@@ -3,12 +3,14 @@ import django
 import json
 import random
 import re
+from fun_global import get_current_time
 from datetime import datetime
 from web.web_global import PRIMARY_SETTINGS_FILE
 from fun_global import get_localized_time
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 import logging
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+from datetime import datetime, timedelta
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
@@ -19,6 +21,8 @@ from web.fun_test.metrics_models import MetricChart, ShaxPerformance
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
 from web.fun_test.metrics_models import WuDispatchTestPerformance, WuSendSpeedTestPerformance, HuRawVolumePerformance
 from web.fun_test.models import JenkinsJobIdMap
+from web.fun_test.metrics_models import VoltestPerformance
+
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus
 
@@ -47,6 +51,10 @@ if __name__ == "__main__":
 
 """
 
+def get_rounded_time(dt):
+    rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=23, minute=59, second=59)
+    rounded_d = get_localized_time(rounded_d)
+    return rounded_d
 
 def software_date_to_datetime(software_date):
     m = re.search(r'(\d{4})(\d{2})(\d{2})', str(software_date))
@@ -100,7 +108,7 @@ if __name__ == "__main4__":
         entry.interpolation_allowed = True
         entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     entries = HuRawVolumePerformance.objects.all()
     for entry in entries:
         dt = entry.input_date_time
@@ -127,6 +135,34 @@ if __name__ == "__main55__":
     for entry in entries:
         print entry
 
+
+
+if __name__ == "__main2__":
+    # clone charts
+    chart_name = "Best time for 1 malloc/free (WU)"
+    entry = MetricChart.objects.get(chart_name=chart_name)
+
+    chart_id_range = range(10000, 10100)
+    for i in chart_id_range:
+        entry.metric_id = i
+        entry.chart_name = "TestChart{}".format(i)
+        entry.pk = None
+        try:
+            entry.save()
+        except:
+            pass
+
+
+if __name__ == "__main66__":
+    chart_name = "Nucleus"
+    entry = MetricChart.objects.get(chart_name=chart_name)
+    chart_id_range = range(10000, 10100)
+    for i in chart_id_range:
+        test_chart_name = "TestChart{}".format(i)
+        test_chart = MetricChart.objects.get(chart_name=test_chart_name)
+        entry.add_child(test_chart.metric_id)
+
+
 if __name__ == "__main5__":
     from django.apps import apps
     for entry in site_state.metric_models.keys():
@@ -140,3 +176,70 @@ if __name__ == "__main5__":
     #for model_name in apps.get_models():
         #print model_name.objects.filter()'''
 
+if __name__ == "__main__":
+    today = get_current_time()
+    from_date = datetime(year=2018, month=8, day=10, minute=0, hour=0, second=0)
+
+    yesterday = today - timedelta(days=0)
+    yesterday = get_rounded_time(yesterday)
+    to_date = yesterday
+    date_range = [from_date, to_date]
+    chart_name = "BLK_LSV: Bandwidth"
+    chart_name = "LSV"
+    mcs_entries = MetricChartStatus.objects.filter(chart_name=chart_name, date_time__range=[from_date, to_date])
+    # mcs_entries = MetricChartStatus.objects.filter(chart_name=chart_name)
+
+    for mcs_entry in mcs_entries:
+        print mcs_entry.score, mcs_entry.date_time
+
+    mcs_entries = MetricChartStatus.objects.filter(chart_name=chart_name)
+
+    for mcs_entry in mcs_entries:
+        print mcs_entry.score, mcs_entry.date_time
+def get_day_bounds(dt):
+    d = get_rounded_time(dt)
+    start = d.replace(hour=0, minute=0, second=0)
+    end = d.replace(hour=23, minute=59, second=59)
+    return start, end
+
+
+def get_entries_for_day(model, day, data_set):
+    bounds = get_day_bounds(day)
+    d = {}
+    d["input_date_time__range"] = bounds
+    inputs = data_set["inputs"]
+    for input_name, input_value in inputs.iteritems():
+        if d == "input_date_time":
+            continue
+        d[input_name] = input_value
+    result = model.objects.filter(**d)
+    return result
+
+if __name__ == "__main2__":
+    today = datetime.now()
+
+    from_date = datetime(year=today.year, month=8, day=8, minute=0, hour=0, second=0)
+
+    yesterday = today - timedelta(days=1)
+    yesterday = get_rounded_time(yesterday)
+    to_date = yesterday
+    current_date = get_rounded_time(from_date)
+
+    from_date = get_localized_time(datetime(year=2018, month=8, day=9, minute=0, hour=0, second=0))
+
+    yesterday = today - timedelta(days=1)
+    yesterday = get_rounded_time(yesterday)
+    to_date = yesterday
+    date_range = [from_date, to_date]
+    chart_name = "BLK_LSV: Bandwidth"
+    chart = MetricChart.objects.get(chart_name=chart_name)
+    data_sets = chart.data_sets
+    data_sets = json.loads(data_sets)
+
+    for data_set in data_sets:
+        while current_date <= to_date:
+            entries = get_entries_for_day(model=VoltestPerformance, day=current_date, data_set=data_set)
+            for entry in entries:
+                print entry
+
+            current_date = current_date + timedelta(days=1)

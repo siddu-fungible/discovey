@@ -5,8 +5,8 @@ import random
 import re
 from datetime import datetime, timedelta
 from web.web_global import PRIMARY_SETTINGS_FILE
-from fun_global import get_localized_time
-
+from fun_global import get_localized_time, get_current_time
+from fun_settings import MAIN_WEB_APP
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
@@ -15,17 +15,17 @@ from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, ShaxPerformance
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
 from web.fun_test.models import JenkinsJobIdMap
-from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 start_month = 4
 start_day = 1
 minute = 59
 hour = 23
-second = 1
+second = 59
 
 def get_rounded_time(dt):
-    rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, microsecond=0)
+    rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=second)
     rounded_d = get_localized_time(rounded_d)
     return rounded_d
 
@@ -97,184 +97,6 @@ def interpolate(chart, model, from_date, to_date):
             current_date = current_date + timedelta(days=1)
             print current_date
 
-if __name__ == "__main2__":
-    model_names = ["NuTransitPerformance"]
-    start_month = 4
-    today = datetime.now()
-    start_date = datetime(year=today.year,
-                          month=start_month,
-                          day=start_day,
-                          minute=minute,
-                          hour=hour,
-                          second=second)
-    yesterday = today - timedelta(days=1)
-    yesterday = get_rounded_time(yesterday)
-
-    for model_name in model_names:
-        charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
-        for chart in charts:
-            model = ANALYTICS_MAP[chart.metric_model_name]["model"]
-            if chart.leaf:
-                first_object = model.objects.first()
-                if hasattr(first_object, "interpolation_allowed") and first_object.interpolation_allowed:
-                    print "Interpolating chart: {}".format(chart.chart_name)
-                    interpolate(chart=chart, model=model, from_date=start_date, to_date=yesterday)
-
-
-
-
-if __name__ == "__main2__":
-    model_names = ["WuLatencyUngated"]
-    model_names = ["NuTransitPerformance"]
-
-    for model_name in model_names:
-        charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
-        '''
-        metric_id = models.IntegerField(default=-1)
-        chart_name = models.TextField(default="Unknown")
-        data_set = JSONField()
-        date_time = models.DateTimeField(default=datetime.now)
-        score = models.FloatField(default=0)
-        valid = models.BooleanField(default=False)
-        '''
-
-        for chart in charts:
-            print "Processing chart: " + chart.chart_name
-            data_sets = chart.data_sets
-            data_sets = json.loads(data_sets)
-            today = datetime.now()
-            model = ANALYTICS_MAP[chart.metric_model_name]["model"]
-            start_month = 4
-
-            start_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second, microsecond=0)
-            yesterday = today - timedelta(days=1)
-            # yesterday = yesterday.replace(hour=hour, minute=minute, microsecond=0, second=second)
-            yesterday = get_rounded_time(yesterday)
-            current_date = get_rounded_time(start_date)
-            while current_date <= yesterday:
-                # print current_date
-                metric_id = chart.metric_id
-                chart_name = chart.chart_name
-                data_sets = data_sets
-                score = 120
-                '''
-                mcs = MetricChartStatus(date_time=current_date,
-                                        metric_id=metric_id,
-                                        chart_name=chart_name,
-                                        data_sets=data_sets,
-                                        score=score)
-                mcs.save()
-                '''
-                scores = {}
-                status_values = []
-                children = json.loads(chart.children)
-                children_weights = json.loads(chart.children_weights)
-                children_weights = {int(x): y for x, y in children_weights.iteritems()}
-                children_goodness_map = {}
-                num_children_passed = 0
-                num_children_failed = 0
-                num_degrades = 0
-                num_child_degrades = 0
-                leaf_status = True
-
-                children_info = {}
-                if not chart.leaf:
-                    '''
-                    if len(children):
-                        child_degrades = 0
-                        sum_of_child_weights = 0
-                        for child in children:
-                            child_metric = MetricChart.objects.get(metric_id=child)
-                            child_weight = children_weights[child] if child in children_weights else 1
-                            sum_of_child_weights += child_weight
-                            get_status = child_metric.get_status(number_of_records=number_of_records)
-                            serialized = MetricChartSerializer(child_metric, many=False)
-                            serialized_data = serialized.data
-                            serialized_data.update(get_status)
-                            children_info[child] = serialized_data
-                            child_status_values, child_goodness_values = get_status["status_values"], \
-                                                                         get_status["goodness_values"]
-                            if child_metric.leaf:
-                                num_child_degrades += get_status["num_degrades"]
-                            else:
-                                num_child_degrades += get_status["num_child_degrades"]
-
-                            last_child_status = child_status_values[-1]
-                            if last_child_status:
-                                num_children_passed += 1
-                            else:
-                                num_children_failed += 1
-
-                            for i in range(number_of_records - 1):
-                                if len(status_values) < (i + 1):
-                                    status_values.append(True)
-                                if len(child_status_values) < (i + 1):
-                                    child_status_values.append(True)
-                                status_values[i] = status_values[i] and child_status_values[i]
-                                if len(goodness_values) < (i + 1):
-                                    goodness_values.append(0)
-                                if len(child_goodness_values) < (i + 1):
-                                    child_goodness_values.append(0)
-
-                                goodness_values[i] += child_goodness_values[i] * child_weight
-                                children_goodness_map[child] = child_goodness_values
-                        if sum_of_child_weights:
-                            for i in range(number_of_records - 1):
-                                goodness_values[i] = goodness_values[i] / sum_of_child_weights
-                    '''
-                else:
-
-                    if True:
-                        data_set_mofified = False
-                        data_sets = json.loads(chart.data_sets)
-                        if len(data_sets):
-                            data_set_combined_goodness = 0
-                            for data_set in data_sets:
-                                print "Processing data-set: {}".format(json.dumps(data_set))
-                                entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
-                                score = -1
-                                this_days_record = None
-                                if len(entries):
-                                    this_days_record = entries[0]
-                                    max_value = data_set["output"]["max"]
-                                    min_value = data_set["output"]["min"]
-                                    output_name = data_set["output"]["name"]  # TODO
-                                    if "expected" in data_set["output"]:
-                                        expected_value = data_set["output"]["expected"]
-                                    else:
-                                        # let's fix it up
-                                        print ("Fixing expected values")
-                                        data_set_mofified = data_set_mofified or chart.fixup_expected_values(
-                                            data_set=data_set)
-                                        expected_value = max_value
-                                        if not chart.positive:
-                                            expected_value = min_value
-                                    get_first_record(model=model, data_set=data_set)
-                                    output_value = getattr(this_days_record, output_name)
-
-                                    # data_set_statuses.append(leaf_status)
-                                    if expected_value is not None:
-                                        if chart.positive:
-                                            data_set_combined_goodness += (float(
-                                                output_value) / expected_value) * 100 if output_value >= 0 else 0
-                                        else:
-                                            if output_value:
-                                                data_set_combined_goodness += (float(
-                                                    expected_value) / output_value) * 100 if output_value >= 0 else 0
-                                            else:
-                                                print "ERROR: {}, {}".format(chart.chart_name,
-                                                                             chart.metric_model_name)
-                            # data_set_combined_goodness = round(data_set_combined_goodness, 1)
-                            final_score = round(data_set_combined_goodness / len(data_sets), 1)
-                            scores[current_date] = final_score
-                            if data_set_mofified:
-                                chart.data_sets = json.dumps(data_sets)
-                                # chart.save()
-                    i = 0
-                    print current_date, scores
-                i = 0
-                current_date = current_date + timedelta(days=1)
-
 
 def prepare_status(chart, purge_old_status=False):
     metric_id = chart.metric_id
@@ -285,13 +107,14 @@ def prepare_status(chart, purge_old_status=False):
         chart.save()
         entries = MetricChartStatus.objects.filter(chart_name=chart.chart_name, metric_id=chart.metric_id)
         entries.all().delete()
-    if chart.chart_name == "EC 8:4 Latency":
+    if chart.chart_name == "BLK_LSV: Bandwidth":
         j = 0
     # print "Preparing status for: {}".format(chart.chart_name)
     children = json.loads(chart.children)
     children_weights = json.loads(chart.children_weights)
     children_weights = {int(x): y for x, y in children_weights.iteritems()}
     data_sets = []
+    valid_dates = []
 
     sum_of_child_weights = 0
     scores = {}
@@ -299,6 +122,7 @@ def prepare_status(chart, purge_old_status=False):
     result["num_build_failed"] = 0
     result["num_degrades"] = 0
     result["children_score_map"] = {}
+    result["valid_dates"] = []
     today = datetime.now()
 
     from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
@@ -308,17 +132,24 @@ def prepare_status(chart, purge_old_status=False):
     to_date = yesterday
     current_date = get_rounded_time(from_date)
 
+    data_sets = chart.data_sets
+    data_sets = json.loads(data_sets)
+
     if not chart.score_cache_valid:
         if not chart.leaf:
             for child in children:
                 child_metric = MetricChart.objects.get(metric_id=child)
                 child_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
                 child_result_scores = child_result["scores"]
-                result["children_score_map"][child_metric.metric_id] = child_result["scores"][to_date]
+                valid_dates = child_result["valid_dates"]
+                # last_valid_date = child_valid_dates[-1]
+
+                if child_result["scores"]:
+                    result["children_score_map"][child_metric.metric_id] = child_result["scores"][to_date]
+
                 child_last_build_status = child_result["last_build_status"]
                 result["num_degrades"] += child_result["num_degrades"]
-                if not child_last_build_status:
-                    result["num_build_failed"] += 1
+                result["num_build_failed"] += child_result["num_build_failed"]
                 child_weight = children_weights[child] if child in children_weights else 1
                 for date_time, child_score in child_result_scores.iteritems():
                     scores.setdefault(date_time, 0)
@@ -336,29 +167,26 @@ def prepare_status(chart, purge_old_status=False):
                                         metric_id=metric_id,
                                         chart_name=chart_name,
                                         data_sets=data_sets,
-                                        score=scores[date_time])
+                                        score=scores[date_time],
+                                        children_score_map=result["children_score_map"])
                 mcs.save()
         else:
             # print "Reached leaf: {}".format(chart.chart_name)
-            data_sets = chart.data_sets
-            data_sets = json.loads(data_sets)
-            model = ANALYTICS_MAP[chart.metric_model_name]["model"]
 
-            last_score = 0
+            model = app_config.get_metric_models()[chart.metric_model_name]
+
+            previous_score = 0
             final_score = 0
             while current_date <= to_date:
-                last_score = final_score
+                valid_dates.append(current_date)
+                if final_score:  # Bertrand wanted to keep track of the last good score
+                    previous_score = final_score
                 # print current_date
 
                 data_sets = data_sets
-                score = 120
-                status_values = []
                 children = json.loads(chart.children)
                 children_weights = json.loads(chart.children_weights)
                 children_weights = {int(x): y for x, y in children_weights.iteritems()}
-                children_goodness_map = {}
-                num_children_passed = 0
-                num_children_failed = 0
 
                 children_info = {}
                 data_set_mofified = False
@@ -367,6 +195,8 @@ def prepare_status(chart, purge_old_status=False):
                 if len(data_sets):
                     data_set_combined_goodness = 0
                     for data_set in data_sets:
+                        if current_date > get_localized_time(datetime(year=2018, month=8, day=10)):
+                            j = 0
                         # print "Processing data-set: {}".format(json.dumps(data_set))
                         entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
                         score = -1
@@ -408,29 +238,32 @@ def prepare_status(chart, purge_old_status=False):
                     chart.data_sets = json.dumps(data_sets)
                     chart.save()
                 # print current_date, scores
+                if final_score <= 0:
+                    final_score = previous_score
                 mcs = MetricChartStatus(date_time=current_date,
                                         metric_id=metric_id,
                                         chart_name=chart_name,
                                         data_sets=data_sets,
                                         score=final_score)
                 mcs.save()
-
                 current_date = current_date + timedelta(days=1)
+                # current_date = get_localized_time(current_date)
 
 
-            # print final_score, last_score
-            is_leaf_degrade = final_score < last_score
+            # print final_score, previous_score
+            is_leaf_degrade = final_score < previous_score
             if is_leaf_degrade or not final_score:
                 result["num_degrades"] += 1
 
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
+        result["valid_dates"] = valid_dates
         if not result["last_build_status"]:
-            u = 0
-        print "Chart: {} num_degrades: {}".format(chart.chart_name, result["num_degrades"])
-        chart.score_cache_valid = True
-        chart.last_build_status = result["last_build_status"]
-        chart.last_num_degrades = result["num_degrades"]
+            result["num_build_failed"] = 1
+        if valid_dates:
+            print "Chart: {} num_degrades: {}, last_score: {}".format(chart.chart_name, result["num_degrades"], result["scores"][valid_dates[-1]])
+        if chart_name == "Networking":
+            j = 0
         chart.save()
     else:
         date_range = [from_date, to_date]
@@ -444,16 +277,17 @@ def prepare_status(chart, purge_old_status=False):
             j = dict(element)
             result["scores"][j["date_time"]] = j
 
-
-        j = 0
-
-
-
+    # chart.last_build_status = result["last_build_status"]
+    chart.score_cache_valid = True
+    chart.last_num_degrades = result["num_degrades"]
+    chart.last_status_update_date = get_current_time()
+    chart.last_num_build_failed = result["num_build_failed"]
+    chart.save()
     return result
 
 if __name__ == "__main__":
-    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Nucleus")
-    prepare_status(chart=total_chart, purge_old_status=False)
+    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    prepare_status(chart=total_chart, purge_old_status=True)
 
 
 if __name__ == "__main2__":

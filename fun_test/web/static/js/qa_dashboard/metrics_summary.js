@@ -4,7 +4,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     let ctrl = this;
 
     this.$onInit = function () {
-
+        $scope.getLastStatusUpdateTime();
         $scope.numGridColumns = 2;
         if(angular.element($window).width() <=1441) {
             $scope.numGridColumns = 2;
@@ -21,13 +21,15 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             let p1 = {metric_id: metricId};
             commonService.apiPost('/metrics/metric_info', p1).then((data) => {
                 $scope.populateNodeInfoCache(data);
-                let newNode = $scope.getNodeFromData(data);
-                newNode.guid = $scope.guid();
-                newNode.hide = false;
-                newNode.indent = 0;
-                $scope.flatNodes.push(newNode);
-                $scope.expandNode(newNode);
-                $scope.collapsedAll = true;
+                let newNode = $scope.getNodeFromData(data).then((newNode) => {
+                    newNode.guid = $scope.guid();
+                    newNode.hide = false;
+                    newNode.indent = 0;
+                    $scope.flatNodes.push(newNode);
+                    $scope.expandNode(newNode);
+                    $scope.collapsedAll = true;
+                });
+
             });
             return data;
         });
@@ -37,6 +39,8 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         $scope.inner = {};
         $scope.inner.nonAtomicMetricInfo = "";
         $scope.currentNodeChildrenGuids = null;
+
+        $scope.validDates = null;
         //console.log($scope.treeModel[0][0].showInfo);
     };
 
@@ -56,6 +60,11 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         });
     };
 
+    $scope.getLastStatusUpdateTime = () => {
+        commonService.apiGet('/common/time_keeper/' + "last_status_update").then((data) => {
+            $scope.lastStatusUpdateTime = data;
+        })
+    };
 
     $scope.guid = () => {
       function s4() {
@@ -100,14 +109,48 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     };
 
     $scope.getDateBound = (dt, lower) => {
-        let yesterday = new Date(dt);
+        let newDay = new Date(dt);
         if (lower) {
-            yesterday.setHours(0, 0, 1);
+            newDay.setHours(0, 0, 1);
         } else {
-            yesterday.setHours(23, 59, 59);
+            newDay.setHours(23, 59, 59);
         }
 
+        return newDay;
+    };
+
+    function isSameDay(d1, d2) {
+          return d1.getFullYear() === d2.getUTCFullYear() &&
+            d1.getUTCMonth() === d2.getUTCMonth() &&
+            d1.getUTCDate() === d2.getUTCDate();
+    }
+
+    $scope.getYesterday = (today) => {
+        let yesterday = new Date(today);
+        yesterday = yesterday.setDate(yesterday.getDate() - 1);
         return yesterday;
+    };
+
+
+    $scope.getDateRange = () => {
+        let today = new Date();
+        console.log(today);
+        let startMonth = 4 - 1;
+        let startDay = 1;
+        let startMinute = 59;
+        let startHour = 23;
+        let startSecond = 1;
+        let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
+        fromDate = $scope.getDateBound(fromDate, true);
+        // console.log(fromDate);
+        // console.log($scope.getDateBound(fromDate, true));
+        // console.log($scope.getDateBound(fromDate, false));
+
+        let yesterday = $scope.getYesterday(today);
+        let toDate = new Date(yesterday);
+        toDate = $scope.getDateBound(toDate, false);
+        return [fromDate, toDate];
+
     };
 
     $scope.getNodeFromData = (data) => {
@@ -123,57 +166,47 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             childrenWeights: JSON.parse(data.children_weights),
             children: {},
             lineage: [],
-            numChildDegrades: data.num_child_degrades,
+            numChildDegrades: data.last_num_degrades,
             positive: data.positive,
             numChildrenPassed: data.num_children_passed,
-            numChildrenFailed: data.num_children_failed,
+            numChildrenFailed: data.last_num_build_failed,
             lastBuildStatus: data.last_build_status
 
         };
+        /*if (data.chart_name === "BLK_LSV: Latency") {
+            let j = 0;
+        }*/
         $scope.metricMap[newNode.metricId] = {chartName: newNode.chartName};
         if (newNode.info === "") {
             newNode.info = "<p>Please update the description</p>";
         }
 
-        let today = new Date();
-        console.log(today);
-        let startMonth = 4 - 1;
-        let startDay = 1;
-        let startMinute = 59;
-        let startHour = 23;
-        let startSecond = 1;
-        let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
-        console.log(fromDate);
-        console.log($scope.getDateBound(fromDate, true));
-        console.log($scope.getDateBound(fromDate, false));
+        let dateRange = $scope.getDateRange();
+        let fromDate = dateRange[0];
+        let toDate = dateRange[1];
+        return $scope.fetchScores(data.metric_id, fromDate.toISOString(), toDate.toISOString()).then((scoreData) => {
+            newNode.childrenScoreMap = scoreData["children_score_map"];
+            $scope.evaluateScores(newNode, scoreData["scores"]);
+            angular.forEach(newNode.childrenWeights, (info, childId) => {
+                newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
+            });
 
-        let yesterday = new Date(today);
-        yesterday = yesterday.setDate(yesterday.getDate() - 1);
-        let toDate = new Date(yesterday);
+            // $scope.evaluateGoodness(newNode, data.goodness_values, data.children_goodness_map);
 
-        $scope.fetchScores(data.metric_id, fromDate.toISOString(), toDate.toISOString()).then((data) => {
+            if (newNode.lastBuildStatus === "PASSED") {
+                newNode.status = true;
+            } else {
+                newNode.status = false;
+            }
 
+            let newNodeChildrenIds = JSON.parse(data.children);
+            if (newNodeChildrenIds.length > 0) {
+                newNode.numChildren = newNodeChildrenIds.length;
+            }
+            return newNode;
         });
 
-        angular.forEach(newNode.childrenWeights, (info, childId) => {
-            newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
-        });
 
-        $scope.evaluateGoodness(newNode, data.goodness_values, data.children_goodness_map);
-
-        //newNode.status = data.status_values[data.status_values.length - 1];
-        if (newNode.lastBuildStatus === "PASSED") {
-            newNode.status = true;
-        } else {
-            newNode.status = false;
-        }
-
-        let newNodeChildrenIds = JSON.parse(data.children);
-        if (newNodeChildrenIds.length > 0) {
-            newNode.numChildren = newNodeChildrenIds.length;
-        }
-
-        return newNode;
     };
 
     $scope.fetchScores = (metricId, fromDate, toDate) => {
@@ -184,6 +217,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             return data;
         });
     };
+
 
     $scope.getSumChildWeights = (children) => {
         let sumOfWeights = 0;
@@ -196,10 +230,69 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     $scope.getScoreTotal = (currentNode) => {
         let children = currentNode.children;
         let scoreTotal = 0;
+
+
         angular.forEach(children, (info, childId) => {
-            scoreTotal += info.weight * $scope.getLastElement(currentNode.childrenGoodnessMap[childId]);
+            scoreTotal += info.weight * currentNode.childrenScoreMap[childId];
         });
+
+        let lastDate = new Date($scope.validDates.slice(-1)[0] * 1000);
+        let lastDateLower = $scope.getDateBound(lastDate, true);
+        let lastDateUpper = $scope.getDateBound(lastDate, false);
+
+
+
+
         return scoreTotal;
+    };
+
+    $scope.evaluateScores = (node, scores) => {
+
+        let keys = Object.keys(scores);
+        let sortedKeys = keys.sort();
+        if (node.chartName === "Total") {
+            $scope.validDates = sortedKeys;
+        }
+
+        if (Object.keys(scores).length) {
+
+            let mostRecentDateTimestamp = sortedKeys.slice(-1)[0];
+            let mostRecentDate = new Date(mostRecentDateTimestamp * 1000);
+            console.log(mostRecentDate);
+            console.log(scores[mostRecentDateTimestamp].score);
+            /*
+            let dateRange = $scope.getDateRange();
+            let fromDate = dateRange[0].getTime()/1000;
+            let toDate = dateRange[1].getTime()/1000;
+            let lastEntry = scores[toDate].score;*/
+        }
+        let goodnessValues = [];
+        sortedKeys.forEach((key) => {
+            goodnessValues.push(scores[key].score);
+        });
+        //console.log("Goodness values: " + goodnessValues);
+
+        node.goodnessValues = goodnessValues;
+        try {
+                node.goodness = Number(goodnessValues[goodnessValues.length - 1].toFixed(1));
+        } catch (e) {
+
+        }
+
+        node.childrenGoodnessMap = {};
+        node.trend = "flat";
+        if (goodnessValues.length > 1) {
+            let penultimateGoodness = Number(goodnessValues[goodnessValues.length - 2].toFixed(1));
+            if (penultimateGoodness > node.goodness) {
+                node.trend = "down";
+            } else if (penultimateGoodness < node.goodness) {
+                node.trend = "up";
+            }
+            if (Number(goodnessValues[goodnessValues.length - 1].toFixed(1)) === 0) {
+                node.trend = "down";
+            }
+        }
+        console.log("Node: " + node.chartName + " Goodness: " + node.goodness);
     };
 
     $scope.evaluateGoodness = (node, goodness_values, children_goodness_map) => {
@@ -387,11 +480,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         let s = "";
         if (node.leaf) {
             if (node.hasOwnProperty("status")) {
-//                if (node.status === true) {
-//                    s = "Bld: <label class=\"label label-success\">PASSED</label>";
-//                } else {
-//                    s = "Bld: <label class=\"label label-danger\">FAILED</label>";
-//                }
+                if (node.status !== true) {
+                    s = "Bld: <label class=\"label label-danger\">FAILED</label>";
+                }
                 if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
                     s = "<p style='background-color: white' class=\"\">No Data</p>";
                 }
@@ -402,6 +493,10 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
 
             //s = "<p><span style='color: green'>&#10003;:</span><b>" + numTrendUp + "</b>" + "&nbsp" ;
             //s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
+            /*if (node.chartName === "BLK_LSV: Latency") {
+                let u = 0;
+            }*/
+
             if (node.numChildDegrades) {
                 s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildDegrades + "";
             }
@@ -459,10 +554,11 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 if (node.chartName === "All metrics") {
                     return;
                 }
-                //return; // Disable for now
+                return; // Disable for now
                 if (!$scope.isLeafsParent(node)) {
                     return;
                 }
+
                 let flattenedLeaves = {};
                 $scope.flattenLeaves("", flattenedLeaves, leaves);
 
@@ -496,17 +592,22 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     };
 
     $scope.prepareGridNodes = (flattenedNodes) => {
+        let maxRowsInMiniChartGrid = 10;
         console.log("Prepare Grid nodes");
         let tempGrid = [];
         let rowIndex = 0;
         Object.keys(flattenedNodes).forEach((key) => {
-            if (tempGrid.length - 1 < rowIndex) {
+            if (rowIndex < maxRowsInMiniChartGrid) {
+                if (tempGrid.length - 1 < rowIndex) {
                 tempGrid.push([]);
+                }
+                tempGrid[rowIndex].push(flattenedNodes[key]);
+                if (tempGrid[rowIndex].length === $scope.numGridColumns) {
+                    rowIndex++;
+                }
+
             }
-            tempGrid[rowIndex].push(flattenedNodes[key]);
-            if (tempGrid[rowIndex].length === $scope.numGridColumns) {
-                rowIndex++;
-            }
+
         });
         $scope.grid = tempGrid;
 
@@ -523,7 +624,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
 
         $scope.charting = true;
 
-        $scope.goodnessTrendChartTitle = "Score Trend" ;
+        $scope.goodnessTrendChartTitle = node.chartName;
     };
 
     $scope.getChildrenGuids = (node) => {
@@ -600,22 +701,24 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
 
         return $scope.fetchMetricInfoById({metricId: childId}).then((data) => {
             if (!alreadyInserted) {
-                let newNode = $scope.getNodeFromData(data);
-                newNode.guid = $scope.guid();
-                thisNode.lineage.forEach((ancestor) => {
-                   newNode.lineage.push(ancestor);
-                });
-                newNode.lineage.push(thisNode.guid);
-                node.childrenGuids.push(newNode.guid);
+                $scope.getNodeFromData(data).then((newNode) => {
+                    newNode.guid = $scope.guid();
+                    thisNode.lineage.forEach((ancestor) => {
+                       newNode.lineage.push(ancestor);
+                    });
+                    newNode.lineage.push(thisNode.guid);
+                    node.childrenGuids.push(newNode.guid);
 
-                newNode.indent = thisNode.indent + 1;
-                let index = $scope.getIndex(thisNode);
-                $scope.flatNodes.splice(index + 1, 0, newNode);
-                $scope._insertNewNode(thisNode, thisChildrenIds, thisAll);
-                newNode.hide = false;
-                if (thisAll) {
-                    $scope.expandNode(newNode, thisAll);
-                }
+                    newNode.indent = thisNode.indent + 1;
+                    let index = $scope.getIndex(thisNode);
+                    $scope.flatNodes.splice(index + 1, 0, newNode);
+                    $scope._insertNewNode(thisNode, thisChildrenIds, thisAll);
+                    newNode.hide = false;
+                    if (thisAll) {
+                        $scope.expandNode(newNode, thisAll);
+                    }
+                });
+
             } else {
                 node.childrenGuids.forEach((childGuid) => {
                    let childNode = $scope.flatNodes[$scope.getIndex({guid: childGuid})];

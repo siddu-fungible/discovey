@@ -85,7 +85,10 @@ def chart_info(request):
                   "y2_axis_title": chart.y2_axis_title,
                   "info": chart.description,
                   "leaf": chart.leaf,
-                  "last_build_status": chart.last_build_status}
+                  "last_build_status": chart.last_build_status,
+                  "last_num_degrades": chart.last_num_degrades,
+                  "last_status_update_date": chart.last_status_update_date,
+                  "last_num_build_failed": chart.last_num_build_failed}
     return result
 
 @csrf_exempt
@@ -191,13 +194,15 @@ def metric_info(request):
     c = MetricChart.objects.get(metric_id=metric_id)
     serialized = MetricChartSerializer(c, many=False)
     serialized_data = serialized.data
-    result = c.get_status(number_of_records=6)
-    serialized_data["goodness_values"] = result["goodness_values"]
-    serialized_data["status_values"] = result["status_values"]
-    serialized_data["children_goodness_map"] = result["children_goodness_map"]
-    serialized_data["num_children_passed"] = result["num_children_passed"]
-    serialized_data["num_children_failed"] = result["num_children_failed"]
-    serialized_data["num_child_degrades"] = result["num_child_degrades"]
+    # result = c.get_status(number_of_records=6)
+    result = c.get_status()
+
+    # serialized_data["goodness_values"] = result["goodness_values"]
+    # serialized_data["status_values"] = result["status_values"]
+    # serialized_data["children_goodness_map"] = result["children_goodness_map"]
+    # serialized_data["num_children_passed"] = result["num_children_passed"]
+    # serialized_data["num_children_failed"] = result["num_children_failed"]
+    # serialized_data["num_child_degrades"] = result["num_child_degrades"]
     serialized_data["children_info"] = result["children_info"]
     return serialized_data
 
@@ -217,9 +222,11 @@ def scores(request):
     serialized = MetricChartStatusSerializer(entries, many=True)
     serialized_data = serialized.data[:]
     result["scores"] = {}
+    result["children_score_map"] = {}
     for element in serialized_data:
         j = dict(element)
         result["scores"][j["date_time"]] = j
+        result["children_score_map"] = j["children_score_map"]
 
     return result
 

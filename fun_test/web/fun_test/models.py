@@ -4,17 +4,44 @@ import os
 
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 # django.setup()
-
+from fun_settings import COMMON_WEB_LOGGER_NAME
 from django.db import models
 from fun_global import RESULTS
 from fun_global import is_performance_server
 from web.fun_test.jira_models import *
 from rest_framework.serializers import ModelSerializer
+from datetime import datetime
+import logging
 
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 
 TAG_LENGTH = 50
+
+class TimeKeeper(models.Model):
+    time = models.DateTimeField(default=datetime.now)
+    name = models.TextField(default="", unique=True)
+
+    @staticmethod
+    def set_time(name, time):
+        try:
+            time_keeper_obj = TimeKeeper.objects.get(name=name)
+        except ObjectDoesNotExist:
+            time_keeper_obj = TimeKeeper(name=name, time=time)
+        time_keeper_obj.time = time
+        time_keeper_obj.save()
+
+    @staticmethod
+    def get(name):
+        result = None
+        try:
+            time_keeper_obj = TimeKeeper.objects.get(name=name)
+            result = time_keeper_obj.time
+        except ObjectDoesNotExist as ex:
+            logging.exception(str(ex))
+        return result
+
 
 class CatalogTestCase(models.Model):
     jira_id = models.IntegerField()
