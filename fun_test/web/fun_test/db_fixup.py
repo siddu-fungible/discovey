@@ -174,6 +174,8 @@ def prepare_status(chart, purge_old_status=False):
             # print "Reached leaf: {}".format(chart.chart_name)
 
             model = app_config.get_metric_models()[chart.metric_model_name]
+            if model.objects.first().interpolation_allowed:
+                interpolate(model=model, from_date=from_date, to_date=to_date, chart=chart)
 
             previous_score = 0
             final_score = 0
