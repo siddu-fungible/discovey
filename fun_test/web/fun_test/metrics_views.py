@@ -1,5 +1,7 @@
 import logging
 import json
+from django.http import HttpResponseRedirect
+from django.core.management import call_command
 from django.apps import apps
 from fun_settings import MAIN_WEB_APP
 from fun_global import get_localized_time, get_current_time
@@ -175,6 +177,11 @@ def update_child_weight(request):
 @csrf_exempt
 def summary_page(request):
     return render(request, 'qa_dashboard/metrics_summary.html', locals())
+
+@csrf_exempt
+def initialize(request):
+    call_command('initialize')
+    return HttpResponseRedirect('/')
 
 @csrf_exempt
 @api_safe_json_response
