@@ -1932,16 +1932,10 @@ class PeekCommands(object):
 
             while True:
                 try:
-                    '''
                     if type(cmd) == list:
                         result = self.dpc_client.execute(verb=verb, arg_list=cmd, tid=tid)
                     else:
                         result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
-                    '''
-                    result = {"pc6 pool3 usage": 146,"pc6 pool5 usage": 3,"pc6 pool63 usage": 228,
-                              "pc6 pool8 usage": 20,"pool0 color": 0,"pool63 color": 0,"pool10 color": 0,
-                              "pool17 color": 0, "pool5 color": 0,"pool19 color": 0,"pool2 color": 0,"pool8 color": 0,
-                              "pool9 color": 0}
                     result = self._sort_bam_keys(result=result, au_sort=au_sort)
                     if result:
                         if prev_result:
