@@ -553,7 +553,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             if ((node.chartName === "All metrics") || (!$scope.isLeafsParent(node))) {
                 return $q.resolve(null);
             } else {
-                //return $q.resolve(null); // Disable for now
+                return $q.resolve(null); // Disable for now
                 commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
 
                     let flattenedLeaves = {};

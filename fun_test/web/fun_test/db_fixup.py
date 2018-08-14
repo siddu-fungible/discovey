@@ -95,7 +95,7 @@ def interpolate(chart, model, from_date, to_date):
                     last_good_entry.input_date_time = current_date
                     last_good_entry.save()
             current_date = current_date + timedelta(days=1)
-            print current_date
+            # print current_date
 
 
 def prepare_status(chart, purge_old_status=False):
