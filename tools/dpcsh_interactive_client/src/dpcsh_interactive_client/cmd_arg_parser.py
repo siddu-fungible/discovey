@@ -4,12 +4,16 @@ from argparse import ArgumentParser
 base_set_parser = ArgumentParser(prog="set")
 base_set_subparsers = base_set_parser.add_subparsers(title="subcommands", help="")
 set_nu_parser = base_set_subparsers.add_parser('nu', help="Set NU config")
+set_hnu_parser = base_set_subparsers.add_parser('hnu', help="Set HNU config")
 set_system_parser = base_set_subparsers.add_parser('system', help="Set System Configs")
 
 # Set NU sub commands
 set_nu_subparsers = set_nu_parser.add_subparsers(title='subcommands', help="")
 set_nu_port_parser = set_nu_subparsers.add_parser('port', help="NU Port commands")
 set_nu_qos_parser = set_nu_subparsers.add_parser('qos', help="NU QoS commands")
+
+set_hnu_subparsers = set_hnu_parser.add_subparsers(title='subcommands', help="")
+set_hnu_qos_parser = set_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
 
 # -----------------------------------------------------------------------------------------------
 # Set NU Port sub commands
@@ -341,12 +345,16 @@ set_system_params_syslog_parser.add_argument('level_val', type=int, help="Syslog
 base_get_parser = ArgumentParser(prog="get")
 base_get_subparsers = base_get_parser.add_subparsers(title="subcommands", help="")
 get_nu_parser = base_get_subparsers.add_parser('nu', help="Get NU config")
+get_hnu_parser = base_get_subparsers.add_parser('hnu', help="Get HNU config")
 get_system_parser = base_get_subparsers.add_parser('system', help="system log commands")
 
 # Get NU sub commands
 get_nu_subparsers = get_nu_parser.add_subparsers(title='subcommands', help="")
 get_nu_port_parser = get_nu_subparsers.add_parser('port', help="NU Port commands")
 get_nu_qos_parser = get_nu_subparsers.add_parser('qos', help="NU QoS commands")
+
+get_hnu_subparsers = get_hnu_parser.add_subparsers(title='subcommands', help="")
+get_hnu_qos_parser = get_hnu_subparsers.add_parser('qos', help="NU QoS commands")
 # -----------------------------------------------------------------------------------------------
 
 # Get NU Port sub commands
@@ -475,8 +483,7 @@ get_qos_xoff_status_parser.add_argument('port_num', type=int, help="Port Num")
 get_qos_xoff_status_parser.add_argument('pg', type=int, help="PG Num")
 
 # ------------------------------------------------------------------------------------------------
-# Get NU qos HNU parser
-get_hnu_qos_parser = get_nu_qos_parsers.add_parser('hnu', help="To run qos commands for hnu")
+# Get qos HNU parser
 get_hnu_qos_parsers = get_hnu_qos_parser.add_subparsers(title="subcommands", help="")
 
 get_hnu_qos_egress_parser = get_hnu_qos_parsers.add_parser('egress', help="QoS Egress Buffers")
@@ -551,7 +558,6 @@ get_hnu_qos_xoff_status_parser.add_argument('pg', type=int, help="PG Num")
 
 # -----------------------------------------------------------------------------------------------------
 # Qos hnu set commands
-set_hnu_qos_parser = set_nu_qos_parsers.add_parser('hnu', help="To run qos commands for hnu")
 set_hnu_qos_parsers = set_hnu_qos_parser.add_subparsers(title="subcommands", help="")
 
 set_hnu_qos_egress_parser = set_hnu_qos_parsers.add_parser('egress', help="QoS Egress Buffers")
