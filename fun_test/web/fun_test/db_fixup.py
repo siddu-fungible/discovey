@@ -137,6 +137,7 @@ def prepare_status(chart, purge_old_status=False):
 
     if not chart.score_cache_valid:
         if not chart.leaf:
+            print "Calculating container score for {}".format(chart.chart_name)
             for child in children:
                 child_metric = MetricChart.objects.get(metric_id=child)
                 child_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
@@ -152,8 +153,10 @@ def prepare_status(chart, purge_old_status=False):
                 result["num_build_failed"] += child_result["num_build_failed"]
                 child_weight = children_weights[child] if child in children_weights else 1
                 for date_time, child_score in child_result_scores.iteritems():
+
                     scores.setdefault(date_time, 0)
                     scores[date_time] += child_score * child_weight
+                    print "Child: {} Score: {} Datetime: {}".format(child_metric.chart_name, child_score, date_time)
                 sum_of_child_weights += child_weight
 
             # Normalize all scores
@@ -169,6 +172,7 @@ def prepare_status(chart, purge_old_status=False):
                                         data_sets=data_sets,
                                         score=scores[date_time],
                                         children_score_map=result["children_score_map"])
+                print "Chart: {} Date: {} Score: {}".format(chart.chart_name, date_time, scores[date_time])
                 mcs.save()
         else:
             # print "Reached leaf: {}".format(chart.chart_name)
