@@ -94,7 +94,11 @@ class LsfStatusServer:
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
 
             response = self.get_job_by_id(job_id=job_info["job_id"])
-            response_dict = json.loads(response)
+            response_dict = {"output_text": "-1"}
+            try:
+                response_dict = json.loads(response)
+            except Exception as ex:
+                fun_test.critical(str(ex))
             print(json.dumps(response_dict, indent=4))
             output_text = response_dict["output_text"]
             result["date_time"] = dt
