@@ -799,7 +799,6 @@ class NuClearCommands(object):
 
 
 class PeekCommands(object):
-
     def __init__(self, dpc_client):
         self.dpc_client = dpc_client
 
@@ -1921,7 +1920,71 @@ class PeekCommands(object):
 
     def peek_bam_resource_stats(self, grep_regex=None):
         cmd = "stats/resource/bam"
-        self._display_stats(cmd=cmd, grep_regex=grep_regex, au_sort=False)
+        verb = "peek"
+        tid = 0
+        au_sort = False
+        prev_result = None
+        try:
+            bam_pool_decode_dict ={'pool0': 'BM_POOL_FUNOS', 'pool4': 'BM_POOL_NU_ERP_FCP', 'pool5': 'BM_POOL_NU_ERP_NONFCP',
+                                   'pool6': 'BM_POOL_NU_ERP_CC', 'pool7': 'BM_POOL_NU_ERP_SAMPLING', 'pool1': 'BM_POOL_NU_ETP_CMDLIST',
+                                   'pool8': 'BM_POOL_HNU_NONFCP', 'pool2': 'BM_POOL_HU_REQ', 'pool9': 'BM_POOL_REGEX',
+                                   'pool10': 'BM_POOL_REFBUF', 'pool63': 'BM_POOL_NU_PREFETCH', 'pool3': 'BM_POOL_SW_PREFETCH'}
+
+            while True:
+                try:
+                    '''
+                    if type(cmd) == list:
+                        result = self.dpc_client.execute(verb=verb, arg_list=cmd, tid=tid)
+                    else:
+                        result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
+                    '''
+                    result = {"pc6 pool3 usage": 146,"pc6 pool5 usage": 3,"pc6 pool63 usage": 228,
+                              "pc6 pool8 usage": 20,"pool0 color": 0,"pool63 color": 0,"pool10 color": 0,
+                              "pool17 color": 0, "pool5 color": 0,"pool19 color": 0,"pool2 color": 0,"pool8 color": 0,
+                              "pool9 color": 0}
+                    result = self._sort_bam_keys(result=result, au_sort=au_sort)
+                    if result:
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            table_obj = PrettyTable(['Field Name', 'Counters', 'Diff Counters'])
+                            table_obj.align = 'l'
+                            for key in result:
+                                decode_value = ''
+                                pool_value = key.split(' ')[0]
+                                if pool_value in bam_pool_decode_dict:
+                                    decode_value = bam_pool_decode_dict[pool_value]
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
+                                else:
+                                    table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counters'])
+                            table_obj.align = 'l'
+                            for key in result:
+                                decode_value = ''
+                                pool_value = key.split(' ')[0]
+                                if pool_value in bam_pool_decode_dict:
+                                    decode_value = bam_pool_decode_dict[pool_value]
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key]])
+                                else:
+                                    table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
+
+                        prev_result = result
+                        print table_obj
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                        time.sleep(TIME_INTERVAL)
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
     '''
     def peek_nwqm_stats(self, grep_regex=None):
         try:
@@ -1967,10 +2030,3 @@ class PeekCommands(object):
     def peek_nwqm_stats(self, grep_regex=None):
         cmd = "stats/nwqm"
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
-
-
-
-
-
-
-
