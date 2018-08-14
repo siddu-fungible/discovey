@@ -203,7 +203,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             if (newNodeChildrenIds.length > 0) {
                 newNode.numChildren = newNodeChildrenIds.length;
             }
-            return newNode;
+            return $q.resolve(newNode);
         });
 
 
@@ -549,23 +549,25 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 chart_name: node.chartName
             };
 
+            console.log("Before getting leaves");
+            if ((node.chartName === "All metrics") || (!$scope.isLeafsParent(node))) {
+                return $q.resolve(null);
+            } else {
+                //return $q.resolve(null); // Disable for now
+                commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
 
-            return commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
-                if (node.chartName === "All metrics") {
-                    return;
-                }
-                return; // Disable for now
-                if (!$scope.isLeafsParent(node)) {
-                    return;
-                }
+                    let flattenedLeaves = {};
+                    $scope.flattenLeaves("", flattenedLeaves, leaves);
+                    $timeout(()=> {
+                        $scope.prepareGridNodes(flattenedLeaves);
+                    }, 1000);
 
-                let flattenedLeaves = {};
-                $scope.flattenLeaves("", flattenedLeaves, leaves);
+                    console.log(angular.element($window).width());
 
-                $scope.prepareGridNodes(flattenedLeaves);
-                console.log(angular.element($window).width());
+                });
 
-            });
+            }
+
         });
 
 
@@ -599,15 +601,13 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         Object.keys(flattenedNodes).forEach((key) => {
             if (rowIndex < maxRowsInMiniChartGrid) {
                 if (tempGrid.length - 1 < rowIndex) {
-                tempGrid.push([]);
+                    tempGrid.push([]);
                 }
                 tempGrid[rowIndex].push(flattenedNodes[key]);
                 if (tempGrid[rowIndex].length === $scope.numGridColumns) {
                     rowIndex++;
                 }
-
             }
-
         });
         $scope.grid = tempGrid;
 
@@ -701,12 +701,14 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
 
         return $scope.fetchMetricInfoById({metricId: childId}).then((data) => {
             if (!alreadyInserted) {
-                $scope.getNodeFromData(data).then((newNode) => {
+                console.log("!alreadyInserted");
+                return $scope.getNodeFromData(data).then((newNode) => {
                     newNode.guid = $scope.guid();
                     thisNode.lineage.forEach((ancestor) => {
                        newNode.lineage.push(ancestor);
                     });
                     newNode.lineage.push(thisNode.guid);
+                    console.log("Added childGuid for node:" + node.chartName);
                     node.childrenGuids.push(newNode.guid);
 
                     newNode.indent = thisNode.indent + 1;
@@ -720,6 +722,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 });
 
             } else {
+                console.log("alreadyInserted");
                 node.childrenGuids.forEach((childGuid) => {
                    let childNode = $scope.flatNodes[$scope.getIndex({guid: childGuid})];
                    //let childrenIds = JSON.parse(data.children);
@@ -729,7 +732,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
 
                 $scope._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
             }
-
+            return $q.resolve(null);
         });
 
 
@@ -760,7 +763,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 node.hide = false;
                 let childrenIds = JSON.parse(data.children);
                 return $scope._insertNewNode(node, childrenIds, all, node.childrenFetched).then(() => {
+                    console.log("Inserted: " + node.chartName);
                     node.childrenFetched = true;
+                    return $q.resolve(null);
                 });
 
             });
