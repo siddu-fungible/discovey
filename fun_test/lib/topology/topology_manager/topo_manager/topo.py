@@ -1903,8 +1903,10 @@ class Node(object):
         commands = []
         docker_stop = '%s %s' % (docker_kill_cmd, self.name)
         netns_del = '%s %s' % (netns_del_cmd, self.name)
+        docker_rm = 'docker rm %s' % (self.name)
         commands.append(docker_stop)
         commands.append(netns_del)
+        commands.append(docker_rm)
         for cmds in commands:
             out = exec_remote_commands([(self.vm_ip, [cmds])], [], timeout=300)
 
@@ -1939,6 +1941,7 @@ class Node(object):
             :returns console output as a list of 1 new line
             separated string.
         """
+        print 'telnet to port %d' % port
         if self.tn is None:
             self.tn = telnetlib.Telnet()
         try:
@@ -1991,20 +1994,19 @@ class FlatNode(Node):
         router_image = docker_images[self.type]
         self.ip = self.loopback_ips[0]
 
-        if config_dict['flat_topo']:
-            self.ip = str(f1_mgmt_ips.pop())
-            self.public_network = self.ip
-            self.docker_run = '%s ' \
-                              '--name %s ' \
-                              '--hostname ' \
-                              'node-%s ' \
-                              '--network=mgmt ' \
-                              '--ip=%s ' \
-                              '-p %s:22 ' \
-                              '-p %s:5001 ' \
-                              '%s &\n' % \
-                      (docker_run_cmd, self.name, self.name, self.ip,
-                       self.host_ssh_port, self.dpcsh_port, router_image)
+        self.ip = str(f1_mgmt_ips.pop())
+        self.public_network = self.ip
+        self.docker_run = '%s ' \
+                          '--name %s ' \
+                          '--hostname ' \
+                          'node-%s ' \
+                          '--network=mgmt ' \
+                          '--ip=%s ' \
+                          '-p %s:22 ' \
+                          '-p %s:5001 ' \
+                          '%s &\n' % \
+                  (docker_run_cmd, self.name, self.name, self.ip,
+                   self.host_ssh_port, self.dpcsh_port, router_image)
         fun_test.log(self.__class__.__name__ + ' docker command: ' + self.docker_run)
 
 class LeafNode(Node):
