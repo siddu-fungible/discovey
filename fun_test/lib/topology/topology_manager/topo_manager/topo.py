@@ -1772,7 +1772,13 @@ class Node(object):
         for intf in self.interfaces:
             self.vm_obj.topo.update_prefix_counts(self.name, intf, action)
 
+    def check_alive(self):
+        return True
+
     def configure(self):
+        if not self.check_alive():
+            print("Node %s not reachable" % self.name)
+            return
         "Generate routing configuration"
         self.do_zebra_config()
         self.do_bgp_config()
