@@ -127,7 +127,7 @@ def prepare_status(chart, purge_old_status=False):
 
     from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
 
-    yesterday = today - timedelta(days=2)
+    yesterday = today - timedelta(days=1)
     yesterday = get_rounded_time(yesterday)
     to_date = yesterday
     current_date = get_rounded_time(from_date)
