@@ -518,6 +518,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             } else if (node.trend === "down") {
                 s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>&nbsp;";
             }
+            else if (node.trend === "flat") {
+                s = "<icon class=\"fa fa-arrow-down aspect-trend-icon\" style=\"visibility: hidden;\"></icon>&nbsp;";
+            }
         }
         return s;
     };

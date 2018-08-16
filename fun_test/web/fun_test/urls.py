@@ -19,6 +19,7 @@ from . import views, regression_views
 from . import tcm_views
 from . import common_views
 from . import metrics_views
+from . import tests_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 regression_urls = [
@@ -119,9 +120,18 @@ metric_urls = [
     url(r'^scores', metrics_views.scores)
 ]
 
+performance_urls = [
+    url(r'^$', metrics_views.summary_page),
+    url(r'^(.*)/(.*)$', metrics_views.atomic)
+]
+
+test_urls = [
+    url(r'^datetime$', tests_views.date_test)
+]
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^performance/', metrics_views.summary_page),
+    url(r'^performance/', include(performance_urls)),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
     # url(r'^tools/', include('tools.urls')),
@@ -130,7 +140,8 @@ urlpatterns = [
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
     url(r'^common/', include(common_urls)),
     url(r'^$', common_views.home),
-    url(r'^initialize$', metrics_views.initialize)
+    url(r'^initialize$', metrics_views.initialize),
+    url(r'^test', include(test_urls))
 
 ]
 
