@@ -14,10 +14,12 @@ set_nu_qos_parser = set_nu_subparsers.add_parser('qos', help="NU QoS commands")
 
 set_hnu_subparsers = set_hnu_parser.add_subparsers(title='subcommands', help="")
 set_hnu_qos_parser = set_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
+set_hnu_port_parser = set_hnu_subparsers.add_parser('port', help="HNU Port commands")
 
 # -----------------------------------------------------------------------------------------------
 # Set NU Port sub commands
 set_nu_port_parsers = set_nu_port_parser.add_subparsers(title="subcommands", help="")
+set_hnu_port_parsers = set_hnu_port_parser.add_subparsers(title="subcommands", help="")
 
 # MTU
 set_port_mtu_parser = set_nu_port_parsers.add_parser('mtu', help="Port MTU")
@@ -354,7 +356,7 @@ get_nu_port_parser = get_nu_subparsers.add_parser('port', help="NU Port commands
 get_nu_qos_parser = get_nu_subparsers.add_parser('qos', help="NU QoS commands")
 
 get_hnu_subparsers = get_hnu_parser.add_subparsers(title='subcommands', help="")
-get_hnu_qos_parser = get_hnu_subparsers.add_parser('qos', help="NU QoS commands")
+get_hnu_qos_parser = get_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
 # -----------------------------------------------------------------------------------------------
 
 # Get NU Port sub commands
@@ -382,11 +384,13 @@ get_port_pfc_subparsers = get_port_pfc_parser.add_subparsers(title="subcommands"
 # Get Port pfc Quanta
 get_port_pfc_quanta_parser = get_port_pfc_subparsers.add_parser('quanta', help="Set Port pfc Quanta")
 get_port_pfc_quanta_parser.add_argument('port_num', type=int, help="port_num")
-get_port_pfc_quanta_parser.add_argument('shape', type=int, help="shape")
+get_port_pfc_quanta_parser.add_argument('shape', type=int, help="shape: {'NU': 0, 'HNU': 1}")
+get_port_pfc_quanta_parser.add_argument('class_num', type=int, help="class: {'NU': 0, 'HNU': 1}")
 # Get Port pfc Threshold
 get_port_pfc_threshold_parser = get_port_pfc_subparsers.add_parser('threshold', help="Set Port pfc threshold")
 get_port_pfc_threshold_parser.add_argument('port_num', type=int, help="port_num")
-get_port_pfc_threshold_parser.add_argument('shape', type=int, help="shape")
+get_port_pfc_threshold_parser.add_argument('shape', type=int, help="shape: {'NU': 0, 'HNU': 1}")
+get_port_pfc_threshold_parser.add_argument('class_num', type=int, help="class: {'NU': 0, 'HNU': 1}")
 
 # Get Port PTP sub commands
 get_port_ptp_parser = get_nu_port_parsers.add_parser('ptp', help="Port PTP")
@@ -774,6 +778,12 @@ clear_nu_erp_stats_parser = clear_nu_stats_subparsers.add_parser('erp', help="Cl
 
 # Clear Parser stats 
 clear_nu_parser_stats_parser = clear_nu_stats_subparsers.add_parser('parser', help="Clear Parser Stats")
+
+# Clear FWD stats
+clear_nu_nwqm_stats_parser = clear_nu_stats_subparsers.add_parser('nwqm', help="Clear NWQM Stats")
+
+# Clear ERP stats
+clear_nu_vppkts_stats_parser = clear_nu_stats_subparsers.add_parser('vppkts', help="Clear VPPKTS Stats")
 
 # Clear ALL NU stats
 clear_nu_all_stats_parser = clear_nu_stats_subparsers.add_parser('all', help="Clear ALL Stats")
