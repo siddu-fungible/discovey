@@ -116,7 +116,8 @@ class PortCommands(object):
                 arg_dict = {"class": class_num, "quanta": quanta}
                 arg_list = ["pfcqset", cmd_arg_dict, arg_dict]
             else:
-                arg_list = ["pfcqget", cmd_arg_dict]
+                arg_dict = {"class": class_num}
+                arg_list = ["pfcqget", cmd_arg_dict, arg_dict]
             result = self.dpc_client.execute(verb="port", arg_list=arg_list)
             print result
         except Exception as ex:
@@ -129,7 +130,8 @@ class PortCommands(object):
                 arg_dict = {"class": class_num, "threshold": threshold}
                 arg_list = ["pfctset", cmd_arg_dict, arg_dict]
             else:
-                arg_list = ["pfctget", cmd_arg_dict]
+                arg_dict = {"class": class_num}
+                arg_list = ["pfctget", cmd_arg_dict, arg_dict]
             result = self.dpc_client.execute(verb="port", arg_list=arg_list)
             print result
         except Exception as ex:
@@ -792,6 +794,22 @@ class NuClearCommands(object):
     def clear_nu_all_stats(self):
         try:
             cmd = ["clear"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_nwqm_stats(self):
+        try:
+            cmd = ["clear", "nwqm"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_vppkts_stats(self):
+        try:
+            cmd = ["clear", "vppkts"]
             result = self.dpc_client.execute(verb="nu", arg_list=cmd)
             print result
         except Exception as ex:
@@ -1945,6 +1963,8 @@ class PeekCommands(object):
                             for key in result:
                                 decode_value = ''
                                 pool_value = key.split(' ')[0]
+                                if 'usage' in key:
+                                    pool_value = key.split(' ')[1]
                                 if pool_value in bam_pool_decode_dict:
                                     decode_value = bam_pool_decode_dict[pool_value]
                                 if grep_regex:
@@ -1958,6 +1978,8 @@ class PeekCommands(object):
                             for key in result:
                                 decode_value = ''
                                 pool_value = key.split(' ')[0]
+                                if 'usage' in key:
+                                    pool_value = key.split(' ')[1]
                                 if pool_value in bam_pool_decode_dict:
                                     decode_value = bam_pool_decode_dict[pool_value]
                                 if grep_regex:

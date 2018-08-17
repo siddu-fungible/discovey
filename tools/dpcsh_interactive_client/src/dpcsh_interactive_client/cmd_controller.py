@@ -83,14 +83,14 @@ class CmdController(Cmd):
                                            class_num=args.class_num)
 
     def get_port_pfc_quanta(self, args):
-        self._port_cmd_obj.port_pfc_quanta(port_num=args.port_num, shape=args.shape)
+        self._port_cmd_obj.port_pfc_quanta(port_num=args.port_num, shape=args.shape, class_num=args.class_num)
 
     def set_port_pfc_threshold(self, args):
         self._port_cmd_obj.port_pfc_threshold(port_num=args.port_num, shape=args.shape, threshold=args.threshold,
                                               class_num=args.class_num)
 
     def get_port_pfc_threshold(self, args):
-        self._port_cmd_obj.port_pfc_threshold(port_num=args.port_num, shape=args.shape)
+        self._port_cmd_obj.port_pfc_threshold(port_num=args.port_num, shape=args.shape, class_num=args.class_num)
 
     def enable_port_ptp_peer_delay(self, args):
         self._port_cmd_obj.enable_disable_ptp_peer_delay(port_num=args.port_num, shape=args.shape)
@@ -764,6 +764,12 @@ class CmdController(Cmd):
     def clear_nu_parser_stats(self, args):
         self._clear_cmd_obj.clear_nu_parser_stats()
 
+    def clear_nu_nwqm_stats(self, args):
+        self._clear_cmd_obj.clear_nu_nwqm_stats()
+
+    def clear_nu_vppkts_stats(self, args):
+        self._clear_cmd_obj.clear_nu_vppkts_stats()
+
     def clear_nu_all_stats(self, args):
         self._clear_cmd_obj.clear_nu_all_stats()
 
@@ -943,7 +949,9 @@ class CmdController(Cmd):
     clear_nu_fwd_stats_parser.set_defaults(func=clear_nu_fwd_stats)
     clear_nu_erp_stats_parser.set_defaults(func=clear_nu_erp_stats)
     clear_nu_parser_stats_parser.set_defaults(func=clear_nu_parser_stats)
-    clear_nu_all_stats_parser.set_defaults(func=clear_nu_all_stats)   
+    clear_nu_all_stats_parser.set_defaults(func=clear_nu_all_stats)
+    clear_nu_nwqm_stats_parser.set_defaults(func=clear_nu_nwqm_stats)
+    clear_nu_vppkts_stats_parser.set_defaults(func=clear_nu_vppkts_stats)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):
