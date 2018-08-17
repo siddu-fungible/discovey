@@ -1145,3 +1145,31 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return stats
+
+    def set_nu_test_op(self, rule, lso):
+        lso_set = False
+        try:
+            cmd = ["old", "add", "rule", rule, "lso", lso]
+            fun_test.debug("Setting NU test op for rule %d with lso %d" % (rule, lso))
+            result = self.json_execute(verb="nu_test_op", data=cmd)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Setting NU test op for rule %d with lso %d" % (rule, lso))
+            lso_set = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return lso_set
+
+    def delete_nu_test_op(self, rule):
+        lso_set = False
+        try:
+            cmd = ["old", "delete", "rule", rule]
+            fun_test.debug("Deleting nu test op rule %d" % rule)
+            result = self.json_execute(verb="nu_test_op", data=cmd)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Deleting nu test op rule %d" % rule)
+            lso_set = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return lso_set
+
+
