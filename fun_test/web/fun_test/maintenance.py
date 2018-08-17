@@ -180,12 +180,12 @@ if __name__ == "__main__":
     today = get_current_time()
     from_date = datetime(year=2018, month=8, day=10, minute=0, hour=0, second=0)
 
-    yesterday = today + timedelta(days=0)
+    yesterday = today + timedelta(days=1)
     yesterday = get_rounded_time(yesterday)
     to_date = yesterday
     date_range = [from_date, to_date]
     chart_name = "BLK_LSV: Bandwidth"
-    chart_name = "Best time for 1 malloc/free (WU)"
+    chart_name = "WU Latency: Alloc Stack"
     mcs_entries = MetricChartStatus.objects.filter(chart_name=chart_name, date_time__range=[from_date, to_date])
     # mcs_entries = MetricChartStatus.objects.filter(chart_name=chart_name)
 
