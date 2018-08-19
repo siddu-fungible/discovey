@@ -1022,6 +1022,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             pfc_header_obj = PriorityFlowControlHeader(op_code=op_code, time0=time0, time1=time1, time2=time2,
                                                        time3=time3, time4=time4, time5=time5, time6=time6, time7=time7,
                                                        reserved=reserved)
+            fun_test.log("Removing ethernet and ip header from streamblock")
+            self.stc_manager.stc.config(stream_obj.spirent_handle, FrameConfig='')
+            #self.stc_manager.apply_configuration()
             fun_test.log("Creating Priority Flow Control Frame with Mac Control header")
             header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
                                                                     header_obj=ethernet_header_obj)
