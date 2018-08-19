@@ -920,14 +920,17 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_psw_port_stats(self, port_num, queue_num=None):
+    def peek_psw_port_stats(self, port_num, queue_num=None, hnu=False):
         stats = None
         try:
+            type = 'nu'
+            if hnu:
+                type = 'hnu'
             if queue_num:
-                stats_cmd = "stats/psw/port/[%d]/q_%s" % (port_num, queue_num)
+                stats_cmd = "stats/psw/%s/port/[%d]/q_%s" % (type, port_num, queue_num)
                 fun_test.debug("Getting PSW stats for port %d for queue %s" % (port_num, queue_num))
             else:
-                stats_cmd = "stats/psw/port/[%d]" % port_num
+                stats_cmd = "stats/psw/%s/port/[%d]" % (type, port_num)
                 fun_test.debug("Getting PSW stats for port %d" % port_num)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %
