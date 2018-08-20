@@ -17,6 +17,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
 
     $scope.doInit = () => {
         $scope.status = "loading";
+        $scope.timeMode = "all";
         $scope.editing = false;
         $scope.chartName = ctrl.chartName;
         $scope.modelName = ctrl.modelName;
@@ -52,7 +53,6 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
         $scope.currentDescription = "---";
         $scope.inner = {};
     };
-
 
     $scope.$watch(function () {
         return ctrl.chartName;
@@ -102,8 +102,6 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
         } else {
             return $q.resolve($scope.tableInfo);
         }
-
-
     };
 
     $scope.outputChange = () => {
@@ -111,7 +109,6 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
             $scope.dummyChartInfo.output.name = $scope.selectedOutput;
         }
     };
-
 
     $scope.openAtomicTab = () => {
         let url = "/metrics/atomic/" + $scope.chartName + "/" + $scope.modelName;
@@ -155,6 +152,18 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
     $scope.hideTable = () => {
         $scope.showingTable = false;
     };
+    $scope.weekView = () => {
+        $scope.timeMode = "week";
+    };
+
+    $scope.monthView = () => {
+        $scope.timeMode = "month";
+    };
+
+    $scope.allView = () => {
+        $scope.timeMode = "all";
+    };
+
 
     $scope.addDataSetClick = () => {
         //let newDataSet = {};
@@ -220,7 +229,6 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
 
     };
 
-
     $scope.removeClick = (index) => {
         //$scope.copyChartInfo.data_sets.splice(index, 1);
         $scope.previewDataSets.splice(index, 1);
@@ -262,6 +270,7 @@ angular.module('qa-dashboard').component("editableMetricChart", {
         tooltipFormatter: '&',
         atomic: '<',
         chartOnly: '<',
+        timeMode: '<',
         waitTime: '='
     },
     controller: EditableMetricChartController

@@ -141,7 +141,7 @@ urlpatterns = [
     url(r'^common/', include(common_urls)),
     url(r'^$', common_views.home),
     url(r'^initialize$', metrics_views.initialize),
-    url(r'^test', include(test_urls))
+    url(r'^test/', include(test_urls))
 
 ]
 
