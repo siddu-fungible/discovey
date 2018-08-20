@@ -249,7 +249,7 @@ class SpirentSetup(FunTestScript):
                                                                                 shared_xon_threshold=self.shared_xon_thr)
         fun_test.test_assert(set_qos_ingress, "Setting qos ingress priority group")
 
-        pfc_enable = network_controller_obj.set_qos_pfc(enable=True)
+        pfc_enable = network_controller_obj.enable_qos_pfc()
         fun_test.test_assert(pfc_enable, "Ensure qos pfc is enabled")
 
         enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_1)
