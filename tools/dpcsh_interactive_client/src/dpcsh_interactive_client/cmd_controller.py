@@ -16,6 +16,7 @@ class CmdController(Cmd):
         self._qos_cmd_obj = QosCommands(dpc_client=self.dpc_client)
         self._peek_cmd_obj = PeekCommands(dpc_client=self.dpc_client)
         self._clear_cmd_obj = NuClearCommands(dpc_client=self.dpc_client)
+        self._sample_cmd_obj = SampleCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -784,6 +785,38 @@ class CmdController(Cmd):
         shape = args.shape
         self._port_cmd_obj.port_speed(port_num=port_num, shape=shape)
 
+    def set_sample(self, args, mode):
+        id = args.id
+        fpg = args.fpg
+        dest = args.dest
+        acl = args.acl
+        flag_mask = args.flag_mask
+        hu = args.hu
+        psw_drop = args.psw_drop
+        pps_en = args.pps_en
+        pps_interval = args.pps_interval
+        pps_burst = args.pps_burst
+        sampler_en = args.sampler_en
+        sampler_rate = args.sampler_rate
+        sampler_run_sz = args.sampler_run_sz
+        first_cell_only = args.first_cell_only
+        self._sample_cmd_obj.set_sample(id=id, fpg=fpg, dest=dest, acl=acl, flag_mask=flag_mask, hu=hu, psw_drop=psw_drop,
+                                        pps_en=pps_en, pps_interval=pps_interval, pps_burst=pps_burst,
+                                        sampler_en=sampler_en, sampler_rate=sampler_rate, sampler_run_sz=sampler_run_sz,
+                                        first_cell_only=first_cell_only, mode=mode)
+
+    def set_ingress_sample(self, args):
+        self.set_sample(args=args, mode=0)
+
+    def set_egress_sample(self, args):
+        self.set_sample(args=args, mode=1)
+
+    def disable_sample(self, args):
+        self.set_sample(args=args, mode=2)
+
+    def get_sample(self, args):
+        self._sample_cmd_obj.get_sample()
+
     # Set handler functions for the sub commands
 
     # -------------- Port Command Handlers ----------------
@@ -824,6 +857,12 @@ class CmdController(Cmd):
     set_system_time_interval_parser.set_defaults(func=set_system_time_interval)
     get_system_time_interval_parser.set_defaults(func=get_system_time_interval)
     get_system_params_syslog_parser.set_defaults(func=get_system_syslog_level)
+
+    # --------------------Sample Commands Handlers -------------
+    set_nu_sample_ingress_parser.set_defaults(func=set_ingress_sample)
+    set_nu_sample_egress_parser.set_defaults(func=set_egress_sample)
+    set_nu_sample_disable_parser.set_defaults(func=disable_sample)
+    get_nu_sample_parser.set_defaults(func=get_sample)
 
     # -------------- QoS Command Handlers ----------------
     set_qos_egress_buffer_pool_parser.set_defaults(func=set_qos_egress_buffer_pool)
