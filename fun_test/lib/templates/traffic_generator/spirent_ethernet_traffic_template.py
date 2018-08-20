@@ -24,7 +24,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         self.stc_connected = False
 
     def setup(self, no_of_ports_needed, flow_type=NuConfigManager.TRANSIT_FLOW_TYPE,
-              flow_direction=None):
+              flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
 
         project_handle = self.stc_manager.create_project(project_name=self.session_name)
