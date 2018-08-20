@@ -333,7 +333,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=[stream_obj], expected_performance_data=self.expected_latency_data,
-                tolerance_percent=TOLERANCE_PERCENT, flow_type=flow_type)
+                tolerance_percent=TOLERANCE_PERCENT, flow_type=FLOW_DIRECTION)
             fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[port1]
@@ -431,7 +431,7 @@ class NuVpJitterTest(FunTestCase):
                                                                     header_obj=ethernet_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 dest_ip = l3_config['vp_destination_ip1']
             else:
                 dest_ip = l3_config['destination_ip2']
@@ -447,7 +447,7 @@ class NuVpJitterTest(FunTestCase):
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 checkpoint = "Configure IP range modifier"
                 modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=200,
                                              step_value="0.0.0.1", mask="255.255.255.255",
@@ -546,7 +546,7 @@ class NuVpJitterTest(FunTestCase):
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=[stream_obj], expected_performance_data=self.expected_jitter_data,
-                tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=flow_type)
+                tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=FLOW_DIRECTION)
             fun_test.simple_assert(expression=jitter_result, message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[self.port]
