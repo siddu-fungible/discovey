@@ -733,21 +733,24 @@ class CmdController(Cmd):
         resource_id = args.resource_id
         self._peek_cmd_obj.peek_nu_resource_stats(resource_id=resource_id, grep_regex=grep_regex)
 
-    def peek_hu0_resource_stats(self, args):
+    def peek_hu_resource_stats(self, args):
+        id = args.id
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, grep_regex=grep_regex)
+
+    def peek_hu_wqsi_resource_stats(self, args):
+        id = args.id
         grep_regex = args.grep
         wqsi = args.wqsi
-        wqse = args.wqse
-        resource_id = args.resource_id
-        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=0, wqsi=wqsi, wqse=wqse, resource_id=resource_id,
+        resource_id = args.rid
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqsi=wqsi, resource_id=resource_id,
                                                   grep_regex=grep_regex)
 
-    def peek_hu1_resource_stats(self, args):
-        wqsi = args.wqsi
-        wqse = args.wqse
-        resource_id = args.resource_id
+    def peek_hu_wqse_resource_stats(self, args):
+        id = args.id
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=1, wqsi=wqsi, wqse=wqse, resource_id=resource_id,
-                                                  grep_regex=grep_regex)
+        wqse = args.wqse
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqse=wqse, grep_regex=grep_regex)
 
     def peek_dam_resource_stats(self, args):
         grep_regex = args.grep
@@ -982,8 +985,9 @@ class CmdController(Cmd):
     peek_rgx_resource_stats_parser.set_defaults(func=peek_rgx_resource_stats)
     peek_hnu_resource_stats_parser.set_defaults(func=peek_hnu_resource_stats)
     peek_nu_resource_stats_parser.set_defaults(func=peek_nu_resource_stats)
-    peek_hu0_resource_stats_parser.set_defaults(func=peek_hu0_resource_stats)
-    peek_hu1_resource_stats_parser.set_defaults(func=peek_hu1_resource_stats)
+    peek_hu_resource_stats_parser.set_defaults(func=peek_hu_resource_stats)
+    peek_hu_wqsi_resource_stats_parser.set_defaults(func=peek_hu_wqsi_resource_stats)
+    peek_hu_wqse_resource_stats_parser.set_defaults(func=peek_hu_wqse_resource_stats)
     peek_dam_resource_stats_parser.set_defaults(func=peek_dam_resource_stats)
     peek_bam_resource_stats_parser.set_defaults(func=peek_bam_resource_stats)
 
