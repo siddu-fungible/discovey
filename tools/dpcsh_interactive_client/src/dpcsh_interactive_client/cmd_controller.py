@@ -738,12 +738,16 @@ class CmdController(Cmd):
         wqsi = args.wqsi
         wqse = args.wqse
         resource_id = args.resource_id
-        self._peek_cmd_obj.peek_hu0_resource_stats(wqsi=wqsi, wqse=wqse, resource_id=resource_id,
-                                                   grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=0, wqsi=wqsi, wqse=wqse, resource_id=resource_id,
+                                                  grep_regex=grep_regex)
 
     def peek_hu1_resource_stats(self, args):
+        wqsi = args.wqsi
+        wqse = args.wqse
+        resource_id = args.resource_id
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_hu1_resource_stats(grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=1, wqsi=wqsi, wqse=wqse, resource_id=resource_id,
+                                                  grep_regex=grep_regex)
 
     def peek_dam_resource_stats(self, args):
         grep_regex = args.grep
