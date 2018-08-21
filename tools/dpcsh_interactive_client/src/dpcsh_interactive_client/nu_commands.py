@@ -1182,6 +1182,9 @@ class PeekCommands(object):
                         result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
                     if 'bam' in cmd:
                         result = self._sort_bam_keys(result=result, au_sort=au_sort)
+                    if not isinstance(result, dict):
+                        print "'%s' seen in output " % result
+                        break
                     if result:
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
@@ -1781,7 +1784,7 @@ class PeekCommands(object):
                     master_table_obj.border = False
                     master_table_obj.header = False
                     if result:
-                        if stop_regex in result:
+                        if stop_regex in str(result):
                             raise Exception("'%s' seen in output" % result)
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
@@ -1914,14 +1917,13 @@ class PeekCommands(object):
             elif wqse:
                 cmd = cmd + "/wqse"
             if resource_id:
-                if not ('wqsi' in cmd or 'wqse' in cmd):
+                if not ('wqsi' in cmd):
                     raise Exception("Resource id given, Please provide wqsi or wqse")
                 cmd = cmd + "[%s]" % resource_id
-            print cmd
             if wqsi or wqse:
                 self._display_stats(cmd=cmd, grep_regex=grep_regex)
             else:
-                self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+                self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, stop_regex="does not exist")
         except Exception as ex:
             print "ERROR:  %s" % str(ex)
 
@@ -2050,7 +2052,6 @@ class SampleCommands(object):
         try:
             result = self.dpc_client.execute(verb='sample', arg_list=['show'])
             if result:
-                print result
                 master_table_obj = PrettyTable(['Field Name', 'Counter'])
                 master_table_obj.align = 'l'
                 for key, val in sorted(result.iteritems()):
