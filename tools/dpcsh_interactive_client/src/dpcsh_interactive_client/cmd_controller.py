@@ -741,16 +741,14 @@ class CmdController(Cmd):
     def peek_hu_wqsi_resource_stats(self, args):
         id = args.id
         grep_regex = args.grep
-        wqsi = args.wqsi
         resource_id = args.rid
-        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqsi=wqsi, resource_id=resource_id,
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqsi=True, resource_id=resource_id,
                                                   grep_regex=grep_regex)
 
     def peek_hu_wqse_resource_stats(self, args):
         id = args.id
         grep_regex = args.grep
-        wqse = args.wqse
-        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqse=wqse, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqse=True, grep_regex=grep_regex)
 
     def peek_dam_resource_stats(self, args):
         grep_regex = args.grep
