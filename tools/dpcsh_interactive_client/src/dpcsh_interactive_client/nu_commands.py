@@ -1906,29 +1906,22 @@ class PeekCommands(object):
         cmd = "stats/resource/nu/[%s]" % resource_id
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_hu0_resource_stats(self, wqsi, wqse, resource_id, grep_regex=None):
-        # TODO: to be implemented as per output
+    def peek_hu_resource_stats(self, hu_id, wqsi=None, wqse=None, resource_id=None, grep_regex=None):
         try:
+            cmd = "stats/resource/hu%s" % hu_id
             if wqsi:
-                cmd = "stats/resource/hu0/wqsi"
+                cmd = cmd + "/wqsi"
             elif wqse:
-                if not resource_id:
-                    raise Exception("Resource id not specified")
-                cmd = "stats/resource/hu0/wqse/[%s]" % resource_id
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        except Exception as ex:
-            print "ERROR:  %s" % str(ex)
-
-    def peek_hu1_resource_stats(self, wqsi, wqse, resource_id, grep_regex=None):
-        # TODO: to be implemented as per output
-        try:
-            if wqsi:
-                cmd = "stats/resource/hu1/wqsi"
-            elif wqse:
-                if not resource_id:
-                    raise Exception("Resource id not specified")
-                cmd = "stats/resource/hu1/wqse/[%s]" % resource_id
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+                cmd = cmd + "/wqse"
+            if resource_id:
+                if not ('wqsi' in cmd or 'wqse' in cmd):
+                    raise Exception("Resource id given, Please provide wqsi or wqse")
+                cmd = cmd + "[%s]" % resource_id
+            print cmd
+            if wqsi or wqse:
+                self._display_stats(cmd=cmd, grep_regex=grep_regex)
+            else:
+                self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
         except Exception as ex:
             print "ERROR:  %s" % str(ex)
 
