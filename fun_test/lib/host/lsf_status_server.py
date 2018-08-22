@@ -3,7 +3,10 @@ from fun_global import get_localized_time
 from web.fun_test.models_helper import add_jenkins_job_id_map
 import requests
 import json
+import pytz
 from datetime import datetime
+from dateutil import parser
+
 LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
 
 
@@ -61,8 +64,8 @@ class LsfStatusServer:
                     fun_test.critical("Job: {} has no field named completion_date".format(job_info["job_id"]))
                     continue
                 completion_date = "20" + job_info["completion_date"]
-
                 dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
+                dt = dt.astimezone(pytz.timezone('US/Pacific'))
                 self.add_palladium_job_info(job_info=job_info)
                 response = self.get_job_by_id(job_id=job_info["job_id"])
                 response = self.get_job_by_id(job_id=job_info["job_id"]) # Workaround
