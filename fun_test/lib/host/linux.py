@@ -1041,6 +1041,8 @@ class Linux(object, ToDictMixin):
     def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, timeout=60):
         transfer_complete = False
         scp_command = "scp %s %s@%s:%s" % (source_file_path, target_username, target_ip, target_file_path)
+        if not self.handle:
+            self._connect()
 
         handle = self.handle
         handle.sendline(scp_command)

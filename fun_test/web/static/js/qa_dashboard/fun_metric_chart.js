@@ -7,6 +7,11 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     ctrl.$onInit = function () {
         $scope.status = "idle";
+        if(ctrl.timeMode) {
+            $scope.timeMode = ctrl.timeMode;
+        } else {
+            $scope.timeMode = "all";
+        }
         $scope.chartInfo = ctrl.chartInfo;
         //console.log("OnInit: CI:" + $scope.chartInfo);
         $scope.waitTime = 0;
@@ -42,8 +47,30 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
         if (ctrl.xaxisFormatter) {
             $scope.xAxisFormatter = (value) => {
-                if(!$attrs.xaxisFormatter) return null;
-                return ctrl.xaxisFormatter()(value);
+                if(!$attrs.xaxisFormatter) {
+                    return null;
+                }
+                else {
+                    let s = "Error";
+                    const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    let r = /(\d{4})-(\d{2})-(\d{2})/g;
+                    let match = r.exec(value);
+
+                    if ($scope.timeMode === "month") {
+                        if (match) {
+                            let month = parseInt(match[2]);
+                            s = monthNames[month];
+                        }
+                    }
+                    else {
+                        if (match) {
+                            s = match[2] + "/" + match[3];
+                        }
+                    }
+                    return s;
+                }
+
             };
         }
 
@@ -55,6 +82,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         }
         //console.log(ctrl.showingTable);
         /*$scope.pointClickCallback = ctrl.pointClickCallback;*/
+
     };
 
     $scope.cleanValue = (key, value) => {
@@ -70,23 +98,21 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     };
 
-
     $scope.$watch(
-        function () {
-        return ctrl.previewDataSets;
-    }, function (newvalue, oldvalue) {
+        () => {return [ctrl.previewDataSets, ctrl.timeMode]}, function (newvalue, oldvalue) {
         if (newvalue === oldvalue) {
             // console.log(newvalue, oldvalue);
             return;
         }
         if (ctrl.previewDataSets.length < 1) {
             return;
-        } 
+        }
         // let i = 0;
         // console.log(newvalue, oldvalue);
-       
+
         $scope.chartInfo = ctrl.chartInfo;
         $scope.tableInfo = ctrl.tableInfo;
+        $scope.timeMode = ctrl.timeMode;
         //console.log("C I:" + ctrl.chartInfo);
         if($scope.chartInfo) {
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
@@ -139,14 +165,6 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
 
         return result;
-    };
-
-    $scope.hideTable = () => {
-        $scope.showingTable = false;
-    };
-
-    $scope.showTable = () => {
-        $scope.showingTable = true;
     };
 
     $scope.shortenKeyList = (keyList) => {
@@ -227,6 +245,32 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         }
     };
 
+    $scope.getDatesByTimeMode = (dateList) => {
+        let len = dateList.length;
+        let filteredDate = [];
+        let result = dateList;
+        if($scope.timeMode === "week") {
+            for(let i = len - 1; i >= 0; i = i - 7)
+            {
+                filteredDate.push(dateList[i]);
+            }
+            result = filteredDate.reverse();
+        }
+        else if($scope.timeMode === "month") {
+            let i = len - 1;
+            let monthDays = {0: 31, 1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30};
+            // how many days to decrement for each month depending on the number of days of the previous month
+            while(i >= 0)
+            {
+                let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
+                filteredDate.push(dateList[i]);
+                i = i - monthDays[latestDate.getMonth()];
+            }
+            result = filteredDate.reverse();
+        }
+        return result;
+    };
+
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
         if(!chartName) {
@@ -276,7 +320,11 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 keyList.sort();
                 $scope.shortenKeyList(keyList);
                 keyList = $scope.fixMissingDates(keyList);
+
+                keyList = $scope.getDatesByTimeMode(keyList);
                 $scope.series = keyList;
+
+
 
 
                 let chartDataSets = [];
@@ -351,6 +399,7 @@ angular.module('qa-dashboard').component("funMetricChart", {
                     xaxisFormatter: '&',
                     tooltipFormatter: '&',
                     showingTable: '<',
+                    timeMode: '<',
                     tableInfo: '<',
                     chartInfo: '<',
                     waitTime: '='

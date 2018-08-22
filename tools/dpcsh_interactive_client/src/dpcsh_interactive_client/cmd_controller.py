@@ -16,6 +16,7 @@ class CmdController(Cmd):
         self._qos_cmd_obj = QosCommands(dpc_client=self.dpc_client)
         self._peek_cmd_obj = PeekCommands(dpc_client=self.dpc_client)
         self._clear_cmd_obj = NuClearCommands(dpc_client=self.dpc_client)
+        self._sample_cmd_obj = SampleCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -83,14 +84,14 @@ class CmdController(Cmd):
                                            class_num=args.class_num)
 
     def get_port_pfc_quanta(self, args):
-        self._port_cmd_obj.port_pfc_quanta(port_num=args.port_num, shape=args.shape)
+        self._port_cmd_obj.port_pfc_quanta(port_num=args.port_num, shape=args.shape, class_num=args.class_num)
 
     def set_port_pfc_threshold(self, args):
         self._port_cmd_obj.port_pfc_threshold(port_num=args.port_num, shape=args.shape, threshold=args.threshold,
                                               class_num=args.class_num)
 
     def get_port_pfc_threshold(self, args):
-        self._port_cmd_obj.port_pfc_threshold(port_num=args.port_num, shape=args.shape)
+        self._port_cmd_obj.port_pfc_threshold(port_num=args.port_num, shape=args.shape, class_num=args.class_num)
 
     def enable_port_ptp_peer_delay(self, args):
         self._port_cmd_obj.enable_disable_ptp_peer_delay(port_num=args.port_num, shape=args.shape)
@@ -732,17 +733,22 @@ class CmdController(Cmd):
         resource_id = args.resource_id
         self._peek_cmd_obj.peek_nu_resource_stats(resource_id=resource_id, grep_regex=grep_regex)
 
-    def peek_hu0_resource_stats(self, args):
+    def peek_hu_resource_stats(self, args):
+        id = args.id
         grep_regex = args.grep
-        wqsi = args.wqsi
-        wqse = args.wqse
-        resource_id = args.resource_id
-        self._peek_cmd_obj.peek_hu0_resource_stats(wqsi=wqsi, wqse=wqse, resource_id=resource_id,
-                                                   grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, grep_regex=grep_regex)
 
-    def peek_hu1_resource_stats(self, args):
+    def peek_hu_wqsi_resource_stats(self, args):
+        id = args.id
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_hu1_resource_stats(grep_regex=grep_regex)
+        resource_id = args.rid
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqsi=True, resource_id=resource_id,
+                                                  grep_regex=grep_regex)
+
+    def peek_hu_wqse_resource_stats(self, args):
+        id = args.id
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqse=True, grep_regex=grep_regex)
 
     def peek_dam_resource_stats(self, args):
         grep_regex = args.grep
@@ -764,6 +770,12 @@ class CmdController(Cmd):
     def clear_nu_parser_stats(self, args):
         self._clear_cmd_obj.clear_nu_parser_stats()
 
+    def clear_nu_nwqm_stats(self, args):
+        self._clear_cmd_obj.clear_nu_nwqm_stats()
+
+    def clear_nu_vppkts_stats(self, args):
+        self._clear_cmd_obj.clear_nu_vppkts_stats()
+
     def clear_nu_all_stats(self, args):
         self._clear_cmd_obj.clear_nu_all_stats()
 
@@ -777,6 +789,38 @@ class CmdController(Cmd):
         port_num = args.port_num
         shape = args.shape
         self._port_cmd_obj.port_speed(port_num=port_num, shape=shape)
+
+    def set_sample(self, args, mode):
+        id = args.id
+        fpg = args.fpg
+        dest = args.dest
+        acl = args.acl
+        flag_mask = args.flag_mask
+        hu = args.hu
+        psw_drop = args.psw_drop
+        pps_en = args.pps_en
+        pps_interval = args.pps_interval
+        pps_burst = args.pps_burst
+        sampler_en = args.sampler_en
+        sampler_rate = args.sampler_rate
+        sampler_run_sz = args.sampler_run_sz
+        first_cell_only = args.first_cell_only
+        self._sample_cmd_obj.set_sample(id=id, fpg=fpg, dest=dest, acl=acl, flag_mask=flag_mask, hu=hu, psw_drop=psw_drop,
+                                        pps_en=pps_en, pps_interval=pps_interval, pps_burst=pps_burst,
+                                        sampler_en=sampler_en, sampler_rate=sampler_rate, sampler_run_sz=sampler_run_sz,
+                                        first_cell_only=first_cell_only, mode=mode)
+
+    def set_ingress_sample(self, args):
+        self.set_sample(args=args, mode=0)
+
+    def set_egress_sample(self, args):
+        self.set_sample(args=args, mode=1)
+
+    def disable_sample(self, args):
+        self.set_sample(args=args, mode=2)
+
+    def get_sample(self, args):
+        self._sample_cmd_obj.get_sample()
 
     # Set handler functions for the sub commands
 
@@ -818,6 +862,12 @@ class CmdController(Cmd):
     set_system_time_interval_parser.set_defaults(func=set_system_time_interval)
     get_system_time_interval_parser.set_defaults(func=get_system_time_interval)
     get_system_params_syslog_parser.set_defaults(func=get_system_syslog_level)
+
+    # --------------------Sample Commands Handlers -------------
+    set_nu_sample_ingress_parser.set_defaults(func=set_ingress_sample)
+    set_nu_sample_egress_parser.set_defaults(func=set_egress_sample)
+    set_nu_sample_disable_parser.set_defaults(func=disable_sample)
+    get_nu_sample_parser.set_defaults(func=get_sample)
 
     # -------------- QoS Command Handlers ----------------
     set_qos_egress_buffer_pool_parser.set_defaults(func=set_qos_egress_buffer_pool)
@@ -933,8 +983,9 @@ class CmdController(Cmd):
     peek_rgx_resource_stats_parser.set_defaults(func=peek_rgx_resource_stats)
     peek_hnu_resource_stats_parser.set_defaults(func=peek_hnu_resource_stats)
     peek_nu_resource_stats_parser.set_defaults(func=peek_nu_resource_stats)
-    peek_hu0_resource_stats_parser.set_defaults(func=peek_hu0_resource_stats)
-    peek_hu1_resource_stats_parser.set_defaults(func=peek_hu1_resource_stats)
+    peek_hu_resource_stats_parser.set_defaults(func=peek_hu_resource_stats)
+    peek_hu_wqsi_resource_stats_parser.set_defaults(func=peek_hu_wqsi_resource_stats)
+    peek_hu_wqse_resource_stats_parser.set_defaults(func=peek_hu_wqse_resource_stats)
     peek_dam_resource_stats_parser.set_defaults(func=peek_dam_resource_stats)
     peek_bam_resource_stats_parser.set_defaults(func=peek_bam_resource_stats)
 
@@ -943,7 +994,9 @@ class CmdController(Cmd):
     clear_nu_fwd_stats_parser.set_defaults(func=clear_nu_fwd_stats)
     clear_nu_erp_stats_parser.set_defaults(func=clear_nu_erp_stats)
     clear_nu_parser_stats_parser.set_defaults(func=clear_nu_parser_stats)
-    clear_nu_all_stats_parser.set_defaults(func=clear_nu_all_stats)   
+    clear_nu_all_stats_parser.set_defaults(func=clear_nu_all_stats)
+    clear_nu_nwqm_stats_parser.set_defaults(func=clear_nu_nwqm_stats)
+    clear_nu_vppkts_stats_parser.set_defaults(func=clear_nu_vppkts_stats)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):

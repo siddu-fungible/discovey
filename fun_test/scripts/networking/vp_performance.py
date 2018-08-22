@@ -32,14 +32,13 @@ INTERFACE_LOAD_SPEC = fun_test.get_script_parent_directory() + "/interface_loads
 TOLERANCE_PERCENT = 10
 TRAFFIC_DURATION = 60
 IPV4_FRAMES = [64, 200, 1000, 1500, 3000, 9000]
-IPV6_FRAMES = [78, 200, 1000, 1500, 3000, 9000]
 LOAD = 1200
 chassis_type = None
 FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_HU
 
 
 class NuVpPerformance(FunTestScript):
-    MTU = max(IPV4_FRAMES)
+    MTU = 9000
     NO_OF_PORTS = 2
     EXPECTED_PERFORMANCE_DATA_FILE_NAME = "nu_vp_performance_data.json"
     port1 = None
@@ -89,7 +88,7 @@ class NuVpPerformance(FunTestScript):
 
         if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
-
+            # TODO: Configure MTU on HNU ports for FPG --> HNU and HNU --> FPG Flows.
             checkpoint = "Change DUT ports MTU to %d" % self.MTU
             for port_num in dut_config['ports']:
                 mtu_changed = network_controller_obj.set_port_mtu(port_num=port_num, mtu_value=self.MTU)
@@ -200,8 +199,13 @@ class NuVpLatencyIPv4Test(FunTestCase):
 
             checkpoint = "Configure IP address for %s " % stream_obj.spirent_handle
             if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+                recycle_count = 200
                 dest_ip = l3_config['vp_destination_ip1']
+            elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+                recycle_count = 20
+                dest_ip = l3_config['hnu_destination_ip1']
             else:
+                recycle_count = 200
                 dest_ip = l3_config['destination_ip2']
             if stream_obj.FixedFrameLength == 64:
                 ip_header_obj = Ipv4Header(destination_address=dest_ip,
@@ -213,9 +217,10 @@ class NuVpLatencyIPv4Test(FunTestCase):
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU or \
+                    FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
                 checkpoint = "Configure IP range modifier"
-                modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=200,
+                modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=recycle_count,
                                              step_value="0.0.0.1", mask="255.255.255.255",
                                              data=dest_ip)
                 result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,
@@ -333,7 +338,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=[stream_obj], expected_performance_data=self.expected_latency_data,
-                tolerance_percent=TOLERANCE_PERCENT, flow_type=flow_type)
+                tolerance_percent=TOLERANCE_PERCENT, flow_type=FLOW_DIRECTION)
             fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[port1]
@@ -431,7 +436,7 @@ class NuVpJitterTest(FunTestCase):
                                                                     header_obj=ethernet_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 dest_ip = l3_config['vp_destination_ip1']
             else:
                 dest_ip = l3_config['destination_ip2']
@@ -447,7 +452,7 @@ class NuVpJitterTest(FunTestCase):
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 checkpoint = "Configure IP range modifier"
                 modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=200,
                                              step_value="0.0.0.1", mask="255.255.255.255",
@@ -546,7 +551,7 @@ class NuVpJitterTest(FunTestCase):
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=[stream_obj], expected_performance_data=self.expected_jitter_data,
-                tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=flow_type)
+                tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=FLOW_DIRECTION)
             fun_test.simple_assert(expression=jitter_result, message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[self.port]

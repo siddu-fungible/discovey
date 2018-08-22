@@ -11,13 +11,16 @@ set_system_parser = base_set_subparsers.add_parser('system', help="Set System Co
 set_nu_subparsers = set_nu_parser.add_subparsers(title='subcommands', help="")
 set_nu_port_parser = set_nu_subparsers.add_parser('port', help="NU Port commands")
 set_nu_qos_parser = set_nu_subparsers.add_parser('qos', help="NU QoS commands")
+set_nu_sample_parser = set_nu_subparsers.add_parser('sample', help="Sample commands")
 
 set_hnu_subparsers = set_hnu_parser.add_subparsers(title='subcommands', help="")
 set_hnu_qos_parser = set_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
+set_hnu_port_parser = set_hnu_subparsers.add_parser('port', help="HNU Port commands")
 
 # -----------------------------------------------------------------------------------------------
 # Set NU Port sub commands
 set_nu_port_parsers = set_nu_port_parser.add_subparsers(title="subcommands", help="")
+set_hnu_port_parsers = set_hnu_port_parser.add_subparsers(title="subcommands", help="")
 
 # MTU
 set_port_mtu_parser = set_nu_port_parsers.add_parser('mtu', help="Port MTU")
@@ -327,6 +330,57 @@ set_qos_xoff_status_parser.add_argument('pg', type=int, help="PG Num")
 set_qos_xoff_status_parser.add_argument('-status', type=int, help="QoS xoff_status", default=None)
 
 # -----------------------------------------------------------------------------------------------
+# Sample commands
+set_nu_sample_parsers = set_nu_sample_parser.add_subparsers(title="subcommands", help="")
+set_nu_sample_ingress_parser = set_nu_sample_parsers.add_parser('ingress', help="Sampler for ingress parser")
+set_nu_sample_ingress_parser.add_argument("id", type=int, help="Sample id [0-63]")
+set_nu_sample_ingress_parser.add_argument("fpg", type=int, help="Fpg [0-7]")
+set_nu_sample_ingress_parser.add_argument("dest", type=int, help="dest [0-1023]", default=None)
+set_nu_sample_ingress_parser.add_argument("-acl", type=int, help="acl: [0-124]", default=None)
+set_nu_sample_ingress_parser.add_argument("-flag_mask", type=int, help="Flag mask [0-63]", default=None)
+set_nu_sample_ingress_parser.add_argument("-hu", type=int, help="HU [0-7]", default=None)
+set_nu_sample_ingress_parser.add_argument("-psw_drop", type=int, help="PSW drop", default=None)
+set_nu_sample_ingress_parser.add_argument("-pps_en", type=int, help="PPS en [0-1]", default=None)
+set_nu_sample_ingress_parser.add_argument("-pps_interval", type=str, help="pps interval [1-0xffffff]", default=None)
+set_nu_sample_ingress_parser.add_argument("-pps_burst", type=int, help="pps burst [0-127]", default=None)
+set_nu_sample_ingress_parser.add_argument("-sampler_en", type=int, help="sampler_en [0-1]", default=None)
+set_nu_sample_ingress_parser.add_argument("-sampler_rate", type=str, help="sampler_rate [1-0x3fff]", default=None)
+set_nu_sample_ingress_parser.add_argument("-sampler_run_sz", type=int, help="sampler run sz [1-15]", default=None)
+set_nu_sample_ingress_parser.add_argument("-first_cell_only", type=int, help="first cell only [0-1]", default=None)
+
+set_nu_sample_egress_parser = set_nu_sample_parsers.add_parser('egress', help="Sampler for egress parser")
+set_nu_sample_egress_parser.add_argument("id", type=int, help="Sample id [0-63]")
+set_nu_sample_egress_parser.add_argument("fpg", type=int, help="Fpg [0-7]")
+set_nu_sample_egress_parser.add_argument("dest", type=int, help="dest [0-1023]")
+set_nu_sample_egress_parser.add_argument("-acl", type=int, help="acl: [0-124]", default=None)
+set_nu_sample_egress_parser.add_argument("-flag_mask", type=int, help="Flag mask [0-63]", default=None)
+set_nu_sample_egress_parser.add_argument("-hu", type=int, help="HU [0-7]", default=None)
+set_nu_sample_egress_parser.add_argument("-psw_drop", type=int, help="PSW drop", default=None)
+set_nu_sample_egress_parser.add_argument("-pps_en", type=int, help="PPS en [0-1]", default=None)
+set_nu_sample_egress_parser.add_argument("-pps_interval", type=str, help="pps interval [1-0xffffff]", default=None)
+set_nu_sample_egress_parser.add_argument("-pps_burst", type=int, help="pps burst [0-127]", default=None)
+set_nu_sample_egress_parser.add_argument("-sampler_en", type=int, help="sampler_en [0-1]", default=None)
+set_nu_sample_egress_parser.add_argument("-sampler_rate", type=str, help="sampler_rate [1-0x3fff]", default=None)
+set_nu_sample_egress_parser.add_argument("-sampler_run_sz", type=int, help="sampler run sz [1-15]", default=None)
+set_nu_sample_egress_parser.add_argument("-first_cell_only", type=int, help="first cell only [0-1]", default=None)
+
+set_nu_sample_disable_parser = set_nu_sample_parsers.add_parser('disable', help="Sampler for disable parser")
+set_nu_sample_disable_parser.add_argument("id", type=int, help="Sample id [0-63]")
+set_nu_sample_disable_parser.add_argument("fpg", type=int, help="Fpg [0-7]")
+set_nu_sample_disable_parser.add_argument("dest", type=int, help="dest [0-1023]")
+set_nu_sample_disable_parser.add_argument("-acl", type=int, help="acl: [0-124]", default=None)
+set_nu_sample_disable_parser.add_argument("-flag_mask", type=int, help="Flag mask [0-63]", default=None)
+set_nu_sample_disable_parser.add_argument("-hu", type=int, help="HU [0-7]", default=None)
+set_nu_sample_disable_parser.add_argument("-psw_drop", type=int, help="PSW drop", default=None)
+set_nu_sample_disable_parser.add_argument("-pps_en", type=int, help="PPS en [0-1]", default=None)
+set_nu_sample_disable_parser.add_argument("-pps_interval", type=str, help="pps interval [1-0xffffff]", default=None)
+set_nu_sample_disable_parser.add_argument("-pps_burst", type=int, help="pps burst [0-127]", default=None)
+set_nu_sample_disable_parser.add_argument("-sampler_en", type=int, help="sampler_en [0-1]", default=None)
+set_nu_sample_disable_parser.add_argument("-sampler_rate", type=str, help="sampler_rate [1-0x3fff]", default=None)
+set_nu_sample_disable_parser.add_argument("-sampler_run_sz", type=int, help="sampler run sz [1-15]", default=None)
+set_nu_sample_disable_parser.add_argument("-first_cell_only", type=int, help="first cell only [0-1]", default=None)
+
+# -----------------------------------------------------------------------------------------------
 # Set NU system sub commands
 set_system_parsers = set_system_parser.add_subparsers(title="subcommands", help="")
 set_system_params_parser = set_system_parsers.add_parser('params', help="Set System Params")
@@ -352,9 +406,10 @@ get_system_parser = base_get_subparsers.add_parser('system', help="system log co
 get_nu_subparsers = get_nu_parser.add_subparsers(title='subcommands', help="")
 get_nu_port_parser = get_nu_subparsers.add_parser('port', help="NU Port commands")
 get_nu_qos_parser = get_nu_subparsers.add_parser('qos', help="NU QoS commands")
+get_nu_sample_parser = get_nu_subparsers.add_parser('sample', help="Sample commands")
 
 get_hnu_subparsers = get_hnu_parser.add_subparsers(title='subcommands', help="")
-get_hnu_qos_parser = get_hnu_subparsers.add_parser('qos', help="NU QoS commands")
+get_hnu_qos_parser = get_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
 # -----------------------------------------------------------------------------------------------
 
 # Get NU Port sub commands
@@ -382,11 +437,13 @@ get_port_pfc_subparsers = get_port_pfc_parser.add_subparsers(title="subcommands"
 # Get Port pfc Quanta
 get_port_pfc_quanta_parser = get_port_pfc_subparsers.add_parser('quanta', help="Set Port pfc Quanta")
 get_port_pfc_quanta_parser.add_argument('port_num', type=int, help="port_num")
-get_port_pfc_quanta_parser.add_argument('shape', type=int, help="shape")
+get_port_pfc_quanta_parser.add_argument('shape', type=int, help="shape: {'NU': 0, 'HNU': 1}")
+get_port_pfc_quanta_parser.add_argument('class_num', type=int, help="class: {'NU': 0, 'HNU': 1}")
 # Get Port pfc Threshold
 get_port_pfc_threshold_parser = get_port_pfc_subparsers.add_parser('threshold', help="Set Port pfc threshold")
 get_port_pfc_threshold_parser.add_argument('port_num', type=int, help="port_num")
-get_port_pfc_threshold_parser.add_argument('shape', type=int, help="shape")
+get_port_pfc_threshold_parser.add_argument('shape', type=int, help="shape: {'NU': 0, 'HNU': 1}")
+get_port_pfc_threshold_parser.add_argument('class_num', type=int, help="class: {'NU': 0, 'HNU': 1}")
 
 # Get Port PTP sub commands
 get_port_ptp_parser = get_nu_port_parsers.add_parser('ptp', help="Port PTP")
@@ -775,6 +832,12 @@ clear_nu_erp_stats_parser = clear_nu_stats_subparsers.add_parser('erp', help="Cl
 # Clear Parser stats 
 clear_nu_parser_stats_parser = clear_nu_stats_subparsers.add_parser('parser', help="Clear Parser Stats")
 
+# Clear FWD stats
+clear_nu_nwqm_stats_parser = clear_nu_stats_subparsers.add_parser('nwqm', help="Clear NWQM Stats")
+
+# Clear ERP stats
+clear_nu_vppkts_stats_parser = clear_nu_stats_subparsers.add_parser('vppkts', help="Clear VPPKTS Stats")
+
 # Clear ALL NU stats
 clear_nu_all_stats_parser = clear_nu_stats_subparsers.add_parser('all', help="Clear ALL Stats")
 
@@ -962,17 +1025,18 @@ peek_nu_resource_stats_parser = peek_resource_stats_parsers.add_parser('nu', hel
 peek_nu_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
 peek_nu_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
-peek_hu0_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu0', help='Peek hu0 resource stats')
-peek_hu0_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
-peek_hu0_resource_stats_parser.add_argument('-wqsi', help="wqsi", default=None)
-peek_hu0_resource_stats_parser.add_argument('-wqse', help="wqse", default=None)
-peek_hu0_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+peek_hu_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu', help='Peek hu resource stats')
+peek_hu_resource_stats_parser.add_argument('id', type=int, help="id")
+peek_hu_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
-peek_hu1_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu1', help='Peek hu1 resource stats')
-peek_hu1_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
-peek_hu1_resource_stats_parser.add_argument('-wqsi', help="wqsi", default=None)
-peek_hu1_resource_stats_parser.add_argument('-wqse', help="wqse", default=None)
-peek_hu1_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+peek_hu_wqsi_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu_wqsi', help='Peek hu_wqsi resource stats')
+peek_hu_wqsi_resource_stats_parser.add_argument('id', type=int, help="id")
+peek_hu_wqsi_resource_stats_parser.add_argument('-rid', type=int, help="Resource id", default=None)
+peek_hu_wqsi_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_hu_wqse_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu_wqse', help='Peek hu_wqse resource stats')
+peek_hu_wqse_resource_stats_parser.add_argument('id', type=int, help="id")
+peek_hu_wqse_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_dam_resource_stats_parser = peek_resource_stats_parsers.add_parser('dam', help='Peek dam resource stats')
 peek_dam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)

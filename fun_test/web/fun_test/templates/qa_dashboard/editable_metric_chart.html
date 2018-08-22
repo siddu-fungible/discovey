@@ -1,11 +1,28 @@
 <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>
-<div align="right" ng-if="!$ctrl.chartOnly">
-    <button ng-if="!$ctrl.atomic" class="btn" style="background-color: white" ng-click="openAtomicTab()"><i class="fa fa-external-link"></i> Open in tab</button>
+<div ng-if="!$ctrl.chartOnly">
+    <span style="float: right;"><button ng-if="!$ctrl.atomic" class="btn" style="background-color: white" ng-click="openAtomicTab()"><i class="fa fa-external-link"></i> Open in tab</button>
     <button class="btn" style="background-color: white" ng-if="!showingTable" ng-click="showTable()"><i class="fa fa-table"></i> Show Tables</button>
     <button class="btn" style="background-color: white" ng-if="showingTable" ng-click="hideTable()"><i class="fa fa-table"></i> Hide Tables</button>
 
     <button class="btn" style="background-color: white" ng-if="!showingThreshold" ng-click="showThreshold()"><i class="fa fa-sliders"></i> Show Threshold</button>
-    <button class="btn" style="background-color: white" ng-if="showingThreshold" ng-click="hideThreshold()"><i class="fa fa-sliders"></i> Hide Threshold</button>
+    <button class="btn" style="background-color: white" ng-if="showingThreshold" ng-click="hideThreshold()"><i class="fa fa-sliders"></i> Hide Threshold</button></span>
+    <div ng-switch="timeMode">
+        <div ng-switch-when="all">
+            <a href="#" ng-click="weekView()"> Week </a>/
+            <a href="#" ng-click="monthView()"> Month </a>/
+            <b><u><a href="#" ng-click="allView()"> All </a></u></b>
+        </div>
+        <div ng-switch-when="week">
+            <b><u><a href="#" ng-click="weekView()"> Week </a></u></b>/
+            <a href="#" ng-click="monthView()"> Month </a>/
+            <a href="#" ng-click="allView()"> All </a>
+        </div>
+        <div ng-switch-when="month">
+            <a href="#" ng-click="weekView()"> Week </a>/
+            <b><u><a href="#" ng-click="monthView()"> Month </a></u></b>/
+            <a href="#" ng-click="allView()"> All </a>
+        </div>
+    </div>
 </div>
 <div class="row" style="padding-bottom: 10px" ng-if="tableInfo && chartInfo">
     <fun-metric-chart chart-name="chartName" y1-axis-title="y1AxisTitle" model-name="modelName"
@@ -13,7 +30,7 @@
                       table-info="tableInfo"
                       chart-info="chartInfo"
                       wait-time="waitTime"
-                      tooltip-formatter="tooltipFormatter" showing-table="showingTable"></fun-metric-chart>
+                      tooltip-formatter="tooltipFormatter" showing-table="showingTable" time-mode="timeMode"></fun-metric-chart>
 </div>
 <div align="right">
     <button class="btn" style="background-color: white" ng-if="showingTable" ng-click="hideTable()"><i class="fa fa-table"></i> Hide Tables</button>

@@ -107,7 +107,7 @@ def prepare_status(chart, purge_old_status=False):
         chart.save()
         entries = MetricChartStatus.objects.filter(chart_name=chart.chart_name, metric_id=chart.metric_id)
         entries.all().delete()
-    if chart.chart_name == "BLK_LSV: Bandwidth":
+    if chart.chart_name == "LSV":
         j = 0
     # print "Preparing status for: {}".format(chart.chart_name)
     children = json.loads(chart.children)
@@ -127,7 +127,7 @@ def prepare_status(chart, purge_old_status=False):
 
     from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
 
-    yesterday = today - timedelta(days=1)
+    yesterday = today - timedelta(days=0) # Just use today
     yesterday = get_rounded_time(yesterday)
     to_date = yesterday
     current_date = get_rounded_time(from_date)
@@ -238,14 +238,15 @@ def prepare_status(chart, purge_old_status=False):
                                         print "ERROR: {}, {}".format(chart.chart_name,
                                                                      chart.metric_model_name)
                     final_score = round(data_set_combined_goodness / len(data_sets), 1)
+                    if final_score <= 0:
+                        final_score = previous_score
                     scores[current_date] = final_score
 
                 if data_set_mofified:
                     chart.data_sets = json.dumps(data_sets)
                     chart.save()
                 # print current_date, scores
-                if final_score <= 0:
-                    final_score = previous_score
+
                 mcs = MetricChartStatus(date_time=current_date,
                                         metric_id=metric_id,
                                         chart_name=chart_name,

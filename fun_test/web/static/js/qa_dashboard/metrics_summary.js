@@ -6,6 +6,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     this.$onInit = function () {
         $scope.getLastStatusUpdateTime();
         $scope.numGridColumns = 2;
+        $scope.timeMode = "all";
         if(angular.element($window).width() <=1441) {
             $scope.numGridColumns = 2;
         }
@@ -84,7 +85,17 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             })
         })
     };
+    $scope.weekView = () => {
+        $scope.timeMode = "week";
+    };
 
+    $scope.monthView = () => {
+        $scope.timeMode = "month";
+    };
+
+    $scope.allView = () => {
+        $scope.timeMode = "all";
+    };
     $scope.getIndex = (node) => {
         let index = $scope.flatNodes.map(function(x) {return x.guid;}).indexOf(node.guid);
         return index;
@@ -385,30 +396,6 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
 
     };
 
-    $scope.xAxisFormatter = (value) => {
-        let s = "Error";
-        /*
-        let key = parseInt(value);
-        if (key in $scope.buildInfo) {
-            s = $scope.buildInfo[key]["software_date"].toString();
-            let thisYear = new Date().getFullYear();
-            s = s.replace(thisYear, "");
-            let r = /(\d\d+)(\d\d)/g;
-            let match = r.exec(s);
-            s = match[1] + "/" + match[2];
-        }*/
-
-        let r = /(\d{4})-(\d{2})-(\d{2})/g;
-        let match = r.exec(value);
-        if (match) {
-            s = match[2] + "/" + match[3];
-        } else {
-            let i = 0;
-        }
-
-        return s;
-    };
-
     $scope.tooltipFormatter = (x, y) => {
         let softwareDate = "Unknown";
         let hardwareVersion = "Unknown";
@@ -517,6 +504,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
                 s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>&nbsp";
             } else if (node.trend === "down") {
                 s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>&nbsp;";
+            }
+            else if (node.trend === "flat") {
+                s = "<icon class=\"fa fa-arrow-down aspect-trend-icon\" style=\"visibility: hidden;\"></icon>&nbsp;";
             }
         }
         return s;

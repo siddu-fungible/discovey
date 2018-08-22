@@ -233,10 +233,13 @@ class NetworkController(DpcshClient):
     def enable_priority_flow_control(self, port_num, shape=0):
         pfc_enabled = False
         try:
+            sleep_duration = 2
+            if shape:
+                sleep_duration = 30
             pfc_enable_args = ['pfcena', {"portnum": port_num, "shape": shape}]
             fun_test.debug("Enabling pfc on port %d" % port_num)
             result = self.json_execute(verb=self.VERB_TYPE_PORT, data=pfc_enable_args,
-                                       command_duration=self.COMMAND_DURATION)
+                                       command_duration=self.COMMAND_DURATION, sleep_duration=sleep_duration)
             fun_test.simple_assert(expression=result['status'], message="Enable pfc on %d" % port_num)
             pfc_enabled = True
         except Exception as ex:
@@ -585,7 +588,7 @@ class NetworkController(DpcshClient):
 
     def set_qos_ingress_priority_group(self, port_num, priority_group_num, min_threshold=None,
                                        shared_threshold=None, headroom_threshold=None, xoff_enable=None,
-                                       shared_xon_threshold=None):
+                                       shared_xon_threshold=None, hnu=False):
         result = False
         try:
             input_dict = {"port": port_num, "pg": priority_group_num}
@@ -601,6 +604,8 @@ class NetworkController(DpcshClient):
                 input_dict["shared_xon_threshold"] = shared_xon_threshold
 
             ingress_priority_group_args = ['set', 'ingress_priority_group', input_dict]
+            if hnu:
+                ingress_priority_group_args = ['set', 'hnu', 'ingress_priority_group', input_dict]
             fun_test.debug("Setting QOS ingress priority group")
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=ingress_priority_group_args,
                                                 command_duration=self.COMMAND_DURATION)
@@ -658,10 +663,12 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return priority_to_pg_map_dict
 
-    def enable_qos_pfc(self):
+    def enable_qos_pfc(self, hnu=False):
         result = False
         try:
             enable_pfc_args = ['set', 'pfc', {"enable": 1}]
+            if hnu:
+                enable_pfc_args = ['set', 'hnu', 'pfc', {"enable": 1}]
             fun_test.debug("Enable QOS priority flow control")
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=enable_pfc_args,
                                                 command_duration=self.COMMAND_DURATION)
@@ -671,10 +678,12 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def disable_qos_pfc(self):
+    def disable_qos_pfc(self, hnu=False):
         result = False
         try:
             disable_pfc_args = ['set', 'pfc', {"enable": 0}]
+            if hnu:
+                disable_pfc_args = ['set', 'hnu', 'pfc', {"enable": 0}]
             fun_test.debug("Disable QOS priority flow control")
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=disable_pfc_args,
                                                 command_duration=self.COMMAND_DURATION)
@@ -907,10 +916,13 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return scheduler_config
 
-    def peek_fpg_port_stats(self, port_num):
+    def peek_fpg_port_stats(self, port_num, hnu=False):
         stats = None
         try:
-            stats_cmd = "stats/fpg/nu/port/[%d]" % port_num
+            type = 'nu'
+            if hnu:
+                type = 'hnu'
+            stats_cmd = "stats/fpg/%s/port/[%d]" % (type, port_num)
             fun_test.debug("Getting FPG stats for port %d" % port_num)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get FPG stats for port %d" % port_num)
@@ -920,16 +932,22 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_psw_port_stats(self, port_num, queue_num=None):
+    def peek_psw_port_stats(self, port_num, queue_num=None, hnu=False):
         stats = None
         try:
+            sleep_duration = 2
+            type = 'nu'
+            if hnu:
+                type = 'hnu'
+                sleep_duration = 30
             if queue_num:
-                stats_cmd = "stats/psw/port/[%d]/q_%s" % (port_num, queue_num)
+                stats_cmd = "stats/psw/%s/port/[%d]/q_%s" % (type, port_num, queue_num)
                 fun_test.debug("Getting PSW stats for port %d for queue %s" % (port_num, queue_num))
             else:
-                stats_cmd = "stats/psw/port/[%d]" % port_num
+                stats_cmd = "stats/psw/%s/port/[%d]" % (type, port_num)
                 fun_test.debug("Getting PSW stats for port %d" % port_num)
-            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION,
+                                       sleep_duration=sleep_duration)
             fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %
                                                                         (port_num))
             fun_test.debug("PSW port %d stats: %s" % (port_num, result['data']))
@@ -1060,22 +1078,6 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def set_qos_pfc(self, enable):
-        result = False
-        try:
-            if enable:
-                value = 1
-            else:
-                value = 0
-            qos_cmd = ['set', 'pfc', {"enable": value}]
-            result = self.json_execute(verb=self.VERB_TYPE_QOS, data=qos_cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'], message="Enable qos pfc")
-            fun_test.debug("Output: %s" % result['data'])
-            result = True
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return result
-
     def disable_syslog(self, level=3):
         result = False
         try:
@@ -1145,3 +1147,31 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return stats
+
+    def set_nu_test_op(self, rule, lso):
+        lso_set = False
+        try:
+            cmd = ["old", "add", "rule", rule, "lso", lso]
+            fun_test.debug("Setting NU test op for rule %d with lso %d" % (rule, lso))
+            result = self.json_execute(verb="nu_test_op", data=cmd)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Setting NU test op for rule %d with lso %d" % (rule, lso))
+            lso_set = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return lso_set
+
+    def delete_nu_test_op(self, rule):
+        lso_set = False
+        try:
+            cmd = ["old", "delete", "rule", rule]
+            fun_test.debug("Deleting nu test op rule %d" % rule)
+            result = self.json_execute(verb="nu_test_op", data=cmd)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Deleting nu test op rule %d" % rule)
+            lso_set = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return lso_set
+
+

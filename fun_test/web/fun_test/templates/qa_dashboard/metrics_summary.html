@@ -236,7 +236,7 @@
                     <div class="closed-section"></div>
                     <editable-metric-chart chart-name="currentChartName" model-name="currentMetricModelName"
                                            xaxis-formatter="xAxisFormatter"
-                                           tooltip-formatter="tooltipFormatter"></editable-metric-chart>
+                                           tooltip-formatter="tooltipFormatter" time-mode="timeMode"></editable-metric-chart>
                 </div>
             </div>
             <div ng-switch-when="showingNonAtomicMetric">
@@ -248,6 +248,24 @@
                 </div>
 
                 <br>
+                <!--
+                <div ng-switch="timeMode">
+                    <div ng-switch-when="all">
+                        <a href="#" ng-click="weekView()"> Week </a>/
+                        <a href="#" ng-click="monthView()"> Month </a>/
+                        <b><u><a href="#" ng-click="allView()"> All </a></u></b>
+                    </div>
+                    <div ng-switch-when="week">
+                        <b><u><a href="#" ng-click="weekView()"> Week </a></u></b>/
+                        <a href="#" ng-click="monthView()"> Month </a>/
+                        <a href="#" ng-click="allView()"> All </a>
+                    </div>
+                    <div ng-switch-when="month">
+                        <a href="#" ng-click="weekView()"> Week </a>/
+                        <b><u><a href="#" ng-click="monthView()"> Month </a></u></b>/
+                        <a href="#" ng-click="allView()"> All </a>
+                    </div>
+                </div>-->
                 <fun-chart values="goodnessTrendValues" show-legend="true"
                            title="goodnessTrendChartTitle" charting="charting" chart-type="line-chart">
                 </fun-chart>
@@ -274,6 +292,7 @@
                                         model-name="node.metricModelName"
                                         xaxis-formatter="xAxisFormatter"
                                         tooltip-formatter="tooltipFormatter"
+                                        time-mode="timeMode"
                                         atomic="atomic"
                                         chart-only="true"
                                         wait-time="(($parent.$index * numGridColumns) + $index) * 1000">

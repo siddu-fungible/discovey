@@ -116,7 +116,8 @@ class PortCommands(object):
                 arg_dict = {"class": class_num, "quanta": quanta}
                 arg_list = ["pfcqset", cmd_arg_dict, arg_dict]
             else:
-                arg_list = ["pfcqget", cmd_arg_dict]
+                arg_dict = {"class": class_num}
+                arg_list = ["pfcqget", cmd_arg_dict, arg_dict]
             result = self.dpc_client.execute(verb="port", arg_list=arg_list)
             print result
         except Exception as ex:
@@ -129,7 +130,8 @@ class PortCommands(object):
                 arg_dict = {"class": class_num, "threshold": threshold}
                 arg_list = ["pfctset", cmd_arg_dict, arg_dict]
             else:
-                arg_list = ["pfctget", cmd_arg_dict]
+                arg_dict = {"class": class_num}
+                arg_list = ["pfctget", cmd_arg_dict, arg_dict]
             result = self.dpc_client.execute(verb="port", arg_list=arg_list)
             print result
         except Exception as ex:
@@ -797,6 +799,22 @@ class NuClearCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
+    def clear_nu_nwqm_stats(self):
+        try:
+            cmd = ["clear", "nwqm"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
+    def clear_nu_vppkts_stats(self):
+        try:
+            cmd = ["clear", "vppkts"]
+            result = self.dpc_client.execute(verb="nu", arg_list=cmd)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
 
 class PeekCommands(object):
     def __init__(self, dpc_client):
@@ -1164,6 +1182,9 @@ class PeekCommands(object):
                         result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
                     if 'bam' in cmd:
                         result = self._sort_bam_keys(result=result, au_sort=au_sort)
+                    if not isinstance(result, dict):
+                        print "'%s' seen in output " % result
+                        break
                     if result:
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
@@ -1763,7 +1784,7 @@ class PeekCommands(object):
                     master_table_obj.border = False
                     master_table_obj.header = False
                     if result:
-                        if stop_regex in result:
+                        if stop_regex in str(result):
                             raise Exception("'%s' seen in output" % result)
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
@@ -1888,29 +1909,21 @@ class PeekCommands(object):
         cmd = "stats/resource/nu/[%s]" % resource_id
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_hu0_resource_stats(self, wqsi, wqse, resource_id, grep_regex=None):
-        # TODO: to be implemented as per output
+    def peek_hu_resource_stats(self, hu_id, wqsi=None, wqse=None, resource_id=None, grep_regex=None):
         try:
+            cmd = "stats/resource/hu%s" % hu_id
             if wqsi:
-                cmd = "stats/resource/hu0/wqsi"
+                cmd = cmd + "/wqsi"
             elif wqse:
-                if not resource_id:
-                    raise Exception("Resource id not specified")
-                cmd = "stats/resource/hu0/wqse/[%s]" % resource_id
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        except Exception as ex:
-            print "ERROR:  %s" % str(ex)
-
-    def peek_hu1_resource_stats(self, wqsi, wqse, resource_id, grep_regex=None):
-        # TODO: to be implemented as per output
-        try:
-            if wqsi:
-                cmd = "stats/resource/hu1/wqsi"
-            elif wqse:
-                if not resource_id:
-                    raise Exception("Resource id not specified")
-                cmd = "stats/resource/hu1/wqse/[%s]" % resource_id
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+                cmd = cmd + "/wqse"
+            if resource_id:
+                if not ('wqsi' in cmd):
+                    raise Exception("Resource id given, Please provide wqsi or wqse")
+                cmd = cmd + "[%s]" % resource_id
+            if wqsi or wqse:
+                self._display_stats(cmd=cmd, grep_regex=grep_regex)
+            else:
+                self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, stop_regex="does not exist")
         except Exception as ex:
             print "ERROR:  %s" % str(ex)
 
@@ -1945,6 +1958,8 @@ class PeekCommands(object):
                             for key in result:
                                 decode_value = ''
                                 pool_value = key.split(' ')[0]
+                                if 'usage' in key:
+                                    pool_value = key.split(' ')[1]
                                 if pool_value in bam_pool_decode_dict:
                                     decode_value = bam_pool_decode_dict[pool_value]
                                 if grep_regex:
@@ -1958,6 +1973,8 @@ class PeekCommands(object):
                             for key in result:
                                 decode_value = ''
                                 pool_value = key.split(' ')[0]
+                                if 'usage' in key:
+                                    pool_value = key.split(' ')[1]
                                 if pool_value in bam_pool_decode_dict:
                                     decode_value = bam_pool_decode_dict[pool_value]
                                 if grep_regex:
@@ -2024,3 +2041,62 @@ class PeekCommands(object):
     def peek_nwqm_stats(self, grep_regex=None):
         cmd = "stats/nwqm"
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+
+
+class SampleCommands(object):
+
+    def __init__(self, dpc_client):
+        self.dpc_client = dpc_client
+
+    def get_sample(self):
+        try:
+            result = self.dpc_client.execute(verb='sample', arg_list=['show'])
+            if result:
+                master_table_obj = PrettyTable(['Field Name', 'Counter'])
+                master_table_obj.align = 'l'
+                for key, val in sorted(result.iteritems()):
+                    if isinstance(val, dict):
+                        table_obj = PrettyTable(['Field Name', 'Counter'])
+                        table_obj.align = 'l'
+                        for _key in sorted(val):
+                            table_obj.add_row([_key, val[_key]])
+                        master_table_obj.add_row([key, table_obj])
+                    else:
+                        master_table_obj.add_row([key, val])
+                print master_table_obj
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def set_sample(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
+                           pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None, sampler_run_sz=None,
+                           first_cell_only=None, mode=0):
+        try:
+            cmd_arg_dict = {"id": id, "fpg": fpg, "mode": mode, "dest": dest}
+            if acl:
+                cmd_arg_dict['acl'] = acl
+            if flag_mask:
+                cmd_arg_dict['flag_mask'] = flag_mask
+            if hu:
+                cmd_arg_dict['hu'] = hu
+            if psw_drop:
+                cmd_arg_dict['psw_drop'] = psw_drop
+            if pps_en:
+                cmd_arg_dict['pps_interval'] = pps_interval
+            if pps_burst:
+                cmd_arg_dict['pps_burst'] = pps_burst
+            if sampler_en:
+                cmd_arg_dict['sampler_en'] = sampler_en
+            if sampler_rate:
+                cmd_arg_dict['sampler_rate'] = sampler_rate
+            if sampler_run_sz:
+                cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
+            if first_cell_only:
+                cmd_arg_dict['first_cell_only'] = first_cell_only
+
+            result = self.dpc_client.execute(verb='sample', arg_list=cmd_arg_dict)
+            if result:
+                print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()

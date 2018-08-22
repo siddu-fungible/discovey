@@ -17,6 +17,7 @@ class NuConfigManager(object):
     TRANSIT_FLOW_TYPE = "transit_flow"
     CC_FLOW_TYPE = "cc_flow"
     VP_FLOW_TYPE = "vp_flow"
+    FLOW_DIRECTION_NU_NU = "NU_NU"
     FLOW_DIRECTION_FPG_CC = "FPG_CC"
     FLOW_DIRECTION_CC_FPG = "CC_FPG"
     FLOW_DIRECTION_HU_CC = "HU_CC"
@@ -56,7 +57,7 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return all_configs
 
-    def read_dut_config(self, dut_type=None, flow_type=TRANSIT_FLOW_TYPE, flow_direction=None):
+    def read_dut_config(self, dut_type=None, flow_type=TRANSIT_FLOW_TYPE, flow_direction=FLOW_DIRECTION_NU_NU):
         result = {}
         try:
             if not dut_type:
@@ -70,7 +71,7 @@ class NuConfigManager(object):
             dut_spirent_map = self.read_dut_spirent_map()
             result['ports'] = []
             if flow_type == self.TRANSIT_FLOW_TYPE:
-                for key, value in sorted(dut_spirent_map[flow_type].items()):
+                for key, value in (dut_spirent_map[flow_type][flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
                         result['ports'].append(int(m.group(1)))
@@ -197,18 +198,18 @@ class NuConfigManager(object):
     '''
 
     def get_spirent_dut_port_mapper(self, flow_type=TRANSIT_FLOW_TYPE, no_of_ports_needed=2,
-                                    flow_direction=None):
+                                    flow_direction=FLOW_DIRECTION_NU_NU):
         result = OrderedDict()
         try:
             dut_spirent_map = self.read_dut_spirent_map()
             spirent_assets = self.read_traffic_generator_asset()
             if flow_type == self.TRANSIT_FLOW_TYPE:
                 fun_test.log("Fetching NU Transit Flow Map")
-                fun_test.simple_assert(len(dut_spirent_map[flow_type]) >= no_of_ports_needed,
+                fun_test.simple_assert(len(dut_spirent_map[flow_type][flow_direction]) >= no_of_ports_needed,
                                        "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
                                        (no_of_ports_needed, len(dut_spirent_map[flow_type])))
                 count = 0
-                for key, value in sorted(dut_spirent_map[flow_type].items()):
+                for key, value in (dut_spirent_map[flow_type][flow_direction].iteritems()):
                     if count == no_of_ports_needed:
                         break
                     fun_test.debug("FPG Port: %s connected to Spirent Port: %s" % (key, value))
