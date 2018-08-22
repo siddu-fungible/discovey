@@ -1429,6 +1429,10 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
 
+    def peek_etp_stats(self, cmd_type, grep_regex=None):
+        cmd = "stats/etp/" + cmd_type
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+
     def _get_parser_stats(self, grep_regex=None, hnu=False):
         try:
             prev_result = None
