@@ -9,7 +9,9 @@ Results Header Dict
   "version": {"is_input": false, "description": "DUT version or FunOS version"}
   "mode": {"is_input": true, "description": "Port modes (25, 50 or 100 G)"},
   "timestamp": {"is_input": false, "description": "Date time of result data"},
-  "flow_type": {"is_input": true, "description": "Traffic Direction for e.g FPG_HU or HU_FPG"}
+  "flow_type": {"is_input": true, "description": "Traffic Direction for e.g FPG_HU or HU_FPG"},
+  "spray_enable": {"is_input": true, "description": "VP Spray enable i.e adding IP Header Range Modifier to use
+                  specific range of DIPs. For e.g 51.1.1.2 -- 51.1.1.14"}
 }
 """
 
@@ -32,14 +34,14 @@ INTERFACE_LOAD_SPEC = fun_test.get_script_parent_directory() + "/interface_loads
 TOLERANCE_PERCENT = 10
 TRAFFIC_DURATION = 60
 IPV4_FRAMES = [64, 200, 1000, 1500, 3000, 9000]
-IPV6_FRAMES = [78, 200, 1000, 1500, 3000, 9000]
 LOAD = 1200
 chassis_type = None
 FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_HU
+SPRAY_ENABLE = False
 
 
 class NuVpPerformance(FunTestScript):
-    MTU = max(IPV4_FRAMES)
+    MTU = 9000
     NO_OF_PORTS = 2
     EXPECTED_PERFORMANCE_DATA_FILE_NAME = "nu_vp_performance_data.json"
     port1 = None
@@ -89,10 +91,14 @@ class NuVpPerformance(FunTestScript):
 
         if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
-
+            # TODO: Configure MTU on HNU ports for FPG --> HNU and HNU --> FPG Flows.
             checkpoint = "Change DUT ports MTU to %d" % self.MTU
             for port_num in dut_config['ports']:
-                mtu_changed = network_controller_obj.set_port_mtu(port_num=port_num, mtu_value=self.MTU)
+                if port_num == 1 or port_num == 2:
+                    shape = 1
+                else:
+                    shape = 0
+                mtu_changed = network_controller_obj.set_port_mtu(port_num=port_num, mtu_value=self.MTU, shape=shape)
                 fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port_num, self.MTU))
             fun_test.add_checkpoint(checkpoint)
 
@@ -173,8 +179,12 @@ class NuVpLatencyIPv4Test(FunTestCase):
 
         # Create stream block objects for each port
         stream_objs = []
+        spray = "spray_disable"
+        if SPRAY_ENABLE:
+            spray = "spray_enable"
+
         for frame_size in IPV4_FRAMES:
-            LOAD = perf_loads[FLOW_DIRECTION][str(frame_size)]
+            LOAD = perf_loads[FLOW_DIRECTION][spray][str(frame_size)]
             stream_objs.append(StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
                                            insert_signature=True,
                                            fixed_frame_length=frame_size,
@@ -200,8 +210,13 @@ class NuVpLatencyIPv4Test(FunTestCase):
 
             checkpoint = "Configure IP address for %s " % stream_obj.spirent_handle
             if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+                recycle_count = 200
                 dest_ip = l3_config['vp_destination_ip1']
+            elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+                recycle_count = 13
+                dest_ip = l3_config['hnu_destination_ip1']
             else:
+                recycle_count = 200
                 dest_ip = l3_config['destination_ip2']
             if stream_obj.FixedFrameLength == 64:
                 ip_header_obj = Ipv4Header(destination_address=dest_ip,
@@ -213,16 +228,18 @@ class NuVpLatencyIPv4Test(FunTestCase):
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
-                checkpoint = "Configure IP range modifier"
-                modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=200,
-                                             step_value="0.0.0.1", mask="255.255.255.255",
-                                             data=dest_ip)
-                result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,
-                                                                           header_obj=ip_header_obj,
-                                                                           streamblock_obj=stream_obj,
-                                                                           header_attribute="destAddr")
-                fun_test.simple_assert(result, checkpoint)
+            if FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_HU_FPG or FLOW_DIRECTION != \
+                    NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+                if SPRAY_ENABLE:
+                    checkpoint = "Configure IP range modifier"
+                    modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=recycle_count,
+                                                 step_value="0.0.0.1", mask="255.255.255.255",
+                                                 data=dest_ip)
+                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,
+                                                                               header_obj=ip_header_obj,
+                                                                               streamblock_obj=stream_obj,
+                                                                               header_attribute="destAddr")
+                    fun_test.simple_assert(result, checkpoint)
 
             if stream_obj.FixedFrameLength != 64:
                 checkpoint = "Add TCP header"
@@ -231,19 +248,20 @@ class NuVpLatencyIPv4Test(FunTestCase):
                                                                         header_obj=tcp_header_obj, update=False)
                 fun_test.simple_assert(result, checkpoint)
 
-                checkpoint = "Configure Port Modifier"
-                port_modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, step_value=1, recycle_count=200,
-                                                  data=1024)
-                result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
-                                                                           header_obj=tcp_header_obj,
-                                                                           streamblock_obj=stream_obj,
-                                                                           header_attribute="destPort")
-                fun_test.simple_assert(result, checkpoint)
-                result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
-                                                                           header_obj=tcp_header_obj,
-                                                                           streamblock_obj=stream_obj,
-                                                                           header_attribute="sourcePort")
-                fun_test.simple_assert(result, checkpoint)
+                if SPRAY_ENABLE:
+                    checkpoint = "Configure Port Modifier"
+                    port_modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, step_value=1, recycle_count=200,
+                                                      data=1024)
+                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
+                                                                               header_obj=tcp_header_obj,
+                                                                               streamblock_obj=stream_obj,
+                                                                               header_attribute="destPort")
+                    fun_test.simple_assert(result, checkpoint)
+                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
+                                                                               header_obj=tcp_header_obj,
+                                                                               streamblock_obj=stream_obj,
+                                                                               header_attribute="sourcePort")
+                    fun_test.simple_assert(result, checkpoint)
 
         checkpoint = "Deactivate All Streams under %s" % self.port
         result = template_obj.deactivate_stream_blocks(stream_obj_list=stream_objects)
@@ -406,8 +424,12 @@ class NuVpJitterTest(FunTestCase):
 
         # Create stream block objects for each port
         stream_objs = []
+        spray = "spray_disable"
+        if SPRAY_ENABLE:
+            spray = "spray_enable"
+
         for frame_size in IPV4_FRAMES:
-            LOAD = perf_loads[FLOW_DIRECTION][str(frame_size)]
+            LOAD = perf_loads[FLOW_DIRECTION][spray][str(frame_size)]
             stream_objs.append(StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
                                            insert_signature=True,
                                            fixed_frame_length=frame_size,
@@ -432,31 +454,36 @@ class NuVpJitterTest(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
+                recycle_count = 200
                 dest_ip = l3_config['vp_destination_ip1']
+            elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+                recycle_count = 20
+                dest_ip = l3_config['hnu_destination_ip1']
             else:
+                recycle_count = 200
                 dest_ip = l3_config['destination_ip2']
-
-            checkpoint = "Configure IP address for %s " % stream_obj.spirent_handle
             if stream_obj.FixedFrameLength == 64:
-                ip_header_obj = Ipv4Header(destination_address=l3_config['vp_destination_ip1'],
+                ip_header_obj = Ipv4Header(destination_address=dest_ip,
                                            protocol=Ipv4Header.PROTOCOL_TYPE_EXPERIMENTAL)
             else:
-                ip_header_obj = Ipv4Header(destination_address=l3_config['vp_destination_ip1'],
+                ip_header_obj = Ipv4Header(destination_address=dest_ip,
                                            protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
             result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
-                checkpoint = "Configure IP range modifier"
-                modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=200,
-                                             step_value="0.0.0.1", mask="255.255.255.255",
-                                             data=dest_ip)
-                result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,
-                                                                           header_obj=ip_header_obj,
-                                                                           streamblock_obj=stream_obj,
-                                                                           header_attribute="destAddr")
-                fun_test.simple_assert(result, checkpoint)
+            if FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_HU_FPG or FLOW_DIRECTION != \
+                    NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+                if SPRAY_ENABLE:
+                    checkpoint = "Configure IP range modifier"
+                    modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=recycle_count,
+                                                 step_value="0.0.0.1", mask="255.255.255.255",
+                                                 data=dest_ip)
+                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,
+                                                                               header_obj=ip_header_obj,
+                                                                               streamblock_obj=stream_obj,
+                                                                               header_attribute="destAddr")
+                    fun_test.simple_assert(result, checkpoint)
 
             if stream_obj.FixedFrameLength != 64:
                 checkpoint = "Add TCP header"
@@ -465,19 +492,20 @@ class NuVpJitterTest(FunTestCase):
                                                                         header_obj=tcp_header_obj, update=False)
                 fun_test.simple_assert(result, checkpoint)
 
-                checkpoint = "Configure Port Modifier"
-                port_modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, step_value=1, recycle_count=200,
-                                                  data=1024)
-                result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
-                                                                           header_obj=tcp_header_obj,
-                                                                           streamblock_obj=stream_obj,
-                                                                           header_attribute="destPort")
-                fun_test.simple_assert(result, checkpoint)
-                result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
-                                                                           header_obj=tcp_header_obj,
-                                                                           streamblock_obj=stream_obj,
-                                                                           header_attribute="sourcePort")
-                fun_test.simple_assert(result, checkpoint)
+                if SPRAY_ENABLE:
+                    checkpoint = "Configure Port Modifier"
+                    port_modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, step_value=1, recycle_count=200,
+                                                      data=1024)
+                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
+                                                                               header_obj=tcp_header_obj,
+                                                                               streamblock_obj=stream_obj,
+                                                                               header_attribute="destPort")
+                    fun_test.simple_assert(result, checkpoint)
+                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
+                                                                               header_obj=tcp_header_obj,
+                                                                               streamblock_obj=stream_obj,
+                                                                               header_attribute="sourcePort")
+                    fun_test.simple_assert(result, checkpoint)
 
         checkpoint = "Deactivate All Streams under %s" % self.port
         result = template_obj.deactivate_stream_blocks(stream_obj_list=stream_objects)
@@ -579,12 +607,13 @@ class NuVpJitterTest(FunTestCase):
         template_obj.populate_performance_counters_json(mode=mode, flow_type=FLOW_DIRECTION,
                                                         latency_results=latency_results,
                                                         jitter_results=jitter_results,
-                                                        file_name=output_file_path)
+                                                        file_name=output_file_path, spray_enable=SPRAY_ENABLE)
 
 
 if __name__ == "__main__":
-    cc_flow_type = nu_config_obj.get_local_settings_parameters(flow_direction=True)
-    FLOW_DIRECTION = cc_flow_type[nu_config_obj.FLOW_DIRECTION]
+    cc_flow_type = nu_config_obj.get_local_settings_parameters(flow_direction=True, spray_enable=True)
+    FLOW_DIRECTION = cc_flow_type[NuConfigManager.FLOW_DIRECTION]
+    SPRAY_ENABLE = cc_flow_type[NuConfigManager.SPRAY_ENABLE]
     ts = NuVpPerformance()
     ts.add_test_case(NuVpLatencyIPv4Test())
     ts.add_test_case(NuVpJitterTest())

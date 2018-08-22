@@ -29,6 +29,7 @@ class NuConfigManager(object):
     FLOW_DIRECTION_HNU_HNU = "HNU_HNU"
     FLOW_DIRECTION = "flow_direction"
     IP_VERSION = "ip_version"
+    SPRAY_ENABLE = "spray_enable"
     INTEGRATION_FLOW_TYPE = "integration_flow"
 
     def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
@@ -298,10 +299,11 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def get_local_settings_parameters(self, flow_direction=False, ip_version=False):
+    def get_local_settings_parameters(self, flow_direction=False, ip_version=False, spray_enable=False):
         result = {}
         try:
-            fun_test.simple_assert(flow_direction or ip_version, "No parameter provided to be fetcehd from local settings")
+            fun_test.simple_assert(flow_direction or ip_version or spray_enable,
+                                   "No parameter provided to be fetcehd from local settings")
             configs = nu_config_obj._get_nu_configs()
             fun_test.simple_assert(configs, "Get NU Configs")
             for config in configs:
@@ -310,6 +312,8 @@ class NuConfigManager(object):
                         result[self.FLOW_DIRECTION] = config[self.FLOW_DIRECTION]
                     if ip_version:
                         result[self.IP_VERSION] = config[self.IP_VERSION]
+                    if spray_enable:
+                        result[self.SPRAY_ENABLE] = config[self.SPRAY_ENABLE]
                     break
         except Exception as ex:
             fun_test.critical(str(ex))

@@ -932,6 +932,18 @@ peek_erp_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", defau
 peek_erp_nu_stats_parser = peek_erp_stats_parsers.add_parser('nu', help="Peek HU erp stats")
 peek_erp_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# erp stats
+peek_etp_stats_parser = peek_stats_parsers.add_parser('etp', help="NU Peek Etp Stats")
+peek_etp_stats_parsers = peek_etp_stats_parser.add_subparsers(title='subcommands', help="")
+
+# Erp HNU stats
+peek_etp_hnu_stats_parser = peek_etp_stats_parsers.add_parser('hnu', help="Peek HNU etp stats")
+peek_etp_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# Erp NU stats
+peek_etp_nu_stats_parser = peek_etp_stats_parsers.add_parser('nu', help="Peek HU etp stats")
+peek_etp_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # Erp NU Flex stats
 peek_erp_flex_stats_parser = peek_erp_stats_parsers.add_parser('flex', help="Peek NU Flex erp stats")
 peek_erp_flex_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
@@ -1025,17 +1037,18 @@ peek_nu_resource_stats_parser = peek_resource_stats_parsers.add_parser('nu', hel
 peek_nu_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
 peek_nu_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
-peek_hu0_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu0', help='Peek hu0 resource stats')
-peek_hu0_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
-peek_hu0_resource_stats_parser.add_argument('-wqsi', help="wqsi", default=None)
-peek_hu0_resource_stats_parser.add_argument('-wqse', help="wqse", default=None)
-peek_hu0_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+peek_hu_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu', help='Peek hu resource stats')
+peek_hu_resource_stats_parser.add_argument('id', type=int, help="id")
+peek_hu_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
-peek_hu1_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu1', help='Peek hu1 resource stats')
-peek_hu1_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
-peek_hu1_resource_stats_parser.add_argument('-wqsi', help="wqsi", default=None)
-peek_hu1_resource_stats_parser.add_argument('-wqse', help="wqse", default=None)
-peek_hu1_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+peek_hu_wqsi_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu_wqsi', help='Peek hu_wqsi resource stats')
+peek_hu_wqsi_resource_stats_parser.add_argument('id', type=int, help="id")
+peek_hu_wqsi_resource_stats_parser.add_argument('-rid', type=int, help="Resource id", default=None)
+peek_hu_wqsi_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+peek_hu_wqse_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu_wqse', help='Peek hu_wqse resource stats')
+peek_hu_wqse_resource_stats_parser.add_argument('id', type=int, help="id")
+peek_hu_wqse_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_dam_resource_stats_parser = peek_resource_stats_parsers.add_parser('dam', help='Peek dam resource stats')
 peek_dam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)

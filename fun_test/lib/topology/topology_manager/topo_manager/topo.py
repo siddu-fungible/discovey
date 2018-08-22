@@ -321,7 +321,7 @@ class Topology(object):
             fun_test.log('Topology already up and running. Cannot call create() again')
             return
 
-        fun_test.log('Creating Topology: %sx%sx%s' % (self.nRacks, self.nLeafs, self.nSpines))
+        fun_test.log('Creating Topology: %s racks %s leafs %s spines' % (self.nRacks, self.nLeafs, self.nSpines))
 
         self.available_vms = len(self.vm_ips)
         self.sizeUp()

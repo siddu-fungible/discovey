@@ -643,6 +643,14 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_erp_stats(cmd_type='nu', grep_regex=grep_regex)
 
+    def peek_etp_hnu_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_etp_stats(cmd_type='hnu', grep_regex=grep_regex)
+
+    def peek_etp_nu_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_etp_stats(cmd_type='nu', grep_regex=grep_regex)
+
     def peek_erp_flex_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_erp_stats(cmd_type='flex', grep_regex=grep_regex)
@@ -733,17 +741,22 @@ class CmdController(Cmd):
         resource_id = args.resource_id
         self._peek_cmd_obj.peek_nu_resource_stats(resource_id=resource_id, grep_regex=grep_regex)
 
-    def peek_hu0_resource_stats(self, args):
+    def peek_hu_resource_stats(self, args):
+        id = args.id
         grep_regex = args.grep
-        wqsi = args.wqsi
-        wqse = args.wqse
-        resource_id = args.resource_id
-        self._peek_cmd_obj.peek_hu0_resource_stats(wqsi=wqsi, wqse=wqse, resource_id=resource_id,
-                                                   grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, grep_regex=grep_regex)
 
-    def peek_hu1_resource_stats(self, args):
+    def peek_hu_wqsi_resource_stats(self, args):
+        id = args.id
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_hu1_resource_stats(grep_regex=grep_regex)
+        resource_id = args.rid
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqsi=True, resource_id=resource_id,
+                                                  grep_regex=grep_regex)
+
+    def peek_hu_wqse_resource_stats(self, args):
+        id = args.id
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_hu_resource_stats(hu_id=id, wqse=True, grep_regex=grep_regex)
 
     def peek_dam_resource_stats(self, args):
         grep_regex = args.grep
@@ -978,10 +991,13 @@ class CmdController(Cmd):
     peek_rgx_resource_stats_parser.set_defaults(func=peek_rgx_resource_stats)
     peek_hnu_resource_stats_parser.set_defaults(func=peek_hnu_resource_stats)
     peek_nu_resource_stats_parser.set_defaults(func=peek_nu_resource_stats)
-    peek_hu0_resource_stats_parser.set_defaults(func=peek_hu0_resource_stats)
-    peek_hu1_resource_stats_parser.set_defaults(func=peek_hu1_resource_stats)
+    peek_hu_resource_stats_parser.set_defaults(func=peek_hu_resource_stats)
+    peek_hu_wqsi_resource_stats_parser.set_defaults(func=peek_hu_wqsi_resource_stats)
+    peek_hu_wqse_resource_stats_parser.set_defaults(func=peek_hu_wqse_resource_stats)
     peek_dam_resource_stats_parser.set_defaults(func=peek_dam_resource_stats)
     peek_bam_resource_stats_parser.set_defaults(func=peek_bam_resource_stats)
+    peek_etp_hnu_stats_parser.set_defaults(func=peek_etp_hnu_stats)
+    peek_etp_nu_stats_parser.set_defaults(func=peek_etp_nu_stats)
 
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
@@ -1031,7 +1047,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.23.102", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

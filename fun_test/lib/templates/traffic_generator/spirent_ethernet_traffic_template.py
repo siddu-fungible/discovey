@@ -1280,7 +1280,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def setup_ports_using_command(self, no_of_ports_needed, flow_type, flow_direction=None):
+    def setup_ports_using_command(self, no_of_ports_needed, flow_type,
+                                  flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
         try:
             offline_ports = {}

@@ -15,6 +15,7 @@ def run_commands():
 
     processes = []
     for command in executing:
+        print("Run remote command " + command)
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         processes.append((proc, command))

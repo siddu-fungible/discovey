@@ -1182,6 +1182,9 @@ class PeekCommands(object):
                         result = self.dpc_client.execute(verb=verb, arg_list=[cmd], tid=tid)
                     if 'bam' in cmd:
                         result = self._sort_bam_keys(result=result, au_sort=au_sort)
+                    if not isinstance(result, dict):
+                        print "'%s' seen in output " % result
+                        break
                     if result:
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
@@ -1425,6 +1428,10 @@ class PeekCommands(object):
             except Exception as ex:
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
+
+    def peek_etp_stats(self, cmd_type, grep_regex=None):
+        cmd = "stats/etp/" + cmd_type
+        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
     def _get_parser_stats(self, grep_regex=None, hnu=False):
         try:
@@ -1781,7 +1788,7 @@ class PeekCommands(object):
                     master_table_obj.border = False
                     master_table_obj.header = False
                     if result:
-                        if stop_regex in result:
+                        if stop_regex in str(result):
                             raise Exception("'%s' seen in output" % result)
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
@@ -1906,29 +1913,21 @@ class PeekCommands(object):
         cmd = "stats/resource/nu/[%s]" % resource_id
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_hu0_resource_stats(self, wqsi, wqse, resource_id, grep_regex=None):
-        # TODO: to be implemented as per output
+    def peek_hu_resource_stats(self, hu_id, wqsi=None, wqse=None, resource_id=None, grep_regex=None):
         try:
+            cmd = "stats/resource/hu%s" % hu_id
             if wqsi:
-                cmd = "stats/resource/hu0/wqsi"
+                cmd = cmd + "/wqsi"
             elif wqse:
-                if not resource_id:
-                    raise Exception("Resource id not specified")
-                cmd = "stats/resource/hu0/wqse/[%s]" % resource_id
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        except Exception as ex:
-            print "ERROR:  %s" % str(ex)
-
-    def peek_hu1_resource_stats(self, wqsi, wqse, resource_id, grep_regex=None):
-        # TODO: to be implemented as per output
-        try:
-            if wqsi:
-                cmd = "stats/resource/hu1/wqsi"
-            elif wqse:
-                if not resource_id:
-                    raise Exception("Resource id not specified")
-                cmd = "stats/resource/hu1/wqse/[%s]" % resource_id
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+                cmd = cmd + "/wqse"
+            if resource_id:
+                if not ('wqsi' in cmd):
+                    raise Exception("Resource id given, Please provide wqsi or wqse")
+                cmd = cmd + "[%s]" % resource_id
+            if wqsi or wqse:
+                self._display_stats(cmd=cmd, grep_regex=grep_regex)
+            else:
+                self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, stop_regex="does not exist")
         except Exception as ex:
             print "ERROR:  %s" % str(ex)
 
@@ -2057,7 +2056,6 @@ class SampleCommands(object):
         try:
             result = self.dpc_client.execute(verb='sample', arg_list=['show'])
             if result:
-                print result
                 master_table_obj = PrettyTable(['Field Name', 'Counter'])
                 master_table_obj.align = 'l'
                 for key, val in sorted(result.iteritems()):
