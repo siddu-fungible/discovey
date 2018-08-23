@@ -1,10 +1,27 @@
 <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>
 <div>
-    <fun-chart values="values" series="series" title="$ctrl.chartName" charting="charting" chart-type="line-chart"
+        <div  style="padding: 20px;" ng-switch="timeMode">
+            <div ng-switch-when="all">
+                <a href="#" ng-click="setTimeMode('week')"> Week </a>/
+                <a href="#" ng-click="setTimeMode('month')"> Month </a>/
+                <b><u><a href="#" ng-click="setTimeMode('all')"> All </a></u></b>
+            </div>
+            <div ng-switch-when="week">
+                <b><u><a href="#" ng-click="setTimeMode('week')"> Week </a></u></b>/
+                <a href="#" ng-click="setTimeMode('month')"> Month </a>/
+                <a href="#" ng-click="setTimeMode('all')"> All </a>
+            </div>
+            <div ng-switch-when="month">
+                <a href="#" ng-click="setTimeMode('week')"> Week </a>/
+                <b><u><a href="#" ng-click="setTimeMode('month')"> Month </a></u></b>/
+                <a href="#" ng-click="setTimeMode('all')"> All </a>
+            </div>
+        </div>
+        <fun-chart values="values" series="series" title="$ctrl.chartName" charting="charting" chart-type="line-chart"
                width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle"
                point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter"
                tooltip-formatter="tooltipFormatter">
-    </fun-chart>
+        </fun-chart>
 </div>
 <div ng-show="$ctrl.showingTable">
     <!-- a href="/metrics/table_view/{{ $ctrl.modelName }}">Full model table</a-->

@@ -212,13 +212,17 @@ def metric_info(request):
 @api_safe_json_response
 def scores(request):
     result = {}
+    date_range = None
     request_json = json.loads(request.body)
-    date_range = request_json["date_range"]
-    date_range = [parser.parse(x) for x in date_range]
-    # chart_name = request_json["chart_name"]
     metric_id = int(request_json["metric_id"])
-    entries = MetricChartStatus.objects.filter(date_time__range=date_range,
-                                               metric_id=metric_id)
+    if "date_range" in request_json:
+        date_range = request_json["date_range"]
+        date_range = [parser.parse(x) for x in date_range]
+        entries = MetricChartStatus.objects.filter(date_time__range=date_range,
+                                                   metric_id=metric_id)
+    # chart_name = request_json["chart_name"]
+    else:
+        entries = MetricChartStatus.objects.filter(metric_id=metric_id)
     serialized = MetricChartStatusSerializer(entries, many=True)
     serialized_data = serialized.data[:]
     result["scores"] = {}

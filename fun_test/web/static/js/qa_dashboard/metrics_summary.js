@@ -6,7 +6,6 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     this.$onInit = function () {
         $scope.getLastStatusUpdateTime();
         $scope.numGridColumns = 2;
-        $scope.timeMode = "all";
         if(angular.element($window).width() <=1441) {
             $scope.numGridColumns = 2;
         }
@@ -44,6 +43,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         $scope.validDates = null;
         //console.log($scope.treeModel[0][0].showInfo);
     };
+
 
     $scope.clearNodeInfoCache = () => {
         $scope.cachedNodeInfo = {};
@@ -85,17 +85,7 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             })
         })
     };
-    $scope.weekView = () => {
-        $scope.timeMode = "week";
-    };
 
-    $scope.monthView = () => {
-        $scope.timeMode = "month";
-    };
-
-    $scope.allView = () => {
-        $scope.timeMode = "all";
-    };
     $scope.getIndex = (node) => {
         let index = $scope.flatNodes.map(function(x) {return x.guid;}).indexOf(node.guid);
         return index;
@@ -160,6 +150,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         let yesterday = $scope.getYesterday(today);
         let toDate = new Date(yesterday);
         toDate = $scope.getDateBound(toDate, false);
+        //let fromDate = new Date();
+        // fromDate.setDate(toDate.getDate() - 7);
+        // fromDate = $scope.getDateBound(fromDate, true);
         return [fromDate, toDate];
 
     };
@@ -281,7 +274,8 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         sortedKeys.forEach((key) => {
             goodnessValues.push(scores[key].score);
         });
-        //console.log("Goodness values: " + goodnessValues);
+
+        // console.log("Goodness values: " + goodnessValues);
 
         node.goodnessValues = goodnessValues;
         try {
@@ -527,34 +521,39 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
 
     $scope.showNonAtomicMetric = (node) => {
         $scope.resetGrid();
+        $scope.mode = "showingNonAtomicMetric";
+        $scope.currentNode = node;
+        $scope.currentChartName = node.chartName;
+        $scope.currentMetricModelName = "MetricContainer";
         $scope.expandNode(node).then(() => {
 
-            $scope.mode = "showingNonAtomicMetric";
+            //$scope.mode = "showingNonAtomicMetric";
             $scope._setupGoodnessTrend(node);
             $scope.inner.nonAtomicMetricInfo = node.info;
-            $scope.currentNode = null;
-            $scope.currentNode = node;
-            let payload = {
-                metric_model_name: "MetricContainer",
-                chart_name: node.chartName
-            };
-
+            //$scope.currentNode = null;
+           // $scope.currentNode = node;
+            // let payload = {
+            //     metric_model_name: "MetricContainer",
+            //     chart_name: node.chartName
+            // };
+            //$scope.currentChartName = node.chartName;
+            //$scope.currentMetricModelName = "MetricContainer";
             console.log("Before getting leaves");
             if ((node.chartName === "All metrics") || (!$scope.isLeafsParent(node))) {
                 return $q.resolve(null);
             } else {
                 return $q.resolve(null); // Disable for now
-                commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
-
-                    let flattenedLeaves = {};
-                    $scope.flattenLeaves("", flattenedLeaves, leaves);
-                    $timeout(()=> {
-                        $scope.prepareGridNodes(flattenedLeaves);
-                    }, 1000);
-
-                    console.log(angular.element($window).width());
-
-                });
+                // commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
+                //
+                //     let flattenedLeaves = {};
+                //     $scope.flattenLeaves("", flattenedLeaves, leaves);
+                //     $timeout(()=> {
+                //         $scope.prepareGridNodes(flattenedLeaves);
+                //     }, 1000);
+                //
+                //     console.log(angular.element($window).width());
+                //
+                // });
 
             }
 
@@ -760,6 +759,9 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
 
             });
 
+        }
+        else {
+            return $q.resolve(null);
         }
         //node.hide = false;
 

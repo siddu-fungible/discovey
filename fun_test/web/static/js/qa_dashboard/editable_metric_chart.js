@@ -1,7 +1,7 @@
 'use strict';
 
 
-function EditableMetricChartController($scope, commonService, $attrs, $window, $timeout) {
+function EditableMetricChartController($scope, commonService, $attrs, $window, $timeout, $q) {
     let ctrl = this;
 
     ctrl.$onInit = () => {
@@ -17,7 +17,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
 
     $scope.doInit = () => {
         $scope.status = "loading";
-        $scope.timeMode = "all";
+
         $scope.editing = false;
         $scope.chartName = ctrl.chartName;
         $scope.modelName = ctrl.modelName;
@@ -47,7 +47,8 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
 
         //console.log("EditableMetric: describeTable in init: " + ctrl.chartName);
         $scope.describeTable().then(function() {
-            $scope.fetchChartInfo();
+            if(ctrl.modelName !== 'MetricContainer')
+                $scope.fetchChartInfo();
         });
 
         $scope.currentDescription = "---";
@@ -80,7 +81,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
             return;
         }
         $scope.inputs = [];
-        if (!$scope.tableInfo) {
+        if (!$scope.tableInfo && $scope.modelName !== "MetricContainer") {
             return commonService.apiGet("/metrics/describe_table/" + ctrl.modelName, "fetchMetricsData").then(function (tableInfo) {
                 //console.log("Editable metric chart: describe_table:  " + ctrl.modelName);
                 $scope.status = "idle";
@@ -152,17 +153,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
     $scope.hideTable = () => {
         $scope.showingTable = false;
     };
-    $scope.weekView = () => {
-        $scope.timeMode = "week";
-    };
 
-    $scope.monthView = () => {
-        $scope.timeMode = "month";
-    };
-
-    $scope.allView = () => {
-        $scope.timeMode = "all";
-    };
 
 
     $scope.addDataSetClick = () => {
@@ -270,8 +261,8 @@ angular.module('qa-dashboard').component("editableMetricChart", {
         tooltipFormatter: '&',
         atomic: '<',
         chartOnly: '<',
-        timeMode: '<',
         waitTime: '='
+
     },
     controller: EditableMetricChartController
 });
