@@ -462,10 +462,10 @@ class NetworkController(DpcshClient):
     
     def set_qos_egress_buffer_pool(self, sf_thr=None, sx_thr=None, dx_thr=None, df_thr=None, fcp_thr=None,
                                    nonfcp_thr=None, sample_copy_thr=0, sf_xoff_thr=0, fcp_xoff_thr=0,
-                                   nonfcp_xoff_thr=0):
+                                   nonfcp_xoff_thr=0, mode='nu'):
         result = False
         try:
-            egress_buffer_pool = self.get_qos_egress_buffer_pool()
+            egress_buffer_pool = self.get_qos_egress_buffer_pool(mode=mode)
             fun_test.simple_assert(egress_buffer_pool, "Get Existing settings")
             if sf_thr:
                 egress_buffer_pool["sf_thr"] = sf_thr
@@ -488,6 +488,8 @@ class NetworkController(DpcshClient):
             if nonfcp_xoff_thr:
                 egress_buffer_pool["nonfcp_xoff_thr"] = nonfcp_xoff_thr
             egress_buffer_pool_args = ['set', 'egress_buffer_pool', egress_buffer_pool]
+            if not mode == 'nu':
+                egress_buffer_pool_args.insert(1, mode)
             fun_test.debug("Setting QOS egress buffer pool")
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=egress_buffer_pool_args,
                                                 command_duration=self.COMMAND_DURATION)
@@ -497,10 +499,12 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def get_qos_egress_buffer_pool(self):
+    def get_qos_egress_buffer_pool(self, mode='nu'):
         egress_buffer_pool_dict = None
         try:
             egress_buffer_pool_args = ['get', 'egress_buffer_pool']
+            if not mode == 'nu':
+                egress_buffer_pool_args.insert(1, mode)
             fun_test.debug("Getting QOS egress buffer pool")
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=egress_buffer_pool_args,
                                                 command_duration=self.COMMAND_DURATION)
