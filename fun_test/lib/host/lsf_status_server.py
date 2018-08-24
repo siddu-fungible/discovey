@@ -65,7 +65,7 @@ class LsfStatusServer:
                     continue
                 completion_date = "20" + job_info["completion_date"]
                 dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
-                dt = dt.astimezone(pytz.timezone('US/Pacific'))
+                # dt = dt.astimezone(pytz.timezone('Etc/Greenwich'))
                 self.add_palladium_job_info(job_info=job_info)
                 response = self.get_job_by_id(job_id=job_info["job_id"])
                 response = self.get_job_by_id(job_id=job_info["job_id"]) # Workaround
