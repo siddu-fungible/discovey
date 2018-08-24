@@ -91,7 +91,6 @@ class NuVpPerformance(FunTestScript):
 
         if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
-            # TODO: Configure MTU on HNU ports for FPG --> HNU and HNU --> FPG Flows.
             checkpoint = "Change DUT ports MTU to %d" % self.MTU
             for port_num in dut_config['ports']:
                 if port_num == 1 or port_num == 2:
@@ -108,6 +107,15 @@ class NuVpPerformance(FunTestScript):
             buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=16380,
                                                                                 nonfcp_xoff_thr=16380)
             fun_test.test_assert(buffer_pool_set, checkpoint)
+
+            if "HNU" in FLOW_DIRECTION:
+                checkpoint = "Configure HNU QoS settings"
+                enable_pfc = network_controller_obj.enable_qos_pfc(hnu=True)
+                fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
+                buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=16380,
+                                                                                    nonfcp_xoff_thr=16380,
+                                                                                    mode="hnu")
+                fun_test.test_assert(buffer_pool_set, checkpoint)
 
         checkpoint = "Read Performance expected data for fixed size scenario"
         file_path = LOGS_DIR + "/" + self.EXPECTED_PERFORMANCE_DATA_FILE_NAME
@@ -212,9 +220,13 @@ class NuVpLatencyIPv4Test(FunTestCase):
             if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
                 recycle_count = 200
                 dest_ip = l3_config['vp_destination_ip1']
-            elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU or \
+                    FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
                 recycle_count = 13
-                dest_ip = l3_config['hnu_destination_ip1']
+                dest_ip = l3_config['hnu_destination_ip2']
+            elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+                recycle_count = 1
+                dest_ip = l3_config['hnu_fcp_destination_ip1']
             else:
                 recycle_count = 200
                 dest_ip = l3_config['destination_ip2']
@@ -228,8 +240,10 @@ class NuVpLatencyIPv4Test(FunTestCase):
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_HU_FPG or FLOW_DIRECTION != \
-                    NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+            if FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_HU_FPG and FLOW_DIRECTION != \
+                    NuConfigManager.FLOW_DIRECTION_HNU_FPG and \
+                    FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU and \
+                    FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_HNU_HNU:
                 if SPRAY_ENABLE:
                     checkpoint = "Configure IP range modifier"
                     modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=recycle_count,
@@ -281,6 +295,8 @@ class NuVpLatencyIPv4Test(FunTestCase):
             fun_test.add_checkpoint(checkpoint=checkpoint)
 
     def run(self):
+        ports = template_obj.stc_manager.get_port_list()
+        rx_port = ports[1]
         port1 = self.port
         global latency_results
         latency_results = OrderedDict()
@@ -322,12 +338,23 @@ class NuVpLatencyIPv4Test(FunTestCase):
             if dut_config['enable_dpcsh']:
                 checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (
                     dut_config['ports'][0], dut_config['ports'][1])
-                port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
-                fun_test.log("Port %d Results: %s" % (dut_config['ports'][0], port1_result))
-                fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
-                port2_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1])
-                fun_test.log("Port %d Results: %s" % (dut_config['ports'][1], port2_result))
-                fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
+                if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_FPG or FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
+                    port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0], hnu=True)
+                    fun_test.log("Port %d Results: %s" % (dut_config['ports'][0], port1_result))
+                    fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
+                else:
+                    port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0], hnu=False)
+                    fun_test.log("Port %d Results: %s" % (dut_config['ports'][0], port1_result))
+                    fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
+
+                if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+                    port2_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1], hnu=True)
+                    fun_test.log("Port %d Results: %s" % (dut_config['ports'][1], port2_result))
+                    fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
+                else:
+                    port2_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1], hnu=False)
+                    fun_test.log("Port %d Results: %s" % (dut_config['ports'][1], port2_result))
+                    fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
 
                 frames_transmitted = get_dut_output_stats_value(result_stats=port1_result,
                                                                 stat_type=FRAMES_TRANSMITTED_OK)
@@ -341,9 +368,10 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 fun_test.log("VP stats: %s" % vp_stats_after)
                 vp_stats_diff = get_diff_stats(old_stats=vp_stats, new_stats=vp_stats_after)
                 fun_test.simple_assert(vp_stats_diff, "Ensure VP stats diff fetched")
-
+                actual_vp_stats = vp_stats_diff[VP_PACKETS_TOTAL_OUT] + vp_stats_diff[
+                    VP_PACKETS_FORWARDING_NU_DIRECT] + vp_stats_diff[VP_PACKETS_CC_OUT]
                 fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
-                                              actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
+                                              actual=actual_vp_stats,
                                               message=checkpoint)
 
             checkpoint = "Validate Latency Results"
@@ -354,9 +382,9 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 tolerance_percent=TOLERANCE_PERCENT, flow_type=FLOW_DIRECTION)
             fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
 
-            checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[port1]
+            checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[rx_port]
             analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
-                port_handle=port1, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
+                port_handle=rx_port, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
             result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
             fun_test.test_assert(expression=result['result'], message=checkpoint)
 
@@ -457,8 +485,8 @@ class NuVpJitterTest(FunTestCase):
                 recycle_count = 200
                 dest_ip = l3_config['vp_destination_ip1']
             elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-                recycle_count = 20
-                dest_ip = l3_config['hnu_destination_ip1']
+                recycle_count = 13
+                dest_ip = l3_config['hnu_destination_ip2']
             else:
                 recycle_count = 200
                 dest_ip = l3_config['destination_ip2']
@@ -472,7 +500,7 @@ class NuVpJitterTest(FunTestCase):
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            if FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_HU_FPG or FLOW_DIRECTION != \
+            if FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_HU_FPG and FLOW_DIRECTION != \
                     NuConfigManager.FLOW_DIRECTION_HNU_FPG:
                 if SPRAY_ENABLE:
                     checkpoint = "Configure IP range modifier"
@@ -536,6 +564,8 @@ class NuVpJitterTest(FunTestCase):
                                   "analyzer_subscribe": analyzer_subscribe}
 
     def run(self):
+        ports = template_obj.stc_manager.get_port_list()
+        rx_port = ports[1]
         stream_objs = stream_port_obj_dict[self.port]
         global jitter_results
         jitter_results = OrderedDict()
@@ -577,9 +607,9 @@ class NuVpJitterTest(FunTestCase):
                 tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=FLOW_DIRECTION)
             fun_test.simple_assert(expression=jitter_result, message=checkpoint)
 
-            checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[self.port]
+            checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[rx_port]
             analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
-                port_handle=self.port, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
+                port_handle=rx_port, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
             result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
             fun_test.test_assert(expression=result['result'], message=checkpoint)
 
@@ -616,6 +646,6 @@ if __name__ == "__main__":
     SPRAY_ENABLE = cc_flow_type[NuConfigManager.SPRAY_ENABLE]
     ts = NuVpPerformance()
     ts.add_test_case(NuVpLatencyIPv4Test())
-    ts.add_test_case(NuVpJitterTest())
+    # ts.add_test_case(NuVpJitterTest())
     ts.run()
 
