@@ -262,7 +262,53 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         }
     };
 
-    $scope.getDatesByTimeMode = (dateList) => {
+    $scope.getDatesByTimeModeForLeaf = (dateList) => {
+        let len = dateList.length;
+        let filteredDate = [];
+        let result = [[len, 0]];
+        if($scope.timeMode === "week") {
+            for(let i = len - 1; i >= 0; i = i - 7)
+            {
+                if(i >= 7)
+                {
+                    filteredDate.push([i, i - 7 + 1]);
+                }
+                else {
+                    filteredDate.push([i, 0]);
+                }
+            }
+            result = filteredDate.reverse();
+        }
+        else if($scope.timeMode === "month") {
+            let i = len - 1;
+            let monthDays = {0: 31, 1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30};
+            // how many days to decrement for each month depending on the number of days of the previous month
+            while(i >= 0)
+            {
+                let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
+                let diff = i - monthDays[latestDate.getMonth()];
+                if(diff >= 0)
+                {
+                    filteredDate.push([i, diff + 1]);
+                }
+                else {
+                    filteredDate.push([i, 0]);
+                }
+                i = diff;
+            }
+            result = filteredDate.reverse();
+        }
+        else {
+            for(let i = len - 1; i >= 0; i--)
+            {
+                filteredDate.push([i, i]);
+            }
+            result = filteredDate.reverse();
+        }
+        return result;
+    };
+
+    $scope.getDatesByTimeModeForContainers = (dateList) => {
         let len = dateList.length;
         let filteredDate = [];
         let result = dateList;
@@ -350,11 +396,12 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 keyList.sort();
                 $scope.shortenKeyList(keyList);
                 keyList = $scope.fixMissingDates(keyList);
-                keyList = $scope.getDatesByTimeMode(keyList);
+                let originalKeyList = keyList;
+                keyList = $scope.getDatesByTimeModeForLeaf(keyList);
 
                 let chartDataSets = [];
+                let seriesDates = [];
                 let dataSetIndex = 0;
-
 
                 $scope.allData = allDataSets;
                 $scope.status = "Preparing chart data-sets";
@@ -364,41 +411,49 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     for(let i = 0; i < keyList.length; i++) {
                         let output = null;
                         let matchingDateFound = false;
-                        for(let j = 0; j < oneDataSet.length; j++) {
-                            let oneRecord = oneDataSet[j];
-                            if(oneRecord.input_date_time.toString() === keyList[i]) {
-                                matchingDateFound = true;
-                                //console.log("DataSetIndex: " + dataSetIndex);
-                                //console.log("ChartName: " + ctrl.chartName);
-                                //console.log("Filter DataSets: " + filterDataSets);
-                                let outputName = filterDataSets[dataSetIndex].output.name;
-                                output = oneRecord[outputName];
-                                if (chartInfo && chartInfo.y1axis_title) {
-                                   $scope.chart1YaxisTitle = chartInfo.y1axis_title;
-                                } else {
-                                   $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                        seriesDates.push(originalKeyList[keyList[i][0]]);
+                        let  startIndex = keyList[i][0];
+                        let endIndex = keyList[i][1];
+                        while(startIndex >= endIndex)
+                        {
+                            for(let j = 0; j < oneDataSet.length; j++) {
+                                let oneRecord = oneDataSet[j];
+                                if (oneRecord.input_date_time.toString() === originalKeyList[startIndex]) {
+                                    matchingDateFound = true;
+
+                                    let outputName = filterDataSets[dataSetIndex].output.name;
+                                    output = oneRecord[outputName];
+                                    if (chartInfo && chartInfo.y1axis_title) {
+                                        $scope.chart1YaxisTitle = chartInfo.y1axis_title;
+                                    } else {
+                                        $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                    }
+                                    if (ctrl.y1AxisTitle) {
+                                        $scope.chart1YaxisTitle = ctrl.y1AxisTitle;
+                                    }
+                                    $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
+
+                                    break;
                                 }
-                                if (ctrl.y1AxisTitle) {
-                                    $scope.chart1YaxisTitle = ctrl.y1AxisTitle;
-                                }
-                                $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
+                            }
+                            if(matchingDateFound)
+                            {
                                 break;
                             }
+                            startIndex--;
                         }
                         let thisMinimum = filterDataSets[dataSetIndex].output.min;
                         let thisMaximum = filterDataSets[dataSetIndex].output.max;
-
                         oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
+
                     }
                     let oneChartDataSet = {name: filterDataSets[dataSetIndex].name, data: oneChartDataArray};
                     chartDataSets.push(oneChartDataSet);
                     dataSetIndex++;
                 });
 
-
-                //chartDataSets = $scope.getDatesByTimeMode(chartDataSets)
                 $scope.status = "idle";
-                $scope.series = keyList;
+                $scope.series = seriesDates;
                 $scope.values = chartDataSets;
             });
             }
@@ -418,7 +473,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     keyList.sort();
                     keyList.forEach((dateTime) => {
                         values.push(data.scores[dateTime].score);
-                        let d = new Date(dateTime * 1000).toISOString(); // The 0 there is the key, which sets the date to the epoch
+                        let d = new Date(dateTime * 1000).toISOString();
                         //let dateSeries = d.setUTCSeconds(dateTime);
                         series.push(d);
                     });
@@ -431,11 +486,11 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     }
                     else {
                         series = $scope.fixMissingDates(series);
-                        series = $scope.getDatesByTimeMode(series);
+                        series = $scope.getDatesByTimeModeForContainers(series);
                         let valuesByTime = [];
                         keyList.forEach((dateTime) => {
                             //values.push(data.scores[dateTime].score);
-                            let d = new Date(dateTime * 1000).toISOString(); // The 0 there is the key, which sets the date to the epoch
+                            let d = new Date(dateTime * 1000).toISOString();
                             for(let i = 0; i < series.length; i++)
                             {
                                 if(d === series[i])
