@@ -17,7 +17,7 @@ import glob, collections
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from fun_global import get_localized_time
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import dateutil.parser
 import re
@@ -292,9 +292,10 @@ def build_to_date_map(request):
         print "Completion date:" + entry.completion_date
         try:
             key = entry.completion_date
-            # dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
-            # key = str(dt)
-            # key = re.sub(r':\d{2}-.*', '', key)
+            dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
+            dt = dt + timedelta(hours=7)  #TODO: hardcoded
+            key = str(dt)
+            key = re.sub(r':\d{2}-.*', '', key)
             build_info[key] = {"software_date": entry.software_date,
                                                  "hardware_version": entry.hardware_version,
                                                  "fun_sdk_branch": entry.fun_sdk_branch,
