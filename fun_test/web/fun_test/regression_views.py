@@ -289,12 +289,16 @@ def build_to_date_map(request):
         key = 0
         if m:
             key = int(m.group(1))
-        dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
+        # print entry.completion_date
+        try:
+            dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
 
-        build_info[entry.completion_date] = {"software_date": entry.software_date,
-                                             "hardware_version": entry.hardware_version,
-                                             "fun_sdk_branch": entry.fun_sdk_branch,
-                                             "git_commit": entry.git_commit}
+            build_info[entry.completion_date] = {"software_date": entry.software_date,
+                                                 "hardware_version": entry.hardware_version,
+                                                 "fun_sdk_branch": entry.fun_sdk_branch,
+                                                 "git_commit": entry.git_commit}
+        except:
+            pass
     return build_info
 
 
