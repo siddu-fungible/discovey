@@ -16,6 +16,8 @@ from web.web_global import initialize_result, api_safe_json_response
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from fun_global import get_localized_time
+from datetime import datetime
 import logging
 import dateutil.parser
 import re
@@ -287,6 +289,8 @@ def build_to_date_map(request):
         key = 0
         if m:
             key = int(m.group(1))
+        dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
+
         build_info[entry.completion_date] = {"software_date": entry.software_date,
                                              "hardware_version": entry.hardware_version,
                                              "fun_sdk_branch": entry.fun_sdk_branch,
