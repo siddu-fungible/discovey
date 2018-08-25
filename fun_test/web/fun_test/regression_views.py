@@ -300,10 +300,10 @@ def build_to_date_map(request):
                                                  "hardware_version": entry.hardware_version,
                                                  "fun_sdk_branch": entry.fun_sdk_branch,
                                                  "git_commit": entry.git_commit}
-            print str(dt)
+            # print str(dt)
         except Exception as ex:
             print ex
-            pass
+            # pass
     return build_info
 
 
