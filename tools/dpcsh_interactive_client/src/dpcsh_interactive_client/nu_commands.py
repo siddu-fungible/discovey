@@ -1078,83 +1078,107 @@ class PeekCommands(object):
                 else:
                     print "--------------> Port %d  <--------------" % port_num
                     if prev_result:
-                        for queue in result:
-                            count_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Bytes Diff', 'Packets',
-                                                           'Packets Diff'])
+                        for key in result:
+                            count_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
                             drops_table_obj = PrettyTable(['Drops Type', 'Count', 'Drop Count Diff'])
 
-                            m = re.search(r'q_\d+', queue)
+                            m = re.search(r'q_\d+', key)
                             if not m:
-                                diff = result[queue] - prev_result[queue]
-                                master_table_obj.add_row(['Orm Port Shared Drops', result[queue], diff])
+                                diff = result[key] - prev_result[key]
+                                master_table_obj.add_row([key, result[key], diff])
                                 continue
-                            queue_result = result[queue]
+                            queue_result = result[key]
                             count_result = queue_result['count']
                             drop_result = queue_result['drops']
 
                             diff_count_result = self._get_difference(result=count_result,
-                                                                     prev_result=prev_result[queue]['count'])
+                                                                     prev_result=prev_result[key]['count'])
                             diff_drop_result = self._get_difference(result=drop_result,
-                                                                    prev_result=prev_result[queue]['drops'])
-                            for key in count_result:
-                                if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        count_table_obj.add_row([key, count_result[key]['bytes'],
-                                                                 diff_count_result[key]['bytes'],
-                                                                 count_result[key]['pkts'],
-                                                                 diff_count_result[key]['pkts']])
-                                else:
-                                    count_table_obj.add_row([key, count_result[key]['bytes'],
-                                                             diff_count_result[key]['bytes'],
-                                                             count_result[key]['pkts'],
-                                                             diff_count_result[key]['pkts']])
+                                                                    prev_result=prev_result[key]['drops'])
 
-                            for key in drop_result:
+                            for _key in count_result:
+                                inner_table_obj = None
                                 if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        drops_table_obj.add_row([key, drop_result[key], diff_drop_result[key]])
+                                    if type(count_result[_key]) == dict:
+                                        inner_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Bytes Diff', 'Packets',
+                                                                       'Packets Diff'])
+                                        inner_table_obj.add_row([_key, count_result[_key]['bytes'],
+                                                                 diff_count_result[_key]['bytes'],
+                                                                 count_result[_key]['pkts'],
+                                                                 diff_count_result[_key]['pkts']])
+                                    else:
+                                        count_table_obj.add_row([_key, count_result[_key], diff_count_result[_key]])
                                 else:
-                                    drops_table_obj.add_row([key, drop_result[key], diff_drop_result[key]])
+                                    if type(count_result[_key]) == dict:
+                                        inner_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Bytes Diff', 'Packets',
+                                                                       'Packets Diff'])
+                                        inner_table_obj.add_row([_key, count_result[_key]['bytes'],
+                                                                 diff_count_result[_key]['bytes'],
+                                                                 count_result[_key]['pkts'],
+                                                                 diff_count_result[_key]['pkts']])
+                                    else:
+                                        count_table_obj.add_row([_key, count_result[_key], diff_count_result[_key]])
+                                    if inner_table_obj:
+                                        count_table_obj.add_row([_key, inner_table_obj, None])
+
+                            for _key in drop_result:
+                                if grep_regex:
+                                    if re.search(grep_regex, _key, re.IGNORECASE):
+                                        drops_table_obj.add_row([_key, drop_result[_key], diff_drop_result[_key]])
+                                else:
+                                    drops_table_obj.add_row([_key, drop_result[_key], diff_drop_result[_key]])
 
                             if queue_list:
-                                if queue in queue_list:
-                                    master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
+                                if key in queue_list:
+                                    master_table_obj.add_row([key, count_table_obj, drops_table_obj])
 
                             else:
-                                master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
+                                master_table_obj.add_row([key, count_table_obj, drops_table_obj])
                     else:
-                        for queue in result:
-                            count_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Packets'])
-                            drops_table_obj = PrettyTable(['Drops Type', 'Count'])
+                        for key in result:
+                            count_table_obj = PrettyTable(['Field Name', 'Counter'])
+                            drops_table_obj = PrettyTable(['Drops Type', 'Counter'])
 
-                            m = re.search(r'q_\d+', queue)
+                            m = re.search(r'q_\d+', key)
                             if not m:
-                                master_table_obj.add_row(['Orm Port Shared Drops', result[queue], None])
+                                master_table_obj.add_row([key, result[key], None])
                                 continue
-                            queue_result = result[queue]
+                            queue_result = result[key]
                             count_result = queue_result['count']
                             drop_result = queue_result['drops']
 
-                            for key in count_result:
+                            for _key in count_result:
+                                inner_table_obj = None
                                 if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        count_table_obj.add_row([key, count_result[key]['bytes'],
-                                                                 count_result[key]['pkts']])
+                                    if re.search(grep_regex, _key, re.IGNORECASE):
+                                        if type(count_result[_key]) == dict:
+                                            inner_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Packets'])
+                                            inner_table_obj.add_row([_key, count_result[_key]['bytes'],
+                                                                     count_result[_key]['pkts']])
+                                        else:
+                                            count_table_obj.add_row([_key, count_result[_key]])
                                 else:
-                                    count_table_obj.add_row([key, count_result[key]['bytes'],
-                                                            count_result[key]['pkts']])
-                            for key in drop_result:
+                                    if type(count_result[_key]) == dict:
+                                        inner_table_obj = PrettyTable(['Enq/Deq', 'Bytes', 'Packets'])
+                                        inner_table_obj.add_row([_key, count_result[_key]['bytes'],
+                                                                count_result[_key]['pkts']])
+                                    else:
+                                        count_table_obj.add_row([_key, count_result[_key]])
+                                if inner_table_obj:
+                                    count_table_obj.add_row([_key, inner_table_obj])
+
+                            for _key in drop_result:
                                 if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
-                                        drops_table_obj.add_row([key, drop_result[key]])
+                                    if re.search(grep_regex, _key, re.IGNORECASE):
+                                        drops_table_obj.add_row([_key, drop_result[_key]])
                                 else:
-                                    drops_table_obj.add_row([key, drop_result[key]])
+                                    drops_table_obj.add_row([_key, drop_result[_key]])
                             if queue_list:
-                                if queue in queue_list:
-                                    master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
+                                if key in queue_list:
+                                    master_table_obj.add_row([key, count_table_obj, drops_table_obj])
 
                             else:
-                                master_table_obj.add_row([queue, count_table_obj, drops_table_obj])
+                                master_table_obj.add_row([key, count_table_obj, drops_table_obj])
                     master_table_obj.border = True
                     master_table_obj.sortby = 'Field 1'
                     master_table_obj.header = False
