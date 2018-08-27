@@ -338,7 +338,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
             if dut_config['enable_dpcsh']:
                 checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (
                     dut_config['ports'][0], dut_config['ports'][1])
-                if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_FPG or FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
+                if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_FPG or "HNU_HNU" in FLOW_DIRECTION:
                     port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0], hnu=True)
                     fun_test.log("Port %d Results: %s" % (dut_config['ports'][0], port1_result))
                     fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
@@ -347,7 +347,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
                     fun_test.log("Port %d Results: %s" % (dut_config['ports'][0], port1_result))
                     fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
 
-                if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+                if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU or "HNU_HNU" in FLOW_DIRECTION:
                     port2_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1], hnu=True)
                     fun_test.log("Port %d Results: %s" % (dut_config['ports'][1], port2_result))
                     fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
@@ -379,14 +379,19 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=[stream_obj], expected_performance_data=self.expected_latency_data,
-                tolerance_percent=TOLERANCE_PERCENT, flow_type=FLOW_DIRECTION)
+                tolerance_percent=TOLERANCE_PERCENT, flow_type=FLOW_DIRECTION, spray_enabled=SPRAY_ENABLE)
             fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[rx_port]
             analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
                 port_handle=rx_port, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
             result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            fun_test.test_assert(expression=result['result'], message=checkpoint)
+            if (FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU or FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_FPG) \
+                    and SPRAY_ENABLE:
+                fun_test.log("Error Counters are seen Reordered Frame Count: %d \n PrbsErrorFrameCount: %d" % (
+                    result['ReorderedFrameCount'], result['PrbsErrorFrameCount']))
+            else:
+                fun_test.test_assert(expression=result['result'], message=checkpoint)
 
             checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
             result = template_obj.deactivate_stream_blocks(stream_obj_list=[stream_obj])
@@ -604,14 +609,19 @@ class NuVpJitterTest(FunTestCase):
                 tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
                 rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
                 stream_objects=[stream_obj], expected_performance_data=self.expected_jitter_data,
-                tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=FLOW_DIRECTION)
+                tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=FLOW_DIRECTION, spray_enabled=SPRAY_ENABLE)
             fun_test.simple_assert(expression=jitter_result, message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[rx_port]
             analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
                 port_handle=rx_port, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
             result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            fun_test.test_assert(expression=result['result'], message=checkpoint)
+            if (FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU or FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_FPG) \
+                    and SPRAY_ENABLE:
+                fun_test.log("Error Counters are seen Reordered Frame Count: %d \n PrbsErrorFrameCount: %d" % (
+                    result['ReorderedFrameCount'], result['PrbsErrorFrameCount']))
+            else:
+                fun_test.test_assert(expression=result['result'], message=checkpoint)
 
             checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
             result = template_obj.deactivate_stream_blocks(stream_obj_list=[stream_obj])
@@ -646,6 +656,6 @@ if __name__ == "__main__":
     SPRAY_ENABLE = cc_flow_type[NuConfigManager.SPRAY_ENABLE]
     ts = NuVpPerformance()
     ts.add_test_case(NuVpLatencyIPv4Test())
-    # ts.add_test_case(NuVpJitterTest())
+    ts.add_test_case(NuVpJitterTest())
     ts.run()
 

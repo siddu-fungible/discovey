@@ -822,7 +822,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
     def validate_performance_result(self, tx_subscribe_handle, rx_subscribe_handle, stream_objects,
                                     jitter=False, expected_performance_data=[],
-                                    tolerance_percent=10, flow_type=None):
+                                    tolerance_percent=10, flow_type=None, spray_enabled=False):
         result = {'result': False}
         try:
             expected_performance_data.reverse()
@@ -849,9 +849,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 fun_test.log("Frame Count Results for %d B: \n Tx Frame Count: %d \n Rx Frame Count: %d " % (
                     stream_obj.FixedFrameLength, int(tx_result['FrameCount']), int(rx_result['FrameCount'])
                 ))
-                fun_test.test_assert_expected(expected=int(tx_result['FrameCount']),
-                                              actual=int(rx_result['FrameCount']),
-                                              message=checkpoint)
+                if (flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HNU or flow_type == NuConfigManager.FLOW_DIRECTION_HNU_FPG) \
+                        and spray_enabled:
+                    fun_test.log("Reordered Frame Count: %d for %d B frame." % (
+                        int(rx_result['ReorderedFrameCount']), stream_obj.FixedFrameLength))
+                else:
+                    fun_test.test_assert_expected(expected=int(tx_result['FrameCount']),
+                                                  actual=int(rx_result['FrameCount']),
+                                                  message=checkpoint)
                 if jitter:
                     expected_jitter_dict = {}
                     for record in expected_performance_data:
