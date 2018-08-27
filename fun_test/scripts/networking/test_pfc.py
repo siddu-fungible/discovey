@@ -732,7 +732,7 @@ class TestCase4(FunTestCase):
         start = template_obj.enable_generator_configs(generator_configs=generator_dict[port_2])
         fun_test.test_assert(start, "Starting generator config on port %s" % port_2)
 
-        fun_test.sleep("Letting pfc frames to be sent", seconds=sleep_time)
+        fun_test.sleep("Letting pfc frames to be sent", seconds=30)
 
         for i in range(check_intervals):
             fun_test.sleep("Letting traffic to be executed", seconds=sleep_time)
@@ -1124,8 +1124,8 @@ if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
-    #ts.add_test_case(TestCase1())
-    #ts.add_test_case(TestCase2())
+    ts.add_test_case(TestCase1())
+    ts.add_test_case(TestCase2())
     ts.add_test_case(TestCase3())
     ts.add_test_case(TestCase4())
     ts.add_test_case(TestCase5())
