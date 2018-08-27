@@ -667,6 +667,39 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return priority_to_pg_map_dict
 
+    def set_qos_queue_to_priority_map(self, port_num, map_list):
+        """
+        QOS queue to priority map
+        :param port_num: FPG port num
+        :param map_list: list of N values where N is the number of priorities N = 16 for FPG ports and N = 8 for EPG ports
+        :return: bool
+        """
+        result = False
+        try:
+            priority_to_pg_map_args = ['set', 'queue_to_priority_map', {"port": port_num, "map": map_list}]
+            fun_test.debug("Setting QOS priority to pg map")
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=priority_to_pg_map_args,
+                                                command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=json_cmd_result['status'], message="Set priority to pg map")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_qos_queue_to_priority_map(self, port_num):
+        priority_to_pg_map_dict = None
+        try:
+            priority_to_pg_map_args = ['get', 'queue_to_priority_map', {"port": port_num}]
+            fun_test.debug("Getting QOS priority to pg map")
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=priority_to_pg_map_args,
+                                                command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=json_cmd_result['status'], message="Get QOS priority to pg map")
+            fun_test.debug(json_cmd_result['data'])
+            priority_to_pg_map_dict = json_cmd_result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return priority_to_pg_map_dict
+
     def enable_qos_pfc(self, hnu=False):
         result = False
         try:
@@ -939,31 +972,41 @@ class NetworkController(DpcshClient):
     def peek_psw_port_stats(self, port_num, queue_num=None, hnu=False):
         stats = None
         try:
+            max_retry = 3
+            current_retry = 0
             sleep_duration = 2
             type = 'nu'
             if hnu:
                 type = 'hnu'
-                sleep_duration = 30
+                sleep_duration = 50
             if queue_num:
                 stats_cmd = "stats/psw/%s/port/[%d]/q_%s" % (type, port_num, queue_num)
                 fun_test.debug("Getting PSW stats for port %d for queue %s" % (port_num, queue_num))
             else:
                 stats_cmd = "stats/psw/%s/port/[%d]" % (type, port_num)
                 fun_test.debug("Getting PSW stats for port %d" % port_num)
-            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION,
-                                       sleep_duration=sleep_duration)
-            fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %
-                                                                        (port_num))
-            fun_test.debug("PSW port %d stats: %s" % (port_num, result['data']))
+            while current_retry < max_retry:
+                result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION,
+                                           sleep_duration=sleep_duration, chunk=8192)
+                fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %
+                                                                            (port_num))
+                fun_test.debug("PSW port %d stats: %s" % (port_num, result['data']))
+                if isinstance(result['data'], dict):
+                    break
+                self.disconnect()
+                fun_test.sleep("Before reconnecting", seconds=3)
+                current_retry += 1
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))
         return stats
 
-    def peek_psw_global_stats(self):
+    def peek_psw_global_stats(self, hnu=False):
         stats = None
         try:
             stats_cmd = "stats/psw/nu"
+            if hnu:
+                stats_cmd = "stats/psw/hnu"
             fun_test.debug("Getting PSW global stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get PSW global stats")

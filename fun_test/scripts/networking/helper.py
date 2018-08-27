@@ -127,7 +127,7 @@ def __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_val
 def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=None):
     result = None
     try:
-        if stat_type == CBFC_PAUSE_FRAMES_RECEIVED:
+        if stat_type == CBFC_PAUSE_FRAMES_RECEIVED or stat_type == CBFC_PAUSE_FRAMES_TRANSMITTED:
             result = __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_value)
             return result
         output = result_stats[0]
@@ -145,11 +145,11 @@ def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=Non
     return result
 
 
-def get_dut_fpg_port_stats(network_controller_obj, dut_port_list=[]):
+def get_dut_fpg_port_stats(network_controller_obj, dut_port_list=[], hnu=False):
     result_dict = {}
     try:
         for port in dut_port_list:
-            result_dict[port] = network_controller_obj.peek_fpg_port_stats(port)
+            result_dict[port] = network_controller_obj.peek_fpg_port_stats(port, hnu=hnu)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result_dict

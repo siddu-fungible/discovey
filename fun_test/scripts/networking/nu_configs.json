@@ -34,7 +34,7 @@
           "gateway": "192.85.1.1",
           "hnu_destination_ip1": "51.1.1.10",
           "hnu_destination_ip2": "52.1.1.2",
-          "hnu_fcp_destination_ip1": "51.1.1.1",
+          "hnu_fcp_destination_ip1": "52.1.1.1",
           "hu_destination_ip1": "18.0.6.1",
           "vp_destination_ip1": "18.0.6.1",
           "cc_destination_ip1": "20.1.1.2",
@@ -115,8 +115,8 @@
   },
   {
     "name": "local_settings",
-    "flow_direction": "HNU_FPG",
+    "flow_direction": "HNU_HNU",
     "ip_version": "4",
-    "spray_enable": true
+    "spray_enable": false
   }
 ]
