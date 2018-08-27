@@ -30,8 +30,9 @@ def get_current_time():
     return utc.astimezone(pytz.timezone(TIME_ZONE))
 
 def get_localized_time(datetime_obj):
-    pytz.timezone(TIME_ZONE)
-    localized = pytz.utc.localize(datetime_obj)
+    tz = pytz.timezone(TIME_ZONE)
+    # localized = pytz.dst.localize(datetime_obj)
+    localized = tz.localize(datetime_obj, is_dst=None)
     return localized
 
 epoch_obj = get_localized_time(datetime.datetime(1970, 1, 1, 0, 0, 0))  # Moving it here for efficiency

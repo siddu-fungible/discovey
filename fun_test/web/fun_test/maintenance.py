@@ -176,7 +176,7 @@ if __name__ == "__main5__":
     #for model_name in apps.get_models():
         #print model_name.objects.filter()'''
 
-if __name__ == "__main__":
+if __name__ == "__main1__":
     today = get_current_time()
     from_date = datetime(year=2018, month=8, day=10, minute=0, hour=0, second=0)
 
@@ -243,3 +243,17 @@ if __name__ == "__main2__":
                 print entry
 
             current_date = current_date + timedelta(days=1)
+
+if __name__ == "__main__":
+    entries = JenkinsJobIdMap.objects.all()
+    for entry in entries:
+        if entry.completion_date:
+            dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
+            dt = dt - timedelta(hours=7)
+            # print dt
+            key = str(dt)
+            key = re.sub(r':\d{2}-.*', '', key)
+            print key
+            entry.completion_date = key
+            entry.save()
+
