@@ -100,9 +100,11 @@ class LsfStatusServer:
             response_dict = {"output_text": "-1"}
             try:
                 response_dict = json.loads(response)
+                print(json.dumps(response_dict, indent=4))
             except Exception as ex:
+                fun_test.log("Actual response:" + response)
                 fun_test.critical(str(ex))
-            print(json.dumps(response_dict, indent=4))
+        
             output_text = response_dict["output_text"]
             result["date_time"] = dt
             result["output_text"] = output_text
