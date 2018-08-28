@@ -18,7 +18,7 @@ generator_config_objs = {}
 generator_dict = {}
 multiplyer = 52
 default_quanta = 65535
-capture_priority_limit = 7
+capture_priority_limit = 8
 priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_octet': '00000000',
                                 'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '0'},
                  'priority_1': {'priority_val': 1, 'ls_octet': '00000010', 'ms_octet': '00000000',
@@ -1608,5 +1608,4 @@ if __name__ == "__main__":
     ts.add_test_case(TestCase15())
     ts.add_test_case(TestCase16())
     ts.add_test_case(TestCase17())
-
     ts.run()
