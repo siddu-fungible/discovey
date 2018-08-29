@@ -3,6 +3,9 @@ from datetime import datetime
 from collections import OrderedDict
 import re
 import time
+import os
+from uuid import uuid4
+import json
 
 TIME_INTERVAL = 5
 
@@ -896,7 +899,7 @@ class PeekCommands(object):
                 sorted_dict[key] = result[key]
         return sorted_dict
 
-    def peek_fpg_stats(self, port_num, grep_regex=None, mode='nu'):
+    def peek_fpg_stats(self, port_num, grep_regex=None, mode='nu', get_result_only=False):
         prev_result = {}
         result = None
         while True:
@@ -958,6 +961,8 @@ class PeekCommands(object):
                             master_table_obj.add_column('Tx Stats', [tx_table_obj])
                         if rx_table_obj.rowcount > 1:
                             master_table_obj.add_column('Rx Stats', [rx_table_obj])
+                if get_result_only:
+                    return cmd, master_table_obj
                 print master_table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
                 time.sleep(TIME_INTERVAL)
@@ -1015,7 +1020,7 @@ class PeekCommands(object):
                 self.dpc_client.disconnect()
                 break
                 
-    def peek_psw_stats(self, mode='nu', port_num=None, queue_list=None, grep_regex=None):
+    def peek_psw_stats(self, mode='nu', port_num=None, queue_list=None, grep_regex=None, get_result_only=False):
         prev_result = None
         while True:
             try:
@@ -1183,7 +1188,8 @@ class PeekCommands(object):
                     master_table_obj.sortby = 'Field 1'
                     master_table_obj.header = False
                     master_table_obj.hrules = FRAME
-
+                if get_result_only:
+                    return cmd, master_table_obj
                 prev_result = result
                 print master_table_obj
                 print "\n########################  %s ########################\n" % str(self._get_timestamp())
@@ -1196,7 +1202,7 @@ class PeekCommands(object):
                 self.dpc_client.disconnect()
                 break
      
-    def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek", tid=0, au_sort=True):
+    def _display_stats(self, cmd, grep_regex, prev_result=None, verb="peek", tid=0, au_sort=True, get_result_only=False):
         try:
             while True:
                 try:
@@ -1233,12 +1239,15 @@ class PeekCommands(object):
                                         table_obj.add_row([key, result[key]])
                                 else:
                                     table_obj.add_row([key, result[key]])
-
+                        if get_result_only:
+                            return cmd, table_obj
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
                         time.sleep(TIME_INTERVAL)
                     else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
                         print "Empty Result"
                         time.sleep(TIME_INTERVAL)
                 except KeyboardInterrupt:
@@ -1377,38 +1386,56 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_vp_stats(self, grep_regex=None):
+    def peek_vp_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/vppkts"
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        if get_result_only:
+            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_fcp_stats(self, tunnel_id=None, grep_regex=None):
+    def peek_fcp_stats(self, tunnel_id=None, grep_regex=None, get_result_only=False):
         cmd = "stats/fcp/global"
         if tunnel_id:
             cmd = "stats/fcp/tunnel[%d]" % tunnel_id
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
-
-    def peek_wro_stats(self, cmd_type, tunnel_id=None, grep_regex=None):
-        if tunnel_id:
-            cmd = "stats/wro/%s/tunnel[%d]" % (cmd_type, tunnel_id)
+        if get_result_only:
+            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
-            cmd = "stats/wro/%s/global" % cmd_type
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+            self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+
+    def peek_wro_stats(self, mode='nu', tunnel_id=None, grep_regex=None, get_result_only=False):
+        if tunnel_id:
+            cmd = "stats/wro/%s/tunnel[%d]" % (mode, tunnel_id)
+        else:
+            cmd = "stats/wro/%s/global" % mode
+        if get_result_only:
+            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
 
     def peek_bam_stats(self, grep_regex=None):
         cmd = "stats/bam"
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_fwd_stats(self, grep_regex=None):
+    def peek_fwd_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/fwd/flex"
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        if get_result_only:
+            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
 
-    def peek_erp_stats(self, cmd_type, grep_regex=None):
-        if cmd_type == "hnu":
+    def peek_erp_stats(self, mode='nu', grep_regex=None, get_result_only=False):
+        if mode == "hnu":
             cmd = "stats/erp/hnu/global"
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        elif cmd_type == 'nu':
+            if get_result_only:
+                return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+            else:
+                self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        elif mode == 'nu':
             cmd = "stats/erp/nu/global"
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+            if get_result_only:
+                return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+            else:
+                self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
             try:
                 prev_result_list = None
@@ -1440,11 +1467,15 @@ class PeekCommands(object):
                                         else:
                                             table_obj.add_row([key, result[key]])
                             prev_result_list = result_list
+                            if get_result_only:
+                                return cmd, table_obj
                             print table_obj
                             print "\n########################  %s ########################\n" % \
                                   str(self._get_timestamp())
                             time.sleep(TIME_INTERVAL)
                         else:
+                            if get_result_only:
+                                return cmd, "Empty Result"
                             print "Empty Result"
                     except KeyboardInterrupt:
                         self.dpc_client.disconnect()
@@ -1453,11 +1484,11 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
 
-    def peek_etp_stats(self, cmd_type, grep_regex=None):
-        cmd = "stats/etp/" + cmd_type
+    def peek_etp_stats(self, mode='nu', grep_regex=None):
+        cmd = "stats/etp/" + mode
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def _get_parser_stats(self, grep_regex=None, hnu=False):
+    def _get_parser_stats(self, grep_regex=None, hnu=False, get_result_only=False):
         try:
             prev_result = None
             while True:
@@ -1496,8 +1527,11 @@ class PeekCommands(object):
                                         table_obj.add_row([_key, global_result[key][_key]])
                                 master_table_obj.add_row([key, table_obj])
                     else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
                         print "Empty Result"
-
+                    if get_result_only:
+                        return cmd, master_table_obj
                     prev_result = global_result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
@@ -1509,8 +1543,11 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_parser_nu_stats(self, grep_regex=None):
-        self._get_parser_stats(grep_regex=grep_regex)
+    def peek_parser_nu_stats(self, grep_regex=None, get_result_only=False):
+        if get_result_only:
+            return self._get_parser_stats(grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._get_parser_stats(grep_regex=grep_regex, get_result_only=get_result_only)
 
     def peek_parser_hnu_stats(self, grep_regex=None):
         self._get_parser_stats(grep_regex=grep_regex, hnu=True)
@@ -1519,13 +1556,19 @@ class PeekCommands(object):
         cmd = ["get", "wred_ecn_stats", {"port": port_num, "queue": queue_num}]
         self._display_stats(cmd=cmd, verb='qos', grep_regex=grep_regex)
 
-    def peek_sfg_stats(self, stats_type, grep_regex=None):
-        if stats_type == "nu":
+    def peek_sfg_stats(self, mode='nu', grep_regex=None, get_result_only=False):
+        if mode == "nu":
             cmd = "stats/sfg/nu"
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
-        elif stats_type == "hnu":
+            if get_result_only:
+                return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+            else:
+                self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        elif mode == "hnu":
             cmd = "stats/sfg/hnu"
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+            if get_result_only:
+                return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+            else:
+                self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
             try:
                 prev_result = None
@@ -1560,11 +1603,17 @@ class PeekCommands(object):
                                             table_obj.add_row([_key, result[key][_key]])
 
                                     master_table_obj.add_column(key, [table_obj])
+                            if get_result_only:
+                                return cmd, master_table_obj
                             prev_result = result
                             print master_table_obj
                             print "\n########################  %s ########################\n" % \
                                   str(self._get_timestamp())
                             time.sleep(TIME_INTERVAL)
+                        else:
+                            if get_result_only:
+                                return cmd, "Empty Result"
+                            print "Empty Result"
                     except KeyboardInterrupt:
                         self.dpc_client.disconnect()
                         break
@@ -1584,7 +1633,7 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
         return result
 
-    def peek_stats_per_vp(self, vp_number=None, grep_regex=None):
+    def peek_stats_per_vp(self, vp_number=None, grep_regex=None, get_result_only=False):
         try:
             prev_result = None
             while True:
@@ -1644,11 +1693,17 @@ class PeekCommands(object):
                                         else:
                                             table_obj.add_row([_key, result[key][_key]])
                                     master_table_obj.add_row([key, table_obj])
+                        if get_result_only:
+                            return cmd, master_table_obj
                         prev_result = result
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
                         time.sleep(TIME_INTERVAL)
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
+                        print "Empty Result"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1656,7 +1711,7 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_mpg_stats(self, grep_regex=None):
+    def peek_mpg_stats(self, grep_regex=None, get_result_only=False):
         try:
             prev_result = None
             while True:
@@ -1718,6 +1773,12 @@ class PeekCommands(object):
                                 master_table_obj.add_column('Tx Stats', [tx_table_obj])
                             if rx_table_obj.rowcount > 1:
                                 master_table_obj.add_column('Rx Stats', [rx_table_obj])
+                    else:
+                        if get_result_only:
+                            print cmd, "Empty Result"
+                        print "Empty Result"
+                    if get_result_only:
+                        return cmd, master_table_obj
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
                     time.sleep(TIME_INTERVAL)
@@ -1728,7 +1789,7 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_pervppkts_stats(self, vp_number=None, grep_regex=None):
+    def peek_pervppkts_stats(self, vp_number=None, grep_regex=None, get_result_only=False):
         try:
             prev_result = None
             while True:
@@ -1789,11 +1850,17 @@ class PeekCommands(object):
                                         else:
                                             table_obj.add_row([_key, result[key][_key]])
                                     master_table_obj.add_row([key, table_obj])
+                        if get_result_only:
+                            return cmd, master_table_obj
                         prev_result = result
                         print master_table_obj
                         print "\n########################  %s ########################\n" % \
                               str(self._get_timestamp())
                         time.sleep(TIME_INTERVAL)
+                    else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
+                        print "Empty Result"
                 except KeyboardInterrupt:
                     self.dpc_client.disconnect()
                     break
@@ -1801,7 +1868,7 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def _get_nested_dict_stats(self, cmd, stop_regex="does not exist", grep_regex=None):
+    def _get_nested_dict_stats(self, cmd, stop_regex="does not exist", grep_regex=None, get_result_only=False):
         try:
             prev_result = None
             while True:
@@ -1838,8 +1905,11 @@ class PeekCommands(object):
                                         table_obj.add_row([_key, result[key][_key]])
                                 master_table_obj.add_row([key, table_obj])
                     else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
                         print "Empty Result"
-
+                    if get_result_only:
+                        return cmd, master_table_obj
                     prev_result = result
                     print master_table_obj
                     print "\n########################  %s ########################\n" % str(self._get_timestamp())
@@ -1897,13 +1967,19 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_nhp_stats(self, grep_regex=None):
+    def peek_nhp_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/nhp"
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        if get_result_only:
+            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
 
-    def peek_sse_stats(self, grep_regex=None):
+    def peek_sse_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/sse"
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+        if get_result_only:
+            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
 
     def peek_pc_resource_stats(self, cluster_id, grep_regex=None):
         cmd = "stats/resource/pc/[%s]" % cluster_id
@@ -1930,12 +2006,21 @@ class PeekCommands(object):
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
     def peek_hnu_resource_stats(self, resource_id, grep_regex=None):
-        cmd = "stats/resource/hnu/[%s]" % resource_id
+        if resource_id:
+            cmd = "stats/resource/hnu/[%s]" % resource_id
+        else:
+            cmd = "stats/resource/hnux"
         self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_nu_resource_stats(self, resource_id, grep_regex=None):
-        cmd = "stats/resource/nu/[%s]" % resource_id
-        self._display_stats(cmd=cmd, grep_regex=grep_regex)
+    def peek_nu_resource_stats(self, resource_id=None, grep_regex=None, get_result_only=False):
+        if resource_id:
+            cmd = "stats/resource/nu/[%s]" % resource_id
+        else:
+            cmd = "stats/resource/nux"
+        if get_result_only:
+            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
     def peek_hu_resource_stats(self, hu_id, wqsi=None, wqse=None, resource_id=None, grep_regex=None):
         try:
@@ -1959,17 +2044,18 @@ class PeekCommands(object):
         cmd = "stats/resource/dam"
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_bam_resource_stats(self, grep_regex=None):
+    def peek_bam_resource_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/resource/bam"
         verb = "peek"
         tid = 0
         au_sort = False
         prev_result = None
         try:
-            bam_pool_decode_dict ={'pool0': 'BM_POOL_FUNOS', 'pool4': 'BM_POOL_NU_ERP_FCP', 'pool5': 'BM_POOL_NU_ERP_NONFCP',
-                                   'pool6': 'BM_POOL_NU_ERP_CC', 'pool7': 'BM_POOL_NU_ERP_SAMPLING', 'pool1': 'BM_POOL_NU_ETP_CMDLIST',
-                                   'pool8': 'BM_POOL_HNU_NONFCP', 'pool2': 'BM_POOL_HU_REQ', 'pool9': 'BM_POOL_REGEX',
-                                   'pool10': 'BM_POOL_REFBUF', 'pool63': 'BM_POOL_NU_PREFETCH', 'pool3': 'BM_POOL_SW_PREFETCH'}
+            bam_pool_decode_dict ={'pool0': 'BM_POOL_FUNOS', 'pool1': 'BM_POOL_NU_ETP_CMDLIST', 'pool2': 'BM_POOL_HU_REQ',
+                                   'pool3': 'BM_POOL_SW_PREFETCH', 'pool4': 'BM_POOL_NU_ERP_FCP', 'pool5': 'BM_POOL_NU_ERP_NONFCP',
+                                   'pool6': 'BM_POOL_NU_ERP_CC', 'pool7': 'BM_POOL_NU_ERP_SAMPLING',
+                                   'pool8': 'BM_POOL_HNU_NONFCP', 'pool9': 'BM_POOL_REGEX',
+                                   'pool10': 'BM_POOL_REFBUF', 'pool62': 'BM_POOL_HNU_PREFETCH', 'pool63': 'BM_POOL_NU_PREFETCH'}
 
             while True:
                 try:
@@ -2010,12 +2096,15 @@ class PeekCommands(object):
                                         table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key]])
                                 else:
                                     table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
-
+                        if get_result_only:
+                            return cmd, table_obj
                         prev_result = result
                         print table_obj
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
                         time.sleep(TIME_INTERVAL)
                     else:
+                        if get_result_only:
+                            return cmd, "Empty Result"
                         print "Empty Result"
                         time.sleep(TIME_INTERVAL)
                 except KeyboardInterrupt:
@@ -2066,10 +2155,12 @@ class PeekCommands(object):
             self.dpc_client.disconnect()
     '''
 
-    def peek_nwqm_stats(self, grep_regex=None):
+    def peek_nwqm_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/nwqm"
-        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
-
+        if get_result_only:
+            return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
 
 class SampleCommands(object):
 
@@ -2127,4 +2218,72 @@ class SampleCommands(object):
                 print result
         except Exception as ex:
             print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+
+class CaptureCommands(PeekCommands):
+    def do_write_on_file(self, filepath, command_dict):
+        result = False
+        try:
+            with open(filepath, 'a') as f:
+                f.write('\n######### Capture start time %s #########\n' % self._get_timestamp())
+                for command in command_dict.iterkeys():
+                    cmd, result = command_dict[command]
+                    f.write("Executed command: %s" % cmd)
+                    f.write("\nOutput is:\n")
+                    if isinstance(result, PrettyTable):
+                        f.write(result.get_string())
+                    else:
+                        f.write(result)
+                    f.write("\n")
+                    f.write('\n===============================================================\n')
+                result = True
+        except Exception as ex:
+            print "Error: %s" % str(ex)
+        return result
+
+    def delete_filepath(self, filepath):
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+    def capture_stats(self, filename, mode='nu', port_list=[]):
+        filepath = None
+        command_dict = OrderedDict()
+        try:
+            tmp_path = '/tmp/'
+            if not filename:
+                filename = str(uuid4()) + '.txt'
+            filepath = tmp_path + filename
+            if mode == 'nu':
+                if not port_list is None:
+                    for port_num in port_list:
+                        command_dict['fpg %s stats' % port_num] = self.peek_fpg_stats(port_num=int(port_num),
+                                                                                      get_result_only=True)
+                command_dict['psw global stats'] = self.peek_psw_stats(get_result_only=True)
+                command_dict['wro stats'] = self.peek_wro_stats(get_result_only=True)
+                command_dict['fcp stats'] = self.peek_fcp_stats(get_result_only=True)
+                command_dict['vppkts stats'] = self.peek_vp_stats(get_result_only=True)
+                #command_dict['fwd stats'] = self.peek_fwd_stats(get_result_only=True)
+                command_dict['erp stats'] = self.peek_erp_stats(get_result_only=True)
+                command_dict['parser stats'] = self.peek_parser_nu_stats(get_result_only=True)
+                command_dict['sfg stats'] = self.peek_sfg_stats(get_result_only=True)
+                command_dict['per_vp stats'] = self.peek_stats_per_vp(get_result_only=True)
+                command_dict['nwqm stats'] = self.peek_nwqm_stats(get_result_only=True)
+                #command_dict['mpg stats'] = self.peek_mpg_stats(get_result_only=True)
+                command_dict['pervppkts stats'] = self.peek_pervppkts_stats(get_result_only=True)
+                command_dict['nhp stats'] = self.peek_nhp_stats(get_result_only=True)
+                command_dict['sse stats'] = self.peek_sse_stats(get_result_only=True)
+                command_dict['resource bam stats'] = self.peek_bam_resource_stats(get_result_only=True)
+                command_dict['nu resource stats'] = self.peek_nu_resource_stats(get_result_only=True)
+            write_result = self.do_write_on_file(filepath=filepath, command_dict=command_dict)
+            if write_result:
+                print "Filepath is %s" % filepath
+            else:
+                print "Error in execution. Deleting file"
+                self.delete_filepath(filepath)
+            self.dpc_client.disconnect()
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            if filepath:
+                self.delete_filepath(filepath)
             self.dpc_client.disconnect()
