@@ -17,6 +17,7 @@ class CmdController(Cmd):
         self._peek_cmd_obj = PeekCommands(dpc_client=self.dpc_client)
         self._clear_cmd_obj = NuClearCommands(dpc_client=self.dpc_client)
         self._sample_cmd_obj = SampleCommands(dpc_client=self.dpc_client)
+        self._capture_cmd_obj = CaptureCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -620,12 +621,12 @@ class CmdController(Cmd):
     def peek_wro_nu_stats(self, args):
         tunnel_id = args.tunnel
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_wro_stats(cmd_type='nu', tunnel_id=tunnel_id, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_wro_stats(mode='nu', tunnel_id=tunnel_id, grep_regex=grep_regex)
 
     def peek_wro_hnu_stats(self, args):
         tunnel_id = args.tunnel
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_wro_stats(cmd_type='hnu', tunnel_id=tunnel_id, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_wro_stats(mode='hnu', tunnel_id=tunnel_id, grep_regex=grep_regex)
 
     def peek_bam_stats(self, args):
         grep_regex = args.grep
@@ -637,23 +638,23 @@ class CmdController(Cmd):
 
     def peek_erp_hnu_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='hnu', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_erp_stats(mode='hnu', grep_regex=grep_regex)
 
     def peek_erp_nu_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='nu', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_erp_stats(mode='nu', grep_regex=grep_regex)
 
     def peek_etp_hnu_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_etp_stats(cmd_type='hnu', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_etp_stats(mode='hnu', grep_regex=grep_regex)
 
     def peek_etp_nu_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_etp_stats(cmd_type='nu', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_etp_stats(mode='nu', grep_regex=grep_regex)
 
     def peek_erp_flex_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_erp_stats(cmd_type='flex', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_erp_stats(mode='flex', grep_regex=grep_regex)
 
     def peek_nu_parser_stats(self, args):
         grep_regex = args.grep
@@ -671,11 +672,11 @@ class CmdController(Cmd):
 
     def peek_nu_sfg_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_sfg_stats(stats_type='nu', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_sfg_stats(mode='nu', grep_regex=grep_regex)
 
     def peek_hnu_sfg_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_sfg_stats(stats_type='hnu', grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_sfg_stats(mode='hnu', grep_regex=grep_regex)
 
     def peek_per_vp_stats(self, args):
         grep_regex = args.grep
@@ -829,6 +830,11 @@ class CmdController(Cmd):
 
     def get_sample(self, args):
         self._sample_cmd_obj.get_sample()
+
+    def capture_tech_nu_stats(self, args):
+        filename = args.filename
+        portlist = args.portlist
+        self._capture_cmd_obj.capture_stats(filename=filename, mode='nu', port_list=portlist)
 
     # Set handler functions for the sub commands
 
@@ -1008,6 +1014,9 @@ class CmdController(Cmd):
     clear_nu_nwqm_stats_parser.set_defaults(func=clear_nu_nwqm_stats)
     clear_nu_vppkts_stats_parser.set_defaults(func=clear_nu_vppkts_stats)
 
+    # -------------- Clear Command Handlers ----------------
+    capture_tech_nu_parser.set_defaults(func=capture_tech_nu_stats)
+
     @with_argparser(base_set_parser)
     def do_set(self, args):
         func = getattr(args, 'func', None)
@@ -1040,14 +1049,24 @@ class CmdController(Cmd):
         else:
             self.do_help('peek')
 
+    @with_argparser(base_capture_parser)
+    def do_capture(self, args):
+        func = getattr(args, 'func', None)
+        if func is not None:
+            func(self, args)
+        else:
+            self.do_help('capture')
+
     def __del__(self):
         self.dpc_client.disconnect()
 
 
 
 
+
+
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.23.102", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.23.121", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 
