@@ -1029,12 +1029,12 @@ peek_rgx_resource_stats_parser.add_argument('cluster_id', type=int, help="Cluste
 peek_rgx_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_hnu_resource_stats_parser = peek_resource_stats_parsers.add_parser('hnu', help='Peek hnu resource stats')
-peek_hnu_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id to be specified between 0 and "
+peek_hnu_resource_stats_parser.add_argument('-resource_id', type=int, help="Resource id to be specified between 0 and "
                                                                           "191", default=None)
 peek_hnu_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_nu_resource_stats_parser = peek_resource_stats_parsers.add_parser('nu', help='Peek nu resource stats')
-peek_nu_resource_stats_parser.add_argument('resource_id', type=int, help="Resource id", default=None)
+peek_nu_resource_stats_parser.add_argument('-resource_id', type=int, help="Resource id", default=None)
 peek_nu_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 peek_hu_resource_stats_parser = peek_resource_stats_parsers.add_parser('hu', help='Peek hu resource stats')
@@ -1055,3 +1055,24 @@ peek_dam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", 
 
 peek_bam_resource_stats_parser = peek_resource_stats_parsers.add_parser('bam', help='Peek bam resource stats')
 peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# ---------------------------------------------------------------------------------------------------
+# capture commands
+
+# Set sub commands
+base_capture_parser = ArgumentParser(prog="capture")
+base_capture_subparsers = base_capture_parser.add_subparsers(title="subcommands", help="")
+capture_tech_parser = base_capture_subparsers.add_parser('tech', help="capture tech commands")
+capture_tech_parsers = capture_tech_parser.add_subparsers(title="subcommands", help="")
+
+capture_tech_nu_parser = capture_tech_parsers.add_parser('nu', help="Capture nu stats")
+capture_tech_nu_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
+                                                   "If not provided it will create one. The entire filepath will be "
+                                                   "provided on console once commands run successfully", default=None,
+                                 type=str)
+capture_tech_nu_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+
+capture_tech_hnu_parser = capture_tech_parsers.add_parser('hnu', help="Capture hnu stats")
+capture_tech_hnu_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
+                                                   "If not provided it will create one. The entire filepath will be "
+                                                   "provided on console once commands run successfully")
