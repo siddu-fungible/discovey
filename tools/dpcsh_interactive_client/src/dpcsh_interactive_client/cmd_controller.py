@@ -836,6 +836,11 @@ class CmdController(Cmd):
         portlist = args.portlist
         self._capture_cmd_obj.capture_stats(filename=filename, mode='nu', port_list=portlist)
 
+    def capture_tech_hnu_stats(self, args):
+        filename = args.filename
+        portlist = args.portlist
+        self._capture_cmd_obj.capture_stats(filename=filename, mode='hnu', port_list=portlist)
+
     # Set handler functions for the sub commands
 
     # -------------- Port Command Handlers ----------------
@@ -1016,6 +1021,7 @@ class CmdController(Cmd):
 
     # -------------- Clear Command Handlers ----------------
     capture_tech_nu_parser.set_defaults(func=capture_tech_nu_stats)
+    capture_tech_hnu_parser.set_defaults(func=capture_tech_hnu_stats)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):
@@ -1066,7 +1072,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.23.121", target_port=40221, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.67", target_port=40221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 
