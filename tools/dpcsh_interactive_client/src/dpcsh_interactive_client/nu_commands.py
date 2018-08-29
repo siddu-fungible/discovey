@@ -1991,7 +1991,7 @@ class PeekCommands(object):
                                 if pool_value in bam_pool_decode_dict:
                                     decode_value = bam_pool_decode_dict[pool_value]
                                 if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                    if re.search(grep_regex, decode_value, re.IGNORECASE):
                                         table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
                                 else:
                                     table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], diff_result[key]])
@@ -2006,7 +2006,7 @@ class PeekCommands(object):
                                 if pool_value in bam_pool_decode_dict:
                                     decode_value = bam_pool_decode_dict[pool_value]
                                 if grep_regex:
-                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                    if re.search(grep_regex, decode_value, re.IGNORECASE):
                                         table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key]])
                                 else:
                                     table_obj.add_row([decode_value + ' (' + key + ')'.strip(), result[key], ])
