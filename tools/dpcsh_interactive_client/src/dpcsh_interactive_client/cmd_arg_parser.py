@@ -1076,3 +1076,4 @@ capture_tech_hnu_parser = capture_tech_parsers.add_parser('hnu', help="Capture h
 capture_tech_hnu_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
                                                    "If not provided it will create one. The entire filepath will be "
                                                    "provided on console once commands run successfully")
+capture_tech_hnu_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
