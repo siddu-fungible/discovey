@@ -372,6 +372,11 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
         $scope.editingDescription = false;
     };
 
+    $scope.openAtomicTab = () => {
+        let url = "/metrics/atomic/" + $scope.currentChartName + "/" + $scope.currentMetricModelName;
+        $window.open(url, '_blank');
+    };
+
     $scope.submitDescription = (node) => {
         let payload = {};
         payload["metric_model_name"] = node.metricModelName;

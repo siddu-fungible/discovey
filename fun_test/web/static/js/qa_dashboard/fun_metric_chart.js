@@ -14,6 +14,12 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         $scope.modelName = ctrl.modelName;
         $scope.editingDescription = false;
         $scope.inner = {};
+        if(ctrl.atomic) {
+            $scope.atomic = ctrl.atomic;
+        }
+        else {
+            $scope.atomic = false;
+        }
         $scope.previewDataSets = ctrl.previewDataSets;
         $scope.currentDescription = "---";
         //console.log("OnInit: CI:" + $scope.chartInfo);
@@ -583,12 +589,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     };
 
     $scope.editDescription = () => {
-        if($scope.editingDescription) {
-            $scope.editingDescription = false;
-        }
-        else {
             $scope.editingDescription = true;
-        }
     };
 
     // $(window).scroll(function() {
@@ -616,7 +617,8 @@ angular.module('qa-dashboard').component("funMetricChart", {
                     showingTable: '<',
                     tableInfo: '<',
                     chartInfo: '<',
-                    waitTime: '='
+                    waitTime: '=',
+                    atomic: '<'
                   },
         controller: FunMetricChartController
  });
