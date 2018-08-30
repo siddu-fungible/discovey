@@ -658,11 +658,11 @@ class CmdController(Cmd):
 
     def peek_nu_parser_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_parser_nu_stats(grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_parser_stats(mode='nu', grep_regex=grep_regex)
 
     def peek_hnu_parser_stats(self, args):
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_parser_hnu_stats(grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_parser_stats(mode='hnu', grep_regex=grep_regex)
 
     def peek_nu_qos_wred_ecn_stats(self, args):
         port_num = args.port_num
@@ -735,12 +735,12 @@ class CmdController(Cmd):
     def peek_hnu_resource_stats(self, args):
         grep_regex = args.grep
         resource_id = args.resource_id
-        self._peek_cmd_obj.peek_hnu_resource_stats(resource_id=resource_id, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_mode_resource_stats(mode='hnu', resource_id=resource_id, grep_regex=grep_regex)
 
     def peek_nu_resource_stats(self, args):
         grep_regex = args.grep
         resource_id = args.resource_id
-        self._peek_cmd_obj.peek_nu_resource_stats(resource_id=resource_id, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_mode_resource_stats(mode='nu', resource_id=resource_id, grep_regex=grep_regex)
 
     def peek_hu_resource_stats(self, args):
         id = args.id
@@ -840,6 +840,11 @@ class CmdController(Cmd):
         filename = args.filename
         portlist = args.portlist
         self._capture_cmd_obj.capture_stats(filename=filename, mode='hnu', port_list=portlist)
+
+    def capture_tech_all_stats(self, args):
+        filename = args.filename
+        portlist = args.portlist
+        self._capture_cmd_obj.capture_stats(filename=filename, mode='all', port_list=portlist)
 
     # Set handler functions for the sub commands
 
@@ -1022,6 +1027,7 @@ class CmdController(Cmd):
     # -------------- Clear Command Handlers ----------------
     capture_tech_nu_parser.set_defaults(func=capture_tech_nu_stats)
     capture_tech_hnu_parser.set_defaults(func=capture_tech_hnu_stats)
+    capture_tech_all_parser.set_defaults(func=capture_tech_all_stats)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):
