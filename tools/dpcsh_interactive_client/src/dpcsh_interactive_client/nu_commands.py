@@ -1543,14 +1543,14 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_parser_nu_stats(self, grep_regex=None, get_result_only=False):
+    def peek_parser_stats(self, mode='nu', grep_regex=None, get_result_only=False):
+        hnu=False
+        if mode == 'hnu':
+            hnu=True
         if get_result_only:
-            return self._get_parser_stats(grep_regex=grep_regex, get_result_only=get_result_only)
+            return self._get_parser_stats(hnu=hnu, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
-            self._get_parser_stats(grep_regex=grep_regex, get_result_only=get_result_only)
-
-    def peek_parser_hnu_stats(self, grep_regex=None):
-        self._get_parser_stats(grep_regex=grep_regex, hnu=True)
+            self._get_parser_stats(hnu=hnu, grep_regex=grep_regex, get_result_only=get_result_only)
 
     def peek_wred_ecn_stats(self, port_num, queue_num, grep_regex=None):
         cmd = ["get", "wred_ecn_stats", {"port": port_num, "queue": queue_num}]
@@ -2005,21 +2005,15 @@ class PeekCommands(object):
         cmd = "stats/resource/rgx/[%s]" % cluster_id
         self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_hnu_resource_stats(self, resource_id=None, grep_regex=None, get_result_only=False):
+    def peek_mode_resource_stats(self, mode='nu', resource_id=None, grep_regex=None, get_result_only=False):
         if resource_id:
             cmd = "stats/resource/hnu/[%s]" % resource_id
+            if mode == 'nu':
+                cmd = "stats/resource/nu/[%s]" % resource_id
         else:
             cmd = "stats/resource/hnux"
-        if get_result_only:
-            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
-        else:
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
-
-    def peek_nu_resource_stats(self, resource_id=None, grep_regex=None, get_result_only=False):
-        if resource_id:
-            cmd = "stats/resource/nu/[%s]" % resource_id
-        else:
-            cmd = "stats/resource/nux"
+            if mode == 'nu':
+                cmd = "stats/resource/nux"
         if get_result_only:
             return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
@@ -2245,6 +2239,23 @@ class CaptureCommands(PeekCommands):
             print "Error: %s" % str(ex)
         return result
 
+    def append_mode_specific_commands(self, command_dict, port_list=[], mode='nu'):
+        try:
+            if not port_list is None:
+                for port_num in port_list:
+                    command_dict['%s fpg %s stats' % (mode, port_num)] = self.peek_fpg_stats(port_num=int(port_num),
+                                                                                             get_result_only=True,
+                                                                                             mode=mode)
+            command_dict['%s psw stats' % mode] = self.peek_psw_stats(get_result_only=True, mode=mode)
+            command_dict['%s wro stats' % mode] = self.peek_wro_stats(get_result_only=True, mode=mode)
+            command_dict['%s erp stats' % mode] = self.peek_erp_stats(get_result_only=True, mode=mode)
+            command_dict['%s sfg stats' % mode] = self.peek_sfg_stats(get_result_only=True, mode=mode)
+            command_dict['%s parser stats' % mode] = self.peek_parser_stats(get_result_only=True, mode=mode)
+            command_dict['%s resource stats' % mode] = self.peek_mode_resource_stats(get_result_only=True, mode=mode)
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+        return command_dict
+
     def delete_filepath(self, filepath):
         if os.path.exists(filepath):
             os.remove(filepath)
@@ -2259,35 +2270,20 @@ class CaptureCommands(PeekCommands):
             filepath = tmp_path + filename
             command_dict['fcp stats'] = self.peek_fcp_stats(get_result_only=True)
             command_dict['vppkts stats'] = self.peek_vp_stats(get_result_only=True)
-            command_dict['parser stats'] = self.peek_parser_nu_stats(get_result_only=True)
             command_dict['per_vp stats'] = self.peek_stats_per_vp(get_result_only=True)
             command_dict['pervppkts stats'] = self.peek_pervppkts_stats(get_result_only=True)
             command_dict['nwqm stats'] = self.peek_nwqm_stats(get_result_only=True)
             command_dict['nhp stats'] = self.peek_nhp_stats(get_result_only=True)
             command_dict['sse stats'] = self.peek_sse_stats(get_result_only=True)
             command_dict['resource bam stats'] = self.peek_bam_resource_stats(get_result_only=True)
-            if mode == 'nu':
-                if not port_list is None:
-                    for port_num in port_list:
-                        command_dict['fpg %s stats' % port_num] = self.peek_fpg_stats(port_num=int(port_num),
-                                                                                      get_result_only=True)
-                command_dict['psw global stats'] = self.peek_psw_stats(get_result_only=True)
-                command_dict['wro stats'] = self.peek_wro_stats(get_result_only=True)
-                #command_dict['fwd stats'] = self.peek_fwd_stats(get_result_only=True)
-                command_dict['erp stats'] = self.peek_erp_stats(get_result_only=True)
-                command_dict['sfg stats'] = self.peek_sfg_stats(get_result_only=True)
-                #command_dict['mpg stats'] = self.peek_mpg_stats(get_result_only=True)
-                command_dict['nu resource stats'] = self.peek_nu_resource_stats(get_result_only=True)
-            elif mode == 'hnu':
-                if not port_list is None:
-                    for port_num in port_list:
-                        command_dict['fpg %s stats' % port_num] = self.peek_fpg_stats(port_num=int(port_num),
-                                                                                      get_result_only=True, mode=mode)
-                    command_dict['psw global stats'] = self.peek_psw_stats(get_result_only=True, mode=mode)
-                    command_dict['wro stats'] = self.peek_wro_stats(get_result_only=True, mode=mode)
-                    command_dict['erp stats'] = self.peek_erp_stats(get_result_only=True, mode=mode)
-                    command_dict['sfg stats'] = self.peek_sfg_stats(get_result_only=True, mode=mode)
-                    command_dict['hnu resource stats'] = self.peek_hnu_resource_stats(get_result_only=True)
+            if mode == 'nu' or mode == 'hnu':
+                command_dict = self.append_mode_specific_commands(command_dict=command_dict, port_list=port_list,
+                                                                  mode=mode)
+            elif mode == 'all':
+                command_dict = self.append_mode_specific_commands(command_dict=command_dict, port_list=port_list,
+                                                                  mode='nu')
+                command_dict = self.append_mode_specific_commands(command_dict=command_dict, port_list=port_list,
+                                                                  mode='hnu')
             write_result = self.do_write_on_file(filepath=filepath, command_dict=command_dict)
             if write_result:
                 print "Filepath is %s" % filepath
