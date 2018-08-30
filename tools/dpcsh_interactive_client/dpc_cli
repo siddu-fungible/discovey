@@ -17,6 +17,8 @@ INTRO = """
     2. Clear Stats
     3. Peek various Stats in iterations at certain time interval. Shows difference in counters in tabular format. 
        Also user can grep specific counters by using regex
+    4. Capture stats to a file. You can provide a filename or it will create a file and print it on console once 
+       command is executed successfully.
     
     For "help" or "-h" for available commands/sub-commands
     
