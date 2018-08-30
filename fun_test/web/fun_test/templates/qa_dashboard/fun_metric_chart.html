@@ -1,6 +1,60 @@
+<style>
+.arrow_btn:after {
+    font-family: "Glyphicons Halflings";
+    content: "\e114";
+    float: right;
+    margin-left: 15px;
+  }
+  /* Icon when the collapsible content is hidden */
+  .arrow_btn.collapsed:after {
+    content: "\e080";
+  }
+    /*.scroll_top {*/
+	/*display:none;*/
+	/*width:100%;*/
+	/*margin:0 auto;*/
+	/*position:fixed;*/
+	/*bottom:20px;*/
+	/*right:10px;*/
+/*}*/
+/*.scroll {*/
+	/*position:absolute;*/
+	/*right:20px;*/
+	/*bottom:20px;*/
+	/*background:#b2b2b2;*/
+	/*background:rgba(178,178,178,0.7);*/
+	/*padding:20px;*/
+	/*text-align: center;*/
+	/*margin: 0 0 0 0;*/
+	/*cursor:pointer;*/
+	/*transition: 0.5s;*/
+	/*-moz-transition: 0.5s;*/
+	/*-webkit-transition: 0.5s;*/
+	/*-o-transition: 0.5s;*/
+/*}*/
+/*.scroll:hover {*/
+	/*background:rgba(178,178,178,1.0);*/
+	/*transition: 0.5s;*/
+	/*-moz-transition: 0.5s;*/
+	/*-webkit-transition: 0.5s;*/
+	/*-o-transition: 0.5s;*/
+/*}*/
+/*.scroll:hover .fa {*/
+	/*padding-top:-10px;*/
+/*}*/
+/*.scroll .fa {*/
+	/*font-size:30px;*/
+	/*margin-top:-5px;*/
+	/*margin-left:1px;*/
+	/*transition: 0.5s;*/
+	/*-moz-transition: 0.5s;*/
+	/*-webkit-transition: 0.5s;*/
+	/*-o-transition: 0.5s;*/
+/*}*/
+</style>
 <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>
 <div>
-        <div  style="padding: 20px;" ng-switch="timeMode">
+        <div ng-switch="timeMode">
             <div ng-switch-when="all">
                 <a href="#" ng-click="setTimeMode('week')"> Week </a>/
                 <a href="#" ng-click="setTimeMode('month')"> Month </a>/
@@ -22,23 +76,87 @@
                point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter"
                tooltip-formatter="tooltipFormatter">
         </fun-chart>
-</div>
-<div ng-show="$ctrl.showingTable">
-    <!-- a href="/metrics/table_view/{{ $ctrl.modelName }}">Full model table</a-->
-    <div id="all-data-table" ng-repeat="data in allData">
-        <h3>{{ filterDataSets[$index].name }}</h3>
-        <table class="table">
-            <tr>
-                <th ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
-                    {{ value.verbose_name }}
-                </th>
-            </tr>
-            <tr ng-repeat="row in data">
-                <td ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
-                    {{ cleanValue(key, row[key])}}
-                </td>
-            </tr>
+    <br>
 
-        </table>
+     <b>Description:   </b><a href="#" ng-if="!editingDescription" ng-click="editDescription()"><i class="fa fa-pencil"></i></a>
+    <br>
+    <div ng-bind-html="inner.currentDescription"></div>
+    <div ng-if="editingDescription">
+        <br>
+        <textarea rows="4" ng-model="inner.currentDescription" style="min-width: 100%;"></textarea>
+        <button class="btn btn-success" ng-click="submit()">Submit</button>
+        <button class="btn" ng-click="dismiss()">Cancel</button>
     </div>
 </div>
+<div ng-if="$ctrl.modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+    <div>
+    <button type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo"
+            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black;">Show Tables</button>
+  <div id="demo" class="collapse">
+       <div id="all-data-table2" ng-repeat="data in allData">
+           <h3>{{ filterDataSets[$index].name }}</h3>
+           <table class="table">
+               <tr>
+                   <th ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
+                       {{ value.verbose_name }}
+                   </th>
+               </tr>
+               <tr ng-repeat="row in data">
+                   <td ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
+                       {{ cleanValue(key, row[key])}}
+                   </td>
+               </tr>
+           </table>
+       </div>
+      <!--<button type="button" class="btn btn1 btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo" style="text-align: left; font-size: 14px; padding: 5px; border-color: black; border: 0px solid; width: 100%; background: white; color: black;">Hide Tables</button>-->
+  </div>
+    </div>
+    <div>
+    <button type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo1"
+            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black;">Configure</button>
+  <div id="demo1" class="collapse">
+       <div class="row">
+           <div class="col-lg-10 col-xl-10 pull-left">
+               <table class="table table-nonfluid table-borderless"
+                      ng-repeat="dataSet in previewDataSets track by $index">
+                   <tr>
+                       <th>Name</th>
+                       <th>Field</th>
+                       <th>Min</th>
+                       <th>Max</th>
+                       <th>Expected</th>
+                   </tr>
+                   <tr>
+                       <td>
+                           {{ dataSet.name }}
+                       </td>
+                       <td>
+                           {{ dataSet.output.name }}
+                       </td>
+                       <td>
+                           <input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min"
+                                  style="width: 100px">
+                       </td>
+                       <td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max"
+                                  style="width: 100px"></td>
+                       <td><input type="number" ng-model="dataSet.output.expected"
+                                  ng-value="dataSet.output.expected"
+                                  style="width: 100px"></td>
+                   </tr>
+               </table>
+               <p><input type="checkbox" ng-checked="negativeGradient" ng-model="inner.negativeGradient">&nbsp;Negative gradient</p>
+               <p><input type="checkbox" ng-checked="leaf" ng-model="inner.leaf">&nbsp;Leaf</p>
+           </div>
+       </div>
+      <div class="row">
+          <div style="padding: 10px;">
+              <button class="btn btn-success" ng-click="submit()">Submit</button>
+          </div>
+      </div>
+  </div>
+    </div>
+
+    </div>
+<!--<div class='scroll_top'>-->
+    <!--<div class='scroll icon'><i class="fa fa-4x fa-angle-up"></i></div>-->
+<!--</div>-->

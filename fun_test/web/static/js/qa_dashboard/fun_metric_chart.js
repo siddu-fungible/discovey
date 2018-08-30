@@ -7,8 +7,15 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     ctrl.$onInit = function () {
         $scope.status = "idle";
+        $scope.showingTable = false;
         $scope.setDefault();
         $scope.chartInfo = ctrl.chartInfo;
+        $scope.chartName = ctrl.chartName;
+        $scope.modelName = ctrl.modelName;
+        $scope.editingDescription = false;
+        $scope.inner = {};
+        $scope.previewDataSets = ctrl.previewDataSets;
+        $scope.currentDescription = "---";
         //console.log("OnInit: CI:" + $scope.chartInfo);
         $scope.waitTime = 0;
         if (ctrl.waitTime) {
@@ -101,9 +108,16 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     };
 
+    $scope.showTables = () => {
+      if($scope.showingTable === false)
+          $scope.showingTable = true;
+      else
+          $scope.showingTable = false;
+    };
+
     $scope.$watch(
         () => {
-            return [ctrl.previewDataSets, ctrl.chartName];
+            return [ctrl.chartName];
         }, function (newvalue, oldvalue) {
             if (newvalue === oldvalue) {
                 // console.log(newvalue, oldvalue);
@@ -112,13 +126,13 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             $scope.setDefault();
             $scope.chartInfo = ctrl.chartInfo;
             $scope.fetchChartInfo().then(() => {
-                //$scope.tableInfo = ctrl.tableInfo;
+                $scope.tableInfo = ctrl.tableInfo;
                 //$scope.timeMode = ctrl.timeMode;
                 //console.log("C I:" + ctrl.chartInfo);
                 if($scope.chartInfo) {
-                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
+                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
                 } else {
-                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, ctrl.previewDataSets); // TODO: Race condition on chartInfo
+                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
                 }
 
             });
@@ -135,10 +149,18 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         payload["chart_name"] = ctrl.chartName;
         // Fetch chart info
         //$scope.status = "Fetching chart info";
+
         if (!$scope.chartInfo) {
             //console.log("Fetching CI already");
             return commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
                 $scope.chartInfo = chartInfo;
+                $scope.previewDataSets = $scope.chartInfo.data_sets;
+                $scope.currentDescription = $scope.chartInfo.description;
+                $scope.inner.currentDescription = $scope.currentDescription;
+                $scope.negativeGradient = !$scope.chartInfo.positive;
+                $scope.inner.negativeGradient = $scope.negativeGradient;
+                $scope.leaf = $scope.chartInfo.leaf;
+                $scope.inner.leaf = $scope.leaf;
                 $scope.status = "idle";
                 return $scope.chartInfo;
             })
@@ -337,9 +359,9 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     $scope.setTimeMode = (mode) => {
         $scope.timeMode = mode;
         if($scope.chartInfo) {
-            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, ctrl.previewDataSets); // TODO: Race condition on chartInfo
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, null); // TODO: Race condition on chartInfo
         } else {
-            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, ctrl.previewDataSets); // TODO: Race condition on chartInfo
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, null); // TODO: Race condition on chartInfo
         }
     };
 
@@ -534,7 +556,49 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 });
             }
         });
-    }
+    };
+
+    $scope.submit = () => {
+        //$scope.previewDataSets = $scope.copyChartInfo.data_sets;
+        let payload = {};
+        payload["metric_model_name"] = $scope.modelName;
+        payload["chart_name"] = $scope.chartName;
+        payload["data_sets"] = $scope.previewDataSets;
+        payload["description"] = $scope.inner.currentDescription;
+        payload["negative_gradient"] = $scope.inner.negativeGradient;
+        payload["leaf"] = $scope.inner.leaf;
+        commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
+            if (data) {
+                alert("Submitted");
+            } else {
+                alert("Submission failed. Please check alerts");
+            }
+
+        });
+        $scope.editingDescription = false;
+    };
+
+    $scope.dismiss = () => {
+        $scope.editingDescription = false;
+    };
+
+    $scope.editDescription = () => {
+        if($scope.editingDescription) {
+            $scope.editingDescription = false;
+        }
+        else {
+            $scope.editingDescription = true;
+        }
+    };
+
+    // $(window).scroll(function() {
+    // if ($(this).scrollTop() > 50 ) {
+    //     $('.scrolltop:hidden').stop(true, true).fadeIn();
+    // } else {
+    //     $('.scrolltop').stop(true, true).fadeOut();
+    // }
+    // });
+    // $(function(){$(".scroll").click(function(){$("html, body").animate({ scrollTop: 0 }, 1000);return false})})
 }
 
 angular.module('qa-dashboard').component("funMetricChart", {

@@ -389,8 +389,6 @@ def data(request):
         d["input_date_time__lt"] = today
         try:
             result = model.objects.filter(**d)   #unpack, pack
-
-
             data.append([model_to_dict(x) for x in result])
         except ObjectDoesNotExist:
             logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))

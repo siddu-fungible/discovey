@@ -244,7 +244,7 @@ function EditableMetricChartController($scope, commonService, $attrs, $window, $
             }
 
         });
-    }
+    };
 }
 
 angular.module('qa-dashboard').component("editableMetricChart", {
