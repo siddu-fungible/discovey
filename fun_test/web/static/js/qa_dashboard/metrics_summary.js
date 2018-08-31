@@ -337,14 +337,19 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     };
 
     $scope.showNodeInfoClick = (node) => {
-        $scope.showingNodeInfo = !$scope.showingNodeInfo;
-        $scope.currentNodeInfo = "S";
-        if (node.positive) {
-            $scope.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/expected value) * 100&nbsp)/n";
-        } else {
-            $scope.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
+        if($scope.currentMetricModelName === 'MetricContainer') {
+            $scope.showingContainerNodeInfo = !$scope.showingContainerNodeInfo;
         }
-        $scope.currentNodeInfo += "&nbsp, where n is the number of data-sets";
+        else {
+            $scope.showingNodeInfo = !$scope.showingNodeInfo;
+            $scope.currentNodeInfo = null;
+            if (node.positive) {
+                $scope.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/expected value) * 100&nbsp)/n";
+            } else {
+                $scope.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
+            }
+            $scope.currentNodeInfo += "&nbsp, where n is the number of data-sets";
+        }
     };
 
 

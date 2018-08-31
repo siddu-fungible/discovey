@@ -219,7 +219,7 @@
                             </td>
                             <td valign="top" align="left">
                                 <span id="score-table-info-icon">
-                                    <i class="fa fa-info-circle" style="padding: 10px"
+                                    <i class="fa fa-info-circle" style="padding: 2px"
                                        ng-click="showNodeInfoClick(currentNode)">
                                     </i>
                                 </span>
@@ -248,17 +248,80 @@
             </div>
             <div ng-switch-when="showingNonAtomicMetric">
                 <!-- div style="padding-bottom: 10px;"><h4>Aspect: {{ currentNode.chartName }}</h4></div-->
-
-                <div id="score-table-parent" class="score-card">
-                <span id="score-table-child">{{ currentNode.goodness }}
-                </span>
+                <div>
+                <table>
+                        <tr>
+                            <td>
+                                    <span id="score-table-parent" class="score-card">
+                                        <span id="score-table-child">{{ currentNode.goodness }}
+                                        </span>
+                                    </span>
+                            </td>
+                            <td valign="top" align="left">
+                                <span id="score-table-info-icon">
+                                    <i class="fa fa-info-circle" style="padding: 2px"
+                                       ng-click="showNodeInfoClick(currentNode)">
+                                    </i>
+                                </span>
+                            </td>
+                        </tr>
+                </table>
+                    <div ng-if="showingContainerNodeInfo">
+                        <br>
+                        <h5>Children</h5>
+                        <div ng-if="currentNode">
+                            <table class="table table-nonfluid">
+                                <tr>
+                                    <th>Aspect</th>
+                                    <th>Weight</th>
+                                    <th>Last score</th>
+                                    <th>Weight * Last Score</th>
+                                </tr>
+                                <tr ng-repeat="(childId, info) in currentNode.children">
+                                    <td>{{ metricMap[childId].chartName }}</td>
+                                    <td>
+                                        <p ng-click="editingWeightClick(info)" ng-if="!info.editing">{{ info.weight }}</p>
+                                        <span ng-if="info.editing">
+                                        <input style="padding-right: 10px" type="number" ng-model="info.editingWeight">
+                                        <button style="border: 1px solid black;overflow: hidden; padding-left: 10px;"
+                                                class="btn btn-sm" ng-click="submitWeightClick(currentNode, childId, info)">&#10003;</button>
+                                        <button style="border: 1px solid black;" class="btn btn-sm"
+                                                ng-click="closeEditingWeightClick(info)">&#10060;</button>
+                                    </span>
+                                    </td>
+                                    <td>
+                                        {{ currentNode.childrenScoreMap[childId] | number: 1}}
+                                    </td>
+                                    <td>
+                                        {{ info.weight }} * {{ currentNode.childrenScoreMap[childId] |
+                                        number: 1 }} = {{ info.weight * currentNode.childrenScoreMap[childId]
+                                        | number: 1 }}
+                                    </td>
+                                    <!-- td>{{ childId }}</td -->
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Total ~ {{ getScoreTotal(currentNode) | number: 1}}</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Sum of child weights = {{ getSumChildWeights (currentNode.children) }}</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Score ~ {{getScoreTotal(currentNode) | number: 1}} / {{ getSumChildWeights(currentNode.children) }} = {{getScoreTotal(currentNode) /  getSumChildWeights(currentNode.children) | number: 1}}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-
                 <br>
-
-                <!--<fun-chart values="goodnessTrendValues" show-legend="true"-->
-                           <!--title="goodnessTrendChartTitle" charting="charting" chart-type="line-chart">-->
-                <!--</fun-chart>-->
                 <div class="closed-section"></div>
                 <fun-metric-chart chart-name="currentChartName" model-name="currentMetricModelName"
                                            tooltip-formatter="tooltipFormatter"></fun-metric-chart>
@@ -275,7 +338,7 @@
                      <!--ng-click="editDescriptionClick()"></div>-->
                 <!--<br>-->
                 <br>
-                <div class="closed-section"></div>
+                <!--<div class="closed-section"></div>-->
                 <div ng-if="grid.length">
                     <table class="table" ng-if="grid">
                         <tr ng-repeat="row in grid track by $index">
@@ -293,59 +356,6 @@
                         </tr>
                     </table>
                     <div class="closed-section"></div>
-                </div>
-
-                <br>
-                <h5>Children</h5>
-                <div ng-if="currentNode">
-                    <table class="table table-nonfluid">
-                        <tr>
-                            <th>Aspect</th>
-                            <th>Weight</th>
-                            <th>Last score</th>
-                            <th>Weight * Last Score</th>
-                        </tr>
-                        <tr ng-repeat="(childId, info) in currentNode.children">
-                            <td>{{ metricMap[childId].chartName }}</td>
-                            <td>
-                                <p ng-click="editingWeightClick(info)" ng-if="!info.editing">{{ info.weight }}</p>
-                                <span ng-if="info.editing">
-                                <input style="padding-right: 10px" type="number" ng-model="info.editingWeight">
-                                <button style="border: 1px solid black;overflow: hidden; padding-left: 10px;"
-                                        class="btn btn-sm" ng-click="submitWeightClick(currentNode, childId, info)">&#10003;</button>
-                                <button style="border: 1px solid black;" class="btn btn-sm"
-                                        ng-click="closeEditingWeightClick(info)">&#10060;</button>
-                            </span>
-                            </td>
-                            <td>
-                                {{ currentNode.childrenScoreMap[childId] | number: 1}}
-                            </td>
-                            <td>
-                                {{ info.weight }} * {{ currentNode.childrenScoreMap[childId] |
-                                number: 1 }} = {{ info.weight * currentNode.childrenScoreMap[childId]
-                                | number: 1 }}
-                            </td>
-                            <!-- td>{{ childId }}</td -->
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>Total ~ {{ getScoreTotal(currentNode) | number: 1}}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>Sum of child weights = {{ getSumChildWeights (currentNode.children) }}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>Score ~ {{getScoreTotal(currentNode) | number: 1}} / {{ getSumChildWeights(currentNode.children) }} = {{getScoreTotal(currentNode) /  getSumChildWeights(currentNode.children) | number: 1}}</td>
-                        </tr>
-                    </table>
                 </div>
             </div>
         </div>
