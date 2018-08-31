@@ -1,57 +1,3 @@
-<style>
-.arrow_btn:after {
-    font-family: "Glyphicons Halflings";
-    content: "\e114";
-    float: right;
-    margin-left: 15px;
-  }
-  /* Icon when the collapsible content is hidden */
-  .arrow_btn.collapsed:after {
-    content: "\e080";
-  }
-    /*.scroll_top {*/
-	/*display:none;*/
-	/*width:100%;*/
-	/*margin:0 auto;*/
-	/*position:fixed;*/
-	/*bottom:20px;*/
-	/*right:10px;*/
-/*}*/
-/*.scroll {*/
-	/*position:absolute;*/
-	/*right:20px;*/
-	/*bottom:20px;*/
-	/*background:#b2b2b2;*/
-	/*background:rgba(178,178,178,0.7);*/
-	/*padding:20px;*/
-	/*text-align: center;*/
-	/*margin: 0 0 0 0;*/
-	/*cursor:pointer;*/
-	/*transition: 0.5s;*/
-	/*-moz-transition: 0.5s;*/
-	/*-webkit-transition: 0.5s;*/
-	/*-o-transition: 0.5s;*/
-/*}*/
-/*.scroll:hover {*/
-	/*background:rgba(178,178,178,1.0);*/
-	/*transition: 0.5s;*/
-	/*-moz-transition: 0.5s;*/
-	/*-webkit-transition: 0.5s;*/
-	/*-o-transition: 0.5s;*/
-/*}*/
-/*.scroll:hover .fa {*/
-	/*padding-top:-10px;*/
-/*}*/
-/*.scroll .fa {*/
-	/*font-size:30px;*/
-	/*margin-top:-5px;*/
-	/*margin-left:1px;*/
-	/*transition: 0.5s;*/
-	/*-moz-transition: 0.5s;*/
-	/*-webkit-transition: 0.5s;*/
-	/*-o-transition: 0.5s;*/
-/*}*/
-</style>
 <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>
 <div>
         <div ng-switch="timeMode">
@@ -85,14 +31,14 @@
         <br>
         <textarea rows="4" ng-model="inner.currentDescription" style="min-width: 100%;"></textarea>
         <button class="btn btn-success" ng-click="submit()">Submit</button>
-        <button class="btn" ng-click="dismiss()">Cancel</button>
+        <a ng-click="dismiss()">Cancel</a>
     </div>
 </div>
 <div ng-if="$ctrl.modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
     <div>
-    <button type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo"
+    <button ng-attr-id="{{ 'show_tables_' + metricId }}" type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="{{ '#showing_tables_' + metricId }}"
             style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black;">Show Tables</button>
-  <div id="demo" class="collapse">
+  <div ng-attr-id="{{ 'showing_tables_' + metricId }}" class="collapse">
        <div id="all-data-table2" ng-repeat="data in allData">
            <h3>{{ filterDataSets[$index].name }}</h3>
            <table class="table">
@@ -108,13 +54,20 @@
                </tr>
            </table>
        </div>
+      <div>
+          <a href="{{ '#show_tables_' + metricId }}" style="float:right" ng-click="changeClass('#showing_tables_' + metricId, '#show_tables_' + metricId)">Hide Tables</a>
+      </div>
+      <br>
+      <br>
+      <div class="closed-section"></div>
+
       <!--<button type="button" class="btn btn1 btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo" style="text-align: left; font-size: 14px; padding: 5px; border-color: black; border: 0px solid; width: 100%; background: white; color: black;">Hide Tables</button>-->
   </div>
     </div>
     <div>
-    <button type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo1"
+    <button ng-attr-id="{{ 'configure_' + metricId }}" type="button" ng-class="after" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="{{ '#show_configure_' + metricId }}"
             style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black;">Configure</button>
-  <div id="demo1" class="collapse">
+  <div ng-attr-id="{{ 'show_configure_' + metricId }}" class="collapse">
        <div class="row">
            <div class="col-lg-10 col-xl-10 pull-left">
                <table class="table table-nonfluid table-borderless"
@@ -151,6 +104,7 @@
       <div class="row">
           <div style="padding: 10px;">
               <button class="btn btn-success" ng-click="submit()">Submit</button>
+              <a href="{{ '#configure_' + metricId }}" ng-click="changeClass('#show_configure_' + metricId, '#configure_' + metricId)">Cancel</a>
           </div>
       </div>
   </div>

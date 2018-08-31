@@ -12,6 +12,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         $scope.chartInfo = ctrl.chartInfo;
         $scope.chartName = ctrl.chartName;
         $scope.modelName = ctrl.modelName;
+        $scope.metricId = -1;
         $scope.editingDescription = false;
         $scope.inner = {};
         if(ctrl.atomic) {
@@ -54,7 +55,6 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             };
         }
 
-        if (ctrl.xaxisFormatter) {
             $scope.xAxisFormatter = (value) => {
                 if (!$attrs.xaxisFormatter) {
                     return null;
@@ -81,7 +81,6 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 }
 
             };
-        }
 
         if (ctrl.tooltipFormatter) {
             $scope.tooltipFormatter = (x, y) => {
@@ -123,7 +122,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     $scope.$watch(
         () => {
-            return [ctrl.chartName];
+            return [ctrl.previewDataSets, ctrl.chartName];
         }, function (newvalue, oldvalue) {
             if (newvalue === oldvalue) {
                 // console.log(newvalue, oldvalue);
@@ -131,6 +130,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             }
             $scope.setDefault();
             $scope.chartInfo = ctrl.chartInfo;
+            $scope.previewDataSets = ctrl.previewDataSets;
             $scope.fetchChartInfo().then(() => {
                 $scope.tableInfo = ctrl.tableInfo;
                 //$scope.timeMode = ctrl.timeMode;
@@ -160,14 +160,16 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             //console.log("Fetching CI already");
             return commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
                 $scope.chartInfo = chartInfo;
-                $scope.previewDataSets = $scope.chartInfo.data_sets;
-                $scope.currentDescription = $scope.chartInfo.description;
-                $scope.inner.currentDescription = $scope.currentDescription;
-                $scope.negativeGradient = !$scope.chartInfo.positive;
-                $scope.inner.negativeGradient = $scope.negativeGradient;
-                $scope.leaf = $scope.chartInfo.leaf;
-                $scope.inner.leaf = $scope.leaf;
-                $scope.status = "idle";
+                if($scope.chartInfo !== null) {
+                    $scope.previewDataSets = $scope.chartInfo.data_sets;
+                    $scope.currentDescription = $scope.chartInfo.description;
+                    $scope.inner.currentDescription = $scope.currentDescription;
+                    $scope.negativeGradient = !$scope.chartInfo.positive;
+                    $scope.inner.negativeGradient = $scope.negativeGradient;
+                    $scope.leaf = $scope.chartInfo.leaf;
+                    $scope.inner.leaf = $scope.leaf;
+                    $scope.status = "idle";
+                }
                 return $scope.chartInfo;
             })
         } else {
@@ -365,9 +367,9 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     $scope.setTimeMode = (mode) => {
         $scope.timeMode = mode;
         if($scope.chartInfo) {
-            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, null); // TODO: Race condition on chartInfo
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
         } else {
-            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, null); // TODO: Race condition on chartInfo
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
         }
     };
 
@@ -382,7 +384,11 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             payload["metric_model_name"] = metricModelName;
             payload["chart_name"] = chartName;
             payload["preview_data_sets"] = previewDataSets;
-            payload["metric_id"] = chartInfo["metric_id"];
+            payload["metric_id"] = -1;
+            if(chartInfo) {
+                payload["metric_id"] = chartInfo["metric_id"];
+                $scope.metricId = chartInfo["metric_id"];
+            }
             if(metricModelName !== 'MetricContainer') {
             $scope.status = "idle";
             $scope.tableInfo = tableInfo;
@@ -590,6 +596,13 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     $scope.editDescription = () => {
             $scope.editingDescription = true;
+    };
+
+    $scope.changeClass = (divId, buttonId) => {
+        let divIdClass = angular.element(document.querySelector(divId));
+        divIdClass.removeClass('in');
+        let collapseArrow = angular.element(document.querySelector(buttonId));
+        collapseArrow.addClass('collapsed');
     };
 
     // $(window).scroll(function() {

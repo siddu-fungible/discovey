@@ -4,8 +4,8 @@
         <h3 ng-if="mode === 'Create'" class="modal-title">Create chart</h3>
     </div>
     <div class="modal-body edit-modal-body">
-        <!--<fun-metric-chart chart-name="chartName" model-name="modelName" width="350" height="350"-->
-                          <!--preview-data-sets="previewDataSets"></fun-metric-chart>-->
+        <fun-metric-chart chart-name="chartName" model-name="modelName" width="350" height="350" xaxis-formatter="xAxisFormatter"
+                          preview-data-sets="previewDataSets"></fun-metric-chart>
         <div ng-if="mode === 'Create'">
             <table class="table table-nonfluid">
                 <tr>
