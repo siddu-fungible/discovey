@@ -1396,7 +1396,7 @@ class PeekCommands(object):
     def peek_fcp_stats(self, mode='nu', tunnel_id=None, grep_regex=None, get_result_only=False):
         cmd = "stats/fcp/%s/global" % mode
         if tunnel_id:
-            cmd = "stats/fcp/tunnel[%d]" % tunnel_id
+            cmd = "stats/fcp/%s/tunnel[%d]" % (mode,tunnel_id)
         if get_result_only:
             return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
