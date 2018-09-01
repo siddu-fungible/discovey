@@ -897,15 +897,13 @@ peek_vp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=No
 peek_fcp_stats_parser = peek_stats_parsers.add_parser('fcp', help="NU Peek FCP Stats")
 peek_fcp_stats_parsers = peek_fcp_stats_parser.add_subparsers(title="subcommands", help="")
 
-
-peek_fcp_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
-peek_fcp_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
-
 peek_fcp_nu_stats_parser = peek_fcp_stats_parsers.add_parser('nu', help="Peek NU fcp stats")
+peek_fcp_nu_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
 peek_fcp_nu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # WRO HNU stats
 peek_fcp_hnu_stats_parser = peek_fcp_stats_parsers.add_parser('hnu', help="Peek HNU fcp stats")
+peek_fcp_hnu_stats_parser.add_argument('-tunnel', type=int, help="Tunnel ID", default=None)
 peek_fcp_hnu_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # WRO Stats
