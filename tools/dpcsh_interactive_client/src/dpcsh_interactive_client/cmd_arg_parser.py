@@ -985,6 +985,14 @@ peek_per_vp_stats_parser.add_argument('-grep', help="Grep regex pattern", defaul
 peek_nwqm_stats_parser = peek_stats_parsers.add_parser('nwqm', help="Peek nwqm stats")
 peek_nwqm_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
 
+# nwqm stats
+peek_nwqm_hnu_stats_parser = peek_stats_parsers.add_parser('nwqm_hnu', help="Peek nwqm hnu stats")
+peek_nwqm_hnu_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
+
+# fae stats
+peek_fae_stats_parser = peek_stats_parsers.add_parser('fae', help="Peek fae stats")
+peek_fae_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
+
 # Nu mpg stats
 peek_mpg_stats_parser = peek_stats_parsers.add_parser('mpg', help='Peek mpg stats')
 peek_mpg_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
@@ -1057,30 +1065,30 @@ peek_bam_resource_stats_parser = peek_resource_stats_parsers.add_parser('bam', h
 peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
 # ---------------------------------------------------------------------------------------------------
-# capture commands
+# show commands
 
 # Set sub commands
-base_capture_parser = ArgumentParser(prog="capture")
-base_capture_subparsers = base_capture_parser.add_subparsers(title="subcommands", help="")
-capture_tech_parser = base_capture_subparsers.add_parser('tech', help="capture tech commands")
-capture_tech_parsers = capture_tech_parser.add_subparsers(title="subcommands", help="")
+base_show_parser = ArgumentParser(prog="show")
+base_show_subparsers = base_show_parser.add_subparsers(title="subcommands", help="")
+show_tech_parser = base_show_subparsers.add_parser('tech', help="show tech commands")
+show_tech_parsers = show_tech_parser.add_subparsers(title="subcommands", help="")
 
-capture_tech_nu_parser = capture_tech_parsers.add_parser('nu', help="Capture nu stats")
-capture_tech_nu_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
+show_tech_nu_parser = show_tech_parsers.add_parser('nu', help="Capture nu stats")
+show_tech_nu_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
                                                    "If not provided it will create one. The entire filepath will be "
                                                    "provided on console once commands run successfully", default=None,
                                     type=str)
-capture_tech_nu_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+show_tech_nu_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
 
-capture_tech_hnu_parser = capture_tech_parsers.add_parser('hnu', help="Capture hnu stats")
-capture_tech_hnu_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
+show_tech_hnu_parser = show_tech_parsers.add_parser('hnu', help="Capture hnu stats")
+show_tech_hnu_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
                                                    "If not provided it will create one. The entire filepath will be "
                                                    "provided on console once commands run successfully")
-capture_tech_hnu_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+show_tech_hnu_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
 
-capture_tech_all_parser = capture_tech_parsers.add_parser('all', help="Capture all stats")
-capture_tech_all_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
+show_tech_all_parser = show_tech_parsers.add_parser('all', help="Capture all stats")
+show_tech_all_parser.add_argument('-filename', help="Specify a filename to save/append the output stats. "
                                                    "If not provided it will create one. The entire filepath will be "
                                                    "provided on console once commands run successfully", default=None,
                                      type=str)
-capture_tech_all_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+show_tech_all_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
