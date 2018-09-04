@@ -37,7 +37,7 @@
 <div ng-if="$ctrl.modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
     <div>
     <button ng-attr-id="{{ 'show_tables_' + metricId }}" type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="{{ '#showing_tables_' + metricId }}"
-            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black;">Show Tables</button>
+            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black; outline: none;">Show Tables</button>
   <div ng-attr-id="{{ 'showing_tables_' + metricId }}" class="collapse">
        <div id="all-data-table2" ng-repeat="data in allData">
            <h3>{{ filterDataSets[$index].name }}</h3>
@@ -66,7 +66,7 @@
     </div>
     <div>
     <button ng-attr-id="{{ 'configure_' + metricId }}" type="button" ng-class="after" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="{{ '#show_configure_' + metricId }}"
-            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black;">Configure</button>
+            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black; outline: none;">Configure</button>
   <div ng-attr-id="{{ 'show_configure_' + metricId }}" class="collapse">
        <div class="row">
            <div class="col-lg-10 col-xl-10 pull-left">

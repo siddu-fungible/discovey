@@ -297,10 +297,8 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         let filteredDate = [];
         let result = [[len, 0]];
         if($scope.timeMode === "week") {
-            for(let i = len - 1; i >= 0; i = i - 7)
-            {
-                if(i >= 7)
-                {
+            for(let i = len - 1; i >= 0; i = i - 7) {
+                if(i >= 7) {
                     filteredDate.push([i, i - 7 + 1]);
                 }
                 else {
@@ -311,26 +309,26 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         }
         else if($scope.timeMode === "month") {
             let i = len - 1;
-            let monthDays = {0: 31, 1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30};
-            // how many days to decrement for each month depending on the number of days of the previous month
-            while(i >= 0)
-            {
-                let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
-                let diff = i - monthDays[latestDate.getMonth()];
-                if(diff >= 0)
-                {
-                    filteredDate.push([i, diff + 1]);
+            let startIndex = len - 1;
+            let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
+            let latestMonth = latestDate.getUTCMonth();
+            while(i >= 0) {
+                let currentDate = new Date(dateList[i].replace(/\s+/g, 'T'));
+                let currentMonth = currentDate.getUTCMonth();
+                if(currentMonth !== latestMonth) {
+                    filteredDate.push([startIndex, i + 1]);
+                    latestMonth = currentMonth;
+                    startIndex = i;
                 }
-                else {
-                    filteredDate.push([i, 0]);
+                if(i === 0) {
+                    filteredDate.push([startIndex, i]);
                 }
-                i = diff;
+                i--;
             }
             result = filteredDate.reverse();
         }
         else {
-            for(let i = len - 1; i >= 0; i--)
-            {
+            for(let i = len - 1; i >= 0; i--) {
                 filteredDate.push([i, i]);
             }
             result = filteredDate.reverse();
@@ -343,21 +341,25 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         let filteredDate = [];
         let result = dateList;
         if($scope.timeMode === "week") {
-            for(let i = len - 1; i >= 0; i = i - 7)
-            {
+            for(let i = len - 1; i >= 0; i = i - 7) {
                 filteredDate.push(dateList[i]);
             }
             result = filteredDate.reverse();
         }
         else if($scope.timeMode === "month") {
             let i = len - 1;
-            let monthDays = {0: 31, 1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30};
-            // how many days to decrement for each month depending on the number of days of the previous month
-            while(i >= 0)
-            {
-                let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
-                filteredDate.push(dateList[i]);
-                i = i - monthDays[latestDate.getMonth()];
+            let startIndex = len - 1;
+            let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
+            let latestMonth = latestDate.getUTCMonth();
+            filteredDate.push(dateList[i]);
+            while(i >= 0) {
+                let currentDate = new Date(dateList[i].replace(/\s+/g, 'T'));
+                let currentMonth = currentDate.getUTCMonth();
+                if(currentMonth !== latestMonth) {
+                    filteredDate.push(dateList[i]);
+                    latestMonth = currentMonth;
+                }
+                i--;
             }
             result = filteredDate.reverse();
         }
@@ -389,107 +391,108 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 payload["metric_id"] = chartInfo["metric_id"];
                 $scope.metricId = chartInfo["metric_id"];
             }
-            if(metricModelName !== 'MetricContainer') {
-            $scope.status = "idle";
-            $scope.tableInfo = tableInfo;
-
-            let filterDataSets = [];
-            if(previewDataSets) {
-                filterDataSets = previewDataSets;
-            } else {
-                //console.log("Chart Info:" + chartInfo);
-                if(chartInfo){
-                    filterDataSets = chartInfo.data_sets;
-                    //console.log("C DS:" + chartInfo.data_sets);
-                }
-            }
-            $scope.filterDataSets = filterDataSets;
-
-            $scope.status = "Fetch data";
-
-            commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
+            if(metricModelName !== 'MetricContainer')
+            {
                 $scope.status = "idle";
-                if(allDataSets.length === 0) {
-                    $scope.values = null;
-                    return;
+                $scope.tableInfo = tableInfo;
+
+                let filterDataSets = [];
+                if(previewDataSets) {
+                    filterDataSets = previewDataSets;
+                } else {
+                    //console.log("Chart Info:" + chartInfo);
+                    if(chartInfo){
+                        filterDataSets = chartInfo.data_sets;
+                        //console.log("C DS:" + chartInfo.data_sets);
+                    }
                 }
+                $scope.filterDataSets = filterDataSets;
 
-                let keySet = new Set();
-                /*
-                let firstDataSet = allDataSets[0];
-                firstDataSet.forEach((oneRecord) => {
-                    keySet.add(oneRecord.input_date_time.toString());
-                });*/
-                allDataSets.forEach((oneDataSet) => {
-                    oneDataSet.forEach((oneRecord) => {
+                $scope.status = "Fetch data";
+
+                commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
+                    $scope.status = "idle";
+                    if(allDataSets.length === 0) {
+                        $scope.values = null;
+                        return;
+                    }
+
+                    let keySet = new Set();
+                    /*
+                    let firstDataSet = allDataSets[0];
+                    firstDataSet.forEach((oneRecord) => {
                         keySet.add(oneRecord.input_date_time.toString());
+                    });*/
+                    allDataSets.forEach((oneDataSet) => {
+                        oneDataSet.forEach((oneRecord) => {
+                            keySet.add(oneRecord.input_date_time.toString());
+                        });
                     });
-                });
 
-                let keyList = Array.from(keySet);
-                keyList.sort();
-                $scope.shortenKeyList(keyList);
-                keyList = $scope.fixMissingDates(keyList);
-                let originalKeyList = keyList;
-                keyList = $scope.getDatesByTimeModeForLeaf(keyList);
+                    let keyList = Array.from(keySet);
+                    keyList.sort();
+                    $scope.shortenKeyList(keyList);
+                    keyList = $scope.fixMissingDates(keyList);
+                    let originalKeyList = keyList;
+                    keyList = $scope.getDatesByTimeModeForLeaf(keyList);
 
-                let chartDataSets = [];
-                let seriesDates = [];
-                let dataSetIndex = 0;
+                    let chartDataSets = [];
+                    let seriesDates = [];
+                    let dataSetIndex = 0;
 
-                $scope.allData = allDataSets;
-                $scope.status = "Preparing chart data-sets";
-                allDataSets.forEach((oneDataSet) => {
+                    $scope.allData = allDataSets;
+                    $scope.status = "Preparing chart data-sets";
+                    allDataSets.forEach((oneDataSet) => {
 
-                    let oneChartDataArray = [];
-                    for(let i = 0; i < keyList.length; i++) {
-                        let output = null;
-                        let matchingDateFound = false;
-                        seriesDates.push(originalKeyList[keyList[i][0]]);
-                        let  startIndex = keyList[i][0];
-                        let endIndex = keyList[i][1];
-                        while(startIndex >= endIndex)
-                        {
-                            for(let j = 0; j < oneDataSet.length; j++) {
-                                let oneRecord = oneDataSet[j];
-                                if (oneRecord.input_date_time.toString() === originalKeyList[startIndex]) {
-                                    matchingDateFound = true;
+                        let oneChartDataArray = [];
+                        for(let i = 0; i < keyList.length; i++) {
+                            let output = null;
+                            let matchingDateFound = false;
+                            seriesDates.push(originalKeyList[keyList[i][0]]);
+                            let  startIndex = keyList[i][0];
+                            let endIndex = keyList[i][1];
+                            while(startIndex >= endIndex)
+                            {
+                                for(let j = 0; j < oneDataSet.length; j++) {
+                                    let oneRecord = oneDataSet[j];
+                                    if (oneRecord.input_date_time.toString() === originalKeyList[startIndex]) {
+                                        matchingDateFound = true;
 
-                                    let outputName = filterDataSets[dataSetIndex].output.name;
-                                    output = oneRecord[outputName];
-                                    if (chartInfo && chartInfo.y1axis_title) {
-                                        $scope.chart1YaxisTitle = chartInfo.y1axis_title;
-                                    } else {
-                                        $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                        let outputName = filterDataSets[dataSetIndex].output.name;
+                                        output = oneRecord[outputName];
+                                        if (chartInfo && chartInfo.y1axis_title) {
+                                            $scope.chart1YaxisTitle = chartInfo.y1axis_title;
+                                        } else {
+                                            $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
+                                        }
+                                        if (ctrl.y1AxisTitle) {
+                                            $scope.chart1YaxisTitle = ctrl.y1AxisTitle;
+                                        }
+                                        $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
+
+                                        break;
                                     }
-                                    if (ctrl.y1AxisTitle) {
-                                        $scope.chart1YaxisTitle = ctrl.y1AxisTitle;
-                                    }
-                                    $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
-
+                                }
+                                if(matchingDateFound)
+                                {
                                     break;
                                 }
+                                startIndex--;
                             }
-                            if(matchingDateFound)
-                            {
-                                break;
-                            }
-                            startIndex--;
+                            let thisMinimum = filterDataSets[dataSetIndex].output.min;
+                            let thisMaximum = filterDataSets[dataSetIndex].output.max;
+                            oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
+
                         }
-                        let thisMinimum = filterDataSets[dataSetIndex].output.min;
-                        let thisMaximum = filterDataSets[dataSetIndex].output.max;
-                        oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
+                        let oneChartDataSet = {name: filterDataSets[dataSetIndex].name, data: oneChartDataArray};
+                        chartDataSets.push(oneChartDataSet);
+                        dataSetIndex++;
+                    });
 
-                    }
-                    let oneChartDataSet = {name: filterDataSets[dataSetIndex].name, data: oneChartDataArray};
-                    chartDataSets.push(oneChartDataSet);
-                    dataSetIndex++;
+                    $scope.status = "idle";
+                    $scope.series = seriesDates;
+                    $scope.values = chartDataSets;
                 });
-
-                $scope.status = "idle";
-                $scope.series = seriesDates;
-                $scope.values = chartDataSets;
-            });
             }
             else{
                 $scope.status = "Fetch data";
