@@ -2042,9 +2042,9 @@ class PeekCommands(object):
             if mode == 'nu':
                 cmd = "stats/resource/nux"
         if get_result_only:
-            return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+            return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
-            self._display_stats(cmd=cmd, grep_regex=grep_regex)
+            self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
     def peek_hu_resource_stats(self, hu_id, wqsi=None, wqse=None, resource_id=None, grep_regex=None):
         try:
