@@ -17,7 +17,7 @@ class CmdController(Cmd):
         self._peek_cmd_obj = PeekCommands(dpc_client=self.dpc_client)
         self._clear_cmd_obj = NuClearCommands(dpc_client=self.dpc_client)
         self._sample_cmd_obj = SampleCommands(dpc_client=self.dpc_client)
-        self._capture_cmd_obj = CaptureCommands(dpc_client=self.dpc_client)
+        self._show_cmd_obj = ShowCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -613,10 +613,15 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_vp_stats(grep_regex=grep_regex)
 
-    def peek_fcp_stats(self, args):
+    def peek_fcp_nu_stats(self, args):
         tunnel_id = args.tunnel
         grep_regex = args.grep
-        self._peek_cmd_obj.peek_fcp_stats(tunnel_id=tunnel_id, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_fcp_stats(mode='nu', tunnel_id=tunnel_id, grep_regex=grep_regex)
+
+    def peek_fcp_hnu_stats(self, args):
+        tunnel_id = args.tunnel
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_fcp_stats(mode='hnu', tunnel_id=tunnel_id, grep_regex=grep_regex)
 
     def peek_wro_nu_stats(self, args):
         tunnel_id = args.tunnel
@@ -686,6 +691,14 @@ class CmdController(Cmd):
     def peek_nwqm_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_nwqm_stats(grep_regex=grep_regex)
+
+    def peek_nwqm_hnu_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_nwqm_stats(mode='hnu', grep_regex=grep_regex)
+
+    def peek_fae_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_fae_stats(grep_regex=grep_regex)
 
     def peek_mpg_stats(self, args):
         self._peek_cmd_obj.peek_mpg_stats()
@@ -831,20 +844,20 @@ class CmdController(Cmd):
     def get_sample(self, args):
         self._sample_cmd_obj.get_sample()
 
-    def capture_tech_nu_stats(self, args):
+    def show_tech_nu_stats(self, args):
         filename = args.filename
         portlist = args.portlist
-        self._capture_cmd_obj.capture_stats(filename=filename, mode='nu', port_list=portlist)
+        self._show_cmd_obj.show_stats(filename=filename, mode='nu', port_list=portlist)
 
-    def capture_tech_hnu_stats(self, args):
+    def show_tech_hnu_stats(self, args):
         filename = args.filename
         portlist = args.portlist
-        self._capture_cmd_obj.capture_stats(filename=filename, mode='hnu', port_list=portlist)
+        self._show_cmd_obj.show_stats(filename=filename, mode='hnu', port_list=portlist)
 
-    def capture_tech_all_stats(self, args):
+    def show_tech_all_stats(self, args):
         filename = args.filename
         portlist = args.portlist
-        self._capture_cmd_obj.capture_stats(filename=filename, mode='all', port_list=portlist)
+        self._show_cmd_obj.show_stats(filename=filename, mode='all', port_list=portlist)
 
     # Set handler functions for the sub commands
 
@@ -980,7 +993,8 @@ class CmdController(Cmd):
     peek_meter_nu_stats_parser.set_defaults(func=peek_meter_stats)
     peek_meter_erp_stats_parser.set_defaults(func=peek_erp_meter_stats)
     peek_vp_stats_parser.set_defaults(func=peek_vp_stats)
-    peek_fcp_stats_parser.set_defaults(func=peek_fcp_stats)
+    peek_fcp_nu_stats_parser.set_defaults(func=peek_fcp_nu_stats)
+    peek_fcp_hnu_stats_parser.set_defaults(func=peek_fcp_hnu_stats)
     peek_wro_nu_stats_parser.set_defaults(func=peek_wro_nu_stats)
     peek_wro_hnu_stats_parser.set_defaults(func=peek_wro_hnu_stats)
     peek_bam_stats_parser.set_defaults(func=peek_bam_stats)
@@ -995,6 +1009,8 @@ class CmdController(Cmd):
     peek_hnu_sfg_stats_parser.set_defaults(func=peek_hnu_sfg_stats)
     peek_per_vp_stats_parser.set_defaults(func=peek_per_vp_stats)
     peek_nwqm_stats_parser.set_defaults(func=peek_nwqm_stats)
+    peek_nwqm_hnu_stats_parser.set_defaults(func=peek_nwqm_hnu_stats)
+    peek_fae_stats_parser.set_defaults(func=peek_fae_stats)
     peek_mpg_stats_parser.set_defaults(func=peek_mpg_stats)
     peek_pervppkts_stats_parser.set_defaults(func=peek_pervppkts_stats)
     peek_nhp_stats_parser.set_defaults(func=peek_stats_nhp)
@@ -1025,9 +1041,9 @@ class CmdController(Cmd):
     clear_nu_vppkts_stats_parser.set_defaults(func=clear_nu_vppkts_stats)
 
     # -------------- Clear Command Handlers ----------------
-    capture_tech_nu_parser.set_defaults(func=capture_tech_nu_stats)
-    capture_tech_hnu_parser.set_defaults(func=capture_tech_hnu_stats)
-    capture_tech_all_parser.set_defaults(func=capture_tech_all_stats)
+    show_tech_nu_parser.set_defaults(func=show_tech_nu_stats)
+    show_tech_hnu_parser.set_defaults(func=show_tech_hnu_stats)
+    show_tech_all_parser.set_defaults(func=show_tech_all_stats)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):
@@ -1061,13 +1077,13 @@ class CmdController(Cmd):
         else:
             self.do_help('peek')
 
-    @with_argparser(base_capture_parser)
-    def do_capture(self, args):
+    @with_argparser(base_show_parser)
+    def do_show(self, args):
         func = getattr(args, 'func', None)
         if func is not None:
             func(self, args)
         else:
-            self.do_help('capture')
+            self.do_help('show')
 
     def __del__(self):
         self.dpc_client.disconnect()

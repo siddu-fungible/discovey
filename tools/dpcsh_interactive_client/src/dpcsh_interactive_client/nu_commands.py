@@ -1393,10 +1393,10 @@ class PeekCommands(object):
         else:
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_fcp_stats(self, tunnel_id=None, grep_regex=None, get_result_only=False):
-        cmd = "stats/fcp/global"
+    def peek_fcp_stats(self, mode='nu', tunnel_id=None, grep_regex=None, get_result_only=False):
+        cmd = "stats/fcp/%s/global" % mode
         if tunnel_id:
-            cmd = "stats/fcp/tunnel[%d]" % tunnel_id
+            cmd = "stats/fcp/%s/tunnel[%d]" % (mode,tunnel_id)
         if get_result_only:
             return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
@@ -1484,9 +1484,12 @@ class PeekCommands(object):
                 print "ERROR: %s" % str(ex)
                 self.dpc_client.disconnect()
 
-    def peek_etp_stats(self, mode='nu', grep_regex=None):
+    def peek_etp_stats(self, mode='nu', grep_regex=None, get_result_only=False):
         cmd = "stats/etp/" + mode
-        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        if get_result_only:
+            return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
     def _get_parser_stats(self, grep_regex=None, hnu=False, get_result_only=False):
         try:
@@ -1887,7 +1890,19 @@ class PeekCommands(object):
                                 table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
                                 table_obj.align = 'l'
                                 for _key in sorted(result[key]):
-                                    if grep_regex:
+                                    if isinstance(result[key][_key], dict):
+                                        table_obj = PrettyTable()
+                                        table_obj.align = 'l'
+                                        inner_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                        inner_table_obj.align = 'l'
+                                        for _key1 in sorted(result[key][_key]):
+                                            if grep_regex:
+                                                if re.search(grep_regex, _key1, re.IGNORECASE):
+                                                    inner_table_obj.add_row([_key1, result[key][_key][_key1], diff_result[key][_key][_key1]])
+                                            else:
+                                                inner_table_obj.add_row([_key1, result[key][_key][_key1], diff_result[key][_key][_key1]])
+                                        table_obj.add_row([_key, inner_table_obj])
+                                    elif grep_regex:
                                         if re.search(grep_regex, _key, re.IGNORECASE):
                                             table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
                                     else:
@@ -1898,7 +1913,19 @@ class PeekCommands(object):
                                 table_obj = PrettyTable(['Field Name', 'Counter'])
                                 table_obj.align = 'l'
                                 for _key in sorted(result[key]):
-                                    if grep_regex:
+                                    if isinstance(result[key][_key], dict):
+                                        table_obj = PrettyTable()
+                                        table_obj.align = 'l'
+                                        inner_table_obj = PrettyTable(['Field Name', 'Counter'])
+                                        inner_table_obj.align = 'l'
+                                        for _key1 in sorted(result[key][_key]):
+                                            if grep_regex:
+                                                if re.search(grep_regex, _key1, re.IGNORECASE):
+                                                    inner_table_obj.add_row([_key1, result[key][_key][_key1]])
+                                            else:
+                                                inner_table_obj.add_row([_key1, result[key][_key][_key1]])
+                                        table_obj.add_row([_key, inner_table_obj])
+                                    elif grep_regex:
                                         if re.search(grep_regex, _key, re.IGNORECASE):
                                             table_obj.add_row([_key, result[key][_key]])
                                     else:
@@ -2152,8 +2179,17 @@ class PeekCommands(object):
             self.dpc_client.disconnect()
     '''
 
-    def peek_nwqm_stats(self, grep_regex=None, get_result_only=False):
+    def peek_nwqm_stats(self, mode=None, grep_regex=None, get_result_only=False):
         cmd = "stats/nwqm"
+        if mode:
+            cmd = "stats/nwqm/%s" % mode
+        if get_result_only:
+            return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+
+    def peek_fae_stats(self, grep_regex=None, get_result_only=False):
+        cmd = "stats/fae"
         if get_result_only:
             return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
@@ -2218,12 +2254,12 @@ class SampleCommands(object):
             self.dpc_client.disconnect()
 
 
-class CaptureCommands(PeekCommands):
+class ShowCommands(PeekCommands):
     def do_write_on_file(self, filepath, command_dict):
         result = False
         try:
             with open(filepath, 'a') as f:
-                f.write('\n######### Capture start time %s #########\n' % self._get_timestamp())
+                f.write('\n######### Show start time %s #########\n' % self._get_timestamp())
                 for command in command_dict.iterkeys():
                     cmd, result = command_dict[command]
                     f.write("Executed command: %s" % cmd)
@@ -2246,11 +2282,13 @@ class CaptureCommands(PeekCommands):
                     command_dict['%s fpg %s stats' % (mode, port_num)] = self.peek_fpg_stats(port_num=int(port_num),
                                                                                              get_result_only=True,
                                                                                              mode=mode)
+            command_dict['%s fcp stats' % mode] = self.peek_fcp_stats(get_result_only=True, mode=mode)
             command_dict['%s psw stats' % mode] = self.peek_psw_stats(get_result_only=True, mode=mode)
             command_dict['%s wro stats' % mode] = self.peek_wro_stats(get_result_only=True, mode=mode)
             command_dict['%s erp stats' % mode] = self.peek_erp_stats(get_result_only=True, mode=mode)
             command_dict['%s sfg stats' % mode] = self.peek_sfg_stats(get_result_only=True, mode=mode)
             command_dict['%s parser stats' % mode] = self.peek_parser_stats(get_result_only=True, mode=mode)
+            command_dict['%s etp stats' % mode] = self.peek_etp_stats(get_result_only=True, mode=mode)
             command_dict['%s resource stats' % mode] = self.peek_mode_resource_stats(get_result_only=True, mode=mode)
         except Exception as ex:
             print "ERROR: %s" % str(ex)
@@ -2260,7 +2298,7 @@ class CaptureCommands(PeekCommands):
         if os.path.exists(filepath):
             os.remove(filepath)
 
-    def capture_stats(self, filename, mode='nu', port_list=[]):
+    def show_stats(self, filename, mode='nu', port_list=[]):
         filepath = None
         command_dict = OrderedDict()
         try:
@@ -2268,7 +2306,7 @@ class CaptureCommands(PeekCommands):
             if not filename:
                 filename = str(uuid4()) + '.txt'
             filepath = tmp_path + filename
-            command_dict['fcp stats'] = self.peek_fcp_stats(get_result_only=True)
+            command_dict['fae stats'] = self.peek_fae_stats(get_result_only=True)
             command_dict['vppkts stats'] = self.peek_vp_stats(get_result_only=True)
             command_dict['per_vp stats'] = self.peek_stats_per_vp(get_result_only=True)
             command_dict['pervppkts stats'] = self.peek_pervppkts_stats(get_result_only=True)
