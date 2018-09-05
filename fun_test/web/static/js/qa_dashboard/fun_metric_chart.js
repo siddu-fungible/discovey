@@ -460,8 +460,8 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
                                         let outputName = filterDataSets[dataSetIndex].output.name;
                                         output = oneRecord[outputName];
-                                        if (chartInfo && chartInfo.y1axis_title) {
-                                            $scope.chart1YaxisTitle = chartInfo.y1axis_title;
+                                        if (chartInfo && chartInfo.y1_axis_title) {
+                                            $scope.chart1YaxisTitle = chartInfo.y1_axis_title;
                                         } else {
                                             $scope.chart1YaxisTitle = tableInfo[outputName].verbose_name;
                                         }
