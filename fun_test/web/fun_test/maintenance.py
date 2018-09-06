@@ -244,7 +244,7 @@ if __name__ == "__main2__":
 
             current_date = current_date + timedelta(days=1)
 
-if __name__ == "__main__":
+if __name__ == "__main250__":
     entries = JenkinsJobIdMap.objects.all()
     for entry in entries:
         if entry.completion_date:
@@ -256,4 +256,20 @@ if __name__ == "__main__":
             print key
             entry.completion_date = key
             entry.save()
+
+if __name__ == "__main__":
+    import pytz
+    chart_name = "WU Latency: Alloc Stack"
+    model_name = "WuLatencyAllocStack"
+
+    mcs_entries = WuLatencyAllocStack.objects.all()
+    x = datetime(year=2018, month=6, day=01, minute=0, hour=0, second=0)
+    tz = pytz.timezone("UTC")
+    localized = tz.localize(x, is_dst=None)
+    # dt = get_localized_time(x)
+
+    for mcs_entry in mcs_entries:
+        if mcs_entry.input_date_time < localized:
+            mcs_entry.delete()
+
 
