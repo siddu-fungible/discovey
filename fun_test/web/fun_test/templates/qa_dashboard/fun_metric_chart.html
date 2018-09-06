@@ -39,21 +39,25 @@
     <button ng-attr-id="{{ 'show_tables_' + metricId }}" type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="{{ '#showing_tables_' + metricId }}"
             style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black; outline: none;">Show Tables</button>
   <div ng-attr-id="{{ 'showing_tables_' + metricId }}" class="collapse">
-       <div id="all-data-table2" ng-repeat="data in allData">
-           <h3>{{ filterDataSets[$index].name }}</h3>
-           <table class="table">
-               <tr>
-                   <th ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
-                       {{ value.verbose_name }}
-                   </th>
-               </tr>
-               <tr ng-repeat="row in data">
-                   <td ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
-                       {{ cleanValue(key, row[key])}}
-                   </td>
-               </tr>
-           </table>
-       </div>
+       <!--<div id="all-data-table2" ng-repeat="data in allData">-->
+           <!--<h3>{{ filterDataSets[$index].name }}</h3>-->
+           <!--<table class="table">-->
+               <!--<tr>-->
+                   <!--<th ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">-->
+                       <!--{{ value.verbose_name }}-->
+                   <!--</th>-->
+               <!--</tr>-->
+               <!--<tr ng-repeat="row in data">-->
+                   <!--<td ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">-->
+                       <!--{{ cleanValue(key, row[key])}}-->
+                   <!--</td>-->
+               <!--</tr>-->
+           <!--</table>-->
+       <!--</div>-->
+      <div ng-if="headers">
+          <fun-table headers="headers" data="allData" filter-data-sets="filterDataSets">
+          </fun-table>
+      </div>
       <div>
           <a href="{{ '#show_tables_' + metricId }}" style="float:right" ng-click="changeClass('#showing_tables_' + metricId, '#show_tables_' + metricId)">Hide Tables</a>
       </div>

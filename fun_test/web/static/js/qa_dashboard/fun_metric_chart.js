@@ -12,6 +12,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         $scope.chartInfo = ctrl.chartInfo;
         $scope.chartName = ctrl.chartName;
         $scope.modelName = ctrl.modelName;
+        $scope.headers = null;
         $scope.metricId = -1;
         $scope.editingDescription = false;
         $scope.inner = {};
@@ -90,7 +91,6 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         }
         //console.log(ctrl.showingTable);
         /*$scope.pointClickCallback = ctrl.pointClickCallback;*/
-
     };
 
     $scope.cleanValue = (key, value) => {
@@ -492,6 +492,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     $scope.status = "idle";
                     $scope.series = seriesDates;
                     $scope.values = chartDataSets;
+                    $scope.headers = $scope.tableInfo;
                 });
             }
             else{
