@@ -131,7 +131,7 @@ test_urls = [
 ]
 
 upgrade_urls = [
-    url(r'^$', upgrade_views.home)
+    url(r'^.*$', upgrade_views.home)
 ]
 
 urlpatterns = [
