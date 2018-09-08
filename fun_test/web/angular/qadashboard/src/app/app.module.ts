@@ -18,6 +18,7 @@ import { PerformanceComponent } from './performance/performance.component';
     BrowserModule,
     AppRoutingModule
   ],
+
   providers: [],
   bootstrap: [AppComponent]
 })
