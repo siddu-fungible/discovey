@@ -69,11 +69,15 @@ class LsfStatusServer:
                 self.add_palladium_job_info(job_info=job_info)
                 response = self.get_job_by_id(job_id=job_info["job_id"])
                 response = self.get_job_by_id(job_id=job_info["job_id"]) # Workaround
-                response_dict = json.loads(response)
-                fun_test.log(json.dumps(response_dict, indent=4))
-                output_text = response_dict["output_text"]
-                past_job["date_time"] = dt
-                past_job["output_text"] = output_text
+                try:
+                    response_dict = json.loads(response)
+                    fun_test.log(json.dumps(response_dict, indent=4))
+                    output_text = response_dict["output_text"]
+                    past_job["date_time"] = dt
+                    past_job["output_text"] = output_text
+                except Exception as ex:
+                    fun_test.log("Actual response:" + response)
+                    fun_test.critical(str(ex))
         return past_jobs
 
     def get_job_by_id(self, job_id):
