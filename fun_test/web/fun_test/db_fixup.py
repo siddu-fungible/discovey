@@ -161,7 +161,7 @@ def prepare_status(chart, purge_old_status=False):
 
             # Normalize all scores
             for date_time, score in scores.iteritems():
-                final_score = 0
+                current_score = 0
                 if sum_of_child_weights:
                     scores[date_time] /= sum_of_child_weights
                 else:
@@ -181,12 +181,17 @@ def prepare_status(chart, purge_old_status=False):
             if model.objects.first().interpolation_allowed:
                 interpolate(model=model, from_date=from_date, to_date=to_date, chart=chart)
 
-            previous_score = 0
-            final_score = 0
+            last_good_score = 0
+            penultimate_good_score = 0  # The good score before the previous good score
+            current_score = 0
+
+            replacement = False
             while current_date <= to_date:
                 valid_dates.append(current_date)
-                if final_score:  # Bertrand wanted to keep track of the last good score
-                    previous_score = final_score
+                if current_score:  # Bertrand wanted to keep track of the last good score
+                    penultimate_good_score = last_good_score
+                    last_good_score = current_score
+
                 # print current_date
 
                 data_sets = data_sets
@@ -237,10 +242,17 @@ def prepare_status(chart, purge_old_status=False):
                                     else:
                                         print "ERROR: {}, {}".format(chart.chart_name,
                                                                      chart.metric_model_name)
-                    final_score = round(data_set_combined_goodness / len(data_sets), 1)
-                    if final_score <= 0:
-                        final_score = previous_score
-                    scores[current_date] = final_score
+                    current_score = round(data_set_combined_goodness / len(data_sets), 1)
+
+
+                    # is_leaf_degrade = current_score < last_good_score
+                    replacement = False
+                    if current_score <= 0:
+                        current_score = last_good_score
+                        replacement = True
+                        # is_leaf_degrade = penultimate_good_score > current_score
+
+                    scores[current_date] = current_score
 
                 if data_set_mofified:
                     chart.data_sets = json.dumps(data_sets)
@@ -251,16 +263,20 @@ def prepare_status(chart, purge_old_status=False):
                                         metric_id=metric_id,
                                         chart_name=chart_name,
                                         data_sets=data_sets,
-                                        score=final_score)
+                                        score=current_score)
                 mcs.save()
                 current_date = current_date + timedelta(days=1)
                 # current_date = get_localized_time(current_date)
 
 
-            # print final_score, previous_score
-            is_leaf_degrade = final_score < previous_score
-            if is_leaf_degrade or not final_score:
+            # print current_score, last_good_score
+
+            is_leaf_degrade = current_score < last_good_score
+            if replacement:
+                is_leaf_degrade = current_score < penultimate_good_score
+            if is_leaf_degrade or not current_score:
                 result["num_degrades"] += 1
+
 
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
