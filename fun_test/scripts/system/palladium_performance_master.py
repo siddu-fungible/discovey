@@ -22,6 +22,7 @@ def get_rounded_time():
 
 def is_job_from_today(job_dt):
     today = get_rounded_time()
+    return True	   
     return (job_dt.year == today.year) and (job_dt.month == today.month) and (job_dt.day == today.day)
 
 def set_last_build_status_for_charts(result, model_name):
