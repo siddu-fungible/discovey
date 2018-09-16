@@ -16,7 +16,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         $scope.metricId = -1;
         $scope.editingDescription = false;
         $scope.inner = {};
-        if(ctrl.atomic) {
+        if (ctrl.atomic) {
             $scope.atomic = ctrl.atomic;
         }
         else {
@@ -49,46 +49,73 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         $scope.xAxisFormatter = null;
         $scope.tooltipFormatter = null;
         $scope.tableInfo = ctrl.tableInfo;
+        $scope.buildInfo = null;
+        $scope.fetchBuildInfo();
         if (ctrl.pointClickCallback) {
             $scope.pointClickCallback = (point) => {
                 if (!$attrs.pointClickCallback) return null;
                 ctrl.pointClickCallback()(point);
             };
         }
-
             $scope.xAxisFormatter = (value) => {
-                if (!$attrs.xaxisFormatter) {
-                    return null;
-                }
-                else {
-                    let s = "Error";
-                    const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    let r = /(\d{4})-(\d{2})-(\d{2})/g;
-                    let match = r.exec(value);
+        let s = "Error";
+        const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        let r = /(\d{4})-(\d{2})-(\d{2})/g;
+        let match = r.exec(value);
 
-                    if ($scope.timeMode === "month") {
-                        if (match) {
-                            let month = parseInt(match[2]);
-                            s = monthNames[month];
-                        }
-                    }
-                    else {
-                        if (match) {
-                            s = match[2] + "/" + match[3];
-                        }
-                    }
-                    return s;
-                }
-
-            };
-
-        if (ctrl.tooltipFormatter) {
-            $scope.tooltipFormatter = (x, y) => {
-                if (!$attrs.tooltipFormatter) return null;
-                return ctrl.tooltipFormatter()(x, y);
-            };
+        if ($scope.timeMode === "month") {
+            if (match) {
+                let month = parseInt(match[2]);
+                s = monthNames[month];
+            }
         }
+        else {
+            if (match) {
+                s = match[2] + "/" + match[3];
+            }
+        }
+        return s;
+
+    };
+
+    $scope.tooltipFormatter = (x, y) => {
+        let softwareDate = "Unknown";
+        let hardwareVersion = "Unknown";
+        let sdkBranch = "Unknown";
+        let gitCommit = "Unknown";
+        let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
+        let match = r.exec(x);
+        let key = "";
+        if (match) {
+            key = match[1];
+        }
+        else {
+            let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
+            match = reg.exec(x);
+            if(match) {
+                key = match[1].replace('T', ' ');
+            }
+        }
+        let s = "Error";
+
+        if ($scope.buildInfo && key in $scope.buildInfo) {
+            softwareDate = $scope.buildInfo[key]["software_date"];
+            hardwareVersion = $scope.buildInfo[key]["hardware_version"];
+            sdkBranch = $scope.buildInfo[key]["fun_sdk_branch"]
+            s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
+            s += "<b>Software date:</b> " + softwareDate + "<br>";
+            s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
+            s += "<b>Git commit:</b> " + $scope.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "") + "<br>";
+            s += "<b>Value:</b> " + y + "<br>";
+        } else {
+            s = "<b>Value:</b> " + y + "<br>";
+        }
+
+        return s;
+    };
+
+
         //console.log(ctrl.showingTable);
         /*$scope.pointClickCallback = ctrl.pointClickCallback;*/
     };
@@ -113,11 +140,21 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     };
 
+
+
+    $scope.fetchBuildInfo = () => {
+        commonService.apiGet('/regression/jenkins_job_id_maps').then((data) => {
+            commonService.apiGet('/regression/build_to_date_map').then((data) => {
+                $scope.buildInfo = data;
+            })
+        })
+    };
+
     $scope.showTables = () => {
-      if($scope.showingTable === false)
-          $scope.showingTable = true;
-      else
-          $scope.showingTable = false;
+        if ($scope.showingTable === false)
+            $scope.showingTable = true;
+        else
+            $scope.showingTable = false;
     };
 
     $scope.$watch(
@@ -135,7 +172,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 $scope.tableInfo = ctrl.tableInfo;
                 //$scope.timeMode = ctrl.timeMode;
                 //console.log("C I:" + ctrl.chartInfo);
-                if($scope.chartInfo) {
+                if ($scope.chartInfo) {
                     $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
                 } else {
                     $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
@@ -143,7 +180,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
             });
 
-    }, true);
+        }, true);
 
     $scope.setDefault = () => {
         $scope.timeMode = "all";
@@ -160,7 +197,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             //console.log("Fetching CI already");
             return commonService.apiPost("/metrics/chart_info", payload, "fun_metric_chart: chart_info").then((chartInfo) => {
                 $scope.chartInfo = chartInfo;
-                if($scope.chartInfo !== null) {
+                if ($scope.chartInfo !== null) {
                     $scope.previewDataSets = $scope.chartInfo.data_sets;
                     $scope.currentDescription = $scope.chartInfo.description;
                     $scope.inner.currentDescription = $scope.currentDescription;
@@ -235,7 +272,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
 
     function sameDay(d1, d2) {
-          return d1.getFullYear() === d2.getFullYear() &&
+        return d1.getFullYear() === d2.getFullYear() &&
             d1.getMonth() === d2.getMonth() &&
             d1.getDate() === d2.getDate();
     }
@@ -296,9 +333,9 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         let len = dateList.length;
         let filteredDate = [];
         let result = [[len, 0]];
-        if($scope.timeMode === "week") {
-            for(let i = len - 1; i >= 0; i = i - 7) {
-                if(i >= 7) {
+        if ($scope.timeMode === "week") {
+            for (let i = len - 1; i >= 0; i = i - 7) {
+                if (i >= 7) {
                     filteredDate.push([i, i - 7 + 1]);
                 }
                 else {
@@ -307,20 +344,20 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             }
             result = filteredDate.reverse();
         }
-        else if($scope.timeMode === "month") {
+        else if ($scope.timeMode === "month") {
             let i = len - 1;
             let startIndex = len - 1;
             let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
             let latestMonth = latestDate.getUTCMonth();
-            while(i >= 0) {
+            while (i >= 0) {
                 let currentDate = new Date(dateList[i].replace(/\s+/g, 'T'));
                 let currentMonth = currentDate.getUTCMonth();
-                if(currentMonth !== latestMonth) {
+                if (currentMonth !== latestMonth) {
                     filteredDate.push([startIndex, i + 1]);
                     latestMonth = currentMonth;
                     startIndex = i;
                 }
-                if(i === 0) {
+                if (i === 0) {
                     filteredDate.push([startIndex, i]);
                 }
                 i--;
@@ -328,7 +365,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             result = filteredDate.reverse();
         }
         else {
-            for(let i = len - 1; i >= 0; i--) {
+            for (let i = len - 1; i >= 0; i--) {
                 filteredDate.push([i, i]);
             }
             result = filteredDate.reverse();
@@ -340,22 +377,22 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         let len = dateList.length;
         let filteredDate = [];
         let result = dateList;
-        if($scope.timeMode === "week") {
-            for(let i = len - 1; i >= 0; i = i - 7) {
+        if ($scope.timeMode === "week") {
+            for (let i = len - 1; i >= 0; i = i - 7) {
                 filteredDate.push(dateList[i]);
             }
             result = filteredDate.reverse();
         }
-        else if($scope.timeMode === "month") {
+        else if ($scope.timeMode === "month") {
             let i = len - 1;
             let startIndex = len - 1;
             let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
             let latestMonth = latestDate.getUTCMonth();
             filteredDate.push(dateList[i]);
-            while(i >= 0) {
+            while (i >= 0) {
                 let currentDate = new Date(dateList[i].replace(/\s+/g, 'T'));
                 let currentMonth = currentDate.getUTCMonth();
-                if(currentMonth !== latestMonth) {
+                if (currentMonth !== latestMonth) {
                     filteredDate.push(dateList[i]);
                     latestMonth = currentMonth;
                 }
@@ -368,7 +405,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     $scope.setTimeMode = (mode) => {
         $scope.timeMode = mode;
-        if($scope.chartInfo) {
+        if ($scope.chartInfo) {
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
         } else {
             $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
@@ -377,7 +414,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
         $scope.title = chartName;
-        if(!chartName) {
+        if (!chartName) {
             return;
         }
         //$scope.status = "Fetch table meta-data";
@@ -387,21 +424,20 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             payload["chart_name"] = chartName;
             payload["preview_data_sets"] = previewDataSets;
             payload["metric_id"] = -1;
-            if(chartInfo) {
+            if (chartInfo) {
                 payload["metric_id"] = chartInfo["metric_id"];
                 $scope.metricId = chartInfo["metric_id"];
             }
-            if(metricModelName !== 'MetricContainer')
-            {
+            if (metricModelName !== 'MetricContainer') {
                 $scope.status = "idle";
                 $scope.tableInfo = tableInfo;
 
                 let filterDataSets = [];
-                if(previewDataSets) {
+                if (previewDataSets) {
                     filterDataSets = previewDataSets;
                 } else {
                     //console.log("Chart Info:" + chartInfo);
-                    if(chartInfo){
+                    if (chartInfo) {
                         filterDataSets = chartInfo.data_sets;
                         //console.log("C DS:" + chartInfo.data_sets);
                     }
@@ -412,7 +448,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
                 commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
                     $scope.status = "idle";
-                    if(allDataSets.length === 0) {
+                    if (allDataSets.length === 0) {
                         $scope.values = null;
                         return;
                     }
@@ -445,15 +481,14 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     allDataSets.forEach((oneDataSet) => {
 
                         let oneChartDataArray = [];
-                        for(let i = 0; i < keyList.length; i++) {
+                        for (let i = 0; i < keyList.length; i++) {
                             let output = null;
                             let matchingDateFound = false;
                             seriesDates.push(originalKeyList[keyList[i][0]]);
-                            let  startIndex = keyList[i][0];
+                            let startIndex = keyList[i][0];
                             let endIndex = keyList[i][1];
-                            while(startIndex >= endIndex)
-                            {
-                                for(let j = 0; j < oneDataSet.length; j++) {
+                            while (startIndex >= endIndex) {
+                                for (let j = 0; j < oneDataSet.length; j++) {
                                     let oneRecord = oneDataSet[j];
                                     if (oneRecord.input_date_time.toString() === originalKeyList[startIndex]) {
                                         matchingDateFound = true;
@@ -473,8 +508,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                                         break;
                                     }
                                 }
-                                if(matchingDateFound)
-                                {
+                                if (matchingDateFound) {
                                     break;
                                 }
                                 startIndex--;
@@ -495,12 +529,12 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     $scope.headers = $scope.tableInfo;
                 });
             }
-            else{
+            else {
                 $scope.status = "Fetch data";
                 console.log("Fetch Scores");
                 return commonService.apiPost('/metrics/scores', payload).then((data) => {
                     $scope.status = "idle";
-                    if(data.length === 0) {
+                    if (data.length === 0) {
                         $scope.values = null;
                         return;
                     }
@@ -517,8 +551,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     });
 
                     $scope.shortenKeyList(series);
-                    if(series.length === 0)
-                    {
+                    if (series.length === 0) {
                         $scope.series = null;
                         $scope.value = null;
                     }
@@ -529,10 +562,8 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                         keyList.forEach((dateTime) => {
                             //values.push(data.scores[dateTime].score);
                             let d = new Date(dateTime * 1000).toISOString();
-                            for(let i = 0; i < series.length; i++)
-                            {
-                                if(d === series[i])
-                                {
+                            for (let i = 0; i < series.length; i++) {
+                                if (d === series[i]) {
                                     valuesByTime.push(data.scores[dateTime].score);
                                 }
                             }
@@ -542,27 +573,27 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                         $scope.values = [{data: valuesByTime}];
                         let seriesDates = [];
                         const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-                        series.forEach(function(seriesValues){
-                            let s = "Error";
-                            let r = /(\d{4})-(\d{2})-(\d{2})/g;
-                            let match = r.exec(seriesValues);
-
-                            if ($scope.timeMode === "month") {
-                                if (match) {
-                                    let month = parseInt(match[2]);
-                                    s = monthNames[month];
-                                }
-                            }
-                            else {
-                                if (match) {
-                                    s = match[2] + "/" + match[3];
-                                }
-                            }
-                            seriesDates.push(s);
-                        });
-                        $scope.series = seriesDates;
+                        // series.forEach(function(seriesValues){
+                        //     let s = "Error";
+                        //     let r = /(\d{4})-(\d{2})-(\d{2})/g;
+                        //     let match = r.exec(seriesValues);
+                        //
+                        //     if ($scope.timeMode === "month") {
+                        //         if (match) {
+                        //             let month = parseInt(match[2]);
+                        //             s = monthNames[month];
+                        //         }
+                        //     }
+                        //     else {
+                        //         if (match) {
+                        //             s = match[2] + "/" + match[3];
+                        //         }
+                        //     }
+                        //     seriesDates.push(s);
+                        // });
+                        $scope.series = series;
 
                         $scope.status = "idle";
                         //let keyList = Array.from(keySet);
@@ -599,7 +630,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     };
 
     $scope.editDescription = () => {
-            $scope.editingDescription = true;
+        $scope.editingDescription = true;
     };
 
     $scope.changeClass = (divId, buttonId) => {
@@ -620,22 +651,20 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 }
 
 angular.module('qa-dashboard').component("funMetricChart", {
-        templateUrl: '/static/qa_dashboard/fun_metric_chart.html',
-        bindings: {
-                    chartName: '<',
-                    y1AxisTitle: '<',
-                    modelName: '<',
-                    width: '@',
-                    height: '@',
-                    previewDataSets: '<',
-                    pointClickCallback: '&',
-                    xaxisFormatter: '&',
-                    tooltipFormatter: '&',
-                    showingTable: '<',
-                    tableInfo: '<',
-                    chartInfo: '<',
-                    waitTime: '=',
-                    atomic: '<'
-                  },
-        controller: FunMetricChartController
- });
+    templateUrl: '/static/qa_dashboard/fun_metric_chart.html',
+    bindings: {
+        chartName: '<',
+        y1AxisTitle: '<',
+        modelName: '<',
+        width: '@',
+        height: '@',
+        previewDataSets: '<',
+        pointClickCallback: '&',
+        showingTable: '<',
+        tableInfo: '<',
+        chartInfo: '<',
+        waitTime: '=',
+        atomic: '<'
+    },
+    controller: FunMetricChartController
+});

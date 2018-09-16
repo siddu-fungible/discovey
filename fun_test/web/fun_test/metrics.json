@@ -372,6 +372,15 @@
                 "weight": 1
               },
               {
+                "info": "Best time for 1 malloc/free (Classic)",
+                "metric_model_name": "AllocSpeedPerformance",
+                "leaf": true,
+                "name": "Best time for 1 malloc/free (Classic)",
+                "label": "Best time for 1 malloc/free (Classic)",
+                "children": [],
+                "weight": 1
+              },
+              {
                 "info": "WU Latency: Alloc Stack",
                 "metric_model_name": "WuLatencyAllocStack",
                 "leaf": true,
@@ -495,6 +504,15 @@
                 "leaf": true,
                 "name": "Best time for 1 malloc/free (Threaded)",
                 "label": "Best time for 1 malloc/free (Threaded)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Best time for 1 malloc/free (Classic)",
+                "metric_model_name": "AllocSpeedPerformance",
+                "leaf": true,
+                "name": "Best time for 1 malloc/free (Classic)",
+                "label": "Best time for 1 malloc/free (Classic)",
                 "children": [],
                 "weight": 1
               },

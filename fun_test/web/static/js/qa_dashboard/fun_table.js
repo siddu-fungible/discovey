@@ -35,7 +35,7 @@ function FunTableController($scope, pagerService) {
 
     $scope.$watch(
         () => {
-            return [ctrl.data];
+            return [ctrl.data, ctrl.filterDataSets];
         }, function (newvalue, oldvalue) {
             if (newvalue === oldvalue) {
                 // console.log(newvalue, oldvalue);

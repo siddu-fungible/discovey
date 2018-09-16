@@ -22,7 +22,7 @@ def get_rounded_time():
 
 def is_job_from_today(job_dt):
     today = get_rounded_time()
-    return True	   
+    return True # TODO:
     return (job_dt.year == today.year) and (job_dt.month == today.month) and (job_dt.day == today.day)
 
 def set_last_build_status_for_charts(result, model_name):
@@ -94,6 +94,7 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
         output_one_malloc_free_wu = 0
         output_one_malloc_free_threaded = 0
+        output_one_malloc_free_classic_min = output_one_malloc_free_classic_avg = output_one_malloc_free_classic_max = -1
         wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = -1
         wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = -1
         try:
@@ -104,15 +105,21 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
-                m = re.search(r'Time for one malloc/free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
+                m = re.search(r'Time for one fun_malloc\+fun_free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
                 if m:
                     alloc_speed_test_found = True
                     d = json.loads(m.group(1))
                     output_one_malloc_free_wu = int(d["avg"])
-                m = re.search(r'Time for one malloc/free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
+                m = re.search(r'Time for one fun_malloc\+fun_free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_threaded_ns\]', line)
                 if m:
                     d = json.loads(m.group(1))
                     output_one_malloc_free_threaded = int(d['avg'])
+                m = re.search(r'Time for one malloc\+free \(classic\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_classic_ns\]', line)
+                if m:
+                    d = json.loads(m.group(1))
+                    output_one_malloc_free_classic_avg = int(d['avg'])
+                    output_one_malloc_free_classic_min = int(d['min'])
+                    output_one_malloc_free_classic_max = int(d['max'])
 
                 # wu_latency_test
                 m = re.search(r' wu_latency_test.*({.*}).*perf_wu_alloc_stack_ns', line)
@@ -132,6 +139,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
             fun_test.log("Malloc Free threaded: {}".format(output_one_malloc_free_threaded))
             fun_test.log("Malloc Free WU: {}".format(output_one_malloc_free_wu))
+            fun_test.log("Malloc Free classic: min: {}, avg: {}, max: {}".format(output_one_malloc_free_classic_min,
+                                                                                 output_one_malloc_free_classic_avg,
+                                                                                 output_one_malloc_free_classic_max))
             fun_test.log("wu_latency_test: wu_alloc_stack_ns: min: {}, avg: {}, max: {}".format(wu_alloc_stack_ns_min,
                                                                                                 wu_alloc_stack_ns_avg,
                                                                                                 wu_alloc_stack_ns_max))
@@ -146,6 +156,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                                                                 input_app="alloc_speed_test",
                                                                 output_one_malloc_free_wu=output_one_malloc_free_wu,
                                                                 output_one_malloc_free_threaded=output_one_malloc_free_threaded,
+                                                                output_one_malloc_free_classic_min=output_one_malloc_free_classic_min,
+                                                                output_one_malloc_free_classic_avg=output_one_malloc_free_classic_avg,
+                                                                output_one_malloc_free_classic_max=output_one_malloc_free_classic_max,
                                                                 input_date_time=self.dt)
 
             MetricHelper(model=WuLatencyUngated).add_entry(status=self.result, input_app="wu_latency_test",

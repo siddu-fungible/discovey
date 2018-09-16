@@ -241,9 +241,7 @@
                     <br>
 
                     <div class="closed-section"></div>
-                    <fun-metric-chart chart-name="currentChartName" model-name="currentMetricModelName"
-                                           xaxis-formatter="xAxisFormatter"
-                                           tooltip-formatter="tooltipFormatter"></fun-metric-chart>
+                    <fun-metric-chart chart-name="currentChartName" model-name="currentMetricModelName"></fun-metric-chart>
                 </div>
             </div>
             <div ng-switch-when="showingNonAtomicMetric">
@@ -323,8 +321,7 @@
                 </div>
                 <br>
                 <div class="closed-section"></div>
-                <fun-metric-chart chart-name="currentChartName" model-name="currentMetricModelName"
-                                           tooltip-formatter="tooltipFormatter"></fun-metric-chart>
+                <fun-metric-chart chart-name="currentChartName" model-name="currentMetricModelName"></fun-metric-chart>
 
                 <br>
                 <!--<b>Description: </b>-->
@@ -346,8 +343,6 @@
                                 <fun-metric-chart
                                         chart-name="node.name"
                                         model-name="node.metricModelName"
-                                        xaxis-formatter="xAxisFormatter"
-                                        tooltip-formatter="tooltipFormatter"
                                         atomic="atomic"
                                         chart-only="true"
                                         wait-time="(($parent.$index * numGridColumns) + $index) * 1000">

@@ -636,10 +636,15 @@ class AllocSpeedPerformance(models.Model):
     input_app = models.TextField(verbose_name="alloc_speed_test", default="alloc_speed_test",  choices=[(0, "alloc_speed_test")])
     output_one_malloc_free_wu = models.IntegerField(verbose_name="Time in ns (WU)")
     output_one_malloc_free_threaded = models.IntegerField(verbose_name="Time in ns (Threaded)")
+    output_one_malloc_free_classic_min = models.IntegerField(default=-1, verbose_name="Time in ns (Classic): Min")
+    output_one_malloc_free_classic_avg = models.IntegerField(default=-1, verbose_name="Time in ns (Classic): Avg")
+    output_one_malloc_free_classic_max = models.IntegerField(default=-1, verbose_name="Time in ns (Classic): Max")
     tag = "analytics"
 
     def __str__(self):
-        return "{}..{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded, self.input_date_time)
+        return "{}..{}..{}..{}..{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded,
+                                       self.output_one_malloc_free_classic_min, self.output_one_malloc_free_classic_avg,
+                                       self.output_one_malloc_free_classic_max, self.input_date_time)
 
 
 class WuLatencyAllocStack(models.Model):

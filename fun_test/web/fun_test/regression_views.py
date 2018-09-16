@@ -289,7 +289,7 @@ def build_to_date_map(request):
         key = 0
         if m:
             key = int(m.group(1))
-        print "Completion date:" + entry.completion_date
+        # print "Completion date:" + entry.completion_date
         try:
             key = entry.completion_date
             dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
