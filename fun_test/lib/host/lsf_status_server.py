@@ -36,6 +36,9 @@ class LsfStatusServer:
         try:
             past_jobs = self.get_past_jobs_by_tag(tag=tag, add_info_to_db=True)
             last_job = past_jobs[0]
+            local_past_jobs_index = fun_test.get_local_setting("lsf_past_jobs_index")
+            if local_past_jobs_index:
+                last_job = past_jobs[int(local_past_jobs_index)]
             job_id = last_job["job_id"]
             fun_test.add_checkpoint("Validating Job: {}".format(job_id))
             fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))

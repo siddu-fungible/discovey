@@ -542,6 +542,15 @@
                 "label": "Malloc agent rate",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "info": "Average wustack alloc/free cycles",
+                "metric_model_name": "WuStackSpeedTestPerformance",
+                "leaf": true,
+                "name": "Average wustack alloc/free cycles",
+                "label": "Average wustack alloc/free cycles",
+                "children": [],
+                "weight": 1
               }
             ]
           },
@@ -595,6 +604,15 @@
                 "leaf": true,
                 "name": "Average WU send ungated cycles",
                 "label": "Average WU send ungated cycles",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Average wustack alloc/free cycles",
+                "metric_model_name": "WuStackSpeedTestPerformance",
+                "leaf": true,
+                "name": "Average wustack alloc/free cycles",
+                "label": "Average wustack alloc/free cycles",
                 "children": [],
                 "weight": 1
               }
