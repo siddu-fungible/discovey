@@ -997,6 +997,23 @@ class FunMagentPerformanceTest(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class WuStackSpeedTestPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="wustack_speed_test", choices=[(0, "wustack_speed_test")])
+    input_metric_name = models.CharField(max_length=40, default="wustack_alloc_free_cycles",
+                                         choices=[(0, "wustack_alloc_free_cycles")])
+    output_average = models.IntegerField(verbose_name="Alloc/free cycles average", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class ShaxPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
