@@ -628,7 +628,7 @@ class WuStackSpeedTestPerformanceTC(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
 
     def describe(self):
-        self.set_test_details(id=8,
+        self.set_test_details(id=10,
                               summary="Wu Send Speed Test performance",
                               steps="Steps 1")
 
