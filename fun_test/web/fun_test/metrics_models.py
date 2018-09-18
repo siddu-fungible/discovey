@@ -988,7 +988,7 @@ class FunMagentPerformanceTest(models.Model):
     input_app = models.CharField(max_length=30, default="fun_magent_perf_test", choices=[(0, "fun_magent_perf_test")])
     input_metric_name = models.CharField(max_length=40, default="fun_magent_rate_malloc_free_per_sec",
                                          choices=[(0, "fun_magent_rate_malloc_free_per_sec")])
-    output_latency = models.IntegerField(verbose_name="Latency", default=-1)
+    output_latency = models.IntegerField(verbose_name="KOps/sec", default=-1)
 
 
     def __str__(self):

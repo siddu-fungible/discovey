@@ -287,13 +287,16 @@ if __name__ == "__main__":
                         outputName = data["output"]["name"]
                         print(entry.metric_model_name, outputName, data["output"]["expected"])
                         model = apps.get_model(app_label='fun_test', model_name=entry.metric_model_name)
-                        mcs_entries = model.objects.filter(**d)
-                        i = len(mcs_entries) - 1
+                        mcs_entries = model.objects.filter(**d).order_by('input_date_time')
+                        for m in mcs_entries:
+                            print getattr(m, outputName) 
+                        i = len(mcs_entries) - 2
                         while i >= 0:
                             lastData = mcs_entries[i]
                             newExpectedOutput = getattr(lastData, outputName)
                             if newExpectedOutput < 0:
                                 i = i-1
+                                print "Decrementing: {}".format(outputName)
                             else:
                                 break
                         print newExpectedOutput
