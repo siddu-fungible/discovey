@@ -213,7 +213,11 @@ def prepare_status(chart, purge_old_status=False):
                         score = -1
                         this_days_record = None
                         if len(entries):
-                            this_days_record = entries[0]
+                            if len(entries > 1):
+                                this_days_record = entries[-1]
+                            else:
+                                this_days_record = entries[0]
+
                             max_value = data_set["output"]["max"]
                             min_value = data_set["output"]["min"]
                             output_name = data_set["output"]["name"]  # TODO
