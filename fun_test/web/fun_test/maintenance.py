@@ -258,18 +258,39 @@ if __name__ == "__main250__":
             entry.save()
 
 if __name__ == "__main__":
-    import pytz
-    chart_name = "WU Latency: Alloc Stack"
-    model_name = "WuLatencyAllocStack"
+    # import pytz
+    # chart_name = "WU Latency: Alloc Stack"
+    # model_name = "WuLatencyAllocStack"
 
-    mcs_entries = WuLatencyAllocStack.objects.all()
-    x = datetime(year=2018, month=6, day=01, minute=0, hour=0, second=0)
-    tz = pytz.timezone("UTC")
-    localized = tz.localize(x, is_dst=None)
-    # dt = get_localized_time(x)
-
-    for mcs_entry in mcs_entries:
-        if mcs_entry.input_date_time < localized:
-            mcs_entry.delete()
-
-
+    # mcs_entries = WuLatencyAllocStack.objects.all()
+    # x = datetime(year=2018, month=6, day=01, minute=0, hour=0, second=0)
+    # tz = pytz.timezone("UTC")
+    # localized = tz.localize(x, is_dst=None)
+    # # dt = get_localized_time(x)
+    #
+    # for mcs_entry in mcs_entries:
+    #     if mcs_entry.input_date_time < localized:
+    #         mcs_entry.delete()
+    entries = MetricChart.objects.all()
+    # print(len(entries))
+    for entry in entries:
+        if entry.data_sets:
+            jsonData = json.loads(entry.data_sets)
+            for data in jsonData:
+                d = {}
+                for input_name, input_value in data["inputs"].iteritems():
+                    if d == "input_date_time":
+                        continue
+                    d[input_name] = input_value
+                if "expected" in data["output"]:
+                    if entry.metric_model_name:
+                        outputName = data["output"]["name"]
+                        print(entry.metric_model_name, outputName, data["output"]["expected"])
+                        model = apps.get_model(app_label='fun_test', model_name=entry.metric_model_name)
+                        mcs_entries = model.objects.filter(**d)
+                        lastData = mcs_entries[len(mcs_entries)-1]
+                        newExpectedOutput = getattr(lastData, outputName)
+                        data["output"]["expected"] = newExpectedOutput
+                        print(data["output"]["expected"])
+            entry.data_sets = json.dumps(jsonData)
+            entry.save()

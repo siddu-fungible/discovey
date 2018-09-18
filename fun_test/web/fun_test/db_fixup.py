@@ -214,7 +214,7 @@ def prepare_status(chart, purge_old_status=False):
                         this_days_record = None
                         if len(entries):
                             if len(entries) > 1:
-                                this_days_record = entries[-1]
+                                this_days_record = entries.last()
                             else:
                                 this_days_record = entries[0]
 
