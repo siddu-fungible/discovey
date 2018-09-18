@@ -97,21 +97,22 @@ class TestCase1(FunTestCase):
                 target_linux_obj.remove_file(file_name=file_path)
                 fun_test.add_checkpoint(checkpoint)
 
-            # Test for MB files with different mss
-            for file_size in file_sizes_in_mbs:
-                fun_test.log("Transferring file of %d MB with mss: %d" % (file_size, mss))
+            if mss >= 500:
+                # Test for MB files with different mss
+                for file_size in file_sizes_in_mbs:
+                    fun_test.log("Transferring file of %d MB with mss: %d" % (file_size, mss))
 
-                file_path = file_dir + "%dmb" % file_size
-                scp_cmd = "ip netns exec n1 scp %s %s@%s:%s" % (file_path, username, target_machine_ip, file_dir)
-                source_linux_obj.command(command=scp_cmd, custom_prompts={"password: ": password}, timeout=3600)
+                    file_path = file_dir + "%dmb" % file_size
+                    scp_cmd = "ip netns exec n1 scp %s %s@%s:%s" % (file_path, username, target_machine_ip, file_dir)
+                    source_linux_obj.command(command=scp_cmd, custom_prompts={"password: ": password}, timeout=3600)
 
-                checkpoint = "Validating md5sum of the %d MB file " % file_size
-                md5sum = target_linux_obj.md5sum(file_name=file_path)
-                fun_test.test_assert_expected(expected=md5sums['mbs'][file_size], actual=md5sum, message=checkpoint)
+                    checkpoint = "Validating md5sum of the %d MB file " % file_size
+                    md5sum = target_linux_obj.md5sum(file_name=file_path)
+                    fun_test.test_assert_expected(expected=md5sums['mbs'][file_size], actual=md5sum, message=checkpoint)
 
-                checkpoint = "Remove all files from target machine"
-                target_linux_obj.remove_file(file_name=file_path)
-                fun_test.add_checkpoint(checkpoint)
+                    checkpoint = "Remove all files from target machine"
+                    target_linux_obj.remove_file(file_name=file_path)
+                    fun_test.add_checkpoint(checkpoint)
 
             if mss == 1300:
                 # Test for GB files with different mss

@@ -20,7 +20,7 @@ from nu_config_manager import *
 
 spirent_config = {}
 subscribed_results = None
-TRAFFIC_DURATION = 10
+TRAFFIC_DURATION = 1
 cc_path_config = {}
 cc_port_list = []
 vp_port_list = []
@@ -294,20 +294,6 @@ class TransitSweep(FunTestCase):
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_1)
         fun_test.log("Rx Port Analyzer Results %s" % rx_port_analyzer_results_2)
 
-        dut_port_1_transmit = None
-        dut_port_1_receive = None
-        dut_port_2_receive = None
-        dut_port_2_transmit = None
-        dut_port_1_rx_eth_stats_pkts = None
-        dut_port_2_tx_eth_stats_pkts = None
-        dut_port_2_rx_eth_stats_pkts = None
-        dut_port_1_tx_eth_stats_pkts = None
-        dut_port_1_rx_octet_stats = None
-        dut_port_2_rx_octet_stats = None
-        dut_port_1_tx_octet_stats = None
-        dut_port_2_tx_octet_stats = None
-        dut_octet_range_stats = None
-        expected_octet_counters = None
         if self.dut_config['enable_dpcsh']:
             fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
             fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
@@ -438,12 +424,6 @@ class TransitSweep(FunTestCase):
             expected_octet_counters = {'64': 1, '127': 63, '255': 128, '511': 256, '1023': 512, '1518': 495,
                                        'max': max_counter_value}
 
-        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
-                             "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
-        fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
-                             "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
-
-        if self.dut_config['enable_dpcsh']:
             fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
                                           message="Ensure frames received on DUT port %s are transmitted from "
                                                   "DUT port %s" % (dut_port_1, dut_port_2))
@@ -490,7 +470,7 @@ class TransitSweep(FunTestCase):
 
             fun_test.test_assert_expected(expected=int(rx_results_1['OctetCount']),
                                           actual=int(dut_port_2_tx_octet_stats),
-                                          message="Ensure octets hsown on tx port of DUT matches rx of spirent")
+                                          message="Ensure octets shown on tx port of DUT matches rx of spirent")
 
             fun_test.test_assert_expected(expected=int(dut_port_2_rx_octet_stats),
                                           actual=int(dut_port_1_tx_octet_stats),
@@ -511,11 +491,17 @@ class TransitSweep(FunTestCase):
                                                       message="Ensure correct value is seen for %s octet in %s of "
                                                               "dut port %s" % (key2, key1, key))
 
-        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
-        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
+        if tx_results_1['FrameCount'] == rx_results_1['FrameCount']:
+            fun_test.test_assert(template_obj.compare_result_attribute(tx_results_1, rx_results_1),
+                                 "Check FrameCount for streamblock %s" % self.streamblock_obj_1.spirent_handle)
+            fun_test.test_assert(template_obj.compare_result_attribute(tx_results_2, rx_results_2),
+                                 "Check FrameCount for streamblock %s" % self.streamblock_obj_2.spirent_handle)
 
-        zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
-        fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
+            zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
+            fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
+
+            zero_counter_seen = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
+            fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port1")
 
     def cleanup(self):
         fun_test.log("In testcase cleanup")
@@ -1377,11 +1363,12 @@ class VPPathIPv4TCP(FunTestCase):
         vp_port_list.append(self.port_1)
         vp_port_list.append(self.port_2)
 
-        checkpoint = "Clear FPG stats on all DUT ports"
-        for port in self.dut_config['ports']:
-            clear_stats = dpcsh_obj.clear_port_stats(port_num=port)
-            fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
-        fun_test.add_checkpoint(checkpoint)
+        if self.dut_config['enable_dpcsh']:
+            checkpoint = "Clear FPG stats on all DUT ports"
+            for port in self.dut_config['ports']:
+                clear_stats = dpcsh_obj.clear_port_stats(port_num=port)
+                fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
+            fun_test.add_checkpoint(checkpoint)
 
         fps = 150
         if VP_FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HU_FPG:
@@ -1683,11 +1670,12 @@ class OverlayIpv4UDP(VPPathIPv4TCP):
         self.port_1 = vp_port_list[0]
         self.port_2 = vp_port_list[1]
 
-        checkpoint = "Clear FPG stats on all DUT ports"
-        for port in self.dut_config['ports']:
-            clear_stats = dpcsh_obj.clear_port_stats(port_num=port)
-            fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
-        fun_test.add_checkpoint(checkpoint)
+        if self.dut_config['enable_dpcsh']:
+            checkpoint = "Clear FPG stats on all DUT ports"
+            for port in self.dut_config['ports']:
+                clear_stats = dpcsh_obj.clear_port_stats(port_num=port)
+                fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
+            fun_test.add_checkpoint(checkpoint)
 
         fps = 150
         if VP_FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HU_FPG:
@@ -1804,11 +1792,12 @@ class OverlayMPLSTCP(VPPathIPv4TCP):
         self.port_1 = vp_port_list[0]
         self.port_2 = vp_port_list[1]
 
-        checkpoint = "Clear FPG stats on all DUT ports"
-        for port in self.dut_config['ports']:
-            clear_stats = dpcsh_obj.clear_port_stats(port_num=port)
-            fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
-        fun_test.add_checkpoint(checkpoint)
+        if self.dut_config['enable_dpcsh']:
+            checkpoint = "Clear FPG stats on all DUT ports"
+            for port in self.dut_config['ports']:
+                clear_stats = dpcsh_obj.clear_port_stats(port_num=port)
+                fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
+            fun_test.add_checkpoint(checkpoint)
 
         fps = 150
         if VP_FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HU_FPG:

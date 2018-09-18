@@ -33,7 +33,7 @@ jitter_results = None
 INTERFACE_LOAD_SPEC = fun_test.get_script_parent_directory() + "/interface_loads.json"
 TOLERANCE_PERCENT = 10
 TRAFFIC_DURATION = 60
-IPV4_FRAMES = [64, 200, 1000, 1500, 3000, 9000]
+IPV4_FRAMES = [64]
 LOAD = 1200
 chassis_type = None
 FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_HU
@@ -192,9 +192,12 @@ class NuVpLatencyIPv4Test(FunTestCase):
             spray = "spray_enable"
 
         for frame_size in IPV4_FRAMES:
+            insert_signature = True
+            if frame_size == 64:
+                insert_signature = False
             LOAD = perf_loads[FLOW_DIRECTION][spray][str(frame_size)]
             stream_objs.append(StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                           insert_signature=True,
+                                           insert_signature=insert_signature,
                                            fixed_frame_length=frame_size,
                                            load=LOAD,
                                            load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND))
@@ -230,12 +233,8 @@ class NuVpLatencyIPv4Test(FunTestCase):
             else:
                 recycle_count = 200
                 dest_ip = l3_config['destination_ip2']
-            if stream_obj.FixedFrameLength == 64:
-                ip_header_obj = Ipv4Header(destination_address=dest_ip,
-                                           protocol=Ipv4Header.PROTOCOL_TYPE_EXPERIMENTAL)
-            else:
-                ip_header_obj = Ipv4Header(destination_address=dest_ip,
-                                           protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
+            ip_header_obj = Ipv4Header(destination_address=dest_ip,
+                                       protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
             result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
                                                                     header_obj=ip_header_obj, update=True)
             fun_test.simple_assert(expression=result, message=checkpoint)
@@ -255,27 +254,26 @@ class NuVpLatencyIPv4Test(FunTestCase):
                                                                                header_attribute="destAddr")
                     fun_test.simple_assert(result, checkpoint)
 
-            if stream_obj.FixedFrameLength != 64:
-                checkpoint = "Add TCP header"
-                tcp_header_obj = TCP()
-                result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
-                                                                        header_obj=tcp_header_obj, update=False)
-                fun_test.simple_assert(result, checkpoint)
+            checkpoint = "Add TCP header"
+            tcp_header_obj = TCP()
+            result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
+                                                                    header_obj=tcp_header_obj, update=False)
+            fun_test.simple_assert(result, checkpoint)
 
-                if SPRAY_ENABLE:
-                    checkpoint = "Configure Port Modifier"
-                    port_modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, step_value=1, recycle_count=200,
-                                                      data=1024)
-                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
-                                                                               header_obj=tcp_header_obj,
-                                                                               streamblock_obj=stream_obj,
-                                                                               header_attribute="destPort")
-                    fun_test.simple_assert(result, checkpoint)
-                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
-                                                                               header_obj=tcp_header_obj,
-                                                                               streamblock_obj=stream_obj,
-                                                                               header_attribute="sourcePort")
-                    fun_test.simple_assert(result, checkpoint)
+            if SPRAY_ENABLE:
+                checkpoint = "Configure Port Modifier"
+                port_modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, step_value=1, recycle_count=200,
+                                                  data=1024)
+                result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
+                                                                           header_obj=tcp_header_obj,
+                                                                           streamblock_obj=stream_obj,
+                                                                           header_attribute="destPort")
+                fun_test.simple_assert(result, checkpoint)
+                result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
+                                                                           header_obj=tcp_header_obj,
+                                                                           streamblock_obj=stream_obj,
+                                                                           header_attribute="sourcePort")
+                fun_test.simple_assert(result, checkpoint)
 
         checkpoint = "Deactivate All Streams under %s" % self.port
         result = template_obj.deactivate_stream_blocks(stream_obj_list=stream_objects)
@@ -328,11 +326,18 @@ class NuVpLatencyIPv4Test(FunTestCase):
             fun_test.sleep("Traffic to start", seconds=4)
 
             checkpoint = "Validate Tx and Rx Rate"
-            rate_result = template_obj.validate_traffic_rate_results(
-                rx_summary_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
-                tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
-                stream_objects=[stream_obj])
-            fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
+            if int(frame_size) == 64:
+                rate_result = template_obj.validate_traffic_rate_results(
+                    rx_summary_subscribe_handle=self.subscribe_results['analyzer_subscribe'],
+                    tx_summary_subscribe_handle=self.subscribe_results['generator_subscribe'],
+                    stream_objects=[stream_obj], tx_port=port1, rx_port=rx_port)
+                fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
+            else:
+                rate_result = template_obj.validate_traffic_rate_results(
+                    rx_summary_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
+                    tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
+                    stream_objects=[stream_obj])
+                fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
             fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
 
             if dut_config['enable_dpcsh']:
@@ -656,6 +661,6 @@ if __name__ == "__main__":
     SPRAY_ENABLE = cc_flow_type[NuConfigManager.SPRAY_ENABLE]
     ts = NuVpPerformance()
     ts.add_test_case(NuVpLatencyIPv4Test())
-    ts.add_test_case(NuVpJitterTest())
+    # ts.add_test_case(NuVpJitterTest())
     ts.run()
 
