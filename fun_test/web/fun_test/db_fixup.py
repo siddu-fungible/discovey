@@ -213,7 +213,7 @@ def prepare_status(chart, purge_old_status=False):
                         score = -1
                         this_days_record = None
                         if len(entries):
-                            if len(entries > 1):
+                            if len(entries) > 1:
                                 this_days_record = entries[-1]
                             else:
                                 this_days_record = entries[0]
