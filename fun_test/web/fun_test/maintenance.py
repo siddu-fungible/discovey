@@ -288,8 +288,15 @@ if __name__ == "__main__":
                         print(entry.metric_model_name, outputName, data["output"]["expected"])
                         model = apps.get_model(app_label='fun_test', model_name=entry.metric_model_name)
                         mcs_entries = model.objects.filter(**d)
-                        lastData = mcs_entries[len(mcs_entries)-1]
-                        newExpectedOutput = getattr(lastData, outputName)
+                        i = len(mcs_entries) - 1
+                        while i >= 0:
+                            lastData = mcs_entries[i]
+                            newExpectedOutput = getattr(lastData, outputName)
+                            if newExpectedOutput < 0:
+                                i = i-1
+                            else:
+                                break
+                        print newExpectedOutput
                         data["output"]["expected"] = newExpectedOutput
                         print(data["output"]["expected"])
             entry.data_sets = json.dumps(jsonData)
