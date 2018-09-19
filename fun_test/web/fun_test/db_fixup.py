@@ -149,9 +149,14 @@ def prepare_status(chart, purge_old_status=False):
                     result["children_score_map"][child_metric.metric_id] = child_result["scores"][to_date]
 
                 child_last_build_status = child_result["last_build_status"]
-                result["num_degrades"] += child_result["num_degrades"]
-                result["num_build_failed"] += child_result["num_build_failed"]
-                child_weight = children_weights[child] if child in children_weights else 1
+                if child == 122:
+                    child_weight = 0
+                    result["num_degrades"] += 0
+                    result["num_build_failed"] += 0
+                else:
+                    child_weight = children_weights[child] if child in children_weights else 1
+                    result["num_degrades"] += child_result["num_degrades"]
+                    result["num_build_failed"] += child_result["num_build_failed"]
                 for date_time, child_score in child_result_scores.iteritems():
 
                     scores.setdefault(date_time, 0)
