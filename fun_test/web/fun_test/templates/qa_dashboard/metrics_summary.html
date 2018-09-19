@@ -184,7 +184,7 @@
                         </span>
                         </td>
                         <td>
-                            <div class="score-label"><span style="vertical-align: top"
+                            <div ng-if="node.chartName !== 'All metrics'" class="score-label"><span style="vertical-align: top"
                                                                                  ng-bind-html="getTrendHtml(node) | unsafe"></span>{{ node.goodness }}</div>
                         </td>
                         <!--td>
