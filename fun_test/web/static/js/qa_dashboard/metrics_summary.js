@@ -487,15 +487,16 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             /*if (node.chartName === "BLK_LSV: Latency") {
                 let u = 0;
             }*/
-
-            if (node.numChildDegrades) {
-                s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildDegrades + "";
-            }
-            if (node.numChildrenFailed) {
+            if(node.chartName !== "All metrics") {
                 if (node.numChildDegrades) {
-                    s += ",&nbsp";
+                    s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildDegrades + "";
                 }
-                s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.numChildrenFailed + "</span>";
+                if (node.numChildrenFailed) {
+                    if (node.numChildDegrades) {
+                        s += ",&nbsp";
+                    }
+                    s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.numChildrenFailed + "</span>";
+                }
             }
         }
         return s;
@@ -504,6 +505,10 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
     $scope.getTrendHtml = (node) => {
         let s = "";
         if (node.hasOwnProperty("trend")) {
+            if (node.chartName === "All metrics")
+            {
+                node.trend = "flat";
+            }
             if (node.trend === "up") {
                 s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>&nbsp";
             } else if (node.trend === "down") {
