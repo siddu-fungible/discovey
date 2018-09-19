@@ -68,6 +68,7 @@ class MetricChart(models.Model):
     last_num_degrades = models.IntegerField(default=0)
     last_status_update_date = models.DateTimeField(verbose_name="last_status_update", default=datetime.now)
     last_num_build_failed = models.IntegerField(default=0)
+    num_leaves = models.IntegerField(default=0)
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)

@@ -163,6 +163,7 @@
                     <tr>
                         <th class="text-center">Aspect</th>
                         <th class="text-center">Score</th>
+                        <th class="text-center"># (Metrics)</th>
                         <!--th></th-->
                         <th class="text-center">More Info</th>
 
@@ -183,14 +184,13 @@
                             </a>
                         </span>
                         </td>
-                        <td>
+                        <td class="text-center">
                             <div ng-if="node.chartName !== 'All metrics'" class="score-label"><span style="vertical-align: top"
                                                                                  ng-bind-html="getTrendHtml(node) | unsafe"></span>{{ node.goodness }}</div>
                         </td>
-                        <!--td>
-                            <a href='#' ng-click='showGoodnessTrend(node)'><span style="vertical-align: top"
-                                                                                 ng-bind-html="getTrendHtml(node) | unsafe"></span></a>
-                        </td-->
+                        <td class="text-center">
+                            <span ng-if="!node.leaf">{{ node.numLeaves }}</span>
+                        </td>
 
                         <td ng-bind-html="getStatusHtml(node) | unsafe"></td>
                     </tr>
