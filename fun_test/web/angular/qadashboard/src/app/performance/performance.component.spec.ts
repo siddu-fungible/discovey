@@ -4,7 +4,7 @@ import { PerformanceComponent } from './performance.component';
 import {HttpClient, HttpHandler} from "@angular/common/http";
 import {Observable, of, throwError} from "rxjs";
 import {catchError, map} from "rxjs/operators";
-import {ApiResponse, ApiService} from "../api.service";
+import {ApiResponse, ApiService} from "../services/api.service";
 
 export class MockApiService {
     post(url: string, payload: any): Observable<ApiResponse> {
