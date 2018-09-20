@@ -98,6 +98,8 @@ def interpolate(chart, model, from_date, to_date):
             # print current_date
 
 
+fixup_results_cache = {}
+
 def prepare_status(chart, purge_old_status=False):
     metric_id = chart.metric_id
     chart_name = chart.chart_name
@@ -123,6 +125,7 @@ def prepare_status(chart, purge_old_status=False):
     result["num_degrades"] = 0
     result["children_score_map"] = {}
     result["valid_dates"] = []
+    result["num_leaves"] = 0
     today = datetime.now()
 
     from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
@@ -139,8 +142,21 @@ def prepare_status(chart, purge_old_status=False):
         if not chart.leaf:
             print "Calculating container score for {}".format(chart.chart_name)
             for child in children:
+
                 child_metric = MetricChart.objects.get(metric_id=child)
-                child_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
+                if child_metric.metric_id not in fixup_results_cache:
+                    temp_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
+                    fixup_results_cache[child_metric.metric_id] = temp_result
+                child_result = fixup_results_cache[child_metric.metric_id]
+
+                if child_metric.chart_name != "All metrics":
+                    if child_metric.leaf:
+                        result["num_leaves"] += 1
+                    else:
+                        if chart_name == "Total":
+                            print "XXXX Child: chart Name: {}, num_leaves: {}".format(child_metric.chart_name, child_result["num_leaves"])
+                        result["num_leaves"] += child_result["num_leaves"]
+
                 child_result_scores = child_result["scores"]
                 valid_dates = child_result["valid_dates"]
                 # last_valid_date = child_valid_dates[-1]
@@ -291,7 +307,7 @@ def prepare_status(chart, purge_old_status=False):
         if not result["last_build_status"]:
             result["num_build_failed"] = 1
         if valid_dates:
-            print "Chart: {} num_degrades: {}, last_score: {}".format(chart.chart_name, result["num_degrades"], result["scores"][valid_dates[-1]])
+            print "Chart: {} num_degrades: {}, last_score: {}, num_leaves: {}".format(chart.chart_name, result["num_degrades"], result["scores"][valid_dates[-1]], result["num_leaves"])
         if chart_name == "Networking":
             j = 0
         chart.save()
@@ -312,6 +328,7 @@ def prepare_status(chart, purge_old_status=False):
     chart.last_num_degrades = result["num_degrades"]
     chart.last_status_update_date = get_current_time()
     chart.last_num_build_failed = result["num_build_failed"]
+    chart.num_leaves = result["num_leaves"]
     chart.save()
     return result
 

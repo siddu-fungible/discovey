@@ -174,7 +174,8 @@ function MetricsSummaryController($scope, commonService, $timeout, $window, $q) 
             positive: data.positive,
             numChildrenPassed: data.num_children_passed,
             numChildrenFailed: data.last_num_build_failed,
-            lastBuildStatus: data.last_build_status
+            lastBuildStatus: data.last_build_status,
+            numLeaves: data.num_leaves
 
         };
         /*if (data.chart_name === "BLK_LSV: Latency") {
