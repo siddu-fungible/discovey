@@ -217,8 +217,8 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     $scope.getValidatedData = (data, minimum, maximum) => {
         let result = data;
-        if(data<0) {
-            data=null;
+        if(data < 0) {
+            data = null;
         }
         result = {
             y: data,
