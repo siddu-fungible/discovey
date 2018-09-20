@@ -1,13 +1,21 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {catchError, map} from 'rxjs/operators';
-import {Observable, throwError, of} from "rxjs";
+import {Observable, of} from "rxjs";
 
 export class ApiResponse {
   status: boolean;
   data: object;
   error_message: string;
   message: string;
+  public constructor(
+    fields?: {
+      status?: boolean,
+      data?: object,
+      message?: string
+  }) {
+    if (fields) Object.assign(this, fields);
+  }
 }
 
 @Injectable({
@@ -28,7 +36,6 @@ export class ApiService {
 
   }
 
-
   post(url: string, payload: any): Observable<ApiResponse> {
     return this.httpClient.post<ApiResponse>(url, payload)
       .pipe(
@@ -37,7 +44,6 @@ export class ApiService {
         }),
         catchError(ApiService.handleError)
       );
-
   }
 
   get(url: string): Observable<ApiResponse> {
