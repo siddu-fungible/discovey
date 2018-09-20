@@ -9,7 +9,6 @@ Script takes following inputs in JSON format. It can be save in /tmp dir with na
    "vp_flow_type": "FPG_HU"
 }
 
-All parameters are optional.
 """
 
 from lib.system.fun_test import *
