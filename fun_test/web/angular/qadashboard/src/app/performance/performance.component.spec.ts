@@ -5,6 +5,7 @@ import {HttpClient, HttpHandler} from "@angular/common/http";
 import {Observable, of, throwError} from "rxjs";
 import {catchError, map} from "rxjs/operators";
 import {ApiResponse, ApiService} from "../services/api/api.service";
+import {LoggerService} from "../services/logger/logger.service";
 
 export class MockApiService {
     post(url: string, payload: any): Observable<ApiResponse> {
@@ -20,7 +21,7 @@ describe('PerformanceComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ PerformanceComponent ],
-      providers: [HttpClient, HttpHandler],
+      providers: [HttpClient, HttpHandler, LoggerService],
 
     })
     .compileComponents();

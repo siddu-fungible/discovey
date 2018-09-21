@@ -2,7 +2,9 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { DashboardComponent } from './dashboard.component';
 import { PerformanceComponent } from "../performance/performance.component";
+import { TestComponent } from "../test/test.component";
 import {HttpClient, HttpHandler} from "@angular/common/http";
+import {LoggerService} from "../services/logger/logger.service";
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -10,8 +12,8 @@ describe('DashboardComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DashboardComponent, PerformanceComponent],
-      providers: [HttpClient, HttpHandler]
+      declarations: [ DashboardComponent, PerformanceComponent, TestComponent],
+      providers: [HttpClient, HttpHandler, LoggerService]
     })
     .compileComponents();
   }));
