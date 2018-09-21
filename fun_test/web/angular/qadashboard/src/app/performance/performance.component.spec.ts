@@ -7,7 +7,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {HttpClient, HttpHandler} from "@angular/common/http";
 import {Observable, of, throwError} from "rxjs";
 import {catchError, map} from "rxjs/operators";
-import {ApiResponse, ApiService} from "../services/api.service";
+import {ApiResponse, ApiService} from "../services/api/api.service";
 
 export class MockApiService {
     post(url: string, payload: any): Observable<ApiResponse> {
@@ -27,7 +27,6 @@ describe('PerformanceComponent', () => {
       imports: [MatSortModule,
       BrowserAnimationsModule],
       providers: [HttpClient, HttpHandler]
-
     })
     .compileComponents();
   }));

@@ -9,6 +9,8 @@ import { AppRoutingModule }     from './app-routing.module';
 import { PerformanceComponent } from './performance/performance.component';
 import { HttpClientModule } from '@angular/common/http';
 import { FunTableComponent } from './fun-table/fun-table.component';
+import {ApiService} from "./services/api/api.service";
+import {LoggerService} from "./services/logger/logger.service";
 
 
 @NgModule({
@@ -27,7 +29,7 @@ import { FunTableComponent } from './fun-table/fun-table.component';
     MatSortModule
   ],
 
-  providers: [],
+  providers: [ApiService, LoggerService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
