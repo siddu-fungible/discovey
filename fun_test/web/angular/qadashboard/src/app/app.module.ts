@@ -6,6 +6,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { AppRoutingModule }     from './app-routing.module';
 import { PerformanceComponent } from './performance/performance.component';
 import { HttpClientModule } from '@angular/common/http';
+import {ApiService} from "./services/api/api.service";
+import {LoggerService} from "./services/logger/logger.service";
 
 
 @NgModule({
@@ -21,7 +23,7 @@ import { HttpClientModule } from '@angular/common/http';
     AppRoutingModule
   ],
 
-  providers: [],
+  providers: [ApiService, LoggerService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

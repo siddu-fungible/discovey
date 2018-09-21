@@ -20,7 +20,7 @@ describe('PerformanceComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ PerformanceComponent ],
-      providers: [HttpClient, HttpHandler]
+      providers: [HttpClient, HttpHandler],
 
     })
     .compileComponents();

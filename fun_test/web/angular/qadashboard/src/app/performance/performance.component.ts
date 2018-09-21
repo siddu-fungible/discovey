@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
+import {LoggerService} from "../services/logger/logger.service";
 
 @Component({
   selector: 'app-performance',
@@ -8,8 +9,8 @@ import {ApiService} from "../services/api/api.service";
 })
 export class PerformanceComponent implements OnInit {
 
-  constructor(private apiService: ApiService) {
-
+  constructor(private apiService: ApiService, private logger: LoggerService) {
+    this.logger.log("Performance component init");
   }
 
   private componentState: string = "Unknown";
