@@ -1,0 +1,38 @@
+<p>
+  table works!
+</p>
+<!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">-->
+<div class="card tableContainer">
+    <div>
+        <div>
+            <!-- items being paged -->
+        <table class="table" matSort (matSortChange)="sortData($event)">
+          <tr>
+            <th *ngFor="let header of headers; index as i" mat-sort-header="{{i}}">{{ header }}</th>
+          </tr>
+          <tr *ngFor="let item of pagedItems">
+            <td *ngFor="let rowItems of item">{{rowItems}}</td>
+          </tr>
+        </table>
+
+            <!-- pager -->
+            <ul *ngIf="pager.pages && pager.pages.length" class="pagination">
+                <li [ngClass]="{disabled:pager.currentPage === 1}">
+                    <a (click)="setPage(1)">First</a>
+                </li>
+                <li [ngClass]="{disabled:pager.currentPage === 1}">
+                    <a (click)="setPage(pager.currentPage - 1)">Previous</a>
+                </li>
+                <li *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
+                    <a (click)="setPage(page)">{{page}}</a>
+                </li>
+                <li [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+                    <a (click)="setPage(pager.currentPage + 1)">Next</a>
+                </li>
+                <li [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+                    <a (click)="setPage(pager.totalPages)">Last</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

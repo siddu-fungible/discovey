@@ -13,8 +13,15 @@ export class PerformanceComponent implements OnInit {
   }
 
   private componentState: string = "Unknown";
+  data: any = [];
 
   ngOnInit() {
+    this.data["rows"] = [['hi', 'hello'], ['how', 'are'], ['you', 'its'], ['been', 'a'], ['long', 'time'], ['also', 'when'], ['where', 'how'], ['are', 'we'], ['meeting', 'if'],['hey', 'buddy'],['let','go'],['we', 'will']];
+    this.data["headers"] = ['Names','Numbers'];
+    this.data["all"] = true;
+
+    this.data["length"] = 12;
+    this.data["currentPageIndex"] = 1;
 
   }
 
@@ -34,6 +41,15 @@ export class PerformanceComponent implements OnInit {
 
   getComponentState(): string {
     return this.componentState;
+  }
+
+  setValues(pageNumber): void {
+    this.data["rows"] = [['hi', 'hello'], ['how', 'are']];
+    this.data["headers"] = ['Names','Numbers'];
+    this.data["all"] = false;
+    this.data["length"] = 14;
+    this.data["currentPageIndex"] = pageNumber;
+
   }
 
 }
