@@ -146,12 +146,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _performance_performance_component__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./performance/performance.component */ "./src/app/performance/performance.component.ts");
 /* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/fesm5/http.js");
 /* harmony import */ var _fun_table_fun_table_component__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./fun-table/fun-table.component */ "./src/app/fun-table/fun-table.component.ts");
+/* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./services/api/api.service */ "./src/app/services/api/api.service.ts");
+/* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
+
 
 
 
@@ -180,7 +184,7 @@ var AppModule = /** @class */ (function () {
                 _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_3__["BrowserAnimationsModule"],
                 _angular_material__WEBPACK_IMPORTED_MODULE_2__["MatSortModule"]
             ],
-            providers: [],
+            providers: [_services_api_api_service__WEBPACK_IMPORTED_MODULE_10__["ApiService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__["LoggerService"]],
             bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_4__["AppComponent"]]
         })
     ], AppModule);
@@ -272,7 +276,7 @@ module.exports = ".tableContainer {\n  margin: 5px;\n  padding: 5px;\n}\n"
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  table works!\n</p>\n<!--<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css\">-->\n<div class=\"card tableContainer\">\n    <div>\n        <div>\n            <!-- items being paged -->\n        <table class=\"table\" matSort (matSortChange)=\"sortData($event)\">\n          <tr>\n            <th *ngFor=\"let header of headers; index as i\" mat-sort-header=\"{{i}}\">{{ header }}</th>\n          </tr>\n          <tr *ngFor=\"let item of pagedItems\">\n            <td *ngFor=\"let rowItems of item\">{{rowItems}}</td>\n          </tr>\n        </table>\n\n            <!-- pager -->\n            <ul *ngIf=\"pager.pages && pager.pages.length\" class=\"pagination\">\n                <li [ngClass]=\"{disabled:pager.currentPage === 1}\">\n                    <a (click)=\"setPage(1)\">First</a>\n                </li>\n                <li [ngClass]=\"{disabled:pager.currentPage === 1}\">\n                    <a (click)=\"setPage(pager.currentPage - 1)\">Previous</a>\n                </li>\n                <li *ngFor=\"let page of pager.pages\" [ngClass]=\"{active:pager.currentPage === page}\">\n                    <a (click)=\"setPage(page)\">{{page}}</a>\n                </li>\n                <li [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n                    <a (click)=\"setPage(pager.currentPage + 1)\">Next</a>\n                </li>\n                <li [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n                    <a (click)=\"setPage(pager.totalPages)\">Last</a>\n                </li>\n            </ul>\n        </div>\n    </div>\n</div>\n"
+module.exports = "<p>\n  table works!\n</p>\n<!--<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css\">-->\n<link href=\"https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css\" rel=\"stylesheet\">\n<script src=\"https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js\"></script>\n<div class=\"card tableContainer\">\n  <div>\n    <div>\n      <!-- items being paged -->\n      <table class=\"table\" matSort (matSortChange)=\"sortData($event)\">\n        <tr>\n          <th *ngFor=\"let header of headers; index as i\" mat-sort-header=\"{{i}}\">{{ header }}</th>\n        </tr>\n        <tr *ngFor=\"let item of pagedItems\">\n          <td *ngFor=\"let rowItems of item\">{{rowItems}}</td>\n        </tr>\n      </table>\n\n      <!-- pager -->\n      <ul *ngIf=\"pager.pages && pager.pages.length\" class=\"pagination\">\n        <li [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(1)\">First</a>\n        </li>\n        <li [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(pager.currentPage - 1)\">Previous</a>\n        </li>\n        <li *ngFor=\"let page of pager.pages\" [ngClass]=\"{active:pager.currentPage === page}\">\n          <a (click)=\"setPage(page)\">{{page}}</a>\n        </li>\n        <li [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.currentPage + 1)\">Next</a>\n        </li>\n        <li [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.totalPages)\">Last</a>\n        </li>\n      </ul>\n      <button (click)=\"editColumns()\" style=\"float: right\">Advanced</button>\n    </div>\n  </div>\n\n  <div *ngIf=\"hideShowColumns\">\n    <!--<form>-->\n      <!--<div *ngFor=\"let header of headers\">-->\n        <!--{{header}}<input bs-switch type=\"checkbox\"/>-->\n      <!--</div>-->\n      <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">Columns</div>\n        <div class=\"panel-body\" *ngFor=\"let header of headers\">{{header}}</div>\n      </div>\n<div class=\"col-md-2\">\n\n        <h4>iOS7 Style</h4>\n\n        <div class=\"switch\">\n        <input id=\"cmn-toggle-4\" class=\"cmn-toggle cmn-toggle-round-flat\" type=\"checkbox\">\n        <label for=\"cmn-toggle-4\"></label>\n        </div>\n\n    </div>    <button (click)=\"submit()\">Submit</button>\n    <button (click)=\"editColumns()\" style=\"margin: 5px;\">Close</button>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -287,7 +291,8 @@ module.exports = "<p>\n  table works!\n</p>\n<!--<link rel=\"stylesheet\" href=\
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FunTableComponent", function() { return FunTableComponent; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
-/* harmony import */ var _services_pager_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/pager.service */ "./src/app/services/pager.service.ts");
+/* harmony import */ var _services_pager_pager_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/pager/pager.service */ "./src/app/services/pager/pager.service.ts");
+/* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -299,62 +304,90 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 };
 
 
+
 var FunTableComponent = /** @class */ (function () {
-    function FunTableComponent(pagerService) {
+    function FunTableComponent(pagerService, logger) {
         this.pagerService = pagerService;
+        this.logger = logger;
+        this.hideShowColumns = false;
         // private allItems: any = [];
         this.pager = {};
+        // originalData: any[];
         this.data = [];
         this.nextPage = new _angular_core__WEBPACK_IMPORTED_MODULE_0__["EventEmitter"]();
+        this.logger.log("FunTableComponent init");
     }
+    FunTableComponent_1 = FunTableComponent;
     FunTableComponent.prototype.ngOnInit = function () {
-        // console.log("Data check:" +this.data);
-        this.rows = this.data["rows"];
-        this.headers = this.data["headers"];
-        // console.log("Allitems:" +this.allItems);
-        // console.log("Allitems rows:" +this.allItems["rows"]);
-        this.originalData = Array.from(this.rows);
-        this.setPage(1);
+        if (this.data.rows && this.data.rows.length === 10000) {
+            this.logger.log("10000 rows");
+        }
     };
+    //setting the page number
     FunTableComponent.prototype.setPage = function (page) {
         // get pager object from service
-        if (!this.data["all"]) {
+        if (!this.data.all) {
             this.nextPage.emit(page);
         }
         else {
-            this.pager = this.pagerService.getPager(this.data["length"], page, 10);
-            this.pagedItems = this.rows.slice(this.pager.startIndex, this.pager.endIndex + 1);
+            this.setPagedItems(page);
         }
     };
-    FunTableComponent.prototype.paging = function (page) {
-        this.pager = this.pagerService.getPager(this.data["length"], page, this.rows.length);
-        this.pagedItems = this.rows.slice(0, this.rows.length);
+    //setting the rows to be displayed by the template
+    FunTableComponent.prototype.setPagedItems = function (page) {
+        this.pager = this.pagerService.getPager(this.data.totalLength, page, this.pageSize);
+        if (this.data.all) {
+            this.pagedItems = this.rows.slice(this.pager.startIndex, this.pager.endIndex + 1);
+        }
+        else {
+            this.pagedItems = this.rows.slice(0, this.pageSize);
+        }
     };
     FunTableComponent.prototype.ngOnChanges = function () {
-        // this.allItems = this.data;
-        // this.headers = this.data["headers"];
-        // this.originalData = Array.from(this.allItems["rows"]);
-        this.rows = this.data["rows"];
-        this.headers = this.data["headers"];
-        this.originalData = Array.from(this.rows);
-        this.paging(this.data["currentPageIndex"]);
-        //this.setPage(1);
+        if (this.data.currentPageIndex < 0) {
+            this.logger.fatal("Page Index is less than 1");
+        }
+        else {
+            this.rows = this.data.rows;
+            this.headers = this.data.headers;
+            // this.originalData = Array.from(this.rows);
+            if (this.data.pageSize) {
+                this.pageSize = this.data.pageSize;
+            }
+            else {
+                this.pageSize = FunTableComponent_1.defaultPageSize;
+            }
+            this.setPagedItems(this.data.currentPageIndex);
+            //this.setPage(1);
+        }
     };
+    //sorts the input rows in the data
     FunTableComponent.prototype.sortData = function (sort) {
         if (!sort.active || sort.direction === '') {
-            this.pagedItems = Array.from(this.originalData);
-            this.rows = this.pagedItems;
-            this.setPage(1);
+            // this.pagedItems = Array.from(this.originalData);
+            // this.rows = this.pagedItems;
+            // this.setPage(1);
             return;
         }
         this.pagedItems = this.rows.sort(function (a, b) {
-            var isAsc = sort.direction === 'asc';
+            var isAscending = sort.direction === 'asc';
             if (sort.active) {
-                return compare(a[sort.active], b[sort.active], isAsc);
+                return compare(a[sort.active], b[sort.active], isAscending);
             }
         });
         this.setPage(1);
     };
+    //toggle between hide and show columns
+    FunTableComponent.prototype.editColumns = function () {
+        this.logger.log("Open form is entered");
+        this.hideShowColumns = !this.hideShowColumns;
+    };
+    FunTableComponent.prototype.submit = function () {
+        this.logger.log("submitted the column change");
+        this.hideShowColumns = false;
+        //change the headers.
+    };
+    FunTableComponent.defaultPageSize = 10;
     __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
         __metadata("design:type", Object)
@@ -363,15 +396,16 @@ var FunTableComponent = /** @class */ (function () {
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Output"])(),
         __metadata("design:type", _angular_core__WEBPACK_IMPORTED_MODULE_0__["EventEmitter"])
     ], FunTableComponent.prototype, "nextPage", void 0);
-    FunTableComponent = __decorate([
+    FunTableComponent = FunTableComponent_1 = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
             selector: 'fun-table',
             template: __webpack_require__(/*! ./fun-table.component.html */ "./src/app/fun-table/fun-table.component.html"),
             styles: [__webpack_require__(/*! ./fun-table.component.css */ "./src/app/fun-table/fun-table.component.css")]
         }),
-        __metadata("design:paramtypes", [_services_pager_service__WEBPACK_IMPORTED_MODULE_1__["PagerService"]])
+        __metadata("design:paramtypes", [_services_pager_pager_service__WEBPACK_IMPORTED_MODULE_1__["PagerService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__["LoggerService"]])
     ], FunTableComponent);
     return FunTableComponent;
+    var FunTableComponent_1;
 }());
 
 function compare(a, b, isAsc) {
@@ -414,7 +448,8 @@ module.exports = "<p>\n  performance works!\n</p>\n<fun-table (nextPage)=\"setVa
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PerformanceComponent", function() { return PerformanceComponent; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
-/* harmony import */ var _services_api_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/api.service */ "./src/app/services/api.service.ts");
+/* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/api/api.service */ "./src/app/services/api/api.service.ts");
+/* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -426,18 +461,381 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 };
 
 
+
 var PerformanceComponent = /** @class */ (function () {
-    function PerformanceComponent(apiService) {
+    function PerformanceComponent(apiService, logger) {
         this.apiService = apiService;
+        this.logger = logger;
         this.componentState = "Unknown";
         this.data = [];
+        this.logger.log("Performance component init");
     }
     PerformanceComponent.prototype.ngOnInit = function () {
+        var _this = this;
         this.data["rows"] = [['hi', 'hello'], ['how', 'are'], ['you', 'its'], ['been', 'a'], ['long', 'time'], ['also', 'when'], ['where', 'how'], ['are', 'we'], ['meeting', 'if'], ['hey', 'buddy'], ['let', 'go'], ['we', 'will']];
         this.data["headers"] = ['Names', 'Numbers'];
         this.data["all"] = true;
-        this.data["length"] = 12;
+        this.data["totalLength"] = 12;
         this.data["currentPageIndex"] = 1;
+        this.data["pageSize"] = 10;
+        this.getLastStatusUpdateTime();
+        this.numGridColumns = 2;
+        if (window.screen.width <= 1441) {
+            this.numGridColumns = 2;
+        }
+        this.mode = null;
+        this.fetchJenkinsJobIdMap();
+        this.flatNodes = [];
+        this.metricMap = {};
+        this.cachedNodeInfo = {};
+        this.fetchRootMetricInfo("Total", "MetricContainer").then(function (data) {
+            var metricId = data.metric_id;
+            var p1 = { metric_id: metricId };
+            _this.apiService.post('/metrics/metric_info', p1).subscribe(function (data) {
+                _this.populateNodeInfoCache(data);
+                var newNode = _this.getNodeFromData(data).then(function (newNode) {
+                    newNode.guid = _this.guid();
+                    newNode.hide = false;
+                    newNode.indent = 0;
+                    _this.flatNodes.push(newNode);
+                    // this.expandNode(newNode);
+                    _this.collapsedAll = true;
+                });
+            }, function (error) {
+                console.log(error);
+                _this.componentState = "Error";
+            });
+            return data;
+        });
+        this.goodnessTrendValues = null;
+        this.inner = {};
+        this.inner.nonAtomicMetricInfo = "";
+        this.currentNodeChildrenGuids = null;
+        this.validDates = null;
+    };
+    PerformanceComponent.prototype.getLastStatusUpdateTime = function () {
+        var _this = this;
+        this.apiService.get('/common/time_keeper/' + "last_status_update").subscribe(function (data) {
+            _this.lastStatusUpdateTime = data;
+        }, function (error) {
+            console.log(error);
+            _this.componentState = "Error";
+        });
+    };
+    PerformanceComponent.prototype.fetchJenkinsJobIdMap = function () {
+        var _this = this;
+        this.apiService.get('/regression/jenkins_job_id_maps').subscribe(function (data) {
+            _this.jenkinsJobIdMap = data;
+            _this.apiService.get('/regression/build_to_date_map').subscribe(function (data) {
+                _this.buildInfo = data;
+            }, function (error) {
+                console.log(error);
+                _this.componentState = "Error";
+            });
+        }, function (error) {
+            console.log(error);
+            _this.componentState = "Error";
+        });
+    };
+    PerformanceComponent.prototype.fetchRootMetricInfo = function (chartName, metricModelName) {
+        var _this = this;
+        var payload = { "metric_model_name": metricModelName, chart_name: chartName };
+        return this.apiService.post('/metrics/chart_info', payload).subscribe(function (data) {
+            return data;
+        }, function (error) {
+            console.log(error);
+            _this.componentState = "Error";
+        });
+    };
+    PerformanceComponent.prototype.populateNodeInfoCache = function (data) {
+        var _this = this;
+        if (!(data.metric_id in this.cachedNodeInfo)) {
+            this.cachedNodeInfo[data.metric_id] = data;
+        }
+        data.children_info.forEach(function (value, key) {
+            _this.cachedNodeInfo[key] = value;
+            value.children_info.forEach(function (v2, key2) {
+                _this.populateNodeInfoCache(v2);
+            });
+        });
+    };
+    PerformanceComponent.prototype.guid = function () {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+    };
+    PerformanceComponent.prototype.expandAllNodes = function () {
+        var _this = this;
+        this.flatNodes.forEach(function (node) {
+            _this.expandNode(node, true);
+        });
+        this.collapsedAll = false;
+        this.expandedAll = true;
+    };
+    PerformanceComponent.prototype.collapseAllNodes = function () {
+        this.collapseNode(this.flatNodes[0]);
+        this.expandedAll = false;
+        this.collapsedAll = true;
+    };
+    ;
+    PerformanceComponent.prototype.expandNode = function (node, all) {
+        var _this = this;
+        node.collapsed = false;
+        if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
+            var thisNode = node;
+            return this.fetchMetricInfoById(node).then(function (data) {
+                console.log("Fetching Metrics Info for node:" + node.metricId);
+                node.hide = false;
+                var childrenIds = JSON.parse(data.children);
+                return _this._insertNewNode(node, childrenIds, all, node.childrenFetched).then(function () {
+                    console.log("Inserted: " + node.chartName);
+                    node.childrenFetched = true;
+                    return null;
+                });
+            });
+        }
+        else {
+            return null;
+        }
+    };
+    PerformanceComponent.prototype.fetchMetricInfoById = function (node) {
+        var _this = this;
+        var thisNode = node;
+        var p1 = { metric_id: node.metricId };
+        if (node.metricId in this.cachedNodeInfo) {
+            return this.cachedNodeInfo[node.metricId];
+        }
+        return this.apiService.post('/metrics/metric_info', p1).subscribe(function (data) {
+            return data;
+        }, function (error) {
+            console.log(error);
+            _this.componentState = "Error";
+        });
+    };
+    PerformanceComponent.prototype.collapseNode = function (node) {
+        if (node.hasOwnProperty("numChildren")) {
+            // this.collapseBranch(node);
+        }
+        node.collapsed = true;
+    };
+    PerformanceComponent.prototype.collapseBranch = function (node, traversedNodes) {
+        var thisIndex = this.getIndex(node);
+        if (node.hasOwnProperty("numChildren")) {
+            this.hideChildren(node, true);
+        }
+        return traversedNodes;
+    };
+    PerformanceComponent.prototype.hideChildren = function (node, root) {
+        var totalHides = 0;
+        if (!node) {
+            return 0;
+        }
+        var thisIndex = this.getIndex(node);
+        if (node.hasOwnProperty("numChildren")) {
+            if (!node.childrenFetched) {
+                return 0;
+            }
+            var nextIndex = thisIndex + 1;
+            if ((nextIndex >= this.flatNodes.length) && (!node.collapsed)) {
+                console.log("Huh!");
+                return 0;
+            }
+            for (var i = 1; i <= node.numChildren && (nextIndex < this.flatNodes.length); i++) {
+                var hides = 0;
+                if (true) {
+                    hides += this.hideChildren(this.flatNodes[nextIndex], false);
+                }
+                this.flatNodes[nextIndex].collapsed = true;
+                this.flatNodes[nextIndex].hide = true;
+                totalHides += 1 + hides;
+                nextIndex += hides + 1;
+            }
+        }
+        return totalHides;
+    };
+    ;
+    PerformanceComponent.prototype._insertNewNode = function (node, childrenIds, all, alreadyInserted) {
+        var _this = this;
+        if (childrenIds.length <= 0) {
+            return;
+        }
+        var thisNode = node;
+        var thisAll = all;
+        var childId = childrenIds.pop();
+        var thisChildrenIds = childrenIds;
+        var p1 = { metric_id: childId };
+        if (!node.hasOwnProperty("childrenGuids")) {
+            node.childrenGuids = [];
+        }
+        return this.fetchMetricInfoById({ metricId: childId }).then(function (data) {
+            if (!alreadyInserted) {
+                console.log("!alreadyInserted");
+                return _this.getNodeFromData(data).then(function (newNode) {
+                    newNode.guid = _this.guid();
+                    thisNode.lineage.forEach(function (ancestor) {
+                        newNode.lineage.push(ancestor);
+                    });
+                    newNode.lineage.push(thisNode.guid);
+                    console.log("Added childGuid for node:" + node.chartName);
+                    node.childrenGuids.push(newNode.guid);
+                    newNode.indent = thisNode.indent + 1;
+                    var index = _this.getIndex(thisNode);
+                    _this.flatNodes.splice(index + 1, 0, newNode);
+                    _this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
+                    newNode.hide = false;
+                    if (thisAll) {
+                        _this.expandNode(newNode, thisAll);
+                    }
+                });
+            }
+            else {
+                console.log("alreadyInserted");
+                node.childrenGuids.forEach(function (childGuid) {
+                    var childNode = _this.flatNodes[_this.getIndex({ guid: childGuid })];
+                    //let childrenIds = JSON.parse(data.children);
+                    childNode.hide = false;
+                });
+                _this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
+            }
+            return null;
+        });
+    };
+    PerformanceComponent.prototype.getIndex = function (node) {
+        var index = this.flatNodes.map(function (x) { return x.guid; }).indexOf(node.guid);
+        return index;
+    };
+    PerformanceComponent.prototype.getNodeFromData = function (data) {
+        var _this = this;
+        var newNode = {
+            info: data.description,
+            label: data.chart_name,
+            collapsed: true,
+            metricId: data.metric_id,
+            hide: true,
+            leaf: data.leaf,
+            chartName: data.chart_name,
+            metricModelName: data.metric_model_name,
+            childrenWeights: JSON.parse(data.children_weights),
+            children: {},
+            lineage: [],
+            numChildDegrades: data.last_num_degrades,
+            positive: data.positive,
+            numChildrenPassed: data.num_children_passed,
+            numChildrenFailed: data.last_num_build_failed,
+            lastBuildStatus: data.last_build_status,
+            numLeaves: data.num_leaves,
+            childrenScoreMap: {},
+            status: false,
+            numChildren: null
+        };
+        this.metricMap[newNode.metricId] = { chartName: newNode.chartName };
+        if (newNode.info === "") {
+            newNode.info = "<p>Please update the description</p>";
+        }
+        var dateRange = this.getDateRange();
+        var fromDate = dateRange[0];
+        var toDate = dateRange[1];
+        return this.fetchScores(data.metric_id, fromDate.toISOString(), toDate.toISOString()).then(function (scoreData) {
+            newNode.childrenScoreMap = scoreData["children_score_map"];
+            _this.evaluateScores(newNode, scoreData["scores"]);
+            newNode.childrenWeights.forEach(function (info, childId) {
+                newNode.children[childId] = { weight: newNode.childrenWeights[childId], editing: false };
+            });
+            if (newNode.lastBuildStatus === "PASSED") {
+                newNode.status = true;
+            }
+            else {
+                newNode.status = false;
+            }
+            var newNodeChildrenIds = JSON.parse(data.children);
+            if (newNodeChildrenIds.length > 0) {
+                newNode.numChildren = newNodeChildrenIds.length;
+            }
+            return newNode;
+        });
+    };
+    PerformanceComponent.prototype.fetchScores = function (metricId, fromDate, toDate) {
+        var _this = this;
+        var payload = {};
+        payload["metric_id"] = metricId;
+        payload["date_range"] = [fromDate, toDate];
+        return this.apiService.post('/metrics/scores', payload).subscribe(function (data) {
+            return data;
+        }, function (error) {
+            console.log(error);
+            _this.componentState = "Error";
+        });
+    };
+    PerformanceComponent.prototype.getDateRange = function () {
+        var today = new Date();
+        console.log(today);
+        var startMonth = 4 - 1;
+        var startDay = 1;
+        var startMinute = 59;
+        var startHour = 23;
+        var startSecond = 1;
+        var fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
+        fromDate = this.getDateBound(fromDate, true);
+        var yesterday = this.getYesterday(today);
+        var toDate = new Date(yesterday);
+        toDate = this.getDateBound(toDate, false);
+        return [fromDate, toDate];
+    };
+    PerformanceComponent.prototype.getYesterday = function (today) {
+        var yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday;
+    };
+    PerformanceComponent.prototype.getDateBound = function (dt, lower) {
+        var newDay = new Date(dt);
+        if (lower) {
+            newDay.setHours(0, 0, 1);
+        }
+        else {
+            newDay.setHours(23, 59, 59);
+        }
+        return newDay;
+    };
+    PerformanceComponent.prototype.evaluateScores = function (node, scores) {
+        var keys = Object.keys(scores);
+        var sortedKeys = keys.sort();
+        if (node.chartName === "Total") {
+            this.validDates = sortedKeys;
+        }
+        if (Object.keys(scores).length) {
+            var mostRecentDateTimestamp = sortedKeys.slice(-1)[0];
+            var mostRecentDate = new Date(mostRecentDateTimestamp);
+            console.log(mostRecentDate);
+            console.log(scores[mostRecentDateTimestamp].score);
+        }
+        var goodnessValues = [];
+        sortedKeys.forEach(function (key) {
+            goodnessValues.push(scores[key].score);
+        });
+        node.goodnessValues = goodnessValues;
+        try {
+            node.goodness = Number(goodnessValues[goodnessValues.length - 1].toFixed(1));
+        }
+        catch (e) {
+        }
+        node.childrenGoodnessMap = {};
+        node.trend = "flat";
+        if (goodnessValues.length > 1) {
+            var penultimateGoodness = Number(goodnessValues[goodnessValues.length - 2].toFixed(1));
+            if (penultimateGoodness > node.goodness) {
+                node.trend = "down";
+            }
+            else if (penultimateGoodness < node.goodness) {
+                node.trend = "up";
+            }
+            if (Number(goodnessValues[goodnessValues.length - 1].toFixed(1)) === 0) {
+                node.trend = "down";
+            }
+        }
+        console.log("Node: " + node.chartName + " Goodness: " + node.goodness);
     };
     PerformanceComponent.prototype.doSomething1 = function () {
         var _this = this;
@@ -458,8 +856,9 @@ var PerformanceComponent = /** @class */ (function () {
         this.data["rows"] = [['hi', 'hello'], ['how', 'are']];
         this.data["headers"] = ['Names', 'Numbers'];
         this.data["all"] = false;
-        this.data["length"] = 14;
+        this.data["totalLength"] = 14;
         this.data["currentPageIndex"] = pageNumber;
+        this.data["pageSize"] = this.data["rows"].length;
     };
     PerformanceComponent = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
@@ -467,7 +866,7 @@ var PerformanceComponent = /** @class */ (function () {
             template: __webpack_require__(/*! ./performance.component.html */ "./src/app/performance/performance.component.html"),
             styles: [__webpack_require__(/*! ./performance.component.css */ "./src/app/performance/performance.component.css")]
         }),
-        __metadata("design:paramtypes", [_services_api_service__WEBPACK_IMPORTED_MODULE_1__["ApiService"]])
+        __metadata("design:paramtypes", [_services_api_api_service__WEBPACK_IMPORTED_MODULE_1__["ApiService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__["LoggerService"]])
     ], PerformanceComponent);
     return PerformanceComponent;
 }());
@@ -476,10 +875,10 @@ var PerformanceComponent = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/app/services/api.service.ts":
-/*!*****************************************!*\
-  !*** ./src/app/services/api.service.ts ***!
-  \*****************************************/
+/***/ "./src/app/services/api/api.service.ts":
+/*!*********************************************!*\
+  !*** ./src/app/services/api/api.service.ts ***!
+  \*********************************************/
 /*! exports provided: ApiResponse, ApiService */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -550,10 +949,150 @@ var ApiService = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/app/services/pager.service.ts":
-/*!*******************************************!*\
-  !*** ./src/app/services/pager.service.ts ***!
-  \*******************************************/
+/***/ "./src/app/services/logger/logger.service.ts":
+/*!***************************************************!*\
+  !*** ./src/app/services/logger/logger.service.ts ***!
+  \***************************************************/
+/*! exports provided: LogLevel, LogEntry, LoggerService */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LogLevel", function() { return LogLevel; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LogEntry", function() { return LogEntry; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoggerService", function() { return LoggerService; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+var LogLevel;
+(function (LogLevel) {
+    LogLevel[LogLevel["All"] = 0] = "All";
+    LogLevel[LogLevel["Debug"] = 1] = "Debug";
+    LogLevel[LogLevel["Info"] = 2] = "Info";
+    LogLevel[LogLevel["Warn"] = 3] = "Warn";
+    LogLevel[LogLevel["Error"] = 4] = "Error";
+    LogLevel[LogLevel["Fatal"] = 5] = "Fatal";
+    LogLevel[LogLevel["Off"] = 6] = "Off";
+})(LogLevel || (LogLevel = {}));
+var LogEntry = /** @class */ (function () {
+    function LogEntry() {
+        // Public properties
+        this.entryDate = new Date();
+        this.message = '';
+        this.level = LogLevel.Debug;
+        this.extraInfo = [];
+        this.logWithDate = true;
+    }
+    LogEntry.prototype.buildLogString = function () {
+        var ret = '';
+        if (this.logWithDate) {
+            ret = new Date() + ' - ';
+        }
+        ret += 'Type: ' + LogLevel[this.level];
+        ret += ' - Message: ' + this.message;
+        if (this.extraInfo.length) {
+            ret += ' - Extra Info: ' + LogEntry.formatParams(this.extraInfo);
+        }
+        return ret;
+    };
+    LogEntry.formatParams = function (params) {
+        var ret = params.join(',');
+        if (params.some(function (p) { return typeof p === 'object'; })) {
+            ret = '';
+            for (var _i = 0, params_1 = params; _i < params_1.length; _i++) {
+                var item = params_1[_i];
+                ret += JSON.stringify(item) + ',';
+            }
+        }
+        return ret;
+    };
+    return LogEntry;
+}());
+
+var LoggerService = /** @class */ (function () {
+    function LoggerService() {
+        // Public properties
+        this.level = LogLevel.All;
+        this.logWithDate = true;
+    }
+    LoggerService.prototype.shouldLog = function (level) {
+        var ret = false;
+        if (this.level !== LogLevel.Off && level >= this.level) {
+            ret = true;
+        }
+        return ret;
+    };
+    LoggerService.prototype.debug = function (msg) {
+        var optionalParams = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            optionalParams[_i - 1] = arguments[_i];
+        }
+        this.writeToLog(msg, LogLevel.Debug, optionalParams);
+    };
+    LoggerService.prototype.info = function (msg) {
+        var optionalParams = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            optionalParams[_i - 1] = arguments[_i];
+        }
+        this.writeToLog(msg, LogLevel.Info, optionalParams);
+    };
+    LoggerService.prototype.warn = function (msg) {
+        var optionalParams = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            optionalParams[_i - 1] = arguments[_i];
+        }
+        this.writeToLog(msg, LogLevel.Warn, optionalParams);
+    };
+    LoggerService.prototype.error = function (msg) {
+        var optionalParams = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            optionalParams[_i - 1] = arguments[_i];
+        }
+        this.writeToLog(msg, LogLevel.Error, optionalParams);
+    };
+    LoggerService.prototype.fatal = function (msg) {
+        var optionalParams = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            optionalParams[_i - 1] = arguments[_i];
+        }
+        this.writeToLog(msg, LogLevel.Debug, optionalParams);
+    };
+    LoggerService.prototype.log = function (msg) {
+        var optionalParams = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            optionalParams[_i - 1] = arguments[_i];
+        }
+        this.writeToLog(msg, LogLevel.All, optionalParams);
+    };
+    LoggerService.prototype.writeToLog = function (msg, level, params) {
+        if (this.shouldLog(level)) {
+            var entry = new LogEntry();
+            entry.message = msg;
+            entry.level = level;
+            entry.extraInfo = params;
+            entry.logWithDate = this.logWithDate;
+            console.log(entry);
+        }
+    };
+    LoggerService = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"])()
+    ], LoggerService);
+    return LoggerService;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/services/pager/pager.service.ts":
+/*!*************************************************!*\
+  !*** ./src/app/services/pager/pager.service.ts ***!
+  \*************************************************/
 /*! exports provided: PagerService */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
