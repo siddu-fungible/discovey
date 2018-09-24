@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import {MatSortModule} from '@angular/material';
@@ -11,6 +12,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { FunTableComponent } from './fun-table/fun-table.component';
 import {ApiService} from "./services/api/api.service";
 import {LoggerService} from "./services/logger/logger.service";
+import { TestComponent } from './test/test.component';
 
 
 @NgModule({
@@ -18,8 +20,8 @@ import {LoggerService} from "./services/logger/logger.service";
     AppComponent,
     DashboardComponent,
     PerformanceComponent,
-    FunTableComponent
-
+    FunTableComponent,
+    TestComponent
   ],
   imports: [
     BrowserModule,
@@ -32,4 +34,5 @@ import {LoggerService} from "./services/logger/logger.service";
   providers: [ApiService, LoggerService],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+}

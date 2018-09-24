@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+
 import time
 import zmq
 import subprocess
 import os
 import stat
+import datetime
 
 commands = []
 POLL_TIMEOUT = 5
@@ -15,7 +18,7 @@ def run_commands():
 
     processes = []
     for command in executing:
-        print("Run remote command " + command)
+        print(str(datetime.datetime.now()) + ": Run remote command " + command)
         proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         processes.append((proc, command))

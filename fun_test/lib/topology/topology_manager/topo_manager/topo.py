@@ -1145,7 +1145,7 @@ class VM(object):
         if not vm_docker_run:
             fun_test.log('No containers to launch')
             return
-        
+
         if self.role == 'leaf' and not config_dict['network_only']:
             for cmd in vm_docker_run.split('\n')[0:-1]:
                 out = exec_send_file([(self.ip, cmd)], [])
@@ -1186,6 +1186,10 @@ class VM(object):
                     self.unpauseRacks([rack.rack_id for rack in self.racks])
             else:
                 self.unpauseNodes([spine.name for spine in self.spines])
+
+            #Invoke rack/nodes to do final setup
+            for rack in self.racks:
+                rack.final_setup()
 
     def pauseRacks(self, *racks):
         pause_list = ' '
@@ -1553,9 +1557,10 @@ class VM(object):
 
             unpause_cmd = docker_unpause_cmd + node_names
             kill_cmd = docker_kill_cmd + node_names
+            remove_cmd = docker_remove_cmd + node_names
             for netns in node_names.split():
                 netns_cmd.append(netns_del_cmd + netns)
-            final_cleanup = [unpause_cmd] + [kill_cmd] + netns_cmd + docker_mnt_clean_cmd
+            final_cleanup = [unpause_cmd] + [kill_cmd] + [remove_cmd] + netns_cmd + docker_mnt_clean_cmd
             if config_dict['flat_topo'] and self.topo.total_vms > 1:
                 final_cleanup += [docker_swarm_leave_cmd]
             for cmd in final_cleanup:
@@ -1594,6 +1599,10 @@ class Rack(object):
         self.nNodes += 1
         self.nodes.append(node)
 
+    def final_setup(self):
+        for node in self.nodes:
+            node.final_setup()
+
     def configureNodes(self):
         #"Configure nodes for Rack %d" % self.rack_id
         for node in self.nodes:
@@ -1608,7 +1617,6 @@ class Rack(object):
             node.run()
             docker_run += node.docker_run
             links += node.link_config
-
         return docker_run, links
 
     def pause(self):
@@ -1772,13 +1780,15 @@ class Node(object):
         for intf in self.interfaces:
             self.vm_obj.topo.update_prefix_counts(self.name, intf, action)
 
+    def final_setup(self):
+        return True
+
     def check_alive(self):
         return True
 
     def configure(self):
-        if not self.check_alive():
-            print("Node %s not reachable" % self.name)
-            return
+        self.check_alive()
+
         "Generate routing configuration"
         self.do_zebra_config()
         self.do_bgp_config()
@@ -2158,7 +2168,6 @@ class Link(object):
                                  right_intf, right_ip,
                                  self.prefixlen, left_intf,
                                  left_ip)
-
         self.interfaces[(self.left.name, self.right.name)] = {'left_intf_name': left_intf,
                                                               'left_ip': left_ip,
                                                               'right_intf_name': right_intf,
@@ -2199,7 +2208,6 @@ class Bridge(object):
                 self.leaf_vlan_ports.append(port_tuple)
                 port_tuple = tuple()
                 vlan += 1
-
         add_port_command = 'ovs-vsctl ' + port_cmd + '\n'
         add_intf_command = 'ovs-vsctl ' + intf_cmd + '\n'
 
@@ -2367,7 +2375,6 @@ class TrafficGenerator(object):
                                      }
 
         if not config_dict['flat_topo']:
-
             self.ip = my_ip
 
             self.commands += 'ip link add name %s type veth peer name %s\n' % \
