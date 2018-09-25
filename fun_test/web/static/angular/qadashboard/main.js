@@ -37,6 +37,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/fesm5/router.js");
 /* harmony import */ var _dashboard_dashboard_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./dashboard/dashboard.component */ "./src/app/dashboard/dashboard.component.ts");
 /* harmony import */ var _performance_performance_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./performance/performance.component */ "./src/app/performance/performance.component.ts");
+/* harmony import */ var _test_test_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./test/test.component */ "./src/app/test/test.component.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -47,10 +48,12 @@ var __decorate = (undefined && undefined.__decorate) || function (decorators, ta
 
 
 
+
 var routes = [
     { path: 'upgrade', component: _dashboard_dashboard_component__WEBPACK_IMPORTED_MODULE_2__["DashboardComponent"] },
     { path: 'upgrade/dashboard', component: _dashboard_dashboard_component__WEBPACK_IMPORTED_MODULE_2__["DashboardComponent"] },
-    { path: 'upgrade/performance', component: _performance_performance_component__WEBPACK_IMPORTED_MODULE_3__["PerformanceComponent"] }
+    { path: 'upgrade/performance', component: _performance_performance_component__WEBPACK_IMPORTED_MODULE_3__["PerformanceComponent"] },
+    { path: 'upgrade/test', component: _test_test_component__WEBPACK_IMPORTED_MODULE_4__["TestComponent"] }
 ];
 var AppRoutingModule = /** @class */ (function () {
     function AppRoutingModule() {
@@ -148,12 +151,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _fun_table_fun_table_component__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./fun-table/fun-table.component */ "./src/app/fun-table/fun-table.component.ts");
 /* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./services/api/api.service */ "./src/app/services/api/api.service.ts");
 /* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
+/* harmony import */ var _test_test_component__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./test/test.component */ "./src/app/test/test.component.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
 
 
 
@@ -175,7 +180,8 @@ var AppModule = /** @class */ (function () {
                 _app_component__WEBPACK_IMPORTED_MODULE_4__["AppComponent"],
                 _dashboard_dashboard_component__WEBPACK_IMPORTED_MODULE_5__["DashboardComponent"],
                 _performance_performance_component__WEBPACK_IMPORTED_MODULE_7__["PerformanceComponent"],
-                _fun_table_fun_table_component__WEBPACK_IMPORTED_MODULE_9__["FunTableComponent"]
+                _fun_table_fun_table_component__WEBPACK_IMPORTED_MODULE_9__["FunTableComponent"],
+                _test_test_component__WEBPACK_IMPORTED_MODULE_12__["TestComponent"]
             ],
             imports: [
                 _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
@@ -213,7 +219,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<title>QA Dashboard</title>\n<div>\n  My dashboard\n  <!--<app-performance></app-performance>-->\n</div>\n"
+module.exports = "<title>QA Dashboard</title>\n<div>\n  My dashboard\n  <app-performance></app-performance>\n  <app-test></app-test>\n</div>\n"
 
 /***/ }),
 
@@ -265,7 +271,7 @@ var DashboardComponent = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = ".tableContainer {\n  margin: 5px;\n  padding: 5px;\n}\n"
+module.exports = ".tableContainer {\n  margin: 5px;\n  padding: 5px;\n}\n.switch {\n  position: relative;\n  display: inline-block;\n  width: 40px;\n  height: 20px;\n}\n.switch input {display:none;}\n.slider {\n  position: absolute;\n  cursor: pointer;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background-color: #ccc;\n  transition: .4s;\n}\n.slider:before {\n  position: absolute;\n  content: \"\";\n  height: 20px;\n  width: 20px;\n  background-color: white;\n  transition: .4s;\n}\ninput:checked + .slider {\n  background-color: #2196F3;\n}\ninput:focus + .slider {\n  box-shadow: 0 0 1px #2196F3;\n}\ninput:checked + .slider:before {\n  -webkit-transform: translateX(26px);\n  transform: translateX(26px);\n}\n/* Rounded sliders */\n.slider.round {\n  border-radius: 20px;\n}\n.slider.round:before {\n  border-radius: 50%;\n}\n"
 
 /***/ }),
 
@@ -276,7 +282,7 @@ module.exports = ".tableContainer {\n  margin: 5px;\n  padding: 5px;\n}\n"
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  table works!\n</p>\n<!--<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css\">-->\n<link href=\"https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css\" rel=\"stylesheet\">\n<script src=\"https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js\"></script>\n<div class=\"card tableContainer\">\n  <div>\n    <div>\n      <!-- items being paged -->\n      <table class=\"table\" matSort (matSortChange)=\"sortData($event)\">\n        <tr>\n          <th *ngFor=\"let header of headers; index as i\" mat-sort-header=\"{{i}}\">{{ header }}</th>\n        </tr>\n        <tr *ngFor=\"let item of pagedItems\">\n          <td *ngFor=\"let rowItems of item\">{{rowItems}}</td>\n        </tr>\n      </table>\n\n      <!-- pager -->\n      <ul *ngIf=\"pager.pages && pager.pages.length\" class=\"pagination\">\n        <li [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(1)\">First</a>\n        </li>\n        <li [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(pager.currentPage - 1)\">Previous</a>\n        </li>\n        <li *ngFor=\"let page of pager.pages\" [ngClass]=\"{active:pager.currentPage === page}\">\n          <a (click)=\"setPage(page)\">{{page}}</a>\n        </li>\n        <li [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.currentPage + 1)\">Next</a>\n        </li>\n        <li [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.totalPages)\">Last</a>\n        </li>\n      </ul>\n      <button (click)=\"editColumns()\" style=\"float: right\">Advanced</button>\n    </div>\n  </div>\n\n  <div *ngIf=\"hideShowColumns\">\n    <!--<form>-->\n      <!--<div *ngFor=\"let header of headers\">-->\n        <!--{{header}}<input bs-switch type=\"checkbox\"/>-->\n      <!--</div>-->\n      <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">Columns</div>\n        <div class=\"panel-body\" *ngFor=\"let header of headers\">{{header}}</div>\n      </div>\n<div class=\"col-md-2\">\n\n        <h4>iOS7 Style</h4>\n\n        <div class=\"switch\">\n        <input id=\"cmn-toggle-4\" class=\"cmn-toggle cmn-toggle-round-flat\" type=\"checkbox\">\n        <label for=\"cmn-toggle-4\"></label>\n        </div>\n\n    </div>    <button (click)=\"submit()\">Submit</button>\n    <button (click)=\"editColumns()\" style=\"margin: 5px;\">Close</button>\n  </div>\n</div>\n"
+module.exports = "<p>\n  table works!\n</p>\n<!--<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css\">-->\n<!--<link href=\"https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css\" rel=\"stylesheet\">-->\n<!--<script src=\"https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js\"></script>-->\n<!--<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css\" integrity=\"sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ\" crossorigin=\"anonymous\">-->\n<!--<script src=\"https://code.jquery.com/jquery-3.1.1.slim.min.js\" integrity=\"sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n\" crossorigin=\"anonymous\"></script>-->\n<!--<script src=\"https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js\" integrity=\"sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb\" crossorigin=\"anonymous\"></script>-->\n<!--<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js\" integrity=\"sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn\" crossorigin=\"anonymous\"></script>-->\n<div class=\"card tableContainer\">\n  <div>\n    <div>\n      <!-- items being paged -->\n      <table class=\"table\" matSort (matSortChange)=\"sortData($event)\">\n        <tr>\n          <th *ngFor=\"let header of headers; index as i\" mat-sort-header=\"{{i}}\">{{ header }}</th>\n        </tr>\n        <tr *ngFor=\"let item of pagedItems\">\n          <td *ngFor=\"let rowItems of item\">{{rowItems}}</td>\n        </tr>\n      </table>\n\n      <!-- pager -->\n      <div *ngIf=\"pager.pages && pager.pages.length\">\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(1)\">First</a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(pager.currentPage - 1)\">Previous</a>\n        </span>\n        <span *ngFor=\"let page of pager.pages\" [ngClass]=\"{active:pager.currentPage === page}\">\n          <a (click)=\"setPage(page)\">{{page}}</a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.currentPage + 1)\">Next</a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.totalPages)\">Last</a>\n        </span>\n      </div>\n      <button (click)=\"editColumns()\" style=\"float: right\">Advanced</button>\n    </div>\n  </div>\n\n  <div *ngIf=\"hideShowColumns\">\n    <div class=\"panel panel-default\">\n      <div class=\"panel-heading\">Columns</div>\n      <div class=\"panel-body\" style=\"vertical-align: center;\" *ngFor=\"let header of headers\">{{header}}\n        <input type=\"checkbox\" checked data-toggle=\"toggle\">\n        <label class=\"switch\">\n          <input type=\"checkbox\" checked>\n          <span class=\"slider round\"></span>\n        </label>\n      </div>\n    </div>\n    <button (click)=\"submit()\">Submit</button>\n    <button (click)=\"editColumns()\" style=\"margin: 5px;\">Close</button>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -1167,6 +1173,69 @@ var PagerService = /** @class */ (function () {
         })
     ], PagerService);
     return PagerService;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/test/test.component.css":
+/*!*****************************************!*\
+  !*** ./src/app/test/test.component.css ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = ""
+
+/***/ }),
+
+/***/ "./src/app/test/test.component.html":
+/*!******************************************!*\
+  !*** ./src/app/test/test.component.html ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "<p>\n  test works!\n\n</p>\n<div class=\"jumbotron text-center\">\n  <h1>My First Bootstrap Page</h1>\n  <p>Resize this responsive page to see the effect!</p>\n</div>\n\n<div class=\"container\">\n  <div class=\"row\">\n    <div class=\"col-sm-4\">\n      <h3>Column 1</h3>\n      <p>Lorem ipsum dolor..</p>\n      <p>Ut enim ad..</p>\n    </div>\n    <div class=\"col-sm-4\">\n      <h3>Column 2</h3>\n      <p>Lorem ipsum dolor..</p>\n      <p>Ut enim ad..</p>\n    </div>\n    <div class=\"col-sm-4\">\n      <h3>Column 3</h3>\n      <p>Lorem ipsum dolor..</p>\n      <p>Ut enim ad..</p>\n    </div>\n  </div>\n</div>\n\n<ul class=\"list-group\">\n  <li class=\"list-group-item active\">Active item</li>\n  <li class=\"list-group-item\">Second item</li>\n  <li class=\"list-group-item\">Third item</li>\n</ul>\n\n<div class=\"container\">\n  <h2>Card Image</h2>\n  <p>Image at the top (card-img-top):</p>\n  <div class=\"card\" style=\"width:400px\">\n    <img class=\"card-img-top\" src=\"https://www.w3schools.com/bootstrap4/img_avatar1.png\" alt=\"Card image\" style=\"width:100%\">\n    <div class=\"card-body\">\n      <h4 class=\"card-title\">John Doe</h4>\n      <p class=\"card-text\">Some example text some example text. John Doe is an architect and engineer</p>\n      <a href=\"#\" class=\"btn btn-primary\">See Profile</a>\n    </div>\n  </div>\n  <br>\n\n  <p>Image at the bottom (card-img-bottom):</p>\n  <div class=\"card\" style=\"width:400px\">\n    <div class=\"card-body\">\n      <h4 class=\"card-title\">Jane Doe</h4>\n      <p class=\"card-text\">Some example text some example text. Jane Doe is an architect and engineer</p>\n      <a href=\"#\" class=\"btn btn-primary\">See Profile</a>\n    </div>\n    <img class=\"card-img-bottom\" src=\"img_avatar6.png\" alt=\"Card image\" style=\"width:100%\">\n  </div>\n</div>\n"
+
+/***/ }),
+
+/***/ "./src/app/test/test.component.ts":
+/*!****************************************!*\
+  !*** ./src/app/test/test.component.ts ***!
+  \****************************************/
+/*! exports provided: TestComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TestComponent", function() { return TestComponent; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+var TestComponent = /** @class */ (function () {
+    function TestComponent() {
+    }
+    TestComponent.prototype.ngOnInit = function () {
+    };
+    TestComponent = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
+            selector: 'app-test',
+            template: __webpack_require__(/*! ./test.component.html */ "./src/app/test/test.component.html"),
+            styles: [__webpack_require__(/*! ./test.component.css */ "./src/app/test/test.component.css")]
+        }),
+        __metadata("design:paramtypes", [])
+    ], TestComponent);
+    return TestComponent;
 }());
 
 

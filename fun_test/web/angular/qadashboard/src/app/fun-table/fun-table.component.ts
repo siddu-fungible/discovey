@@ -39,8 +39,7 @@ export class FunTableComponent implements OnInit {
     // get pager object from service
     if (!this.data.all) {
       this.nextPage.emit(page);
-    }
-    else {
+    } else {
       this.setPagedItems(page);
     }
   }
@@ -50,8 +49,7 @@ export class FunTableComponent implements OnInit {
     this.pager = this.pagerService.getPager(this.data.totalLength, page, this.pageSize);
     if (this.data.all) {
       this.pagedItems = this.rows.slice(this.pager.startIndex, this.pager.endIndex + 1);
-    }
-    else {
+    } else {
       this.pagedItems = this.rows.slice(0, this.pageSize);
     }
   }
@@ -59,8 +57,7 @@ export class FunTableComponent implements OnInit {
   ngOnChanges() {
     if (this.data.currentPageIndex < 0) {
       this.logger.fatal("Page Index is less than 1");
-    }
-    else {
+    } else {
       this.rows = this.data.rows;
       this.headers = this.data.headers;
       // this.originalData = Array.from(this.rows);
@@ -96,12 +93,6 @@ export class FunTableComponent implements OnInit {
   editColumns() {
     this.logger.log("Open form is entered");
     this.hideShowColumns = !this.hideShowColumns;
-  }
-
-  submit() {
-    this.logger.log("submitted the column change");
-    this.hideShowColumns = false;
-    //change the headers.
   }
 
 }
