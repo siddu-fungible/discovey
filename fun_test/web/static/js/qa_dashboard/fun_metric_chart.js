@@ -167,15 +167,17 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             }
             $scope.setDefault();
             $scope.chartInfo = ctrl.chartInfo;
+            $scope.chartName = ctrl.chartName;
+            $scope.modelName = ctrl.modelName;
             $scope.previewDataSets = ctrl.previewDataSets;
             $scope.fetchChartInfo().then(() => {
                 $scope.tableInfo = ctrl.tableInfo;
                 //$scope.timeMode = ctrl.timeMode;
                 //console.log("C I:" + ctrl.chartInfo);
                 if ($scope.chartInfo) {
-                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
+                    $scope.fetchMetricsData($scope.modelName, $scope.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
                 } else {
-                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
+                    $scope.fetchMetricsData($scope.modelName, $scope.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
                 }
 
             });
@@ -486,6 +488,8 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                         let oneChartDataArray = [];
                         for (let i = 0; i < keyList.length; i++) {
                             let output = null;
+                            let total = 0;
+                            let count = 0;
                             let matchingDateFound = false;
                             seriesDates.push(originalKeyList[keyList[i][0]]);
                             let startIndex = keyList[i][0];
@@ -495,9 +499,10 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                                     let oneRecord = oneDataSet[j];
                                     if (oneRecord.input_date_time.toString() === originalKeyList[startIndex]) {
                                         matchingDateFound = true;
-
                                         let outputName = filterDataSets[dataSetIndex].output.name;
                                         output = oneRecord[outputName];
+                                        total += output;
+                                        count++;
                                         if (chartInfo && chartInfo.y1_axis_title) {
                                             $scope.chart1YaxisTitle = chartInfo.y1_axis_title;
                                         } else {
@@ -508,18 +513,16 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                                         }
                                         $scope.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
 
-                                        break;
                                     }
                                 }
-                                if (matchingDateFound) {
-                                    break;
-                                }
                                 startIndex--;
+                            }
+                            if(count !== 0) {
+                                output = total/count;
                             }
                             let thisMinimum = filterDataSets[dataSetIndex].output.min;
                             let thisMaximum = filterDataSets[dataSetIndex].output.max;
                             oneChartDataArray.push($scope.getValidatedData(output, thisMinimum, thisMaximum));
-
                         }
                         let oneChartDataSet = {name: filterDataSets[dataSetIndex].name, data: oneChartDataArray};
                         chartDataSets.push(oneChartDataSet);
