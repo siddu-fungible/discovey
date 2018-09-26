@@ -549,7 +549,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     let keyList = Object.keys(data.scores);
                     keyList.sort();
                     keyList.forEach((dateTime) => {
-                        values.push(data.scores[dateTime].score);
+                        //values.push(data.scores[dateTime].score);
                         let d = new Date(dateTime * 1000).toISOString();
                         //let dateSeries = d.setUTCSeconds(dateTime);
                         series.push(d);
@@ -559,12 +559,10 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     if (series.length === 0) {
                         $scope.series = null;
                         $scope.value = null;
-                    }
-                    else {
+                    } else {
                         series = $scope.fixMissingDates(series);
                         let dateSeries = [];
                         let seriesRange = $scope.getDatesByTimeMode(series);
-                        let valuesByTime = [];
                         for (let i = 0; i < seriesRange.length; i++) {
                             let startIndex = seriesRange[i][0];
                             let endIndex = seriesRange[i][1];
@@ -572,24 +570,24 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                             let total = 0;
                             dateSeries.push(series[startIndex]);
                             while (startIndex >= endIndex) {
-                                keyList.forEach((dateTime) => {
+                                for (let j = 0; j < keyList.length; j++) {
+                                    let dateTime = keyList[j];
                                     let d = new Date(dateTime * 1000).toISOString();
                                     if (d === series[startIndex]) {
                                         total += data.scores[dateTime].score;
                                         count++;
                                     }
-                                });
+                                }
                                 startIndex--;
                             }
                             if (count !== 0) {
                                 let average = total / count;
-                                valuesByTime.push(average);
-                            }
-                            else {
-                                valuesByTime.push(null);
+                                values.push(average);
+                            } else {
+                                values.push(null);
                             }
                         }
-                        $scope.values = [{data: valuesByTime}];
+                        $scope.values = [{data: values}];
                         $scope.series = dateSeries;
                         $scope.status = "idle";
                         //let keyList = Array.from(keySet);
