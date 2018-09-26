@@ -1334,12 +1334,12 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             existing_ports = self.stc_manager.get_port_list()
             for port_handle in existing_ports:
                 port_info = self.stc_manager.get_port_details(port=port_handle)
-                offline_ports[port_info['Location']] = port_handle
+                offline_ports[port_info['Location'].split('//')[1]] = port_handle
 
             for key, val in ports_map.iteritems():
                 fun_test.log("Using %s -----> %s" % (key, val))
                 if val in offline_ports:
-                    result['port_list'] = offline_ports[val]
+                    result['port_list'].append(offline_ports[val])
                 else:
                     port_handle = self.stc_manager.create_port(location=val)
                     fun_test.test_assert(port_handle, "Create Port: %s" % val)
