@@ -463,7 +463,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>.*)\s+(?P<units>\S+)\s+\[(?P<metric_id>\S+)\]',
+                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>.*)\s+(?P<units>\S+)\s+\[(?P<metric_id>\S+)\]',
                     line)
                 if m:
                     stats_found = True
