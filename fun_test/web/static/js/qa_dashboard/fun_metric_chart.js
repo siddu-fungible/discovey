@@ -57,63 +57,63 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 ctrl.pointClickCallback()(point);
             };
         }
-            $scope.xAxisFormatter = (value) => {
-        let s = "Error";
-        const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        let r = /(\d{4})-(\d{2})-(\d{2})/g;
-        let match = r.exec(value);
+        $scope.xAxisFormatter = (value) => {
+            let s = "Error";
+            const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            let r = /(\d{4})-(\d{2})-(\d{2})/g;
+            let match = r.exec(value);
 
-        if ($scope.timeMode === "month") {
+            if ($scope.timeMode === "month") {
+                if (match) {
+                    let month = parseInt(match[2]);
+                    s = monthNames[month];
+                }
+            }
+            else {
+                if (match) {
+                    s = match[2] + "/" + match[3];
+                }
+            }
+            return s;
+
+        };
+
+        $scope.tooltipFormatter = (x, y) => {
+            let softwareDate = "Unknown";
+            let hardwareVersion = "Unknown";
+            let sdkBranch = "Unknown";
+            let gitCommit = "Unknown";
+            let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
+            let match = r.exec(x);
+            let key = "";
             if (match) {
-                let month = parseInt(match[2]);
-                s = monthNames[month];
+                key = match[1];
             }
-        }
-        else {
-            if (match) {
-                s = match[2] + "/" + match[3];
+            else {
+                let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
+                match = reg.exec(x);
+                if (match) {
+                    key = match[1].replace('T', ' ');
+                }
             }
-        }
-        return s;
+            let s = "Error";
 
-    };
-
-    $scope.tooltipFormatter = (x, y) => {
-        let softwareDate = "Unknown";
-        let hardwareVersion = "Unknown";
-        let sdkBranch = "Unknown";
-        let gitCommit = "Unknown";
-        let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-        let match = r.exec(x);
-        let key = "";
-        if (match) {
-            key = match[1];
-        }
-        else {
-            let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
-            match = reg.exec(x);
-            if(match) {
-                key = match[1].replace('T', ' ');
+            if ($scope.buildInfo && key in $scope.buildInfo) {
+                softwareDate = $scope.buildInfo[key]["software_date"];
+                hardwareVersion = $scope.buildInfo[key]["hardware_version"];
+                sdkBranch = $scope.buildInfo[key]["fun_sdk_branch"]
+                s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
+                s += "<b>Software date:</b> " + softwareDate + "<br>";
+                s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
+                s += "<b>Git commit:</b> " + $scope.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "") + "<br>";
+                s += "<b>Value:</b> " + y + "<br>";
+            } else {
+                s = "<b>Value:</b> " + y + "<br>";
             }
-        }
-        let s = "Error";
 
-        if ($scope.buildInfo && key in $scope.buildInfo) {
-            softwareDate = $scope.buildInfo[key]["software_date"];
-            hardwareVersion = $scope.buildInfo[key]["hardware_version"];
-            sdkBranch = $scope.buildInfo[key]["fun_sdk_branch"]
-            s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
-            s += "<b>Software date:</b> " + softwareDate + "<br>";
-            s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
-            s += "<b>Git commit:</b> " + $scope.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "") + "<br>";
-            s += "<b>Value:</b> " + y + "<br>";
-        } else {
-            s = "<b>Value:</b> " + y + "<br>";
-        }
-
-        return s;
-    };
+            return s;
+        };
 
 
         //console.log(ctrl.showingTable);
@@ -139,7 +139,6 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         }
 
     };
-
 
 
     $scope.fetchBuildInfo = () => {
@@ -219,7 +218,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     $scope.getValidatedData = (data, minimum, maximum) => {
         let result = data;
-        if(data < 0) {
+        if (data < 0) {
             data = null;
         }
         result = {
@@ -334,7 +333,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         }
     };
 
-    $scope.getDatesByTimeModeForLeaf = (dateList) => {
+    $scope.getDatesByTimeMode = (dateList) => {
         let len = dateList.length;
         let filteredDate = [];
         let result = [[len, 0]];
@@ -378,35 +377,35 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         return result;
     };
 
-    $scope.getDatesByTimeModeForContainers = (dateList) => {
-        let len = dateList.length;
-        let filteredDate = [];
-        let result = dateList;
-        if ($scope.timeMode === "week") {
-            for (let i = len - 1; i >= 0; i = i - 7) {
-                filteredDate.push(dateList[i]);
-            }
-            result = filteredDate.reverse();
-        }
-        else if ($scope.timeMode === "month") {
-            let i = len - 1;
-            let startIndex = len - 1;
-            let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
-            let latestMonth = latestDate.getUTCMonth();
-            filteredDate.push(dateList[i]);
-            while (i >= 0) {
-                let currentDate = new Date(dateList[i].replace(/\s+/g, 'T'));
-                let currentMonth = currentDate.getUTCMonth();
-                if (currentMonth !== latestMonth) {
-                    filteredDate.push(dateList[i]);
-                    latestMonth = currentMonth;
-                }
-                i--;
-            }
-            result = filteredDate.reverse();
-        }
-        return result;
-    };
+    // $scope.getDatesByTimeModeForContainers = (dateList) => {
+    //     let len = dateList.length;
+    //     let filteredDate = [];
+    //     let result = dateList;
+    //     if ($scope.timeMode === "week") {
+    //         for (let i = len - 1; i >= 0; i = i - 7) {
+    //             filteredDate.push(dateList[i]);
+    //         }
+    //         result = filteredDate.reverse();
+    //     }
+    //     else if ($scope.timeMode === "month") {
+    //         let i = len - 1;
+    //         let startIndex = len - 1;
+    //         let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
+    //         let latestMonth = latestDate.getUTCMonth();
+    //         filteredDate.push(dateList[i]);
+    //         while (i >= 0) {
+    //             let currentDate = new Date(dateList[i].replace(/\s+/g, 'T'));
+    //             let currentMonth = currentDate.getUTCMonth();
+    //             if (currentMonth !== latestMonth) {
+    //                 filteredDate.push(dateList[i]);
+    //                 latestMonth = currentMonth;
+    //             }
+    //             i--;
+    //         }
+    //         result = filteredDate.reverse();
+    //     }
+    //     return result;
+    // };
 
     $scope.setTimeMode = (mode) => {
         $scope.timeMode = mode;
@@ -475,7 +474,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     $scope.shortenKeyList(keyList);
                     keyList = $scope.fixMissingDates(keyList);
                     let originalKeyList = keyList;
-                    keyList = $scope.getDatesByTimeModeForLeaf(keyList);
+                    keyList = $scope.getDatesByTimeMode(keyList);
 
                     let chartDataSets = [];
                     let seriesDates = [];
@@ -517,8 +516,8 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                                 }
                                 startIndex--;
                             }
-                            if(count !== 0) {
-                                output = total/count;
+                            if (count !== 0) {
+                                output = total / count;
                             }
                             let thisMinimum = filterDataSets[dataSetIndex].output.min;
                             let thisMaximum = filterDataSets[dataSetIndex].output.max;
@@ -550,7 +549,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     let keyList = Object.keys(data.scores);
                     keyList.sort();
                     keyList.forEach((dateTime) => {
-                        values.push(data.scores[dateTime].score);
+                        //values.push(data.scores[dateTime].score);
                         let d = new Date(dateTime * 1000).toISOString();
                         //let dateSeries = d.setUTCSeconds(dateTime);
                         series.push(d);
@@ -560,52 +559,39 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                     if (series.length === 0) {
                         $scope.series = null;
                         $scope.value = null;
-                    }
-                    else {
+                    } else {
                         series = $scope.fixMissingDates(series);
-                        series = $scope.getDatesByTimeModeForContainers(series);
-                        let valuesByTime = [];
-                        keyList.forEach((dateTime) => {
-                            //values.push(data.scores[dateTime].score);
-                            let d = new Date(dateTime * 1000).toISOString();
-                            for (let i = 0; i < series.length; i++) {
-                                if (d === series[i]) {
-                                    valuesByTime.push(data.scores[dateTime].score);
+                        let dateSeries = [];
+                        let seriesRange = $scope.getDatesByTimeMode(series);
+                        for (let i = 0; i < seriesRange.length; i++) {
+                            let startIndex = seriesRange[i][0];
+                            let endIndex = seriesRange[i][1];
+                            let count = 0;
+                            let total = 0;
+                            dateSeries.push(series[startIndex]);
+                            while (startIndex >= endIndex) {
+                                for (let j = 0; j < keyList.length; j++) {
+                                    let dateTime = keyList[j];
+                                    let d = new Date(dateTime * 1000).toISOString();
+                                    if (d === series[startIndex]) {
+                                        total += data.scores[dateTime].score;
+                                        count++;
+                                    }
                                 }
+                                startIndex--;
                             }
-                            //let dateSeries = d.setUTCSeconds(dateTime);
-                            //series.push(d);
-                        });
-                        $scope.values = [{data: valuesByTime}];
-                        let seriesDates = [];
-                        const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-                        // series.forEach(function(seriesValues){
-                        //     let s = "Error";
-                        //     let r = /(\d{4})-(\d{2})-(\d{2})/g;
-                        //     let match = r.exec(seriesValues);
-                        //
-                        //     if ($scope.timeMode === "month") {
-                        //         if (match) {
-                        //             let month = parseInt(match[2]);
-                        //             s = monthNames[month];
-                        //         }
-                        //     }
-                        //     else {
-                        //         if (match) {
-                        //             s = match[2] + "/" + match[3];
-                        //         }
-                        //     }
-                        //     seriesDates.push(s);
-                        // });
-                        $scope.series = series;
-
+                            if (count !== 0) {
+                                let average = total / count;
+                                values.push(average);
+                            } else {
+                                values.push(null);
+                            }
+                        }
+                        $scope.values = [{data: values}];
+                        $scope.series = dateSeries;
                         $scope.status = "idle";
                         //let keyList = Array.from(keySet);
                     }
-
-
                 });
             }
         });

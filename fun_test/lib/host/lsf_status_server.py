@@ -90,6 +90,7 @@ class LsfStatusServer:
     def add_palladium_job_info(self, job_info):
         try:
             self.get_job_by_id(job_id=job_info["job_id"])
+            self.get_job_by_id(job_id=job_info["job_id"])
         except:
             pass
         result = {}
@@ -102,7 +103,7 @@ class LsfStatusServer:
                                                  hardware_version=job_info["hardware_version"],
                                                  completion_date=completion_date)
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
-
+            response = self.get_job_by_id(job_id=job_info["job_id"])
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response_dict = {"output_text": "-1"}
             try:
