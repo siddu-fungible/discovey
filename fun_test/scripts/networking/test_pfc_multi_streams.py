@@ -55,7 +55,6 @@ priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_o
 priority_list = [val['priority_val'] for val in priority_dict.itervalues()]
 k_list = [x for x in range(0, 16)]
 k_list.reverse()
-print k_list
 
 
 def verify_spirent_stats(result_dict):
@@ -415,6 +414,9 @@ class TestCase1(FunTestCase):
     quanta = 5000
     current_priority_value = 1
     priority_key = 'priority_%s' % current_priority_value
+    zero_quanta_value = 0
+    capture_quanta_checker = {'time1': quanta, 'time2': zero_quanta_value, 'time3': zero_quanta_value, 'time4': zero_quanta_value,
+                              'time5': zero_quanta_value, 'time6': zero_quanta_value, 'time7': zero_quanta_value}
 
     def pcap_output(self):
         if not self.current_priority_value > 7:
@@ -422,7 +424,14 @@ class TestCase1(FunTestCase):
             output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time1=str(self.final_quanta_value))
             fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
 
-            first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time1=self.quanta)
+            first = pcap_parser_1.verify_pfc_header_fields(first_packet=True,
+                                                           time1=self.capture_quanta_checker['time1'],
+                                                           time2=self.capture_quanta_checker['time2'],
+                                                           time3=self.capture_quanta_checker['time3'],
+                                                           time4=self.capture_quanta_checker['time4'],
+                                                           time5=self.capture_quanta_checker['time5'],
+                                                           time6=self.capture_quanta_checker['time6'],
+                                                           time7=self.capture_quanta_checker['time7'])
             fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % self.quanta)
 
     def describe(self):
@@ -629,7 +638,9 @@ class TestCase1(FunTestCase):
         if self.current_priority_value < capture_priority_limit:
             capture_obj = Capture()
             start_capture = template_obj.stc_manager.start_capture_command(capture_obj=capture_obj, port_handle=port_1)
-            fun_test.test_assert(start_capture, "Started capture for quanta 0 on port %s" % port_1)
+            fun_test.test_assert(start_capture, "Started capture on port %s" % port_1)
+
+            fun_test.sleep("Letting capture to start", seconds=5)
 
         # Stop traffic from port 1
         stop = template_obj.disable_generator_configs(generator_configs=generator_dict[port_2])
@@ -742,6 +753,10 @@ class TestCase1(FunTestCase):
 class TestCase2(TestCase1):
     current_priority_value = 2
     priority_key = 'priority_%s' % current_priority_value
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.quanta,
+                              'time3': TestCase1.zero_quanta_value,'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=2,
@@ -779,6 +794,10 @@ class TestCase2(TestCase1):
 class TestCase3(TestCase1):
     current_priority_value = 3
     priority_key = 'priority_%s' % current_priority_value
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.quanta, 'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=3,
@@ -816,6 +835,10 @@ class TestCase3(TestCase1):
 class TestCase4(TestCase1):
     current_priority_value = 4
     priority_key = 'priority_%s' % current_priority_value
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.zero_quanta_value, 'time4': TestCase1.quanta,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=4,
@@ -853,6 +876,10 @@ class TestCase4(TestCase1):
 class TestCase5(TestCase1):
     current_priority_value = 5
     priority_key = 'priority_%s' % current_priority_value
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.zero_quanta_value, 'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.quanta, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=5,
@@ -890,6 +917,10 @@ class TestCase5(TestCase1):
 class TestCase6(TestCase1):
     current_priority_value = 6
     priority_key = 'priority_%s' % current_priority_value
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.zero_quanta_value, 'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.quanta,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=6,
@@ -927,6 +958,10 @@ class TestCase6(TestCase1):
 class TestCase7(TestCase1):
     current_priority_value = 7
     priority_key = 'priority_%s' % current_priority_value
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.zero_quanta_value, 'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.quanta}
 
     def describe(self):
         self.set_test_details(id=7,
@@ -1591,6 +1626,7 @@ if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
+    '''
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())
     ts.add_test_case(TestCase3())
@@ -1606,6 +1642,7 @@ if __name__ == "__main__":
     ts.add_test_case(TestCase13())
     ts.add_test_case(TestCase14())
     ts.add_test_case(TestCase15())
+    '''
     ts.add_test_case(TestCase16())
     ts.add_test_case(TestCase17())
     ts.run()
