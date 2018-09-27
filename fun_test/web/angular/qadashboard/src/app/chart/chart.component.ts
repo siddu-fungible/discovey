@@ -11,7 +11,7 @@ import { ApiService} from "../services/api/api.service";
 })
 export class ChartComponent implements OnInit {
   ngOnInit() {
-  // this.doSomething1();
+    this.doSomething1();
 
   }
   constructor(private apiService: ApiService) {
