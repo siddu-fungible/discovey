@@ -453,6 +453,10 @@ export class PerformanceComponent implements OnInit {
   getComponentState(): string {
     return this.componentState;
   }
+counter(i: number) {
+    return new Array(i);
+  }
+
 
   setValues(pageNumber): void {
     this.data["rows"] = [['hi', 'hello'], ['how', 'are']];
