@@ -1,23 +1,35 @@
-import {Component, OnInit, Input, Output, EventEmitter} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output
+} from '@angular/core';
 import {Sort} from '@angular/material';
 import {PagerService} from '../services/pager/pager.service';
 import {LoggerService} from "../services/logger/logger.service";
-import {logger} from "../../../node_modules/codelyzer/util/logger";
+import {ApiService} from "../services/api/api.service";
 
 @Component({
   selector: 'fun-table',
   templateUrl: './fun-table.component.html',
-  styleUrls: ['./fun-table.component.css']
+  styleUrls: ['./fun-table.component.css'],
+  changeDetection: ChangeDetectionStrategy.Default
 })
 
 export class FunTableComponent implements OnInit {
   headers: any[];
+  // originalHeaders: any[];
   rows: any[];
+  // originalRows: any[];
   pageSize: number;
   hideShowColumns: boolean = false;
+  headerIndexMap: Map<number, boolean> = new Map<number, boolean>();
   static readonly defaultPageSize: number = 10;
 
-  constructor(private pagerService: PagerService, private logger: LoggerService) {
+  constructor(private apiService: ApiService, private pagerService: PagerService, private logger: LoggerService, private changeDetector: ChangeDetectorRef) {
     this.logger.log("FunTableComponent init");
   }
 
@@ -32,6 +44,7 @@ export class FunTableComponent implements OnInit {
     if (this.data.rows && this.data.rows.length === 10000) {
       this.logger.log("10000 rows");
     }
+    // this.doSomething1();
   }
 
   //setting the page number
@@ -60,6 +73,12 @@ export class FunTableComponent implements OnInit {
     } else {
       this.rows = this.data.rows;
       this.headers = this.data.headers;
+      // this.originalHeaders = this.data.headers;
+      // this.originalRows = this.data.rows;
+      for (let i in this.headers) {
+        this.headerIndexMap.set(Number(i), true);
+      }
+      // this.headerIndexMap.set(0, true);
       // this.originalData = Array.from(this.rows);
       if (this.data.pageSize) {
         this.pageSize = this.data.pageSize;
@@ -92,8 +111,73 @@ export class FunTableComponent implements OnInit {
   //toggle between hide and show columns
   editColumns() {
     this.logger.log("Open form is entered");
+    this.headerIndexMap.forEach((value, key) => {
+      console.log(Number(key) ,this.headerIndexMap.get(Number(key)));
+    });
     this.hideShowColumns = !this.hideShowColumns;
   }
+
+  setHeaders(header) {
+    // this.headerIndexMap.set(this.originalHeaders.indexOf(header), !this.headerIndexMap.get(this.originalHeaders.indexOf(header)));
+    // let newHeaders = this.originalHeaders.filter(item => {
+    //   if(this.headerIndexMap.get(this.originalHeaders.indexOf(item)) === true) {
+    //     return true;
+    //   }
+    //   return false;
+    // });
+    // for (let i = 0; i < this.originalRows.length; i++) {
+    //   this.rows[i] = this.originalRows[i].filter(item => {
+    //   if(this.headerIndexMap.get(this.originalHeaders.indexOf(item)) === true) {
+    //     return true;
+    //   }
+    //   return false;
+    // });
+    // }
+    // this.headers = newHeaders;
+    // // this.setPage(1);
+    this.headerIndexMap.set(this.headers.indexOf(header), !this.headerIndexMap.get(this.headers.indexOf(header)));
+    this.filteredHeaders(this.headerIndexMap);
+    // this.changeDetector.detectChanges();
+  }
+
+  filteredHeaders(indexMap) {
+    console.log("filtered header");
+    return this.headers.filter(item => {
+            if(this.headers.indexOf(item) < indexMap.size && indexMap.get(this.headers.indexOf(item))) {
+              return true;
+            }
+            return false;
+        });
+  }
+
+  filteredRows(item) {
+    return item.filter(oldItem => {
+            if(item.indexOf(oldItem) < this.headerIndexMap.size && this.headerIndexMap.get(item.indexOf(oldItem))) {
+              return true;
+            }
+            return false;
+        });
+  }
+    doSomething1(): void {
+    console.log("Doing Something1");
+    let payload = {"metric_id": 122, "date_range": ["2018-04-01T07:00:01.000Z", "2018-09-13T06:59:59.765Z"]};
+    this.apiService.post('/metrics/scores', payload).subscribe(response => {
+        //console.log(response.data);
+
+      },
+      error => {
+        //console.log(error);
+        this.delay(1000)
+        this.doSomething1();
+      });
+
+  }
+  async delay(ms: number) {
+    await new Promise(resolve => setTimeout(()=>resolve(), ms)).then(()=>console.log("fired"));
+}
+r() {
+   return Math.random();
+}
 
 }
 

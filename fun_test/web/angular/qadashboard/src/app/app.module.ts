@@ -12,6 +12,9 @@ import { FunTableComponent } from './fun-table/fun-table.component';
 import {ApiService} from "./services/api/api.service";
 import {LoggerService} from "./services/logger/logger.service";
 import { TestComponent } from './test/test.component';
+import { FunTableFilterPipe } from './pipe/fun-table-filter.pipe';
+import { ChartModule } from 'angular-highcharts';
+import { ChartComponent } from './chart/chart.component';
 
 
 @NgModule({
@@ -20,14 +23,17 @@ import { TestComponent } from './test/test.component';
     DashboardComponent,
     PerformanceComponent,
     FunTableComponent,
-    TestComponent
+    TestComponent,
+    FunTableFilterPipe,
+    ChartComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    MatSortModule
+    MatSortModule,
+    ChartModule
   ],
 
   providers: [ApiService, LoggerService],
