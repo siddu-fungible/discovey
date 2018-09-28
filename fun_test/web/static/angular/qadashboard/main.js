@@ -155,12 +155,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pipe_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./pipe/fun-table-filter.pipe */ "./src/app/pipe/fun-table-filter.pipe.ts");
 /* harmony import */ var angular_highcharts__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! angular-highcharts */ "./node_modules/angular-highcharts/angular-highcharts.es5.js");
 /* harmony import */ var _chart_chart_component__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./chart/chart.component */ "./src/app/chart/chart.component.ts");
+/* harmony import */ var _fun_chart_fun_chart_component__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./fun-chart/fun-chart.component */ "./src/app/fun-chart/fun-chart.component.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
 
 
 
@@ -189,7 +191,8 @@ var AppModule = /** @class */ (function () {
                 _fun_table_fun_table_component__WEBPACK_IMPORTED_MODULE_9__["FunTableComponent"],
                 _test_test_component__WEBPACK_IMPORTED_MODULE_12__["TestComponent"],
                 _pipe_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__["FunTableFilterPipe"],
-                _chart_chart_component__WEBPACK_IMPORTED_MODULE_15__["ChartComponent"]
+                _chart_chart_component__WEBPACK_IMPORTED_MODULE_15__["ChartComponent"],
+                _fun_chart_fun_chart_component__WEBPACK_IMPORTED_MODULE_16__["FunChartComponent"]
             ],
             imports: [
                 _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
@@ -332,7 +335,7 @@ var ChartComponent = /** @class */ (function () {
     };
     ChartComponent = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
-            selector: 'fun-chart',
+            selector: 'app-fun-chart',
             template: "\n    <button (click)=\"add()\">Add Point!</button>\n    <div [chart]=\"chart\"></div>\n  "
         }),
         __metadata("design:paramtypes", [_services_api_api_service__WEBPACK_IMPORTED_MODULE_2__["ApiService"]])
@@ -362,7 +365,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<title>QA Dashboard</title>\n<div>\n  My dashboard\n  <app-performance></app-performance>\n  <app-test></app-test>\n</div>\n"
+module.exports = "<title>QA Dashboard</title>\n<div>\n  My dashboard\n  <app-performance></app-performance>\n  <!--<app-test></app-test>-->\n</div>\n"
 
 /***/ }),
 
@@ -403,6 +406,284 @@ var DashboardComponent = /** @class */ (function () {
     return DashboardComponent;
 }());
 
+
+
+/***/ }),
+
+/***/ "./src/app/fun-chart/fun-chart.component.css":
+/*!***************************************************!*\
+  !*** ./src/app/fun-chart/fun-chart.component.css ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = ""
+
+/***/ }),
+
+/***/ "./src/app/fun-chart/fun-chart.component.html":
+/*!****************************************************!*\
+  !*** ./src/app/fun-chart/fun-chart.component.html ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "<p>\n  fun-chart works!\n</p>\n<div class=\"card\">\n<button (click)=\"add()\">Add Point!</button>\n    <div [chart]=\"chart\"></div>\n</div>\n"
+
+/***/ }),
+
+/***/ "./src/app/fun-chart/fun-chart.component.ts":
+/*!**************************************************!*\
+  !*** ./src/app/fun-chart/fun-chart.component.ts ***!
+  \**************************************************/
+/*! exports provided: FunChartComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FunChartComponent", function() { return FunChartComponent; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+/* harmony import */ var angular_highcharts__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-highcharts */ "./node_modules/angular-highcharts/angular-highcharts.es5.js");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+var FunChartComponent = /** @class */ (function () {
+    function FunChartComponent() {
+        // @Input() xValues: any[];
+        // @Input() yValues: any[];
+        this.chart = new angular_highcharts__WEBPACK_IMPORTED_MODULE_1__["Chart"]({
+            chart: {
+                type: 'line',
+                height: 500,
+                width: 500
+            },
+            title: {
+                text: this.title
+            },
+            xAxis: {
+                labels: {
+                    format: this.xAxisLabel
+                }
+            },
+            yAxis: {
+                labels: {
+                    format: this.yAxisLabel
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            series: this.yValues
+        });
+    }
+    FunChartComponent.prototype.add = function () {
+        this.chart.addPoint(Math.floor(Math.random() * 10));
+    };
+    FunChartComponent.prototype.ngOnInit = function () {
+        // this.yValues = {};
+        // this.xValues.foreach((input)  => {
+        //             this.yValues[input] = [];
+        //         });
+        // this.getRandomId();
+    };
+    __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
+        __metadata("design:type", Array)
+    ], FunChartComponent.prototype, "yValues", void 0);
+    __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
+        __metadata("design:type", Array)
+    ], FunChartComponent.prototype, "xValues", void 0);
+    __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
+        __metadata("design:type", String)
+    ], FunChartComponent.prototype, "title", void 0);
+    __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
+        __metadata("design:type", String)
+    ], FunChartComponent.prototype, "xAxisLabel", void 0);
+    __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
+        __metadata("design:type", String)
+    ], FunChartComponent.prototype, "yAxisLabel", void 0);
+    FunChartComponent = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
+            selector: 'fun-chart',
+            template: __webpack_require__(/*! ./fun-chart.component.html */ "./src/app/fun-chart/fun-chart.component.html"),
+            styles: [__webpack_require__(/*! ./fun-chart.component.css */ "./src/app/fun-chart/fun-chart.component.css")]
+        }),
+        __metadata("design:paramtypes", [])
+    ], FunChartComponent);
+    return FunChartComponent;
+}());
+
+//
+//                 if (ctrl.charting) {
+//                     $timeout(function () {
+//                          if (ctrl.chartType === "line-chart") {
+//                             let series = angular.copy(ctrl.values);
+//                             let chartInfo = {
+//                                 chart: {
+//                                     height: ctrl.height,
+//                                     width: ctrl.width
+//                                 },
+//                                 title: {
+//                                     text: ctrl.title
+//                                 },
+//
+//                                 subtitle: {
+//                                     text: ''
+//                                 },
+//                                 xAxis: {
+//                                     categories: ctrl.series,
+//                                     title: {
+//                                         text: ctrl.xaxisTitle
+//                                     }
+//                                 },
+//
+//                                 yAxis: {
+//                                     title: {
+//                                         text: ctrl.yaxisTitle
+//                                     }
+//                                 },
+//                                 legend: {
+//                                     layout: 'vertical',
+//                                     align: 'right',
+//                                     verticalAlign: 'middle'
+//                                 },
+//                                 credits: {
+//                                     enabled: false
+//                                 },
+//                                 plotOptions: {
+//                                     line: {
+//                                         animation: false,
+//                                         marker: {
+//                                             enabled: true
+//                                         }
+//                                     },
+//                                     series: {
+//                                         animation: false,
+//                                         label: {
+//                                             connectorAllowed: false
+//                                         },
+//                                         point: {
+//                                             events: {
+//                                                 click: function (e) {
+//                                                     /*location.href = 'https://en.wikipedia.org/wiki/' +
+//                                                         this.options.key;*/
+//                                                     console.log(ctrl.pointClickCallback);
+//                                                     ctrl.pointClickCallback()(e.point);
+//                                                 }
+//                                             }
+//                                         }
+//                                     }
+//
+//                                 },
+//
+//                                 series: series,
+//
+//
+//                                 responsive: {
+//                                     rules: [{
+//                                         condition: {
+//                                             maxWidth: 500
+//                                         },
+//                                         chartOptions: {
+//                                             legend: {
+//                                                 layout: 'horizontal',
+//                                                 align: 'center',
+//                                                 verticalAlign: 'bottom'
+//                                             }
+//                                         }
+//                                     }]
+//                                 }
+//
+//                             };
+//                             try {
+//                                 if (ctrl.xaxisFormatter && ctrl.xaxisFormatter()()) {
+//                                     chartInfo.xAxis["labels"] = {formatter: function () {
+//                                         return ctrl.xaxisFormatter()(this.value);
+//                                     }};
+//                                 }
+//
+//                                 if (ctrl.tooltipFormatter && ctrl.tooltipFormatter()()) {
+//                                     chartInfo.tooltip = {
+//                                         formatter: function () {
+//                                             return ctrl.tooltipFormatter()(this.x, this.y);
+//                                         }
+//                                     }
+//                                 }
+//
+//                                 if (ctrl.pointClickCallback && ctrl.pointClickCallback()()) {
+//                                     chartInfo.plotOptions.series["point"] = {
+//                                         events: {
+//                                             click: function (e) {
+//                                                 ctrl.pointClickCallback()(e.point);
+//                                             }
+//                                         }
+//                                     }
+//                                 }
+//                             } catch (e) {
+//                                 console.log(e);
+//
+//                             }
+//
+//
+//                             Highcharts.chart("c-" + $scope.genId, chartInfo);
+//                         } }, 10);
+//
+//                 }
+//             }, true);
+//
+//         ctrl.$onInit = function () {
+//
+//             //["Sent", "Received"];
+//             $scope.xValue = 0;
+//             $scope.values = {};
+//             angular.forEach(ctrl.series, function (input) {
+//                 $scope.values[input] = [];
+//             });
+//
+//             /*$timeout($scope.repeat, 1000);*/
+//
+//
+//         };
+//
+//         $scope.repeat = function () {
+//             console.log(ctrl);
+//             $timeout($scope.repeat, 1000);
+//         }
+//
+//     }
+//             autoUpdate: '<',
+//             charting: '<',
+//             values: '<',
+//             updateChartsNow: '=',
+//             showLegend: '<',
+//             series: '<',
+//             title: '<',
+//             minimal: '<',
+//             chartType: '@',
+//             colors: '<',
+//             width: '<',
+//             height: '<',
+//             xaxisTitle: '<',
+//             yaxisTitle: '<',
+//             pointClickCallback: '&',
+//             xaxisFormatter: '&',
+//             tooltipFormatter: '&'
+//         }
+//     });
+//
+// })(window.angular);
 
 
 /***/ }),
@@ -696,7 +977,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  performance works!\n</p>\n<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table>\n<!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->\n  <!--<fun-chart></fun-chart>-->\n<!--</li>-->\n\n\n"
+module.exports = "<p>\n  performance works!\n</p>\n<!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->\n  <!--<fun-chart></fun-chart>-->\n<!--</li>-->\n<fun-chart></fun-chart>\n<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table>\n<app-test></app-test>\n\n"
 
 /***/ }),
 
@@ -734,372 +1015,402 @@ var PerformanceComponent = /** @class */ (function () {
         this.logger.log("Performance component init");
     }
     PerformanceComponent.prototype.ngOnInit = function () {
-        var _this = this;
         this.data["rows"] = [['hi', 'hello'], ['how', 'are'], ['you', 'its'], ['been', 'a'], ['long', 'time'], ['also', 'when'], ['where', 'how'], ['are', 'we'], ['meeting', 'if'], ['hey', 'buddy'], ['let', 'go'], ['we', 'will']];
         this.data["headers"] = ['Names', 'Numbers'];
         this.data["all"] = true;
         this.data["totalLength"] = 12;
         this.data["currentPageIndex"] = 1;
         this.data["pageSize"] = 10;
-        this.getLastStatusUpdateTime();
+        //this.getLastStatusUpdateTime();
         this.numGridColumns = 2;
         if (window.screen.width <= 1441) {
             this.numGridColumns = 2;
         }
         this.mode = null;
-        this.fetchJenkinsJobIdMap();
+        //this.fetchJenkinsJobIdMap();
         this.flatNodes = [];
         this.metricMap = {};
         this.cachedNodeInfo = {};
-        this.fetchRootMetricInfo("Total", "MetricContainer").then(function (data) {
-            var metricId = data.metric_id;
-            var p1 = { metric_id: metricId };
-            _this.apiService.post('/metrics/metric_info', p1).subscribe(function (data) {
-                _this.populateNodeInfoCache(data);
-                var newNode = _this.getNodeFromData(data).then(function (newNode) {
-                    newNode.guid = _this.guid();
-                    newNode.hide = false;
-                    newNode.indent = 0;
-                    _this.flatNodes.push(newNode);
-                    // this.expandNode(newNode);
-                    _this.collapsedAll = true;
-                });
-            }, function (error) {
-                console.log(error);
-                _this.componentState = "Error";
-            });
-            return data;
-        });
+        // this.fetchRootMetricInfo("Total", "MetricContainer").then((data) => {
+        //   let metricId = data.metric_id;
+        //   let p1 = {metric_id: metricId};
+        //   this.apiService.post('/metrics/metric_info', p1).subscribe((data) => {
+        //     this.populateNodeInfoCache(data);
+        //     let newNode = this.getNodeFromData(data).then((newNode) => {
+        //       newNode.guid = this.guid();
+        //       newNode.hide = false;
+        //       newNode.indent = 0;
+        //       this.flatNodes.push(newNode);
+        //       // this.expandNode(newNode);
+        //       this.collapsedAll = true;
+        //     });
+        //
+        //   },
+        //     error => {
+        //         console.log(error);
+        //         this.componentState = "Error";
+        //       });
+        //   return data;
+        // });
         this.goodnessTrendValues = null;
         this.inner = {};
         this.inner.nonAtomicMetricInfo = "";
         this.currentNodeChildrenGuids = null;
         this.validDates = null;
     };
-    PerformanceComponent.prototype.getLastStatusUpdateTime = function () {
-        var _this = this;
-        this.apiService.get('/common/time_keeper/' + "last_status_update").subscribe(function (data) {
-            _this.lastStatusUpdateTime = data;
-        }, function (error) {
-            console.log(error);
-            _this.componentState = "Error";
-        });
-    };
-    PerformanceComponent.prototype.fetchJenkinsJobIdMap = function () {
-        var _this = this;
-        this.apiService.get('/regression/jenkins_job_id_maps').subscribe(function (data) {
-            _this.jenkinsJobIdMap = data;
-            _this.apiService.get('/regression/build_to_date_map').subscribe(function (data) {
-                _this.buildInfo = data;
-            }, function (error) {
-                console.log(error);
-                _this.componentState = "Error";
-            });
-        }, function (error) {
-            console.log(error);
-            _this.componentState = "Error";
-        });
-    };
-    PerformanceComponent.prototype.fetchRootMetricInfo = function (chartName, metricModelName) {
-        var _this = this;
-        var payload = { "metric_model_name": metricModelName, chart_name: chartName };
-        return this.apiService.post('/metrics/chart_info', payload).subscribe(function (data) {
-            return data;
-        }, function (error) {
-            console.log(error);
-            _this.componentState = "Error";
-        });
-    };
-    PerformanceComponent.prototype.populateNodeInfoCache = function (data) {
-        var _this = this;
-        if (!(data.metric_id in this.cachedNodeInfo)) {
-            this.cachedNodeInfo[data.metric_id] = data;
-        }
-        data.children_info.forEach(function (value, key) {
-            _this.cachedNodeInfo[key] = value;
-            value.children_info.forEach(function (v2, key2) {
-                _this.populateNodeInfoCache(v2);
-            });
-        });
-    };
-    PerformanceComponent.prototype.guid = function () {
-        function s4() {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
-        }
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-    };
-    PerformanceComponent.prototype.expandAllNodes = function () {
-        var _this = this;
-        this.flatNodes.forEach(function (node) {
-            _this.expandNode(node, true);
-        });
-        this.collapsedAll = false;
-        this.expandedAll = true;
-    };
-    PerformanceComponent.prototype.collapseAllNodes = function () {
-        this.collapseNode(this.flatNodes[0]);
-        this.expandedAll = false;
-        this.collapsedAll = true;
-    };
-    ;
-    PerformanceComponent.prototype.expandNode = function (node, all) {
-        var _this = this;
-        node.collapsed = false;
-        if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
-            var thisNode = node;
-            return this.fetchMetricInfoById(node).then(function (data) {
-                console.log("Fetching Metrics Info for node:" + node.metricId);
-                node.hide = false;
-                var childrenIds = JSON.parse(data.children);
-                return _this._insertNewNode(node, childrenIds, all, node.childrenFetched).then(function () {
-                    console.log("Inserted: " + node.chartName);
-                    node.childrenFetched = true;
-                    return null;
-                });
-            });
-        }
-        else {
-            return null;
-        }
-    };
-    PerformanceComponent.prototype.fetchMetricInfoById = function (node) {
-        var _this = this;
-        var thisNode = node;
-        var p1 = { metric_id: node.metricId };
-        if (node.metricId in this.cachedNodeInfo) {
-            return this.cachedNodeInfo[node.metricId];
-        }
-        return this.apiService.post('/metrics/metric_info', p1).subscribe(function (data) {
-            return data;
-        }, function (error) {
-            console.log(error);
-            _this.componentState = "Error";
-        });
-    };
-    PerformanceComponent.prototype.collapseNode = function (node) {
-        if (node.hasOwnProperty("numChildren")) {
-            // this.collapseBranch(node);
-        }
-        node.collapsed = true;
-    };
-    PerformanceComponent.prototype.collapseBranch = function (node, traversedNodes) {
-        var thisIndex = this.getIndex(node);
-        if (node.hasOwnProperty("numChildren")) {
-            this.hideChildren(node, true);
-        }
-        return traversedNodes;
-    };
-    PerformanceComponent.prototype.hideChildren = function (node, root) {
-        var totalHides = 0;
-        if (!node) {
-            return 0;
-        }
-        var thisIndex = this.getIndex(node);
-        if (node.hasOwnProperty("numChildren")) {
-            if (!node.childrenFetched) {
-                return 0;
-            }
-            var nextIndex = thisIndex + 1;
-            if ((nextIndex >= this.flatNodes.length) && (!node.collapsed)) {
-                console.log("Huh!");
-                return 0;
-            }
-            for (var i = 1; i <= node.numChildren && (nextIndex < this.flatNodes.length); i++) {
-                var hides = 0;
-                if (true) {
-                    hides += this.hideChildren(this.flatNodes[nextIndex], false);
-                }
-                this.flatNodes[nextIndex].collapsed = true;
-                this.flatNodes[nextIndex].hide = true;
-                totalHides += 1 + hides;
-                nextIndex += hides + 1;
-            }
-        }
-        return totalHides;
-    };
-    ;
-    PerformanceComponent.prototype._insertNewNode = function (node, childrenIds, all, alreadyInserted) {
-        var _this = this;
-        if (childrenIds.length <= 0) {
-            return;
-        }
-        var thisNode = node;
-        var thisAll = all;
-        var childId = childrenIds.pop();
-        var thisChildrenIds = childrenIds;
-        var p1 = { metric_id: childId };
-        if (!node.hasOwnProperty("childrenGuids")) {
-            node.childrenGuids = [];
-        }
-        return this.fetchMetricInfoById({ metricId: childId }).then(function (data) {
-            if (!alreadyInserted) {
-                console.log("!alreadyInserted");
-                return _this.getNodeFromData(data).then(function (newNode) {
-                    newNode.guid = _this.guid();
-                    thisNode.lineage.forEach(function (ancestor) {
-                        newNode.lineage.push(ancestor);
-                    });
-                    newNode.lineage.push(thisNode.guid);
-                    console.log("Added childGuid for node:" + node.chartName);
-                    node.childrenGuids.push(newNode.guid);
-                    newNode.indent = thisNode.indent + 1;
-                    var index = _this.getIndex(thisNode);
-                    _this.flatNodes.splice(index + 1, 0, newNode);
-                    _this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
-                    newNode.hide = false;
-                    if (thisAll) {
-                        _this.expandNode(newNode, thisAll);
-                    }
-                });
-            }
-            else {
-                console.log("alreadyInserted");
-                node.childrenGuids.forEach(function (childGuid) {
-                    var childNode = _this.flatNodes[_this.getIndex({ guid: childGuid })];
-                    //let childrenIds = JSON.parse(data.children);
-                    childNode.hide = false;
-                });
-                _this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
-            }
-            return null;
-        });
-    };
-    PerformanceComponent.prototype.getIndex = function (node) {
-        var index = this.flatNodes.map(function (x) { return x.guid; }).indexOf(node.guid);
-        return index;
-    };
-    PerformanceComponent.prototype.getNodeFromData = function (data) {
-        var _this = this;
-        var newNode = {
-            info: data.description,
-            label: data.chart_name,
-            collapsed: true,
-            metricId: data.metric_id,
-            hide: true,
-            leaf: data.leaf,
-            chartName: data.chart_name,
-            metricModelName: data.metric_model_name,
-            childrenWeights: JSON.parse(data.children_weights),
-            children: {},
-            lineage: [],
-            numChildDegrades: data.last_num_degrades,
-            positive: data.positive,
-            numChildrenPassed: data.num_children_passed,
-            numChildrenFailed: data.last_num_build_failed,
-            lastBuildStatus: data.last_build_status,
-            numLeaves: data.num_leaves,
-            childrenScoreMap: {},
-            status: false,
-            numChildren: null
-        };
-        this.metricMap[newNode.metricId] = { chartName: newNode.chartName };
-        if (newNode.info === "") {
-            newNode.info = "<p>Please update the description</p>";
-        }
-        var dateRange = this.getDateRange();
-        var fromDate = dateRange[0];
-        var toDate = dateRange[1];
-        return this.fetchScores(data.metric_id, fromDate.toISOString(), toDate.toISOString()).then(function (scoreData) {
-            newNode.childrenScoreMap = scoreData["children_score_map"];
-            _this.evaluateScores(newNode, scoreData["scores"]);
-            newNode.childrenWeights.forEach(function (info, childId) {
-                newNode.children[childId] = { weight: newNode.childrenWeights[childId], editing: false };
-            });
-            if (newNode.lastBuildStatus === "PASSED") {
-                newNode.status = true;
-            }
-            else {
-                newNode.status = false;
-            }
-            var newNodeChildrenIds = JSON.parse(data.children);
-            if (newNodeChildrenIds.length > 0) {
-                newNode.numChildren = newNodeChildrenIds.length;
-            }
-            return newNode;
-        });
-    };
-    PerformanceComponent.prototype.fetchScores = function (metricId, fromDate, toDate) {
-        var _this = this;
-        var payload = {};
-        payload["metric_id"] = metricId;
-        payload["date_range"] = [fromDate, toDate];
-        return this.apiService.post('/metrics/scores', payload).subscribe(function (data) {
-            return data;
-        }, function (error) {
-            console.log(error);
-            _this.componentState = "Error";
-        });
-    };
-    PerformanceComponent.prototype.getDateRange = function () {
-        var today = new Date();
-        console.log(today);
-        var startMonth = 4 - 1;
-        var startDay = 1;
-        var startMinute = 59;
-        var startHour = 23;
-        var startSecond = 1;
-        var fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
-        fromDate = this.getDateBound(fromDate, true);
-        var yesterday = this.getYesterday(today);
-        var toDate = new Date(yesterday);
-        toDate = this.getDateBound(toDate, false);
-        return [fromDate, toDate];
-    };
-    PerformanceComponent.prototype.getYesterday = function (today) {
-        var yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        return yesterday;
-    };
-    PerformanceComponent.prototype.getDateBound = function (dt, lower) {
-        var newDay = new Date(dt);
-        if (lower) {
-            newDay.setHours(0, 0, 1);
-        }
-        else {
-            newDay.setHours(23, 59, 59);
-        }
-        return newDay;
-    };
-    PerformanceComponent.prototype.evaluateScores = function (node, scores) {
-        var keys = Object.keys(scores);
-        var sortedKeys = keys.sort();
-        if (node.chartName === "Total") {
-            this.validDates = sortedKeys;
-        }
-        if (Object.keys(scores).length) {
-            var mostRecentDateTimestamp = sortedKeys.slice(-1)[0];
-            var mostRecentDate = new Date(mostRecentDateTimestamp);
-            console.log(mostRecentDate);
-            console.log(scores[mostRecentDateTimestamp].score);
-        }
-        var goodnessValues = [];
-        sortedKeys.forEach(function (key) {
-            goodnessValues.push(scores[key].score);
-        });
-        node.goodnessValues = goodnessValues;
-        try {
-            node.goodness = Number(goodnessValues[goodnessValues.length - 1].toFixed(1));
-        }
-        catch (e) {
-        }
-        node.childrenGoodnessMap = {};
-        node.trend = "flat";
-        if (goodnessValues.length > 1) {
-            var penultimateGoodness = Number(goodnessValues[goodnessValues.length - 2].toFixed(1));
-            if (penultimateGoodness > node.goodness) {
-                node.trend = "down";
-            }
-            else if (penultimateGoodness < node.goodness) {
-                node.trend = "up";
-            }
-            if (Number(goodnessValues[goodnessValues.length - 1].toFixed(1)) === 0) {
-                node.trend = "down";
-            }
-        }
-        console.log("Node: " + node.chartName + " Goodness: " + node.goodness);
-    };
+    //
+    // getLastStatusUpdateTime(): void {
+    //       this.apiService.get('/common/time_keeper/' + "last_status_update").subscribe((data) => {
+    //           this.lastStatusUpdateTime = data;
+    //       },
+    //         error => {
+    //           console.log(error);
+    //           this.componentState = "Error";
+    //         });
+    //   }
+    //
+    //   fetchJenkinsJobIdMap(): void {
+    //       this.apiService.get('/regression/jenkins_job_id_maps').subscribe((data) => {
+    //           this.jenkinsJobIdMap = data;
+    //           this.apiService.get('/regression/build_to_date_map').subscribe((data) => {
+    //               this.buildInfo = data;
+    //           },
+    //             error => {
+    //           console.log(error);
+    //           this.componentState = "Error";
+    //         });
+    //       },
+    //         error => {
+    //           console.log(error);
+    //           this.componentState = "Error";
+    //         });
+    //   }
+    //
+    //   fetchRootMetricInfo(chartName, metricModelName): any {
+    //       let payload = {"metric_model_name": metricModelName, chart_name: chartName};
+    //       return this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
+    //           return data;
+    //       },
+    //        error => {
+    //       console.log(error);
+    //       this.componentState = "Error";
+    //       });
+    //   }
+    //
+    //   populateNodeInfoCache(data): void {
+    //       if (!(data.metric_id in this.cachedNodeInfo)) {
+    //           this.cachedNodeInfo[data.metric_id] = data;
+    //       }
+    //       data.children_info.forEach((value, key) => {
+    //          this.cachedNodeInfo[key] = value;
+    //          value.children_info.forEach((v2, key2) => {
+    //              this.populateNodeInfoCache(v2);
+    //          });
+    //       });
+    //   }
+    //
+    //   guid(): any {
+    //     function s4() {
+    //       return Math.floor((1 + Math.random()) * 0x10000)
+    //         .toString(16)
+    //         .substring(1);
+    //     }
+    //     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+    //   }
+    //
+    //   expandAllNodes(): void {
+    //       this.flatNodes.forEach((node) => {
+    //           this.expandNode(node, true);
+    //       });
+    //       this.collapsedAll = false;
+    //       this.expandedAll = true;
+    //   }
+    //
+    //   collapseAllNodes(): void {
+    //       this.collapseNode(this.flatNodes[0]);
+    //       this.expandedAll = false;
+    //       this.collapsedAll = true;
+    //   };
+    //
+    // expandNode(node, all): any {
+    //       node.collapsed = false;
+    //       if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
+    //           let thisNode = node;
+    //           return this.fetchMetricInfoById(node).then((data) => {
+    //               console.log("Fetching Metrics Info for node:" + node.metricId);
+    //               node.hide = false;
+    //               let childrenIds = JSON.parse(data.children);
+    //               return this._insertNewNode(node, childrenIds, all, node.childrenFetched).then(() => {
+    //                   console.log("Inserted: " + node.chartName);
+    //                   node.childrenFetched = true;
+    //                   return null;
+    //               });
+    //
+    //           });
+    //       }
+    //       else {
+    //           return null;
+    //       }
+    //   }
+    //
+    //   fetchMetricInfoById(node): any {
+    //       let thisNode = node;
+    //       let p1 = {metric_id: node.metricId};
+    //       if (node.metricId in this.cachedNodeInfo) {
+    //           return this.cachedNodeInfo[node.metricId];
+    //       }
+    //       return this.apiService.post('/metrics/metric_info', p1).subscribe((data) => {
+    //          return data;
+    //       },
+    //         error => {
+    //           console.log(error);
+    //           this.componentState = "Error";
+    //         });
+    //   }
+    //
+    //   collapseNode(node): void {
+    //       if (node.hasOwnProperty("numChildren")) {
+    //           // this.collapseBranch(node);
+    //       }
+    //       node.collapsed = true;
+    //   }
+    //
+    //   collapseBranch(node, traversedNodes): any {
+    //       let thisIndex = this.getIndex(node);
+    //       if (node.hasOwnProperty("numChildren")) {
+    //           this.hideChildren(node, true);
+    //       }
+    //       return traversedNodes;
+    //   }
+    //
+    //   hideChildren(node, root): any {
+    //       let totalHides = 0;
+    //       if (!node) {
+    //           return 0;
+    //       }
+    //       let thisIndex = this.getIndex(node);
+    //
+    //       if (node.hasOwnProperty("numChildren")) {
+    //           if (!node.childrenFetched) {
+    //               return 0;
+    //           }
+    //
+    //           let nextIndex = thisIndex + 1;
+    //           if ((nextIndex >= this.flatNodes.length) && (!node.collapsed)) {
+    //               console.log("Huh!");
+    //               return 0;
+    //           }
+    //           for(let i = 1; i <= node.numChildren  && (nextIndex < this.flatNodes.length); i++) {
+    //               let hides = 0;
+    //               if (true) {
+    //                   hides += this.hideChildren(this.flatNodes[nextIndex], false);
+    //               }
+    //
+    //               this.flatNodes[nextIndex].collapsed = true;
+    //               this.flatNodes[nextIndex].hide = true;
+    //               totalHides += 1 + hides;
+    //               nextIndex += hides + 1;
+    //
+    //           }
+    //       }
+    //       return totalHides;
+    //   };
+    //
+    //   _insertNewNode(node, childrenIds, all, alreadyInserted): any {
+    //       if (childrenIds.length <= 0) {
+    //           return;
+    //       }
+    //       let thisNode = node;
+    //       let thisAll = all;
+    //       let childId = childrenIds.pop();
+    //       let thisChildrenIds = childrenIds;
+    //       let p1 = {metric_id: childId};
+    //       if (!node.hasOwnProperty("childrenGuids")) {
+    //           node.childrenGuids = [];
+    //       }
+    //
+    //       return this.fetchMetricInfoById({metricId: childId}).then((data) => {
+    //           if (!alreadyInserted) {
+    //               console.log("!alreadyInserted");
+    //               return this.getNodeFromData(data).then((newNode) => {
+    //                   newNode.guid = this.guid();
+    //                   thisNode.lineage.forEach((ancestor) => {
+    //                      newNode.lineage.push(ancestor);
+    //                   });
+    //                   newNode.lineage.push(thisNode.guid);
+    //                   console.log("Added childGuid for node:" + node.chartName);
+    //                   node.childrenGuids.push(newNode.guid);
+    //
+    //                   newNode.indent = thisNode.indent + 1;
+    //                   let index = this.getIndex(thisNode);
+    //                   this.flatNodes.splice(index + 1, 0, newNode);
+    //                   this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
+    //                   newNode.hide = false;
+    //                   if (thisAll) {
+    //                       this.expandNode(newNode, thisAll);
+    //                   }
+    //               });
+    //
+    //           } else {
+    //               console.log("alreadyInserted");
+    //               node.childrenGuids.forEach((childGuid) => {
+    //                  let childNode = this.flatNodes[this.getIndex({guid: childGuid})];
+    //                  //let childrenIds = JSON.parse(data.children);
+    //                  childNode.hide = false;
+    //
+    //               });
+    //
+    //               this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
+    //           }
+    //           return null;
+    //       });
+    //   }
+    //
+    //   getIndex(node): any {
+    //       let index = this.flatNodes.map(function(x) {return x.guid;}).indexOf(node.guid);
+    //       return index;
+    //   }
+    //
+    //   getNodeFromData(data): any {
+    //       let newNode = {
+    //           info: data.description,
+    //           label: data.chart_name,
+    //           collapsed: true,
+    //           metricId: data.metric_id,
+    //           hide: true,
+    //           leaf: data.leaf,
+    //           chartName: data.chart_name,
+    //           metricModelName: data.metric_model_name,
+    //           childrenWeights: JSON.parse(data.children_weights),
+    //           children: {},
+    //           lineage: [],
+    //           numChildDegrades: data.last_num_degrades,
+    //           positive: data.positive,
+    //           numChildrenPassed: data.num_children_passed,
+    //           numChildrenFailed: data.last_num_build_failed,
+    //           lastBuildStatus: data.last_build_status,
+    //           numLeaves: data.num_leaves,
+    //           childrenScoreMap: {},
+    //           status: false,
+    //           numChildren: null
+    //
+    //       };
+    //       this.metricMap[newNode.metricId] = {chartName: newNode.chartName};
+    //       if (newNode.info === "") {
+    //           newNode.info = "<p>Please update the description</p>";
+    //       }
+    //
+    //       let dateRange = this.getDateRange();
+    //       let fromDate = dateRange[0];
+    //       let toDate = dateRange[1];
+    //       return this.fetchScores(data.metric_id, fromDate.toISOString(), toDate.toISOString()).then((scoreData) => {
+    //           newNode.childrenScoreMap = scoreData["children_score_map"];
+    //           this.evaluateScores(newNode, scoreData["scores"]);
+    //           newNode.childrenWeights.forEach((info, childId) => {
+    //               newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
+    //           });
+    //
+    //           if (newNode.lastBuildStatus === "PASSED") {
+    //               newNode.status = true;
+    //           } else {
+    //               newNode.status = false;
+    //           }
+    //
+    //           let newNodeChildrenIds = JSON.parse(data.children);
+    //           if (newNodeChildrenIds.length > 0) {
+    //               newNode.numChildren = newNodeChildrenIds.length;
+    //           }
+    //           return newNode;
+    //       });
+    //   }
+    //
+    //   fetchScores(metricId, fromDate, toDate): any {
+    //       let payload = {};
+    //       payload["metric_id"] = metricId;
+    //       payload["date_range"] = [fromDate, toDate];
+    //       return this.apiService.post('/metrics/scores', payload).subscribe((data) => {
+    //           return data;
+    //       },
+    //         error => {
+    //           console.log(error);
+    //           this.componentState = "Error";
+    //         });
+    //   }
+    //
+    //   getDateRange(): any {
+    //       let today = new Date();
+    //       console.log(today);
+    //       let startMonth = 4 - 1;
+    //       let startDay = 1;
+    //       let startMinute = 59;
+    //       let startHour = 23;
+    //       let startSecond = 1;
+    //       let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
+    //       fromDate = this.getDateBound(fromDate, true);
+    //
+    //       let yesterday = this.getYesterday(today);
+    //       let toDate = new Date(yesterday);
+    //       toDate = this.getDateBound(toDate, false);
+    //       return [fromDate, toDate];
+    //   }
+    //
+    //   getYesterday(today): any {
+    //       let yesterday = new Date(today);
+    //       yesterday.setDate(yesterday.getDate() - 1);
+    //       return yesterday;
+    //   }
+    //
+    //   getDateBound(dt, lower): any {
+    //       let newDay = new Date(dt);
+    //       if (lower) {
+    //           newDay.setHours(0, 0, 1);
+    //       } else {
+    //           newDay.setHours(23, 59, 59);
+    //       }
+    //       return newDay;
+    //   }
+    //
+    //   evaluateScores(node, scores): void {
+    //
+    //       let keys = Object.keys(scores);
+    //       let sortedKeys = keys.sort();
+    //       if (node.chartName === "Total") {
+    //           this.validDates = sortedKeys;
+    //       }
+    //
+    //       if (Object.keys(scores).length) {
+    //           let mostRecentDateTimestamp = sortedKeys.slice(-1)[0];
+    //           let mostRecentDate = new Date(mostRecentDateTimestamp);
+    //           console.log(mostRecentDate);
+    //           console.log(scores[mostRecentDateTimestamp].score);
+    //       }
+    //       let goodnessValues = [];
+    //       sortedKeys.forEach((key) => {
+    //           goodnessValues.push(scores[key].score);
+    //       });
+    //
+    //       node.goodnessValues = goodnessValues;
+    //       try {
+    //               node.goodness = Number(goodnessValues[goodnessValues.length - 1].toFixed(1));
+    //       } catch (e) {
+    //
+    //       }
+    //
+    //       node.childrenGoodnessMap = {};
+    //       node.trend = "flat";
+    //       if (goodnessValues.length > 1) {
+    //           let penultimateGoodness = Number(goodnessValues[goodnessValues.length - 2].toFixed(1));
+    //           if (penultimateGoodness > node.goodness) {
+    //               node.trend = "down";
+    //           } else if (penultimateGoodness < node.goodness) {
+    //               node.trend = "up";
+    //           }
+    //           if (Number(goodnessValues[goodnessValues.length - 1].toFixed(1)) === 0) {
+    //               node.trend = "down";
+    //           }
+    //       }
+    //       console.log("Node: " + node.chartName + " Goodness: " + node.goodness);
+    //   }
     PerformanceComponent.prototype.doSomething1 = function () {
         var _this = this;
         console.log("Doing Something1");
@@ -1503,7 +1814,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  test works!\n\n</p>\n<div class=\"jumbotron text-center\">\n  <h1>My First Bootstrap Page</h1>\n  <p>Resize this responsive page to see the effect!</p>\n</div>\n\n<div class=\"container\">\n  <div class=\"row\">\n    <div class=\"col-sm-4\">\n      <h3>Column 1</h3>\n      <p>Lorem ipsum dolor..</p>\n      <p>Ut enim ad..</p>\n    </div>\n    <div class=\"col-sm-4\">\n      <h3>Column 2</h3>\n      <p>Lorem ipsum dolor..</p>\n      <p>Ut enim ad..</p>\n    </div>\n    <div class=\"col-sm-4\">\n      <h3>Column 3</h3>\n      <p>Lorem ipsum dolor..</p>\n      <p>Ut enim ad..</p>\n    </div>\n  </div>\n</div>\n\n<ul class=\"list-group\">\n  <li class=\"list-group-item active\">Active item</li>\n  <li class=\"list-group-item\">Second item</li>\n  <li class=\"list-group-item\">Third item</li>\n</ul>\n\n<div class=\"container\">\n  <h2>Card Image</h2>\n  <p>Image at the top (card-img-top):</p>\n  <div class=\"card\" style=\"width:400px\">\n    <img class=\"card-img-top\" src=\"https://www.w3schools.com/bootstrap4/img_avatar1.png\" alt=\"Card image\" style=\"width:100%\">\n    <div class=\"card-body\">\n      <h4 class=\"card-title\">John Doe</h4>\n      <p class=\"card-text\">Some example text some example text. John Doe is an architect and engineer</p>\n      <a href=\"#\" class=\"btn btn-primary\">See Profile</a>\n    </div>\n  </div>\n  <br>\n\n  <p>Image at the bottom (card-img-bottom):</p>\n  <div class=\"card\" style=\"width:400px\">\n    <div class=\"card-body\">\n      <h4 class=\"card-title\">Jane Doe</h4>\n      <p class=\"card-text\">Some example text some example text. Jane Doe is an architect and engineer</p>\n      <a href=\"#\" class=\"btn btn-primary\">See Profile</a>\n    </div>\n    <img class=\"card-img-bottom\" src=\"img_avatar6.png\" alt=\"Card image\" style=\"width:100%\">\n  </div>\n</div>\n"
+module.exports = "<!--<p>-->\n  <!--test works!-->\n\n<!--</p>-->\n<!--<div class=\"jumbotron text-center\">-->\n  <!--<h1>My First Bootstrap Page</h1>-->\n  <!--<p>Resize this responsive page to see the effect!</p>-->\n<!--</div>-->\n\n<!--<div class=\"container\">-->\n  <!--<div class=\"row\">-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 1</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 2</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 3</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n  <!--</div>-->\n<!--</div>-->\n\n<!--<ul class=\"list-group\">-->\n  <!--<li class=\"list-group-item active\">Active item</li>-->\n  <!--<li class=\"list-group-item\">Second item</li>-->\n  <!--<li class=\"list-group-item\">Third item</li>-->\n<!--</ul>-->\n\n<!--<div class=\"container\">-->\n  <!--<h2>Card Image</h2>-->\n  <!--<p>Image at the top (card-img-top):</p>-->\n  <!--<div class=\"card\" style=\"width:400px\">-->\n    <!--<img class=\"card-img-top\" src=\"https://www.w3schools.com/bootstrap4/img_avatar1.png\" alt=\"Card image\" style=\"width:100%\">-->\n    <!--<div class=\"card-body\">-->\n      <!--<h4 class=\"card-title\">John Doe</h4>-->\n      <!--<p class=\"card-text\">Some example text some example text. John Doe is an architect and engineer</p>-->\n      <!--<a href=\"#\" class=\"btn btn-primary\">See Profile</a>-->\n    <!--</div>-->\n  <!--</div>-->\n  <!--<br>-->\n\n  <!--<p>Image at the bottom (card-img-bottom):</p>-->\n  <!--<div class=\"card\" style=\"width:400px\">-->\n    <!--<div class=\"card-body\">-->\n      <!--<h4 class=\"card-title\">Jane Doe</h4>-->\n      <!--<p class=\"card-text\">Some example text some example text. Jane Doe is an architect and engineer</p>-->\n      <!--<a href=\"#\" class=\"btn btn-primary\">See Profile</a>-->\n    <!--</div>-->\n    <!--<img class=\"card-img-bottom\" src=\"img_avatar6.png\" alt=\"Card image\" style=\"width:100%\">-->\n  <!--</div>-->\n<!--</div>-->\n<fun-chart [yValues]=\"yValues\" [xValues]=\"xValues\" [title]=\"title\" [xAxisLabel]=\"xAxisLabel\" [yAxisLabel]=\"yAxisLabel\"></fun-chart>\n"
 
 /***/ }),
 
@@ -1530,8 +1841,23 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 var TestComponent = /** @class */ (function () {
     function TestComponent() {
+        this.yValues = [];
+        this.xValues = [];
     }
     TestComponent.prototype.ngOnInit = function () {
+        var temp = [];
+        temp["name"] = 'series 1';
+        temp["data"] = [1, 2, 3, 4, 5];
+        this.yValues[0] = temp;
+        // this.yValues.push({ name: 'series 1', data: [1,2,3,4,5]});
+        // this.yValues.push({ name: 'series 2', data: [6,7,8,9,10]});
+        // this.yValues.push({ name: 'series 3', data: [11,12,13,14,15]});
+        // this.yValues.push({ name: 'series 4', data: [16,17,18,19,20]});
+        // this.yValues.push({ name: 'series 5', data: [21,22,23,24,25]});
+        this.xValues.push([0, 1, 2, 3, 4]);
+        this.title = "Funchart";
+        this.xAxisLabel = "Date";
+        this.yAxisLabel = "Range";
     };
     TestComponent = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
