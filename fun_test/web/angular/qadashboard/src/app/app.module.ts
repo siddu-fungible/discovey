@@ -15,6 +15,7 @@ import { TestComponent } from './test/test.component';
 import { FunTableFilterPipe } from './pipe/fun-table-filter.pipe';
 import { ChartModule } from 'angular-highcharts';
 import { ChartComponent } from './chart/chart.component';
+import { FunChartComponent } from './fun-chart/fun-chart.component';
 
 
 @NgModule({
@@ -25,7 +26,8 @@ import { ChartComponent } from './chart/chart.component';
     FunTableComponent,
     TestComponent,
     FunTableFilterPipe,
-    ChartComponent
+    ChartComponent,
+    FunChartComponent
   ],
   imports: [
     BrowserModule,

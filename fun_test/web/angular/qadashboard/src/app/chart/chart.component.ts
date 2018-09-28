@@ -3,7 +3,7 @@ import { Chart } from 'angular-highcharts';
 import { ApiService} from "../services/api/api.service";
 
 @Component({
-  selector: 'fun-chart',
+  selector: 'app-fun-chart',
   template: `
     <button (click)="add()">Add Point!</button>
     <div [chart]="chart"></div>
