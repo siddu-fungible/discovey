@@ -18,7 +18,7 @@ from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
-start_month = 4
+start_month = 6
 start_day = 1
 minute = 59
 hour = 23
