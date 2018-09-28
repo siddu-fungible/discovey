@@ -25,13 +25,13 @@
       <!-- items being paged -->
       <table class="table" matSort (matSortChange)="sortData($event)">
         <tr>
-            <th *ngFor="let header of filteredHeaders(headerIndexMap)" mat-sort-header="{{headers.indexOf(header)}}">{{ r() }}</th>
+            <th *ngFor="let header of filtered(headers)" mat-sort-header="{{headers.indexOf(header)}}">{{ header }}</th>
           <!--<th *ngFor="let header of headers" mat-sort-header="{{headers.indexOf(header)}}">{{ header }}</th>-->
           <!-- th *ngFor="let key of headerIndexMap.keys()" >{{ headers[key] }}</th-->
         </tr>
         <tr *ngFor="let item of pagedItems">
-            <!--<td *ngFor="let rowItems of filteredRows(item)">{{rowItems}}</td>-->
-          <td *ngFor="let rowItems of item">{{rowItems}}</td>
+            <td *ngFor="let rowItems of filtered(item)">{{rowItems}}</td>
+          <!--<td *ngFor="let rowItems of item">{{rowItems}}</td>-->
         </tr>
       </table>
       <a id="advancedLink" (click)="editColumns()">Advanced</a>

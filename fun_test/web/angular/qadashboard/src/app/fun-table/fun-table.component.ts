@@ -136,21 +136,21 @@ export class FunTableComponent implements OnInit {
     // this.headers = newHeaders;
     // // this.setPage(1);
     this.headerIndexMap.set(this.headers.indexOf(header), !this.headerIndexMap.get(this.headers.indexOf(header)));
-    this.filteredHeaders(this.headerIndexMap);
+    // this.filtered(this.headers);
     // this.changeDetector.detectChanges();
   }
 
-  filteredHeaders(indexMap) {
-    console.log("filtered header");
-    return this.headers.filter(item => {
-            if(this.headers.indexOf(item) < indexMap.size && indexMap.get(this.headers.indexOf(item))) {
-              return true;
-            }
-            return false;
-        });
-  }
+  // filteredHeaders(indexMap) {
+  //   console.log("filtered header");
+  //   return this.headers.filter(item => {
+  //           if(this.headers.indexOf(item) < indexMap.size && indexMap.get(this.headers.indexOf(item))) {
+  //             return true;
+  //           }
+  //           return false;
+  //       });
+  // }
 
-  filteredRows(item) {
+  filtered(item) {
     return item.filter(oldItem => {
             if(item.indexOf(oldItem) < this.headerIndexMap.size && this.headerIndexMap.get(item.indexOf(oldItem))) {
               return true;

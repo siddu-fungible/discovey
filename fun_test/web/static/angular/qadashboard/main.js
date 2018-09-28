@@ -292,7 +292,7 @@ var ChartComponent = /** @class */ (function () {
         });
     }
     ChartComponent.prototype.ngOnInit = function () {
-        this.doSomething1();
+        // this.doSomething1();
     };
     ChartComponent.prototype.doSomething1 = function () {
         var _this = this;
@@ -425,7 +425,7 @@ module.exports = ".tableContainer {\n  margin: 5px;\n  padding: 5px;\n}\n/*.swit
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  table works!\n</p>\n<div class=\"card tableContainer\">\n  <div>\n    <div>\n      <!-- pager -->\n      <div id=\"pageDiv\" *ngIf=\"pager.pages && pager.pages.length\">\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(1)\">First </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(pager.currentPage - 1)\">Previous </a>\n        </span>\n        <span *ngFor=\"let page of pager.pages\" [ngClass]=\"{active:pager.currentPage === page}\">\n          <a (click)=\"setPage(page)\">{{page}} </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.currentPage + 1)\">Next </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.totalPages)\">Last </a>\n        </span>\n      </div>\n      <!-- items being paged -->\n      <table class=\"table\" matSort (matSortChange)=\"sortData($event)\">\n        <tr>\n            <th *ngFor=\"let header of filteredHeaders(headerIndexMap)\" mat-sort-header=\"{{headers.indexOf(header)}}\">{{ r() }}</th>\n          <!--<th *ngFor=\"let header of headers\" mat-sort-header=\"{{headers.indexOf(header)}}\">{{ header }}</th>-->\n          <!-- th *ngFor=\"let key of headerIndexMap.keys()\" >{{ headers[key] }}</th-->\n        </tr>\n        <tr *ngFor=\"let item of pagedItems\">\n            <!--<td *ngFor=\"let rowItems of filteredRows(item)\">{{rowItems}}</td>-->\n          <td *ngFor=\"let rowItems of item\">{{rowItems}}</td>\n        </tr>\n      </table>\n      <a id=\"advancedLink\" (click)=\"editColumns()\">Advanced</a>\n    </div>\n  </div>\n\n  <div *ngIf=\"hideShowColumns\">\n    <div class=\"panel panel-default\">\n      <div class=\"panel-heading\">Columns</div>\n      <div class=\"panel-body\" style=\"vertical-align: center;\">\n          <table>\n            <tr *ngFor=\"let header of headers\">\n              <td>\n               <label>\n                 {{header}}\n               </label>\n              </td>\n              <td style=\"padding: 10px; margin: 5px;\">\n                <label class=\"switch\">\n          <input type=\"checkbox\" [checked]=\"headerIndexMap.get(headers.indexOf(header))\" (change)=\"setHeaders(header)\" class=\"switch\" data-toggle=\"toggle\" >\n          <span class=\"slider round\"></span>\n        </label>\n              </td>\n            </tr>\n          </table>\n\n      </div>\n    </div>\n    <button (click)=\"editColumns()\" style=\"margin: 5px;\">Close</button>\n  </div>\n</div>\n"
+module.exports = "<p>\n  table works!\n</p>\n<div class=\"card tableContainer\">\n  <div>\n    <div>\n      <!-- pager -->\n      <div id=\"pageDiv\" *ngIf=\"pager.pages && pager.pages.length\">\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(1)\">First </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(pager.currentPage - 1)\">Previous </a>\n        </span>\n        <span *ngFor=\"let page of pager.pages\" [ngClass]=\"{active:pager.currentPage === page}\">\n          <a (click)=\"setPage(page)\">{{page}} </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.currentPage + 1)\">Next </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.totalPages)\">Last </a>\n        </span>\n      </div>\n      <!-- items being paged -->\n      <table class=\"table\" matSort (matSortChange)=\"sortData($event)\">\n        <tr>\n            <th *ngFor=\"let header of filtered(headers)\" mat-sort-header=\"{{headers.indexOf(header)}}\">{{ header }}</th>\n          <!--<th *ngFor=\"let header of headers\" mat-sort-header=\"{{headers.indexOf(header)}}\">{{ header }}</th>-->\n          <!-- th *ngFor=\"let key of headerIndexMap.keys()\" >{{ headers[key] }}</th-->\n        </tr>\n        <tr *ngFor=\"let item of pagedItems\">\n            <td *ngFor=\"let rowItems of filtered(item)\">{{rowItems}}</td>\n          <!--<td *ngFor=\"let rowItems of item\">{{rowItems}}</td>-->\n        </tr>\n      </table>\n      <a id=\"advancedLink\" (click)=\"editColumns()\">Advanced</a>\n    </div>\n  </div>\n\n  <div *ngIf=\"hideShowColumns\">\n    <div class=\"panel panel-default\">\n      <div class=\"panel-heading\">Columns</div>\n      <div class=\"panel-body\" style=\"vertical-align: center;\">\n          <table>\n            <tr *ngFor=\"let header of headers\">\n              <td>\n               <label>\n                 {{header}}\n               </label>\n              </td>\n              <td style=\"padding: 10px; margin: 5px;\">\n                <label class=\"switch\">\n          <input type=\"checkbox\" [checked]=\"headerIndexMap.get(headers.indexOf(header))\" (change)=\"setHeaders(header)\" class=\"switch\" data-toggle=\"toggle\" >\n          <span class=\"slider round\"></span>\n        </label>\n              </td>\n            </tr>\n          </table>\n\n      </div>\n    </div>\n    <button (click)=\"editColumns()\" style=\"margin: 5px;\">Close</button>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -601,20 +601,19 @@ var FunTableComponent = /** @class */ (function () {
         // this.headers = newHeaders;
         // // this.setPage(1);
         this.headerIndexMap.set(this.headers.indexOf(header), !this.headerIndexMap.get(this.headers.indexOf(header)));
-        this.filteredHeaders(this.headerIndexMap);
+        // this.filtered(this.headers);
         // this.changeDetector.detectChanges();
     };
-    FunTableComponent.prototype.filteredHeaders = function (indexMap) {
-        var _this = this;
-        console.log("filtered header");
-        return this.headers.filter(function (item) {
-            if (_this.headers.indexOf(item) < indexMap.size && indexMap.get(_this.headers.indexOf(item))) {
-                return true;
-            }
-            return false;
-        });
-    };
-    FunTableComponent.prototype.filteredRows = function (item) {
+    // filteredHeaders(indexMap) {
+    //   console.log("filtered header");
+    //   return this.headers.filter(item => {
+    //           if(this.headers.indexOf(item) < indexMap.size && indexMap.get(this.headers.indexOf(item))) {
+    //             return true;
+    //           }
+    //           return false;
+    //       });
+    // }
+    FunTableComponent.prototype.filtered = function (item) {
         var _this = this;
         return item.filter(function (oldItem) {
             if (item.indexOf(oldItem) < _this.headerIndexMap.size && _this.headerIndexMap.get(item.indexOf(oldItem))) {
@@ -697,7 +696,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  performance works!\n</p>\n<!--<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table>-->\n<li *ngFor='let in of counter(50) ;let i = index'>{{i}}\n  <fun-chart></fun-chart>\n</li>\n\n\n"
+module.exports = "<p>\n  performance works!\n</p>\n<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table>\n<!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->\n  <!--<fun-chart></fun-chart>-->\n<!--</li>-->\n\n\n"
 
 /***/ }),
 
