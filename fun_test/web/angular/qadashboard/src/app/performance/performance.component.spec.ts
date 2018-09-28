@@ -1,6 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PerformanceComponent } from './performance.component';
+import {FunTableComponent} from "../fun-table/fun-table.component";
+import {MatSortModule} from '@angular/material';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {HttpClient, HttpHandler} from "@angular/common/http";
 import {Observable, of, throwError} from "rxjs";
 import {catchError, map} from "rxjs/operators";
@@ -20,9 +23,11 @@ describe('PerformanceComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PerformanceComponent ],
-      providers: [HttpClient, HttpHandler, LoggerService],
-
+      declarations: [ PerformanceComponent,
+                      FunTableComponent],
+      imports: [MatSortModule,
+      BrowserAnimationsModule],
+      providers: [HttpClient, HttpHandler, LoggerService]
     })
     .compileComponents();
   }));

@@ -2,8 +2,11 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { DashboardComponent } from './dashboard.component';
 import { PerformanceComponent } from "../performance/performance.component";
-import { TestComponent } from "../test/test.component";
+import {FunTableComponent} from "../fun-table/fun-table.component";
 import {HttpClient, HttpHandler} from "@angular/common/http";
+import {MatSortModule} from '@angular/material';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import { TestComponent } from "../test/test.component";
 import {LoggerService} from "../services/logger/logger.service";
 
 describe('DashboardComponent', () => {
@@ -12,7 +15,8 @@ describe('DashboardComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DashboardComponent, PerformanceComponent, TestComponent],
+      declarations: [ DashboardComponent, PerformanceComponent, TestComponent, FunTableComponent],
+      imports: [MatSortModule, BrowserAnimationsModule],
       providers: [HttpClient, HttpHandler, LoggerService]
     })
     .compileComponents();

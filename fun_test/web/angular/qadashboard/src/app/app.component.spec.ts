@@ -2,11 +2,19 @@ import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { RouterTestingModule } from '@angular/router/testing'
 import { PerformanceComponent} from "./performance/performance.component";
+import { FunTableComponent } from './fun-table/fun-table.component';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+
+import {MatSortModule} from '@angular/material';
+import { BrowserModule } from '@angular/platform-browser';
 
 describe('AppComponent', () => {
   beforeEach(() => { TestBed.configureTestingModule(
-    { declarations: [ AppComponent ],
-      imports: [ RouterTestingModule ]
+    { declarations: [ AppComponent ,
+      PerformanceComponent,
+      FunTableComponent],
+      imports: [ RouterTestingModule, MatSortModule,
+      BrowserAnimationsModule]
     })});
 
 
@@ -16,6 +24,9 @@ describe('AppComponent', () => {
         AppComponent,
         PerformanceComponent
       ],
+      imports: [
+        BrowserModule
+      ]
     }).compileComponents();
   }));
   it('should create the app', async(() => {
