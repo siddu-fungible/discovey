@@ -152,12 +152,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./services/api/api.service */ "./src/app/services/api/api.service.ts");
 /* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
 /* harmony import */ var _test_test_component__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./test/test.component */ "./src/app/test/test.component.ts");
+/* harmony import */ var _pipe_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./pipe/fun-table-filter.pipe */ "./src/app/pipe/fun-table-filter.pipe.ts");
+/* harmony import */ var angular_highcharts__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! angular-highcharts */ "./node_modules/angular-highcharts/angular-highcharts.es5.js");
+/* harmony import */ var _chart_chart_component__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./chart/chart.component */ "./src/app/chart/chart.component.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
+
+
 
 
 
@@ -181,20 +187,157 @@ var AppModule = /** @class */ (function () {
                 _dashboard_dashboard_component__WEBPACK_IMPORTED_MODULE_5__["DashboardComponent"],
                 _performance_performance_component__WEBPACK_IMPORTED_MODULE_7__["PerformanceComponent"],
                 _fun_table_fun_table_component__WEBPACK_IMPORTED_MODULE_9__["FunTableComponent"],
-                _test_test_component__WEBPACK_IMPORTED_MODULE_12__["TestComponent"]
+                _test_test_component__WEBPACK_IMPORTED_MODULE_12__["TestComponent"],
+                _pipe_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__["FunTableFilterPipe"],
+                _chart_chart_component__WEBPACK_IMPORTED_MODULE_15__["ChartComponent"]
             ],
             imports: [
                 _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
                 _angular_common_http__WEBPACK_IMPORTED_MODULE_8__["HttpClientModule"],
                 _app_routing_module__WEBPACK_IMPORTED_MODULE_6__["AppRoutingModule"],
                 _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_3__["BrowserAnimationsModule"],
-                _angular_material__WEBPACK_IMPORTED_MODULE_2__["MatSortModule"]
+                _angular_material__WEBPACK_IMPORTED_MODULE_2__["MatSortModule"],
+                angular_highcharts__WEBPACK_IMPORTED_MODULE_14__["ChartModule"]
             ],
             providers: [_services_api_api_service__WEBPACK_IMPORTED_MODULE_10__["ApiService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__["LoggerService"]],
             bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_4__["AppComponent"]]
         })
     ], AppModule);
     return AppModule;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/chart/chart.component.ts":
+/*!******************************************!*\
+  !*** ./src/app/chart/chart.component.ts ***!
+  \******************************************/
+/*! exports provided: ChartComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ChartComponent", function() { return ChartComponent; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+/* harmony import */ var angular_highcharts__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! angular-highcharts */ "./node_modules/angular-highcharts/angular-highcharts.es5.js");
+/* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/api/api.service */ "./src/app/services/api/api.service.ts");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+
+
+
+var ChartComponent = /** @class */ (function () {
+    function ChartComponent(apiService) {
+        this.apiService = apiService;
+        this.chart = new angular_highcharts__WEBPACK_IMPORTED_MODULE_1__["Chart"]({
+            chart: {
+                type: 'line'
+            },
+            title: {
+                text: 'Linechart'
+            },
+            credits: {
+                enabled: false
+            },
+            series: [
+                {
+                    name: 'Line 1',
+                    data: [1, 2, 3]
+                }
+            ]
+        });
+    }
+    ChartComponent.prototype.ngOnInit = function () {
+        this.doSomething1();
+    };
+    ChartComponent.prototype.doSomething1 = function () {
+        var _this = this;
+        console.log("Doing Something1");
+        var payload = { "metric_id": 122, "date_range": ["2018-04-01T07:00:01.000Z", "2018-09-13T06:59:59.765Z"] };
+        this.apiService.post('/metrics/scores', payload).subscribe(function (response) {
+            console.log(response.data);
+            _this.delay(1000);
+        }, function (error) {
+            console.log(error);
+            _this.delay(1000);
+        });
+    };
+    ChartComponent.prototype.delay = function (ms) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(function () { return resolve(); }, ms); }).then(function () {
+                            _this.add();
+                            _this.doSomething1();
+                            console.log("fired");
+                        })];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ChartComponent.prototype.r = function () {
+        return Math.random();
+    };
+    // add point to chart serie
+    ChartComponent.prototype.add = function () {
+        this.chart.addPoint(Math.floor(Math.random() * 10));
+    };
+    ChartComponent = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
+            selector: 'fun-chart',
+            template: "\n    <button (click)=\"add()\">Add Point!</button>\n    <div [chart]=\"chart\"></div>\n  "
+        }),
+        __metadata("design:paramtypes", [_services_api_api_service__WEBPACK_IMPORTED_MODULE_2__["ApiService"]])
+    ], ChartComponent);
+    return ChartComponent;
 }());
 
 
@@ -271,7 +414,7 @@ var DashboardComponent = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = ".tableContainer {\n  margin: 5px;\n  padding: 5px;\n}\n.switch {\n  position: relative;\n  display: inline-block;\n  width: 40px;\n  height: 20px;\n}\n.switch input {display:none;}\n.slider {\n  position: absolute;\n  cursor: pointer;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background-color: #ccc;\n  transition: .4s;\n}\n.slider:before {\n  position: absolute;\n  content: \"\";\n  height: 20px;\n  width: 20px;\n  background-color: white;\n  transition: .4s;\n}\ninput:checked + .slider {\n  background-color: #2196F3;\n}\ninput:focus + .slider {\n  box-shadow: 0 0 1px #2196F3;\n}\ninput:checked + .slider:before {\n  -webkit-transform: translateX(26px);\n  transform: translateX(26px);\n}\n/* Rounded sliders */\n.slider.round {\n  border-radius: 20px;\n}\n.slider.round:before {\n  border-radius: 50%;\n}\n"
+module.exports = ".tableContainer {\n  margin: 5px;\n  padding: 5px;\n}\n/*.switch {*/\n/*position: relative;*/\n/*display: inline-block;*/\n/*width: 40px;*/\n/*height: 20px;*/\n/*}*/\n/*.switch input {display:none;}*/\n/*.slider {*/\n/*position: absolute;*/\n/*cursor: pointer;*/\n/*top: 0;*/\n/*left: 0;*/\n/*right: 0;*/\n/*bottom: 0;*/\n/*background-color: #ccc;*/\n/*-webkit-transition: .4s;*/\n/*transition: .4s;*/\n/*}*/\n/*.slider:before {*/\n/*position: absolute;*/\n/*content: \"\";*/\n/*height: 20px;*/\n/*width: 20px;*/\n/*background-color: white;*/\n/*-webkit-transition: .4s;*/\n/*transition: .4s;*/\n/*}*/\n/*input:checked + .slider {*/\n/*background-color: #2196F3;*/\n/*}*/\n/*input:focus + .slider {*/\n/*box-shadow: 0 0 1px #2196F3;*/\n/*}*/\n/*input:checked + .slider:before {*/\n/*-webkit-transform: translateX(26px);*/\n/*-ms-transform: translateX(26px);*/\n/*transform: translateX(26px);*/\n/*}*/\n/*!* Rounded sliders *!*/\n/*.slider.round {*/\n/*border-radius: 20px;*/\n/*}*/\n/*.slider.round:before {*/\n/*border-radius: 50%;*/\n/*}*/\n.fake-link {\n    color: blue;\n    text-decoration: underline;\n    cursor: pointer;\n}\na {\n  cursor: pointer;\n}\n#pageDiv {\n  float: right;\n  padding: 10px;\n}\n#advancedLink {\n  margin: 5px;\n}\n/*.switch {*/\n/*width: 40px;*/\n/*margin: 5px;*/\n/*}*/\n/*.slider {*/\n/*right: 10px;*/\n/*}*/\n/*.round {*/\n/*right: 5px;*/\n/*}*/\n/* The switch - the box around the slider */\n/*.switch {*/\n/*position: relative;*/\n/*display: inline-block;*/\n/*width: 30px;*/\n/*height: 15px;*/\n/*}*/\n/*!* Hide default HTML checkbox *!*/\n/*.switch input {display:none;}*/\n/*!* The slider *!*/\n/*.slider {*/\n/*position: absolute;*/\n/*cursor: pointer;*/\n/*top: 0;*/\n/*left: 0;*/\n/*right: 0;*/\n/*bottom: 0;*/\n/*background-color: #ccc;*/\n/*-webkit-transition: .4s;*/\n/*transition: .4s;*/\n/*}*/\n/*.slider:before {*/\n/*position: absolute;*/\n/*content: \"\";*/\n/*height: 10px;*/\n/*width: 10px;*/\n/*background-color: white;*/\n/*-webkit-transition: .4s;*/\n/*transition: .4s;*/\n/*}*/\n/*input.default:checked + .slider {*/\n/*background-color: #444;*/\n/*}*/\n/*input.primary:checked + .slider {*/\n/*background-color: #2196F3;*/\n/*}*/\n/*input.success:checked + .slider {*/\n/*background-color: #8bc34a;*/\n/*}*/\n/*input.info:checked + .slider {*/\n/*background-color: #3de0f5;*/\n/*}*/\n/*input.warning:checked + .slider {*/\n/*background-color: #FFC107;*/\n/*}*/\n/*input.danger:checked + .slider {*/\n/*background-color: #f44336;*/\n/*}*/\n/*input:focus + .slider {*/\n/*box-shadow: 0 0 1px #2196F3;*/\n/*}*/\n/*input:checked + .slider:before {*/\n/*-webkit-transform: translateX(26px);*/\n/*-ms-transform: translateX(26px);*/\n/*transform: translateX(26px);*/\n/*}*/\n/*!* Rounded sliders *!*/\n/*.slider.round {*/\n/*border-radius: 10px;*/\n/*}*/\n/*.slider.round:before {*/\n/*border-radius: 50%;*/\n/*}*/\n"
 
 /***/ }),
 
@@ -282,7 +425,7 @@ module.exports = ".tableContainer {\n  margin: 5px;\n  padding: 5px;\n}\n.switch
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  table works!\n</p>\n<!--<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css\">-->\n<!--<link href=\"https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css\" rel=\"stylesheet\">-->\n<!--<script src=\"https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js\"></script>-->\n<!--<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css\" integrity=\"sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ\" crossorigin=\"anonymous\">-->\n<!--<script src=\"https://code.jquery.com/jquery-3.1.1.slim.min.js\" integrity=\"sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n\" crossorigin=\"anonymous\"></script>-->\n<!--<script src=\"https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js\" integrity=\"sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb\" crossorigin=\"anonymous\"></script>-->\n<!--<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js\" integrity=\"sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn\" crossorigin=\"anonymous\"></script>-->\n<div class=\"card tableContainer\">\n  <div>\n    <div>\n      <!-- items being paged -->\n      <table class=\"table\" matSort (matSortChange)=\"sortData($event)\">\n        <tr>\n          <th *ngFor=\"let header of headers; index as i\" mat-sort-header=\"{{i}}\">{{ header }}</th>\n        </tr>\n        <tr *ngFor=\"let item of pagedItems\">\n          <td *ngFor=\"let rowItems of item\">{{rowItems}}</td>\n        </tr>\n      </table>\n\n      <!-- pager -->\n      <div *ngIf=\"pager.pages && pager.pages.length\">\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(1)\">First</a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(pager.currentPage - 1)\">Previous</a>\n        </span>\n        <span *ngFor=\"let page of pager.pages\" [ngClass]=\"{active:pager.currentPage === page}\">\n          <a (click)=\"setPage(page)\">{{page}}</a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.currentPage + 1)\">Next</a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.totalPages)\">Last</a>\n        </span>\n      </div>\n      <button (click)=\"editColumns()\" style=\"float: right\">Advanced</button>\n    </div>\n  </div>\n\n  <div *ngIf=\"hideShowColumns\">\n    <div class=\"panel panel-default\">\n      <div class=\"panel-heading\">Columns</div>\n      <div class=\"panel-body\" style=\"vertical-align: center;\" *ngFor=\"let header of headers\">{{header}}\n        <input type=\"checkbox\" checked data-toggle=\"toggle\">\n        <label class=\"switch\">\n          <input type=\"checkbox\" checked>\n          <span class=\"slider round\"></span>\n        </label>\n      </div>\n    </div>\n    <button (click)=\"submit()\">Submit</button>\n    <button (click)=\"editColumns()\" style=\"margin: 5px;\">Close</button>\n  </div>\n</div>\n"
+module.exports = "<p>\n  table works!\n</p>\n<div class=\"card tableContainer\">\n  <div>\n    <div>\n      <!-- pager -->\n      <div id=\"pageDiv\" *ngIf=\"pager.pages && pager.pages.length\">\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(1)\">First </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === 1}\">\n          <a (click)=\"setPage(pager.currentPage - 1)\">Previous </a>\n        </span>\n        <span *ngFor=\"let page of pager.pages\" [ngClass]=\"{active:pager.currentPage === page}\">\n          <a (click)=\"setPage(page)\">{{page}} </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.currentPage + 1)\">Next </a>\n        </span>\n        <span [ngClass]=\"{disabled:pager.currentPage === pager.totalPages}\">\n          <a (click)=\"setPage(pager.totalPages)\">Last </a>\n        </span>\n      </div>\n      <!-- items being paged -->\n      <table class=\"table\" matSort (matSortChange)=\"sortData($event)\">\n        <tr>\n            <th *ngFor=\"let header of filteredHeaders(headerIndexMap)\" mat-sort-header=\"{{headers.indexOf(header)}}\">{{ r() }}</th>\n          <!--<th *ngFor=\"let header of headers\" mat-sort-header=\"{{headers.indexOf(header)}}\">{{ header }}</th>-->\n          <!-- th *ngFor=\"let key of headerIndexMap.keys()\" >{{ headers[key] }}</th-->\n        </tr>\n        <tr *ngFor=\"let item of pagedItems\">\n            <!--<td *ngFor=\"let rowItems of filteredRows(item)\">{{rowItems}}</td>-->\n          <td *ngFor=\"let rowItems of item\">{{rowItems}}</td>\n        </tr>\n      </table>\n      <a id=\"advancedLink\" (click)=\"editColumns()\">Advanced</a>\n    </div>\n  </div>\n\n  <div *ngIf=\"hideShowColumns\">\n    <div class=\"panel panel-default\">\n      <div class=\"panel-heading\">Columns</div>\n      <div class=\"panel-body\" style=\"vertical-align: center;\">\n          <table>\n            <tr *ngFor=\"let header of headers\">\n              <td>\n               <label>\n                 {{header}}\n               </label>\n              </td>\n              <td style=\"padding: 10px; margin: 5px;\">\n                <label class=\"switch\">\n          <input type=\"checkbox\" [checked]=\"headerIndexMap.get(headers.indexOf(header))\" (change)=\"setHeaders(header)\" class=\"switch\" data-toggle=\"toggle\" >\n          <span class=\"slider round\"></span>\n        </label>\n              </td>\n            </tr>\n          </table>\n\n      </div>\n    </div>\n    <button (click)=\"editColumns()\" style=\"margin: 5px;\">Close</button>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -299,6 +442,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
 /* harmony import */ var _services_pager_pager_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/pager/pager.service */ "./src/app/services/pager/pager.service.ts");
 /* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
+/* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../services/api/api.service */ "./src/app/services/api/api.service.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -308,14 +452,53 @@ var __decorate = (undefined && undefined.__decorate) || function (decorators, ta
 var __metadata = (undefined && undefined.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+
 
 
 
 var FunTableComponent = /** @class */ (function () {
-    function FunTableComponent(pagerService, logger) {
+    function FunTableComponent(apiService, pagerService, logger, changeDetector) {
+        this.apiService = apiService;
         this.pagerService = pagerService;
         this.logger = logger;
+        this.changeDetector = changeDetector;
         this.hideShowColumns = false;
+        this.headerIndexMap = new Map();
         // private allItems: any = [];
         this.pager = {};
         // originalData: any[];
@@ -328,6 +511,7 @@ var FunTableComponent = /** @class */ (function () {
         if (this.data.rows && this.data.rows.length === 10000) {
             this.logger.log("10000 rows");
         }
+        // this.doSomething1();
     };
     //setting the page number
     FunTableComponent.prototype.setPage = function (page) {
@@ -356,6 +540,12 @@ var FunTableComponent = /** @class */ (function () {
         else {
             this.rows = this.data.rows;
             this.headers = this.data.headers;
+            // this.originalHeaders = this.data.headers;
+            // this.originalRows = this.data.rows;
+            for (var i in this.headers) {
+                this.headerIndexMap.set(Number(i), true);
+            }
+            // this.headerIndexMap.set(0, true);
             // this.originalData = Array.from(this.rows);
             if (this.data.pageSize) {
                 this.pageSize = this.data.pageSize;
@@ -385,13 +575,80 @@ var FunTableComponent = /** @class */ (function () {
     };
     //toggle between hide and show columns
     FunTableComponent.prototype.editColumns = function () {
+        var _this = this;
         this.logger.log("Open form is entered");
+        this.headerIndexMap.forEach(function (value, key) {
+            console.log(Number(key), _this.headerIndexMap.get(Number(key)));
+        });
         this.hideShowColumns = !this.hideShowColumns;
     };
-    FunTableComponent.prototype.submit = function () {
-        this.logger.log("submitted the column change");
-        this.hideShowColumns = false;
-        //change the headers.
+    FunTableComponent.prototype.setHeaders = function (header) {
+        // this.headerIndexMap.set(this.originalHeaders.indexOf(header), !this.headerIndexMap.get(this.originalHeaders.indexOf(header)));
+        // let newHeaders = this.originalHeaders.filter(item => {
+        //   if(this.headerIndexMap.get(this.originalHeaders.indexOf(item)) === true) {
+        //     return true;
+        //   }
+        //   return false;
+        // });
+        // for (let i = 0; i < this.originalRows.length; i++) {
+        //   this.rows[i] = this.originalRows[i].filter(item => {
+        //   if(this.headerIndexMap.get(this.originalHeaders.indexOf(item)) === true) {
+        //     return true;
+        //   }
+        //   return false;
+        // });
+        // }
+        // this.headers = newHeaders;
+        // // this.setPage(1);
+        this.headerIndexMap.set(this.headers.indexOf(header), !this.headerIndexMap.get(this.headers.indexOf(header)));
+        this.filteredHeaders(this.headerIndexMap);
+        // this.changeDetector.detectChanges();
+    };
+    FunTableComponent.prototype.filteredHeaders = function (indexMap) {
+        var _this = this;
+        console.log("filtered header");
+        return this.headers.filter(function (item) {
+            if (_this.headers.indexOf(item) < indexMap.size && indexMap.get(_this.headers.indexOf(item))) {
+                return true;
+            }
+            return false;
+        });
+    };
+    FunTableComponent.prototype.filteredRows = function (item) {
+        var _this = this;
+        return item.filter(function (oldItem) {
+            if (item.indexOf(oldItem) < _this.headerIndexMap.size && _this.headerIndexMap.get(item.indexOf(oldItem))) {
+                return true;
+            }
+            return false;
+        });
+    };
+    FunTableComponent.prototype.doSomething1 = function () {
+        var _this = this;
+        console.log("Doing Something1");
+        var payload = { "metric_id": 122, "date_range": ["2018-04-01T07:00:01.000Z", "2018-09-13T06:59:59.765Z"] };
+        this.apiService.post('/metrics/scores', payload).subscribe(function (response) {
+            //console.log(response.data);
+        }, function (error) {
+            //console.log(error);
+            _this.delay(1000);
+            _this.doSomething1();
+        });
+    };
+    FunTableComponent.prototype.delay = function (ms) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(function () { return resolve(); }, ms); }).then(function () { return console.log("fired"); })];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    FunTableComponent.prototype.r = function () {
+        return Math.random();
     };
     FunTableComponent.defaultPageSize = 10;
     __decorate([
@@ -406,9 +663,10 @@ var FunTableComponent = /** @class */ (function () {
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
             selector: 'fun-table',
             template: __webpack_require__(/*! ./fun-table.component.html */ "./src/app/fun-table/fun-table.component.html"),
-            styles: [__webpack_require__(/*! ./fun-table.component.css */ "./src/app/fun-table/fun-table.component.css")]
+            styles: [__webpack_require__(/*! ./fun-table.component.css */ "./src/app/fun-table/fun-table.component.css")],
+            changeDetection: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ChangeDetectionStrategy"].Default
         }),
-        __metadata("design:paramtypes", [_services_pager_pager_service__WEBPACK_IMPORTED_MODULE_1__["PagerService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__["LoggerService"]])
+        __metadata("design:paramtypes", [_services_api_api_service__WEBPACK_IMPORTED_MODULE_3__["ApiService"], _services_pager_pager_service__WEBPACK_IMPORTED_MODULE_1__["PagerService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__["LoggerService"], _angular_core__WEBPACK_IMPORTED_MODULE_0__["ChangeDetectorRef"]])
     ], FunTableComponent);
     return FunTableComponent;
     var FunTableComponent_1;
@@ -439,7 +697,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  performance works!\n</p>\n<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table>\n"
+module.exports = "<p>\n  performance works!\n</p>\n<!--<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table>-->\n<li *ngFor='let in of counter(50) ;let i = index'>{{i}}\n  <fun-chart></fun-chart>\n</li>\n\n\n"
 
 /***/ }),
 
@@ -858,6 +1116,9 @@ var PerformanceComponent = /** @class */ (function () {
     PerformanceComponent.prototype.getComponentState = function () {
         return this.componentState;
     };
+    PerformanceComponent.prototype.counter = function (i) {
+        return new Array(i);
+    };
     PerformanceComponent.prototype.setValues = function (pageNumber) {
         this.data["rows"] = [['hi', 'hello'], ['how', 'are']];
         this.data["headers"] = ['Names', 'Numbers'];
@@ -875,6 +1136,52 @@ var PerformanceComponent = /** @class */ (function () {
         __metadata("design:paramtypes", [_services_api_api_service__WEBPACK_IMPORTED_MODULE_1__["ApiService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__["LoggerService"]])
     ], PerformanceComponent);
     return PerformanceComponent;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/pipe/fun-table-filter.pipe.ts":
+/*!***********************************************!*\
+  !*** ./src/app/pipe/fun-table-filter.pipe.ts ***!
+  \***********************************************/
+/*! exports provided: FunTableFilterPipe */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FunTableFilterPipe", function() { return FunTableFilterPipe; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+var FunTableFilterPipe = /** @class */ (function () {
+    function FunTableFilterPipe() {
+    }
+    FunTableFilterPipe.prototype.transform = function (items, filter) {
+        console.log("Filter Pipe");
+        if (!items || !filter) {
+            return items;
+        }
+        return items.filter(function (item) {
+            if (items.indexOf(item) < filter.size && filter.get(items.indexOf(item))) {
+                return true;
+            }
+            return false;
+        });
+    };
+    FunTableFilterPipe = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Pipe"])({
+            name: 'funTableFilter',
+            pure: true
+        })
+    ], FunTableFilterPipe);
+    return FunTableFilterPipe;
 }());
 
 

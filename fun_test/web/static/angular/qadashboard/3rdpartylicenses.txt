@@ -147,6 +147,14 @@ MIT
 MIT
 MIT
 
+angular-highcharts@6.2.6
+MIT
+MIT
+
+highcharts@6.1.4
+https://www.highcharts.com/license
+https://www.highcharts.com/license
+
 rxjs@6.3.2
 Apache-2.0
 Apache License

@@ -40,6 +40,7 @@ export class ChartComponent implements OnInit {
     let payload = {"metric_id": 122, "date_range": ["2018-04-01T07:00:01.000Z", "2018-09-13T06:59:59.765Z"]};
     this.apiService.post('/metrics/scores', payload).subscribe(response => {
         console.log(response.data);
+        this.delay(1000);
       },
       error => {
         console.log(error);
