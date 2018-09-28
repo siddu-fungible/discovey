@@ -611,6 +611,7 @@ class TestCase3(FunTestCase):
 
 
 class TestCase4(FunTestCase):
+    queue_num = '00'
     pcap_file_path = None
     pcap_file_path_1 = None
     pg = 0
@@ -756,8 +757,8 @@ class TestCase4(FunTestCase):
 
             dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
             dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
-            dut_port_1_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_1, hnu=hnu)
-            dut_port_2_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_2, hnu=hnu)
+            dut_port_1_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_1, hnu=hnu, queue_num=self.queue_num)
+            dut_port_2_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_2, hnu=hnu, queue_num=self.queue_num)
 
             dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
             dut_port_2_good_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -766,10 +767,10 @@ class TestCase4(FunTestCase):
                                                                   tx=False, class_value=CLASS_0)
             dut_port_1_pause_transmit = get_dut_output_stats_value(dut_port_1_results, CBFC_PAUSE_FRAMES_TRANSMITTED,
                                                                   tx=True, class_value=CLASS_0)
-            dut_port_1_q00_pg_enqueue_pkts = dut_port_1_psw_results['q_00']['count']['pg_enq']['pkts']
-            dut_port_1_q00_pg_dequeue_pkts = dut_port_1_psw_results['q_00']['count']['pg_deq']['pkts']
-            dut_port_2_q00_q_enqueue_pkts = dut_port_2_psw_results['q_00']['count']['q_enq']['pkts']
-            dut_port_2_q00_q_dequeue_pkts = dut_port_2_psw_results['q_00']['count']['q_deq']['pkts']
+            dut_port_1_q00_pg_enqueue_pkts = dut_port_1_psw_results['count']['pg_enq']['pkts']
+            dut_port_1_q00_pg_dequeue_pkts = dut_port_1_psw_results['count']['pg_deq']['pkts']
+            dut_port_2_q00_q_enqueue_pkts = dut_port_2_psw_results['count']['q_enq']['pkts']
+            dut_port_2_q00_q_dequeue_pkts = dut_port_2_psw_results['count']['q_deq']['pkts']
 
             if i == 0:
                 # Fetch counter values
@@ -900,14 +901,14 @@ class TestCase4(FunTestCase):
 
         # DUT STATS
         current_dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
-        current_dut_port_1_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_1, hnu=hnu)
-        current_dut_port_2_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_2, hnu=hnu)
+        current_dut_port_1_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_1, hnu=hnu, queue_num=self.queue_num)
+        current_dut_port_2_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_2, hnu=hnu, queue_num=self.queue_num)
 
         current_dut_port_2_good_transmit = get_dut_output_stats_value(current_dut_port_2_results, FRAMES_TRANSMITTED_OK)
-        current_dut_port_1_q00_pg_enqueue_pkts = current_dut_port_1_psw_results['q_00']['count']['pg_enq']['pkts']
-        current_dut_port_1_q00_pg_dequeue_pkts = current_dut_port_1_psw_results['q_00']['count']['pg_deq']['pkts']
-        current_dut_port_2_q00_q_enqueue_pkts = current_dut_port_2_psw_results['q_00']['count']['q_enq']['pkts']
-        current_dut_port_2_q00_q_dequeue_pkts = current_dut_port_2_psw_results['q_00']['count']['q_deq']['pkts']
+        current_dut_port_1_q00_pg_enqueue_pkts = current_dut_port_1_psw_results['count']['pg_enq']['pkts']
+        current_dut_port_1_q00_pg_dequeue_pkts = current_dut_port_1_psw_results['count']['pg_deq']['pkts']
+        current_dut_port_2_q00_q_enqueue_pkts = current_dut_port_2_psw_results['count']['q_enq']['pkts']
+        current_dut_port_2_q00_q_dequeue_pkts = current_dut_port_2_psw_results['count']['q_deq']['pkts']
 
         # Logging counter values
         fun_test.log("Values of spirent rx counter before and after stopping pfc are:- Before: %s ; After: %s"

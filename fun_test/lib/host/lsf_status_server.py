@@ -44,10 +44,26 @@ class LsfStatusServer:
             fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
             if validate:
                 fun_test.add_checkpoint("Fetching return code for: {}".format(job_id))
-                return_code = int(last_job["return_code"])
-                fun_test.test_assert(not return_code, "Valid return code")
+                response = self.get_job_by_id(job_id=job_id)
+                response = self.get_job_by_id(job_id=job_id)
+
+                response_dict = {"output_text": "-1"}
+                try:
+                    response_dict = json.loads(response)
+                    # last_job = response_dict
+                    response_dict = response_dict["job_dict"]
+                    print(json.dumps(response_dict, indent=4))
+                    return_code = int(response_dict["return_code"])
+                    fun_test.test_assert(not return_code, "Valid return code")
+                    result = last_job
+                except Exception as ex:
+                    fun_test.log("Actual response:" + response)
+                    fun_test.critical(str(ex))
+
+                # last_job = response
+
                 fun_test.test_assert("output_text" in last_job, "output_text found in job info: {}".format(job_id))
-            result = last_job
+
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
