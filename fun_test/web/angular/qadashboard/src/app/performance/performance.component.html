@@ -1,9 +1,201 @@
-<p>
-  performance works!
-</p>
-<fun-table (nextPage)="setValues($event)" [data]="data"></fun-table>
+
+<!--fun-table (nextPage)="setValues($event)" [data]="data"></fun-table-->
 <!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->
   <!--<fun-chart></fun-chart>-->
 <!--</li>-->
+<div class="content">
+  <div class="col-lg-6 col-xl-6 col-md-6">
+    <div>
+      <table class="table table-nonfluid">
+        <tr>
+          <th class="text-center">Aspect</th>
+          <th class="text-center">Score</th>
+          <th class="text-center">#</th>
+          <!--th></th-->
+          <th class="text-center">More Info</th>
 
+        </tr>
+        <tr class="fade-element-in" ng-if="!node.hide" ng-repeat="node in flatNodes track by $index">
+          <td id="{{ node.guid }}" class="child-transition">
+                        <span ng-bind-html="getIndentHtml(node) | unsafe">
+                        </span>
+            <a ng-if="node.leaf" href="#" ng-click="setCurrentChart(node)">{{ node.label }}</a>
+            <a ng-if="!node.leaf" href="#" ng-click="showNonAtomicMetric(node)">{{ node.label }}</a>
+            <!-- span ng-if="!node.leaf">{{ node.label }}</span -->&nbsp
+            <span ng-if="node.numChildren">
+                            <a href="#{{ node.guid }}" ng-if="!node.collapsed" ng-click="collapseNode(node)">
+                                <span class="arrow-down"></span>
+                            </a>
+                            <a href="#{{ node.guid }}" ng-if="node.collapsed" ng-click="expandNode(node)">
+                                <span class="arrow-right"></span>
+                            </a>
+                        </span>
+          </td>
+          <td class="text-center">
+            <div ng-if="node.chartName !== 'All metrics'" class="score-label"><span style="vertical-align: top"
+                                                                                    ng-bind-html="getTrendHtml(node) | unsafe"></span>{{ node.goodness }}
+            </div>
+          </td>
+          <td class="text-center">
+            <span ng-if="!node.leaf">{{ node.numLeaves }}</span>
+          </td>
+
+          <td ng-bind-html="getStatusHtml(node) | unsafe"></td>
+        </tr>
+      </table>
+
+    </div>
+    <!--<p>Last updated at: {{ lastStatusUpdateTime }}</p>-->
+  </div>
+
+
+  <div ng-if="mode" class="card col-xl-6 col-lg-6 col-xxl-6" ng-switch="mode">
+    <div ng-switch-when="showingGoodnessTrend">
+      <!-- fun-chart values="goodnessTrendValues" show-legend="true"
+                 title="goodnessTrendChartTitle" charting="charting" chart-type="line-chart">
+      </fun-chart-->
+    </div>
+    <div ng-switch-when="showingAtomicMetric">
+      <div ng-if="currentChartName">
+        <table>
+          <tr>
+            <td>
+                                    <span id="score-table-parent" class="score-card">
+                                        <span id="score-table-child">{{ currentNode.goodness }}
+                                        </span>
+                                    </span>
+            </td>
+            <td valign="top" align="left">
+                                <span id="score-table-info-icon">
+                                    <i class="fa fa-info-circle" style="padding: 2px"
+                                       ng-click="showNodeInfoClick(currentNode)">
+                                    </i>
+                                </span>
+            </td>
+            <td style="width: 100%">
+                                <span style="float: right;">
+                                            <button class="btn" style="background-color: white"
+                                                    ng-click="openAtomicTab()">
+                                                <i class="fa fa-external-link"></i></button>
+                                </span>
+            </td>
+          </tr>
+        </table>
+
+        <div ng-if="showingNodeInfo">
+          <h5>Score calculation</h5>
+          <p ng-bind-html="currentNodeInfo"></p>
+        </div>
+
+        <br>
+
+        <div class="closed-section"></div>
+        <!--fun-metric-chart chart-name="currentChartName" model-name="currentMetricModelName"></fun-metric-chart-->
+      </div>
+    </div>
+    <div ng-switch-when="showingNonAtomicMetric">
+      <!-- div style="padding-bottom: 10px;"><h4>Aspect: {{ currentNode.chartName }}</h4></div-->
+      <div>
+        <table>
+          <tr>
+            <td>
+                                    <span id="score-table-parent" class="score-card">
+                                        <span id="score-table-child">{{ currentNode.goodness }}
+                                        </span>
+                                    </span>
+            </td>
+            <td valign="top" align="left">
+                                <span id="score-table-info-icon">
+                                    <i class="fa fa-info-circle" style="padding: 2px"
+                                       ng-click="showNodeInfoClick(currentNode)">
+                                    </i>
+                                </span>
+            </td>
+          </tr>
+        </table>
+        <div ng-if="showingContainerNodeInfo">
+          <br>
+          <h5>Children</h5>
+          <div ng-if="currentNode">
+            <table class="table table-nonfluid">
+              <tr>
+                <th>Aspect</th>
+                <th>Weight</th>
+                <th>Last score</th>
+                <th>Weight * Last Score</th>
+              </tr>
+              <tr ng-repeat="(childId, info) in currentNode.children">
+                <td>{{ metricMap[childId].chartName }}</td>
+                <td>
+                  <p ng-click="editingWeightClick(info)" ng-if="!info.editing">{{ info.weight }}</p>
+                  <span ng-if="info.editing">
+                                        <input style="padding-right: 10px" type="number" ng-model="info.editingWeight">
+                                        <button style="border: 1px solid black;overflow: hidden; padding-left: 10px;"
+                                                class="btn btn-sm"
+                                                ng-click="submitWeightClick(currentNode, childId, info)">&#10003;</button>
+                                        <button style="border: 1px solid black;" class="btn btn-sm"
+                                                ng-click="closeEditingWeightClick(info)">&#10060;</button>
+                                    </span>
+                </td>
+                <td>
+                  {{ currentNode.childrenScoreMap[childId] | number: 1}}
+                </td>
+                <td>
+                  {{ info.weight }} * {{ currentNode.childrenScoreMap[childId] |
+                  number: 1 }} = {{ info.weight * currentNode.childrenScoreMap[childId]
+                  | number: 1 }}
+                </td>
+                <!-- td>{{ childId }}</td -->
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Total ~ {{ getScoreTotal(currentNode) | number: 1}}</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Sum of child weights = {{ getSumChildWeights (currentNode.children) }}</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Score ~ {{ getScoreTotal(currentNode) | number: 1}} / {{ getSumChildWeights(currentNode.children) }}
+                  = {{ getScoreTotal(currentNode) /  getSumChildWeights(currentNode.children) | number: 1}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <br>
+      <div class="closed-section"></div>
+      <!--fun-metric-chart chart-name="currentChartName" model-name="currentMetricModelName"></fun-metric-chart-->
+
+      <br>
+      <br>
+      <!--<div class="closed-section"></div>-->
+      <div ng-if="grid.length">
+        <table class="table" ng-if="grid">
+          <tr ng-repeat="row in grid track by $index">
+            <td ng-repeat="node in row track by $index" style="width: 50%">
+              <!--fun-metric-chart
+                chart-name="node.name"
+                model-name="node.metricModelName"
+                atomic="atomic"
+                chart-only="true"
+                wait-time="(($parent.$index * numGridColumns) + $index) * 1000">
+              </fun-metric-chart-->
+            </td>
+          </tr>
+        </table>
+        <div class="closed-section"></div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
 

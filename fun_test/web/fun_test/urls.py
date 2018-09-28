@@ -118,7 +118,8 @@ metric_urls = [
     url(r'^update_child_weight$', metrics_views.update_child_weight),
     url(r'^table_view/(.*)$', metrics_views.table_view),
     url(r'^test$', metrics_views.test),
-    url(r'^scores', metrics_views.scores)
+    url(r'^scores', metrics_views.scores),
+    url(r'^dag$', metrics_views.dag)
 ]
 
 performance_urls = [

@@ -398,3 +398,35 @@ def data(request):
 @csrf_exempt
 def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
+
+
+def traverse_dag(metric_id):
+    result = {}
+    chart = MetricChart.objects.get(metric_id=metric_id)
+
+    result["metric_model_name"] = chart.metric_model_name
+    result["chart_name"] = chart.chart_name
+    result["children"] = json.loads(chart.children)
+    result["children_info"] = {}
+    result["leaf"] = chart.leaf
+    result["num_leaves"] = chart.num_leaves
+    result["last_num_degrades"] = chart.last_num_degrades
+    result["last_num_build_failed"] = chart.last_num_build_failed
+
+    if not chart.leaf:
+        children_info = result["children_info"]
+        for child_id in result["children"]:
+            child_chart = MetricChart.objects.get(metric_id=child_id)
+            children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def dag(request):
+    result = {}
+    request_json = json.loads(request.body)
+    metric_model_name = request_json["metric_model_name"]
+    chart_name = request_json["chart_name"]
+    chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id)
+    return result

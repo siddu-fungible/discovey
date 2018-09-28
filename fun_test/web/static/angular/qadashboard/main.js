@@ -153,16 +153,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
 /* harmony import */ var _test_test_component__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./test/test.component */ "./src/app/test/test.component.ts");
 /* harmony import */ var _pipe_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./pipe/fun-table-filter.pipe */ "./src/app/pipe/fun-table-filter.pipe.ts");
-/* harmony import */ var angular_highcharts__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! angular-highcharts */ "./node_modules/angular-highcharts/angular-highcharts.es5.js");
-/* harmony import */ var _chart_chart_component__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./chart/chart.component */ "./src/app/chart/chart.component.ts");
-/* harmony import */ var _fun_chart_fun_chart_component__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./fun-chart/fun-chart.component */ "./src/app/fun-chart/fun-chart.component.ts");
+/* harmony import */ var _chart_chart_component__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./chart/chart.component */ "./src/app/chart/chart.component.ts");
+/* harmony import */ var _fun_chart_fun_chart_component__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./fun-chart/fun-chart.component */ "./src/app/fun-chart/fun-chart.component.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-
 
 
 
@@ -191,16 +189,15 @@ var AppModule = /** @class */ (function () {
                 _fun_table_fun_table_component__WEBPACK_IMPORTED_MODULE_9__["FunTableComponent"],
                 _test_test_component__WEBPACK_IMPORTED_MODULE_12__["TestComponent"],
                 _pipe_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__["FunTableFilterPipe"],
-                _chart_chart_component__WEBPACK_IMPORTED_MODULE_15__["ChartComponent"],
-                _fun_chart_fun_chart_component__WEBPACK_IMPORTED_MODULE_16__["FunChartComponent"]
+                _chart_chart_component__WEBPACK_IMPORTED_MODULE_14__["ChartComponent"],
+                _fun_chart_fun_chart_component__WEBPACK_IMPORTED_MODULE_15__["FunChartComponent"]
             ],
             imports: [
                 _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
                 _angular_common_http__WEBPACK_IMPORTED_MODULE_8__["HttpClientModule"],
                 _app_routing_module__WEBPACK_IMPORTED_MODULE_6__["AppRoutingModule"],
                 _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_3__["BrowserAnimationsModule"],
-                _angular_material__WEBPACK_IMPORTED_MODULE_2__["MatSortModule"],
-                angular_highcharts__WEBPACK_IMPORTED_MODULE_14__["ChartModule"]
+                _angular_material__WEBPACK_IMPORTED_MODULE_2__["MatSortModule"]
             ],
             providers: [_services_api_api_service__WEBPACK_IMPORTED_MODULE_10__["ApiService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__["LoggerService"]],
             bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_4__["AppComponent"]]
@@ -336,7 +333,7 @@ var ChartComponent = /** @class */ (function () {
     ChartComponent = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
             selector: 'app-fun-chart',
-            template: "\n    <button (click)=\"add()\">Add Point!</button>\n    <div [chart]=\"chart\"></div>\n  "
+            template: "\n    <button (click)=\"add()\">Add Point!</button>\n    <!--div [chart]=\"chart\"></div-->\n  "
         }),
         __metadata("design:paramtypes", [_services_api_api_service__WEBPACK_IMPORTED_MODULE_2__["ApiService"]])
     ], ChartComponent);
@@ -365,7 +362,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<title>QA Dashboard</title>\n<div>\n  My dashboard\n  <app-performance></app-performance>\n  <!--<app-test></app-test>-->\n</div>\n"
+module.exports = "<div>\n  My dashboard\n  <app-performance></app-performance>\n  <app-test></app-test>\n</div>\n"
 
 /***/ }),
 
@@ -428,7 +425,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  fun-chart works!\n</p>\n<div class=\"card\">\n<button (click)=\"add()\">Add Point!</button>\n    <div [chart]=\"chart\"></div>\n</div>\n"
+module.exports = "<p>\n  fun-chart works!\n</p>\n<div>\n<button (click)=\"add()\">Add Point!</button>\n    <!--div [chart]=\"chart\"></div-->\n</div>\n"
 
 /***/ }),
 
@@ -457,25 +454,30 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 var FunChartComponent = /** @class */ (function () {
     function FunChartComponent() {
-        // @Input() xValues: any[];
-        // @Input() yValues: any[];
+    }
+    // @Input() xValues: any[];
+    // @Input() yValues: any[];
+    FunChartComponent.prototype.add = function () {
+        this.chart.addPoint(Math.floor(Math.random() * 10));
+    };
+    FunChartComponent.prototype.ngOnChanges = function () {
         this.chart = new angular_highcharts__WEBPACK_IMPORTED_MODULE_1__["Chart"]({
             chart: {
                 type: 'line',
-                height: 500,
-                width: 500
+                width: 500,
+                height: 500
             },
             title: {
                 text: this.title
             },
             xAxis: {
-                labels: {
-                    format: this.xAxisLabel
+                title: {
+                    text: this.xAxisLabel
                 }
             },
             yAxis: {
-                labels: {
-                    format: this.yAxisLabel
+                title: {
+                    text: this.yAxisLabel
                 }
             },
             credits: {
@@ -483,16 +485,8 @@ var FunChartComponent = /** @class */ (function () {
             },
             series: this.yValues
         });
-    }
-    FunChartComponent.prototype.add = function () {
-        this.chart.addPoint(Math.floor(Math.random() * 10));
     };
     FunChartComponent.prototype.ngOnInit = function () {
-        // this.yValues = {};
-        // this.xValues.foreach((input)  => {
-        //             this.yValues[input] = [];
-        //         });
-        // this.getRandomId();
     };
     __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
@@ -966,7 +960,7 @@ function compare(a, b, isAsc) {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = ""
+module.exports = ".info-box {\n  border: 1px;\n  border-color: #4CAF50;\n  border-style: solid;\n  border-radius: 5px;\n  width: inherit;\n  margin-top: 5px;\n}\n\n.info-box-header {\n  background-color: #dff0d8;\n  border-radius: 5px;\n\n}\n\n.info-box-text {\n  padding: 5px;\n}\n\n.aspect-label {\n  padding: 5px;\n}\n\n.aspect-label-text {\n  padding: 5px;\n}\n\n.fa-icon-green {\n  color: green;\n}\n\n.fa-icon-red {\n  color: red;\n}\n\n#score-table-parent {\n  display: table;\n  width: 60px;\n  height: 60px;\n  border: 3px solid lightsteelblue;\n  border-radius: 5px;\n}\n\n#score-table-child {\n  display: table-cell;\n  vertical-align: middle;\n  text-align: center;\n  font-size: 25px;\n  color: white;\n\n}\n\n#score-table-info-icon {\n  display: table-cell;\n  vertical-align: top;\n}\n\n.score-card {\n  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);\n  transition: 0.3s;\n  width: 40%;\n  background-color: #006699;\n}\n\n.fade-element-in.ng-enter {\n  opacity: 0;\n}\n\n.fade-element-in-init .fade-element-in.ng-enter {\n  opacity: 1;\n}\n\n.fade-element-in.ng-enter.ng-enter-active {\n  opacity: 1;\n}\n\n.fade-element-in.ng-leave {\n  transition: 0.3s linear all;\n  opacity: 1;\n}\n\n.fade-element-in.ng-leave.ng-leave-active {\n  opacity: 0;\n}\n\narrow-icon {\n  border: solid black;\n  border-width: 0 3px 3px 0;\n  display: inline-block;\n  padding: 3px;\n\n}\n\n.arrow-right {\n  transform: rotate(-45deg);\n  -webkit-transform: rotate(-45deg);\n\n}\n\n.arrow-down {\n  transform: rotate(45deg);\n  -webkit-transform: rotate(45deg);\n}\n\n.trend-button-green {\n  background-color: white;\n  border: 1px solid #4CAF50;\n  color: white;\n  text-align: center;\n  text-decoration: none;\n  border-radius: 1.5px;\n\n}\n\n.score-label {\n  -webkit-text-decoration: solid;\n          text-decoration: solid;\n}\n\n.trend-button-red {\n  background-color: white;\n  border: 1px solid red;\n  color: white;\n  text-align: center;\n  text-decoration: none;\n  border-radius: 1.5px;\n\n}\n"
 
 /***/ }),
 
@@ -977,7 +971,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<p>\n  performance works!\n</p>\n<!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->\n  <!--<fun-chart></fun-chart>-->\n<!--</li>-->\n<fun-chart></fun-chart>\n<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table>\n<app-test></app-test>\n\n"
+module.exports = "\n<!--fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table-->\n<!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->\n  <!--<fun-chart></fun-chart>-->\n<!--</li>-->\n<div class=\"content\">\n  <div class=\"col-lg-6 col-xl-6 col-md-6\">\n    <div>\n      <table class=\"table table-nonfluid\">\n        <tr>\n          <th class=\"text-center\">Aspect</th>\n          <th class=\"text-center\">Score</th>\n          <th class=\"text-center\">#</th>\n          <!--th></th-->\n          <th class=\"text-center\">More Info</th>\n\n        </tr>\n        <tr class=\"fade-element-in\" ng-if=\"!node.hide\" ng-repeat=\"node in flatNodes track by $index\">\n          <td id=\"{{ node.guid }}\" class=\"child-transition\">\n                        <span ng-bind-html=\"getIndentHtml(node) | unsafe\">\n                        </span>\n            <a ng-if=\"node.leaf\" href=\"#\" ng-click=\"setCurrentChart(node)\">{{ node.label }}</a>\n            <a ng-if=\"!node.leaf\" href=\"#\" ng-click=\"showNonAtomicMetric(node)\">{{ node.label }}</a>\n            <!-- span ng-if=\"!node.leaf\">{{ node.label }}</span -->&nbsp\n            <span ng-if=\"node.numChildren\">\n                            <a href=\"#{{ node.guid }}\" ng-if=\"!node.collapsed\" ng-click=\"collapseNode(node)\">\n                                <span class=\"arrow-down\"></span>\n                            </a>\n                            <a href=\"#{{ node.guid }}\" ng-if=\"node.collapsed\" ng-click=\"expandNode(node)\">\n                                <span class=\"arrow-right\"></span>\n                            </a>\n                        </span>\n          </td>\n          <td class=\"text-center\">\n            <div ng-if=\"node.chartName !== 'All metrics'\" class=\"score-label\"><span style=\"vertical-align: top\"\n                                                                                    ng-bind-html=\"getTrendHtml(node) | unsafe\"></span>{{ node.goodness }}\n            </div>\n          </td>\n          <td class=\"text-center\">\n            <span ng-if=\"!node.leaf\">{{ node.numLeaves }}</span>\n          </td>\n\n          <td ng-bind-html=\"getStatusHtml(node) | unsafe\"></td>\n        </tr>\n      </table>\n\n    </div>\n    <!--<p>Last updated at: {{ lastStatusUpdateTime }}</p>-->\n  </div>\n\n\n  <div ng-if=\"mode\" class=\"card col-xl-6 col-lg-6 col-xxl-6\" ng-switch=\"mode\">\n    <div ng-switch-when=\"showingGoodnessTrend\">\n      <!-- fun-chart values=\"goodnessTrendValues\" show-legend=\"true\"\n                 title=\"goodnessTrendChartTitle\" charting=\"charting\" chart-type=\"line-chart\">\n      </fun-chart-->\n    </div>\n    <div ng-switch-when=\"showingAtomicMetric\">\n      <div ng-if=\"currentChartName\">\n        <table>\n          <tr>\n            <td>\n                                    <span id=\"score-table-parent\" class=\"score-card\">\n                                        <span id=\"score-table-child\">{{ currentNode.goodness }}\n                                        </span>\n                                    </span>\n            </td>\n            <td valign=\"top\" align=\"left\">\n                                <span id=\"score-table-info-icon\">\n                                    <i class=\"fa fa-info-circle\" style=\"padding: 2px\"\n                                       ng-click=\"showNodeInfoClick(currentNode)\">\n                                    </i>\n                                </span>\n            </td>\n            <td style=\"width: 100%\">\n                                <span style=\"float: right;\">\n                                            <button class=\"btn\" style=\"background-color: white\"\n                                                    ng-click=\"openAtomicTab()\">\n                                                <i class=\"fa fa-external-link\"></i></button>\n                                </span>\n            </td>\n          </tr>\n        </table>\n\n        <div ng-if=\"showingNodeInfo\">\n          <h5>Score calculation</h5>\n          <p ng-bind-html=\"currentNodeInfo\"></p>\n        </div>\n\n        <br>\n\n        <div class=\"closed-section\"></div>\n        <!--fun-metric-chart chart-name=\"currentChartName\" model-name=\"currentMetricModelName\"></fun-metric-chart-->\n      </div>\n    </div>\n    <div ng-switch-when=\"showingNonAtomicMetric\">\n      <!-- div style=\"padding-bottom: 10px;\"><h4>Aspect: {{ currentNode.chartName }}</h4></div-->\n      <div>\n        <table>\n          <tr>\n            <td>\n                                    <span id=\"score-table-parent\" class=\"score-card\">\n                                        <span id=\"score-table-child\">{{ currentNode.goodness }}\n                                        </span>\n                                    </span>\n            </td>\n            <td valign=\"top\" align=\"left\">\n                                <span id=\"score-table-info-icon\">\n                                    <i class=\"fa fa-info-circle\" style=\"padding: 2px\"\n                                       ng-click=\"showNodeInfoClick(currentNode)\">\n                                    </i>\n                                </span>\n            </td>\n          </tr>\n        </table>\n        <div ng-if=\"showingContainerNodeInfo\">\n          <br>\n          <h5>Children</h5>\n          <div ng-if=\"currentNode\">\n            <table class=\"table table-nonfluid\">\n              <tr>\n                <th>Aspect</th>\n                <th>Weight</th>\n                <th>Last score</th>\n                <th>Weight * Last Score</th>\n              </tr>\n              <tr ng-repeat=\"(childId, info) in currentNode.children\">\n                <td>{{ metricMap[childId].chartName }}</td>\n                <td>\n                  <p ng-click=\"editingWeightClick(info)\" ng-if=\"!info.editing\">{{ info.weight }}</p>\n                  <span ng-if=\"info.editing\">\n                                        <input style=\"padding-right: 10px\" type=\"number\" ng-model=\"info.editingWeight\">\n                                        <button style=\"border: 1px solid black;overflow: hidden; padding-left: 10px;\"\n                                                class=\"btn btn-sm\"\n                                                ng-click=\"submitWeightClick(currentNode, childId, info)\">&#10003;</button>\n                                        <button style=\"border: 1px solid black;\" class=\"btn btn-sm\"\n                                                ng-click=\"closeEditingWeightClick(info)\">&#10060;</button>\n                                    </span>\n                </td>\n                <td>\n                  {{ currentNode.childrenScoreMap[childId] | number: 1}}\n                </td>\n                <td>\n                  {{ info.weight }} * {{ currentNode.childrenScoreMap[childId] |\n                  number: 1 }} = {{ info.weight * currentNode.childrenScoreMap[childId]\n                  | number: 1 }}\n                </td>\n                <!-- td>{{ childId }}</td -->\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Total ~ {{ getScoreTotal(currentNode) | number: 1}}</td>\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Sum of child weights = {{ getSumChildWeights (currentNode.children) }}</td>\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Score ~ {{ getScoreTotal(currentNode) | number: 1}} / {{ getSumChildWeights(currentNode.children) }}\n                  = {{ getScoreTotal(currentNode) /  getSumChildWeights(currentNode.children) | number: 1}}</td>\n              </tr>\n            </table>\n          </div>\n        </div>\n      </div>\n      <br>\n      <div class=\"closed-section\"></div>\n      <!--fun-metric-chart chart-name=\"currentChartName\" model-name=\"currentMetricModelName\"></fun-metric-chart-->\n\n      <br>\n      <br>\n      <!--<div class=\"closed-section\"></div>-->\n      <div ng-if=\"grid.length\">\n        <table class=\"table\" ng-if=\"grid\">\n          <tr ng-repeat=\"row in grid track by $index\">\n            <td ng-repeat=\"node in row track by $index\" style=\"width: 50%\">\n              <!--fun-metric-chart\n                chart-name=\"node.name\"\n                model-name=\"node.metricModelName\"\n                atomic=\"atomic\"\n                chart-only=\"true\"\n                wait-time=\"(($parent.$index * numGridColumns) + $index) * 1000\">\n              </fun-metric-chart-->\n            </td>\n          </tr>\n        </table>\n        <div class=\"closed-section\"></div>\n      </div>\n    </div>\n  </div>\n\n\n</div>\n\n"
 
 /***/ }),
 
@@ -992,8 +986,9 @@ module.exports = "<p>\n  performance works!\n</p>\n<!--<li *ngFor='let in of cou
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PerformanceComponent", function() { return PerformanceComponent; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
-/* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/api/api.service */ "./src/app/services/api/api.service.ts");
-/* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/fesm5/common.js");
+/* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/api/api.service */ "./src/app/services/api/api.service.ts");
+/* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1006,436 +1001,217 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 
 
+
+var Node = /** @class */ (function () {
+    function Node() {
+    }
+    return Node;
+}());
+var FlatNode = /** @class */ (function () {
+    function FlatNode() {
+    }
+    return FlatNode;
+}());
 var PerformanceComponent = /** @class */ (function () {
-    function PerformanceComponent(apiService, logger) {
+    function PerformanceComponent(location, apiService, loggerService) {
+        var _this = this;
+        this.location = location;
         this.apiService = apiService;
-        this.logger = logger;
-        this.componentState = "Unknown";
-        this.data = [];
-        this.logger.log("Performance component init");
+        this.loggerService = loggerService;
+        this.dag = null;
+        this.nodeMap = {};
+        this.lastGuid = 0;
+        this.flatNodes = [];
+        this.getNodeFromData = function (data) {
+            var newNode = {
+                info: data.description,
+                label: data.chart_name,
+                collapsed: true,
+                metricId: data.metric_id,
+                hide: true,
+                leaf: data.leaf,
+                chartName: data.chart_name,
+                metricModelName: data.metric_model_name,
+                childrenWeights: JSON.parse(data.children_weights),
+                children: {},
+                lineage: [],
+                numChildDegrades: data.last_num_degrades,
+                positive: data.positive,
+                numChildren: 0,
+                numChildrenPassed: data.num_children_passed,
+                numChildrenFailed: data.last_num_build_failed,
+                lastBuildStatus: data.last_build_status,
+                status: true
+            };
+            _this.metricMap[newNode.metricId] = { chartName: newNode.chartName };
+            if (newNode.info === "") {
+                newNode.info = "<p>Please update the description</p>";
+            }
+            //     let dateRange = this.getDateRange();
+            //     let fromDate = dateRange[0];
+            //     let toDate = dateRange[1];
+            //     return this.fetchScores(data.metric_id, fromDate.toISOString(), toDate.toISOString()).then((scoreData) => {
+            //         newNode.childrenScoreMap = scoreData["children_score_map"];
+            //         this.evaluateScores(newNode, scoreData["scores"]);
+            //         newNode.childrenWeights.forEach((info, childId) => {
+            //             newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
+            //         });
+            //
+            //         if (newNode.lastBuildStatus === "PASSED") {
+            //             newNode.status = true;
+            //         } else {
+            //             newNode.status = false;
+            //         }
+            //
+            //         let newNodeChildrenIds = JSON.parse(data.children);
+            //         if (newNodeChildrenIds.length > 0) {
+            //             newNode.numChildren = newNodeChildrenIds.length;
+            //         }
+            return newNode;
+            //     });
+            //
+            //
+        };
+        this.guid = function () {
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+            }
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+        };
+        this.expandNode = function (node, all) {
+            node.collapsed = false;
+            if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
+                var thisNode = node;
+                // Fetch children ids
+                // return this.fetchMetricInfoById(node).then((data) => {
+                //     console.log("Fetching Metrics Info for node:" + node.metricId);
+                //     node.hide = false;
+                //     let childrenIds = JSON.parse(data.children);
+                //     return this._insertNewNode(node, childrenIds, all, node.childrenFetched).then(() => {
+                //         console.log("Inserted: " + node.chartName);
+                //         node.childrenFetched = true;
+                //         return null;
+                //     });
+                //
+                // });
+            }
+            else {
+                return null;
+            }
+            //node.hide = false;
+        };
     }
     PerformanceComponent.prototype.ngOnInit = function () {
-        this.data["rows"] = [['hi', 'hello'], ['how', 'are'], ['you', 'its'], ['been', 'a'], ['long', 'time'], ['also', 'when'], ['where', 'how'], ['are', 'we'], ['meeting', 'if'], ['hey', 'buddy'], ['let', 'go'], ['we', 'will']];
-        this.data["headers"] = ['Names', 'Numbers'];
-        this.data["all"] = true;
-        this.data["totalLength"] = 12;
-        this.data["currentPageIndex"] = 1;
-        this.data["pageSize"] = 10;
-        //this.getLastStatusUpdateTime();
+        // this.getLastStatusUpdateTime();
         this.numGridColumns = 2;
+        this.data = [['hi', 'hello'], ['how', 'are'], ['you', 'its'], ['been', 'a'], ['long', 'time'], ['also', 'when'], ['where', 'how'], ['are', 'we'], ['meeting', 'if'], [1, 2], [3, 4]];
+        this.headers = ['Names', 'Numbers'];
+        this.fetchDag();
         if (window.screen.width <= 1441) {
             this.numGridColumns = 2;
         }
-        this.mode = null;
-        //this.fetchJenkinsJobIdMap();
-        this.flatNodes = [];
-        this.metricMap = {};
-        this.cachedNodeInfo = {};
-        // this.fetchRootMetricInfo("Total", "MetricContainer").then((data) => {
-        //   let metricId = data.metric_id;
-        //   let p1 = {metric_id: metricId};
-        //   this.apiService.post('/metrics/metric_info', p1).subscribe((data) => {
-        //     this.populateNodeInfoCache(data);
-        //     let newNode = this.getNodeFromData(data).then((newNode) => {
-        //       newNode.guid = this.guid();
-        //       newNode.hide = false;
-        //       newNode.indent = 0;
-        //       this.flatNodes.push(newNode);
-        //       // this.expandNode(newNode);
-        //       this.collapsedAll = true;
-        //     });
-        //
-        //   },
-        //     error => {
-        //         console.log(error);
-        //         this.componentState = "Error";
-        //       });
-        //   return data;
-        // });
-        this.goodnessTrendValues = null;
-        this.inner = {};
-        this.inner.nonAtomicMetricInfo = "";
-        this.currentNodeChildrenGuids = null;
-        this.validDates = null;
     };
-    //
-    // getLastStatusUpdateTime(): void {
-    //       this.apiService.get('/common/time_keeper/' + "last_status_update").subscribe((data) => {
-    //           this.lastStatusUpdateTime = data;
-    //       },
-    //         error => {
-    //           console.log(error);
-    //           this.componentState = "Error";
-    //         });
-    //   }
-    //
-    //   fetchJenkinsJobIdMap(): void {
-    //       this.apiService.get('/regression/jenkins_job_id_maps').subscribe((data) => {
-    //           this.jenkinsJobIdMap = data;
-    //           this.apiService.get('/regression/build_to_date_map').subscribe((data) => {
-    //               this.buildInfo = data;
-    //           },
-    //             error => {
-    //           console.log(error);
-    //           this.componentState = "Error";
-    //         });
-    //       },
-    //         error => {
-    //           console.log(error);
-    //           this.componentState = "Error";
-    //         });
-    //   }
-    //
-    //   fetchRootMetricInfo(chartName, metricModelName): any {
-    //       let payload = {"metric_model_name": metricModelName, chart_name: chartName};
-    //       return this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
-    //           return data;
-    //       },
-    //        error => {
-    //       console.log(error);
-    //       this.componentState = "Error";
-    //       });
-    //   }
-    //
-    //   populateNodeInfoCache(data): void {
-    //       if (!(data.metric_id in this.cachedNodeInfo)) {
-    //           this.cachedNodeInfo[data.metric_id] = data;
-    //       }
-    //       data.children_info.forEach((value, key) => {
-    //          this.cachedNodeInfo[key] = value;
-    //          value.children_info.forEach((v2, key2) => {
-    //              this.populateNodeInfoCache(v2);
-    //          });
-    //       });
-    //   }
-    //
-    //   guid(): any {
-    //     function s4() {
-    //       return Math.floor((1 + Math.random()) * 0x10000)
-    //         .toString(16)
-    //         .substring(1);
-    //     }
-    //     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-    //   }
-    //
-    //   expandAllNodes(): void {
-    //       this.flatNodes.forEach((node) => {
-    //           this.expandNode(node, true);
-    //       });
-    //       this.collapsedAll = false;
-    //       this.expandedAll = true;
-    //   }
-    //
-    //   collapseAllNodes(): void {
-    //       this.collapseNode(this.flatNodes[0]);
-    //       this.expandedAll = false;
-    //       this.collapsedAll = true;
-    //   };
-    //
-    // expandNode(node, all): any {
-    //       node.collapsed = false;
-    //       if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
-    //           let thisNode = node;
-    //           return this.fetchMetricInfoById(node).then((data) => {
-    //               console.log("Fetching Metrics Info for node:" + node.metricId);
-    //               node.hide = false;
-    //               let childrenIds = JSON.parse(data.children);
-    //               return this._insertNewNode(node, childrenIds, all, node.childrenFetched).then(() => {
-    //                   console.log("Inserted: " + node.chartName);
-    //                   node.childrenFetched = true;
-    //                   return null;
-    //               });
-    //
-    //           });
-    //       }
-    //       else {
-    //           return null;
-    //       }
-    //   }
-    //
-    //   fetchMetricInfoById(node): any {
-    //       let thisNode = node;
-    //       let p1 = {metric_id: node.metricId};
-    //       if (node.metricId in this.cachedNodeInfo) {
-    //           return this.cachedNodeInfo[node.metricId];
-    //       }
-    //       return this.apiService.post('/metrics/metric_info', p1).subscribe((data) => {
-    //          return data;
-    //       },
-    //         error => {
-    //           console.log(error);
-    //           this.componentState = "Error";
-    //         });
-    //   }
-    //
-    //   collapseNode(node): void {
-    //       if (node.hasOwnProperty("numChildren")) {
-    //           // this.collapseBranch(node);
-    //       }
-    //       node.collapsed = true;
-    //   }
-    //
-    //   collapseBranch(node, traversedNodes): any {
-    //       let thisIndex = this.getIndex(node);
-    //       if (node.hasOwnProperty("numChildren")) {
-    //           this.hideChildren(node, true);
-    //       }
-    //       return traversedNodes;
-    //   }
-    //
-    //   hideChildren(node, root): any {
-    //       let totalHides = 0;
-    //       if (!node) {
-    //           return 0;
-    //       }
-    //       let thisIndex = this.getIndex(node);
-    //
-    //       if (node.hasOwnProperty("numChildren")) {
-    //           if (!node.childrenFetched) {
-    //               return 0;
-    //           }
-    //
-    //           let nextIndex = thisIndex + 1;
-    //           if ((nextIndex >= this.flatNodes.length) && (!node.collapsed)) {
-    //               console.log("Huh!");
-    //               return 0;
-    //           }
-    //           for(let i = 1; i <= node.numChildren  && (nextIndex < this.flatNodes.length); i++) {
-    //               let hides = 0;
-    //               if (true) {
-    //                   hides += this.hideChildren(this.flatNodes[nextIndex], false);
-    //               }
-    //
-    //               this.flatNodes[nextIndex].collapsed = true;
-    //               this.flatNodes[nextIndex].hide = true;
-    //               totalHides += 1 + hides;
-    //               nextIndex += hides + 1;
-    //
-    //           }
-    //       }
-    //       return totalHides;
-    //   };
-    //
-    //   _insertNewNode(node, childrenIds, all, alreadyInserted): any {
-    //       if (childrenIds.length <= 0) {
-    //           return;
-    //       }
-    //       let thisNode = node;
-    //       let thisAll = all;
-    //       let childId = childrenIds.pop();
-    //       let thisChildrenIds = childrenIds;
-    //       let p1 = {metric_id: childId};
-    //       if (!node.hasOwnProperty("childrenGuids")) {
-    //           node.childrenGuids = [];
-    //       }
-    //
-    //       return this.fetchMetricInfoById({metricId: childId}).then((data) => {
-    //           if (!alreadyInserted) {
-    //               console.log("!alreadyInserted");
-    //               return this.getNodeFromData(data).then((newNode) => {
-    //                   newNode.guid = this.guid();
-    //                   thisNode.lineage.forEach((ancestor) => {
-    //                      newNode.lineage.push(ancestor);
-    //                   });
-    //                   newNode.lineage.push(thisNode.guid);
-    //                   console.log("Added childGuid for node:" + node.chartName);
-    //                   node.childrenGuids.push(newNode.guid);
-    //
-    //                   newNode.indent = thisNode.indent + 1;
-    //                   let index = this.getIndex(thisNode);
-    //                   this.flatNodes.splice(index + 1, 0, newNode);
-    //                   this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
-    //                   newNode.hide = false;
-    //                   if (thisAll) {
-    //                       this.expandNode(newNode, thisAll);
-    //                   }
-    //               });
-    //
-    //           } else {
-    //               console.log("alreadyInserted");
-    //               node.childrenGuids.forEach((childGuid) => {
-    //                  let childNode = this.flatNodes[this.getIndex({guid: childGuid})];
-    //                  //let childrenIds = JSON.parse(data.children);
-    //                  childNode.hide = false;
-    //
-    //               });
-    //
-    //               this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
-    //           }
-    //           return null;
-    //       });
-    //   }
-    //
-    //   getIndex(node): any {
-    //       let index = this.flatNodes.map(function(x) {return x.guid;}).indexOf(node.guid);
-    //       return index;
-    //   }
-    //
-    //   getNodeFromData(data): any {
-    //       let newNode = {
-    //           info: data.description,
-    //           label: data.chart_name,
-    //           collapsed: true,
-    //           metricId: data.metric_id,
-    //           hide: true,
-    //           leaf: data.leaf,
-    //           chartName: data.chart_name,
-    //           metricModelName: data.metric_model_name,
-    //           childrenWeights: JSON.parse(data.children_weights),
-    //           children: {},
-    //           lineage: [],
-    //           numChildDegrades: data.last_num_degrades,
-    //           positive: data.positive,
-    //           numChildrenPassed: data.num_children_passed,
-    //           numChildrenFailed: data.last_num_build_failed,
-    //           lastBuildStatus: data.last_build_status,
-    //           numLeaves: data.num_leaves,
-    //           childrenScoreMap: {},
-    //           status: false,
-    //           numChildren: null
-    //
-    //       };
-    //       this.metricMap[newNode.metricId] = {chartName: newNode.chartName};
-    //       if (newNode.info === "") {
-    //           newNode.info = "<p>Please update the description</p>";
-    //       }
-    //
-    //       let dateRange = this.getDateRange();
-    //       let fromDate = dateRange[0];
-    //       let toDate = dateRange[1];
-    //       return this.fetchScores(data.metric_id, fromDate.toISOString(), toDate.toISOString()).then((scoreData) => {
-    //           newNode.childrenScoreMap = scoreData["children_score_map"];
-    //           this.evaluateScores(newNode, scoreData["scores"]);
-    //           newNode.childrenWeights.forEach((info, childId) => {
-    //               newNode.children[childId] = {weight: newNode.childrenWeights[childId], editing: false};
-    //           });
-    //
-    //           if (newNode.lastBuildStatus === "PASSED") {
-    //               newNode.status = true;
-    //           } else {
-    //               newNode.status = false;
-    //           }
-    //
-    //           let newNodeChildrenIds = JSON.parse(data.children);
-    //           if (newNodeChildrenIds.length > 0) {
-    //               newNode.numChildren = newNodeChildrenIds.length;
-    //           }
-    //           return newNode;
-    //       });
-    //   }
-    //
-    //   fetchScores(metricId, fromDate, toDate): any {
-    //       let payload = {};
-    //       payload["metric_id"] = metricId;
-    //       payload["date_range"] = [fromDate, toDate];
-    //       return this.apiService.post('/metrics/scores', payload).subscribe((data) => {
-    //           return data;
-    //       },
-    //         error => {
-    //           console.log(error);
-    //           this.componentState = "Error";
-    //         });
-    //   }
-    //
-    //   getDateRange(): any {
-    //       let today = new Date();
-    //       console.log(today);
-    //       let startMonth = 4 - 1;
-    //       let startDay = 1;
-    //       let startMinute = 59;
-    //       let startHour = 23;
-    //       let startSecond = 1;
-    //       let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
-    //       fromDate = this.getDateBound(fromDate, true);
-    //
-    //       let yesterday = this.getYesterday(today);
-    //       let toDate = new Date(yesterday);
-    //       toDate = this.getDateBound(toDate, false);
-    //       return [fromDate, toDate];
-    //   }
-    //
-    //   getYesterday(today): any {
-    //       let yesterday = new Date(today);
-    //       yesterday.setDate(yesterday.getDate() - 1);
-    //       return yesterday;
-    //   }
-    //
-    //   getDateBound(dt, lower): any {
-    //       let newDay = new Date(dt);
-    //       if (lower) {
-    //           newDay.setHours(0, 0, 1);
-    //       } else {
-    //           newDay.setHours(23, 59, 59);
-    //       }
-    //       return newDay;
-    //   }
-    //
-    //   evaluateScores(node, scores): void {
-    //
-    //       let keys = Object.keys(scores);
-    //       let sortedKeys = keys.sort();
-    //       if (node.chartName === "Total") {
-    //           this.validDates = sortedKeys;
-    //       }
-    //
-    //       if (Object.keys(scores).length) {
-    //           let mostRecentDateTimestamp = sortedKeys.slice(-1)[0];
-    //           let mostRecentDate = new Date(mostRecentDateTimestamp);
-    //           console.log(mostRecentDate);
-    //           console.log(scores[mostRecentDateTimestamp].score);
-    //       }
-    //       let goodnessValues = [];
-    //       sortedKeys.forEach((key) => {
-    //           goodnessValues.push(scores[key].score);
-    //       });
-    //
-    //       node.goodnessValues = goodnessValues;
-    //       try {
-    //               node.goodness = Number(goodnessValues[goodnessValues.length - 1].toFixed(1));
-    //       } catch (e) {
-    //
-    //       }
-    //
-    //       node.childrenGoodnessMap = {};
-    //       node.trend = "flat";
-    //       if (goodnessValues.length > 1) {
-    //           let penultimateGoodness = Number(goodnessValues[goodnessValues.length - 2].toFixed(1));
-    //           if (penultimateGoodness > node.goodness) {
-    //               node.trend = "down";
-    //           } else if (penultimateGoodness < node.goodness) {
-    //               node.trend = "up";
-    //           }
-    //           if (Number(goodnessValues[goodnessValues.length - 1].toFixed(1)) === 0) {
-    //               node.trend = "down";
-    //           }
-    //       }
-    //       console.log("Node: " + node.chartName + " Goodness: " + node.goodness);
-    //   }
-    PerformanceComponent.prototype.doSomething1 = function () {
+    PerformanceComponent.prototype.getGuid = function () {
+        this.lastGuid++;
+        return this.lastGuid;
+    };
+    PerformanceComponent.prototype.fetchDag = function () {
         var _this = this;
-        console.log("Doing Something1");
-        var payload = { "metric_id": 122, "date_range": ["2018-04-01T07:00:01.000Z", "2018-09-13T06:59:59.765Z"] };
-        this.apiService.post('/metrics/scores', payload).subscribe(function (response) {
-            console.log(response.data);
-            _this.componentState = response.message;
+        // Fetch the DAG
+        var payload = { metric_model_name: "MetricContainer", chart_name: "Total" };
+        this.apiService.post("/metrics/dag", payload).subscribe(function (response) {
+            _this.dag = response.data;
+            _this.walkDag(_this.dag);
+            var i = 0;
         }, function (error) {
-            console.log(error);
-            _this.componentState = "Error";
+            _this.loggerService.error("fetchDag");
         });
     };
-    PerformanceComponent.prototype.getComponentState = function () {
-        return this.componentState;
+    PerformanceComponent.prototype.getNodeFromEntry = function (metricId, dagEntry) {
+        var node = new Node();
+        node.metricId = metricId;
+        node.chartName = dagEntry.chart_name;
+        node.metricModelName = dagEntry.metric_model_name;
+        node.numLeaves = dagEntry.num_leaves;
+        node.numChildrenDegrades = dagEntry.last_num_degrades;
+        node.lastNumBuildFailed = dagEntry.last_num_build_failed;
+        return node;
+    };
+    PerformanceComponent.prototype.addNodeToMap = function (metricId, node) {
+        this.nodeMap[metricId] = node;
+    };
+    PerformanceComponent.prototype.getNewFlatNode = function (node) {
+        var newFlatNode = new FlatNode();
+        newFlatNode.gUid = this.getGuid();
+        newFlatNode.node = node;
+        newFlatNode.hide = true;
+        newFlatNode.collapsed = true;
+        return newFlatNode;
+    };
+    PerformanceComponent.prototype.walkDag = function (dagEntry) {
+        var _this = this;
+        this.loggerService.log(dagEntry);
+        var _loop_1 = function (metricId) {
+            var numMetricId = Number(metricId); // TODO, why do we need this conversion
+            var nodeInfo = dagEntry[numMetricId];
+            var newNode = this_1.getNodeFromEntry(numMetricId, dagEntry[numMetricId]);
+            this_1.addNodeToMap(numMetricId, newNode);
+            this_1.flatNodes.push(this_1.getNewFlatNode(newNode));
+            this_1.loggerService.log('Node:' + nodeInfo.chart_name);
+            if (!nodeInfo.leaf) {
+                var children = nodeInfo.children;
+                children.forEach(function (cId) {
+                    //let childEntry: {[childId: number]: object} = {cId: nodeInfo.children_info[Number(childId)]};
+                    var childEntry = (_a = {}, _a[cId] = nodeInfo.children_info[Number(cId)], _a);
+                    _this.walkDag(childEntry);
+                    var _a;
+                });
+            }
+        };
+        var this_1 = this;
+        for (var metricId in dagEntry) {
+            _loop_1(metricId);
+        }
+    };
+    PerformanceComponent.prototype.setValues = function (pageNumber) {
+        this.data = [['hi', 'hello'], ['how', 'are']];
+        this.headers = ['Names', 'Numbers'];
+    };
+    PerformanceComponent.prototype.goBack = function () {
+        this.location.back();
+    };
+    PerformanceComponent.prototype.getLastStatusUpdateTime = function () {
+        var _this = this;
+        this.apiService.get('/common/time_keeper/' + "last_status_update").subscribe(function (data) {
+            _this.lastStatusUpdateTime = data;
+        }, function (error) {
+        });
+    };
+    PerformanceComponent.prototype.fetchRootMetricInfo = function (chartName, metricModelName) {
+        var _this = this;
+        var payload = { "metric_model_name": metricModelName, chart_name: chartName };
+        this.apiService.post('/metrics/chart_info', payload).subscribe(function (data) {
+            return data;
+        }, function (error) {
+            _this.loggerService.error("fetchRootMetricInfo");
+        });
+    };
+    PerformanceComponent.prototype.populateNodeInfoCache = function (data) {
+        var _this = this;
+        if (!(data.metric_id in this.cachedNodeInfo)) {
+            this.cachedNodeInfo[data.metric_id] = data;
+        }
+        data.children_info.forEach(function (value, key) {
+            _this.cachedNodeInfo[key] = value;
+            value.children_info.forEach(function (v2, key2) {
+                _this.populateNodeInfoCache(v2);
+            });
+        });
     };
     PerformanceComponent.prototype.counter = function (i) {
         return new Array(i);
-    };
-    PerformanceComponent.prototype.setValues = function (pageNumber) {
-        this.data["rows"] = [['hi', 'hello'], ['how', 'are']];
-        this.data["headers"] = ['Names', 'Numbers'];
-        this.data["all"] = false;
-        this.data["totalLength"] = 14;
-        this.data["currentPageIndex"] = pageNumber;
-        this.data["pageSize"] = this.data["rows"].length;
     };
     PerformanceComponent = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
@@ -1443,11 +1219,699 @@ var PerformanceComponent = /** @class */ (function () {
             template: __webpack_require__(/*! ./performance.component.html */ "./src/app/performance/performance.component.html"),
             styles: [__webpack_require__(/*! ./performance.component.css */ "./src/app/performance/performance.component.css")]
         }),
-        __metadata("design:paramtypes", [_services_api_api_service__WEBPACK_IMPORTED_MODULE_1__["ApiService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_2__["LoggerService"]])
+        __metadata("design:paramtypes", [_angular_common__WEBPACK_IMPORTED_MODULE_1__["Location"],
+            _services_api_api_service__WEBPACK_IMPORTED_MODULE_2__["ApiService"],
+            _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_3__["LoggerService"]])
     ], PerformanceComponent);
     return PerformanceComponent;
 }());
 
+//
+//     this.clearNodeInfoCache = () => {
+//         this.cachedNodeInfo = {};
+//     };
+//
+//
+//
+//
+//
+//
+//
+//     this.getIndex = (node) => {
+//         let index = this.flatNodes.map(function(x) {return x.guid;}).indexOf(node.guid);
+//         return index;
+//     };
+//
+//     this.getNode = (guid) => {
+//         return this.flatNodes[this.getIndex({guid: guid})];
+//     };
+//
+//     this.expandAllNodes = () => {
+//         this.flatNodes.forEach((node) => {
+//             this.expandNode(node, true);
+//         });
+//         this.collapsedAll = false;
+//         this.expandedAll = true;
+//     };
+//
+//     this.collapseAllNodes = () => {
+//         this.collapseNode(this.flatNodes[0]);
+//         this.expandedAll = false;
+//         this.collapsedAll = true;
+//     };
+//
+//     this.getDateBound = (dt, lower) => {
+//         let newDay = new Date(dt);
+//         if (lower) {
+//             newDay.setHours(0, 0, 1);
+//         } else {
+//             newDay.setHours(23, 59, 59);
+//         }
+//
+//         return newDay;
+//     };
+//
+//     function isSameDay(d1, d2) {
+//           return d1.getFullYear() === d2.getUTCFullYear() &&
+//             d1.getUTCMonth() === d2.getUTCMonth() &&
+//             d1.getUTCDate() === d2.getUTCDate();
+//     }
+//
+//     this.getYesterday = (today) => {
+//         let yesterday = new Date(today);
+//         yesterday = yesterday.setDate(yesterday.getDate() - 1);
+//         return yesterday;
+//     };
+//
+//
+//     this.getDateRange = () => {
+//         let today = new Date();
+//         console.log(today);
+//         let startMonth = 4 - 1;
+//         let startDay = 1;
+//         let startMinute = 59;
+//         let startHour = 23;
+//         let startSecond = 1;
+//         let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
+//         fromDate = this.getDateBound(fromDate, true);
+//         // console.log(fromDate);
+//         // console.log(this.getDateBound(fromDate, true));
+//         // console.log(this.getDateBound(fromDate, false));
+//
+//         let yesterday = this.getYesterday(today);
+//         let toDate = new Date(yesterday);
+//         toDate = this.getDateBound(toDate, false);
+//         //let fromDate = new Date();
+//         // fromDate.setDate(toDate.getDate() - 7);
+//         // fromDate = this.getDateBound(fromDate, true);
+//         return [fromDate, toDate];
+//
+//     };
+//
+//
+//
+//     this.fetchScores = (metricId, fromDate, toDate) => {
+//         let payload = {};
+//         payload.metric_id = metricId;
+//         payload.date_range = [fromDate, toDate];
+//         return commonService.apiPost('/metrics/scores', payload).then((data) => {
+//             return data;
+//         });
+//     };
+//
+//
+//     this.getSumChildWeights = (children) => {
+//         let sumOfWeights = 0;
+//         angular.forEach(children, (info, childId) => {
+//             sumOfWeights += info.weight;
+//         });
+//         return sumOfWeights;
+//     };
+//
+//     this.getScoreTotal = (currentNode) => {
+//         let children = currentNode.children;
+//         let scoreTotal = 0;
+//
+//
+//         angular.forEach(children, (info, childId) => {
+//             scoreTotal += info.weight * currentNode.childrenScoreMap[childId];
+//         });
+//
+//         let lastDate = new Date(this.validDates.slice(-1)[0] * 1000);
+//         let lastDateLower = this.getDateBound(lastDate, true);
+//         let lastDateUpper = this.getDateBound(lastDate, false);
+//
+//
+//
+//
+//         return scoreTotal;
+//     };
+//
+//     this.evaluateScores = (node, scores) => {
+//
+//         let keys = Object.keys(scores);
+//         let sortedKeys = keys.sort();
+//         if (node.chartName === "Total") {
+//             this.validDates = sortedKeys;
+//         }
+//
+//         if (Object.keys(scores).length) {
+//
+//             let mostRecentDateTimestamp = sortedKeys.slice(-1)[0];
+//             let mostRecentDate = new Date(mostRecentDateTimestamp * 1000);
+//             console.log(mostRecentDate);
+//             console.log(scores[mostRecentDateTimestamp].score);
+//             /*
+//             let dateRange = this.getDateRange();
+//             let fromDate = dateRange[0].getTime()/1000;
+//             let toDate = dateRange[1].getTime()/1000;
+//             let lastEntry = scores[toDate].score;*/
+//         }
+//         let goodnessValues = [];
+//         sortedKeys.forEach((key) => {
+//             goodnessValues.push(scores[key].score);
+//         });
+//
+//         // console.log("Goodness values: " + goodnessValues);
+//
+//         node.goodnessValues = goodnessValues;
+//         try {
+//                 node.goodness = Number(goodnessValues[goodnessValues.length - 1].toFixed(1));
+//         } catch (e) {
+//
+//         }
+//
+//         node.childrenGoodnessMap = {};
+//         node.trend = "flat";
+//         if (goodnessValues.length > 1) {
+//             let penultimateGoodness = Number(goodnessValues[goodnessValues.length - 2].toFixed(1));
+//             if (penultimateGoodness > node.goodness) {
+//                 node.trend = "down";
+//             } else if (penultimateGoodness < node.goodness) {
+//                 node.trend = "up";
+//             }
+//             if (Number(goodnessValues[goodnessValues.length - 1].toFixed(1)) === 0) {
+//                 node.trend = "down";
+//             }
+//         }
+//         console.log("Node: " + node.chartName + " Goodness: " + node.goodness);
+//     };
+//
+//     this.evaluateGoodness = (node, goodness_values, children_goodness_map) => {
+//         if (goodness_values.length) {
+//             try {
+//                 node.goodness = Number(goodness_values[goodness_values.length - 1].toFixed(1));
+//             } catch (e) {
+//             }
+//             node.goodnessValues = goodness_values;
+//             node.childrenGoodnessMap = children_goodness_map;
+//             node.trend = "flat";
+//             let penultimateGoodness = Number(goodness_values[goodness_values.length - 2].toFixed(1));
+//             if (penultimateGoodness > node.goodness) {
+//                 node.trend = "down";
+//             } else if (penultimateGoodness < node.goodness) {
+//                 node.trend = "up";
+//             }
+//             if (Number(goodness_values[goodness_values.length - 1].toFixed(1)) === 0) {
+//                 node.trend = "down";
+//             }
+//         }
+//     };
+//
+//     this.getLastElement = (array) => {
+//         let result = null;
+//         if (array.length) {
+//             result = array[array.length - 1];
+//         }
+//         return result;
+//     };
+//
+//     this.setCurrentChart = (node) => {
+//         this.mode = "showingAtomicMetric";
+//         this.currentChartName = node.chartName;
+//         this.currentMetricModelName = node.metricModelName;
+//         this.currentNode = node;
+//     };
+//
+//     this.showNodeInfoClick = (node) => {
+//         if(this.currentMetricModelName === 'MetricContainer') {
+//             this.showingContainerNodeInfo = !this.showingContainerNodeInfo;
+//         }
+//         else {
+//             this.showingNodeInfo = !this.showingNodeInfo;
+//             this.currentNodeInfo = null;
+//             if (node.positive) {
+//                 this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/expected value) * 100&nbsp)/n";
+//             } else {
+//                 this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
+//             }
+//             this.currentNodeInfo += "&nbsp, where n is the number of data-sets";
+//         }
+//     };
+//
+//
+//
+//
+//     this.getChildWeight = (node, childMetricId) => {
+//         if (node.hasOwnProperty("childrenWeights")) {
+//             return node.childrenWeights[childMetricId];
+//         } else {
+//             return 0;
+//         }
+//     };
+//
+//     this.editDescriptionClick = () => {
+//         this.editingDescription = true;
+//     };
+//
+//
+//     this.closeEditingDescriptionClick = () => {
+//         this.editingDescription = false;
+//     };
+//
+//     this.openAtomicTab = () => {
+//         let url = "/metrics/atomic/" + this.currentChartName + "/" + this.currentMetricModelName;
+//         $window.open(url, '_blank');
+//     };
+//
+//     this.submitDescription = (node) => {
+//         let payload = {};
+//         payload["metric_model_name"] = node.metricModelName;
+//         payload["chart_name"] = node.chartName;
+//         payload["description"] = this.inner.nonAtomicMetricInfo;
+//
+//         // TODO: Refresh cache
+//         commonService.apiPost('/metrics/update_chart', payload, "EditDescription: Submit").then((data) => {
+//             if (data) {
+//                 alert("Submitted");
+//             } else {
+//                 alert("Submission failed. Please check alerts");
+//             }
+//         });
+//         this.editingDescription = false;
+//
+//     };
+//
+//     this.tooltipFormatter = (x, y) => {
+//         let softwareDate = "Unknown";
+//         let hardwareVersion = "Unknown";
+//         let sdkBranch = "Unknown";
+//         let gitCommit = "Unknown";
+//         let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
+//         let match = r.exec(x);
+//         let key = "";
+//         if (match) {
+//             key = match[1];
+//         }
+//         let s = "";
+//
+//         if (key in this.buildInfo) {
+//             softwareDate = this.buildInfo[key]["software_date"];
+//             hardwareVersion = this.buildInfo[key]["hardware_version"];
+//             sdkBranch = this.buildInfo[key]["fun_sdk_branch"]
+//             s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
+//             s += "<b>Software date:</b> " + softwareDate + "<br>";
+//             s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
+//             s += "<b>Git commit:</b> " + this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "")  + "<br>";
+//             s += "<b>Value:</b> " + y + "<br>";
+//         } else {
+//             s += "<b>Value:</b> " + y + "<br>";
+//         }
+//
+//         return s;
+//     };
+//
+//
+//     this.fetchMetricInfoById = (node) => {
+//         let thisNode = node;
+//         let p1 = {metric_id: node.metricId};
+//         if (node.metricId in this.cachedNodeInfo) {
+//             return $q.resolve(this.cachedNodeInfo[node.metricId]);
+//         }
+//         return commonService.apiPost('/metrics/metric_info', p1).then((data) => {
+//            return data;
+//         });
+//     };
+//
+//
+//     this.testClick = function () {
+//         console.log("testClick");
+//         console.log(ctrl.f);
+//     };
+//
+//     this.showInfoClick = (node) => {
+//         node.showInfo = !node.showInfo;
+//     };
+//
+//     this.getConsolidatedTrend = (node) => {
+//         let numTrendDown = 0;
+//
+//         if (node.hasOwnProperty("childrenGuids")) {
+//             node.childrenGuids.forEach((childGuid) => {
+//                 let child = this.flatNodes[this.getIndex({guid: childGuid})];
+//                 numTrendDown += this.getConsolidatedTrend(child);
+//             });
+//         } else {
+//             if (node.trend === "down") {
+//                 numTrendDown += 1;
+//             }
+//         }
+//         return numTrendDown;
+//     };
+//
+//     this.getStatusHtml = (node) => {
+//         let s = "";
+//         if (node.leaf) {
+//             if (node.hasOwnProperty("status")) {
+//                 if (node.status !== true) {
+//                     s = "Bld: <label class=\"label label-danger\">FAILED</label>";
+//                 }
+//                 if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
+//                     s = "<p style='background-color: white' class=\"\">No Data</p>";
+//                 }
+//             }
+//         } else {
+//
+//
+//
+//             //s = "<p><span style='color: green'>&#10003;:</span><b>" + numTrendUp + "</b>" + "&nbsp" ;
+//             //s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
+//             /*if (node.chartName === "BLK_LSV: Latency") {
+//                 let u = 0;
+//             }*/
+//
+//             if (node.numChildDegrades) {
+//                 s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildDegrades + "";
+//             }
+//             if (node.numChildrenFailed) {
+//                 if (node.numChildDegrades) {
+//                     s += ",&nbsp";
+//                 }
+//                 s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.numChildrenFailed + "</span>";
+//             }
+//         }
+//         return s;
+//     };
+//
+//     this.getTrendHtml = (node) => {
+//         let s = "";
+//         if (node.hasOwnProperty("trend")) {
+//             if (node.trend === "up") {
+//                 s = "<icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon>&nbsp";
+//             } else if (node.trend === "down") {
+//                 s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>&nbsp;";
+//             }
+//             else if (node.trend === "flat") {
+//                 s = "<icon class=\"fa fa-arrow-down aspect-trend-icon\" style=\"visibility: hidden;\"></icon>&nbsp;";
+//             }
+//         }
+//         return s;
+//     };
+//
+//     this.isLeafsParent = (node) => {
+//         let isLeafParent = false; // Parent of a leaf
+//         if (node.hasOwnProperty("childrenGuids")) {
+//             node.childrenGuids.forEach((childGuid) => {
+//                 let child = this.flatNodes[this.getIndex({guid: childGuid})];
+//                 if (child.leaf) {
+//                     isLeafParent = true;
+//                 }
+//             });
+//         }
+//         return isLeafParent;
+//     };
+//
+//     this.showNonAtomicMetric = (node) => {
+//         this.resetGrid();
+//         this.mode = "showingNonAtomicMetric";
+//         this.currentNode = node;
+//         this.currentChartName = node.chartName;
+//         this.currentMetricModelName = "MetricContainer";
+//         this.expandNode(node).then(() => {
+//
+//             //this.mode = "showingNonAtomicMetric";
+//             this._setupGoodnessTrend(node);
+//             this.inner.nonAtomicMetricInfo = node.info;
+//             //this.currentNode = null;
+//            // this.currentNode = node;
+//             // let payload = {
+//             //     metric_model_name: "MetricContainer",
+//             //     chart_name: node.chartName
+//             // };
+//             //this.currentChartName = node.chartName;
+//             //this.currentMetricModelName = "MetricContainer";
+//             console.log("Before getting leaves");
+//             if ((node.chartName === "All metrics") || (!this.isLeafsParent(node))) {
+//                 return $q.resolve(null);
+//             } else {
+//                 return $q.resolve(null); // Disable for now
+//                 // commonService.apiPost('/metrics/get_leaves', payload, 'test').then((leaves) => {
+//                 //
+//                 //     let flattenedLeaves = {};
+//                 //     this.flattenLeaves("", flattenedLeaves, leaves);
+//                 //     $timeout(()=> {
+//                 //         this.prepareGridNodes(flattenedLeaves);
+//                 //     }, 1000);
+//                 //
+//                 //     console.log(angular.element($window).width());
+//                 //
+//                 // });
+//
+//             }
+//
+//         });
+//
+//
+//     };
+//
+//     this.flattenLeaves = function (parentName, flattenedLeaves, node) {
+//         let myName = node.name;
+//         if (parentName !== "") {
+//             myName = parentName + " > " + node.name;
+//         }
+//         if (!node.leaf) {
+//             node.children.forEach((child) => {
+//                 this.flattenLeaves(myName, flattenedLeaves, child);
+//             });
+//         } else {
+//             node.lineage = parentName;
+//             let newNode = {name: node.name, id: node.id, metricModelName: node.metric_model_name};
+//             flattenedLeaves[newNode.id] = newNode;
+//         }
+//     };
+//
+//     this.resetGrid = () => {
+//         this.grid = [];
+//     };
+//
+//     this.prepareGridNodes = (flattenedNodes) => {
+//         let maxRowsInMiniChartGrid = 10;
+//         console.log("Prepare Grid nodes");
+//         let tempGrid = [];
+//         let rowIndex = 0;
+//         Object.keys(flattenedNodes).forEach((key) => {
+//             if (rowIndex < maxRowsInMiniChartGrid) {
+//                 if (tempGrid.length - 1 < rowIndex) {
+//                     tempGrid.push([]);
+//                 }
+//                 tempGrid[rowIndex].push(flattenedNodes[key]);
+//                 if (tempGrid[rowIndex].length === this.numGridColumns) {
+//                     rowIndex++;
+//                 }
+//             }
+//         });
+//         this.grid = tempGrid;
+//
+//     };
+//
+//     this._setupGoodnessTrend = (node) => {
+//         let values = [{
+//                 data: node.goodnessValues
+//             }];
+//         this.goodnessTrendValues = null;
+//         $timeout (() => {
+//             this.goodnessTrendValues = values;
+//         }, 1);
+//
+//         this.charting = true;
+//
+//         this.goodnessTrendChartTitle = node.chartName;
+//     };
+//
+//     this.getChildrenGuids = (node) => {
+//         return node.childrenGuids;
+//     };
+//
+//     this.showGoodnessTrend = (node) => {
+//         this.mode = "showingGoodnessTrend";
+//         this._setupGoodnessTrend(node);
+//     };
+//
+//     this.getIndentHtml = (node) => {
+//         let s = "";
+//         if (node.hasOwnProperty("indent")) {
+//             for(let i = 0; i < node.indent - 1; i++) {
+//                 s += "<span style=\"color: white\">&rarr;</span>";
+//             }
+//             if (node.indent)
+//                 s += "<span>&nbsp;&nbsp;</span>";
+//         }
+//
+//         return s;
+//     };
+//
+//     this.editingWeightClick = (info) => {
+//         info.editing = true;
+//         info.editingWeight = info.weight;
+//     };
+//
+//     this.submitWeightClick = (node, childId, info) => {
+//         let payload = {};
+//         payload.metric_id = node.metricId;
+//         payload.lineage = node.lineage;
+//         payload.child_id = childId;
+//         payload.weight = info.editingWeight;
+//         commonService.apiPost('/metrics/update_child_weight', payload).then((data) => {
+//             info.weight = info.editingWeight;
+//             this.clearNodeInfoCache();
+//             if (node.hasOwnProperty("lineage") && node.lineage.length > 0) {
+//                 this.refreshNode(this.getNode(node.lineage[0]));
+//             } else {
+//                 this.refreshNode(node);
+//             }
+//         });
+//         info.editing = false;
+//     };
+//
+//     this.closeEditingWeightClick = (info) => {
+//         info.editing = false;
+//     };
+//
+//
+//     this.collapseNode = (node) => {
+//         if (node.hasOwnProperty("numChildren")) {
+//             this.collapseBranch(node);
+//         }
+//         node.collapsed = true;
+//     };
+//
+//
+//
+//     this._insertNewNode = (node, childrenIds, all, alreadyInserted) => {
+//         if (childrenIds.length <= 0) {
+//             return;
+//         }
+//         let thisNode = node;
+//         let thisAll = all;
+//         let childId = childrenIds.pop();
+//         let thisChildrenIds = childrenIds;
+//         let p1 = {metric_id: childId};
+//         if (!node.hasOwnProperty("childrenGuids")) {
+//             node.childrenGuids = [];
+//         }
+//
+//         return this.fetchMetricInfoById({metricId: childId}).then((data) => {
+//             if (!alreadyInserted) {
+//                 console.log("!alreadyInserted");
+//                 return this.getNodeFromData(data).then((newNode) => {
+//                     newNode.guid = this.guid();
+//                     thisNode.lineage.forEach((ancestor) => {
+//                        newNode.lineage.push(ancestor);
+//                     });
+//                     newNode.lineage.push(thisNode.guid);
+//                     console.log("Added childGuid for node:" + node.chartName);
+//                     node.childrenGuids.push(newNode.guid);
+//
+//                     newNode.indent = thisNode.indent + 1;
+//                     let index = this.getIndex(thisNode);
+//                     this.flatNodes.splice(index + 1, 0, newNode);
+//                     this._insertNewNode(thisNode, thisChildrenIds, thisAll);
+//                     newNode.hide = false;
+//                     if (thisAll) {
+//                         this.expandNode(newNode, thisAll);
+//                     }
+//                 });
+//
+//             } else {
+//                 console.log("alreadyInserted");
+//                 node.childrenGuids.forEach((childGuid) => {
+//                    let childNode = this.flatNodes[this.getIndex({guid: childGuid})];
+//                    //let childrenIds = JSON.parse(data.children);
+//                    childNode.hide = false;
+//
+//                 });
+//
+//                 this._insertNewNode(thisNode, thisChildrenIds, thisAll, alreadyInserted);
+//             }
+//             return $q.resolve(null);
+//         });
+//
+//
+//     };
+//
+//     this.refreshNode = (node) => {
+//         let payload = {metric_id: node.metricId};
+//         commonService.apiPost('/metrics/metric_info', payload).then((data) => {
+//             this.populateNodeInfoCache(data);
+//             this.evaluateGoodness(node, data.goodness_values, data.children_goodness_map);
+//             this._setupGoodnessTrend(node);
+//         });
+//         if (node.hasOwnProperty("childrenGuids")) {
+//             node.childrenGuids.forEach((childGuid) => {
+//                 this.refreshNode(this.getNode(childGuid));
+//             });
+//         }
+//     };
+//
+//
+//     this.collapseBranch = (node, traversedNodes) => {
+//         let thisIndex = this.getIndex(node);
+//         if (node.hasOwnProperty("numChildren")) {
+//             this.hideChildren(node, true);
+//             /*
+//             for(let i = 1; i <= node.numChildren; i++) {
+//                 if (!node.collapsed) {
+//                     traversedNodes += this.collapseBranch(this.flatNodes[thisIndex + traversedNodes + 2]);
+//                     this.flatNodes[thisIndex + traversedNodes + 1].collapsed = true;
+//                     this.flatNodes[thisIndex + traversedNodes + 1].hide = true;
+//                 }
+//             }*/
+//         }
+//         return traversedNodes;
+//     };
+//
+//     this.hideChildren = (node, root) => {
+//         let totalHides = 0;
+//         if (!node) {
+//             return 0;
+//         }
+//         let thisIndex = this.getIndex(node);
+//
+//
+//
+//         if (node.hasOwnProperty("numChildren")) {
+//             if (!node.childrenFetched) {
+//                 return 0;
+//             }
+//
+//             let nextIndex = thisIndex + 1;
+//             if ((nextIndex >= this.flatNodes.length) && (!node.collapsed)) {
+//                 console.log("Huh!");
+//                 return 0;
+//             }
+//             for(let i = 1; i <= node.numChildren  && (nextIndex < this.flatNodes.length); i++) {
+//                 let hides = 0;
+//                 if (true) {
+//                     hides += this.hideChildren(this.flatNodes[nextIndex], false);
+//                 }
+//
+//                 this.flatNodes[nextIndex].collapsed = true;
+//                 this.flatNodes[nextIndex].hide = true;
+//                 totalHides += 1 + hides;
+//                 nextIndex += hides + 1;
+//
+//             }
+//         }
+//         /*
+//         if (!root) {
+//             this.flatNodes[thisIndex].collapsed = true;
+//             this.flatNodes[thisIndex].hide = true;
+//             totalHides += 1;
+//         }*/
+//         return totalHides;
+//     };
+//
+//     isNodeVisible = (node) => {
+//         return !node.hide;
+//     }
+//
+// }
+//
+//
+//
+//
+//
+//
 
 
 /***/ }),
@@ -1814,7 +2278,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<!--<p>-->\n  <!--test works!-->\n\n<!--</p>-->\n<!--<div class=\"jumbotron text-center\">-->\n  <!--<h1>My First Bootstrap Page</h1>-->\n  <!--<p>Resize this responsive page to see the effect!</p>-->\n<!--</div>-->\n\n<!--<div class=\"container\">-->\n  <!--<div class=\"row\">-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 1</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 2</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 3</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n  <!--</div>-->\n<!--</div>-->\n\n<!--<ul class=\"list-group\">-->\n  <!--<li class=\"list-group-item active\">Active item</li>-->\n  <!--<li class=\"list-group-item\">Second item</li>-->\n  <!--<li class=\"list-group-item\">Third item</li>-->\n<!--</ul>-->\n\n<!--<div class=\"container\">-->\n  <!--<h2>Card Image</h2>-->\n  <!--<p>Image at the top (card-img-top):</p>-->\n  <!--<div class=\"card\" style=\"width:400px\">-->\n    <!--<img class=\"card-img-top\" src=\"https://www.w3schools.com/bootstrap4/img_avatar1.png\" alt=\"Card image\" style=\"width:100%\">-->\n    <!--<div class=\"card-body\">-->\n      <!--<h4 class=\"card-title\">John Doe</h4>-->\n      <!--<p class=\"card-text\">Some example text some example text. John Doe is an architect and engineer</p>-->\n      <!--<a href=\"#\" class=\"btn btn-primary\">See Profile</a>-->\n    <!--</div>-->\n  <!--</div>-->\n  <!--<br>-->\n\n  <!--<p>Image at the bottom (card-img-bottom):</p>-->\n  <!--<div class=\"card\" style=\"width:400px\">-->\n    <!--<div class=\"card-body\">-->\n      <!--<h4 class=\"card-title\">Jane Doe</h4>-->\n      <!--<p class=\"card-text\">Some example text some example text. Jane Doe is an architect and engineer</p>-->\n      <!--<a href=\"#\" class=\"btn btn-primary\">See Profile</a>-->\n    <!--</div>-->\n    <!--<img class=\"card-img-bottom\" src=\"img_avatar6.png\" alt=\"Card image\" style=\"width:100%\">-->\n  <!--</div>-->\n<!--</div>-->\n<fun-chart [yValues]=\"yValues\" [xValues]=\"xValues\" [title]=\"title\" [xAxisLabel]=\"xAxisLabel\" [yAxisLabel]=\"yAxisLabel\"></fun-chart>\n"
+module.exports = "<!--<p>-->\n  <!--test works!-->\n\n<!--</p>-->\n<!--<div class=\"jumbotron text-center\">-->\n  <!--<h1>My First Bootstrap Page</h1>-->\n  <!--<p>Resize this responsive page to see the effect!</p>-->\n<!--</div>-->\n\n<!--<div class=\"container\">-->\n  <!--<div class=\"row\">-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 1</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 2</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n    <!--<div class=\"col-sm-4\">-->\n      <!--<h3>Column 3</h3>-->\n      <!--<p>Lorem ipsum dolor..</p>-->\n      <!--<p>Ut enim ad..</p>-->\n    <!--</div>-->\n  <!--</div>-->\n<!--</div>-->\n\n<!--<ul class=\"list-group\">-->\n  <!--<li class=\"list-group-item active\">Active item</li>-->\n  <!--<li class=\"list-group-item\">Second item</li>-->\n  <!--<li class=\"list-group-item\">Third item</li>-->\n<!--</ul>-->\n\n<!--<div class=\"container\">-->\n  <!--<h2>Card Image</h2>-->\n  <!--<p>Image at the top (card-img-top):</p>-->\n  <!--<div class=\"card\" style=\"width:400px\">-->\n    <!--<img class=\"card-img-top\" src=\"https://www.w3schools.com/bootstrap4/img_avatar1.png\" alt=\"Card image\" style=\"width:100%\">-->\n    <!--<div class=\"card-body\">-->\n      <!--<h4 class=\"card-title\">John Doe</h4>-->\n      <!--<p class=\"card-text\">Some example text some example text. John Doe is an architect and engineer</p>-->\n      <!--<a href=\"#\" class=\"btn btn-primary\">See Profile</a>-->\n    <!--</div>-->\n  <!--</div>-->\n  <!--<br>-->\n\n  <!--<p>Image at the bottom (card-img-bottom):</p>-->\n  <!--<div class=\"card\" style=\"width:400px\">-->\n    <!--<div class=\"card-body\">-->\n      <!--<h4 class=\"card-title\">Jane Doe</h4>-->\n      <!--<p class=\"card-text\">Some example text some example text. Jane Doe is an architect and engineer</p>-->\n      <!--<a href=\"#\" class=\"btn btn-primary\">See Profile</a>-->\n    <!--</div>-->\n    <!--<img class=\"card-img-bottom\" src=\"img_avatar6.png\" alt=\"Card image\" style=\"width:100%\">-->\n  <!--</div>-->\n<!--</div>-->\n<div class=\"card\">\n<fun-chart [yValues]=\"yValues\" [xValues]=\"xValues\" [title]=\"title\" [xAxisLabel]=\"xAxisLabel\" [yAxisLabel]=\"yAxisLabel\"></fun-chart>\n</div>\n"
 
 /***/ }),
 
@@ -1845,15 +2309,15 @@ var TestComponent = /** @class */ (function () {
         this.xValues = [];
     }
     TestComponent.prototype.ngOnInit = function () {
-        var temp = [];
-        temp["name"] = 'series 1';
-        temp["data"] = [1, 2, 3, 4, 5];
-        this.yValues[0] = temp;
-        // this.yValues.push({ name: 'series 1', data: [1,2,3,4,5]});
-        // this.yValues.push({ name: 'series 2', data: [6,7,8,9,10]});
-        // this.yValues.push({ name: 'series 3', data: [11,12,13,14,15]});
-        // this.yValues.push({ name: 'series 4', data: [16,17,18,19,20]});
-        // this.yValues.push({ name: 'series 5', data: [21,22,23,24,25]});
+        // let temp = [];
+        // temp["name"] = 'series 1';
+        // temp["data"] = [1,2,3,4,5];
+        // this.yValues[0] = temp;
+        this.yValues.push({ name: 'series 1', data: [1, 2, 3, 4, 5] });
+        this.yValues.push({ name: 'series 2', data: [6, 7, 8, 9, 10] });
+        this.yValues.push({ name: 'series 3', data: [11, 12, 13, 14, 15] });
+        this.yValues.push({ name: 'series 4', data: [16, 17, 18, 19, 20] });
+        this.yValues.push({ name: 'series 5', data: [21, 22, 23, 24, 25] });
         this.xValues.push([0, 1, 2, 3, 4]);
         this.title = "Funchart";
         this.xAxisLabel = "Date";
@@ -1934,7 +2398,7 @@ Object(_angular_platform_browser_dynamic__WEBPACK_IMPORTED_MODULE_1__["platformB
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /Users/ash/Desktop/Integration/fun_test/web/angular/qadashboard/src/main.ts */"./src/main.ts");
+module.exports = __webpack_require__(/*! /Users/johnabraham/PycharmProjects/fun_test/Integration/fun_test/web/angular/qadashboard/src/main.ts */"./src/main.ts");
 
 
 /***/ })

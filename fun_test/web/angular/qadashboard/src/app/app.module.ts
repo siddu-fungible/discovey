@@ -13,7 +13,6 @@ import {ApiService} from "./services/api/api.service";
 import {LoggerService} from "./services/logger/logger.service";
 import { TestComponent } from './test/test.component';
 import { FunTableFilterPipe } from './pipe/fun-table-filter.pipe';
-import { ChartModule } from 'angular-highcharts';
 import { ChartComponent } from './chart/chart.component';
 import { FunChartComponent } from './fun-chart/fun-chart.component';
 
@@ -34,8 +33,7 @@ import { FunChartComponent } from './fun-chart/fun-chart.component';
     HttpClientModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    MatSortModule,
-    ChartModule
+    MatSortModule
   ],
 
   providers: [ApiService, LoggerService],

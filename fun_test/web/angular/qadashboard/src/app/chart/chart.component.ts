@@ -6,7 +6,7 @@ import { ApiService} from "../services/api/api.service";
   selector: 'app-fun-chart',
   template: `
     <button (click)="add()">Add Point!</button>
-    <div [chart]="chart"></div>
+    <!--div [chart]="chart"></div-->
   `
 })
 export class ChartComponent implements OnInit {
