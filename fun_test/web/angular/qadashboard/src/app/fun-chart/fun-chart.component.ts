@@ -31,6 +31,8 @@ export class FunChartComponent implements OnInit {
   @Input() title: string;
   @Input() xAxisLabel: string;
   @Input() y1AxisLabel: string;
+  @Input() public xAxisFormatter: Function;
+  @Input() public tooltipFormatter: Function;
   chart: any;
 
   // @Input() xValues: any[];
@@ -57,8 +59,20 @@ export class FunChartComponent implements OnInit {
     xAxis: {
       title: {
         text: this.xAxisLabel
+      },
+      categories: this.xValues,
+      labels: {
+        formatter: () => {
+          return this.xAxisFormatter(this.xValues);
+        }
+
       }
     },
+      // tooltip: {
+      //   formatter: () => {
+      //     return this.tooltipFormatter(this.y1Values);
+      //   }
+      //},
     yAxis: {
       title: {
         text: this.y1AxisLabel

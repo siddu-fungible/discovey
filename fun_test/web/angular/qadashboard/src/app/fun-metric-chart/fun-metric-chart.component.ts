@@ -28,8 +28,6 @@ export class FunMetricChartComponent implements OnInit {
   width: any;
   height: any;
   pointClickCallback: any = null;
-  xAxisFormatter: any;
-  tooltipFormatter: any;
   tableInfo: any;
   buildInfo: any;
   timeMode: string;
@@ -48,6 +46,8 @@ export class FunMetricChartComponent implements OnInit {
   chart1XaxisTitle: any;
   chart1YaxisTitle: any;
   y1AxisTitle: any;
+  public formatter: Function;
+  public tooltip: Function;
 
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) {
@@ -82,17 +82,25 @@ export class FunMetricChartComponent implements OnInit {
 
     this.values = null;
     this.charting = true;
-    this.xAxisFormatter = null;
-    this.tooltipFormatter = null;
     this.buildInfo = null;
     this.fetchBuildInfo();
+    this.formatter = this.xAxisFormatter.bind(this);
+    this.tooltip = this.tooltipFormatter.bind(this);
     // if (this.pointClickCallback) {
     //   this.pointClickCallback = (point) => {
     //     if (!$attrs.pointClickCallback) return null;
     //     this.pointClickCallback()(point);
     //   };
     // }
-    this.xAxisFormatter = (value) => {
+
+  }
+
+  ngOnChanges() {
+    this.setDefault();
+    this.fetchInfo();
+  }
+
+   public xAxisFormatter(value): any {
       let s = "Error";
       const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -112,9 +120,9 @@ export class FunMetricChartComponent implements OnInit {
       }
       return s;
 
-    };
+    }
 
-    this.tooltipFormatter = (x, y) => {
+    tooltipFormatter(x, y): any {
       let softwareDate = "Unknown";
       let hardwareVersion = "Unknown";
       let sdkBranch = "Unknown";
@@ -148,13 +156,7 @@ export class FunMetricChartComponent implements OnInit {
       }
 
       return s;
-    };
-  }
-
-  ngOnChanges() {
-    this.setDefault();
-    this.fetchInfo();
-  }
+    }
 
   fetchInfo() {
     let payload = {};
@@ -174,7 +176,6 @@ export class FunMetricChartComponent implements OnInit {
           this.inner.leaf = this.leaf;
           this.status = "idle";
         }
-        // let thisChartInfo = chartInfo;
         setTimeout(() => {
           this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, null);
         }, this.waitTime);
@@ -294,21 +295,6 @@ export class FunMetricChartComponent implements OnInit {
       this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets); // TODO: Race condition on chartInfo
     } else {
       this.fetchMetricsData(this.modelName, this.chartName, null, this.previewDataSets); // TODO: Race condition on chartInfo
-    }
-  }
-
-  describeTable(metricModelName) {
-    var self = this;
-    if (!this.tableInfo && metricModelName !== 'MetricContainer') {
-      return this.apiService.get("/metrics/describe_table/" + metricModelName).subscribe(function (tableInfo) {
-        //console.log("FunMetric: Describe table: " + metricModelName);
-        self.tableInfo = tableInfo;
-        return self.tableInfo;
-      }, error => {
-        this.loggerService.error("fetchMetricsData");
-      })
-    } else {
-      return this.tableInfo;
     }
   }
 
@@ -497,7 +483,7 @@ export class FunMetricChartComponent implements OnInit {
                   output = oneRecord[outputName];
                   total += output;
                   count++;
-                  if (chartInfo && chartInfo.y1_axis_title) {
+                  if (chartInfo && chartInfo.data.y1_axis_title) {
                     this.chart1YaxisTitle = chartInfo.data.y1_axis_title;
                   } else {
                     this.chart1YaxisTitle = tableInfo.data[outputName].verbose_name;

@@ -89,7 +89,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<!DOCTYPE html>\n<html lang=\"en\" ng-app=\"qa-dashboard\">\n<head>\n    <title>QA Dashboard</title>\n\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n    <!-- css -->\n    <!-- link href=\"static/css/common/bootstrap.min.css\"  rel=\"stylesheet\" id=\"bootstrap-css\" -->\n\n</head>\n<body>\n  <h1>QA Dashboard</h1>\n\n<!--div class=\"nav-side-menu\" style=\"width: 10%\">\n    <div class=\"brand\">Fungible QA</div>\n    <i class=\"fa fa-bars fa-2x toggle-btn\" data-toggle=\"collapse\" data-target=\"#menu-content\"></i>\n    <div class=\"menu-list\">\n        <ul id=\"menu-content\" class=\"menu-content collapse out\">\n            <li data-toggle=\"collapse\" data-target=\"#regression-tasks\">\n                <a href=\"#\"><i class=\"fa fa-dashboard fa-lg\"></i>Regression<span class=\"arrow\"></span></a>\n            </li>\n            <ul class=\"sub-menu\" id=\"regression-tasks\">\n                <li class=\"active\"><a href=\"/regression\">All Jobs</a></li>\n                <li class=\"active\"><a href=\"/regression/completed_jobs\">Completed Jobs</a></li>\n                <li class=\"active\"><a href=\"/regression/pending_jobs\">Pending Jobs</a></li>\n                <li class=\"active\"><a href=\"/regression/jenkins_jobs\">Jenkins Jobs</a></li>\n                <li><a href=\"/regression/submit_job_page\">Submit Jobs</a></li>\n            </ul>\n            <li data-toggle=\"collapse\" data-target=\"#test-case\" class=\"collapsed\">\n                <a href=\"#\"><i class=\"fa fa-globe fa-lg\"></i> Test-cases <span class=\"arrow\"></span></a>\n            </li>\n            <ul class=\"sub-menu collapse\" id=\"test-case\">\n                <li><a href=\"/tcm/view_catalog_page\">View Catalog</a></li>\n                <li><a href=\"/tcm/create_catalog_page\">Create Catalog</a></li>\n            </ul>\n        </ul>\n    </div>\n</div-->\n\n<nav class=\"navbar navbar-default\" style=\"background-color: #337ab7;\">\n    <div class=\"container-fluid\">\n        <!-- Brand and toggle get grouped for better mobile display -->\n        <div class=\"navbar-header\">\n            <button type=\"button\" class=\"navbar-toggle collapsed\" data-toggle=\"collapse\"\n                    data-target=\"#qa-dashboard-navbar\" aria-expanded=\"false\">\n                <span class=\"sr-only\">Toggle navigation</span>\n                <span class=\"icon-bar\"></span>\n                <span class=\"icon-bar\"></span>\n                <span class=\"icon-bar\"></span>\n            </button>\n            <a class=\"navbar-brand\" href=\"/\" style=\"color: white\">Integration</a>\n        </div>\n\n        <!-- Collect the nav links, forms, and other content for toggling -->\n        <div class=\"collapse navbar-collapse\" id=\"qa-dashboard-navbar\">\n            <ul class=\"nav navbar-nav\">\n                <li>\n                    <a href=\"/upgrade/performance\" style=\"color: white;background-color: #337ab7\" role=\"button\">Performance</a>\n                </li>\n\n                <li class=\"dropdown\">\n                    <a href=\"/common/home\" style=\"color: white;background-color: #337ab7\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\"\n                       aria-expanded=\"false\">Regression<span class=\"caret\"></span></a>\n                    <ul class=\"dropdown-menu\">\n                        <li><a href=\"/regression\">All Jobs</a></li>\n                        <li><a href=\"/regression/completed_jobs\">Completed Jobs</a></li>\n                        <li><a href=\"/regression/pending_jobs\">Pending Jobs</a></li>\n                        <li><a href=\"/regression/submit_job_page\">Submit Job</a></li>\n                        <li role=\"separator\" class=\"divider\"></li>\n                        <li><a href=\"/regression/jenkins_jobs\">Jenkins Jobs</a></li>\n                        <li><a href=\"/regression/jobs_by_tag/network-sanity\">Networking Sanity</a></li>\n                        <li><a href=\"/metrics/atomic/Unit-Tests/UnitTestPerformance\">FunOS Unit-Tests</a></li>\n                    </ul>\n                </li>\n                <li class=\"dropdown\">\n                    <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\"\n                       aria-expanded=\"false\" style=\"color: white;background-color: #337ab7\">Test-cases<span class=\"caret\"></span></a>\n                    <ul class=\"dropdown-menu\">\n                        <li><a href=\"/tcm/releases_page\">Releases</a> </li>\n                        <li><a href=\"/tcm/view_catalogs\">View Catalogs</a></li>\n                        <li><a href=\"/tcm/create_catalog_page\">Create Catalog</a></li>\n                    </ul>\n                </li>\n                <li class=\"dropdown\">\n                    <a href=\"#\" style=\"color: white;background-color: #337ab7\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\"\n                       aria-expanded=\"false\">Administration<span class=\"caret\"></span></a>\n                    <ul class=\"dropdown-menu\">\n                        <li><a href=\"/metrics\">All</a> </li>\n                        <li><a href=\"/metrics/summary\">Summary</a></li>\n                        <li><a href=\"/initialize\">Initialize</a></li>\n                    </ul>\n                </li>\n            </ul>\n            <!--form class=\"navbar-form navbar-left\">\n                <div class=\"form-group\">\n                    <input type=\"text\" class=\"form-control\" placeholder=\"Search\">\n                </div>\n                <button type=\"submit\" class=\"btn btn-default\">Submit</button>\n            </form-->\n            <ul class=\"nav navbar-nav navbar-right\">\n                <li><a href=\"/common/alerts_page\" role=\"button\" style=\"color: white;background-color: #337ab7\">Alerts</a></li>\n            </ul>\n        </div><!-- /.navbar-collapse -->\n    </div><!-- /.container-fluid -->\n</nav>\n\n<div class=\"content\" ng-controller=\"QaDashBoardController\" ng-if=\"showCommonError\">\n    <div class=\"alert alert-danger alert-dismissible show\" role=\"alert\">\n        <strong>{{ commonErrorMessage }} </strong>&nbsp <a href=\"{{ commonAlertLink }}\">Details</a> {{ detailError }}\n        <button type=\"button\" class=\"close\" aria-label=\"Close\">\n            <span aria-hidden=\"true\" ng-click=\"closeCommonError()\">&times;</span>\n        </button>\n    </div>\n</div>\n<div class=\"content\" ng-controller=\"QaDashBoardController\" ng-if=\"showCommonSuccess\">\n    <div class=\"alert alert-success alert-dismissible show\" role=\"alert\">\n        <strong>{{ commonSuccessMessage }}</strong>\n        <button type=\"button\" class=\"close\" aria-label=\"Close\">\n            <span aria-hidden=\"true\" ng-click=\"closeCommonSuccess()\">&times;</span>\n        </button>\n    </div>\n</div>\n\n\n<router-outlet></router-outlet>\n\n\n</body>\n</html>\n\n\n"
+module.exports = "<!DOCTYPE html>\n<html lang=\"en\" ng-app=\"qa-dashboard\">\n<head>\n    <title>QA Dashboard</title>\n\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n    <!-- css -->\n    <!-- link href=\"static/css/common/bootstrap.min.css\"  rel=\"stylesheet\" id=\"bootstrap-css\" -->\n\n</head>\n<body>\n\n\n<nav class=\"navbar navbar-default\" style=\"background-color: #337ab7;\">\n    <div class=\"container-fluid\">\n        <!-- Brand and toggle get grouped for better mobile display -->\n        <div class=\"navbar-header\">\n            <button type=\"button\" class=\"navbar-toggle collapsed\" data-toggle=\"collapse\"\n                    data-target=\"#qa-dashboard-navbar\" aria-expanded=\"false\">\n                <span class=\"sr-only\">Toggle navigation</span>\n                <span class=\"icon-bar\"></span>\n                <span class=\"icon-bar\"></span>\n                <span class=\"icon-bar\"></span>\n            </button>\n            <a class=\"navbar-brand\" href=\"/\" style=\"color: white\">Integration</a>\n        </div>\n\n        <!-- Collect the nav links, forms, and other content for toggling -->\n        <div class=\"collapse navbar-collapse\" id=\"qa-dashboard-navbar\">\n            <ul class=\"nav navbar-nav\">\n                <li>\n                    <a href=\"/upgrade/performance\" style=\"color: white;background-color: #337ab7\" role=\"button\">Performance</a>\n                </li>\n\n                <li class=\"dropdown\">\n                    <a href=\"/common/home\" style=\"color: white;background-color: #337ab7\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\"\n                       aria-expanded=\"false\">Regression<span class=\"caret\"></span></a>\n                    <ul class=\"dropdown-menu\">\n                        <li><a href=\"/regression\">All Jobs</a></li>\n                        <li><a href=\"/regression/completed_jobs\">Completed Jobs</a></li>\n                        <li><a href=\"/regression/pending_jobs\">Pending Jobs</a></li>\n                        <li><a href=\"/regression/submit_job_page\">Submit Job</a></li>\n                        <li role=\"separator\" class=\"divider\"></li>\n                        <li><a href=\"/regression/jenkins_jobs\">Jenkins Jobs</a></li>\n                        <li><a href=\"/regression/jobs_by_tag/network-sanity\">Networking Sanity</a></li>\n                        <li><a href=\"/metrics/atomic/Unit-Tests/UnitTestPerformance\">FunOS Unit-Tests</a></li>\n                    </ul>\n                </li>\n                <li class=\"dropdown\">\n                    <a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\"\n                       aria-expanded=\"false\" style=\"color: white;background-color: #337ab7\">Test-cases<span class=\"caret\"></span></a>\n                    <ul class=\"dropdown-menu\">\n                        <li><a href=\"/tcm/releases_page\">Releases</a> </li>\n                        <li><a href=\"/tcm/view_catalogs\">View Catalogs</a></li>\n                        <li><a href=\"/tcm/create_catalog_page\">Create Catalog</a></li>\n                    </ul>\n                </li>\n                <li class=\"dropdown\">\n                    <a href=\"#\" style=\"color: white;background-color: #337ab7\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-haspopup=\"true\"\n                       aria-expanded=\"false\">Administration<span class=\"caret\"></span></a>\n                    <ul class=\"dropdown-menu\">\n                        <li><a href=\"/metrics\">All</a> </li>\n                        <li><a href=\"/metrics/summary\">Summary</a></li>\n                        <li><a href=\"/initialize\">Initialize</a></li>\n                    </ul>\n                </li>\n            </ul>\n            <!--form class=\"navbar-form navbar-left\">\n                <div class=\"form-group\">\n                    <input type=\"text\" class=\"form-control\" placeholder=\"Search\">\n                </div>\n                <button type=\"submit\" class=\"btn btn-default\">Submit</button>\n            </form-->\n            <ul class=\"nav navbar-nav navbar-right\">\n                <li><a href=\"/common/alerts_page\" role=\"button\" style=\"color: white;background-color: #337ab7\">Alerts</a></li>\n            </ul>\n        </div><!-- /.navbar-collapse -->\n    </div><!-- /.container-fluid -->\n</nav>\n\n<div class=\"content\" ng-controller=\"QaDashBoardController\" ng-if=\"showCommonError\">\n    <div class=\"alert alert-danger alert-dismissible show\" role=\"alert\">\n        <strong>{{ commonErrorMessage }} </strong>&nbsp <a href=\"{{ commonAlertLink }}\">Details</a> {{ detailError }}\n        <button type=\"button\" class=\"close\" aria-label=\"Close\">\n            <span aria-hidden=\"true\" ng-click=\"closeCommonError()\">&times;</span>\n        </button>\n    </div>\n</div>\n<div class=\"content\" ng-controller=\"QaDashBoardController\" ng-if=\"showCommonSuccess\">\n    <div class=\"alert alert-success alert-dismissible show\" role=\"alert\">\n        <strong>{{ commonSuccessMessage }}</strong>\n        <button type=\"button\" class=\"close\" aria-label=\"Close\">\n            <span aria-hidden=\"true\" ng-click=\"closeCommonSuccess()\">&times;</span>\n        </button>\n    </div>\n</div>\n\n\n<router-outlet></router-outlet>\n\n\n</body>\n</html>\n\n\n"
 
 /***/ }),
 
@@ -152,19 +152,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _services_api_api_service__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./services/api/api.service */ "./src/app/services/api/api.service.ts");
 /* harmony import */ var _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./services/logger/logger.service */ "./src/app/services/logger/logger.service.ts");
 /* harmony import */ var _test_test_component__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./test/test.component */ "./src/app/test/test.component.ts");
-/* harmony import */ var _pipe_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./pipe/fun-table-filter.pipe */ "./src/app/pipe/fun-table-filter.pipe.ts");
+/* harmony import */ var _pipes_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./pipes/fun-table-filter.pipe */ "./src/app/pipes/fun-table-filter.pipe.ts");
 /* harmony import */ var _chart_chart_component__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./chart/chart.component */ "./src/app/chart/chart.component.ts");
 /* harmony import */ var _fun_chart_fun_chart_component__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./fun-chart/fun-chart.component */ "./src/app/fun-chart/fun-chart.component.ts");
 /* harmony import */ var angular_highcharts__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! angular-highcharts */ "./node_modules/angular-highcharts/angular-highcharts.es5.js");
 /* harmony import */ var _fun_metric_chart_fun_metric_chart_component__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./fun-metric-chart/fun-metric-chart.component */ "./src/app/fun-metric-chart/fun-metric-chart.component.ts");
 /* harmony import */ var angular_font_awesome__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! angular-font-awesome */ "./node_modules/angular-font-awesome/dist/angular-font-awesome.es5.js");
 /* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/fesm5/forms.js");
+/* harmony import */ var _pipes_safe_html_pipe__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./pipes/safe-html.pipe */ "./src/app/pipes/safe-html.pipe.ts");
+/* harmony import */ var angular2_fontawesome_angular2_fontawesome__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! angular2-fontawesome/angular2-fontawesome */ "./node_modules/angular2-fontawesome/angular2-fontawesome.js");
+/* harmony import */ var angular2_fontawesome_angular2_fontawesome__WEBPACK_IMPORTED_MODULE_21___default = /*#__PURE__*/__webpack_require__.n(angular2_fontawesome_angular2_fontawesome__WEBPACK_IMPORTED_MODULE_21__);
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
+
 
 
 
@@ -196,10 +201,11 @@ var AppModule = /** @class */ (function () {
                 _performance_performance_component__WEBPACK_IMPORTED_MODULE_7__["PerformanceComponent"],
                 _fun_table_fun_table_component__WEBPACK_IMPORTED_MODULE_9__["FunTableComponent"],
                 _test_test_component__WEBPACK_IMPORTED_MODULE_12__["TestComponent"],
-                _pipe_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__["FunTableFilterPipe"],
+                _pipes_fun_table_filter_pipe__WEBPACK_IMPORTED_MODULE_13__["FunTableFilterPipe"],
                 _chart_chart_component__WEBPACK_IMPORTED_MODULE_14__["ChartComponent"],
                 _fun_chart_fun_chart_component__WEBPACK_IMPORTED_MODULE_15__["FunChartComponent"],
-                _fun_metric_chart_fun_metric_chart_component__WEBPACK_IMPORTED_MODULE_17__["FunMetricChartComponent"]
+                _fun_metric_chart_fun_metric_chart_component__WEBPACK_IMPORTED_MODULE_17__["FunMetricChartComponent"],
+                _pipes_safe_html_pipe__WEBPACK_IMPORTED_MODULE_20__["SafeHtmlPipe"]
             ],
             imports: [
                 _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
@@ -209,7 +215,8 @@ var AppModule = /** @class */ (function () {
                 _angular_material__WEBPACK_IMPORTED_MODULE_2__["MatSortModule"],
                 angular_highcharts__WEBPACK_IMPORTED_MODULE_16__["ChartModule"],
                 angular_font_awesome__WEBPACK_IMPORTED_MODULE_18__["AngularFontAwesomeModule"],
-                _angular_forms__WEBPACK_IMPORTED_MODULE_19__["FormsModule"]
+                _angular_forms__WEBPACK_IMPORTED_MODULE_19__["FormsModule"],
+                angular2_fontawesome_angular2_fontawesome__WEBPACK_IMPORTED_MODULE_21__["Angular2FontawesomeModule"] // Add this line
             ],
             providers: [_services_api_api_service__WEBPACK_IMPORTED_MODULE_10__["ApiService"], _services_logger_logger_service__WEBPACK_IMPORTED_MODULE_11__["LoggerService"]],
             bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_4__["AppComponent"]]
@@ -473,6 +480,7 @@ var FunChartComponent = /** @class */ (function () {
         this.chart.addPoint(Math.floor(Math.random() * 10));
     };
     FunChartComponent.prototype.ngOnChanges = function () {
+        var _this = this;
         this.chart = new angular_highcharts__WEBPACK_IMPORTED_MODULE_1__["Chart"]({
             chart: {
                 type: 'line',
@@ -485,8 +493,19 @@ var FunChartComponent = /** @class */ (function () {
             xAxis: {
                 title: {
                     text: this.xAxisLabel
+                },
+                categories: this.xValues,
+                labels: {
+                    formatter: function () {
+                        return _this.xAxisFormatter(_this.xValues);
+                    }
                 }
             },
+            // tooltip: {
+            //   formatter: () => {
+            //     return this.tooltipFormatter(this.y1Values);
+            //   }
+            //},
             yAxis: {
                 title: {
                     text: this.y1AxisLabel
@@ -531,6 +550,14 @@ var FunChartComponent = /** @class */ (function () {
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
         __metadata("design:type", String)
     ], FunChartComponent.prototype, "y1AxisLabel", void 0);
+    __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
+        __metadata("design:type", Function)
+    ], FunChartComponent.prototype, "xAxisFormatter", void 0);
+    __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Input"])(),
+        __metadata("design:type", Function)
+    ], FunChartComponent.prototype, "tooltipFormatter", void 0);
     FunChartComponent = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
             selector: 'fun-chart',
@@ -723,7 +750,7 @@ module.exports = "a {\n  cursor: pointer;\n}\n"
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\" />\n<div>\n        <div [ngSwitch]=\"timeMode\">\n            <div *ngSwitchCase=\"'all'\">\n                <a (click)=\"setTimeMode('week')\"> Week </a>/\n                <a (click)=\"setTimeMode('month')\"> Month </a>/\n                <b><u><a (click)=\"setTimeMode('all')\"> All </a></u></b>\n            </div>\n            <div *ngSwitchCase=\"'week'\">\n                <b><u><a (click)=\"setTimeMode('week')\"> Week </a></u></b>/\n                <a (click)=\"setTimeMode('month')\"> Month </a>/\n                <a (click)=\"setTimeMode('all')\"> All </a>\n            </div>\n            <div *ngSwitchCase=\"'month'\">\n                <a (click)=\"setTimeMode('week')\"> Week </a>/\n                <b><u><a (click)=\"setTimeMode('month')\"> Month </a></u></b>/\n                <a (click)=\"setTimeMode('all')\"> All </a>\n            </div>\n        </div>\n        <!--<fun-chart values=\"values\" series=\"series\" title=\"$ctrl.chartName\" charting=\"charting\" chart-type=\"line-chart\"-->\n               <!--width=\"width\" height=\"height\" xaxis-title=\"chart1XaxisTitle\" yaxis-title=\"chart1YaxisTitle\"-->\n               <!--point-click-callback=\"pointClickCallback\" xaxis-formatter=\"xAxisFormatter\"-->\n               <!--tooltip-formatter=\"tooltipFormatter\">-->\n        <!--</fun-chart>-->\n      <!--<fun-chart [yValues]=\"yValues\" [xValues]=\"xValues\" [title]=\"title\" [xAxisLabel]=\"xAxisLabel\" [yAxisLabel]=\"yAxisLabel\"></fun-chart>-->\n  <!--<div *ngFor=\"let in of counter(50)\">-->\n  <fun-chart [y1Values]=\"values\" [xValues]=\"series\" [title]=\"chartName\" [xAxisLabel]=\"xAxisLabel\" [y1AxisLabel]=\"yAxisLabel\"></fun-chart>\n  <!--</div>-->\n    <br>\n\n     <b>Description:   </b><a *ngIf=\"!editingDescription\" (click)=\"toggleEdit()\"><i class=\"fa fa-pencil\"></i></a>\n    <br>\n    <div [innerHTML]=\"inner.currentDescription\"></div>\n    <div *ngIf=\"editingDescription\">\n        <br>\n        <textarea rows=\"4\" [(ngModel)]=\"inner.currentDescription\" style=\"min-width: 100%;\"></textarea>\n        <button class=\"btn btn-success\" (click)=\"submit()\">Submit</button>\n        <a style=\"padding: 5px;\" (click)=\"toggleEdit()\">Cancel</a>\n    </div>\n</div>\n<div *ngIf=\"modelName !== 'MetricContainer'\" style=\"padding-top: 10px; padding-bottom: 10px;\">\n    <div>\n    <button [attr.id]=\"'show_tables_' + metricId\" type=\"button\" class=\"btn arrow_btn btn-lg btn-info collapsed\" data-toggle=\"collapse\" [attr.data-target]=\"'#showing_tables_' + metricId\"\n            style=\"text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;\">Show Tables</button>\n  <div [attr.id]=\"'showing_tables_' + metricId\" class=\"collapse\">\n      <div *ngIf=\"headers\">\n          <!--<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\">-->\n          <!--</fun-table>-->\n      </div>\n      <div>\n          <a href=\"{{ '#show_tables_' + metricId }}\" style=\"float:right\" (click)=\"changeClass('#showing_tables_' + metricId, '#show_tables_' + metricId)\">Hide Tables</a>\n      </div>\n      <br>\n      <br>\n      <div class=\"closed-section\"></div>\n\n      <!--<button type=\"button\" class=\"btn btn1 btn-lg btn-info collapsed\" data-toggle=\"collapse\" data-target=\"#demo\" style=\"text-align: left; font-size: 14px; padding: 5px; border-color: black; border: 0px solid; width: 100%; background: white; color: black;\">Hide Tables</button>-->\n  </div>\n    </div>\n    <div>\n    <button [attr.id]=\"'configure_' + metricId\" type=\"button\" ng-class=\"after\" class=\"btn arrow_btn btn-lg btn-info collapsed\" data-toggle=\"collapse\" [attr.data-target]=\"'#show_configure_' + metricId\"\n            style=\"text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;\">Configure</button>\n  <div [attr.id]=\"'show_configure_' + metricId\" class=\"collapse\">\n       <div class=\"row\">\n           <!--<div class=\"col-lg-10 col-xl-10 pull-left\">-->\n               <!--<table class=\"table table-nonfluid table-borderless\"-->\n                      <!--ng-repeat=\"dataSet in previewDataSets track by $index\">-->\n                   <!--<tr>-->\n                       <!--<th>Name</th>-->\n                       <!--<th>Field</th>-->\n                       <!--<th>Min</th>-->\n                       <!--<th>Max</th>-->\n                       <!--<th>Expected</th>-->\n                   <!--</tr>-->\n                   <!--<tr>-->\n                       <!--<td>-->\n                           <!--{{ dataSet.name }}-->\n                       <!--</td>-->\n                       <!--<td>-->\n                           <!--{{ dataSet.output.name }}-->\n                       <!--</td>-->\n                       <!--<td>-->\n                           <!--<input type=\"number\" ng-model=\"dataSet.output.min\" ng-value=\"dataSet.output.min\"-->\n                                  <!--style=\"width: 100px\">-->\n                       <!--</td>-->\n                       <!--<td><input type=\"number\" ng-model=\"dataSet.output.max\" ng-value=\"dataSet.output.max\"-->\n                                  <!--style=\"width: 100px\"></td>-->\n                       <!--<td><input type=\"number\" ng-model=\"dataSet.output.expected\"-->\n                                  <!--ng-value=\"dataSet.output.expected\"-->\n                                  <!--style=\"width: 100px\"></td>-->\n                   <!--</tr>-->\n               <!--</table>-->\n               <!--<p><input type=\"checkbox\" ng-checked=\"negativeGradient\" ng-model=\"inner.negativeGradient\">&nbsp;Negative gradient</p>-->\n               <!--<p><input type=\"checkbox\" ng-checked=\"leaf\" ng-model=\"inner.leaf\">&nbsp;Leaf</p>-->\n           <!--</div>-->\n       </div>\n      <div class=\"row\">\n          <div style=\"padding: 10px;\">\n              <button class=\"btn btn-success\" (click)=\"submit()\">Submit</button>\n              <a href=\"{{ '#configure_' + metricId }}\" (click)=\"changeClass('#show_configure_' + metricId, '#configure_' + metricId)\">Cancel</a>\n          </div>\n      </div>\n  </div>\n    </div>\n\n    </div>\n"
+module.exports = "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\" />\n<div>\n        <div [ngSwitch]=\"timeMode\">\n            <div *ngSwitchCase=\"'all'\">\n                <a (click)=\"setTimeMode('week')\"> Week </a>/\n                <a (click)=\"setTimeMode('month')\"> Month </a>/\n                <b><u><a (click)=\"setTimeMode('all')\"> All </a></u></b>\n            </div>\n            <div *ngSwitchCase=\"'week'\">\n                <b><u><a (click)=\"setTimeMode('week')\"> Week </a></u></b>/\n                <a (click)=\"setTimeMode('month')\"> Month </a>/\n                <a (click)=\"setTimeMode('all')\"> All </a>\n            </div>\n            <div *ngSwitchCase=\"'month'\">\n                <a (click)=\"setTimeMode('week')\"> Week </a>/\n                <b><u><a (click)=\"setTimeMode('month')\"> Month </a></u></b>/\n                <a (click)=\"setTimeMode('all')\"> All </a>\n            </div>\n        </div>\n        <!--<fun-chart values=\"values\" series=\"series\" title=\"$ctrl.chartName\" charting=\"charting\" chart-type=\"line-chart\"-->\n               <!--width=\"width\" height=\"height\" xaxis-title=\"chart1XaxisTitle\" yaxis-title=\"chart1YaxisTitle\"-->\n               <!--point-click-callback=\"pointClickCallback\" xaxis-formatter=\"xAxisFormatter\"-->\n               <!--tooltip-formatter=\"tooltipFormatter\">-->\n        <!--</fun-chart>-->\n      <!--<fun-chart [yValues]=\"yValues\" [xValues]=\"xValues\" [title]=\"title\" [xAxisLabel]=\"xAxisLabel\" [yAxisLabel]=\"yAxisLabel\"></fun-chart>-->\n  <!--<div *ngFor=\"let in of counter(50)\">-->\n  <fun-chart [y1Values]=\"values\" [xValues]=\"series\" [title]=\"chartName\" [xAxisLabel]=\"chart1XaxisTitle\" [y1AxisLabel]=\"y1AxisTitle\" [xAxisFormatter]=\"formatter\" [tooltipFormatter]=\"tooltip\"></fun-chart>\n  <!--</div>-->\n    <br>\n\n     <b>Description:   </b><a *ngIf=\"!editingDescription\" (click)=\"toggleEdit()\"><i class=\"fa fa-pencil\"></i></a>\n    <br>\n    <div [innerHTML]=\"inner.currentDescription\"></div>\n    <div *ngIf=\"editingDescription\">\n        <br>\n        <textarea rows=\"4\" [(ngModel)]=\"inner.currentDescription\" style=\"min-width: 100%;\"></textarea>\n        <button class=\"btn btn-success\" (click)=\"submit()\">Submit</button>\n        <a style=\"padding: 5px;\" (click)=\"toggleEdit()\">Cancel</a>\n    </div>\n</div>\n<div *ngIf=\"modelName !== 'MetricContainer'\" style=\"padding-top: 10px; padding-bottom: 10px;\">\n    <div>\n    <button [attr.id]=\"'show_tables_' + metricId\" type=\"button\" class=\"btn arrow_btn btn-lg btn-info collapsed\" data-toggle=\"collapse\" [attr.data-target]=\"'#showing_tables_' + metricId\"\n            style=\"text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;\">Show Tables</button>\n  <div [attr.id]=\"'showing_tables_' + metricId\" class=\"collapse\">\n      <div *ngIf=\"headers\">\n          <!--<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\">-->\n          <!--</fun-table>-->\n      </div>\n      <div>\n          <a href=\"{{ '#show_tables_' + metricId }}\" style=\"float:right\" (click)=\"changeClass('#showing_tables_' + metricId, '#show_tables_' + metricId)\">Hide Tables</a>\n      </div>\n      <br>\n      <br>\n      <div class=\"closed-section\"></div>\n\n      <!--<button type=\"button\" class=\"btn btn1 btn-lg btn-info collapsed\" data-toggle=\"collapse\" data-target=\"#demo\" style=\"text-align: left; font-size: 14px; padding: 5px; border-color: black; border: 0px solid; width: 100%; background: white; color: black;\">Hide Tables</button>-->\n  </div>\n    </div>\n    <div>\n    <button [attr.id]=\"'configure_' + metricId\" type=\"button\" ng-class=\"after\" class=\"btn arrow_btn btn-lg btn-info collapsed\" data-toggle=\"collapse\" [attr.data-target]=\"'#show_configure_' + metricId\"\n            style=\"text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;\">Configure</button>\n  <div [attr.id]=\"'show_configure_' + metricId\" class=\"collapse\">\n       <div class=\"row\">\n           <!--<div class=\"col-lg-10 col-xl-10 pull-left\">-->\n               <!--<table class=\"table table-nonfluid table-borderless\"-->\n                      <!--ng-repeat=\"dataSet in previewDataSets track by $index\">-->\n                   <!--<tr>-->\n                       <!--<th>Name</th>-->\n                       <!--<th>Field</th>-->\n                       <!--<th>Min</th>-->\n                       <!--<th>Max</th>-->\n                       <!--<th>Expected</th>-->\n                   <!--</tr>-->\n                   <!--<tr>-->\n                       <!--<td>-->\n                           <!--{{ dataSet.name }}-->\n                       <!--</td>-->\n                       <!--<td>-->\n                           <!--{{ dataSet.output.name }}-->\n                       <!--</td>-->\n                       <!--<td>-->\n                           <!--<input type=\"number\" ng-model=\"dataSet.output.min\" ng-value=\"dataSet.output.min\"-->\n                                  <!--style=\"width: 100px\">-->\n                       <!--</td>-->\n                       <!--<td><input type=\"number\" ng-model=\"dataSet.output.max\" ng-value=\"dataSet.output.max\"-->\n                                  <!--style=\"width: 100px\"></td>-->\n                       <!--<td><input type=\"number\" ng-model=\"dataSet.output.expected\"-->\n                                  <!--ng-value=\"dataSet.output.expected\"-->\n                                  <!--style=\"width: 100px\"></td>-->\n                   <!--</tr>-->\n               <!--</table>-->\n               <!--<p><input type=\"checkbox\" ng-checked=\"negativeGradient\" ng-model=\"inner.negativeGradient\">&nbsp;Negative gradient</p>-->\n               <!--<p><input type=\"checkbox\" ng-checked=\"leaf\" ng-model=\"inner.leaf\">&nbsp;Leaf</p>-->\n           <!--</div>-->\n       </div>\n      <div class=\"row\">\n          <div style=\"padding: 10px;\">\n              <button class=\"btn btn-success\" (click)=\"submit()\">Submit</button>\n              <a href=\"{{ '#configure_' + metricId }}\" (click)=\"changeClass('#show_configure_' + metricId, '#configure_' + metricId)\">Cancel</a>\n          </div>\n      </div>\n  </div>\n    </div>\n\n    </div>\n"
 
 /***/ }),
 
@@ -766,7 +793,6 @@ var FunMetricChartComponent = /** @class */ (function () {
         this.xValues = [];
     }
     FunMetricChartComponent.prototype.ngOnInit = function () {
-        var _this = this;
         this.yValues.push({ name: 'series 1', data: [1, 2, 3, 4, 5] });
         this.yValues.push({ name: 'series 2', data: [6, 7, 8, 9, 10] });
         this.yValues.push({ name: 'series 3', data: [11, 12, 13, 14, 15] });
@@ -790,73 +816,73 @@ var FunMetricChartComponent = /** @class */ (function () {
         }
         this.values = null;
         this.charting = true;
-        this.xAxisFormatter = null;
-        this.tooltipFormatter = null;
         this.buildInfo = null;
         this.fetchBuildInfo();
+        this.formatter = this.xAxisFormatter.bind(this);
+        this.tooltip = this.tooltipFormatter.bind(this);
         // if (this.pointClickCallback) {
         //   this.pointClickCallback = (point) => {
         //     if (!$attrs.pointClickCallback) return null;
         //     this.pointClickCallback()(point);
         //   };
         // }
-        this.xAxisFormatter = function (value) {
-            var s = "Error";
-            var monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            var r = /(\d{4})-(\d{2})-(\d{2})/g;
-            var match = r.exec(value);
-            if (_this.timeMode === "month") {
-                if (match) {
-                    var month = parseInt(match[2]);
-                    s = monthNames[month];
-                }
-            }
-            else {
-                if (match) {
-                    s = match[2] + "/" + match[3];
-                }
-            }
-            return s;
-        };
-        this.tooltipFormatter = function (x, y) {
-            var softwareDate = "Unknown";
-            var hardwareVersion = "Unknown";
-            var sdkBranch = "Unknown";
-            var gitCommit = "Unknown";
-            var r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-            var match = r.exec(x);
-            var key = "";
-            if (match) {
-                key = match[1];
-            }
-            else {
-                var reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
-                match = reg.exec(x);
-                if (match) {
-                    key = match[1].replace('T', ' ');
-                }
-            }
-            var s = "Error";
-            if (_this.buildInfo && key in _this.buildInfo) {
-                softwareDate = _this.buildInfo[key]["software_date"];
-                hardwareVersion = _this.buildInfo[key]["hardware_version"];
-                sdkBranch = _this.buildInfo[key]["fun_sdk_branch"];
-                s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
-                s += "<b>Software date:</b> " + softwareDate + "<br>";
-                s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
-                s += "<b>Git commit:</b> " + _this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "") + "<br>";
-                s += "<b>Value:</b> " + y + "<br>";
-            }
-            else {
-                s = "<b>Value:</b> " + y + "<br>";
-            }
-            return s;
-        };
     };
     FunMetricChartComponent.prototype.ngOnChanges = function () {
         this.setDefault();
         this.fetchInfo();
+    };
+    FunMetricChartComponent.prototype.xAxisFormatter = function (value) {
+        var s = "Error";
+        var monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var r = /(\d{4})-(\d{2})-(\d{2})/g;
+        var match = r.exec(value);
+        if (this.timeMode === "month") {
+            if (match) {
+                var month = parseInt(match[2]);
+                s = monthNames[month];
+            }
+        }
+        else {
+            if (match) {
+                s = match[2] + "/" + match[3];
+            }
+        }
+        return s;
+    };
+    FunMetricChartComponent.prototype.tooltipFormatter = function (x, y) {
+        var softwareDate = "Unknown";
+        var hardwareVersion = "Unknown";
+        var sdkBranch = "Unknown";
+        var gitCommit = "Unknown";
+        var r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
+        var match = r.exec(x);
+        var key = "";
+        if (match) {
+            key = match[1];
+        }
+        else {
+            var reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
+            match = reg.exec(x);
+            if (match) {
+                key = match[1].replace('T', ' ');
+            }
+        }
+        var s = "Error";
+        if (this.buildInfo && key in this.buildInfo) {
+            softwareDate = this.buildInfo[key]["software_date"];
+            hardwareVersion = this.buildInfo[key]["hardware_version"];
+            sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
+            s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
+            s += "<b>Software date:</b> " + softwareDate + "<br>";
+            s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
+            s += "<b>Git commit:</b> " + this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "") + "<br>";
+            s += "<b>Value:</b> " + y + "<br>";
+        }
+        else {
+            s = "<b>Value:</b> " + y + "<br>";
+        }
+        return s;
     };
     FunMetricChartComponent.prototype.fetchInfo = function () {
         var _this = this;
@@ -876,7 +902,6 @@ var FunMetricChartComponent = /** @class */ (function () {
                     _this.inner.leaf = _this.leaf;
                     _this.status = "idle";
                 }
-                // let thisChartInfo = chartInfo;
                 setTimeout(function () {
                     _this.fetchMetricsData(_this.modelName, _this.chartName, _this.chartInfo, null);
                 }, _this.waitTime);
@@ -991,22 +1016,6 @@ var FunMetricChartComponent = /** @class */ (function () {
         }
         else {
             this.fetchMetricsData(this.modelName, this.chartName, null, this.previewDataSets); // TODO: Race condition on chartInfo
-        }
-    };
-    FunMetricChartComponent.prototype.describeTable = function (metricModelName) {
-        var _this = this;
-        var self = this;
-        if (!this.tableInfo && metricModelName !== 'MetricContainer') {
-            return this.apiService.get("/metrics/describe_table/" + metricModelName).subscribe(function (tableInfo) {
-                //console.log("FunMetric: Describe table: " + metricModelName);
-                self.tableInfo = tableInfo;
-                return self.tableInfo;
-            }, function (error) {
-                _this.loggerService.error("fetchMetricsData");
-            });
-        }
-        else {
-            return this.tableInfo;
         }
     };
     FunMetricChartComponent.prototype.getDatesByTimeMode = function (dateList) {
@@ -1187,7 +1196,7 @@ var FunMetricChartComponent = /** @class */ (function () {
                                     output = oneRecord[outputName];
                                     total += output;
                                     count++;
-                                    if (chartInfo && chartInfo.y1_axis_title) {
+                                    if (chartInfo && chartInfo.data.y1_axis_title) {
                                         _this.chart1YaxisTitle = chartInfo.data.y1_axis_title;
                                     }
                                     else {
@@ -1623,7 +1632,7 @@ function compare(a, b, isAsc) {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = ".info-box {\n  border: 1px;\n  border-color: #4CAF50;\n  border-style: solid;\n  border-radius: 5px;\n  width: inherit;\n  margin-top: 5px;\n}\n\n.info-box-header {\n  background-color: #dff0d8;\n  border-radius: 5px;\n\n}\n\n.info-box-text {\n  padding: 5px;\n}\n\n.aspect-label {\n  padding: 5px;\n}\n\n.aspect-label-text {\n  padding: 5px;\n}\n\n.fa-icon-green {\n  color: green;\n}\n\n.fa-icon-red {\n  color: red;\n}\n\n#score-table-parent {\n  display: table;\n  width: 60px;\n  height: 60px;\n  border: 3px solid lightsteelblue;\n  border-radius: 5px;\n}\n\n#score-table-child {\n  display: table-cell;\n  vertical-align: middle;\n  text-align: center;\n  font-size: 25px;\n  color: white;\n\n}\n\n#score-table-info-icon {\n  display: table-cell;\n  vertical-align: top;\n}\n\n.score-card {\n  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);\n  transition: 0.3s;\n  width: 40%;\n  background-color: #006699;\n}\n\n.fade-element-in.ng-enter {\n  opacity: 0;\n}\n\n.fade-element-in-init .fade-element-in.ng-enter {\n  opacity: 1;\n}\n\n.fade-element-in.ng-enter.ng-enter-active {\n  opacity: 1;\n}\n\n.fade-element-in.ng-leave {\n  transition: 0.3s linear all;\n  opacity: 1;\n}\n\n.fade-element-in.ng-leave.ng-leave-active {\n  opacity: 0;\n}\n\narrow-icon {\n  border: solid black;\n  border-width: 0 3px 3px 0;\n  display: inline-block;\n  padding: 3px;\n\n}\n\n.arrow-right {\n  transform: rotate(-45deg);\n  -webkit-transform: rotate(-45deg);\n\n}\n\n.arrow-down {\n  transform: rotate(45deg);\n  -webkit-transform: rotate(45deg);\n}\n\n.trend-button-green {\n  background-color: white;\n  border: 1px solid #4CAF50;\n  color: white;\n  text-align: center;\n  text-decoration: none;\n  border-radius: 1.5px;\n\n}\n\n.score-label {\n  -webkit-text-decoration: solid;\n          text-decoration: solid;\n}\n\n.trend-button-red {\n  background-color: white;\n  border: 1px solid red;\n  color: white;\n  text-align: center;\n  text-decoration: none;\n  border-radius: 1.5px;\n\n}\n"
+module.exports = ".info-box {\n  border: 1px;\n  border-color: #4CAF50;\n  border-style: solid;\n  border-radius: 5px;\n  width: inherit;\n  margin-top: 5px;\n}\n\n.info-box-header {\n  background-color: #dff0d8;\n  border-radius: 5px;\n\n}\n\n.info-box-text {\n  padding: 5px;\n}\n\n.aspect-label {\n  padding: 5px;\n}\n\n.aspect-label-text {\n  padding: 5px;\n}\n\n.fa-icon-green {\n  color: green;\n}\n\n.fa-icon-red {\n  color: red;\n}\n\n#score-table-parent {\n  display: table;\n  width: 60px;\n  height: 60px;\n  border: 3px solid lightsteelblue;\n  border-radius: 5px;\n}\n\n#score-table-child {\n  display: table-cell;\n  vertical-align: middle;\n  text-align: center;\n  font-size: 25px;\n  color: white;\n\n}\n\n#score-table-info-icon {\n  display: table-cell;\n  vertical-align: top;\n}\n\n.score-card {\n  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);\n  transition: 0.3s;\n  width: 40%;\n  background-color: #006699;\n}\n\n.fade-element-in.ng-enter {\n  opacity: 0;\n}\n\n.fade-element-in-init .fade-element-in.ng-enter {\n  opacity: 1;\n}\n\n.fade-element-in.ng-enter.ng-enter-active {\n  opacity: 1;\n}\n\n.fade-element-in.ng-leave {\n  transition: 0.3s linear all;\n  opacity: 1;\n}\n\n.fade-element-in.ng-leave.ng-leave-active {\n  opacity: 0;\n}\n\narrow-icon {\n  border: solid black;\n  border-width: 0 3px 3px 0;\n  display: inline-block;\n  padding: 3px;\n\n}\n\n.arrow-right {\n  border: solid black;\n  border-width: 0 3px 3px 0;\n  display: inline-block;\n  padding: 3px;\n  transform: rotate(-45deg);\n  -webkit-transform: rotate(-45deg);\n\n}\n\n.arrow-down {\n  border: solid black;\n  border-width: 0 3px 3px 0;\n  display: inline-block;\n  padding: 3px;\n  transform: rotate(45deg);\n  -webkit-transform: rotate(45deg);\n}\n\n.trend-button-green {\n  background-color: white;\n  border: 1px solid #4CAF50;\n  color: white;\n  text-align: center;\n  text-decoration: none;\n  border-radius: 1.5px;\n\n}\n\n.score-label {\n  -webkit-text-decoration: solid;\n          text-decoration: solid;\n}\n\n.trend-button-red {\n  background-color: white;\n  border: 1px solid red;\n  color: white;\n  text-align: center;\n  text-decoration: none;\n  border-radius: 1.5px;\n\n}\n"
 
 /***/ }),
 
@@ -1634,7 +1643,7 @@ module.exports = ".info-box {\n  border: 1px;\n  border-color: #4CAF50;\n  borde
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "\n<!--<fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table>-->\n<!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->\n  <!--<fun-chart></fun-chart>-->\n<!--</li>-->\n<div class=\"content\">\n  <div class=\"col-lg-6 col-xl-6 col-md-6\">\n    <div>\n      <table class=\"table table-nonfluid\">\n        <tr>\n          <th class=\"text-center\">Aspect</th>\n          <th class=\"text-center\">Score</th>\n          <th class=\"text-center\">#</th>\n          <!--th></th-->\n          <th class=\"text-center\">More Info</th>\n\n        </tr>\n        <tr class=\"fade-element-in\" ng-if=\"!node.hide\" ng-repeat=\"node in flatNodes track by $index\">\n          <td id=\"{{ node.guid }}\" class=\"child-transition\">\n                        <span ng-bind-html=\"getIndentHtml(node) | unsafe\">\n                        </span>\n            <a ng-if=\"node.leaf\" href=\"#\" ng-click=\"setCurrentChart(node)\">{{ node.label }}</a>\n            <a ng-if=\"!node.leaf\" href=\"#\" ng-click=\"showNonAtomicMetric(node)\">{{ node.label }}</a>\n            <!-- span ng-if=\"!node.leaf\">{{ node.label }}</span -->&nbsp\n            <span ng-if=\"node.numChildren\">\n                            <a href=\"#{{ node.guid }}\" ng-if=\"!node.collapsed\" ng-click=\"collapseNode(node)\">\n                                <span class=\"arrow-down\"></span>\n                            </a>\n                            <a href=\"#{{ node.guid }}\" ng-if=\"node.collapsed\" ng-click=\"expandNode(node)\">\n                                <span class=\"arrow-right\"></span>\n                            </a>\n                        </span>\n          </td>\n          <td class=\"text-center\">\n            <div ng-if=\"node.chartName !== 'All metrics'\" class=\"score-label\"><span style=\"vertical-align: top\"\n                                                                                    ng-bind-html=\"getTrendHtml(node) | unsafe\"></span>{{ node.goodness }}\n            </div>\n          </td>\n          <td class=\"text-center\">\n            <span ng-if=\"!node.leaf\">{{ node.numLeaves }}</span>\n          </td>\n\n          <td ng-bind-html=\"getStatusHtml(node) | unsafe\"></td>\n        </tr>\n      </table>\n\n    </div>\n    <!--<p>Last updated at: {{ lastStatusUpdateTime }}</p>-->\n  </div>\n\n\n  <div ng-if=\"mode\" class=\"card col-xl-6 col-lg-6 col-xxl-6\" ng-switch=\"mode\">\n    <div ng-switch-when=\"showingGoodnessTrend\">\n      <!-- fun-chart values=\"goodnessTrendValues\" show-legend=\"true\"\n                 title=\"goodnessTrendChartTitle\" charting=\"charting\" chart-type=\"line-chart\">\n      </fun-chart-->\n    </div>\n    <div ng-switch-when=\"showingAtomicMetric\">\n      <div ng-if=\"currentChartName\">\n        <table>\n          <tr>\n            <td>\n                                    <span id=\"score-table-parent\" class=\"score-card\">\n                                        <span id=\"score-table-child\">{{ currentNode.goodness }}\n                                        </span>\n                                    </span>\n            </td>\n            <td valign=\"top\" align=\"left\">\n                                <span id=\"score-table-info-icon\">\n                                    <i class=\"fa fa-info-circle\" style=\"padding: 2px\"\n                                       ng-click=\"showNodeInfoClick(currentNode)\">\n                                    </i>\n                                </span>\n            </td>\n            <td style=\"width: 100%\">\n                                <span style=\"float: right;\">\n                                            <button class=\"btn\" style=\"background-color: white\"\n                                                    ng-click=\"openAtomicTab()\">\n                                                <i class=\"fa fa-external-link\"></i></button>\n                                </span>\n            </td>\n          </tr>\n        </table>\n\n        <div ng-if=\"showingNodeInfo\">\n          <h5>Score calculation</h5>\n          <p ng-bind-html=\"currentNodeInfo\"></p>\n        </div>\n\n        <br>\n\n        <div class=\"closed-section\"></div>\n        <!--fun-metric-chart chart-name=\"currentChartName\" model-name=\"currentMetricModelName\"></fun-metric-chart-->\n      </div>\n    </div>\n    <div ng-switch-when=\"showingNonAtomicMetric\">\n      <!-- div style=\"padding-bottom: 10px;\"><h4>Aspect: {{ currentNode.chartName }}</h4></div-->\n      <div>\n        <table>\n          <tr>\n            <td>\n                                    <span id=\"score-table-parent\" class=\"score-card\">\n                                        <span id=\"score-table-child\">{{ currentNode.goodness }}\n                                        </span>\n                                    </span>\n            </td>\n            <td valign=\"top\" align=\"left\">\n                                <span id=\"score-table-info-icon\">\n                                    <i class=\"fa fa-info-circle\" style=\"padding: 2px\"\n                                       ng-click=\"showNodeInfoClick(currentNode)\">\n                                    </i>\n                                </span>\n            </td>\n          </tr>\n        </table>\n        <div ng-if=\"showingContainerNodeInfo\">\n          <br>\n          <h5>Children</h5>\n          <div ng-if=\"currentNode\">\n            <table class=\"table table-nonfluid\">\n              <tr>\n                <th>Aspect</th>\n                <th>Weight</th>\n                <th>Last score</th>\n                <th>Weight * Last Score</th>\n              </tr>\n              <tr ng-repeat=\"(childId, info) in currentNode.children\">\n                <td>{{ metricMap[childId].chartName }}</td>\n                <td>\n                  <p ng-click=\"editingWeightClick(info)\" ng-if=\"!info.editing\">{{ info.weight }}</p>\n                  <span ng-if=\"info.editing\">\n                                        <input style=\"padding-right: 10px\" type=\"number\" ng-model=\"info.editingWeight\">\n                                        <button style=\"border: 1px solid black;overflow: hidden; padding-left: 10px;\"\n                                                class=\"btn btn-sm\"\n                                                ng-click=\"submitWeightClick(currentNode, childId, info)\">&#10003;</button>\n                                        <button style=\"border: 1px solid black;\" class=\"btn btn-sm\"\n                                                ng-click=\"closeEditingWeightClick(info)\">&#10060;</button>\n                                    </span>\n                </td>\n                <td>\n                  {{ currentNode.childrenScoreMap[childId] | number: 1}}\n                </td>\n                <td>\n                  {{ info.weight }} * {{ currentNode.childrenScoreMap[childId] |\n                  number: 1 }} = {{ info.weight * currentNode.childrenScoreMap[childId]\n                  | number: 1 }}\n                </td>\n                <!-- td>{{ childId }}</td -->\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Total ~ {{ getScoreTotal(currentNode) | number: 1}}</td>\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Sum of child weights = {{ getSumChildWeights (currentNode.children) }}</td>\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Score ~ {{ getScoreTotal(currentNode) | number: 1}} / {{ getSumChildWeights(currentNode.children) }}\n                  = {{ getScoreTotal(currentNode) /  getSumChildWeights(currentNode.children) | number: 1}}</td>\n              </tr>\n            </table>\n          </div>\n        </div>\n      </div>\n      <br>\n      <div class=\"closed-section\"></div>\n      <!--fun-metric-chart chart-name=\"currentChartName\" model-name=\"currentMetricModelName\"></fun-metric-chart-->\n\n      <br>\n      <br>\n      <!--<div class=\"closed-section\"></div>-->\n      <div ng-if=\"grid.length\">\n        <table class=\"table\" ng-if=\"grid\">\n          <tr ng-repeat=\"row in grid track by $index\">\n            <td ng-repeat=\"node in row track by $index\" style=\"width: 50%\">\n              <!--fun-metric-chart\n                chart-name=\"node.name\"\n                model-name=\"node.metricModelName\"\n                atomic=\"atomic\"\n                chart-only=\"true\"\n                wait-time=\"(($parent.$index * numGridColumns) + $index) * 1000\">\n              </fun-metric-chart-->\n            </td>\n          </tr>\n        </table>\n        <div class=\"closed-section\"></div>\n      </div>\n    </div>\n  </div>\n\n\n</div>\n\n"
+module.exports = "<!--fun-table (nextPage)=\"setValues($event)\" [data]=\"data\"></fun-table-->\n<!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->\n<!--<fun-chart></fun-chart>-->\n<!--</li>-->\n<div class=\"content\">\n  <div class=\"col-lg-6 col-xl-6 col-md-6\">\n    <div>\n      <table class=\"table table-nonfluid\">\n        <tr>\n          <th class=\"text-center\">Aspect</th>\n          <th class=\"text-center\">Score</th>\n          <th class=\"text-center\">#</th>\n          <!--th></th-->\n          <th class=\"text-center\">More Info</th>\n\n        </tr>\n        <tr class=\"fade-element-in\" *ngFor=\"let flatNode of getVisibleNodes(flatNodes)\">\n          <td id=\"{{ flatNode.gUid }}\" class=\"child-transition\">\n                        <span [innerHTML]=\"getIndentHtml(flatNode) | safeHtml\">\n                        </span>\n            <a *ngIf=\"flatNode.node.leaf\" href=\"\"\n               (click)=\"setCurrentChart(flatNode.node)\">{{ flatNode.node.chartName }}</a>\n            <a *ngIf=\"!flatNode.node.leaf\" href=\"\"\n               (click)=\"showNonAtomicMetric(flatNode.node)\">{{ flatNode.node.chartName }}</a>\n            <!-- span ng-if=\"!node.leaf\">{{ flatNode.node.chartName }}</span -->\n            <span *ngIf=\"!flatNode.node.leaf\">\n              <span [innerHTML]=\"'&nbsp'\"></span>\n              <a [routerLink]=\"\" *ngIf=\"!flatNode.collapsed\" (click)=\"collapseNode(flatNode)\">\n                <span class=\"arrow-down\"></span>\n              </a>\n              <a [routerLink]=\"\" *ngIf=\"flatNode.collapsed\" (click)=\"expandNode(flatNode)\">\n                <span class=\"arrow-right\"></span>\n              </a>\n            </span>\n          </td>\n          <td class=\"text-center\">\n            <div ng-if=\"flatNode.node.chartName !== 'All metrics'\" class=\"score-label\"><span style=\"vertical-align: top\"\n                                                                                             ng-bind-html=\"getTrendHtml(node) | unsafe\"></span>{{ flatNode.node.chartName }}\n            </div>\n          </td>\n          <td class=\"text-center\">\n            <span ng-if=\"!node.leaf\">{{ flatNode.node.numLeaves }}</span>\n          </td>\n\n          <td [innerHTML]=\"getStatusHtml(flatNode.node)\"></td>\n        </tr>\n      </table>\n\n    </div>\n    <!--<p>Last updated at: {{ lastStatusUpdateTime }}</p>-->\n  </div>\n\n\n  <div ng-if=\"mode\" class=\"card col-xl-6 col-lg-6 col-xxl-6\" ng-switch=\"mode\">\n    <div ng-switch-when=\"showingGoodnessTrend\">\n      <!-- fun-chart values=\"goodnessTrendValues\" show-legend=\"true\"\n                 title=\"goodnessTrendChartTitle\" charting=\"charting\" chart-type=\"line-chart\">\n      </fun-chart-->\n    </div>\n    <div ng-switch-when=\"showingAtomicMetric\">\n      <div ng-if=\"currentChartName\">\n        <table>\n          <tr>\n            <td>\n                                    <span id=\"score-table-parent\" class=\"score-card\">\n                                        <span id=\"score-table-child\">{{ currentNode.goodness }}\n                                        </span>\n                                    </span>\n            </td>\n            <td valign=\"top\" align=\"left\">\n                                <span id=\"score-table-info-icon\">\n                                    <i class=\"fa fa-info-circle\" style=\"padding: 2px\"\n                                       ng-click=\"showNodeInfoClick(currentNode)\">\n                                    </i>\n                                </span>\n            </td>\n            <td style=\"width: 100%\">\n                                <span style=\"float: right;\">\n                                            <button class=\"btn\" style=\"background-color: white\"\n                                                    ng-click=\"openAtomicTab()\">\n                                                <i class=\"fa fa-external-link\"></i></button>\n                                </span>\n            </td>\n          </tr>\n        </table>\n\n        <div ng-if=\"showingNodeInfo\">\n          <h5>Score calculation</h5>\n          <p ng-bind-html=\"currentNodeInfo\"></p>\n        </div>\n\n        <br>\n\n        <div class=\"closed-section\"></div>\n        <!--fun-metric-chart chart-name=\"currentChartName\" model-name=\"currentMetricModelName\"></fun-metric-chart-->\n      </div>\n    </div>\n    <div ng-switch-when=\"showingNonAtomicMetric\">\n      <!-- div style=\"padding-bottom: 10px;\"><h4>Aspect: {{ currentNode.chartName }}</h4></div-->\n      <div>\n        <table>\n          <tr>\n            <td>\n                                    <span id=\"score-table-parent\" class=\"score-card\">\n                                        <span id=\"score-table-child\">{{ currentNode.goodness }}\n                                        </span>\n                                    </span>\n            </td>\n            <td valign=\"top\" align=\"left\">\n                                <span id=\"score-table-info-icon\">\n                                    <i class=\"fa fa-info-circle\" style=\"padding: 2px\"\n                                       ng-click=\"showNodeInfoClick(currentNode)\">\n                                    </i>\n                                </span>\n            </td>\n          </tr>\n        </table>\n        <div ng-if=\"showingContainerNodeInfo\">\n          <br>\n          <h5>Children</h5>\n          <div ng-if=\"currentNode\">\n            <table class=\"table table-nonfluid\">\n              <tr>\n                <th>Aspect</th>\n                <th>Weight</th>\n                <th>Last score</th>\n                <th>Weight * Last Score</th>\n              </tr>\n              <tr ng-repeat=\"(childId, info) in currentNode.children\">\n                <td>{{ metricMap[childId].chartName }}</td>\n                <td>\n                  <p ng-click=\"editingWeightClick(info)\" ng-if=\"!info.editing\">{{ info.weight }}</p>\n                  <span ng-if=\"info.editing\">\n                                        <input style=\"padding-right: 10px\" type=\"number\" ng-model=\"info.editingWeight\">\n                                        <button style=\"border: 1px solid black;overflow: hidden; padding-left: 10px;\"\n                                                class=\"btn btn-sm\"\n                                                ng-click=\"submitWeightClick(currentNode, childId, info)\">&#10003;</button>\n                                        <button style=\"border: 1px solid black;\" class=\"btn btn-sm\"\n                                                ng-click=\"closeEditingWeightClick(info)\">&#10060;</button>\n                                    </span>\n                </td>\n                <td>\n                  {{ currentNode.childrenScoreMap[childId] | number: 1}}\n                </td>\n                <td>\n                  {{ info.weight }} * {{ currentNode.childrenScoreMap[childId] |\n                  number: 1 }} = {{ info.weight * currentNode.childrenScoreMap[childId]\n                  | number: 1 }}\n                </td>\n                <!-- td>{{ childId }}</td -->\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Total ~ {{ getScoreTotal(currentNode) | number: 1}}</td>\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Sum of child weights = {{ getSumChildWeights (currentNode.children) }}</td>\n              </tr>\n              <tr>\n                <td></td>\n                <td></td>\n                <td></td>\n                <td>Score ~ {{ getScoreTotal(currentNode) | number: 1}} / {{ getSumChildWeights(currentNode.children) }}\n                  = {{ getScoreTotal(currentNode) /  getSumChildWeights(currentNode.children) | number: 1}}</td>\n              </tr>\n            </table>\n          </div>\n        </div>\n      </div>\n      <br>\n      <div class=\"closed-section\"></div>\n      <!--fun-metric-chart chart-name=\"currentChartName\" model-name=\"currentMetricModelName\"></fun-metric-chart-->\n\n      <br>\n      <br>\n      <!--<div class=\"closed-section\"></div>-->\n      <div ng-if=\"grid.length\">\n        <table class=\"table\" ng-if=\"grid\">\n          <tr ng-repeat=\"row in grid track by $index\">\n            <td ng-repeat=\"node in row track by $index\" style=\"width: 50%\">\n              <!--fun-metric-chart\n                chart-name=\"node.name\"\n                model-name=\"node.metricModelName\"\n                atomic=\"atomic\"\n                chart-only=\"true\"\n                wait-time=\"(($parent.$index * numGridColumns) + $index) * 1000\">\n              </fun-metric-chart-->\n            </td>\n          </tr>\n        </table>\n        <div class=\"closed-section\"></div>\n      </div>\n    </div>\n  </div>\n\n\n</div>\n"
 
 /***/ }),
 
@@ -1667,12 +1676,17 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 var Node = /** @class */ (function () {
     function Node() {
+        this.goodness = 0;
     }
     return Node;
 }());
 var FlatNode = /** @class */ (function () {
     function FlatNode() {
+        this.children = [];
     }
+    FlatNode.prototype.addChild = function (flatNode) {
+        this.children.push(flatNode);
+    };
     return FlatNode;
 }());
 var PerformanceComponent = /** @class */ (function () {
@@ -1685,6 +1699,58 @@ var PerformanceComponent = /** @class */ (function () {
         this.nodeMap = {};
         this.lastGuid = 0;
         this.flatNodes = [];
+        this.collapseBranch = function (flatNode) {
+            flatNode.children.forEach(function (child) {
+                child.hide = true;
+                child.collapsed = true;
+                _this.collapseBranch(child);
+            });
+        };
+        this.collapseNode = function (flatNode) {
+            flatNode.collapsed = true;
+            _this.collapseBranch(flatNode);
+        };
+        this.space = function (number) {
+            var s = "";
+            for (var i = 0; i < number; i++) {
+                s += "&nbsp";
+            }
+            return s;
+        };
+        this.getVisibleNodes = function () {
+            return _this.flatNodes.filter(function (flatNode) { return !flatNode.hide; });
+        };
+        this.getIndentHtml = function (node) {
+            var s = "";
+            if (node.hasOwnProperty("indent")) {
+                for (var i = 0; i < node.indent - 1; i++) {
+                    s += "<span style=\"color: white\">&rarr;</span>";
+                }
+                if (node.indent)
+                    s += "<span>&nbsp;&nbsp;</span>";
+            }
+            return s;
+        };
+        this.getStatusHtml = function (node) {
+            var s = "";
+            if (node.leaf) {
+                if (node.lastNumBuildFailed > 0) {
+                    s = "Bld: <label class=\"label label-danger\">FAILED</label>";
+                }
+            }
+            else {
+                if (node.numChildrenDegrades) {
+                    s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildrenDegrades + "";
+                }
+                if (node.lastNumBuildFailed) {
+                    if (node.numChildrenDegrades) {
+                        s += ",&nbsp";
+                    }
+                    s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
+                }
+            }
+            return s;
+        };
         this.getNodeFromData = function (data) {
             var newNode = {
                 info: data.description,
@@ -1743,27 +1809,12 @@ var PerformanceComponent = /** @class */ (function () {
             }
             return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
         };
-        this.expandNode = function (node, all) {
-            node.collapsed = false;
-            if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
-                var thisNode = node;
-                // Fetch children ids
-                // return this.fetchMetricInfoById(node).then((data) => {
-                //     console.log("Fetching Metrics Info for node:" + node.metricId);
-                //     node.hide = false;
-                //     let childrenIds = JSON.parse(data.children);
-                //     return this._insertNewNode(node, childrenIds, all, node.childrenFetched).then(() => {
-                //         console.log("Inserted: " + node.chartName);
-                //         node.childrenFetched = true;
-                //         return null;
-                //     });
-                //
-                // });
-            }
-            else {
-                return null;
-            }
-            //node.hide = false;
+        this.expandNode = function (flatNode, all) {
+            flatNode.collapsed = false;
+            flatNode.hide = false;
+            flatNode.children.forEach(function (child) {
+                child.hide = false;
+            });
         };
     }
     PerformanceComponent.prototype.ngOnInit = function () {
@@ -1787,6 +1838,7 @@ var PerformanceComponent = /** @class */ (function () {
         this.apiService.post("/metrics/dag", payload).subscribe(function (response) {
             _this.dag = response.data;
             _this.walkDag(_this.dag);
+            _this.flatNodes[0].hide = false;
             var i = 0;
         }, function (error) {
             _this.loggerService.error("fetchDag");
@@ -1795,6 +1847,7 @@ var PerformanceComponent = /** @class */ (function () {
     PerformanceComponent.prototype.getNodeFromEntry = function (metricId, dagEntry) {
         var node = new Node();
         node.metricId = metricId;
+        node.leaf = dagEntry.leaf;
         node.chartName = dagEntry.chart_name;
         node.metricModelName = dagEntry.metric_model_name;
         node.numLeaves = dagEntry.num_leaves;
@@ -1805,30 +1858,35 @@ var PerformanceComponent = /** @class */ (function () {
     PerformanceComponent.prototype.addNodeToMap = function (metricId, node) {
         this.nodeMap[metricId] = node;
     };
-    PerformanceComponent.prototype.getNewFlatNode = function (node) {
+    PerformanceComponent.prototype.getNewFlatNode = function (node, indent) {
         var newFlatNode = new FlatNode();
         newFlatNode.gUid = this.getGuid();
         newFlatNode.node = node;
         newFlatNode.hide = true;
         newFlatNode.collapsed = true;
+        newFlatNode.indent = indent;
         return newFlatNode;
     };
-    PerformanceComponent.prototype.walkDag = function (dagEntry) {
+    PerformanceComponent.prototype.walkDag = function (dagEntry, indent) {
         var _this = this;
+        if (indent === void 0) { indent = 0; }
+        var thisFlatNode = null;
         this.loggerService.log(dagEntry);
         var _loop_1 = function (metricId) {
             var numMetricId = Number(metricId); // TODO, why do we need this conversion
             var nodeInfo = dagEntry[numMetricId];
             var newNode = this_1.getNodeFromEntry(numMetricId, dagEntry[numMetricId]);
             this_1.addNodeToMap(numMetricId, newNode);
-            this_1.flatNodes.push(this_1.getNewFlatNode(newNode));
+            thisFlatNode = this_1.getNewFlatNode(newNode, indent);
+            this_1.flatNodes.push(thisFlatNode);
             this_1.loggerService.log('Node:' + nodeInfo.chart_name);
             if (!nodeInfo.leaf) {
                 var children = nodeInfo.children;
                 children.forEach(function (cId) {
                     //let childEntry: {[childId: number]: object} = {cId: nodeInfo.children_info[Number(childId)]};
                     var childEntry = (_a = {}, _a[cId] = nodeInfo.children_info[Number(cId)], _a);
-                    _this.walkDag(childEntry);
+                    var childFlatNode = _this.walkDag(childEntry, indent + 1);
+                    thisFlatNode.addChild(childFlatNode);
                     var _a;
                 });
             }
@@ -1837,6 +1895,7 @@ var PerformanceComponent = /** @class */ (function () {
         for (var metricId in dagEntry) {
             _loop_1(metricId);
         }
+        return thisFlatNode;
     };
     PerformanceComponent.prototype.setValues = function (pageNumber) {
         this.data = [['hi', 'hello'], ['how', 'are']];
@@ -1947,29 +2006,6 @@ var PerformanceComponent = /** @class */ (function () {
 //     };
 //
 //
-//     this.getDateRange = () => {
-//         let today = new Date();
-//         console.log(today);
-//         let startMonth = 4 - 1;
-//         let startDay = 1;
-//         let startMinute = 59;
-//         let startHour = 23;
-//         let startSecond = 1;
-//         let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
-//         fromDate = this.getDateBound(fromDate, true);
-//         // console.log(fromDate);
-//         // console.log(this.getDateBound(fromDate, true));
-//         // console.log(this.getDateBound(fromDate, false));
-//
-//         let yesterday = this.getYesterday(today);
-//         let toDate = new Date(yesterday);
-//         toDate = this.getDateBound(toDate, false);
-//         //let fromDate = new Date();
-//         // fromDate.setDate(toDate.getDate() - 7);
-//         // fromDate = this.getDateBound(fromDate, true);
-//         return [fromDate, toDate];
-//
-//     };
 //
 //
 //
@@ -2137,53 +2173,6 @@ var PerformanceComponent = /** @class */ (function () {
 //         $window.open(url, '_blank');
 //     };
 //
-//     this.submitDescription = (node) => {
-//         let payload = {};
-//         payload["metric_model_name"] = node.metricModelName;
-//         payload["chart_name"] = node.chartName;
-//         payload["description"] = this.inner.nonAtomicMetricInfo;
-//
-//         // TODO: Refresh cache
-//         commonService.apiPost('/metrics/update_chart', payload, "EditDescription: Submit").then((data) => {
-//             if (data) {
-//                 alert("Submitted");
-//             } else {
-//                 alert("Submission failed. Please check alerts");
-//             }
-//         });
-//         this.editingDescription = false;
-//
-//     };
-//
-//     this.tooltipFormatter = (x, y) => {
-//         let softwareDate = "Unknown";
-//         let hardwareVersion = "Unknown";
-//         let sdkBranch = "Unknown";
-//         let gitCommit = "Unknown";
-//         let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-//         let match = r.exec(x);
-//         let key = "";
-//         if (match) {
-//             key = match[1];
-//         }
-//         let s = "";
-//
-//         if (key in this.buildInfo) {
-//             softwareDate = this.buildInfo[key]["software_date"];
-//             hardwareVersion = this.buildInfo[key]["hardware_version"];
-//             sdkBranch = this.buildInfo[key]["fun_sdk_branch"]
-//             s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
-//             s += "<b>Software date:</b> " + softwareDate + "<br>";
-//             s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
-//             s += "<b>Git commit:</b> " + this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "")  + "<br>";
-//             s += "<b>Value:</b> " + y + "<br>";
-//         } else {
-//             s += "<b>Value:</b> " + y + "<br>";
-//         }
-//
-//         return s;
-//     };
-//
 //
 //     this.fetchMetricInfoById = (node) => {
 //         let thisNode = node;
@@ -2222,39 +2211,6 @@ var PerformanceComponent = /** @class */ (function () {
 //         return numTrendDown;
 //     };
 //
-//     this.getStatusHtml = (node) => {
-//         let s = "";
-//         if (node.leaf) {
-//             if (node.hasOwnProperty("status")) {
-//                 if (node.status !== true) {
-//                     s = "Bld: <label class=\"label label-danger\">FAILED</label>";
-//                 }
-//                 if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
-//                     s = "<p style='background-color: white' class=\"\">No Data</p>";
-//                 }
-//             }
-//         } else {
-//
-//
-//
-//             //s = "<p><span style='color: green'>&#10003;:</span><b>" + numTrendUp + "</b>" + "&nbsp" ;
-//             //s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
-//             /*if (node.chartName === "BLK_LSV: Latency") {
-//                 let u = 0;
-//             }*/
-//
-//             if (node.numChildDegrades) {
-//                 s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildDegrades + "";
-//             }
-//             if (node.numChildrenFailed) {
-//                 if (node.numChildDegrades) {
-//                     s += ",&nbsp";
-//                 }
-//                 s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.numChildrenFailed + "</span>";
-//             }
-//         }
-//         return s;
-//     };
 //
 //     this.getTrendHtml = (node) => {
 //         let s = "";
@@ -2579,10 +2535,10 @@ var PerformanceComponent = /** @class */ (function () {
 
 /***/ }),
 
-/***/ "./src/app/pipe/fun-table-filter.pipe.ts":
-/*!***********************************************!*\
-  !*** ./src/app/pipe/fun-table-filter.pipe.ts ***!
-  \***********************************************/
+/***/ "./src/app/pipes/fun-table-filter.pipe.ts":
+/*!************************************************!*\
+  !*** ./src/app/pipes/fun-table-filter.pipe.ts ***!
+  \************************************************/
 /*! exports provided: FunTableFilterPipe */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -2619,6 +2575,47 @@ var FunTableFilterPipe = /** @class */ (function () {
         })
     ], FunTableFilterPipe);
     return FunTableFilterPipe;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/pipes/safe-html.pipe.ts":
+/*!*****************************************!*\
+  !*** ./src/app/pipes/safe-html.pipe.ts ***!
+  \*****************************************/
+/*! exports provided: SafeHtmlPipe */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SafeHtmlPipe", function() { return SafeHtmlPipe; });
+/* harmony import */ var _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/platform-browser */ "./node_modules/@angular/platform-browser/fesm5/platform-browser.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+var SafeHtmlPipe = /** @class */ (function () {
+    function SafeHtmlPipe(sanitized) {
+        this.sanitized = sanitized;
+    }
+    SafeHtmlPipe.prototype.transform = function (value) {
+        return this.sanitized.bypassSecurityTrustHtml(value);
+    };
+    SafeHtmlPipe = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Pipe"])({ name: 'safeHtml' }),
+        __metadata("design:paramtypes", [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["DomSanitizer"]])
+    ], SafeHtmlPipe);
+    return SafeHtmlPipe;
 }());
 
 
