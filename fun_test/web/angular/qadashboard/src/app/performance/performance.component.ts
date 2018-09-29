@@ -4,7 +4,6 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 
 
-
 class Node {
   metricId: number;
   leaf: boolean;
@@ -13,7 +12,8 @@ class Node {
   numChildrenFailed: number;
   numChildrenDegrades: number;
   lastNumBuildFailed: number;
-  numLeaves: number
+  numLeaves: number;
+  goodness: number = 0;
 }
 
 class FlatNode {
@@ -21,6 +21,12 @@ class FlatNode {
   node: Node;
   collapsed: boolean;
   hide: boolean;
+  indent: number;
+  children: FlatNode[] = [];
+  addChild(flatNode: FlatNode) {
+    this.children.push(flatNode);
+  }
+
 }
 
 @Component({
@@ -44,7 +50,7 @@ export class PerformanceComponent implements OnInit {
   data: any[];
   dag: any = null;
 
-  nodeMap: { [metricId: number] : Node } = {};
+  nodeMap: { [metricId: number]: Node } = {};
   lastGuid: number = 0;
   flatNodes: FlatNode[] = [];
 
@@ -73,10 +79,11 @@ export class PerformanceComponent implements OnInit {
 
   fetchDag(): void {
     // Fetch the DAG
-    let payload: { [i: string]: string} = {metric_model_name: "MetricContainer", chart_name: "Total"};
-    this.apiService.post("/metrics/dag", payload).subscribe( response => {
+    let payload: { [i: string]: string } = {metric_model_name: "MetricContainer", chart_name: "Total"};
+    this.apiService.post("/metrics/dag", payload).subscribe(response => {
       this.dag = response.data;
       this.walkDag(this.dag);
+      this.flatNodes[0].hide = false;
       let i = 0;
     }, error => {
       this.loggerService.error("fetchDag");
@@ -86,6 +93,7 @@ export class PerformanceComponent implements OnInit {
   getNodeFromEntry(metricId: number, dagEntry: any): Node {
     let node = new Node();
     node.metricId = metricId;
+    node.leaf = dagEntry.leaf;
     node.chartName = dagEntry.chart_name;
     node.metricModelName = dagEntry.metric_model_name;
     node.numLeaves = dagEntry.num_leaves;
@@ -99,35 +107,65 @@ export class PerformanceComponent implements OnInit {
     this.nodeMap[metricId] = node;
   }
 
-  getNewFlatNode(node: Node): FlatNode {
+  getNewFlatNode(node: Node, indent: number): FlatNode {
     let newFlatNode = new FlatNode();
     newFlatNode.gUid = this.getGuid();
     newFlatNode.node = node;
     newFlatNode.hide = true;
     newFlatNode.collapsed = true;
+    newFlatNode.indent = indent;
     return newFlatNode;
   }
 
-  walkDag(dagEntry: object): void {
+  walkDag(dagEntry: object, indent: number = 0): void {
+    let thisFlatNode = null;
     this.loggerService.log(dagEntry);
     for (let metricId in dagEntry) {
       let numMetricId: number = Number(metricId); // TODO, why do we need this conversion
       let nodeInfo = dagEntry[numMetricId];
       let newNode = this.getNodeFromEntry(numMetricId, dagEntry[numMetricId]);
       this.addNodeToMap(numMetricId, newNode);
-
-      this.flatNodes.push(this.getNewFlatNode(newNode));
+      thisFlatNode = this.getNewFlatNode(newNode, indent);
+      this.flatNodes.push(thisFlatNode);
       this.loggerService.log('Node:' + nodeInfo.chart_name);
       if (!nodeInfo.leaf) {
         let children = nodeInfo.children;
         children.forEach((cId) => {
           //let childEntry: {[childId: number]: object} = {cId: nodeInfo.children_info[Number(childId)]};
           let childEntry = {[cId]: nodeInfo.children_info[Number(cId)]};
-          this.walkDag(childEntry);
+          let childFlatNode = this.walkDag(childEntry, indent + 1);
+          thisFlatNode.addChild(childFlatNode);
         })
       }
     }
+    return thisFlatNode;
   }
+
+
+  collapseBranch = (flatNode) => {
+    flatNode.children.forEach((child) => {
+      child.hide = true;
+      child.collapsed = true;
+      this.collapseBranch(child);
+    });
+  };
+
+  collapseNode = (flatNode) => {
+    flatNode.collapsed = true;
+    this.collapseBranch(flatNode);
+  };
+
+  space = (number) => {
+    let s = "";
+    for (let i = 0; i < number; i++) {
+      s += "&nbsp";
+    }
+    return s;
+  };
+
+  getVisibleNodes = () => {
+    return this.flatNodes.filter(flatNode => { return !flatNode.hide })
+  };
 
   setValues(pageNumber): void {
     this.data = [['hi', 'hello'], ['how', 'are']];
@@ -167,10 +205,45 @@ export class PerformanceComponent implements OnInit {
       });
     });
   }
-counter(i: number) {
+
+  getIndentHtml = (node) => {
+    let s = "";
+    if (node.hasOwnProperty("indent")) {
+      for (let i = 0; i < node.indent - 1; i++) {
+        s += "<span style=\"color: white\">&rarr;</span>";
+      }
+      if (node.indent)
+        s += "<span>&nbsp;&nbsp;</span>";
+    }
+
+    return s;
+  };
+
+
+  counter(i: number) {
     return new Array(i);
   }
 
+      getStatusHtml = (node) => {
+        let s = "";
+        if (node.leaf) {
+                if (node.lastNumBuildFailed > 0) {
+                    s = "Bld: <label class=\"label label-danger\">FAILED</label>";
+                }
+        } else {
+
+            if (node.numChildrenDegrades) {
+                s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildrenDegrades + "";
+            }
+            if (node.lastNumBuildFailed) {
+                if (node.numChildrenDegrades) {
+                    s += ",&nbsp";
+                }
+                s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
+            }
+        }
+        return s;
+    };
 
 
   getNodeFromData = (data): any => {
@@ -236,34 +309,18 @@ counter(i: number) {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   };
 
-  expandNode = (node, all) => {
-    node.collapsed = false;
-    if (node.hasOwnProperty("numChildren") && (node.numChildren > 0)) {
-      let thisNode = node;
-      // Fetch children ids
-
-      // return this.fetchMetricInfoById(node).then((data) => {
-      //     console.log("Fetching Metrics Info for node:" + node.metricId);
-      //     node.hide = false;
-      //     let childrenIds = JSON.parse(data.children);
-      //     return this._insertNewNode(node, childrenIds, all, node.childrenFetched).then(() => {
-      //         console.log("Inserted: " + node.chartName);
-      //         node.childrenFetched = true;
-      //         return null;
-      //     });
-      //
-      // });
-
-    }
-    else {
-      return null;
-    }
-    //node.hide = false;
-
+  expandNode = (flatNode, all) => {
+    flatNode.collapsed = false;
+    flatNode.hide = false;
+    flatNode.children.forEach((child) => {
+      child.hide = false;
+    })
   };
 
 
 }
+
+
 
 //
 //     this.clearNodeInfoCache = () => {
@@ -323,29 +380,6 @@ counter(i: number) {
 //     };
 //
 //
-//     this.getDateRange = () => {
-//         let today = new Date();
-//         console.log(today);
-//         let startMonth = 4 - 1;
-//         let startDay = 1;
-//         let startMinute = 59;
-//         let startHour = 23;
-//         let startSecond = 1;
-//         let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
-//         fromDate = this.getDateBound(fromDate, true);
-//         // console.log(fromDate);
-//         // console.log(this.getDateBound(fromDate, true));
-//         // console.log(this.getDateBound(fromDate, false));
-//
-//         let yesterday = this.getYesterday(today);
-//         let toDate = new Date(yesterday);
-//         toDate = this.getDateBound(toDate, false);
-//         //let fromDate = new Date();
-//         // fromDate.setDate(toDate.getDate() - 7);
-//         // fromDate = this.getDateBound(fromDate, true);
-//         return [fromDate, toDate];
-//
-//     };
 //
 //
 //
@@ -513,53 +547,8 @@ counter(i: number) {
 //         $window.open(url, '_blank');
 //     };
 //
-//     this.submitDescription = (node) => {
-//         let payload = {};
-//         payload["metric_model_name"] = node.metricModelName;
-//         payload["chart_name"] = node.chartName;
-//         payload["description"] = this.inner.nonAtomicMetricInfo;
-//
-//         // TODO: Refresh cache
-//         commonService.apiPost('/metrics/update_chart', payload, "EditDescription: Submit").then((data) => {
-//             if (data) {
-//                 alert("Submitted");
-//             } else {
-//                 alert("Submission failed. Please check alerts");
-//             }
-//         });
-//         this.editingDescription = false;
-//
-//     };
-//
-//     this.tooltipFormatter = (x, y) => {
-//         let softwareDate = "Unknown";
-//         let hardwareVersion = "Unknown";
-//         let sdkBranch = "Unknown";
-//         let gitCommit = "Unknown";
-//         let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-//         let match = r.exec(x);
-//         let key = "";
-//         if (match) {
-//             key = match[1];
-//         }
-//         let s = "";
-//
-//         if (key in this.buildInfo) {
-//             softwareDate = this.buildInfo[key]["software_date"];
-//             hardwareVersion = this.buildInfo[key]["hardware_version"];
-//             sdkBranch = this.buildInfo[key]["fun_sdk_branch"]
-//             s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
-//             s += "<b>Software date:</b> " + softwareDate + "<br>";
-//             s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
-//             s += "<b>Git commit:</b> " + this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "")  + "<br>";
-//             s += "<b>Value:</b> " + y + "<br>";
-//         } else {
-//             s += "<b>Value:</b> " + y + "<br>";
-//         }
-//
-//         return s;
-//     };
-//
+
+
 //
 //     this.fetchMetricInfoById = (node) => {
 //         let thisNode = node;
@@ -598,39 +587,7 @@ counter(i: number) {
 //         return numTrendDown;
 //     };
 //
-//     this.getStatusHtml = (node) => {
-//         let s = "";
-//         if (node.leaf) {
-//             if (node.hasOwnProperty("status")) {
-//                 if (node.status !== true) {
-//                     s = "Bld: <label class=\"label label-danger\">FAILED</label>";
-//                 }
-//                 if ((!node.hasOwnProperty("numChildren") && (!node.leaf)) || ((node.numChildren === 0) && !node.leaf)) {
-//                     s = "<p style='background-color: white' class=\"\">No Data</p>";
-//                 }
-//             }
-//         } else {
-//
-//
-//
-//             //s = "<p><span style='color: green'>&#10003;:</span><b>" + numTrendUp + "</b>" + "&nbsp" ;
-//             //s = "<icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon>";
-//             /*if (node.chartName === "BLK_LSV: Latency") {
-//                 let u = 0;
-//             }*/
-//
-//             if (node.numChildDegrades) {
-//                 s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildDegrades + "";
-//             }
-//             if (node.numChildrenFailed) {
-//                 if (node.numChildDegrades) {
-//                     s += ",&nbsp";
-//                 }
-//                 s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.numChildrenFailed + "</span>";
-//             }
-//         }
-//         return s;
-//     };
+
 //
 //     this.getTrendHtml = (node) => {
 //         let s = "";

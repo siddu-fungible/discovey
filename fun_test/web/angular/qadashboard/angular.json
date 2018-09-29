@@ -20,11 +20,14 @@
             "tsConfig": "src/tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "src/assets/font-awesome/fonts"
             ],
             "styles": [
               "src/styles.css",
-              "../../static/css/common/bootstrap.min.css"
+              "../../static/css/common/bootstrap.min.css",
+              "./node_modules/font-awesome/css/font-awesome.css"
+
             ],
             "scripts": []
           },
