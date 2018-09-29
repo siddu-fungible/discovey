@@ -26,11 +26,11 @@ export class FunChartComponent implements OnInit {
   // tooltipFormatter: any;
   //
   // genId: any = null;
-  @Input() yValues: any[];
+  @Input() y1Values: any[];
   @Input() xValues: any[];
   @Input() title: string;
   @Input() xAxisLabel: string;
-  @Input() yAxisLabel: string;
+  @Input() y1AxisLabel: string;
   chart: any;
 
   // @Input() xValues: any[];
@@ -61,13 +61,24 @@ export class FunChartComponent implements OnInit {
     },
     yAxis: {
       title: {
-        text: this.yAxisLabel
+        text: this.y1AxisLabel
       }
     },
     credits: {
       enabled: false
     },
-    series: this.yValues
+      plotOptions: {
+      line: {
+        animation: false,
+        marker: {
+          enabled: true
+        }
+        },
+        series: {
+        animation: false
+      }
+      },
+    series: this.y1Values
   });
   }
 

@@ -45,13 +45,13 @@ describe('PerformanceComponent', () => {
     expect(component).toBeTruthy();
 
 
-    spyOn(service, 'post').and.returnValue(of(new ApiResponse({message: "Mock1"})));
-    component.doSomething1();
-    expect(component.getComponentState()).toMatch("Mock1");
-
-    spyOn(service, 'post').and.returnValue(throwError(new ApiResponse({message: "Mock2"})));
-    component.doSomething1();
-    expect(component.getComponentState()).toMatch("Error");
+    // spyOn(service, 'post').and.returnValue(of(new ApiResponse({message: "Mock1"})));
+    // component.doSomething1();
+    // expect(component.getComponentState()).toMatch("Mock1");
+    //
+    // spyOn(service, 'post').and.returnValue(throwError(new ApiResponse({message: "Mock2"})));
+    // component.doSomething1();
+    // expect(component.getComponentState()).toMatch("Error");
 
 
   });

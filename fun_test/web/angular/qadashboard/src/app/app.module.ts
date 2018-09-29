@@ -15,6 +15,10 @@ import { TestComponent } from './test/test.component';
 import { FunTableFilterPipe } from './pipe/fun-table-filter.pipe';
 import { ChartComponent } from './chart/chart.component';
 import { FunChartComponent } from './fun-chart/fun-chart.component';
+import { ChartModule } from 'angular-highcharts';
+import { FunMetricChartComponent } from './fun-metric-chart/fun-metric-chart.component';
+import { AngularFontAwesomeModule } from 'angular-font-awesome';
+import { FormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -26,14 +30,18 @@ import { FunChartComponent } from './fun-chart/fun-chart.component';
     TestComponent,
     FunTableFilterPipe,
     ChartComponent,
-    FunChartComponent
+    FunChartComponent,
+    FunMetricChartComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    MatSortModule
+    MatSortModule,
+    ChartModule,
+    AngularFontAwesomeModule,
+    FormsModule
   ],
 
   providers: [ApiService, LoggerService],

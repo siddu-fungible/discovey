@@ -1,0 +1,106 @@
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+<div>
+        <div [ngSwitch]="timeMode">
+            <div *ngSwitchCase="'all'">
+                <a (click)="setTimeMode('week')"> Week </a>/
+                <a (click)="setTimeMode('month')"> Month </a>/
+                <b><u><a (click)="setTimeMode('all')"> All </a></u></b>
+            </div>
+            <div *ngSwitchCase="'week'">
+                <b><u><a (click)="setTimeMode('week')"> Week </a></u></b>/
+                <a (click)="setTimeMode('month')"> Month </a>/
+                <a (click)="setTimeMode('all')"> All </a>
+            </div>
+            <div *ngSwitchCase="'month'">
+                <a (click)="setTimeMode('week')"> Week </a>/
+                <b><u><a (click)="setTimeMode('month')"> Month </a></u></b>/
+                <a (click)="setTimeMode('all')"> All </a>
+            </div>
+        </div>
+        <!--<fun-chart values="values" series="series" title="$ctrl.chartName" charting="charting" chart-type="line-chart"-->
+               <!--width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle"-->
+               <!--point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter"-->
+               <!--tooltip-formatter="tooltipFormatter">-->
+        <!--</fun-chart>-->
+      <!--<fun-chart [yValues]="yValues" [xValues]="xValues" [title]="title" [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel"></fun-chart>-->
+  <!--<div *ngFor="let in of counter(50)">-->
+  <fun-chart [y1Values]="values" [xValues]="series" [title]="chartName" [xAxisLabel]="xAxisLabel" [y1AxisLabel]="yAxisLabel"></fun-chart>
+  <!--</div>-->
+    <br>
+
+     <b>Description:   </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
+    <br>
+    <div [innerHTML]="inner.currentDescription"></div>
+    <div *ngIf="editingDescription">
+        <br>
+        <textarea rows="4" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
+        <button class="btn btn-success" (click)="submit()">Submit</button>
+        <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
+    </div>
+</div>
+<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+    <div>
+    <button [attr.id]="'show_tables_' + metricId" type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" [attr.data-target]="'#showing_tables_' + metricId"
+            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;">Show Tables</button>
+  <div [attr.id]="'showing_tables_' + metricId" class="collapse">
+      <div *ngIf="headers">
+          <!--<fun-table (nextPage)="setValues($event)" [data]="data">-->
+          <!--</fun-table>-->
+      </div>
+      <div>
+          <a href="{{ '#show_tables_' + metricId }}" style="float:right" (click)="changeClass('#showing_tables_' + metricId, '#show_tables_' + metricId)">Hide Tables</a>
+      </div>
+      <br>
+      <br>
+      <div class="closed-section"></div>
+
+      <!--<button type="button" class="btn btn1 btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo" style="text-align: left; font-size: 14px; padding: 5px; border-color: black; border: 0px solid; width: 100%; background: white; color: black;">Hide Tables</button>-->
+  </div>
+    </div>
+    <div>
+    <button [attr.id]="'configure_' + metricId" type="button" ng-class="after" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" [attr.data-target]="'#show_configure_' + metricId"
+            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;">Configure</button>
+  <div [attr.id]="'show_configure_' + metricId" class="collapse">
+       <div class="row">
+           <!--<div class="col-lg-10 col-xl-10 pull-left">-->
+               <!--<table class="table table-nonfluid table-borderless"-->
+                      <!--ng-repeat="dataSet in previewDataSets track by $index">-->
+                   <!--<tr>-->
+                       <!--<th>Name</th>-->
+                       <!--<th>Field</th>-->
+                       <!--<th>Min</th>-->
+                       <!--<th>Max</th>-->
+                       <!--<th>Expected</th>-->
+                   <!--</tr>-->
+                   <!--<tr>-->
+                       <!--<td>-->
+                           <!--{{ dataSet.name }}-->
+                       <!--</td>-->
+                       <!--<td>-->
+                           <!--{{ dataSet.output.name }}-->
+                       <!--</td>-->
+                       <!--<td>-->
+                           <!--<input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min"-->
+                                  <!--style="width: 100px">-->
+                       <!--</td>-->
+                       <!--<td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max"-->
+                                  <!--style="width: 100px"></td>-->
+                       <!--<td><input type="number" ng-model="dataSet.output.expected"-->
+                                  <!--ng-value="dataSet.output.expected"-->
+                                  <!--style="width: 100px"></td>-->
+                   <!--</tr>-->
+               <!--</table>-->
+               <!--<p><input type="checkbox" ng-checked="negativeGradient" ng-model="inner.negativeGradient">&nbsp;Negative gradient</p>-->
+               <!--<p><input type="checkbox" ng-checked="leaf" ng-model="inner.leaf">&nbsp;Leaf</p>-->
+           <!--</div>-->
+       </div>
+      <div class="row">
+          <div style="padding: 10px;">
+              <button class="btn btn-success" (click)="submit()">Submit</button>
+              <a href="{{ '#configure_' + metricId }}" (click)="changeClass('#show_configure_' + metricId, '#configure_' + metricId)">Cancel</a>
+          </div>
+      </div>
+  </div>
+    </div>
+
+    </div>
