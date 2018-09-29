@@ -12,13 +12,15 @@ import { FunTableComponent } from './fun-table/fun-table.component';
 import {ApiService} from "./services/api/api.service";
 import {LoggerService} from "./services/logger/logger.service";
 import { TestComponent } from './test/test.component';
-import { FunTableFilterPipe } from './pipe/fun-table-filter.pipe';
+import { FunTableFilterPipe } from './pipes/fun-table-filter.pipe';
 import { ChartComponent } from './chart/chart.component';
 import { FunChartComponent } from './fun-chart/fun-chart.component';
 import { ChartModule } from 'angular-highcharts';
 import { FunMetricChartComponent } from './fun-metric-chart/fun-metric-chart.component';
 import { AngularFontAwesomeModule } from 'angular-font-awesome';
 import { FormsModule } from '@angular/forms';
+import { SafeHtmlPipe } from './pipes/safe-html.pipe';
+import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
 
 
 @NgModule({
@@ -31,7 +33,8 @@ import { FormsModule } from '@angular/forms';
     FunTableFilterPipe,
     ChartComponent,
     FunChartComponent,
-    FunMetricChartComponent
+    FunMetricChartComponent,
+    SafeHtmlPipe
   ],
   imports: [
     BrowserModule,
@@ -41,7 +44,8 @@ import { FormsModule } from '@angular/forms';
     MatSortModule,
     ChartModule,
     AngularFontAwesomeModule,
-    FormsModule
+    FormsModule,
+    Angular2FontawesomeModule  // Add this line
   ],
 
   providers: [ApiService, LoggerService],

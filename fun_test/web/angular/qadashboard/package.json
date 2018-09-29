@@ -25,6 +25,7 @@
     "@angular/router": "^6.1.0",
     "angular-font-awesome": "^3.1.2",
     "angular-highcharts": "^6.2.6",
+    "angular2-fontawesome": "^5.2.1",
     "core-js": "^2.5.4",
     "font-awesome": "^4.7.0",
     "highcharts": "^6.1.4",
