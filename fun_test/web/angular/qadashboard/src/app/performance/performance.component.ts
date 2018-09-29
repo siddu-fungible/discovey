@@ -532,7 +532,7 @@ export class PerformanceComponent implements OnInit {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   };
 
-  expandNode = (flatNode, all) => {
+  expandNode = (flatNode, all=false) => {
     flatNode.collapsed = false;
     flatNode.hide = false;
     flatNode.children.forEach((child) => {
@@ -540,14 +540,16 @@ export class PerformanceComponent implements OnInit {
     })
   };
 
-  showAtomicMetric = (node) => {
-    this.currentNode = node;
+  showAtomicMetric = (flatNode) => {
+    this.currentNode = flatNode.node;
     this.mode = Mode.ShowingAtomicMetric;
+    this.expandNode(flatNode);
   };
 
-  showNonAtomicMetric = (node) => {
-    this.currentNode = node;
+  showNonAtomicMetric = (flatNode) => {
+    this.currentNode = flatNode.node;
     this.mode = Mode.ShowingNonAtomicMetric;
+    this.expandNode(flatNode);
   };
 
 }

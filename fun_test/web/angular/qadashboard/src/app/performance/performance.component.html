@@ -19,9 +19,9 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
             <a *ngIf="flatNode.node.leaf" [routerLink]=""
-               (click)="showAtomicMetric(flatNode.node)">{{ flatNode.node.chartName }}</a>
+               (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
             <a *ngIf="!flatNode.node.leaf" [routerLink]=""
-               (click)="showNonAtomicMetric(flatNode.node)">{{ flatNode.node.chartName }}</a>
+               (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
             <!-- span ng-if="!node.leaf">{{ flatNode.node.chartName }}</span -->
             <span *ngIf="!flatNode.node.leaf">
               <span [innerHTML]="'&nbsp'"></span>
