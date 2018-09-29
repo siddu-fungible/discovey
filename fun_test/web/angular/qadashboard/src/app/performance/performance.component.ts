@@ -2,7 +2,13 @@ import {Component, OnInit} from '@angular/core';
 import {Location} from '@angular/common';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
+import {isSameDay} from "ngx-bootstrap/chronos/utils/date-getters";
 
+class ChildInfo {
+  lastScore: number;
+  weight: number;
+  weightEditing: boolean = false;
+};
 
 class Node {
   metricId: number;
@@ -13,7 +19,13 @@ class Node {
   numChildrenDegrades: number;
   lastNumBuildFailed: number;
   numLeaves: number;
-  goodness: number = 0;
+  scores: any;
+  childrenInfo: Map<number, ChildInfo> = new Map<number, ChildInfo>();
+  childrenScoreMap: Map<number, number> = new Map();
+  childrenWeights: Map<number, number> = new Map();
+  trend: number;
+  lastScore: number = null;
+  children: number[] = [];
 }
 
 class FlatNode {
@@ -23,10 +35,16 @@ class FlatNode {
   hide: boolean;
   indent: number;
   children: FlatNode[] = [];
+
   addChild(flatNode: FlatNode) {
     this.children.push(flatNode);
   }
+}
 
+enum Mode {
+  None,
+  ShowingAtomicMetric,
+  ShowingNonAtomicMetric
 }
 
 @Component({
@@ -35,9 +53,11 @@ class FlatNode {
   styleUrls: ['./performance.component.css']
 })
 export class PerformanceComponent implements OnInit {
+
+
   numGridColumns: number;
   lastStatusUpdateTime: any;
-  mode: any;
+  mode: Mode = Mode.None;
   jenkinsJobIdMap: any;
   metricMap: any;
   cachedNodeInfo: any;
@@ -50,9 +70,15 @@ export class PerformanceComponent implements OnInit {
   data: any[];
   dag: any = null;
 
-  nodeMap: { [metricId: number]: Node } = {};
+  nodeMap: Map<number, Node> = new Map<number, Node>();
   lastGuid: number = 0;
   flatNodes: FlatNode[] = [];
+  validDates: any;
+  currentNode: Node = null;
+  modeType = Mode;
+  currentNodeInfo: string;
+  showScoreInfo: boolean = false;
+
 
   constructor(
     private location: Location,
@@ -62,6 +88,10 @@ export class PerformanceComponent implements OnInit {
   }
 
   ngOnInit() {
+    let myMap = new Map().set('a', 1).set('b', 2);
+    let keys = Array.from( myMap.keys() );
+    console.log(keys);
+
     // this.getLastStatusUpdateTime();
     this.numGridColumns = 2;
     this.data = [['hi', 'hello'], ['how', 'are'], ['you', 'its'], ['been', 'a'], ['long', 'time'], ['also', 'when'], ['where', 'how'], ['are', 'we'], ['meeting', 'if'], [1, 2], [3, 4]];
@@ -99,12 +129,145 @@ export class PerformanceComponent implements OnInit {
     node.numLeaves = dagEntry.num_leaves;
     node.numChildrenDegrades = dagEntry.last_num_degrades;
     node.lastNumBuildFailed = dagEntry.last_num_build_failed;
+    node.children = dagEntry.children;
+
+    Object.keys(dagEntry.children_weights).forEach((key) => {
+      let childInfo: ChildInfo = new ChildInfo();
+      childInfo.weight = dagEntry.children_weights[Number(key)];
+      childInfo.weightEditing = false;
+      childInfo.lastScore = 0;
+      node.childrenInfo.set(Number(key), childInfo);
+    });
+    this.fetchScores(node);
+    let keys = Array.from( node.childrenInfo.keys() );
+    console.log(keys);
     return node;
   }
 
+   getKeys(map){
+    //console.log(map.keys());
+    let a = Array.from(map.keys());
+    return a;
+  }
+
+  getSumChildWeights = (currentNode) => {
+        let sumOfWeights = 0;
+        currentNode.childrenInfo.forEach((childInfo, key) => {
+            sumOfWeights += childInfo.weight;
+        });
+        return sumOfWeights;
+  };
+
+  getScoreTotal = (currentNode) => {
+        let children = currentNode.children;
+        let scoreTotal = 0;
+
+
+        /*angular.forEach(children, (info, childId) => {
+            scoreTotal += info.weight * currentNode.childrenScoreMap[childId];
+        });*/
+        currentNode.childrenInfo.forEach((childInfo, key) => {
+            scoreTotal += childInfo.weight * childInfo.lastScore;
+        });
+
+        let lastDate = new Date(this.validDates.slice(-1)[0] * 1000);
+        let lastDateLower = this.getDateBound(lastDate, true);
+        let lastDateUpper = this.getDateBound(lastDate, false);
+
+        return scoreTotal;
+    };
+
+  fetchScores(node) {
+    let dateRange = this.getDateRange();
+    let fromDate = dateRange[0];
+    let toDate = dateRange[1];
+
+    let payload = {metric_id: node.metricId, date_range: [fromDate.toISOString(), toDate.toISOString()]};
+    payload.metric_id = node.metricId;
+    this.apiService.post('/metrics/scores', payload).subscribe((response) => {
+      node.scores = response.data.scores;
+
+      //node.childrenScoreMap = response.data.children_score_map;
+
+      try {
+        Object.keys(response.data.children_score_map).forEach((key) => {
+          let numKey = Number(key);
+          if (response.data.children_score_map.hasOwnProperty(numKey)) {
+            node.childrenInfo.get(numKey).lastScore = response.data.children_score_map[numKey];
+          }
+
+      });
+      } catch(e) {
+        let i = 0;
+      }
+
+      this.evaluateScores(node);
+    }, error => {
+      this.loggerService.error("fetchScores");
+    });
+    return node;
+  }
+
+  getNode = (id) => {
+    let node = this.nodeMap.get(id);
+    return node;
+  };
+
+
+
+  evaluateScores = (node) => {
+
+    let keys: number[] = Object.keys(node.scores).map(Number);
+    if (keys.length) {
+      let sortedKeys = keys.sort();
+      if (node.chartName === "Total") {
+        this.validDates = sortedKeys;
+      }
+
+      let lastKey = sortedKeys[sortedKeys.length - 1];
+      let penultimateKey = sortedKeys[sortedKeys.length - 2];
+      try {
+
+        let lastScore = Number(node.scores[lastKey].score.toFixed(1));
+        let penultimateScore = Number(node.scores[penultimateKey].score.toFixed(1));
+        node.trend = 0;
+        if (lastScore < penultimateScore) {
+          node.trend = -1;
+        }
+        if (lastScore > penultimateScore) {
+          node.trend = 1;
+        }
+        node.lastScore = lastScore;
+      }   catch (e) {
+      }
+
+    }
+
+    //console.log("Node: " + node.chartName + " Goodness: " + node.goodness);
+  };
+
+  getCurrentNodeScoreInfo = (node) => {
+    this.currentNodeInfo = null;
+     if(node.metricModelName !== 'MetricContainer') {
+        //$scope.showingContainerNodeInfo = !$scope.showingContainerNodeInfo;
+       if (node.positive) {
+            this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/expected value) * 100&nbsp)/n";
+        } else {
+            this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
+        }
+        this.currentNodeInfo += "&nbsp, where n is the number of data-sets";
+     }
+    return this.currentNodeInfo;
+  };
+
+  showScoreInfoClick = (node) => {
+    this.showScoreInfo = !this.showScoreInfo;
+
+
+    };
 
   addNodeToMap(metricId: number, node: Node): void {
-    this.nodeMap[metricId] = node;
+    this.nodeMap.set(Number(metricId), node);
   }
 
   getNewFlatNode(node: Node, indent: number): FlatNode {
@@ -164,7 +327,9 @@ export class PerformanceComponent implements OnInit {
   };
 
   getVisibleNodes = () => {
-    return this.flatNodes.filter(flatNode => { return !flatNode.hide })
+    return this.flatNodes.filter(flatNode => {
+      return !flatNode.hide
+    })
   };
 
   setValues(pageNumber): void {
@@ -224,26 +389,66 @@ export class PerformanceComponent implements OnInit {
     return new Array(i);
   }
 
-      getStatusHtml = (node) => {
-        let s = "";
-        if (node.leaf) {
-                if (node.lastNumBuildFailed > 0) {
-                    s = "Bld: <label class=\"label label-danger\">FAILED</label>";
-                }
-        } else {
+  getDateBound = (dt, lower) => {
+    let newDay = new Date(dt);
+    if (lower) {
+      newDay.setHours(0, 0, 1);
+    } else {
+      newDay.setHours(23, 59, 59);
+    }
 
-            if (node.numChildrenDegrades) {
-                s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildrenDegrades + "";
-            }
-            if (node.lastNumBuildFailed) {
-                if (node.numChildrenDegrades) {
-                    s += ",&nbsp";
-                }
-                s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
-            }
+    return newDay;
+  };
+
+  isSameDay(d1, d2) {
+    return d1.getFullYear() === d2.getUTCFullYear() &&
+      d1.getUTCMonth() === d2.getUTCMonth() &&
+      d1.getUTCDate() === d2.getUTCDate();
+  }
+
+  getYesterday = (today) => {
+    let yesterday: Date = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday;
+  };
+
+
+  getDateRange = () => {
+    let today = new Date();
+    let startMonth = 4 - 1;
+    let startDay = 1;
+    let startMinute = 59;
+    let startHour = 23;
+    let startSecond = 1;
+    let fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
+    fromDate = this.getDateBound(fromDate, true);
+    let yesterday = this.getYesterday(today);
+    let toDate = new Date(yesterday);
+    toDate = this.getDateBound(toDate, false);
+    return [fromDate, toDate];
+
+  };
+
+  getStatusHtml = (node) => {
+    let s = "";
+    if (node.leaf) {
+      if (node.lastNumBuildFailed > 0) {
+        s = "Bld: <label class=\"label label-danger\">FAILED</label>";
+      }
+    } else {
+
+      if (node.numChildrenDegrades) {
+        s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildrenDegrades + "";
+      }
+      if (node.lastNumBuildFailed) {
+        if (node.numChildrenDegrades) {
+          s += ",&nbsp";
         }
-        return s;
-    };
+        s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
+      }
+    }
+    return s;
+  };
 
 
   getNodeFromData = (data): any => {
@@ -299,6 +504,24 @@ export class PerformanceComponent implements OnInit {
     //
   };
 
+  getTrendHtml = (node) => {
+    let s = "";
+    if (node.hasOwnProperty("trend")) {
+      if (node.chartName === "All metrics") {
+        node.trend = 0;
+      }
+      if (node.trend > 0) {
+        s = "<span style='color: green'><icon class=\"fa fa-arrow-up aspect-trend-icon fa-icon-green\"></icon></span>&nbsp";
+      } else if (node.trend < 0) {
+        s = "<span style='color: red'><icon class=\"fa fa-arrow-down aspect-trend-icon fa-icon-red\"></icon></span>&nbsp;";
+      }
+      else if (node.trend === 0) {
+        s = "<icon class=\"fa fa-arrow-down aspect-trend-icon\" style=\"visibility: hidden;\"></icon>&nbsp;";
+      }
+    }
+    return s;
+  };
+
   guid = () => {
     function s4() {
       return Math.floor((1 + Math.random()) * 0x10000)
@@ -317,81 +540,19 @@ export class PerformanceComponent implements OnInit {
     })
   };
 
+  showAtomicMetric = (node) => {
+    this.currentNode = node;
+    this.mode = Mode.ShowingAtomicMetric;
+  };
+
+  showNonAtomicMetric = (node) => {
+    this.currentNode = node;
+    this.mode = Mode.ShowingNonAtomicMetric;
+  };
 
 }
 
 
-
-//
-//     this.clearNodeInfoCache = () => {
-//         this.cachedNodeInfo = {};
-//     };
-//
-//
-//
-//
-//
-//
-//
-//     this.getIndex = (node) => {
-//         let index = this.flatNodes.map(function(x) {return x.guid;}).indexOf(node.guid);
-//         return index;
-//     };
-//
-//     this.getNode = (guid) => {
-//         return this.flatNodes[this.getIndex({guid: guid})];
-//     };
-//
-//     this.expandAllNodes = () => {
-//         this.flatNodes.forEach((node) => {
-//             this.expandNode(node, true);
-//         });
-//         this.collapsedAll = false;
-//         this.expandedAll = true;
-//     };
-//
-//     this.collapseAllNodes = () => {
-//         this.collapseNode(this.flatNodes[0]);
-//         this.expandedAll = false;
-//         this.collapsedAll = true;
-//     };
-//
-//     this.getDateBound = (dt, lower) => {
-//         let newDay = new Date(dt);
-//         if (lower) {
-//             newDay.setHours(0, 0, 1);
-//         } else {
-//             newDay.setHours(23, 59, 59);
-//         }
-//
-//         return newDay;
-//     };
-//
-//     function isSameDay(d1, d2) {
-//           return d1.getFullYear() === d2.getUTCFullYear() &&
-//             d1.getUTCMonth() === d2.getUTCMonth() &&
-//             d1.getUTCDate() === d2.getUTCDate();
-//     }
-//
-//     this.getYesterday = (today) => {
-//         let yesterday = new Date(today);
-//         yesterday = yesterday.setDate(yesterday.getDate() - 1);
-//         return yesterday;
-//     };
-//
-//
-//
-//
-//
-//     this.fetchScores = (metricId, fromDate, toDate) => {
-//         let payload = {};
-//         payload.metric_id = metricId;
-//         payload.date_range = [fromDate, toDate];
-//         return commonService.apiPost('/metrics/scores', payload).then((data) => {
-//             return data;
-//         });
-//     };
-//
 //
 //     this.getSumChildWeights = (children) => {
 //         let sumOfWeights = 0;

@@ -5,7 +5,7 @@ import {Observable, of} from "rxjs";
 
 export class ApiResponse {
   status: boolean;
-  data: object;
+  data: any;
   error_message: string;
   message: string;
   public constructor(

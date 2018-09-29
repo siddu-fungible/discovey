@@ -408,10 +408,12 @@ def traverse_dag(metric_id):
     result["chart_name"] = chart.chart_name
     result["children"] = json.loads(chart.children)
     result["children_info"] = {}
+    result["children_weights"] = json.loads(chart.children_weights)
     result["leaf"] = chart.leaf
     result["num_leaves"] = chart.num_leaves
     result["last_num_degrades"] = chart.last_num_degrades
     result["last_num_build_failed"] = chart.last_num_build_failed
+    result["positive"] = chart.positive
 
     if not chart.leaf:
         children_info = result["children_info"]
