@@ -26,9 +26,9 @@
   <!--<div *ngFor="let in of counter(50)">-->
   <fun-chart [y1Values]="values" [xValues]="series" [title]="chartName" [xAxisLabel]="chart1XaxisTitle" [y1AxisLabel]="y1AxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"></fun-chart>
   <!--</div>-->
-  <div>
+  <div *ngIf="minimal">
     <br>
-
+<div>
      <b>Description:   </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
     <br>
     <div [innerHTML]="inner.currentDescription"></div>
@@ -38,6 +38,7 @@
         <button class="btn btn-success" (click)="submit()">Submit</button>
         <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
     </div>
+  </div>
   </div>
   <br>
 
