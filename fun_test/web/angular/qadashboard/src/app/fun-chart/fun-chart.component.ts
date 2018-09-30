@@ -49,9 +49,7 @@ export class FunChartComponent implements OnInit {
   ngOnChanges() {
     this.chart = new Chart({
     chart: {
-      type: 'line',
-      width: 500,
-      height: 500
+      type: 'line'
     },
     title: {
       text: this.title

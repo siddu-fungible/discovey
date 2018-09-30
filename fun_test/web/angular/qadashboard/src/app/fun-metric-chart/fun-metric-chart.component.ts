@@ -581,7 +581,7 @@ export class FunMetricChartComponent implements OnInit {
       return;
     }
     var self = this;
-    if (!this.tableInfo && metricModelName !== 'MetricContainer') {
+    if (metricModelName !== 'MetricContainer') {
       return this.apiService.get("/metrics/describe_table/" + metricModelName).subscribe(function (response) {
         //console.log("FunMetric: Describe table: " + metricModelName);
         self.tableInfo = response.data;

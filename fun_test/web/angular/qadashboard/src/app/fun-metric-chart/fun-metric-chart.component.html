@@ -26,6 +26,7 @@
   <!--<div *ngFor="let in of counter(50)">-->
   <fun-chart [y1Values]="values" [xValues]="series" [title]="chartName" [xAxisLabel]="chart1XaxisTitle" [y1AxisLabel]="y1AxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"></fun-chart>
   <!--</div>-->
+  <div>
     <br>
 
      <b>Description:   </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
@@ -37,70 +38,73 @@
         <button class="btn btn-success" (click)="submit()">Submit</button>
         <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
     </div>
+  </div>
+  <br>
+
 </div>
-<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
-    <div>
-    <button [attr.id]="'show_tables_' + metricId" type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" [attr.data-target]="'#showing_tables_' + metricId"
-            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;">Show Tables</button>
-  <div [attr.id]="'showing_tables_' + metricId" class="collapse">
-      <div *ngIf="headers">
-          <!--<fun-table (nextPage)="setValues($event)" [data]="data">-->
-          <!--</fun-table>-->
-      </div>
-      <div>
-          <a href="{{ '#show_tables_' + metricId }}" style="float:right" (click)="changeClass('#showing_tables_' + metricId, '#show_tables_' + metricId)">Hide Tables</a>
-      </div>
-      <br>
-      <br>
-      <div class="closed-section"></div>
+<!--<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">-->
+    <!--<div>-->
+    <!--<button [attr.id]="'show_tables_' + metricId" type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" [attr.data-target]="'#showing_tables_' + metricId"-->
+            <!--style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;">Show Tables</button>-->
+  <!--<div [attr.id]="'showing_tables_' + metricId" class="collapse">-->
+      <!--<div *ngIf="headers">-->
+          <!--&lt;!&ndash;<fun-table (nextPage)="setValues($event)" [data]="data">&ndash;&gt;-->
+          <!--&lt;!&ndash;</fun-table>&ndash;&gt;-->
+      <!--</div>-->
+      <!--<div>-->
+          <!--<a href="{{ '#show_tables_' + metricId }}" style="float:right" (click)="changeClass('#showing_tables_' + metricId, '#show_tables_' + metricId)">Hide Tables</a>-->
+      <!--</div>-->
+      <!--<br>-->
+      <!--<br>-->
+      <!--<div class="closed-section"></div>-->
 
-      <!--<button type="button" class="btn btn1 btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo" style="text-align: left; font-size: 14px; padding: 5px; border-color: black; border: 0px solid; width: 100%; background: white; color: black;">Hide Tables</button>-->
-  </div>
-    </div>
-    <div>
-    <button [attr.id]="'configure_' + metricId" type="button" ng-class="after" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" [attr.data-target]="'#show_configure_' + metricId"
-            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;">Configure</button>
-  <div [attr.id]="'show_configure_' + metricId" class="collapse">
-       <div class="row">
-           <!--<div class="col-lg-10 col-xl-10 pull-left">-->
-               <!--<table class="table table-nonfluid table-borderless"-->
-                      <!--ng-repeat="dataSet in previewDataSets track by $index">-->
-                   <!--<tr>-->
-                       <!--<th>Name</th>-->
-                       <!--<th>Field</th>-->
-                       <!--<th>Min</th>-->
-                       <!--<th>Max</th>-->
-                       <!--<th>Expected</th>-->
-                   <!--</tr>-->
-                   <!--<tr>-->
-                       <!--<td>-->
-                           <!--{{ dataSet.name }}-->
-                       <!--</td>-->
-                       <!--<td>-->
-                           <!--{{ dataSet.output.name }}-->
-                       <!--</td>-->
-                       <!--<td>-->
-                           <!--<input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min"-->
-                                  <!--style="width: 100px">-->
-                       <!--</td>-->
-                       <!--<td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max"-->
-                                  <!--style="width: 100px"></td>-->
-                       <!--<td><input type="number" ng-model="dataSet.output.expected"-->
-                                  <!--ng-value="dataSet.output.expected"-->
-                                  <!--style="width: 100px"></td>-->
-                   <!--</tr>-->
-               <!--</table>-->
-               <!--<p><input type="checkbox" ng-checked="negativeGradient" ng-model="inner.negativeGradient">&nbsp;Negative gradient</p>-->
-               <!--<p><input type="checkbox" ng-checked="leaf" ng-model="inner.leaf">&nbsp;Leaf</p>-->
-           <!--</div>-->
-       </div>
-      <div class="row">
-          <div style="padding: 10px;">
-              <button class="btn btn-success" (click)="submit()">Submit</button>
-              <a href="{{ '#configure_' + metricId }}" (click)="changeClass('#show_configure_' + metricId, '#configure_' + metricId)">Cancel</a>
-          </div>
-      </div>
-  </div>
-    </div>
+      <!--&lt;!&ndash;<button type="button" class="btn btn1 btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo" style="text-align: left; font-size: 14px; padding: 5px; border-color: black; border: 0px solid; width: 100%; background: white; color: black;">Hide Tables</button>&ndash;&gt;-->
+  <!--</div>-->
+    <!--</div>-->
+    <!--<div>-->
+    <!--<button [attr.id]="'configure_' + metricId" type="button" ng-class="after" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" [attr.data-target]="'#show_configure_' + metricId"-->
+            <!--style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0; border-color: black; border: 0 solid; background: white; color: black; outline: none;">Configure</button>-->
+  <!--<div [attr.id]="'show_configure_' + metricId" class="collapse">-->
+       <!--<div class="row">-->
+           <!--&lt;!&ndash;<div class="col-lg-10 col-xl-10 pull-left">&ndash;&gt;-->
+               <!--&lt;!&ndash;<table class="table table-nonfluid table-borderless"&ndash;&gt;-->
+                      <!--&lt;!&ndash;ng-repeat="dataSet in previewDataSets track by $index">&ndash;&gt;-->
+                   <!--&lt;!&ndash;<tr>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<th>Name</th>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<th>Field</th>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<th>Min</th>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<th>Max</th>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<th>Expected</th>&ndash;&gt;-->
+                   <!--&lt;!&ndash;</tr>&ndash;&gt;-->
+                   <!--&lt;!&ndash;<tr>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<td>&ndash;&gt;-->
+                           <!--&lt;!&ndash;{{ dataSet.name }}&ndash;&gt;-->
+                       <!--&lt;!&ndash;</td>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<td>&ndash;&gt;-->
+                           <!--&lt;!&ndash;{{ dataSet.output.name }}&ndash;&gt;-->
+                       <!--&lt;!&ndash;</td>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<td>&ndash;&gt;-->
+                           <!--&lt;!&ndash;<input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min"&ndash;&gt;-->
+                                  <!--&lt;!&ndash;style="width: 100px">&ndash;&gt;-->
+                       <!--&lt;!&ndash;</td>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max"&ndash;&gt;-->
+                                  <!--&lt;!&ndash;style="width: 100px"></td>&ndash;&gt;-->
+                       <!--&lt;!&ndash;<td><input type="number" ng-model="dataSet.output.expected"&ndash;&gt;-->
+                                  <!--&lt;!&ndash;ng-value="dataSet.output.expected"&ndash;&gt;-->
+                                  <!--&lt;!&ndash;style="width: 100px"></td>&ndash;&gt;-->
+                   <!--&lt;!&ndash;</tr>&ndash;&gt;-->
+               <!--&lt;!&ndash;</table>&ndash;&gt;-->
+               <!--&lt;!&ndash;<p><input type="checkbox" ng-checked="negativeGradient" ng-model="inner.negativeGradient">&nbsp;Negative gradient</p>&ndash;&gt;-->
+               <!--&lt;!&ndash;<p><input type="checkbox" ng-checked="leaf" ng-model="inner.leaf">&nbsp;Leaf</p>&ndash;&gt;-->
+           <!--&lt;!&ndash;</div>&ndash;&gt;-->
+       <!--</div>-->
+      <!--<div class="row">-->
+          <!--<div style="padding: 10px;">-->
+              <!--<button class="btn btn-success" (click)="submit()">Submit</button>-->
+              <!--<a href="{{ '#configure_' + metricId }}" (click)="changeClass('#show_configure_' + metricId, '#configure_' + metricId)">Cancel</a>-->
+          <!--</div>-->
+      <!--</div>-->
+  <!--</div>-->
+    <!--</div>-->
 
-    </div>
+    <!--</div>-->
