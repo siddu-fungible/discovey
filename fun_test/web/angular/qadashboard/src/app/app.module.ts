@@ -21,8 +21,7 @@ import { AngularFontAwesomeModule } from 'angular-font-awesome';
 import { FormsModule } from '@angular/forms';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 
 @NgModule({
   declarations: [
@@ -38,7 +37,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     SafeHtmlPipe
   ],
   imports: [
-    NgbModule.forRoot(),
+    BsDropdownModule,
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,

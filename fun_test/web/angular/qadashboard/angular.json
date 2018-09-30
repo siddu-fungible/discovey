@@ -24,13 +24,12 @@
               "src/assets/font-awesome/fonts"
             ],
             "styles": [
+
               "src/styles.css",
-              "../../static/css/common/bootstrap.min.css",
               "./node_modules/font-awesome/css/font-awesome.css"
 
             ],
-            "scripts": [
-  "./node_modules/bootstrap/dist/js/bootstrap.js"]
+            "scripts": []
           },
           "configurations": {
             "production": {
