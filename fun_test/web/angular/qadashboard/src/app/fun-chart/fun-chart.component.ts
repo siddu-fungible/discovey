@@ -65,13 +65,12 @@ export class FunChartComponent implements OnInit {
             return self.xAxisFormatter(this.value);
           }
         },
-
       },
-      // tooltip: {
-      //   formatter: () => {
-      //     return this.tooltipFormatter(this.y1Values);
-      //   }
-      //},
+      tooltip: {
+        formatter: () => {
+          return this.tooltipFormatter();
+        }
+      },
       yAxis: {
         title: {
           text: this.y1AxisLabel

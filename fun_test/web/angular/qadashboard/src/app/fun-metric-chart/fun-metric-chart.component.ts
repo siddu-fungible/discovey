@@ -14,6 +14,7 @@ export class FunMetricChartComponent implements OnInit {
   chartInfo: any;
   @Input() chartName: any;
   @Input() modelName: any;
+  @Input() minimal: boolean = false;
   headers: any;
   allData: any;
   metricId: any;
