@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import { Chart } from 'angular-highcharts';
+import {Chart} from 'angular-highcharts';
 
 @Component({
   selector: 'fun-chart',
@@ -47,51 +47,52 @@ export class FunChartComponent implements OnInit {
   }
 
   ngOnChanges() {
+    var self = this;
     this.chart = new Chart({
-    chart: {
-      type: 'line'
-    },
-    title: {
-      text: this.title
-    },
-    xAxis: {
-      title: {
-        text: this.xAxisLabel
+      chart: {
+        type: 'line'
       },
-      categories: this.xValues,
-      labels: {
-        formatter: () => {
-          return this.xAxisFormatter(this.xValues);
-        }
+      title: {
+        text: this.title
+      },
+      xAxis: {
+        title: {
+          text: this.xAxisLabel
+        },
+        categories: this.xValues,
+        labels: {
+          formatter: function () {
+            return self.xAxisFormatter(this.value);
+          }
+        },
 
-      }
-    },
+      },
       // tooltip: {
       //   formatter: () => {
       //     return this.tooltipFormatter(this.y1Values);
       //   }
       //},
-    yAxis: {
-      title: {
-        text: this.y1AxisLabel
-      }
-    },
-    credits: {
-      enabled: false
-    },
-      plotOptions: {
-      line: {
-        animation: false,
-        marker: {
-          enabled: true
+      yAxis: {
+        title: {
+          text: this.y1AxisLabel
         }
+      },
+      credits: {
+        enabled: false
+      },
+      plotOptions: {
+        line: {
+          animation: false,
+          marker: {
+            enabled: true
+          }
         },
         series: {
-        animation: false
-      }
+          animation: false
+        }
       },
-    series: this.y1Values
-  });
+      series: this.y1Values
+    });
   }
 
   ngOnInit() {
