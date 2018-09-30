@@ -26,6 +26,8 @@ class Node {
   trend: number;
   lastScore: number = null;
   children: number[] = [];
+  last_two_scores: number[] = [];
+  grid: any[];
 }
 
 class FlatNode {
@@ -130,6 +132,7 @@ export class PerformanceComponent implements OnInit {
     node.numChildrenDegrades = dagEntry.last_num_degrades;
     node.lastNumBuildFailed = dagEntry.last_num_build_failed;
     node.children = dagEntry.children;
+    node.last_two_scores = dagEntry.last_two_scores;
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
@@ -170,9 +173,10 @@ export class PerformanceComponent implements OnInit {
             scoreTotal += childInfo.weight * childInfo.lastScore;
         });
 
+        /*
         let lastDate = new Date(this.validDates.slice(-1)[0] * 1000);
         let lastDateLower = this.getDateBound(lastDate, true);
-        let lastDateUpper = this.getDateBound(lastDate, false);
+        let lastDateUpper = this.getDateBound(lastDate, false);*/
 
         return scoreTotal;
     };
@@ -184,6 +188,8 @@ export class PerformanceComponent implements OnInit {
 
     let payload = {metric_id: node.metricId, date_range: [fromDate.toISOString(), toDate.toISOString()]};
     payload.metric_id = node.metricId;
+    this.evaluateScores(node);
+    /*
     this.apiService.post('/metrics/scores', payload).subscribe((response) => {
       node.scores = response.data.scores;
 
@@ -204,7 +210,7 @@ export class PerformanceComponent implements OnInit {
       this.evaluateScores(node);
     }, error => {
       this.loggerService.error("fetchScores");
-    });
+    });*/
     return node;
   }
 
@@ -213,7 +219,52 @@ export class PerformanceComponent implements OnInit {
     return node;
   };
 
+ evaluateScores = (node) => {
+   let [lastScore, penultimateScore] = node.last_two_scores;
+   lastScore = lastScore;
+   node.lastScore = lastScore;
+          try {
 
+        node.trend = 0;
+        if (lastScore < penultimateScore) {
+          node.trend = -1;
+        }
+        if (lastScore > penultimateScore) {
+          node.trend = 1;
+        }
+        node.lastScore = lastScore;
+      }   catch (e) {
+      }
+ };
+
+     prepareGridNodes = (node) => {
+       node.grid = [];
+        let maxRowsInMiniChartGrid = 10;
+        let maxColumns = 2;
+        console.log("Prepare Grid nodes");
+        let tempGrid = [];
+        let rowIndex = 0;
+        let childNodes = [];
+        node.childrenInfo.forEach((childInfo, childId) => {
+          childNodes.push(this.nodeMap.get(Number(childId)));
+        });
+
+        let oneRow = [];
+        childNodes.forEach((childNode) => {
+            oneRow.push(childNode);
+            if (oneRow.length === maxColumns) {
+              node.grid.push(oneRow);
+              oneRow = [];
+            }
+        });
+        if (oneRow.length) {
+          node.grid.push(oneRow);
+        }
+
+
+    };
+
+  /*
 
   evaluateScores = (node) => {
 
@@ -244,7 +295,7 @@ export class PerformanceComponent implements OnInit {
     }
 
     //console.log("Node: " + node.chartName + " Goodness: " + node.goodness);
-  };
+  };*/
 
   getCurrentNodeScoreInfo = (node) => {
     this.currentNodeInfo = null;
@@ -550,6 +601,7 @@ export class PerformanceComponent implements OnInit {
     this.currentNode = flatNode.node;
     this.mode = Mode.ShowingNonAtomicMetric;
     this.expandNode(flatNode);
+    this.prepareGridNodes(flatNode.node);
   };
 
 }

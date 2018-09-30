@@ -21,6 +21,7 @@ import { AngularFontAwesomeModule } from 'angular-font-awesome';
 import { FormsModule } from '@angular/forms';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
 @NgModule({
@@ -37,6 +38,7 @@ import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawe
     SafeHtmlPipe
   ],
   imports: [
+    NgbModule.forRoot(),
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,

@@ -415,6 +415,12 @@ def traverse_dag(metric_id):
     result["last_num_build_failed"] = chart.last_num_build_failed
     result["positive"] = chart.positive
 
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
+    # only get the first two entries
+    # print "Chart status entry for {}".format(chart.chart_name)
+    # for chart_status_entry in chart_status_entries:
+    #    print chart_status_entry.date_time
+    result["last_two_scores"] = [x.score for x in chart_status_entries]
     if not chart.leaf:
         children_info = result["children_info"]
         for child_id in result["children"]:
@@ -430,5 +436,6 @@ def dag(request):
     metric_model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+
     result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id)
     return result
