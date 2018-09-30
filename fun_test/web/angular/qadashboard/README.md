@@ -26,3 +26,17 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+
+
+## Installation on Ubuntu
+sudo apt-get install npm
+sudo npm install -g @angular/cli
+curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+Optional: 
+which nodejs 
+sudo ln -s /usr/bin/nodejs /usr/sbin/node
+
+/qadashboard# npm install
+/qadashboard# ng build
