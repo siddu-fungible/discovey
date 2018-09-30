@@ -161,31 +161,25 @@ export class FunMetricChartComponent implements OnInit {
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
 
-    if (!this.chartInfo) {
-      this.apiService.post("/metrics/chart_info", payload).subscribe((chartInfo) => {
-        this.chartInfo = chartInfo;
-        if (this.chartInfo !== null) {
-          this.previewDataSets = this.chartInfo.data.data_sets;
-          this.currentDescription = this.chartInfo.data.description;
-          this.inner.currentDescription = this.currentDescription;
-          this.negativeGradient = !this.chartInfo.data.positive;
-          this.inner.negativeGradient = this.negativeGradient;
-          this.leaf = this.chartInfo.data.leaf;
-          this.inner.leaf = this.leaf;
-          this.status = "idle";
-        }
-        // let thisChartInfo = chartInfo;
-        setTimeout(() => {
-          this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, null);
-        }, this.waitTime);
-      }, error => {
-        this.loggerService.error("fun_metric_chart: chart_info");
-      });
-    } else {
+    this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
+      this.chartInfo = response.data;
+      if (this.chartInfo !== null) {
+        this.previewDataSets = this.chartInfo.data_sets;
+        this.currentDescription = this.chartInfo.description;
+        this.inner.currentDescription = this.currentDescription;
+        this.negativeGradient = !this.chartInfo.positive;
+        this.inner.negativeGradient = this.negativeGradient;
+        this.leaf = this.chartInfo.leaf;
+        this.inner.leaf = this.leaf;
+        this.status = "idle";
+      }
+      // let thisChartInfo = chartInfo;
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, null);
       }, this.waitTime);
-    }
+    }, error => {
+      this.loggerService.error("fun_metric_chart: chart_info");
+    });
 
   }
 
@@ -419,8 +413,8 @@ export class FunMetricChartComponent implements OnInit {
     payload["preview_data_sets"] = previewDataSets;
     payload["metric_id"] = -1;
     if (chartInfo) {
-      payload["metric_id"] = chartInfo.data["metric_id"];
-      this.metricId = chartInfo.data["metric_id"];
+      payload["metric_id"] = chartInfo["metric_id"];
+      this.metricId = chartInfo["metric_id"];
     }
     if (metricModelName !== 'MetricContainer') {
       this.status = "idle";
@@ -432,7 +426,7 @@ export class FunMetricChartComponent implements OnInit {
       } else {
         //console.log("Chart Info:" + chartInfo);
         if (chartInfo) {
-          filterDataSets = chartInfo.data['data_sets'];
+          filterDataSets = chartInfo['data_sets'];
           //console.log("C DS:" + chartInfo.data_sets);
         }
       }
@@ -440,7 +434,8 @@ export class FunMetricChartComponent implements OnInit {
 
       this.status = "Fetch data";
 
-      this.apiService.post("/metrics/data", payload).subscribe((allDataSets: any) => {
+      this.apiService.post("/metrics/data", payload).subscribe((response: any) => {
+        let allDataSets = response.data;
         self.status = "idle";
         if (allDataSets.length === 0) {
           this.values = null;
@@ -453,7 +448,7 @@ export class FunMetricChartComponent implements OnInit {
         firstDataSet.forEach((oneRecord) => {
             keySet.add(oneRecord.input_date_time.toString());
         });*/
-        for (let oneDataSet of allDataSets.data) {
+        for (let oneDataSet of allDataSets) {
           for (let oneRecord of oneDataSet) {
             keySet.add(oneRecord.input_date_time.toString());
           }
@@ -477,7 +472,7 @@ export class FunMetricChartComponent implements OnInit {
 
         this.allData = allDataSets;
         this.status = "Preparing chart data-sets";
-        for (let oneDataSet of allDataSets.data) {
+        for (let oneDataSet of allDataSets) {
 
           let oneChartDataArray = [];
           for (let i = 0; i < keyList.length; i++) {
@@ -498,14 +493,14 @@ export class FunMetricChartComponent implements OnInit {
                   total += output;
                   count++;
                   if (chartInfo && chartInfo.y1_axis_title) {
-                    this.chart1YaxisTitle = chartInfo.data.y1_axis_title;
+                    this.chart1YaxisTitle = chartInfo.y1_axis_title;
                   } else {
-                    this.chart1YaxisTitle = tableInfo.data[outputName].verbose_name;
+                    this.chart1YaxisTitle = tableInfo[outputName].verbose_name;
                   }
                   if (this.y1AxisTitle) {
                     this.chart1YaxisTitle = this.y1AxisTitle;
                   }
-                  this.chart1XaxisTitle = tableInfo.data["input_date_time"].verbose_name;
+                  this.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
 
                 }
               }
@@ -534,16 +529,16 @@ export class FunMetricChartComponent implements OnInit {
     else {
       this.status = "Fetch data";
       console.log("Fetch Scores");
-      this.apiService.post('/metrics/scores', payload).subscribe((data: any) => {
+      this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
         self.status = "idle";
-        if (data.length === 0) {
+        if (response.data.length === 0) {
           this.values = null;
           return;
         }
 
         let values = [];
         let series = [];
-        let keyList = Object.keys(data.scores);
+        let keyList = Object.keys(response.data.scores);
         keyList.sort();
         for (let dateTime of keyList) {
           //values.push(data.scores[dateTime].score);
@@ -571,7 +566,7 @@ export class FunMetricChartComponent implements OnInit {
                 let dateTime: any = keyList[j];
                 let d = new Date(dateTime * 1000).toISOString();
                 if (d === series[startIndex]) {
-                  total += data.scores[dateTime].score;
+                  total += response.data.scores[dateTime].score;
                   count++;
                 }
               }
@@ -601,11 +596,11 @@ export class FunMetricChartComponent implements OnInit {
     }
     var self = this;
     if (!this.tableInfo && metricModelName !== 'MetricContainer') {
-      return this.apiService.get("/metrics/describe_table/" + metricModelName).subscribe(function (tableInfo) {
+      return this.apiService.get("/metrics/describe_table/" + metricModelName).subscribe(function (response) {
         //console.log("FunMetric: Describe table: " + metricModelName);
-        self.tableInfo = tableInfo;
+        self.tableInfo = response.data;
         // return self.tableInfo;
-        self.fetchData(metricModelName, chartName, chartInfo, previewDataSets, tableInfo);
+        self.fetchData(metricModelName, chartName, chartInfo, previewDataSets, self.tableInfo);
       }, error => {
         this.loggerService.error("fetchMetricsData");
       })
