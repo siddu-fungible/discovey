@@ -99,8 +99,8 @@ export class PerformanceComponent implements OnInit {
     this.data = [['hi', 'hello'], ['how', 'are'], ['you', 'its'], ['been', 'a'], ['long', 'time'], ['also', 'when'], ['where', 'how'], ['are', 'we'], ['meeting', 'if'], [1, 2], [3, 4]];
     this.headers = ['Names', 'Numbers'];
     this.fetchDag();
-    if (window.screen.width <= 1441) {
-      this.numGridColumns = 2;
+    if (window.screen.width >= 1441) {
+      this.numGridColumns = 4;
     }
   }
 
@@ -240,7 +240,7 @@ export class PerformanceComponent implements OnInit {
      prepareGridNodes = (node) => {
        node.grid = [];
         let maxRowsInMiniChartGrid = 10;
-        let maxColumns = 2;
+        let maxColumns = this.numGridColumns;
         console.log("Prepare Grid nodes");
         let tempGrid = [];
         let rowIndex = 0;
