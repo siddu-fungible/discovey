@@ -160,7 +160,7 @@
           <tr *ngFor="let row of currentNode.grid">
             <td *ngFor="let node of row" style="width: 50%">
               <div class="card">
-                <fun-metric-chart [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="true"></fun-metric-chart>
+                <fun-metric-chart [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="'true'"></fun-metric-chart>
               </div>
             </td>
           </tr>
