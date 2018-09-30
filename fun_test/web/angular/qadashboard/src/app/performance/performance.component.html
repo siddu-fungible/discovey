@@ -168,8 +168,8 @@
         <div class="closed-section"></div>
       </div>
     </div-->
-      <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="container" style="background-color: whitesmoke">
-      <div *ngIf="currentNode.grid.length" class="container">
+      <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="" style="background-color: whitesmoke">
+      <div *ngIf="currentNode.grid.length" style="padding: 20px">
           <div *ngFor="let row of currentNode.grid" class="row">
             <div *ngFor="let node of row" class="col">
               <div class="card">
