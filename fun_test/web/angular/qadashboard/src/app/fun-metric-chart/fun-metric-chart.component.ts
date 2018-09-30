@@ -269,15 +269,15 @@ export class FunMetricChartComponent implements OnInit {
   }
 
   fetchBuildInfo(): void {
-    this.apiService.get('/regression/jenkins_job_id_maps').subscribe((data) => {
+    //this.apiService.get('/regression/jenkins_job_id_maps').subscribe((data) => {
       this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
         this.buildInfo = response.data;
       }, error => {
         this.loggerService.error("regression/build_to_date_map");
       });
-    }, error => {
+    /*}, error => {
       this.loggerService.error("fetchBuildInfo");
-    });
+    });*/
   }
 
   showTables(): void {

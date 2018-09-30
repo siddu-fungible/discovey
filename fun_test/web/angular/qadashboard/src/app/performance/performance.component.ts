@@ -484,7 +484,7 @@ export class PerformanceComponent implements OnInit {
     let s = "";
     if (node.leaf) {
       if (node.lastNumBuildFailed > 0) {
-        s = "Bld: <label class=\"label label-danger\">FAILED</label>";
+        s = "Bld: <label class=\"badge badge-danger\">FAILED</label>";
       }
     } else {
 
