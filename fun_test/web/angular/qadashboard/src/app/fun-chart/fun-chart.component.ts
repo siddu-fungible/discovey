@@ -67,8 +67,8 @@ export class FunChartComponent implements OnInit {
         },
       },
       tooltip: {
-        formatter: () => {
-          return this.tooltipFormatter();
+        formatter: function () {
+          return self.tooltipFormatter(this.x, this.y);
         }
       },
       yAxis: {
