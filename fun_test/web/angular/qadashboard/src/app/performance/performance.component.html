@@ -150,16 +150,18 @@
     <br>
 
     <div class="closed-section"></div>
-    <fun-metric-chart [chartName]="currentNode.chartName" [modelName]="currentNode.metricModelName" [minimal]="true"></fun-metric-chart>
+    <fun-metric-chart [chartName]="currentNode.chartName" [modelName]="currentNode.metricModelName" [minimal]="false"></fun-metric-chart>
     <div class="closed-section"></div>
 
 
-    <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="">
+    <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="" style="background-color: lightgrey">
       <div *ngIf="currentNode.grid.length">
         <table class="table">
           <tr *ngFor="let row of currentNode.grid">
             <td *ngFor="let node of row" style="width: 50%">
-              <fun-metric-chart [chartName]="node.chartName" [modelName]="node.metricModelName"></fun-metric-chart>
+              <div class="card">
+                <fun-metric-chart [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="true"></fun-metric-chart>
+              </div>
             </td>
           </tr>
         </table>
