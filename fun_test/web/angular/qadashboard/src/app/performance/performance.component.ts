@@ -80,6 +80,7 @@ export class PerformanceComponent implements OnInit {
   modeType = Mode;
   currentNodeInfo: string;
   showScoreInfo: boolean = false;
+  miniGridMaxWidth: string;
 
 
   constructor(
@@ -96,11 +97,13 @@ export class PerformanceComponent implements OnInit {
 
     // this.getLastStatusUpdateTime();
     this.numGridColumns = 2;
+    this.miniGridMaxWidth = '50%';
     this.data = [['hi', 'hello'], ['how', 'are'], ['you', 'its'], ['been', 'a'], ['long', 'time'], ['also', 'when'], ['where', 'how'], ['are', 'we'], ['meeting', 'if'], [1, 2], [3, 4]];
     this.headers = ['Names', 'Numbers'];
     this.fetchDag();
-    if (window.screen.width >= 1441) {
+    if (window.screen.width >= 1690) {
       this.numGridColumns = 4;
+      this.miniGridMaxWidth = '25%';
     }
   }
 

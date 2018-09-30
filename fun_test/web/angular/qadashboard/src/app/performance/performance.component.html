@@ -5,7 +5,7 @@
 <div class="" style="padding-top: 20px">
   <div class="row">
   <!-- div class="col-lg-6 col-xl-6 col-md-6"-->
-  <div class="col-lg-5 col-md-5 col-xxl-5 col-xl-5">
+  <div class="col-lg-4 col-md-4 col-xxl-4 col-xl-4">
     <table class="table table-nonfluid">
       <tr>
         <th class="text-center">Aspect</th>
@@ -49,7 +49,7 @@
 
   </div>
   <!--div *ngIf="mode != modeType.None" class="card col-xl-6 col-lg-6 col-xxl-6"-->
-  <div class="col-lg-7 col-md-7 col-xxl-7 col-xl-7" style="max-width: 1500px">
+  <div class="col-lg-8 col-md-8 col-xxl-8 col-xl-8" style="max-width: 1500px">
     <div *ngIf="mode != modeType.None" class="card" style="padding: 10px">
     <table>
       <tr>
@@ -169,11 +169,11 @@
       </div>
     </div-->
       <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="" style="background-color: whitesmoke">
-      <div *ngIf="currentNode.grid.length" class="container">
+      <div *ngIf="currentNode.grid.length">
           <div *ngFor="let row of currentNode.grid" class="row">
-            <div *ngFor="let node of row" class="col-lg-6 col-md-6 col-xl-6 col-xxl-6">
-              <div class="card">
-                <fun-metric-chart [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="'true'"></fun-metric-chart>
+            <div *ngFor="let node of row" class="col-lg-6 col-md-6 col-xl-6 col-xxl-6" [ngStyle]="{'max-width': miniGridMaxWidth}">
+              <div>
+                <fun-metric-chart style="max-height: 300px;" [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="'true'"></fun-metric-chart>
               </div>
             </div>
           </div>
