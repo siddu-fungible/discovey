@@ -171,7 +171,7 @@
       <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="" style="background-color: whitesmoke">
       <div *ngIf="currentNode.grid.length" class="container">
           <div *ngFor="let row of currentNode.grid" class="row">
-            <div *ngFor="let node of row" class="col">
+            <div *ngFor="let node of row" class="col-lg-6 col-md-6 col-xl-6 col-xxl-6">
               <div class="card">
                 <fun-metric-chart [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="'true'"></fun-metric-chart>
               </div>
