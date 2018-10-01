@@ -134,7 +134,7 @@ export class FunMetricChartComponent implements OnInit {
             relevant = true;
         }
         this.filterDataSets.forEach((oneDataSet) => {
-            oneDataSet.inputs.foreach((value, key) => {
+            Object.keys(oneDataSet.inputs).forEach((key) => {
                 if (key === fieldName) {
                     relevant = true;
                 }
@@ -211,6 +211,12 @@ export class FunMetricChartComponent implements OnInit {
   setDefault(): void {
     this.timeMode = "all";
     this.mileStoneIndex = null;
+    this.showingTable = false;
+    this.showingConfigure = false;
+  }
+
+  close() {
+    this.showingTable = false;
   }
 
   toggleEdit() {
@@ -542,10 +548,32 @@ export class FunMetricChartComponent implements OnInit {
         this.series = seriesDates;
         this.values = chartDataSets;
         this.headers = this.tableInfo;
-        // this.headers.foreach((key, value) => {
-        //   if(this.isFieldRelevant(key))
-        //
-        // });
+        this.data["rows"] = [];
+        this.data["headers"] = [];
+        this.data["all"] = true;
+        this.data["pageSize"] = 10;
+        this.data["currentPageIndex"] = 1;
+        Object.keys(this.headers).forEach((key) => {
+          if(this.isFieldRelevant(key)) {
+            this.data["headers"].push(this.headers[key].verbose_name);
+          }
+
+        });
+        for(let i = 0; i < this.allData.length; i++) {
+          let dataSet = this.allData[i];
+          let index = 0;
+          for(let rowData of dataSet) {
+            let row = [];
+          Object.keys(this.headers).forEach((key) => {
+            if(this.isFieldRelevant(key)) {
+              let value = rowData[key];
+              row.push(this.cleanValue(key, value));
+            }
+          });
+          this.data["rows"][index++] = row;
+          }
+        }
+        this.data["totalLength"] = this.data["rows"].length;
       }, error => {
         this.loggerService.error("fetchMetricsData");
       });

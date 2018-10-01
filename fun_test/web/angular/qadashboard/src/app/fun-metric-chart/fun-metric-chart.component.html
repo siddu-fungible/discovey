@@ -47,16 +47,23 @@
 
 </div>
 <div class="closed-section"></div>
-<!--<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">-->
-  <!--<div *ngIf="!minimal">-->
-    <!--<span>-->
-      <!--<a [routerLink]="" (click)="showTables()">Show Tables </a>-->
-      <!--<a [routerLink]="" (click)="showTables()"><span *ngIf="!showingTable" class="arrow-right"></span>-->
-        <!--<span *ngIf="showingTable" class="arrow-down"></span>-->
-      <!--</a>-->
-    <!--</span>-->
-  <!--</div>-->
-<!--</div>-->
+<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+  <div *ngIf="!minimal">
+    <span>
+      <a *ngIf="!showingTable" [routerLink]="" (click)="showTables()">Show Table </a>
+      <a *ngIf="showingTable" [routerLink]="" (click)="showTables()">Hide Table </a>
+      <a [routerLink]="" (click)="showTables()"><span *ngIf="!showingTable" class="arrow-right"></span>
+        <span *ngIf="showingTable" class="arrow-down"></span>
+      </a>
+    </span>
+  </div>
+  <div *ngIf="showingTable">
+      <h3 style="float: left;">{{ chartName }}</h3>
+      <fun-table [data]="data"></fun-table>
+      <!--<button (click)="close()">Hide Table</button>-->
+
+  </div>
+</div>
 <div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
   <div *ngIf="!minimal">
     <span>

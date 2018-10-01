@@ -1,25 +1,25 @@
-<p>
-  table works!
-</p>
-<div class="card tableContainer">
+<!--<p>-->
+  <!--table works!-->
+<!--</p>-->
+<div class="tableContainer">
   <div>
     <div>
       <!-- pager -->
       <div id="pageDiv" *ngIf="pager.pages && pager.pages.length">
         <span [ngClass]="{disabled:pager.currentPage === 1}">
-          <a (click)="setPage(1)">First </a>
+          <a [routerLink]="" (click)="setPage(1)">First </a>
         </span>
         <span [ngClass]="{disabled:pager.currentPage === 1}">
-          <a (click)="setPage(pager.currentPage - 1)">Previous </a>
+          <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
         </span>
         <span *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
-          <a (click)="setPage(page)">{{page}} </a>
+          <a [routerLink]="" (click)="setPage(page)">{{page}} </a>
         </span>
         <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
-          <a (click)="setPage(pager.currentPage + 1)">Next </a>
+          <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
         </span>
         <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
-          <a (click)="setPage(pager.totalPages)">Last </a>
+          <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
         </span>
       </div>
       <!-- items being paged -->
@@ -34,14 +34,13 @@
           <!--<td *ngFor="let rowItems of item">{{rowItems}}</td>-->
         </tr>
       </table>
-      <a id="advancedLink" (click)="editColumns()">Advanced</a>
+      <a [routerLink]="" id="advancedLink" (click)="editColumns()">Advanced</a>
     </div>
   </div>
 
   <div *ngIf="hideShowColumns">
-    <div class="panel panel-default">
-      <div class="panel-heading">Columns</div>
-      <div class="panel-body" style="vertical-align: center;">
+    <div>
+      <div style="vertical-align: center;">
           <table>
             <tr *ngFor="let header of headers">
               <td>
@@ -60,6 +59,6 @@
 
       </div>
     </div>
-    <button (click)="editColumns()" style="margin: 5px;">Close</button>
+    <a [routerLink]="" (click)="editColumns()">Close</a>
   </div>
 </div>
