@@ -505,7 +505,7 @@ export class PerformanceComponent implements OnInit {
         if (node.numChildrenDegrades) {
           s += ",&nbsp";
         }
-        s += "<i class='fa fa-times fa-icon-red'>:</i>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
+        s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
       }
     }
     return s;
