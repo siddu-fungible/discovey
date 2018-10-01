@@ -13,11 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='unittestperformance',
-            name='input_job_id',
-            field=models.IntegerField(default=0, verbose_name=b'Job Id'),
-        ),
         migrations.AlterField(
             model_name='allocspeedperformance',
             name='input_date_time',

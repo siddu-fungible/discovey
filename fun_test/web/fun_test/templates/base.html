@@ -11,6 +11,7 @@
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css">
     <link href="{% static "css/common/bootstrap-xlgrid.css" %}" rel="stylesheet">
@@ -21,7 +22,7 @@
 
         <script src="{% static "js/common/jquery-3.2.1.min.js" %}"></script>
         <script src="{% static "js/common/bootstrap.min.js" %}"></script>
-        <!-- script src="{% static "js/common/angular.min.js" %}"></script -->
+         <!--script src="{% static "js/common/angular.min.js" %}"></script -->
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular-sanitize.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.20.0/select.js"
@@ -40,10 +41,7 @@
         <script src="https://code.highcharts.com/highcharts-more.js"></script>
         <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
         <script src="{% static "js/qa_dashboard/fun_metric_chart.js" %}"></script>
-
-
-
-
+        <script src="{% static "js/qa_dashboard/fun_table.js" %}"></script>
 
     {% endblock %}
 
@@ -128,6 +126,7 @@
                     <ul class="dropdown-menu">
                         <li><a href="/metrics">All</a> </li>
                         <li><a href="/metrics/summary">Summary</a></li>
+                        <li><a href="/initialize">Initialize</a></li>
                     </ul>
                 </li>
             </ul>
@@ -165,7 +164,6 @@
 
 {% block content %}
 {% endblock %}
-
 
 </body>
 </html>

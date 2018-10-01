@@ -112,16 +112,17 @@ DATABASES = {
     }
 }
 
-'''
+
 # Sample for postgresql
-DATABASES["performance"] = {
-    'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'fun_test',
-        'USER': 'fun_test_user',
-        'PASSWORD': 'fun123',
-        'HOST': 'localhost',
-        'PORT': ''}
-'''
+if is_performance_server() and True:
+    DATABASES["performance"] = {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'fun_test',
+            'USER': 'fun_test_user',
+            'PASSWORD': 'fun123',
+            'HOST': 'localhost',
+            'PORT': ''}
+    DATABASES["default"] = DATABASES["performance"]
 
 DATABASE_ROUTERS = ('web.fun_test.db_routers.UsersRouter',)
 

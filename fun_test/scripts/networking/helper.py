@@ -27,10 +27,13 @@ CBFC_PAUSE_FRAMES_RECEIVED = "CBFCPAUSEFramesReceived"
 CBFC_PAUSE_FRAMES_TRANSMITTED = "CBFCPAUSEFramesTransmitted"
 FRAME_CHECK_SEQUENCE_ERROR = "aFrameCheckSequenceErrors"
 CLASS_0 = "0"
+CLASS_1 = "1"
+CLASS_2 = "2"
 VP_PACKETS_TOTAL_IN = "vp_packets_total_in"
 VP_PACKETS_TOTAL_OUT = "vp_packets_total_out"
 VP_PACKETS_OUT_HU = "vp_packets_out_hu"
 VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
+VP_PACKETS_FORWARDING_NU_DIRECT = "vp_packets_forwarding_nu_direct"
 VP_PACKETS_OUT_ETP = "vp_packets_out_etp"
 VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
 VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
@@ -40,7 +43,7 @@ ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED = "count_for_all_non_fcp_packets_rece
 ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE = "count_for_efp_to_wqm_decrement_pulse"
 ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT = "count_for_efp_to_wro_descriptors_sent"
 ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS = "count_for_erp0_to_efp_error_interface_flits"
-ERP_COUNT_FOR_EFP_FCP_VLD = "count_for_efp_to_fcp_vld"
+ERP_COUNT_FOR_EFP_FCP_VLD = "count_for_efp_to_fcb_vld"
 ERP_COUNT_PACKETS_INNER_LAYER4_CS_ERROR = "count_for_packets_with_inner_layer4_cs_error"
 ERP_COUNT_PACKETS_OUTER_LAYER4_CS_ERROR = "count_for_packets_with_outer_layer4_cs_error"
 ERP_COUNT_PACKETS_INNER_IP_LEN_ERROR = "count_for_packets_with_inner_ip_len_error"
@@ -49,37 +52,39 @@ WRO_IN_NFCP_PKTS = "wroin_nfcp_pkts"
 WRO_IN_PKTS = "wroin_pkts"
 WRO_OUT_WUS = "wroout_wus"
 WRO_WU_COUNT_VPP = "wrowu_cnt_vpp"
-ETH_COPP_ARP_REQ_METER_ID = 1
-ETH_COPP_ARP_RESP_METER_ID = 2
-ETH_COPP_RARP_METER_ID = 3
-ETH_COPP_ISIS_1_METER_ID = 4
-ETH_COPP_ISIS_2_METER_ID = 5
-ETH_COPP_LLDP_METER_ID = 6
-ETH_COPP_PTP_METER_ID = 7
-IPV4_COPP_ICMP_METER_ID = 8
-IPV4_COPP_OSPF_1_METER_ID = 9
-IPV4_COPP_OSPF_2_METER_ID = 10
-IPV4_COPP_DHCP_METER_ID = 11
-IPV4_COPP_PIM_METER_ID = 12
-IPV4_COPP_BGP_METER_ID = 13
-IPV4_COPP_IGMP_METER_ID = 14
-IPV4_COPP_PTP_1_METER_ID = 15
-IPV4_COPP_PTP_2_METER_ID = 16
-IPV4_COPP_PTP_3_METER_ID = 17
-IPV4_COPP_PTP_4_METER_ID = 18
-IPV4_COPP_TTL_ERR_METER_ID = 19
-IPV4_COPP_OPTS_METER_ID = 20
-IPV4_COPP_FOR_US_METER_ID = 21
-ERR_TRAP_COPP_FSF_METER_ID = 25
-ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 26
-ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 27
-ERR_TRAP_COPP_PRSR_V4_VER_METER_ID = 35
-ERR_TRAP_COPP_PRSR_V6_VER_METER_ID = 36
-ERR_TRAP_COPP_PRSR_IHL_METER_ID = 37
-ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 38
-ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 39
-ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 40
-ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 41
+
+# Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
+ETH_COPP_ARP_REQ_METER_ID = 23
+ETH_COPP_ARP_RESP_METER_ID = 24
+ETH_COPP_RARP_METER_ID = 25
+ETH_COPP_ISIS_1_METER_ID = 26
+ETH_COPP_ISIS_2_METER_ID = 27
+ETH_COPP_LLDP_METER_ID = 28
+ETH_COPP_PTP_METER_ID = 29
+IPV4_COPP_ICMP_METER_ID = 30
+IPV4_COPP_OSPF_1_METER_ID = 31
+IPV4_COPP_OSPF_2_METER_ID = 32
+IPV4_COPP_DHCP_METER_ID = 33
+IPV4_COPP_PIM_METER_ID = 34
+IPV4_COPP_BGP_METER_ID = 35
+IPV4_COPP_IGMP_METER_ID = 36
+IPV4_COPP_PTP_1_METER_ID = 37
+IPV4_COPP_PTP_2_METER_ID = 38
+IPV4_COPP_PTP_3_METER_ID = 39
+IPV4_COPP_PTP_4_METER_ID = 40
+IPV4_COPP_TTL_ERR_METER_ID = 41
+IPV4_COPP_OPTS_METER_ID = 42
+IPV4_COPP_FOR_US_METER_ID = 43
+ERR_TRAP_COPP_FSF_METER_ID = 3
+ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 4
+ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 5
+ERR_TRAP_COPP_PRSR_V4_VER_METER_ID = 14
+ERR_TRAP_COPP_PRSR_V6_VER_METER_ID = 15
+ERR_TRAP_COPP_PRSR_IHL_METER_ID = 16
+ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 17
+ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 18
+ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 19
+ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 20
 
 
 psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx_drop',
@@ -124,7 +129,7 @@ def __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_val
 def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=None):
     result = None
     try:
-        if stat_type == CBFC_PAUSE_FRAMES_RECEIVED:
+        if stat_type == CBFC_PAUSE_FRAMES_RECEIVED or stat_type == CBFC_PAUSE_FRAMES_TRANSMITTED:
             result = __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_value)
             return result
         output = result_stats[0]
@@ -142,11 +147,11 @@ def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=Non
     return result
 
 
-def get_dut_fpg_port_stats(network_controller_obj, dut_port_list=[]):
+def get_dut_fpg_port_stats(network_controller_obj, dut_port_list=[], hnu=False):
     result_dict = {}
     try:
         for port in dut_port_list:
-            result_dict[port] = network_controller_obj.peek_fpg_port_stats(port)
+            result_dict[port] = network_controller_obj.peek_fpg_port_stats(port, hnu=hnu)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result_dict
@@ -271,14 +276,21 @@ def get_wro_global_stats_values(network_controller_obj):
     return result
 
 
-def validate_parser_stats(parser_result, compare_value, check_list_keys=[]):
+def validate_parser_stats(parser_result, compare_value, check_list_keys=[], parser_old_result=None):
     result = False
     try:
         stat_counter_list = ['prv_sent', 'eop_cnt', 'sop_cnt']
         for key in check_list_keys:
             current_dict = parser_result['global'][key]
             for counter in stat_counter_list:
-                fun_test.test_assert_expected(expected=compare_value, actual=int(current_dict[counter]),
+                actual = int(current_dict[counter])
+                if parser_old_result:
+                    old_dict = parser_old_result['global'][key]
+                    if counter in old_dict:
+                        actual = int(current_dict[counter]) - int(old_dict[counter])
+                    else:
+                        actual = int(current_dict[counter])
+                fun_test.test_assert_expected(expected=compare_value, actual=actual,
                                               message="Check %s stats for %s in parser nu stats" % (counter, key))
         result = True
     except Exception as ex:
@@ -292,6 +304,29 @@ def get_vp_per_pkts_stats_values(network_controller_obj):
         output = network_controller_obj.peek_per_vppkts_stats()
         fun_test.simple_assert(output, "Ensure vp per packet stats are grepped")
         result = parse_result_dict(output)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_diff_stats(old_stats, new_stats, stats_list=[]):
+    result = {}
+    try:
+        if stats_list:
+            for stat in stats_list:
+                fun_test.simple_assert(stat in new_stats, "Stat %s not present in new stats" % stat)
+                if stat in old_stats:
+                    result[stat] = int(new_stats[stat]) - int(old_stats[stat])
+                else:
+                    result[stat] = int(new_stats[stat])
+        else:
+            for key, val in new_stats.iteritems():
+                if isinstance(val, dict):
+                    result[key] = get_diff_stats(old_stats=old_stats[key], new_stats=new_stats[key])
+                elif key in old_stats:
+                    result[key] = int(new_stats[key]) - int(old_stats[key])
+                else:
+                    result[key] = int(new_stats[key])
     except Exception as ex:
         fun_test.critical(str(ex))
     return result

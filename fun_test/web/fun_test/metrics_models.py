@@ -1,15 +1,50 @@
+from fun_settings import MAIN_WEB_APP
 from django.db import models
+from django.apps import apps
+#from web.fun_test import apps
 from fun_global import RESULTS, get_current_time, get_localized_time
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 import json
+# from web.fun_test.site_state import site_state
 from django.forms.models import model_to_dict
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 import logging
+import datetime
 from datetime import datetime, timedelta
+from django.contrib.postgres.fields import JSONField
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+
+LAST_ANALYTICS_DB_STATUS_UPDATE = "last_status_update"
+
+class MetricChartStatus(models.Model):
+    metric_id = models.IntegerField(default=-1)
+    chart_name = models.TextField(default="Unknown")
+    data_sets = JSONField()
+    date_time = models.DateTimeField(default=datetime.now)
+    score = models.FloatField(default=-1)
+    valid = models.BooleanField(default=False)
+    children_score_map = JSONField(default={})
+
+    def __str__(self):
+        s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
+        return s
+
+
+class TimestampField(serializers.Field):
+    def to_representation(self, value):
+        epoch = get_localized_time(datetime(1970, 1, 1))
+        return int((value - epoch).total_seconds())
+
+class MetricChartStatusSerializer(ModelSerializer):
+    date_time = TimestampField()
+
+    class Meta:
+        model = MetricChartStatus
+        fields = "__all__"
 
 class MetricChart(models.Model):
     last_build_status = models.CharField(max_length=15, default=RESULTS["PASSED"])
@@ -29,6 +64,11 @@ class MetricChart(models.Model):
     goodness_cache_range = models.IntegerField(default=5)
     goodness_cache_valid = models.BooleanField(default=False)
     status_cache = models.TextField(default="[]")
+    score_cache_valid = models.BooleanField(default=False)
+    last_num_degrades = models.IntegerField(default=0)
+    last_status_update_date = models.DateTimeField(verbose_name="last_status_update", default=datetime.now)
+    last_num_build_failed = models.IntegerField(default=0)
+    num_leaves = models.IntegerField(default=0)
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -190,7 +230,26 @@ class MetricChart(models.Model):
     def is_same_day(self, d1, d2):
         return (d1.year == d2.year) and (d1.month == d2.month) and (d1.day == d2.day)
 
-    def get_status(self, number_of_records=5):
+
+    def get_status(self):
+        children = json.loads(self.children)
+        children_info = {}
+        if not self.leaf:
+            if len(children):
+                for child in children:
+                    child_metric = MetricChart.objects.get(metric_id=child)
+                    serialized = MetricChartSerializer(child_metric, many=False)
+                    serialized_data = serialized.data
+                    get_status = child_metric.get_status()
+                    serialized_data.update(get_status)
+                    children_info[child] = serialized_data
+        else:
+            pass
+
+        return {
+                "children_info": children_info}
+
+    def get_status2(self, number_of_records=5):
         print ("Get status for: {}".format(self.chart_name))
         goodness_values = []
         status_values = []
@@ -203,23 +262,23 @@ class MetricChart(models.Model):
         num_degrades = 0
         num_child_degrades = 0
         leaf_status = True
-        if self.chart_name == "Nucleus":
-            j = 2
-        if self.chart_name == "BLK_EC: Latency":
-            j = 3
+
         children_info = {}
         if not self.leaf:
             if len(children):
                 child_degrades = 0
                 sum_of_child_weights = 0
                 for child in children:
+
                     child_metric = MetricChart.objects.get(metric_id=child)
                     child_weight = children_weights[child] if child in children_weights else 1
                     sum_of_child_weights += child_weight
                     get_status = child_metric.get_status(number_of_records=number_of_records)
+
                     serialized = MetricChartSerializer(child_metric, many=False)
                     serialized_data = serialized.data
                     serialized_data.update(get_status)
+
                     children_info[child] = serialized_data
                     child_status_values, child_goodness_values = get_status["status_values"], \
                                                                  get_status["goodness_values"]
@@ -279,8 +338,6 @@ class MetricChart(models.Model):
 
                     today = get_current_time()
                     from_date = today - timedelta(days=number_of_records - 1)
-
-
 
                     for day_index in range(number_of_records - 1):
                         current_date = from_date + timedelta(days=day_index)
@@ -367,7 +424,7 @@ class MetricChart(models.Model):
         self.goodness_cache_valid = True
         self.goodness_cache_range = number_of_records
         self.status_cache = json.dumps(status_values)
-        self.save()
+        self.save()  #TODO: Save only if something changed
         try:
             if (goodness_values[-2] > goodness_values[-1]) or (goodness_values[-1] == 0):
                 num_degrades += 1
@@ -412,7 +469,9 @@ class MetricChart(models.Model):
         if data_set:
             # data_set = data_sets[0]
             inputs = data_set["inputs"]
-            model = ANALYTICS_MAP[self.metric_model_name]["model"]
+            #model = apps.get_model(app_label='fun_test', model_name=self.metric_model_name)
+            model = app_config.get_metric_models()[self.metric_model_name]
+
             today = get_current_time()
             yesterday = today - timedelta(days=1)
             yesterday = yesterday.replace(hour=23, minute=59, second=59)
@@ -500,6 +559,26 @@ class Performance1(models.Model):
     tag = "analytics"
 
 
+class ShaxPerformance(models.Model):
+    output_latency_min = models.IntegerField(verbose_name="Latency Min", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="Latency Avg", default=-1)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_algorithm = models.TextField(verbose_name="Algorithm", default="", choices=[[0, "SHA1"], [1, "SHA224"], [2, "SHA256"], [3, "SHA384"], [4, "SHA512"], [5, "SHA3_224"], [6, "SHA3_256"], [7, "SHA3_384"], [8, "SHA3_512"], [9, "SHA1"], [10, "SHA224"], [11, "SHA256"], [12, "SHA384"], [13, "SHA512"], [14, "SHA3_224"], [15, "SHA3_256"], [16, "SHA3_384"], [17, "SHA3_512"]])
+    output_avg_throughput_expected = models.FloatField(verbose_name="Average Throughput expected", default=-1)
+    input_num_hw_threads = models.IntegerField(verbose_name="Number of HW threads", default=-1, choices=[[0, 1.0], [1, 1.0], [2, 1.0], [3, 1.0], [4, 1.0], [5, 1.0], [6, 1.0], [7, 1.0], [8, 1.0], [9, ""], [10, 6.0], [11, 6.0], [12, 6.0], [13, 6.0], [14, 6.0], [15, 6.0], [16, 6.0], [17, ""]])
+    output_iops_expected = models.IntegerField(verbose_name="IOPS", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="Latency Max", default=-1)
+    input_sdk_version = models.TextField(verbose_name="Sdk version", default="")
+    output_iops = models.IntegerField(verbose_name="IOPS", default=-1)
+    output_avg_throughput = models.FloatField(verbose_name="Average Throughput", default=-1)
+    input_effort = models.IntegerField(verbose_name="Effort", default=-1, choices=[[0, 1.0], [1, 1.0], [2, 1.0], [3, 1.0], [4, 1.0], [5, 1.0], [6, 1.0], [7, 1.0], [8, 1.0], [9, 1.0], [10, 1.0], [11, 1.0], [12, 1.0], [13, 1.0], [14, 1.0], [15, 1.0], [16, 1.0], [17, 1.0]])
+    output_latency_expected = models.IntegerField(verbose_name="Latency Expected", default=-1)
+    tag = "analytics"
+    interpolation_allowed = models.BooleanField(default=True)
+    interpolated = models.BooleanField(default=False)
+
+
+
 class PerformanceBlt(models.Model):
     key = models.CharField(max_length=30, verbose_name="Build no.")
     input1_block_size = models.CharField(max_length=20, choices=[(0, "4K"), (1, "8K"), (2, "16K")], verbose_name="Block size")
@@ -558,10 +637,15 @@ class AllocSpeedPerformance(models.Model):
     input_app = models.TextField(verbose_name="alloc_speed_test", default="alloc_speed_test",  choices=[(0, "alloc_speed_test")])
     output_one_malloc_free_wu = models.IntegerField(verbose_name="Time in ns (WU)")
     output_one_malloc_free_threaded = models.IntegerField(verbose_name="Time in ns (Threaded)")
+    output_one_malloc_free_classic_min = models.IntegerField(default=-1, verbose_name="Time in ns (Classic): Min")
+    output_one_malloc_free_classic_avg = models.IntegerField(default=-1, verbose_name="Time in ns (Classic): Avg")
+    output_one_malloc_free_classic_max = models.IntegerField(default=-1, verbose_name="Time in ns (Classic): Max")
     tag = "analytics"
 
     def __str__(self):
-        return "{}..{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded, self.input_date_time)
+        return "{}..{}..{}..{}..{}..{}..{}".format(self.key, self.output_one_malloc_free_wu, self.output_one_malloc_free_threaded,
+                                       self.output_one_malloc_free_classic_min, self.output_one_malloc_free_classic_avg,
+                                       self.output_one_malloc_free_classic_max, self.input_date_time)
 
 
 class WuLatencyAllocStack(models.Model):
@@ -845,6 +929,98 @@ class VoltestPerformance(models.Model):
     output_VOL_TYPE_BLK_EC_read_Bandwidth_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth avg", default=0)
     output_VOL_TYPE_BLK_EC_read_Bandwidth_total = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth total", default=-1)
 
+    def __str__(self):
+        return "{}: {}".format(self.input_date_time, self.output_VOL_TYPE_BLK_LSV_write_Bandwidth_total)
+
+class WuDispatchTestPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="dispatch_speed_test", choices=[(0, "dispatch_speed_test")])
+    input_metric_name = models.CharField(max_length=30, default="wu_dispatch_latency_cycles", choices=[(0, "wu_dispatch_latency_cycles")])
+    output_average = models.IntegerField(verbose_name="Output WU Dispatch Performanmce Test Average", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class WuSendSpeedTestPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="wu_send_speed_test", choices=[(0, "wu_send_speed_test")])
+    input_metric_name = models.CharField(max_length=40, default="wu_send_ungated_latency_cycles", choices=[(0, "wu_send_ungated_latency_cycles")])
+    output_average = models.IntegerField(verbose_name="Output WU Send Speed Performanmce Test Average", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class HuRawVolumePerformance(models.Model):
+    output_latency = models.IntegerField(verbose_name="Latency", default=-1)
+    output_bandwidth = models.IntegerField(verbose_name="Bandwidth", default=-1)
+    output_iops = models.IntegerField(verbose_name="IO per second", default=-1)
+    #input_threads = models.IntegerField(verbose_name="Number of threads", default=-1, choices=[[0, 1.0]])
+    input_testbed = models.CharField(max_length=30, verbose_name="Testbed", default="storage1", choices=[(0, "storage1"),(1.0,"storage2"),(2.0, "storagenw")])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    tag = "analytics"
+    interpolation_allowed = models.BooleanField(default=True)
+    interpolated = models.BooleanField(default=False)
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class FunMagentPerformanceTest(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="fun_magent_perf_test", choices=[(0, "fun_magent_perf_test")])
+    input_metric_name = models.CharField(max_length=40, default="fun_magent_rate_malloc_free_per_sec",
+                                         choices=[(0, "fun_magent_rate_malloc_free_per_sec")])
+    output_latency = models.IntegerField(verbose_name="KOps/sec", default=-1)
+
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class WuStackSpeedTestPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="wustack_speed_test", choices=[(0, "wustack_speed_test")])
+    input_metric_name = models.CharField(max_length=40, default="wustack_alloc_free_cycles",
+                                         choices=[(0, "wustack_alloc_free_cycles")])
+    output_average = models.IntegerField(verbose_name="Alloc/free cycles average", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class ShaxPerformanceSerializer(ModelSerializer):
+    input_date_time = serializers.DateTimeField()
+    class Meta:
+        model = ShaxPerformance
+        fields = "__all__"
+
 class BcopyPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
     class Meta:
@@ -854,6 +1030,7 @@ class BcopyPerformanceSerializer(ModelSerializer):
 
 class VoltestPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = VoltestPerformance
         fields = "__all__"
@@ -861,28 +1038,35 @@ class VoltestPerformanceSerializer(ModelSerializer):
 
 class BcopyFloodDmaPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = BcopyFloodDmaPerformance
         fields = "__all__"
 
+
 class LsvZipCryptoPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = LsvZipCryptoPerformance
         fields = "__all__"
 
+
 class EcVolPerformanceSerialzer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = EcVolPerformance
         fields = "__all__"
 
+
 class NuTransitPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()
+
     class Meta:
         model = NuTransitPerformance
         fields = "__all__"
-
+'''
 ANALYTICS_MAP = {
     "Performance1": {
         "model": Performance1,
@@ -985,6 +1169,36 @@ ANALYTICS_MAP = {
         "module": "storage",
         "component": "general",
         "verbose_name": "Voltest Performance"
+    },
+    "WuDispatchTestPerformance": {
+        "model": WuDispatchTestPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "WU Dispatch Performance Test"
+    },
+    "WuSendSpeedTestPerformance": {
+        "model": WuSendSpeedTestPerformance,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "WU Dispatch Performance Test"
+    },
+    "HuRawVolumePerformance": {
+        "model": HuRawVolumePerformance,
+        "module": "storage",
+        "component": "general",
+        "verbose_name": "HU Raw Volume Performance"
+    },
+    "FunMagentPerformanceTest": {
+        "model": FunMagentPerformanceTest,
+        "module": "system",
+        "component": "general",
+        "verbose_name": "Fun Magent Performance test"
+    },
+    "ShaxPerformance": {
+        "model": ShaxPerformance,
+        "module": "security",
+        "component": "general",
+        "verbose_name": "Shax Performance"
     }
 }
-
+'''

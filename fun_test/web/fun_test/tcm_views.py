@@ -1,4 +1,4 @@
-from fun_settings import TCMS_PROJECT
+from fun_settings import TCMS_PROJECT, MAIN_WEB_APP
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.shortcuts import render
 import logging
@@ -46,7 +46,7 @@ MODULE_COMPONENT_MAP = {
 }
 
 def get_jira_manager():
-    app_config = apps.get_app_config('fun_test')
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     return app_config.get_jira_manager()
 
 def index(request):

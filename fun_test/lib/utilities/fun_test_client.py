@@ -64,6 +64,7 @@ class FunTestClient:
                              data=data,
                              cookies=self.cookies,
                              headers={"X-CSRFToken": self.csrf_token})
+        print resp.elapsed.total_seconds()
         response_json = None
         try:
             response_json = json.loads(resp.text)

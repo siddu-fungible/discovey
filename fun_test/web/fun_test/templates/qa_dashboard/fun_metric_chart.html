@@ -1,27 +1,120 @@
 <fun-spinner-status status="status" hide-on-idle="true"></fun-spinner-status>
 <div>
-    <fun-chart values="values" series="series" title="$ctrl.chartName" charting="charting" chart-type="line-chart"
+        <div ng-switch="timeMode">
+            <div ng-switch-when="all">
+                <a href="#" ng-click="setTimeMode('week')"> Week </a>/
+                <a href="#" ng-click="setTimeMode('month')"> Month </a>/
+                <b><u><a href="#" ng-click="setTimeMode('all')"> All </a></u></b>
+            </div>
+            <div ng-switch-when="week">
+                <b><u><a href="#" ng-click="setTimeMode('week')"> Week </a></u></b>/
+                <a href="#" ng-click="setTimeMode('month')"> Month </a>/
+                <a href="#" ng-click="setTimeMode('all')"> All </a>
+            </div>
+            <div ng-switch-when="month">
+                <a href="#" ng-click="setTimeMode('week')"> Week </a>/
+                <b><u><a href="#" ng-click="setTimeMode('month')"> Month </a></u></b>/
+                <a href="#" ng-click="setTimeMode('all')"> All </a>
+            </div>
+        </div>
+        <fun-chart values="values" series="series" title="$ctrl.chartName" charting="charting" chart-type="line-chart"
                width="width" height="height" xaxis-title="chart1XaxisTitle" yaxis-title="chart1YaxisTitle"
                point-click-callback="pointClickCallback" xaxis-formatter="xAxisFormatter"
                tooltip-formatter="tooltipFormatter">
-    </fun-chart>
-</div>
-<div ng-show="$ctrl.showingTable">
-    <!-- a href="/metrics/table_view/{{ $ctrl.modelName }}">Full model table</a-->
-    <div id="all-data-table" ng-repeat="data in allData">
-        <h3>{{ filterDataSets[$index].name }}</h3>
-        <table class="table">
-            <tr>
-                <th ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
-                    {{ value.verbose_name }}
-                </th>
-            </tr>
-            <tr ng-repeat="row in data">
-                <td ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">
-                    {{ cleanValue(key, row[key])}}
-                </td>
-            </tr>
+        </fun-chart>
+    <br>
 
-        </table>
+     <b>Description:   </b><a href="#" ng-if="!editingDescription" ng-click="editDescription()"><i class="fa fa-pencil"></i></a>
+    <br>
+    <div ng-bind-html="inner.currentDescription"></div>
+    <div ng-if="editingDescription">
+        <br>
+        <textarea rows="4" ng-model="inner.currentDescription" style="min-width: 100%;"></textarea>
+        <button class="btn btn-success" ng-click="submit()">Submit</button>
+        <a href="" style="padding: 5px;" ng-click="dismiss()">Cancel</a>
     </div>
 </div>
+<div ng-if="$ctrl.modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+    <div>
+    <button ng-attr-id="{{ 'show_tables_' + metricId }}" type="button" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="{{ '#showing_tables_' + metricId }}"
+            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black; outline: none;">Show Tables</button>
+  <div ng-attr-id="{{ 'showing_tables_' + metricId }}" class="collapse">
+       <!--<div id="all-data-table2" ng-repeat="data in allData">-->
+           <!--<h3>{{ filterDataSets[$index].name }}</h3>-->
+           <!--<table class="table">-->
+               <!--<tr>-->
+                   <!--<th ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">-->
+                       <!--{{ value.verbose_name }}-->
+                   <!--</th>-->
+               <!--</tr>-->
+               <!--<tr ng-repeat="row in data">-->
+                   <!--<td ng-repeat="(key, value) in tableInfo" ng-if="isFieldRelevant(key)">-->
+                       <!--{{ cleanValue(key, row[key])}}-->
+                   <!--</td>-->
+               <!--</tr>-->
+           <!--</table>-->
+       <!--</div>-->
+      <div ng-if="headers">
+          <fun-table headers="headers" data="allData" filter-data-sets="filterDataSets">
+          </fun-table>
+      </div>
+      <div>
+          <a href="{{ '#show_tables_' + metricId }}" style="float:right" ng-click="changeClass('#showing_tables_' + metricId, '#show_tables_' + metricId)">Hide Tables</a>
+      </div>
+      <br>
+      <br>
+      <div class="closed-section"></div>
+
+      <!--<button type="button" class="btn btn1 btn-lg btn-info collapsed" data-toggle="collapse" data-target="#demo" style="text-align: left; font-size: 14px; padding: 5px; border-color: black; border: 0px solid; width: 100%; background: white; color: black;">Hide Tables</button>-->
+  </div>
+    </div>
+    <div>
+    <button ng-attr-id="{{ 'configure_' + metricId }}" type="button" ng-class="after" class="btn arrow_btn btn-lg btn-info collapsed" data-toggle="collapse" data-target="{{ '#show_configure_' + metricId }}"
+            style="text-align: left; font-size: 14px; padding: 5px; padding-left: 0px; border-color: black; border: 0px solid; background: white; color: black; outline: none;">Configure</button>
+  <div ng-attr-id="{{ 'show_configure_' + metricId }}" class="collapse">
+       <div class="row">
+           <div class="col-lg-10 col-xl-10 pull-left">
+               <table class="table table-nonfluid table-borderless"
+                      ng-repeat="dataSet in previewDataSets track by $index">
+                   <tr>
+                       <th>Name</th>
+                       <th>Field</th>
+                       <th>Min</th>
+                       <th>Max</th>
+                       <th>Expected</th>
+                   </tr>
+                   <tr>
+                       <td>
+                           {{ dataSet.name }}
+                       </td>
+                       <td>
+                           {{ dataSet.output.name }}
+                       </td>
+                       <td>
+                           <input type="number" ng-model="dataSet.output.min" ng-value="dataSet.output.min"
+                                  style="width: 100px">
+                       </td>
+                       <td><input type="number" ng-model="dataSet.output.max" ng-value="dataSet.output.max"
+                                  style="width: 100px"></td>
+                       <td><input type="number" ng-model="dataSet.output.expected"
+                                  ng-value="dataSet.output.expected"
+                                  style="width: 100px"></td>
+                   </tr>
+               </table>
+               <p><input type="checkbox" ng-checked="negativeGradient" ng-model="inner.negativeGradient">&nbsp;Negative gradient</p>
+               <p><input type="checkbox" ng-checked="leaf" ng-model="inner.leaf">&nbsp;Leaf</p>
+           </div>
+       </div>
+      <div class="row">
+          <div style="padding: 10px;">
+              <button class="btn btn-success" ng-click="submit()">Submit</button>
+              <a href="{{ '#configure_' + metricId }}" ng-click="changeClass('#show_configure_' + metricId, '#configure_' + metricId)">Cancel</a>
+          </div>
+      </div>
+  </div>
+    </div>
+
+    </div>
+<!--<div class='scroll_top'>-->
+    <!--<div class='scroll icon'><i class="fa fa-4x fa-angle-up"></i></div>-->
+<!--</div>-->

@@ -84,7 +84,12 @@ class FunTestCase1(FunTestCase):
         # fun_test.simple_assert(open_ikv['data']['status'] == 0, message="Open likv response")
 
         generator = ikv_obj.kv_generator(size=size, max_time=duration / 3)
-        key_value_store = [{'key_hex': k, 'value_hex': v} for k, v in generator]
+        key_value_store1 = [{'key_hex': k, 'value_hex': v} for k, v in generator]
+        # get rid duplicate vals
+        key_value_store = []
+        for i in key_value_store1:
+            if not (i in key_value_store):
+                key_value_store.append(i)
 
         store_len = len(key_value_store)
         fun_test.test_assert(store_len,
@@ -185,7 +190,7 @@ class FunTestCase1(FunTestCase):
         # set funos topoplogy
         topology = fun_test.shared_variables["topology"]
         dut_instance = topology.get_dut_instance(index=0)
-        dut_instance.restart()
+        # dut_instance.restart()
 
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))

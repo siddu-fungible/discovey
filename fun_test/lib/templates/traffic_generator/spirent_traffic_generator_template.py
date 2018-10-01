@@ -138,7 +138,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         return result
 
     def populate_performance_counters_json(self, mode, file_name, latency_results=None, jitter_results=None,
-                                           flow_type=None):
+                                           flow_type=None, spray_enable=False):
         file_created = False
         records = []
         try:
@@ -155,6 +155,8 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                 record['frame_size'] = frame_size
                 if flow_type:
                     record['flow_type'] = flow_type
+                if spray_enable:
+                    record['spray_enable'] = spray_enable
                 if jitter_results:
                     if len(latency_results[key]['latency_count']) > 1:
                         record['throughput'] = float(latency_results[key]['throughput_count'])
@@ -674,6 +676,7 @@ class Ipv6Header(object):
     NEXT_HEADER_TCP = 6
     NEXT_HEADER_UDP = 17
     NO_NEXT_HEADER = 59
+    PAYLOAD_LENGTH_ERROR = '65535'
     _spirent_handle = None
 
     def __init__(self, destination_address="2000::1", destination_prefix_length=64, flow_label=0, gateway="::0",

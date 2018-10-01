@@ -1,25 +1,33 @@
 import logging
 import json
+from django.http import HttpResponseRedirect
+from django.core.management import call_command
+from django.apps import apps
+from fun_settings import MAIN_WEB_APP
 from fun_global import get_localized_time, get_current_time
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.shortcuts import render
 from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
-from web.fun_test.metrics_models import MetricChart, ModelMapping, ANALYTICS_MAP, VolumePerformanceSerializer, WuLatencyAllocStack
+from web.fun_test.metrics_models import MetricChart, ModelMapping, VolumePerformanceSerializer, WuLatencyAllocStack
 from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
 from web.fun_test.metrics_models import NuTransitPerformance, NuTransitPerformanceSerializer
+from web.fun_test.metrics_models import ShaxPerformanceSerializer
+from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 from django.core import serializers, paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 from analytics_models_helper import invalidate_goodness_cache
-
+from datetime import datetime
+from dateutil import parser
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 
 def index(request):
@@ -43,7 +51,7 @@ def metrics_list(request):
 @api_safe_json_response
 def describe_table(request, table_name):
     result = None
-    metric_model = ANALYTICS_MAP[table_name]["model"]
+    metric_model = app_config.get_metric_models()[table_name]
     if metric_model:
         fields = metric_model._meta.get_fields()
         payload = OrderedDict()
@@ -77,7 +85,10 @@ def chart_info(request):
                   "y2_axis_title": chart.y2_axis_title,
                   "info": chart.description,
                   "leaf": chart.leaf,
-                  "last_build_status": chart.last_build_status}
+                  "last_build_status": chart.last_build_status,
+                  "last_num_degrades": chart.last_num_degrades,
+                  "last_status_update_date": chart.last_status_update_date,
+                  "last_num_build_failed": chart.last_num_build_failed}
     return result
 
 @csrf_exempt
@@ -171,6 +182,11 @@ def summary_page(request):
     return render(request, 'qa_dashboard/metrics_summary.html', locals())
 
 @csrf_exempt
+def initialize(request):
+    call_command('initialize')
+    return HttpResponseRedirect('/')
+
+@csrf_exempt
 @api_safe_json_response
 def metric_info(request):
     request_json = json.loads(request.body)
@@ -178,22 +194,52 @@ def metric_info(request):
     c = MetricChart.objects.get(metric_id=metric_id)
     serialized = MetricChartSerializer(c, many=False)
     serialized_data = serialized.data
-    result = c.get_status(number_of_records=6)
-    serialized_data["goodness_values"] = result["goodness_values"]
-    serialized_data["status_values"] = result["status_values"]
-    serialized_data["children_goodness_map"] = result["children_goodness_map"]
-    serialized_data["num_children_passed"] = result["num_children_passed"]
-    serialized_data["num_children_failed"] = result["num_children_failed"]
-    serialized_data["num_child_degrades"] = result["num_child_degrades"]
+    # result = c.get_status(number_of_records=6)
+    result = c.get_status()
+
+    # serialized_data["goodness_values"] = result["goodness_values"]
+    # serialized_data["status_values"] = result["status_values"]
+    # serialized_data["children_goodness_map"] = result["children_goodness_map"]
+    # serialized_data["num_children_passed"] = result["num_children_passed"]
+    # serialized_data["num_children_failed"] = result["num_children_failed"]
+    # serialized_data["num_child_degrades"] = result["num_child_degrades"]
     serialized_data["children_info"] = result["children_info"]
     return serialized_data
+
+
+
+@csrf_exempt
+@api_safe_json_response
+def scores(request):
+    result = {}
+    date_range = None
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    if "date_range" in request_json:
+        date_range = request_json["date_range"]
+        date_range = [parser.parse(x) for x in date_range]
+        entries = MetricChartStatus.objects.filter(date_time__range=date_range,
+                                                   metric_id=metric_id)
+    # chart_name = request_json["chart_name"]
+    else:
+        entries = MetricChartStatus.objects.filter(metric_id=metric_id)
+    serialized = MetricChartStatusSerializer(entries, many=True)
+    serialized_data = serialized.data[:]
+    result["scores"] = {}
+    result["children_score_map"] = {}
+    for element in serialized_data:
+        j = dict(element)
+        result["scores"][j["date_time"]] = j
+        result["children_score_map"] = j["children_score_map"]
+
+    return result
 
 @csrf_exempt
 @api_safe_json_response
 def table_data(request, page=None, records_per_page=10):
     request_json = json.loads(request.body)
     model_name = request_json["model_name"]
-    model = ANALYTICS_MAP[model_name]["model"]
+    model = app_config.get_metric_models()[model_name]
     data = {}
     header_list = [x.name for x in model._meta.get_fields()]
     data["headers"] = header_list
@@ -216,7 +262,8 @@ def table_data(request, page=None, records_per_page=10):
                       "BcopyFloodDmaPerformance": BcopyFloodDmaPerformanceSerializer,
                       "JenkinsJobIdMap": JenkinsJobIdMapSerializer,
                       "LsvZipCryptoPerformance": LsvZipCryptoPerformanceSerializer,
-                      "NuTransitPerformance": NuTransitPerformanceSerializer}
+                      "NuTransitPerformance": NuTransitPerformanceSerializer,
+                      "ShaxPerformance": ShaxPerformanceSerializer}
     serializer = serializer_map[model_name]
     all_entries = model.objects.all().order_by()
     if hasattr(model.objects.first(), "input_date_time"):
@@ -270,6 +317,8 @@ def update_chart(request):
                         chart_name=chart_name,
                         data_sets=json.dumps(data_sets),
                         metric_id=LastMetricId.get_next_id())
+        if leaf:
+            c.leaf = leaf
         c.save()
         invalidate_goodness_cache()
     return "Ok"
@@ -321,7 +370,7 @@ def data(request):
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     except ObjectDoesNotExist:
         pass
-    model = ANALYTICS_MAP[metric_model_name]["model"]
+    model = app_config.get_metric_models()[metric_model_name]
     if preview_data_sets is not None:
         data_sets = preview_data_sets
     else:
@@ -340,8 +389,6 @@ def data(request):
         d["input_date_time__lt"] = today
         try:
             result = model.objects.filter(**d)   #unpack, pack
-
-
             data.append([model_to_dict(x) for x in result])
         except ObjectDoesNotExist:
             logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
@@ -351,3 +398,44 @@ def data(request):
 @csrf_exempt
 def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
+
+
+def traverse_dag(metric_id):
+    result = {}
+    chart = MetricChart.objects.get(metric_id=metric_id)
+
+    result["metric_model_name"] = chart.metric_model_name
+    result["chart_name"] = chart.chart_name
+    result["children"] = json.loads(chart.children)
+    result["children_info"] = {}
+    result["children_weights"] = json.loads(chart.children_weights)
+    result["leaf"] = chart.leaf
+    result["num_leaves"] = chart.num_leaves
+    result["last_num_degrades"] = chart.last_num_degrades
+    result["last_num_build_failed"] = chart.last_num_build_failed
+    result["positive"] = chart.positive
+
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
+    # only get the first two entries
+    # print "Chart status entry for {}".format(chart.chart_name)
+    # for chart_status_entry in chart_status_entries:
+    #    print chart_status_entry.date_time
+    result["last_two_scores"] = [x.score for x in chart_status_entries]
+    if not chart.leaf:
+        children_info = result["children_info"]
+        for child_id in result["children"]:
+            child_chart = MetricChart.objects.get(metric_id=child_id)
+            children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def dag(request):
+    result = {}
+    request_json = json.loads(request.body)
+    metric_model_name = request_json["metric_model_name"]
+    chart_name = request_json["chart_name"]
+    chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+
+    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id)
+    return result

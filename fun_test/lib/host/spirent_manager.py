@@ -60,13 +60,13 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return health_result
 
-    def get_test_module_info(self):
+    def get_test_module_info(self, chassis_ip):
         module_list = []
         chassis_info = {}
         port_group_list = []
         port_list = []
         try:
-            if not self.connect_chassis():
+            if not self.connect_chassis(chassis_ip=chassis_ip):
                 raise FunTestLibException("Unable to connect chassis: %s" % self.chassis_ip)
             chassis_mgr = self.get_chassis_manager()
             manager_handles = self.stc.get(chassis_mgr, "children-PhysicalChassis").split()
@@ -121,10 +121,6 @@ class SpirentManager(object):
                 if not port_group['OwnershipState'] == self.OWNERSHIP_STATE_AVAILABLE:
                     raise FunTestLibException("Port Group Reserved by %s@%s" % (port_group['OwnerUserId'],
                                                                                 port_group['OwnerHostname']))
-
-                if not port_group['Status'] == self.MODULE_STATUS_UP:
-                    raise FunTestLibException("Port Group Status is not Up")
-
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -166,10 +162,10 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return ip_address
 
-    def connect_chassis(self):
+    def connect_chassis(self, chassis_ip):
         result = False
         try:
-            self.stc.connect(str(self.chassis_ip))
+            self.stc.connect(str(chassis_ip))
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1055,8 +1051,36 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def detach_ports_by_command(self, port_handles):
+        result = False
+        try:
+            if type(port_handles) == list:
+                port_handles = ' '.join(port_handles)
+            fun_test.debug("Releasing %s from project" % port_handles)
+            output = self.stc.perform("DetachPortsCommand", PortList=port_handles)
+            fun_test.simple_assert(output['State'] == 'COMPLETED', "%s detached" % port_handles)
+            if re.search(r'Successfully\s+detached.*', output['Status'], re.IGNORECASE):
+                fun_test.log("%s released successfully" % port_handles)
+                if self.apply_configuration():
+                    result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
-
+    def attach_ports_by_command(self, port_handles, auto_connect_chassis=True):
+        result = False
+        try:
+            if type(port_handles) == list:
+                port_handles = ' '.join(port_handles)
+            fun_test.debug("Releasing %s from project" % port_handles)
+            output = self.stc.perform("AttachPortsCommand", PortList=port_handles, AutoConnect=auto_connect_chassis)
+            fun_test.simple_assert(output['State'] == 'COMPLETED', "%s attached" % port_handles)
+            if re.search(r'Reserving.*.*', output['Status'], re.IGNORECASE):
+                if self.apply_configuration():
+                    result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
 
 if __name__ == "__main__":

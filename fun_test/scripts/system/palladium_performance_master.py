@@ -1,10 +1,14 @@
 from lib.system.fun_test import *
 from lib.host.lsf_status_server import LsfStatusServer
-from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance
+from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
+from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
+from web.fun_test.metrics_models import WuStackSpeedTestPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
+from web.fun_test.analytics_models_helper import prepare_status_db
+from web.fun_test.models import TimeKeeper
 import re
 from datetime import datetime
 
@@ -19,6 +23,7 @@ def get_rounded_time():
 
 def is_job_from_today(job_dt):
     today = get_rounded_time()
+    return True # TODO:
     return (job_dt.year == today.year) and (job_dt.month == today.month) and (job_dt.day == today.day)
 
 def set_last_build_status_for_charts(result, model_name):
@@ -90,6 +95,7 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
         output_one_malloc_free_wu = 0
         output_one_malloc_free_threaded = 0
+        output_one_malloc_free_classic_min = output_one_malloc_free_classic_avg = output_one_malloc_free_classic_max = -1
         wu_alloc_stack_ns_min = wu_alloc_stack_ns_max = wu_alloc_stack_ns_avg = -1
         wu_ungated_ns_min = wu_ungated_ns_max = wu_ungated_ns_avg = -1
         try:
@@ -100,15 +106,21 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
-                m = re.search(r'Time for one malloc/free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
+                m = re.search(r'Time for one fun_malloc\+fun_free \(WU\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
                 if m:
                     alloc_speed_test_found = True
                     d = json.loads(m.group(1))
                     output_one_malloc_free_wu = int(d["avg"])
-                m = re.search(r'Time for one malloc/free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_wu_ns\]', line)
+                m = re.search(r'Time for one fun_malloc\+fun_free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_threaded_ns\]', line)
                 if m:
                     d = json.loads(m.group(1))
                     output_one_malloc_free_threaded = int(d['avg'])
+                m = re.search(r'Time for one malloc\+free \(classic\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_classic_ns\]', line)
+                if m:
+                    d = json.loads(m.group(1))
+                    output_one_malloc_free_classic_avg = int(d['avg'])
+                    output_one_malloc_free_classic_min = int(d['min'])
+                    output_one_malloc_free_classic_max = int(d['max'])
 
                 # wu_latency_test
                 m = re.search(r' wu_latency_test.*({.*}).*perf_wu_alloc_stack_ns', line)
@@ -128,6 +140,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
             fun_test.log("Malloc Free threaded: {}".format(output_one_malloc_free_threaded))
             fun_test.log("Malloc Free WU: {}".format(output_one_malloc_free_wu))
+            fun_test.log("Malloc Free classic: min: {}, avg: {}, max: {}".format(output_one_malloc_free_classic_min,
+                                                                                 output_one_malloc_free_classic_avg,
+                                                                                 output_one_malloc_free_classic_max))
             fun_test.log("wu_latency_test: wu_alloc_stack_ns: min: {}, avg: {}, max: {}".format(wu_alloc_stack_ns_min,
                                                                                                 wu_alloc_stack_ns_avg,
                                                                                                 wu_alloc_stack_ns_max))
@@ -142,6 +157,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                                                                 input_app="alloc_speed_test",
                                                                 output_one_malloc_free_wu=output_one_malloc_free_wu,
                                                                 output_one_malloc_free_threaded=output_one_malloc_free_threaded,
+                                                                output_one_malloc_free_classic_min=output_one_malloc_free_classic_min,
+                                                                output_one_malloc_free_classic_avg=output_one_malloc_free_classic_avg,
+                                                                output_one_malloc_free_classic_max=output_one_malloc_free_classic_max,
                                                                 input_date_time=self.dt)
 
             MetricHelper(model=WuLatencyUngated).add_entry(status=self.result, input_app="wu_latency_test",
@@ -401,7 +419,7 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'\S\s+(?P<metric_type>\S+):\s+(?P<value>.*)\s+(?P<units>\S+)\s+\[\S+:(?P<metric_name>\S+)\]', line)
+                    r'(?:\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>.*)\s+(?P<units>\S+)\s+\[\S+:(?P<metric_name>\S+)\]', line)
                 if m:
                     metric_type = m.group("metric_type")
                     value = m.group("value")
@@ -445,7 +463,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'"(?P<metric_name>\S+)\s+(?P<metric_type>\S+):\s+(?P<value>.*)\s+(?P<units>\S+)\s+\[(?P<metric_id>\S+)\]',
+                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>.*)\s+(?P<units>\S+)\s+\[(?P<metric_id>\S+)\]',
                     line)
                 if m:
                     stats_found = True
@@ -493,6 +511,171 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
 
         set_last_build_status_for_charts(result=self.result, model_name="VoltestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Wu Dispatch Test performance",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            i = 0
+
+            for line in self.lines:
+                m = re.search(
+                    r'Average\s+dispatch\s+WU\s+cycles:\s+(?P<average>\d+)\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]',
+                    line)
+                if m:
+                    output_average = int(m.group("average"))
+                    input_app = "dispatch_speed_test"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_average"] = output_average
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    j = 0
+                    MetricHelper(model=WuDispatchTestPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="WuDispatchTestPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="Wu Send Speed Test performance",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            i = 0
+
+            for line in self.lines:
+                m = re.search(
+                    r'Average\s+WU\s+send\s+ungated\s+cycles:\s+(?P<average>\d+)\s+\[(?P<metric_name>wu_send_ungated_latency_cycles)\]',
+                    line)
+                if m:
+                    output_average = int(m.group("average"))
+                    input_app = "wu_send_speed_test"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_average"] = output_average
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    j = 0
+                    MetricHelper(model=WuSendSpeedTestPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="WuSendSpeedTestPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class FunMagentPerformanceTestTC(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="Fun Magent Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            i = 0
+
+            for line in self.lines:
+                m = re.search(
+                    r'fun_magent.*=>\s+(?P<latency>\d+)(?P<unit>Kops/sec)\s+\[(?P<metric_name>fun_magent_rate_malloc_free_per_sec)\]',
+                    line)
+                if m:
+                    unit = m.group("unit")
+                    fun_test.test_assert(unit, "Kops/sec", "Valid Unit")
+                    output_latency = int(m.group("latency"))
+                    input_app = "fun_magent_perf_test"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("latency: {}, metric_name: {}".format(output_latency, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_latency"] = output_latency
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    j = 0
+                    MetricHelper(model=FunMagentPerformanceTest).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="FunMagentPerformanceTest")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class WuStackSpeedTestPerformanceTC(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+
+    def describe(self):
+        self.set_test_details(id=10,
+                              summary="Wu Send Speed Test performance",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'Average\s+wustack\s+alloc/+free\s+cycles:\s+(?P<average>\d+)\s+\[(?P<metric_name>wustack_alloc_free_cycles)\]',
+                    line)
+                if m:
+                    output_average = int(m.group("average"))
+                    input_app = "wustack_speed_test"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_average"] = output_average
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=WuStackSpeedTestPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="WuStackSpeedTestPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class PrepareDbTc(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=100,
+                              summary="Prepare Status Db",
+                              steps="Steps 1")
+
+    def setup(self):
+        pass
+
+    def run(self):
+        prepare_status_db()
+        TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
+
+    def cleanup(self):
+        pass
+
 
 
 if __name__ == "__main__":
@@ -503,5 +686,10 @@ if __name__ == "__main__":
     myscript.add_test_case(EcPerformanceTc())
     myscript.add_test_case(EcVolPerformanceTc())
     myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTC())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTC())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

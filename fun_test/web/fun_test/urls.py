@@ -19,7 +19,11 @@ from . import views, regression_views
 from . import tcm_views
 from . import common_views
 from . import metrics_views
+from . import tests_views
+from . import upgrade_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.generic import RedirectView
+
 
 regression_urls = [
     url(r'^$', regression_views.index),
@@ -85,6 +89,7 @@ tcm_urls = [
 ]
 
 common_urls = [
+    url(r'^time_keeper/(.*)$', common_views.time_keeper),
     url(r'^alerts_page$', common_views.alerts_page),
     url(r'^add_session_log$', common_views.add_session_log),
     url(r'^get_session_logs$', common_views.get_session_logs),
@@ -114,12 +119,27 @@ metric_urls = [
     url(r'^atomic/(.*)/(.*)$', metrics_views.atomic),
     url(r'^update_child_weight$', metrics_views.update_child_weight),
     url(r'^table_view/(.*)$', metrics_views.table_view),
-    url(r'^test$', metrics_views.test)
+    url(r'^test$', metrics_views.test),
+    url(r'^scores', metrics_views.scores),
+    url(r'^dag$', metrics_views.dag)
+]
+
+performance_urls = [
+    url(r'^$', metrics_views.summary_page),
+    url(r'^(.*)/(.*)$', metrics_views.atomic)
+]
+
+test_urls = [
+    url(r'^datetime$', tests_views.date_test)
+]
+
+upgrade_urls = [
+    url(r'^.*$', upgrade_views.home)
 ]
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^performance/', metrics_views.summary_page),
+    url(r'^performance/', include(performance_urls)),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
     # url(r'^tools/', include('tools.urls')),
@@ -127,9 +147,14 @@ urlpatterns = [
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
     url(r'^common/', include(common_urls)),
-    url(r'^$', common_views.home)
+    url(r'^$', common_views.home),
+    url(r'^initialize$', metrics_views.initialize),
+    url(r'^test/', include(test_urls)),
+    url(r'^upgrade/', include(upgrade_urls)),
+    url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
 
 ]
 
 
 urlpatterns += staticfiles_urlpatterns()
+

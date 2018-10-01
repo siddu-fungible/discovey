@@ -95,8 +95,8 @@ class SuiteWorker(Thread):
             if not version:
                 models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"])
                 error_message = "Unable to determine version from build url: {}".format(build_url)
-                scheduler_logger.critical(error_message)
-                local_scheduler_logger.critical(error_message)
+                scheduler_logger.exception(error_message)
+                local_scheduler_logger.exception(error_message)
                 self.suite_shutdown = True
             else:
                 models_helper.update_suite_execution(suite_execution_id=self.job_id, version=version)
@@ -126,8 +126,8 @@ class SuiteWorker(Thread):
             if self.abort_on_failure_requested:
                 continue
             if self.suite_shutdown:
-                scheduler_logger.critical("{}: SUITE shutdown requested".format(self.job_id))
-                local_scheduler_logger.critical("SUITE shutdown requested")
+                scheduler_logger.exception("{}: SUITE shutdown requested".format(self.job_id))
+                local_scheduler_logger.exception("SUITE shutdown requested")
                 suite_summary[os.path.basename(script_path)] = {"crashed": True, "result": False}
                 continue
 
@@ -157,9 +157,9 @@ class SuiteWorker(Thread):
                 # print("Still working...")
                 poll_status = self.current_script_process.poll()
             if poll_status:  #
-                scheduler_logger.critical("FAILED: Script {}".format(os.path.basename(script_path)))
+                scheduler_logger.exception("FAILED: Script {}".format(os.path.basename(script_path)))
                 self.local_scheduler_logger.info("FAILED: {}".format(script_path))
-                local_scheduler_logger.critical("FAILED")
+                local_scheduler_logger.exception("FAILED")
                 crashed = True  # TODO: Need to re-check this based on exit code
             script_result = False
             if self.current_script_process.returncode == 0:
@@ -169,8 +169,8 @@ class SuiteWorker(Thread):
                     self.abort_on_failure_requested = True
                     models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"])
                     error_message = "Abort Requested on failure for: {}".format(script_path)
-                    scheduler_logger.critical(error_message)
-                    local_scheduler_logger.critical(error_message)
+                    scheduler_logger.exception(error_message)
+                    local_scheduler_logger.exception(error_message)
 
             self.local_scheduler_logger.info("Executed: {}".format(script_path))
             suite_summary[os.path.basename(script_path)] = {"crashed": crashed, "result": script_result}
@@ -182,8 +182,8 @@ class SuiteWorker(Thread):
         if self.abort_on_failure_requested:
             models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"])
             error_message = "Abort Requested on failure for: {}".format(last_script_path)
-            scheduler_logger.critical(error_message)
-            local_scheduler_logger.critical(error_message)
+            scheduler_logger.exception(error_message)
+            local_scheduler_logger.exception(error_message)
             suite_execution = models_helper.get_suite_execution(suite_execution_id=self.job_id)
             suite_execution.result = RESULTS["ABORTED"]
             suite_execution.finalized = True
@@ -308,7 +308,7 @@ def process_queue():
 
                 t.start()
         except Exception as ex:
-            scheduler_logger.critical(str(ex))
+            scheduler_logger.exception(str(ex))
 
 
         de_queue_job(job_file)
@@ -322,7 +322,7 @@ def de_queue_job(job_file):
                                archived_file)
         os.rename(job_file, archived_file)
     except Exception as ex:
-        scheduler_logger.critical(str(ex))
+        scheduler_logger.exception(str(ex))
         # TODO: Ensure job_file is removed
 
 
@@ -355,7 +355,7 @@ if __name__ == "__main__":
         try:
             process_queue()
         except SchedulerException as ex:
-            scheduler_logger.critical(str(ex))
+            scheduler_logger.exception(str(ex))
         except Exception as ex:
-            scheduler_logger.critical(str(ex))
+            scheduler_logger.exception(str(ex))
         # wait

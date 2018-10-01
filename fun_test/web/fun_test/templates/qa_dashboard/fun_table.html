@@ -1,0 +1,49 @@
+<!--<div ng-repeat="">-->
+    <!--<table>-->
+        <!--<tr>-->
+            <!--<th ng-repeat="(key, value) in headers" ng-if="isFieldRelevant(key)">-->
+                       <!--{{ value.verbose_name }}-->
+            <!--</th>-->
+        <!--</tr>-->
+        <!--<tr ng-repeat="row in data">-->
+            <!--<td ng-repeat="(key, value) in data" ng-if="isFieldRelevant(key)">-->
+                       <!--{{ cleanValue(key, row[key])}}-->
+            <!--</td>-->
+        <!--</tr>-->
+    <!--</table>-->
+<!--</div>-->
+<div ng-repeat="rowData in data" style="overflow-x: auto">
+    <div class="text-center">
+        <h3 style="float: left;">{{ filterDataSets[$index].name }}</h3>
+        <!-- pager -->
+        <ul style="float: right;" ng-if="pager.pages.length" class="pagination">
+            <li ng-class="{disabled:pager.currentPage === 1}">
+                <a ng-click="setPage(1)">First</a>
+            </li>
+            <li ng-class="{disabled:pager.currentPage === 1}">
+                <a ng-click="setPage(pager.currentPage - 1)">Previous</a>
+            </li>
+            <li ng-repeat="page in pager.pages" ng-class="{active:pager.currentPage === page}">
+                <a ng-click="setPage(page)">{{ page }}</a>
+            </li>
+            <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
+                <a ng-click="setPage(pager.currentPage + 1)">Next</a>
+            </li>
+            <li ng-class="{disabled:pager.currentPage === pager.totalPages}">
+                <a ng-click="setPage(pager.totalPages)">Last</a>
+            </li>
+        </ul>
+    </div>
+    <table class="table">
+        <tr>
+            <th ng-repeat="(key, value) in headers" ng-if="isFieldRelevant(key)">
+                {{ value.verbose_name }}
+            </th>
+        </tr>
+        <tr ng-repeat="row in rowData">
+            <td ng-repeat="(key, value) in headers" ng-if="isFieldRelevant(key)">
+                {{ cleanValue(key, row[key])}}
+            </td>
+        </tr>
+    </table>
+</div>

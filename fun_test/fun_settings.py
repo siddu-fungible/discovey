@@ -1,3 +1,4 @@
+import os
 from os.path import dirname, abspath
 import sys
 
@@ -17,6 +18,9 @@ LOGS_RELATIVE_DIR = STATIC_RELATIVE_DIR + "/logs"
 MEDIA_DIR = WEB_STATIC_DIR + "/media"
 
 WEB_SERVER_PORT = 5000
+if "PERFORMANCE_SERVER" in os.environ:
+    WEB_SERVER_PORT = 80
+
 COMMON_WEB_LOGGER_NAME = "web"
 
 
@@ -49,3 +53,5 @@ SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"
 
 REGRESSION_USER = "regression"
 REGRESSION_USER_PASSWORD = "FunPrecious123"
+
+MAIN_WEB_APP = 'fun_test'

@@ -10,8 +10,9 @@ class Command(BaseCommand):
         site_state.register_users()
         site_state.register_tags()
         site_state.register_modules()
+        '''
         if is_performance_server():
-            site_state.register_model_mappings()
+            site_state.register_model_mappings()'''
         if is_regression_server():
             site_state.register_testbeds()
         if is_regression_server() or is_performance_server():

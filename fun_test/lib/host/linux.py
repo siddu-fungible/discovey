@@ -111,6 +111,7 @@ class Linux(object, ToDictMixin):
         self.trace_id = None
         self.tmp_dir = None
         self.prompt_terminator = None
+        self.root_prompt_terminator = Linux.ROOT_PROMPT_TERMINATOR_DEFAULT
         self.buffer = None
         self.saved_prompt_terminator = None
         self._set_defaults()
@@ -202,6 +203,8 @@ class Linux(object, ToDictMixin):
             expects = collections.OrderedDict()
             expects[0] = '[pP]assword'
             expects[1] = '\(yes/no\)?'
+            if self.ssh_username == 'root':
+                self.prompt_terminator = self.root_prompt_terminator
             expects[2] = self.prompt_terminator + r'$'
 
             attempt = 0
@@ -216,7 +219,7 @@ class Linux(object, ToDictMixin):
                         "Attempting SSH connect to %s username: %s password: %s" % (self.host_ip,
                                                                                     self.ssh_username,
                                                                                     self.ssh_password))
-                    fun_test.debug("Prompt terminator:%s" % self.prompt_terminator)
+                    fun_test.debug("Prompt terminator:%s " % self.prompt_terminator)
                     if self.ssh_port:
                         ssh_command = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s@%s -p %d' % (self.ssh_username,
                                                                                            self.host_ip,
@@ -241,7 +244,7 @@ class Linux(object, ToDictMixin):
                         "Attempting Telnet connect to %s username: %s password: %s" % (self.host_ip,
                                                                                     self.ssh_username,
                                                                                     self.ssh_password))
-                    fun_test.debug("Prompt terminator:%s" % self.prompt_terminator)
+                    fun_test.debug("Prompt terminator:{} Root prompt terminator: {}".format(self.prompt_terminator, self.root_prompt_terminator))
                     telnet_command = 'telnet -l {} {} {}'.format(self.telnet_username, self.host_ip, self.telnet_port)
                     self.logger.log(telnet_command)
                     self.handle = pexpect.spawn(telnet_command,
@@ -726,7 +729,7 @@ class Linux(object, ToDictMixin):
         if not self.handle:
             self._connect()
         self.saved_prompt_terminator = self.prompt_terminator
-        self.set_prompt_terminator(prompt_terminator=r'# ')
+        self.set_prompt_terminator(prompt_terminator=self.root_prompt_terminator)
         prompt = r'assword\s+for\s+%s: ' % self.ssh_username
         mac_prompt = r'Password:.*'
         options_str = ""
@@ -741,6 +744,10 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def set_prompt_terminator(self, prompt_terminator):
         self.prompt_terminator = prompt_terminator
+
+    @fun_test.safe
+    def set_root_prompt_terminator(self, root_prompt_terminator):
+        self.root_prompt_terminator = root_prompt_terminator
 
     @fun_test.safe
     def exit_sudo(self):
@@ -1041,6 +1048,8 @@ class Linux(object, ToDictMixin):
     def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, timeout=60):
         transfer_complete = False
         scp_command = "scp %s %s@%s:%s" % (source_file_path, target_username, target_ip, target_file_path)
+        if not self.handle:
+            self._connect()
 
         handle = self.handle
         handle.sendline(scp_command)

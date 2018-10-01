@@ -1,0 +1,187 @@
+<!--fun-table (nextPage)="setValues($event)" [data]="data"></fun-table-->
+<!--<li *ngFor='let in of counter(50) ;let i = index'>{{i}}-->
+<!--<fun-chart></fun-chart>-->
+<!--</li>-->
+<div class="" style="padding-top: 20px">
+  <div class="row">
+  <!-- div class="col-lg-6 col-xl-6 col-md-6"-->
+  <div class="col-lg-4 col-md-4 col-xxl-4 col-xl-4">
+    <table class="table table-nonfluid">
+      <tr>
+        <th class="text-center">Aspect</th>
+        <th class="text-center">Score</th>
+        <th class="text-center">#</th>
+        <!--th></th-->
+        <th class="text-center">More Info</th>
+
+      </tr>
+      <tr class="fade-element-in" *ngFor="let flatNode of getVisibleNodes(flatNodes)">
+        <td id="{{ flatNode.gUid }}" class="child-transition">
+                        <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
+                        </span>
+          <a *ngIf="flatNode.node.leaf" [routerLink]=""
+             (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+          <a *ngIf="!flatNode.node.leaf" [routerLink]=""
+             (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+          <!-- span ng-if="!node.leaf">{{ flatNode.node.chartName }}</span -->
+          <span *ngIf="!flatNode.node.leaf">
+              <span [innerHTML]="'&nbsp'"></span>
+              <a [routerLink]="" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
+                <span class="arrow-down"></span>
+              </a>
+              <a [routerLink]="" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
+                <span class="arrow-right"></span>
+              </a>
+            </span>
+        </td>
+        <td class="text-center">
+          <div ng-if="flatNode.node.chartName !== 'All metrics'" class="score-label"><span style="vertical-align: top"
+                                                                                           [innerHTML]="getTrendHtml(flatNode.node) | safeHtml"></span>{{ flatNode.node.lastScore | number: '1.1-1' }}
+          </div>
+        </td>
+        <td class="text-center">
+          <span ng-if="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
+        </td>
+
+        <td [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+      </tr>
+    </table>
+
+  </div>
+  <!--div *ngIf="mode != modeType.None" class="card col-xl-6 col-lg-6 col-xxl-6"-->
+  <div class="col-lg-8 col-md-8 col-xxl-8 col-xl-8" style="max-width: 1500px">
+    <div *ngIf="mode != modeType.None" class="card" style="padding: 10px">
+    <table>
+      <tr>
+        <td>
+              <span id="score-table-parent" class="score-card">
+                  <span id="score-table-child">{{ currentNode.lastScore | number: '1.1-1' }}
+                  </span>
+              </span>
+        </td>
+        <td valign="top" align="left">
+              <span id="score-table-info-icon">
+                  <i class="fa fa-info-circle" style="padding: 2px"
+                     (click)="showScoreInfoClick(currentNode)">
+                  </i>
+              </span>
+        </td>
+        <td style="width: 100%">
+              <span style="float: right;">
+                          <button class="btn" style="background-color: white"
+                                  ng-click="openAtomicTab()">
+                              <i class="fa fa-external-link"></i></button>
+              </span>
+        </td>
+      </tr>
+    </table>
+
+    <div *ngIf="showScoreInfo">
+      <div [ngSwitch]="mode">
+        <div *ngSwitchCase="modeType.ShowingAtomicMetric">
+          <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
+        </div>
+        <div *ngSwitchCase="modeType.ShowingNonAtomicMetric">
+          <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
+          <div *ngIf="currentNode">
+            <table class="table table-nonfluid">
+              <tr>
+                <th>Aspect</th>
+                <th>Weight</th>
+                <th>Last score</th>
+                <th>Weight * Last Score</th>
+              </tr>
+              <tr *ngFor="let childId of getKeys(currentNode.childrenInfo)">
+                <td>{{ nodeMap.get(childId).chartName }}</td>
+                <td>
+                  <p (click)="editingWeightClick(currentNode.childrenInfo.get(childId))" *ngIf="!currentNode.childrenInfo.get(childId).weightEditing">
+                    {{ currentNode.childrenInfo.get(childId).weight }}</p>
+                  <span *ngIf="currentNode.childrenInfo.get(childId).weightEditing">
+                        <input style="padding-right: 10px" type="number"
+                               [(ngModel)]="currentNode.childrenInfo.get(childId).weightBeingEdited">
+                        <button style="border: 1px solid black;overflow: hidden; padding-left: 10px;"
+                                class="btn btn-sm"
+                                (click)="submitWeightClick(currentNode, childId, currentNode.childrenInfo.get(childId))">&#10003;</button>
+                        <button style="border: 1px solid black;" class="btn btn-sm"
+                                (click)="closeEditingWeightClick(currentNode.childrenInfo.get(childId))">&#10060;</button>
+                      </span>
+                </td>
+                <td>
+                  {{ currentNode.childrenInfo.get(childId).lastScore | number: '1.1-1' }}
+                </td>
+                <td>
+                  {{ currentNode.childrenInfo.get(childId).weight }} *
+                  {{ currentNode.childrenInfo.get(childId).lastScore |
+                    number: '1.1-1' }} =
+                  {{ currentNode.childrenInfo.get(childId).weight * currentNode.childrenInfo.get(childId).lastScore
+                    | number: '1.1-1' }}
+                </td>
+                <!-- td>{{ childId }}</td -->
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Total ~ {{ getScoreTotal(currentNode) | number: '1.1-1'}}</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Sum of child weights = {{ getSumChildWeights (currentNode) }}</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Score ~ {{ getScoreTotal(currentNode) | number: '1.1-1'}} /
+                  {{ getSumChildWeights(currentNode) }}
+                  = {{ getScoreTotal(currentNode) /  getSumChildWeights(currentNode) | number: '1.1-1'}}
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="closed-section"></div>
+    <fun-metric-chart [chartName]="currentNode.chartName" [modelName]="currentNode.metricModelName" [minimal]="false"></fun-metric-chart>
+    <div class="closed-section"></div>
+
+
+    <!--div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="container" style="background-color: whitesmoke">
+      <div *ngIf="currentNode.grid.length">
+        <table class="table">
+          <tr *ngFor="let row of currentNode.grid">
+            <td *ngFor="let node of row">
+              <div class="card">
+                <fun-metric-chart style="width: 50%" [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="'true'"></fun-metric-chart>
+              </div>
+            </td>
+          </tr>
+        </table>
+        <div class="closed-section"></div>
+      </div>
+    </div-->
+      <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="" style="background-color: whitesmoke">
+      <div *ngIf="currentNode.grid.length">
+          <div *ngFor="let row of currentNode.grid" class="row">
+            <div *ngFor="let node of row" class="col-lg-6 col-md-6 col-xl-6 col-xxl-6" [ngStyle]="{'max-width': miniGridMaxWidth}">
+              <div>
+                <fun-metric-chart style="max-height: 300px;" [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="'true'"></fun-metric-chart>
+              </div>
+            </div>
+          </div>
+        <div class="closed-section"></div>
+      </div>
+    </div>
+
+
+  </div>
+  </div>
+  </div>
+
+</div>

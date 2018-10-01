@@ -74,7 +74,11 @@ class LikvTemplate(object):
                      "init_lvs_bytes": init_lvs_bytes, "lvs_allocator_uuid": lvs_allocator_uuid,
                      "max_lvs_bytes": max_lvs_bytes, "lvs_vol_uuid": lvs_vol_uuid, "dir_uuid": lvs_dir_uuid,
                      'options': self.LIKV_COMPRESSION_ON if self.compression_enabled else self.LIKV_COMPRESSION_OFF,
-                     "lba_bytes_log2": 12}
+                     "lba_bytes_log2": 12,
+                     'zip_algorithm': 0,
+                     'zip_effort': 0,
+                     'zip_preamble_size': 0,
+                     'chunk_size': 8192}
         calc_output = self.storage_controller_obj.json_command(action=cal_vol_size, data=likv_data)
         fun_test.simple_assert(calc_output['status'], message="Execute likv_calc_vol_size")
         action_create = "create"
@@ -122,6 +126,7 @@ class LikvTemplate(object):
 
     def kv_generator(self, size=40, max_time=70):
         sample_size = 16  # fixed size usable chars
+        sample_size = sample_size if sample_size <= size else size
         usable_char = random.sample(ascii_letters, sample_size)
         timer = FunTimer(max_time)
         padding = size - sample_size
@@ -129,7 +134,7 @@ class LikvTemplate(object):
             random.shuffle(usable_char)
             char_str = ''.join(usable_char)
             if padding:
-                fs = "{}" * (padding)
+                fs = "{}" * padding
                 padding_string = fs.format(*(['0'] * padding))
                 data_str = "{0}{1}".format(padding_string, char_str)
             else:
@@ -144,8 +149,6 @@ if __name__ == "__main__":
                                                                      mode="likv"),
                             volume_info={},
                             likv_volume_id="10")
-    data = "012345678901234567890123456789012345 l6789012345678901234567890123456789"
-    key = likv_obj.get_sha256_hex(data)
-    val = likv_obj.get_hex(data)
-    print "key", key
-    print "val", val
+    p = likv_obj.kv_generator(size=(40))
+    print p.next()
+
