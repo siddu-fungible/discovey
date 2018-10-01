@@ -166,13 +166,11 @@
         <div class="closed-section"></div>
       </div>
     </div-->
-      <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="" style="background-color: whitesmoke">
+      <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class="" style="background-color: whitesmoke; padding-left: 20px; padding-right: 20px">
       <div *ngIf="currentNode.grid.length">
           <div *ngFor="let row of currentNode.grid" class="row">
-            <div *ngFor="let node of row" class="col-lg-6 col-md-6 col-xl-6 col-xxl-6" [ngStyle]="{'max-width': miniGridMaxWidth}">
-              <div>
+            <div *ngFor="let node of row" class="" [ngStyle]="{'width': miniGridMaxWidth, 'padding': '20px'}">
                 <fun-metric-chart style="max-height: 300px;" [chartName]="node.chartName" [modelName]="node.metricModelName" [minimal]="'true'"></fun-metric-chart>
-              </div>
             </div>
           </div>
         <div class="closed-section"></div>
