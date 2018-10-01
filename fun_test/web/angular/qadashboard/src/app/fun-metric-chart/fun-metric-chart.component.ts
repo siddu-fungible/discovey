@@ -566,6 +566,8 @@ export class FunMetricChartComponent implements OnInit {
               values.push(null);
             }
           }
+          this.chart1YaxisTitle = "Scores";
+          this.chart1XaxisTitle = "Date";
           this.values = [{data: values}];
           this.series = dateSeries;
           this.status = "idle";

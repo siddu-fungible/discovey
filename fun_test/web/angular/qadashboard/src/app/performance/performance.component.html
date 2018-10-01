@@ -77,14 +77,12 @@
     </table>
 
     <div *ngIf="showScoreInfo">
-      <h5>Score calculation</h5>
       <div [ngSwitch]="mode">
         <div *ngSwitchCase="modeType.ShowingAtomicMetric">
           <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
         </div>
         <div *ngSwitchCase="modeType.ShowingNonAtomicMetric">
           <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
-          <h5>Children</h5>
           <div *ngIf="currentNode">
             <table class="table table-nonfluid">
               <tr>
