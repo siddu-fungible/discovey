@@ -141,12 +141,12 @@ export class PerformanceComponent implements OnInit {
       let childInfo: ChildInfo = new ChildInfo();
       childInfo.weight = dagEntry.children_weights[Number(key)];
       childInfo.weightEditing = false;
-      childInfo.lastScore = 0;
+      childInfo.lastScore = dagEntry.children_info[Number(key)].last_two_scores[0];
       node.childrenInfo.set(Number(key), childInfo);
     });
     this.fetchScores(node);
     let keys = Array.from( node.childrenInfo.keys() );
-    console.log(keys);
+    // console.log(keys);
     return node;
   }
 
@@ -173,7 +173,7 @@ export class PerformanceComponent implements OnInit {
             scoreTotal += info.weight * currentNode.childrenScoreMap[childId];
         });*/
         currentNode.childrenInfo.forEach((childInfo, key) => {
-            scoreTotal += childInfo.weight * childInfo.lastScore;
+            scoreTotal += childInfo.weight * (childInfo.lastScore || 0);
         });
 
         /*
@@ -336,7 +336,7 @@ export class PerformanceComponent implements OnInit {
 
   walkDag(dagEntry: object, indent: number = 0): void {
     let thisFlatNode = null;
-    this.loggerService.log(dagEntry);
+    //this.loggerService.log(dagEntry);
     for (let metricId in dagEntry) {
       let numMetricId: number = Number(metricId); // TODO, why do we need this conversion
       let nodeInfo = dagEntry[numMetricId];
@@ -344,7 +344,7 @@ export class PerformanceComponent implements OnInit {
       this.addNodeToMap(numMetricId, newNode);
       thisFlatNode = this.getNewFlatNode(newNode, indent);
       this.flatNodes.push(thisFlatNode);
-      this.loggerService.log('Node:' + nodeInfo.chart_name);
+      //this.loggerService.log('Node:' + nodeInfo.chart_name);
       if (!nodeInfo.leaf) {
         let children = nodeInfo.children;
         children.forEach((cId) => {
