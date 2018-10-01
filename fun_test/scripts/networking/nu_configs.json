@@ -46,7 +46,7 @@
           "source_ip1": "1001::10:10:1:1",
           "destination_ip1": "2001::50:0:1:1",
           "source_ip2": "1001::10:10:2:1",
-          "destination_ip2": "2001::75:0:0:2",
+          "destination_ip2": "2001::75:0:2:2",
           "hnu_destination_ip1": "2001::18.0.6.2",
           "hu_destination_ip1": "2001::18:0:6:1"
         }
