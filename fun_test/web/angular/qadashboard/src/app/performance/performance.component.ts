@@ -8,6 +8,7 @@ class ChildInfo {
   lastScore: number;
   weight: number;
   weightEditing: boolean = false;
+  weightBeingEdited: number;
 };
 
 class Node {
@@ -92,7 +93,7 @@ export class PerformanceComponent implements OnInit {
 
   ngOnInit() {
     let myMap = new Map().set('a', 1).set('b', 2);
-    let keys = Array.from( myMap.keys() );
+    let keys = Array.from(myMap.keys());
     console.log(keys);
 
     // this.getLastStatusUpdateTime();
@@ -145,44 +146,44 @@ export class PerformanceComponent implements OnInit {
       node.childrenInfo.set(Number(key), childInfo);
     });
     this.fetchScores(node);
-    let keys = Array.from( node.childrenInfo.keys() );
+    let keys = Array.from(node.childrenInfo.keys());
     // console.log(keys);
     return node;
   }
 
-   getKeys(map){
+  getKeys(map) {
     //console.log(map.keys());
     let a = Array.from(map.keys());
     return a;
   }
 
   getSumChildWeights = (currentNode) => {
-        let sumOfWeights = 0;
-        currentNode.childrenInfo.forEach((childInfo, key) => {
-            sumOfWeights += childInfo.weight;
-        });
-        return sumOfWeights;
+    let sumOfWeights = 0;
+    currentNode.childrenInfo.forEach((childInfo, key) => {
+      sumOfWeights += childInfo.weight;
+    });
+    return sumOfWeights;
   };
 
   getScoreTotal = (currentNode) => {
-        let children = currentNode.children;
-        let scoreTotal = 0;
+    let children = currentNode.children;
+    let scoreTotal = 0;
 
 
-        /*angular.forEach(children, (info, childId) => {
-            scoreTotal += info.weight * currentNode.childrenScoreMap[childId];
-        });*/
-        currentNode.childrenInfo.forEach((childInfo, key) => {
-            scoreTotal += childInfo.weight * (childInfo.lastScore || 0);
-        });
+    /*angular.forEach(children, (info, childId) => {
+        scoreTotal += info.weight * currentNode.childrenScoreMap[childId];
+    });*/
+    currentNode.childrenInfo.forEach((childInfo, key) => {
+      scoreTotal += childInfo.weight * (childInfo.lastScore || 0);
+    });
 
-        /*
-        let lastDate = new Date(this.validDates.slice(-1)[0] * 1000);
-        let lastDateLower = this.getDateBound(lastDate, true);
-        let lastDateUpper = this.getDateBound(lastDate, false);*/
+    /*
+    let lastDate = new Date(this.validDates.slice(-1)[0] * 1000);
+    let lastDateLower = this.getDateBound(lastDate, true);
+    let lastDateUpper = this.getDateBound(lastDate, false);*/
 
-        return scoreTotal;
-    };
+    return scoreTotal;
+  };
 
   fetchScores(node) {
     let dateRange = this.getDateRange();
@@ -222,50 +223,50 @@ export class PerformanceComponent implements OnInit {
     return node;
   };
 
- evaluateScores = (node) => {
-   let [lastScore, penultimateScore] = node.last_two_scores;
-   lastScore = lastScore;
-   node.lastScore = lastScore;
-          try {
+  evaluateScores = (node) => {
+    let [lastScore, penultimateScore] = node.last_two_scores;
+    lastScore = lastScore;
+    node.lastScore = lastScore;
+    try {
 
-        node.trend = 0;
-        if (lastScore < penultimateScore) {
-          node.trend = -1;
-        }
-        if (lastScore > penultimateScore) {
-          node.trend = 1;
-        }
-        node.lastScore = lastScore;
-      }   catch (e) {
+      node.trend = 0;
+      if (lastScore < penultimateScore) {
+        node.trend = -1;
       }
- };
+      if (lastScore > penultimateScore) {
+        node.trend = 1;
+      }
+      node.lastScore = lastScore;
+    } catch (e) {
+    }
+  };
 
-     prepareGridNodes = (node) => {
-       node.grid = [];
-        let maxRowsInMiniChartGrid = 10;
-        let maxColumns = this.numGridColumns;
-        console.log("Prepare Grid nodes");
-        let tempGrid = [];
-        let rowIndex = 0;
-        let childNodes = [];
-        node.childrenInfo.forEach((childInfo, childId) => {
-          childNodes.push(this.nodeMap.get(Number(childId)));
-        });
+  prepareGridNodes = (node) => {
+    node.grid = [];
+    let maxRowsInMiniChartGrid = 10;
+    let maxColumns = this.numGridColumns;
+    console.log("Prepare Grid nodes");
+    let tempGrid = [];
+    let rowIndex = 0;
+    let childNodes = [];
+    node.childrenInfo.forEach((childInfo, childId) => {
+      childNodes.push(this.nodeMap.get(Number(childId)));
+    });
 
-        let oneRow = [];
-        childNodes.forEach((childNode) => {
-            oneRow.push(childNode);
-            if (oneRow.length === maxColumns) {
-              node.grid.push(oneRow);
-              oneRow = [];
-            }
-        });
-        if (oneRow.length) {
-          node.grid.push(oneRow);
-        }
+    let oneRow = [];
+    childNodes.forEach((childNode) => {
+      oneRow.push(childNode);
+      if (oneRow.length === maxColumns) {
+        node.grid.push(oneRow);
+        oneRow = [];
+      }
+    });
+    if (oneRow.length) {
+      node.grid.push(oneRow);
+    }
 
 
-    };
+  };
 
   /*
 
@@ -302,15 +303,15 @@ export class PerformanceComponent implements OnInit {
 
   getCurrentNodeScoreInfo = (node) => {
     this.currentNodeInfo = null;
-     if(node.metricModelName !== 'MetricContainer') {
-        //$scope.showingContainerNodeInfo = !$scope.showingContainerNodeInfo;
-       if (node.positive) {
-            this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/expected value) * 100&nbsp)/n";
-        } else {
-            this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
-        }
-        this.currentNodeInfo += "&nbsp, where n is the number of data-sets";
-     }
+    if (node.metricModelName !== 'MetricContainer') {
+      //$scope.showingContainerNodeInfo = !$scope.showingContainerNodeInfo;
+      if (node.positive) {
+        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/expected value) * 100&nbsp)/n";
+      } else {
+        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
+      }
+      this.currentNodeInfo += "&nbsp, where n is the number of data-sets";
+    }
     return this.currentNodeInfo;
   };
 
@@ -318,7 +319,7 @@ export class PerformanceComponent implements OnInit {
     this.showScoreInfo = !this.showScoreInfo;
 
 
-    };
+  };
 
   addNodeToMap(metricId: number, node: Node): void {
     this.nodeMap.set(Number(metricId), node);
@@ -442,6 +443,12 @@ export class PerformanceComponent implements OnInit {
   counter(i: number) {
     return new Array(i);
   }
+
+  editingWeightClick = (info) => {
+    info.weightEditing = true;
+    info.weightBeingEdited = info.weight;
+  };
+
 
   getDateBound = (dt, lower) => {
     let newDay = new Date(dt);
@@ -586,7 +593,7 @@ export class PerformanceComponent implements OnInit {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   };
 
-  expandNode = (flatNode, all=false) => {
+  expandNode = (flatNode, all = false) => {
     flatNode.collapsed = false;
     flatNode.hide = false;
     flatNode.children.forEach((child) => {
@@ -606,6 +613,20 @@ export class PerformanceComponent implements OnInit {
     this.expandNode(flatNode);
     this.prepareGridNodes(flatNode.node);
   };
+
+  submitWeightClick = (node, childId, info) => {
+    let payload: { [i: string]: string } = {metric_id: node.metricId, child_id: childId, weight: info.weightBeingEdited};
+    this.apiService.post('/metrics/update_child_weight', payload).subscribe((response) => {
+      info.weight = info.weightBeingEdited;
+    });
+    info.weightEditing = false;
+  };
+
+
+  closeEditingWeightClick = (info) => {
+         info.weightEditing = false;
+     };
+
 
 }
 
@@ -954,32 +975,11 @@ export class PerformanceComponent implements OnInit {
 //         return s;
 //     };
 //
-//     this.editingWeightClick = (info) => {
-//         info.editing = true;
-//         info.editingWeight = info.weight;
-//     };
+
 //
-//     this.submitWeightClick = (node, childId, info) => {
-//         let payload = {};
-//         payload.metric_id = node.metricId;
-//         payload.lineage = node.lineage;
-//         payload.child_id = childId;
-//         payload.weight = info.editingWeight;
-//         commonService.apiPost('/metrics/update_child_weight', payload).then((data) => {
-//             info.weight = info.editingWeight;
-//             this.clearNodeInfoCache();
-//             if (node.hasOwnProperty("lineage") && node.lineage.length > 0) {
-//                 this.refreshNode(this.getNode(node.lineage[0]));
-//             } else {
-//                 this.refreshNode(node);
-//             }
-//         });
-//         info.editing = false;
-//     };
+
 //
-//     this.closeEditingWeightClick = (info) => {
-//         info.editing = false;
-//     };
+
 //
 //
 //     this.collapseNode = (node) => {
