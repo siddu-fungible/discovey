@@ -47,6 +47,7 @@ export class FunMetricChartComponent implements OnInit {
   chart1XaxisTitle: any;
   chart1YaxisTitle: any;
   y1AxisTitle: any;
+  mileStoneIndex: number = null;
   public formatter: Function;
   public tooltip: Function;
 
@@ -187,6 +188,7 @@ export class FunMetricChartComponent implements OnInit {
 
   setDefault(): void {
     this.timeMode = "all";
+    this.mileStoneIndex = null;
   }
 
   toggleEdit() {
@@ -468,6 +470,11 @@ export class FunMetricChartComponent implements OnInit {
             let count = 0;
             let matchingDateFound = false;
             seriesDates.push(originalKeyList[keyList[i][0]]);
+            if (originalKeyList[keyList[i][0]].includes("2018-09-16")) { // Tape-out
+                    //console.log("Here: " + startIndex);
+                    this.mileStoneIndex = i;
+                  }
+
             let startIndex = keyList[i][0];
             let endIndex = keyList[i][1];
             while (startIndex >= endIndex) {
@@ -553,12 +560,19 @@ export class FunMetricChartComponent implements OnInit {
                 let dateTime: any = keyList[j];
                 let d = new Date(dateTime * 1000).toISOString();
                 if (d === series[startIndex]) {
+                  if (d.includes("2018-09-16")) { // Tape-out
+                    //console.log("Here: " + startIndex);
+                    this.mileStoneIndex = startIndex;
+                  }
                   total += response.data.scores[dateTime].score;
                   count++;
                 }
+
               }
               startIndex--;
+
             }
+
             if (count !== 0) {
               let average = total / count;
               values.push(average);

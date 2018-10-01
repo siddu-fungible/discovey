@@ -31,6 +31,7 @@ export class FunChartComponent implements OnInit {
   @Input() title: string;
   @Input() xAxisLabel: string;
   @Input() y1AxisLabel: string;
+  @Input() mileStoneIndex: number = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
   chart: any;
@@ -48,7 +49,9 @@ export class FunChartComponent implements OnInit {
 
   ngOnChanges() {
     var self = this;
-    this.chart = new Chart({
+
+
+    let chartOptions = {
       chart: {
         type: 'line'
       },
@@ -91,7 +94,23 @@ export class FunChartComponent implements OnInit {
         }
       },
       series: this.y1Values
-    });
+    };
+    if (this.mileStoneIndex) {
+          chartOptions.xAxis["plotLines"] = [{
+          color: 'red', // Color value
+          dashStyle: 'solid', // Style of the plot line. Default to solid
+          value: this.mileStoneIndex, // Value of where the line will appear
+          width: 2, // Width of the line
+          label: {
+            text: 'Tape-out',
+            verticalAlign: 'top',
+            textAlign: 'center'
+          }
+        }];
+
+    }
+
+    this.chart = new Chart(chartOptions);
   }
 
   ngOnInit() {
