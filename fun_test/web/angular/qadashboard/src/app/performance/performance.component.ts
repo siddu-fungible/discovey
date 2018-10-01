@@ -593,7 +593,12 @@ export class PerformanceComponent implements OnInit {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   };
 
-  expandNode = (flatNode, all = false) => {
+  openAtomicTab = () => {
+        let url = "/metrics/atomic/" + this.currentNode.chartName + "/" + this.currentNode.metricModelName;
+        window.open(url, '_blank');
+    };
+
+  expandNode = (flatNode, all=false) => {
     flatNode.collapsed = false;
     flatNode.hide = false;
     flatNode.children.forEach((child) => {

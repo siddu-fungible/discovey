@@ -46,15 +46,64 @@
   <br>
 
 </div>
+<div class="closed-section"></div>
 <!--<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">-->
   <!--<div *ngIf="!minimal">-->
     <!--<span>-->
       <!--<a [routerLink]="" (click)="showTables()">Show Tables </a>-->
-      <!--<a [routerLink]="" (click)=""showTables()"><span class="arrow-right"></span>-->
+      <!--<a [routerLink]="" (click)="showTables()"><span *ngIf="!showingTable" class="arrow-right"></span>-->
+        <!--<span *ngIf="showingTable" class="arrow-down"></span>-->
       <!--</a>-->
     <!--</span>-->
   <!--</div>-->
 <!--</div>-->
+<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+  <div *ngIf="!minimal">
+    <span>
+      <a [routerLink]="" (click)="showConfigure()">Configure </a>
+      <a [routerLink]="" (click)="showConfigure()"><span *ngIf="!showingConfigure" class="arrow-right"></span>
+        <span *ngIf="showingConfigure" class="arrow-down"></span>
+      </a>
+    </span>
+    <div *ngIf="showingConfigure">
+      <table class="table table-nonfluid table-borderless" *ngFor="let dataSet of previewDataSets">
+        <tr>
+          <th>Name</th>
+          <th>Field</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Expected</th>
+        </tr>
+        <tr>
+          <td>
+            {{ dataSet.name }}
+          </td>
+          <td>
+            {{ dataSet.output.name }}
+          </td>
+          <td>
+            <input type="number" [ngModel]="dataSet.output.min" ng-value="dataSet.output.min"
+                   style="width: 100px">
+          </td>
+          <td><input type="number" [ngModel]="dataSet.output.max" ng-value="dataSet.output.max"
+                     style="width: 100px"></td>
+          <td><input type="number" [ngModel]="dataSet.output.expected"
+                     ng-value="dataSet.output.expected"
+                     style="width: 100px"></td>
+        </tr>
+      </table>
+      <p><input type="checkbox" [checked]="negativeGradient" [ngModel]="inner.negativeGradient">&nbsp;Negative gradient
+      </p>
+      <p><input type="checkbox" [checked]="leaf" [ngModel]="inner.leaf">&nbsp;Leaf</p>
+      <div class="row">
+        <div style="padding: 10px;">
+          <button class="btn btn-success" (click)="submit()">Submit</button>
+          <a (click)="showConfigure()"> Cancel</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <!--<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">-->
 <!--<div>-->
 <!--<button [attr.id]="'show_tables_' + metricId" type="button" class="btn btn-lg btn-info collapsed" data-toggle="collapse" [attr.data-target]="'#showing_tables_' + metricId"-->

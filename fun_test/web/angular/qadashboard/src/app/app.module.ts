@@ -22,6 +22,7 @@ import { FormsModule } from '@angular/forms';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { AngularCollapseModule } from 'angular-collapse';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
     ChartModule,
     AngularFontAwesomeModule,
     FormsModule,
-    Angular2FontawesomeModule  // Add this line
+    Angular2FontawesomeModule,  // Add this line
+    AngularCollapseModule
   ],
 
   providers: [ApiService, LoggerService],

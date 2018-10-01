@@ -11,12 +11,14 @@ import {Observable} from "rxjs";
 export class FunMetricChartComponent implements OnInit {
   status: any;
   showingTable: boolean;
+  showingConfigure: boolean;
   chartInfo: any;
   @Input() chartName: any;
   @Input() modelName: any;
   @Input() minimal: boolean = false;
   headers: any;
   allData: any;
+  data: any = {};
   metricId: any;
   editingDescription: boolean = false;
   inner: any = {};
@@ -37,6 +39,7 @@ export class FunMetricChartComponent implements OnInit {
   title: any;
   series: any;
   filterDataSets: any;
+  isCollapsed: boolean = false;
 
   yValues: any = [];
   xValues: any = [];
@@ -69,6 +72,7 @@ export class FunMetricChartComponent implements OnInit {
 
     this.status = "idle";
     this.showingTable = false;
+    this.showingConfigure = false;
     this.setDefault();
     this.headers = null;
     this.metricId = -1;
@@ -122,6 +126,24 @@ export class FunMetricChartComponent implements OnInit {
       }
       return s;
 
+    }
+
+     isFieldRelevant(fieldName): boolean{
+        let relevant = false;
+        if (fieldName === "input_date_time") {
+            relevant = true;
+        }
+        this.filterDataSets.forEach((oneDataSet) => {
+            oneDataSet.inputs.foreach((value, key) => {
+                if (key === fieldName) {
+                    relevant = true;
+                }
+            });
+            if (fieldName === oneDataSet.output.name) {
+                relevant = true;
+            }
+        });
+        return relevant;
     }
 
     tooltipFormatter(x, y): any {
@@ -284,6 +306,10 @@ export class FunMetricChartComponent implements OnInit {
 
   showTables(): void {
     this.showingTable = !this.showingTable;
+  }
+
+  showConfigure(): void {
+    this.showingConfigure = !this.showingConfigure;
   }
 
   setTimeMode(mode): void {
@@ -516,6 +542,10 @@ export class FunMetricChartComponent implements OnInit {
         this.series = seriesDates;
         this.values = chartDataSets;
         this.headers = this.tableInfo;
+        // this.headers.foreach((key, value) => {
+        //   if(this.isFieldRelevant(key))
+        //
+        // });
       }, error => {
         this.loggerService.error("fetchMetricsData");
       });
