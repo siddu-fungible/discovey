@@ -9,13 +9,14 @@ import {Observable} from "rxjs";
   styleUrls: ['./fun-metric-chart.component.css']
 })
 export class FunMetricChartComponent implements OnInit {
+  @Input() chartName: any;
+  @Input() modelName: any;
+  @Input() minimal: boolean = false;
+
   status: any;
   showingTable: boolean;
   showingConfigure: boolean;
   chartInfo: any;
-  @Input() chartName: any;
-  @Input() modelName: any;
-  @Input() minimal: boolean = false;
   headers: any;
   allData: any;
   data: any = {};
@@ -39,66 +40,39 @@ export class FunMetricChartComponent implements OnInit {
   title: any;
   series: any;
   filterDataSets: any;
-  isCollapsed: boolean = false;
-
-  yValues: any = [];
-  xValues: any = [];
-  chartTitle: string;
-  xAxisLabel: string;
-  yAxisLabel: string;
-
   chart1XaxisTitle: any;
   chart1YaxisTitle: any;
   y1AxisTitle: any;
   mileStoneIndex: number = null;
+
   public formatter: Function;
   public tooltip: Function;
-
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) {
   }
 
   ngOnInit() {
-
-    this.yValues.push({name: 'series 1', data: [1, 2, 3, 4, 5]});
-    this.yValues.push({name: 'series 2', data: [6, 7, 8, 9, 10]});
-    this.yValues.push({name: 'series 3', data: [11, 12, 13, 14, 15]});
-    this.yValues.push({name: 'series 4', data: [16, 17, 18, 19, 20]});
-    this.yValues.push({name: 'series 5', data: [21, 22, 23, 24, 25]});
-    this.xValues.push([0, 1, 2, 3, 4]);
-    this.chartTitle = "Funchart";
-    this.xAxisLabel = "Date";
-    this.yAxisLabel = "Range";
-
     this.status = "idle";
     this.showingTable = false;
     this.showingConfigure = false;
-    this.setDefault();
     this.headers = null;
     this.metricId = -1;
     this.editingDescription = false;
     this.inner = {};
     this.inner.currentDescription = "TBD";
     this.currentDescription = "---";
-
+    this.values = null;
+    this.charting = true;
+    this.buildInfo = null;
+    this.setDefault();
 
     if (this.chartName) {
       this.fetchInfo();
     }
 
-    this.values = null;
-    this.charting = true;
-    this.buildInfo = null;
     this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
-    // if (this.pointClickCallback) {
-    //   this.pointClickCallback = (point) => {
-    //     if (!$attrs.pointClickCallback) return null;
-    //     this.pointClickCallback()(point);
-    //   };
-    // }
-
   }
 
   ngOnChanges() {
@@ -106,87 +80,83 @@ export class FunMetricChartComponent implements OnInit {
     this.fetchInfo();
   }
 
-   public xAxisFormatter(value): any {
-      let s = "Error";
-      const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      let r = /(\d{4})-(\d{2})-(\d{2})/g;
-      let match = r.exec(value);
-
-      if (this.timeMode === "month") {
-        if (match) {
-          let month = parseInt(match[2]);
-          s = monthNames[month];
-        }
-      }
-      else {
-        if (match) {
-          s = match[2] + "/" + match[3];
-        }
-      }
-      return s;
-
-    }
-
-     isFieldRelevant(fieldName): boolean{
-        let relevant = false;
-        if (fieldName === "input_date_time") {
-            relevant = true;
-        }
-        this.filterDataSets.forEach((oneDataSet) => {
-            Object.keys(oneDataSet.inputs).forEach((key) => {
-                if (key === fieldName) {
-                    relevant = true;
-                }
-            });
-            if (fieldName === oneDataSet.output.name) {
-                relevant = true;
-            }
-        });
-        return relevant;
-    }
-
-    tooltipFormatter(x, y): any {
-      let softwareDate = "Unknown";
-      let hardwareVersion = "Unknown";
-      let sdkBranch = "Unknown";
-      let gitCommit = "Unknown";
-      let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-      let match = r.exec(x);
-      let key = "";
+  //formats the string displayed on xaxis of the chart
+  xAxisFormatter(value): string {
+    let s = "Error";
+    const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let r = /(\d{4})-(\d{2})-(\d{2})/g;
+    let match = r.exec(value);
+    if (this.timeMode === "month") {
       if (match) {
-        key = match[1];
+        let month = parseInt(match[2]);
+        s = monthNames[month];
       }
-      else {
-        let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
-        match = reg.exec(x);
-        if (match) {
-          key = match[1].replace('T', ' ');
-        }
+    } else {
+      if (match) {
+        s = match[2] + "/" + match[3];
       }
-      let s = "Error";
-
-      if (this.buildInfo && key in this.buildInfo) {
-        softwareDate = this.buildInfo[key]["software_date"];
-        hardwareVersion = this.buildInfo[key]["hardware_version"];
-        sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
-        s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
-        s += "<b>Software date:</b> " + softwareDate + "<br>";
-        s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
-        s += "<b>Git commit:</b> " + this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "") + "<br>";
-        s += "<b>Value:</b> " + y + "<br>";
-      } else {
-        s = "<b>Value:</b> " + y + "<br>";
-      }
-
-      return s;
     }
+    return s;
+  }
 
-  fetchInfo() {
+  //checks if the given fieldname is relevant to display in show tables
+  isFieldRelevant(fieldName): boolean {
+    let relevant = false;
+    if (fieldName === "input_date_time") {
+      relevant = true;
+    }
+    this.filterDataSets.forEach((oneDataSet) => {
+      Object.keys(oneDataSet.inputs).forEach((key) => {
+        if (key === fieldName) {
+          relevant = true;
+        }
+      });
+      if (fieldName === oneDataSet.output.name) {
+        relevant = true;
+      }
+    });
+    return relevant;
+  }
+
+  //formats the tooltip shown in the charts
+  tooltipFormatter(x, y): string {
+    let softwareDate = "Unknown";
+    let hardwareVersion = "Unknown";
+    let sdkBranch = "Unknown";
+    let gitCommit = "Unknown";
+    let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
+    let match = r.exec(x);
+    let key = "";
+    if (match) {
+      key = match[1];
+    } else {
+      let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
+      match = reg.exec(x);
+      if (match) {
+        key = match[1].replace('T', ' ');
+      }
+    }
+    let s = "Error";
+    if (this.buildInfo && key in this.buildInfo) {
+      softwareDate = this.buildInfo[key]["software_date"];
+      hardwareVersion = this.buildInfo[key]["hardware_version"];
+      sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
+      s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
+      s += "<b>Software date:</b> " + softwareDate + "<br>";
+      s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
+      s += "<b>Git commit:</b> " + this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "") + "<br>";
+      s += "<b>Value:</b> " + y + "<br>";
+    } else {
+      s = "<b>Value:</b> " + y + "<br>";
+    }
+    return s;
+  }
+
+  // populates chartInfo and fetches metrics data
+  fetchInfo(): void {
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
-
     this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
       this.chartInfo = response.data;
       if (this.chartInfo !== null) {
@@ -205,9 +175,9 @@ export class FunMetricChartComponent implements OnInit {
     }, error => {
       this.loggerService.error("fun_metric_chart: chart_info");
     });
-
   }
 
+  //sets the state of the component to default values
   setDefault(): void {
     this.timeMode = "all";
     this.mileStoneIndex = null;
@@ -215,21 +185,17 @@ export class FunMetricChartComponent implements OnInit {
     this.showingConfigure = false;
   }
 
+  //closes the div of show tables
   close() {
     this.showingTable = false;
   }
 
+  //toggles the div of description below the chart
   toggleEdit() {
     this.editingDescription = !this.editingDescription;
   }
 
-  changeClass(divId, buttonId): void {
-    let divIdClass = window.document.querySelector(divId);
-    divIdClass.removeClass('in');
-    let collapseArrow = window.document.querySelector(buttonId);
-    collapseArrow.addClass('collapsed');
-  }
-
+  //shows the shortened date in show tables
   cleanValue(key, value): any {
     try {
       if (key === "input_date_time") {
@@ -244,13 +210,11 @@ export class FunMetricChartComponent implements OnInit {
         return value;
       }
     } catch (e) {
-
     }
-
   }
 
+  //saves the edited data back to the DB
   submit(): void {
-    //this.previewDataSets = this.copyChartInfo.data_sets;
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
@@ -270,54 +234,26 @@ export class FunMetricChartComponent implements OnInit {
     this.editingDescription = false;
   }
 
-  fetchChartInfo(): any {
-    let payload = {};
-    payload["metric_model_name"] = this.modelName;
-    payload["chart_name"] = this.chartName;
-
-    if (!this.chartInfo) {
-      return this.apiService.post("/metrics/chart_info", payload).subscribe((chartInfo) => {
-        this.chartInfo = chartInfo;
-        if (this.chartInfo !== null) {
-          this.previewDataSets = this.chartInfo.data_sets;
-          this.currentDescription = this.chartInfo.description;
-          this.inner.currentDescription = this.currentDescription;
-          this.negativeGradient = !this.chartInfo.positive;
-          this.inner.negativeGradient = this.negativeGradient;
-          this.leaf = this.chartInfo.leaf;
-          this.inner.leaf = this.leaf;
-          this.status = "idle";
-        }
-        return this.chartInfo;
-      }, error => {
-        this.loggerService.error("fun_metric_chart: chart_info");
-      });
-    } else {
-      return this.chartInfo;
-    }
-
-  }
-
+  //populates buildInfo
   fetchBuildInfo(): void {
-    //this.apiService.get('/regression/jenkins_job_id_maps').subscribe((data) => {
-      this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
-        this.buildInfo = response.data;
-      }, error => {
-        this.loggerService.error("regression/build_to_date_map");
-      });
-    /*}, error => {
-      this.loggerService.error("fetchBuildInfo");
-    });*/
+    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
+      this.buildInfo = response.data;
+    }, error => {
+      this.loggerService.error("regression/build_to_date_map");
+    });
   }
 
+  //opens and closes the show tables panel
   showTables(): void {
     this.showingTable = !this.showingTable;
   }
 
+  //opens and closes the show configure panel
   showConfigure(): void {
     this.showingConfigure = !this.showingConfigure;
   }
 
+  //invoked when timeMode changes
   setTimeMode(mode): void {
     this.timeMode = mode;
     if (this.chartInfo) {
@@ -327,7 +263,8 @@ export class FunMetricChartComponent implements OnInit {
     }
   }
 
-  getDatesByTimeMode(dateList) {
+  //returns the range of dates according to the time mode
+  getDatesByTimeMode(dateList): any {
     let len = dateList.length;
     let filteredDate = [];
     let result = [[len, 0]];
@@ -341,8 +278,7 @@ export class FunMetricChartComponent implements OnInit {
         }
       }
       result = filteredDate.reverse();
-    }
-    else if (this.timeMode === "month") {
+    } else if (this.timeMode === "month") {
       let i = len - 1;
       let startIndex = len - 1;
       let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
@@ -361,8 +297,7 @@ export class FunMetricChartComponent implements OnInit {
         i--;
       }
       result = filteredDate.reverse();
-    }
-    else {
+    } else {
       for (let i = len - 1; i >= 0; i--) {
         filteredDate.push([i, i]);
       }
@@ -371,18 +306,8 @@ export class FunMetricChartComponent implements OnInit {
     return result;
   }
 
-  shortenKeyList(keyList: any) {
-    let newList = [];
-    for (let key of keyList) {
-      let r = /(\d{4})-(\d{2})-(\d{2})/g;
-      let match = r.exec(key);
-      let s = match[2] + "/" + match[3];
-      newList.push(s)
-    }
-    return newList;
-  }
-
-  fixMissingDates(dates) {
+  //check for all dates and if not present add the respective date to the list
+  fixMissingDates(dates): any {
     let firstString = dates[0].replace(/\s+/g, 'T');
     //firstString = firstString.replace('+', 'Z');
     //firstString = firstString.substring(0, firstString.indexOf('Z'));
@@ -421,12 +346,14 @@ export class FunMetricChartComponent implements OnInit {
     return finalDates;
   }
 
+  //check if both the dates are same
   sameDay(d1, d2) {
     return d1.getFullYear() === d2.getFullYear() &&
       d1.getMonth() === d2.getMonth() &&
       d1.getDate() === d2.getDate();
   }
 
+  //fetch the data from backend
   fetchData(metricModelName, chartName, chartInfo, previewDataSets, tableInfo) {
     let payload = {};
     payload["metric_model_name"] = metricModelName;
@@ -438,217 +365,185 @@ export class FunMetricChartComponent implements OnInit {
       this.metricId = chartInfo["metric_id"];
     }
     if (metricModelName !== 'MetricContainer') {
-      this.status = "idle";
-      this.tableInfo = tableInfo;
+      this.fetchLeafData(chartInfo, previewDataSets, tableInfo, payload);
+    } else {
+      this.fetchContainerData(payload);
+    }
+  }
 
-      let filterDataSets = [];
-      if (previewDataSets) {
-        filterDataSets = previewDataSets;
-      } else {
-        //console.log("Chart Info:" + chartInfo);
-        if (chartInfo) {
-          filterDataSets = chartInfo['data_sets'];
-          //console.log("C DS:" + chartInfo.data_sets);
+  //fetching leaf data
+  fetchLeafData(chartInfo, previewDataSets, tableInfo, payload): void {
+    this.status = "idle";
+    this.tableInfo = tableInfo;
+    let filterDataSets = [];
+    if (previewDataSets) {
+      filterDataSets = previewDataSets;
+    } else {
+      if (chartInfo) {
+        filterDataSets = chartInfo['data_sets'];
+      }
+    }
+    this.filterDataSets = filterDataSets;
+    this.status = "Fetch data";
+    this.apiService.post("/metrics/data", payload).subscribe((response: any) => {
+      let allDataSets = response.data;
+      self.status = "idle";
+      if (allDataSets.length === 0) {
+        this.values = null;
+        return;
+      }
+      let keyList = [];
+      let keyValue = {};
+      for (let oneDataSet of allDataSets) {
+        for (let oneRecord of oneDataSet) {
+          keyList.push(oneRecord.input_date_time.toString());
+          keyValue[oneRecord.input_date_time.toString()] = oneRecord;
         }
       }
-      this.filterDataSets = filterDataSets;
-
-      this.status = "Fetch data";
-
-      this.apiService.post("/metrics/data", payload).subscribe((response: any) => {
-        let allDataSets = response.data;
-        self.status = "idle";
-        if (allDataSets.length === 0) {
-          this.values = null;
-          return;
-        }
-
-        let keySet = new Set();
-        /*
-        let firstDataSet = allDataSets[0];
-        firstDataSet.forEach((oneRecord) => {
-            keySet.add(oneRecord.input_date_time.toString());
-        });*/
-        for (let oneDataSet of allDataSets) {
-          for (let oneRecord of oneDataSet) {
-            keySet.add(oneRecord.input_date_time.toString());
+      keyList.sort();
+      keyList = this.fixMissingDates(keyList);
+      let originalKeyList = keyList;
+      keyList = this.getDatesByTimeMode(keyList);
+      let chartDataSets = [];
+      let seriesDates = [];
+      this.allData = allDataSets;
+      this.status = "Preparing chart data-sets";
+      for (let j = 0; j < this.filterDataSets.length; j++) {
+        let oneChartDataArray = [];
+        for (let i = 0; i < keyList.length; i++) {
+          let output = null;
+          let total = 0;
+          let count = 0;
+          let startIndex = keyList[i][0];
+          let endIndex = keyList[i][1];
+          let matchingDateFound = false;
+          seriesDates.push(originalKeyList[startIndex]);
+          if (originalKeyList[startIndex].includes("2018-09-16")) { // Tape-out
+            this.mileStoneIndex = startIndex;
           }
-        }
-        // allDataSets.foreach((oneDataSet) => {
-        //   oneDataSet.foreach((oneRecord) => {
-        //     keySet.add(oneRecord.input_date_time.toString());
-        //   });
-        // });
-
-        let keyList = Array.from(keySet);
-        keyList.sort();
-        this.shortenKeyList(keyList);
-        keyList = this.fixMissingDates(keyList);
-        let originalKeyList = keyList;
-        keyList = this.getDatesByTimeMode(keyList);
-
-        let chartDataSets = [];
-        let seriesDates = [];
-        let dataSetIndex = 0;
-
-        this.allData = allDataSets;
-        this.status = "Preparing chart data-sets";
-        for (let oneDataSet of allDataSets) {
-
-          let oneChartDataArray = [];
-          for (let i = 0; i < keyList.length; i++) {
-            let output = null;
-            let total = 0;
-            let count = 0;
-            let matchingDateFound = false;
-            seriesDates.push(originalKeyList[keyList[i][0]]);
-            if (originalKeyList[keyList[i][0]].includes("2018-09-16")) { // Tape-out
-                    //console.log("Here: " + startIndex);
-                    this.mileStoneIndex = i;
-                  }
-
-            let startIndex = keyList[i][0];
-            let endIndex = keyList[i][1];
-            while (startIndex >= endIndex) {
-              for (let j = 0; j < oneDataSet.length; j++) {
-                let oneRecord = oneDataSet[j];
-                if (oneRecord.input_date_time.toString() === originalKeyList[startIndex]) {
-                  matchingDateFound = true;
-                  let outputName = this.filterDataSets[dataSetIndex].output.name;
-                  output = oneRecord[outputName];
-                  total += output;
-                  count++;
-                  if (chartInfo && chartInfo.y1_axis_title) {
-                    this.chart1YaxisTitle = chartInfo.y1_axis_title;
-                  } else {
-                    this.chart1YaxisTitle = tableInfo[outputName].verbose_name;
-                  }
-                  if (this.y1AxisTitle) {
-                    this.chart1YaxisTitle = this.y1AxisTitle;
-                  }
-                  this.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
-
-                }
+          while (startIndex >= endIndex) {
+            if (keyValue[originalKeyList[startIndex]]) {
+              let oneRecord = keyValue[originalKeyList[startIndex]];
+              matchingDateFound = true;
+              let outputName = this.filterDataSets[j].output.name;
+              output = oneRecord[outputName];
+              total += output;
+              count++;
+              if (chartInfo && chartInfo.y1_axis_title) {
+                this.chart1YaxisTitle = chartInfo.y1_axis_title;
+              } else {
+                this.chart1YaxisTitle = tableInfo[outputName].verbose_name;
               }
-              startIndex--;
+              if (this.y1AxisTitle) {
+                this.chart1YaxisTitle = this.y1AxisTitle;
+              }
+              this.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
             }
-            if (count !== 0) {
-              output = total / count;
-            }
-            let thisMinimum = this.filterDataSets[dataSetIndex].output.min;
-            let thisMaximum = this.filterDataSets[dataSetIndex].output.max;
-            oneChartDataArray.push(this.getValidatedData(output, thisMinimum, thisMaximum));
+            startIndex--;
           }
-          let oneChartDataSet = {name: this.filterDataSets[dataSetIndex].name, data: oneChartDataArray};
-          chartDataSets.push(oneChartDataSet);
-          dataSetIndex++;
+          if (count !== 0) {
+            output = total / count;
+          }
+          let thisMinimum = this.filterDataSets[j].output.min;
+          let thisMaximum = this.filterDataSets[j].output.max;
+          oneChartDataArray.push(this.getValidatedData(output, thisMinimum, thisMaximum));
         }
-
-        this.status = "idle";
-        this.series = seriesDates;
-        this.values = chartDataSets;
-        this.headers = this.tableInfo;
-        this.data["rows"] = [];
-        this.data["headers"] = [];
-        this.data["all"] = true;
-        this.data["pageSize"] = 10;
-        this.data["currentPageIndex"] = 1;
-        Object.keys(this.headers).forEach((key) => {
-          if(this.isFieldRelevant(key)) {
-            this.data["headers"].push(this.headers[key].verbose_name);
-          }
-
-        });
-        for(let i = 0; i < this.allData.length; i++) {
-          let dataSet = this.allData[i];
-          let index = 0;
-          for(let rowData of dataSet) {
-            let row = [];
+        let oneChartDataSet = {name: this.filterDataSets[j].name, data: oneChartDataArray};
+        chartDataSets.push(oneChartDataSet);
+      }
+      this.status = "idle";
+      this.series = seriesDates;
+      this.values = chartDataSets;
+      this.headers = this.tableInfo;
+      //this.data has values for the fun table
+      this.data["rows"] = [];
+      this.data["headers"] = [];
+      this.data["all"] = true;
+      this.data["pageSize"] = 10;
+      this.data["currentPageIndex"] = 1;
+      Object.keys(this.headers).forEach((key) => {
+        if (this.isFieldRelevant(key)) {
+          this.data["headers"].push(this.headers[key].verbose_name);
+        }
+      });
+        let dataSet = this.allData[0];
+        let index = 0;
+        for (let rowData of dataSet) {
+          let row = [];
           Object.keys(this.headers).forEach((key) => {
-            if(this.isFieldRelevant(key)) {
+            if (this.isFieldRelevant(key)) {
               let value = rowData[key];
               row.push(this.cleanValue(key, value));
             }
           });
           this.data["rows"][index++] = row;
-          }
         }
-        this.data["totalLength"] = this.data["rows"].length;
-      }, error => {
-        this.loggerService.error("fetchMetricsData");
-      });
-    }
-    else {
-      this.status = "Fetch data";
-      console.log("Fetch Scores");
-      this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
-        self.status = "idle";
-        if (response.data.length === 0) {
-          this.values = null;
-          return;
-        }
-
-        let values = [];
-        let series = [];
-        let keyList = Object.keys(response.data.scores);
-        keyList.sort();
-        for (let dateTime of keyList) {
-          //values.push(data.scores[dateTime].score);
-          let d = new Date(1000 * Number(dateTime)).toISOString();
-          //let dateSeries = d.setUTCSeconds(dateTime);
-          series.push(d);
-        }
-
-        this.shortenKeyList(series);
-        if (series.length === 0) {
-          this.series = null;
-          this.values = null;
-        } else {
-          series = this.fixMissingDates(series);
-          let dateSeries = [];
-          let seriesRange = this.getDatesByTimeMode(series);
-          for (let i = 0; i < seriesRange.length; i++) {
-            let startIndex = seriesRange[i][0];
-            let endIndex = seriesRange[i][1];
-            let count = 0;
-            let total = 0;
-            dateSeries.push(series[startIndex]);
-            while (startIndex >= endIndex) {
-              for (let j = 0; j < keyList.length; j++) {
-                let dateTime: any = keyList[j];
-                let d = new Date(dateTime * 1000).toISOString();
-                if (d === series[startIndex]) {
-                  if (d.includes("2018-09-16")) { // Tape-out
-                    //console.log("Here: " + startIndex);
-                    this.mileStoneIndex = startIndex;
-                  }
-                  total += response.data.scores[dateTime].score;
-                  count++;
-                }
-
-              }
-              startIndex--;
-
-            }
-
-            if (count !== 0) {
-              let average = total / count;
-              values.push(average);
-            } else {
-              values.push(null);
-            }
-          }
-          this.chart1YaxisTitle = "Scores";
-          this.chart1XaxisTitle = "Date";
-          this.values = [{data: values}];
-          this.series = dateSeries;
-          this.status = "idle";
-          //let keyList = Array.from(keySet);
-        }
-      });
-    }
+      this.data["totalLength"] = this.data["rows"].length;
+    }, error => {
+      this.loggerService.error("fetchMetricsData");
+    });
   }
 
+  //fetching container data
+  fetchContainerData(payload): void {
+    this.status = "Fetch data";
+    console.log("Fetch Scores");
+    this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
+      self.status = "idle";
+      if (response.data.length === 0) {
+        this.values = null;
+        return;
+      }
+      let values = [];
+      let series = [];
+      let keyValue = {};
+      let keyList = Object.keys(response.data.scores);
+      keyList.sort();
+      for (let dateTime of keyList) {
+        let d = new Date(1000 * Number(dateTime)).toISOString();
+        series.push(d);
+        keyValue[d] = response.data.scores[dateTime].score;
+      }
+      if (series.length === 0) {
+        this.series = null;
+        this.values = null;
+      } else {
+        series = this.fixMissingDates(series);
+        let dateSeries = [];
+        let seriesRange = this.getDatesByTimeMode(series);
+        for (let i = 0; i < seriesRange.length; i++) {
+          let startIndex = seriesRange[i][0];
+          let endIndex = seriesRange[i][1];
+          let count = 0;
+          let total = 0;
+          dateSeries.push(series[startIndex]);
+          if (series[startIndex].includes("2018-09-16")) { // Tape-out
+                  this.mileStoneIndex = startIndex;
+                }
+          while (startIndex >= endIndex) {
+              if (keyValue[series[startIndex]] != -1) {
+                total += keyValue[series[startIndex]];
+                count++;
+              }
+            startIndex--;
+           }
+          if (count !== 0) {
+            let average = total / count;
+            values.push(average);
+          } else {
+            values.push(null);
+          }
+        }
+        this.chart1YaxisTitle = "Scores";
+        this.chart1XaxisTitle = "Date";
+        this.values = [{data: values}];
+        this.series = dateSeries;
+        this.status = "idle";
+      }
+    });
+  }
+
+  //called from fetchInfo and setTimeMode
   fetchMetricsData(metricModelName, chartName, chartInfo, previewDataSets) {
     this.title = chartName;
     var self = this;
@@ -658,19 +553,17 @@ export class FunMetricChartComponent implements OnInit {
     var self = this;
     if (metricModelName !== 'MetricContainer') {
       return this.apiService.get("/metrics/describe_table/" + metricModelName).subscribe(function (response) {
-        //console.log("FunMetric: Describe table: " + metricModelName);
         self.tableInfo = response.data;
-        // return self.tableInfo;
         self.fetchData(metricModelName, chartName, chartInfo, previewDataSets, self.tableInfo);
       }, error => {
         this.loggerService.error("fetchMetricsData");
       })
     } else {
-      // return this.tableInfo;
       this.fetchData(metricModelName, chartName, chartInfo, previewDataSets, this.tableInfo);
     }
   }
 
+  //creates the point values for the funchart
   getValidatedData(data, minimum, maximum): any {
     let result = data;
     if (data < 0) {
@@ -684,11 +577,4 @@ export class FunMetricChartComponent implements OnInit {
     };
     return result;
   }
-
-  counter(num: number): number[] {
-    let newArray = new Array(num);
-    return newArray;
-  }
-
-
 }

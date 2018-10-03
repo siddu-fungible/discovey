@@ -7,25 +7,6 @@ import {Chart} from 'angular-highcharts';
   styleUrls: ['./fun-chart.component.css']
 })
 export class FunChartComponent implements OnInit {
-  // autoUpdate: any;
-  // charting: any;
-  // @Input() values: any[];
-  // updateChartsNow: any;
-  // showLegend: any;
-  // series: any;
-  // title: any;
-  // minimal: any;
-  // chartType: any;
-  // colors: any;
-  // width: any;
-  // height: any;
-  // xaxisTitle: any;
-  // yaxisTitle: any;
-  // pointClickCallback: any;
-  // xaxisFormatter: any;
-  // tooltipFormatter: any;
-  //
-  // genId: any = null;
   @Input() y1Values: any[];
   @Input() xValues: any[];
   @Input() title: string;
@@ -36,21 +17,11 @@ export class FunChartComponent implements OnInit {
   @Input() public tooltipFormatter: Function;
   chart: any;
 
-  // @Input() xValues: any[];
-  // @Input() yValues: any[];
-
-
-  add() {
-    this.chart.addPoint(Math.floor(Math.random() * 10));
-  }
-
   constructor() {
   }
 
   ngOnChanges() {
     var self = this;
-
-
     let chartOptions = {
       chart: {
         type: 'line'
@@ -96,35 +67,22 @@ export class FunChartComponent implements OnInit {
       series: this.y1Values
     };
     if (this.mileStoneIndex) {
-          chartOptions.xAxis["plotLines"] = [{
-          color: 'red', // Color value
-          dashStyle: 'solid', // Style of the plot line. Default to solid
-          value: this.mileStoneIndex, // Value of where the line will appear
-          width: 2, // Width of the line
-          label: {
-            text: 'Tape-out',
-            verticalAlign: 'top',
-            textAlign: 'center'
-          }
-        }];
-
+      chartOptions.xAxis["plotLines"] = [{
+        color: 'red', // Color value
+        dashStyle: 'solid', // Style of the plot line. Default to solid
+        value: this.mileStoneIndex, // Value of where the line will appear
+        width: 2, // Width of the line
+        label: {
+          text: 'Tape-out',
+          verticalAlign: 'top',
+          textAlign: 'center'
+        }
+      }];
     }
-
     this.chart = new Chart(chartOptions);
   }
 
   ngOnInit() {
   }
-
-  // getRandomId() {
-  //   if (!this.genId) {
-  //     let min = Math.ceil(0);
-  //     let max = Math.floor(10000);
-  //     this.genId = Math.floor(Math.random() * (max - min + 1)) + min;
-  //     return this.genId;
-  //   } else {
-  //     return this.genId;
-  //   }
-  // }
 
 }
