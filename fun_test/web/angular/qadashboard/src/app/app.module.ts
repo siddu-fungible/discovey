@@ -13,7 +13,6 @@ import {ApiService} from "./services/api/api.service";
 import {LoggerService} from "./services/logger/logger.service";
 import { TestComponent } from './test/test.component';
 import { FunTableFilterPipe } from './pipes/fun-table-filter.pipe';
-import { ChartComponent } from './chart/chart.component';
 import { FunChartComponent } from './fun-chart/fun-chart.component';
 import { ChartModule } from 'angular-highcharts';
 import { FunMetricChartComponent } from './fun-metric-chart/fun-metric-chart.component';
@@ -23,6 +22,7 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
+import { CreateChartComponent } from './create-chart/create-chart.component';
 
 @NgModule({
   declarations: [
@@ -32,10 +32,10 @@ import { AngularCollapseModule } from 'angular-collapse';
     FunTableComponent,
     TestComponent,
     FunTableFilterPipe,
-    ChartComponent,
     FunChartComponent,
     FunMetricChartComponent,
-    SafeHtmlPipe
+    SafeHtmlPipe,
+    CreateChartComponent
   ],
   imports: [
     BsDropdownModule,

@@ -360,6 +360,17 @@ def status(request):
 
 @csrf_exempt
 @api_safe_json_response
+def metric_by_id(request):
+    request_json = json.loads(request.body)
+    metric_id = request_json["metric_id"]
+    chart = MetricChart.objects.get(metric_id=metric_id)
+    result = {}
+    result["metric_model_name"] = chart.metric_model_name
+    result["chart_name"] = chart.chart_name
+    return result
+
+@csrf_exempt
+@api_safe_json_response
 def data(request):
     request_json = json.loads(request.body)
     metric_model_name = request_json["metric_model_name"]

@@ -139,8 +139,7 @@
         <br>
         <div class="closed-section"></div>
         <!-- Fun Metric Chart component -->
-        <fun-metric-chart [chartName]="currentNode.chartName" [modelName]="currentNode.metricModelName"
-                          [minimal]="false"></fun-metric-chart>
+        <fun-metric-chart [id]="currentNode.metricId"></fun-metric-chart>
         <div class="closed-section"></div>
         <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class=""
              style="background-color: whitesmoke; padding-left: 20px; padding-right: 20px">
@@ -148,8 +147,7 @@
             <div *ngFor="let row of currentNode.grid" class="row">
               <div *ngFor="let node of row" class="" [ngStyle]="{'width': miniGridMaxWidth, 'padding': '20px'}">
                 <!-- Fun Metric Chart component -->
-                <fun-metric-chart style="max-height: 300px;" [chartName]="node.chartName"
-                                  [modelName]="node.metricModelName" [minimal]="'true'"></fun-metric-chart>
+                <fun-metric-chart style="max-height: 300px;" [id]="node.metricId" [minimal]="'true'"></fun-metric-chart>
               </div>
             </div>
             <div class="closed-section"></div>

@@ -29,7 +29,7 @@ export class FunTableComponent implements OnInit {
 
   constructor(private apiService: ApiService, private pagerService: PagerService, private logger: LoggerService,
               private changeDetector: ChangeDetectorRef) {
-    this.logger.log("FunTableComponent init");
+    console.log("FunTableComponent init");
   }
 
   pager: any = {};
@@ -62,7 +62,7 @@ export class FunTableComponent implements OnInit {
 
   ngOnChanges() {
     if (this.data.currentPageIndex < 0) {
-      this.logger.fatal("Page Index is less than 1");
+      this.logger.error("Page Index is less than 1");
     } else {
       this.rows = this.data.rows;
       this.headers = this.data.headers;
