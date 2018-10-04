@@ -886,6 +886,9 @@ class FunTest:
         os.remove(file_path)
         return True
 
+    def get_helper_dir_path(self):
+        return self.get_script_parent_directory() + "/helper"
+
 
 fun_test = FunTest()
 
