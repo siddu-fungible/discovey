@@ -95,7 +95,7 @@ class FunTest:
         LOG_LEVEL_DEBUG: '\033[94m',
         LOG_LEVEL_CRITICAL: '\033[91m',
         LOG_LEVEL_NORMAL: '',
-        "RESET": '\033[30m',
+        "RESET": '\033[0m',
         "GREEN": '\033[92m'
     }
 
