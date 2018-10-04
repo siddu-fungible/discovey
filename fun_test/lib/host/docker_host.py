@@ -324,7 +324,7 @@ class DockerHost(Linux, ToDictMixin):
                     fun_test.critical(str(ex))
 
             try:
-                container.remove()
+                container.remove(force=True)
                 fun_test.debug("Removed Container: {}".format(container.name))
             except Exception as ex:
                 if not ignore_error:
