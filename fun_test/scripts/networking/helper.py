@@ -117,7 +117,9 @@ def __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_val
     for key in output.iterkeys():
         if len(key.split('_')) > 5:
             if stat_type == key.split('_')[4] and str(class_value) == key.split('_')[5]:
-                if tx and 'TX' == key.split('_')[3]:
+                if tx:
+                    if not 'TX' == key.split('_')[3]:
+                        break
                     result = output[key]
                     break
                 elif 'RX' == key.split('_')[3]:
@@ -136,7 +138,9 @@ def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=Non
         for key in output.iterkeys():
             if len(key.split('_')) > 4:
                 if stat_type == key.split('_')[4]:
-                    if tx and 'TX' == key.split('_')[3]:
+                    if tx:
+                        if not 'TX' == key.split('_')[3]:
+                            break
                         result = output[key]
                         break
                     elif 'RX' == key.split('_')[3]:
