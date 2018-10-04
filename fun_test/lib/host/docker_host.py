@@ -371,6 +371,7 @@ class DockerHost(Linux, ToDictMixin):
                                         allocated_ports=self.pool2_allocated_ports)
 
         while port_retries < max_port_retries:
+            fun_test.log("Current Try: {}, Max Tries: {}".format(port_retries, max_port_retries))
             self.pool0_allocated_ports = port_allocator0.allocated_ports
             self.pool1_allocated_ports = port_allocator1.allocated_ports
             self.pool2_allocated_ports = port_allocator2.allocated_ports
@@ -435,7 +436,8 @@ class DockerHost(Linux, ToDictMixin):
                     fun_test.sleep("Additional sleep for {}".format(self.type), seconds=fun_test.local_settings["CONTAINER_START_TIME"])
                 elif self.type == self.TYPE_DESKTOP:
                     fun_test.sleep("Additional sleep for {}".format(self.type), seconds=15)
-                self.sudo_command("docker logs {}".format(container_name))
+                if not self.localhost:
+                    self.sudo_command("docker logs {}".format(container_name))
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
@@ -445,7 +447,8 @@ class DockerHost(Linux, ToDictMixin):
 
 
                 fun_test.log("Launched container: {}".format(container_name))
-                self.sudo_command("docker logs {}".format(container_name))
+                if not self.localhost:
+                    self.sudo_command("docker logs {}".format(container_name))
 
                 port_retries += 1
                 container_asset = {"host_ip": self.host_ip}
@@ -484,15 +487,18 @@ class DockerHost(Linux, ToDictMixin):
                 else:
                     fun_test.log("Retrying with different ports...")
             except Exception as ex:
+                port_retries += 1
                 fun_test.critical(ex)
                 self.destroy_container(container_name=container_name)
                 if allocated_container:
-                    self.sudo_command("docker logs {}".format(container_name))
+                    if not self.localhost:
+                        self.sudo_command("docker logs {}".format(container_name))
                     logs = allocated_container.logs(stdout=True, stderr=True)
                     fun_test.log("Docker logs:\n {}".format(logs))
                     break
                 else:
-                    self.sudo_command("docker logs {}".format(container_name))
+                    if not self.localhost:
+                        self.sudo_command("docker logs {}".format(container_name))
 
 
 
