@@ -340,3 +340,148 @@ def get_diff_stats(old_stats, new_stats, stats_list=[]):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def verify_spirent_stats(result_dict):
+    for stream_key in result_dict.iterkeys():
+        fun_test.test_assert_expected(expected=result_dict[stream_key]['tx_result']['FrameCount'],
+                                      actual=result_dict[stream_key]['rx_result']['FrameCount'],
+                                      message="Check results for %s" % stream_key)
+    result = True
+    return result
+
+
+def get_key_to_change(class_dict, priority_val):
+    result = None
+    for key in class_dict.iterkeys():
+        if 'time' in key:
+            out = int(filter(str.isdigit, key))
+            if out == priority_val:
+                result = key
+                break
+    return result
+
+
+def find_spirent_rx_counters_stopped(template_obj, subscribe_result, streamblock_handle_list=None, pfc_stream=False,
+                                     port_handle=None):
+    result_dict = {}
+    value_dict = {}
+    for i in range(2):        # Get value of rx counter of stream in 2 runs to check if it has stopped or not
+        if not pfc_stream:
+            value_dict[i] = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_result,
+                                                                               streamblock_handle_list=streamblock_handle_list,
+                                                                               rx_result=True)
+        else:
+            value_dict[i] = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_result,
+                                                                               port_handle_list=[port_handle],
+                                                                               analyzer_result=True)
+        fun_test.sleep("Sleeping 5 seconds", seconds=5)
+    if not pfc_stream:
+        for stream in streamblock_handle_list:
+            result_dict[stream] = None
+            old_rx_counter = int(value_dict[0][stream]['rx_result']['FrameCount'])
+            new_rx_counter = int(value_dict[1][stream]['rx_result']['FrameCount'])
+            fun_test.log("Values of rx counter for stream %s are:- Old: %s ; New: %s" % (stream, old_rx_counter,
+                                                                                         new_rx_counter))
+
+            if old_rx_counter < new_rx_counter:
+                result_dict[stream] = False
+            elif old_rx_counter == new_rx_counter:
+                result_dict[stream] = True
+
+    if pfc_stream:
+        old_rx_counter = int(value_dict[0][port_handle]['analyzer_result']['TotalFrameCount'])
+        new_rx_counter = int(value_dict[1][port_handle]['analyzer_result']['TotalFrameCount'])
+        fun_test.log("Values of rx counter for stream %s are:- Old: %s ; New: %s" % (port_handle, old_rx_counter,
+                                                                                     new_rx_counter))
+
+        if old_rx_counter < new_rx_counter:
+            result_dict[port_handle] = False
+        elif old_rx_counter == new_rx_counter:
+            result_dict[port_handle] = True
+
+    return result_dict
+
+
+def get_fpg_port_cbfcpause_counters(network_controller_obj, dut_port, shape, tx=False, hnu=False, priority_list=None):
+    output_dict = {}
+    if not priority_list:
+        priority_list = [x for x in range(16)]
+    try:
+        stat_type = CBFC_PAUSE_FRAMES_RECEIVED
+        if tx:
+            stat_type = CBFC_PAUSE_FRAMES_TRANSMITTED
+        out = network_controller_obj.clear_port_stats(dut_port, shape=shape)
+        fun_test.simple_assert(out, "Clear port stats on dut port %s" % dut_port)
+        fun_test.sleep('Stats clear', seconds=2)
+        stats = network_controller_obj.peek_fpg_port_stats(dut_port, hnu=hnu)
+        fun_test.simple_assert(stats, "Fpg stats on port %s" % dut_port)
+
+        for priority in priority_list:
+            output_dict[priority] = False
+            value = get_dut_output_stats_value(stats, stat_type=stat_type,
+                                               tx=tx, class_value=priority)
+            if value:
+                fun_test.log("Value seen for priority %s is %s" % (priority, value))
+                output_dict[priority] = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output_dict
+
+
+def get_psw_port_enqueue_dequeue_counters(network_controller_obj, dut_port, hnu, pg=False, priority_list=None):
+    output_dict = {}
+    if not priority_list:
+        priority_list = [x for x in range(16)]
+    dequeue = 'dequeue'
+    enqueue = 'enqueue'
+    if pg:
+        dequeue_type = 'pg_deq'
+        enqueue_type = 'pg_enq'
+    else:
+        dequeue_type = 'q_deq'
+        enqueue_type = 'q_enq'
+    try:
+        stats_1 = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu)
+        fun_test.simple_assert(stats_1, "Ensure psw command is executed for 1st time on port %s" % dut_port)
+
+        fun_test.sleep("Letting queries to be executed", seconds=5)
+
+        stats_2 = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu)
+        fun_test.simple_assert(stats_2, "Ensure psw command is executed for 2nd time on port %s" % dut_port)
+
+        for queue_num in priority_list:
+            output_dict[queue_num] = {}
+            output_dict[queue_num][dequeue] = True
+            output_dict[queue_num][enqueue] = False
+            if len(str(queue_num)) == 1:
+                updated_queue = '0' + str(queue_num)
+            else:
+                updated_queue = str(queue_num)
+            q_no = 'q_' + updated_queue
+
+            old_dequeue_val = int(stats_1[q_no]['count'][dequeue_type]['pkts'])
+            new_dequeue_val = int(stats_2[q_no]['count'][dequeue_type]['pkts'])
+            old_enqueue_val = int(stats_1[q_no]['count'][enqueue_type]['pkts'])
+            new_enqueue_val = int(stats_2[q_no]['count'][enqueue_type]['pkts'])
+
+            fun_test.log("Values of dequeue seen for queue %s are:- Old: %s ; New: %s" % (q_no,
+                                                                                           old_dequeue_val,
+                                                                                           new_dequeue_val))
+            fun_test.log("Values of enqueue seen for queue %s are:- Old: %s ; New: %s" % (q_no,
+                                                                                          old_enqueue_val,
+                                                                                          new_enqueue_val))
+
+            if old_dequeue_val < new_dequeue_val:
+                output_dict[queue_num][dequeue] = True
+            elif old_dequeue_val == new_dequeue_val:
+                output_dict[queue_num][dequeue] = False
+
+            if old_enqueue_val < new_enqueue_val:
+                output_dict[queue_num][enqueue] = True
+            elif old_enqueue_val == new_enqueue_val:
+                output_dict[queue_num][enqueue] = False
+
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output_dict
