@@ -86,6 +86,7 @@ class FunTest:
     LOG_LEVEL_NORMAL = 2
     SETUP_TC_ID = 0
     CLEANUP_TC_ID = 999
+    MAX_SIG_INT_COUNT = 3 # Try Ctrl+C 3 times
 
     MODE_REAL = 1
     MODE_SIMULATION = 2
@@ -98,6 +99,7 @@ class FunTest:
         "RESET": '\033[30m',
         "GREEN": '\033[92m'
     }
+
 
     fun_test_thread_id = 0
 
@@ -159,7 +161,9 @@ class FunTest:
         (frame, file_name, line_number, function_name, lines, index) = \
             inspect.getouterframes(inspect.currentframe())[2]
 
+        self.original_sig_int_handler = None
         if threading.current_thread().__class__.__name__ == '_MainThread':
+            self.original_sig_int_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, self.exit_gracefully)
 
         self.initialized = False
@@ -197,6 +201,7 @@ class FunTest:
         self.fun_test_threads = {}
         self.fun_test_timers = []
         self.version = "1"
+        self.sig_int_count = 0
         self.determine_version()
 
     def get_local_setting(self, setting):
@@ -723,6 +728,9 @@ class FunTest:
 
     def exit_gracefully(self, sig, _):
         fun_test.critical("Unexpected Exit")
+        fun_test.sig_int_count += 1
+        if fun_test.sig_int_count >= self.MAX_SIG_INT_COUNT:
+            signal.signal(signal.SIGINT, self.original_sig_int_handler)
         if fun_test.suite_execution_id:
             models_helper.update_test_case_execution(test_case_execution_id=fun_test.current_test_case_execution_id,
                                                      suite_execution_id=fun_test.suite_execution_id,
