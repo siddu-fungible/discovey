@@ -482,7 +482,7 @@ class DockerHost(Linux, ToDictMixin):
                 if port_retries >= max_port_retries:
                     raise FunTestLibException("Unable to bind to any port, max_retries: {} reached".format(max_port_retries))
                 else:
-                    fun_test.log("Retrying...")
+                    fun_test.log("Retrying with different ports...")
             except Exception as ex:
                 fun_test.critical(ex)
                 self.destroy_container(container_name=container_name)
@@ -511,6 +511,19 @@ class DockerHost(Linux, ToDictMixin):
             fun_test.critical("Timer expired waiting for container to run")
         return result
 
+    def ensure_container_idling(self, container_name, max_wait_time=180, idle_marker="Idling"):
+        timer = FunTimer(max_time=180)
+        container_up = False
+        try:
+            while not timer.is_expired():
+                output = self.command(command="docker logs {}".format(container_name), include_last_line=True)
+                if re.search(idle_marker, output):
+                    container_up = True
+                    break
+                fun_test.sleep("Waiting for container to come up", seconds=10)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return container_up
 
     @staticmethod
     def get(asset_properties):
