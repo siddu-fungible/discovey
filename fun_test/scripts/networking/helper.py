@@ -54,7 +54,7 @@ WRO_OUT_WUS = "wroout_wus"
 WRO_WU_COUNT_VPP = "wrowu_cnt_vpp"
 
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
-ETH_COPP_ARP_REQ_METER_ID = 23
+ETH_COPP_ARP_REQ_METER_ID = 1
 ETH_COPP_ARP_RESP_METER_ID = 24
 ETH_COPP_RARP_METER_ID = 25
 ETH_COPP_ISIS_1_METER_ID = 26
@@ -74,7 +74,7 @@ IPV4_COPP_PTP_3_METER_ID = 39
 IPV4_COPP_PTP_4_METER_ID = 40
 IPV4_COPP_TTL_ERR_METER_ID = 41
 IPV4_COPP_OPTS_METER_ID = 42
-IPV4_COPP_FOR_US_METER_ID = 43
+IPV4_COPP_FOR_US_METER_ID = 21
 ERR_TRAP_COPP_FSF_METER_ID = 3
 ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 4
 ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 5
@@ -324,9 +324,15 @@ def get_diff_stats(old_stats, new_stats, stats_list=[]):
                 if isinstance(val, dict):
                     result[key] = get_diff_stats(old_stats=old_stats[key], new_stats=new_stats[key])
                 elif key in old_stats:
-                    result[key] = int(new_stats[key]) - int(old_stats[key])
+                    try:
+                        result[key] = int(new_stats[key]) - int(old_stats[key])
+                    except TypeError:
+                        result[key] = None
                 else:
-                    result[key] = int(new_stats[key])
+                    try:
+                        result[key] = int(new_stats[key])
+                    except TypeError:
+                        result[key] = None
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
