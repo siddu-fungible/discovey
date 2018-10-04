@@ -2,8 +2,9 @@ from lib.system.fun_test import *
 from asset.asset_manager import AssetManager
 from lib.host.linux import Linux
 
+
 import os
-os.environ["DOCKER_HOSTS_SPEC_FILE"] = "./local_docker_host.json"
+os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/local_docker_host.json"
 
 
 class Setup(FunTestScript):
