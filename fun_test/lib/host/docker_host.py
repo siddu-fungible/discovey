@@ -6,6 +6,7 @@ from docker import DockerClient
 from docker.types.services import Mount
 import re, collections
 from fun_settings import DEFAULT_BUILD_URL
+from urllib3.connection import ConnectionError
 # fun_test.enable_debug()
 
 
@@ -487,6 +488,9 @@ class DockerHost(Linux, ToDictMixin):
                 else:
                     fun_test.log("Retrying with different ports...")
             except Exception as ex:
+                if (hasattr(ex, "message") and "Max retries" in str(ex.message)):
+                    fun_test.log("Unable to reach the Docker remote API")
+                    port_retries = max_port_retries
                 port_retries += 1
                 fun_test.critical(ex)
                 self.destroy_container(container_name=container_name)
@@ -499,8 +503,6 @@ class DockerHost(Linux, ToDictMixin):
                 else:
                     if not self.localhost:
                         self.sudo_command("docker logs {}".format(container_name))
-
-
 
         return container_asset
 
