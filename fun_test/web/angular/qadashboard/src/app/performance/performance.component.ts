@@ -29,6 +29,8 @@ class Node {
   children: number[] = [];
   last_two_scores: number[] = [];
   grid: any[];
+  copiedScore: boolean = false;
+  copiedScoreDisposition: number = null;
 }
 
 class FlatNode {
@@ -123,6 +125,9 @@ export class PerformanceComponent implements OnInit {
     node.lastNumBuildFailed = dagEntry.last_num_build_failed;
     node.children = dagEntry.children;
     node.last_two_scores = dagEntry.last_two_scores;
+    node.copiedScore = dagEntry.copied_score;
+    node.copiedScoreDisposition = dagEntry.copied_score_disposition;
+
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
       childInfo.weight = dagEntry.children_weights[Number(key)];
@@ -169,7 +174,7 @@ export class PerformanceComponent implements OnInit {
 
   evaluateScores = (node) => {
     let [lastScore, penultimateScore] = node.last_two_scores;
-    lastScore = lastScore;
+    //lastScore = lastScore;
     node.lastScore = lastScore;
     try {
 
@@ -183,6 +188,14 @@ export class PerformanceComponent implements OnInit {
       node.lastScore = lastScore;
     } catch (e) {
     }
+    if (node.copiedScore) {
+      if (node.copiedScoreDisposition > 0) {
+        node.trend = 1;
+      } else if (node.copiedScoreDisposition < 0) {
+        node.trend = -1;
+      }
+    }
+
   };
 
   prepareGridNodes = (node) => {

@@ -28,6 +28,10 @@ class MetricChartStatus(models.Model):
     score = models.FloatField(default=-1)
     valid = models.BooleanField(default=False)
     children_score_map = JSONField(default={})
+    copied_score = models.BooleanField(default=False)  # If the score was copied from the last good score
+    copied_score_disposition = models.IntegerField(default=0)  # 0 indicates current and last score is identical,
+                                                               # 1 indicates last copied score was in upward trend
+                                                               # -1 indicates last copied score was in downward trend
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)

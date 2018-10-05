@@ -22,7 +22,7 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
-import { CreateChartComponent } from './create-chart/create-chart.component';
+// import { CreateChartComponent } from './create-chart/create-chart.component';
 
 @NgModule({
   declarations: [
@@ -34,8 +34,7 @@ import { CreateChartComponent } from './create-chart/create-chart.component';
     FunTableFilterPipe,
     FunChartComponent,
     FunMetricChartComponent,
-    SafeHtmlPipe,
-    CreateChartComponent
+    SafeHtmlPipe
   ],
   imports: [
     BsDropdownModule,

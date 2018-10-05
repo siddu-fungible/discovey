@@ -432,6 +432,12 @@ def traverse_dag(metric_id):
     # for chart_status_entry in chart_status_entries:
     #    print chart_status_entry.date_time
     result["last_two_scores"] = [x.score for x in chart_status_entries]
+    last_entry = chart_status_entries.last()
+    if last_entry:
+        result["copied_score"] = chart_status_entries.last().copied_score
+        result["copied_score_disposition"] = chart_status_entries.last().copied_score_disposition
+    else:
+        result["copied_score"] = False
     if not chart.leaf:
         children_info = result["children_info"]
         for child_id in result["children"]:
