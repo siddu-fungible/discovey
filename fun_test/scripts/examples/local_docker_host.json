@@ -1,0 +1,12 @@
+[
+  {
+    "name": "my-host",
+    "type": "TYPE_DESKTOP",
+    "host_ip": "127.0.0.1",
+    "localhost": true,
+    "remote_api_port": 1234,
+    "mgmt_ssh_username": "unknown",
+    "mgmt_ssh_password": "unknown",
+    "mgmt_ssh_port": 22
+  }
+]

@@ -95,9 +95,10 @@ class FunTest:
         LOG_LEVEL_DEBUG: '\033[94m',
         LOG_LEVEL_CRITICAL: '\033[91m',
         LOG_LEVEL_NORMAL: '',
-        "RESET": '\033[30m',
+        "RESET": '\033[0m',
         "GREEN": '\033[92m'
     }
+
 
     fun_test_thread_id = 0
 
@@ -159,7 +160,9 @@ class FunTest:
         (frame, file_name, line_number, function_name, lines, index) = \
             inspect.getouterframes(inspect.currentframe())[2]
 
+        self.original_sig_int_handler = None
         if threading.current_thread().__class__.__name__ == '_MainThread':
+            self.original_sig_int_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, self.exit_gracefully)
 
         self.initialized = False
@@ -723,10 +726,13 @@ class FunTest:
 
     def exit_gracefully(self, sig, _):
         fun_test.critical("Unexpected Exit")
+
         if fun_test.suite_execution_id:
             models_helper.update_test_case_execution(test_case_execution_id=fun_test.current_test_case_execution_id,
                                                      suite_execution_id=fun_test.suite_execution_id,
                                                      result=fun_test.FAILED)
+            signal.signal(signal.SIGINT, self.original_sig_int_handler)
+        sys.exit(-1)
 
     def _get_flat_file_name(self, path):
         parts = path.split("/")

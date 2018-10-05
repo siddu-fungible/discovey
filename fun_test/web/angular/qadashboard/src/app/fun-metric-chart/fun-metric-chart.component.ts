@@ -1,17 +1,19 @@
-import {Component, OnInit, Input} from '@angular/core';
+import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Observable} from "rxjs";
+import {ActivatedRoute} from "@angular/router";
 
 @Component({
   selector: 'fun-metric-chart',
   templateUrl: './fun-metric-chart.component.html',
   styleUrls: ['./fun-metric-chart.component.css']
 })
-export class FunMetricChartComponent implements OnInit {
+export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() chartName: any;
   @Input() modelName: any;
   @Input() minimal: boolean = false;
+  @Input() id: number = null;
 
   status: any;
   showingTable: boolean;
@@ -48,10 +50,11 @@ export class FunMetricChartComponent implements OnInit {
   public formatter: Function;
   public tooltip: Function;
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService) {
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute) {
   }
 
   ngOnInit() {
+    this.populateNames();
     this.status = "idle";
     this.showingTable = false;
     this.showingConfigure = false;
@@ -76,8 +79,32 @@ export class FunMetricChartComponent implements OnInit {
   }
 
   ngOnChanges() {
-    this.setDefault();
-    this.fetchInfo();
+    this.populateNames();
+  }
+
+  populateNames() {
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.id = params['id'];
+      }
+    });
+    if (this.id) {
+      let payload = {};
+      payload["metric_id"] = this.id;
+      this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
+        this.chartName = data.data["chart_name"];
+        this.modelName = data.data["metric_model_name"];
+        this.setDefault();
+        this.fetchInfo();
+      }, error => {
+        this.loggerService.error("fetching by metric id failed");
+      });
+    }
+    else {
+      this.setDefault();
+      this.fetchInfo();
+    }
+
   }
 
   //formats the string displayed on xaxis of the chart
@@ -466,18 +493,18 @@ export class FunMetricChartComponent implements OnInit {
           this.data["headers"].push(this.headers[key].verbose_name);
         }
       });
-        let dataSet = this.allData[0];
-        let index = 0;
-        for (let rowData of dataSet) {
-          let row = [];
-          Object.keys(this.headers).forEach((key) => {
-            if (this.isFieldRelevant(key)) {
-              let value = rowData[key];
-              row.push(this.cleanValue(key, value));
-            }
-          });
-          this.data["rows"][index++] = row;
-        }
+      let dataSet = this.allData[0];
+      let index = 0;
+      for (let rowData of dataSet) {
+        let row = [];
+        Object.keys(this.headers).forEach((key) => {
+          if (this.isFieldRelevant(key)) {
+            let value = rowData[key];
+            row.push(this.cleanValue(key, value));
+          }
+        });
+        this.data["rows"][index++] = row;
+      }
       this.data["totalLength"] = this.data["rows"].length;
     }, error => {
       this.loggerService.error("fetchMetricsData");
@@ -518,15 +545,15 @@ export class FunMetricChartComponent implements OnInit {
           let total = 0;
           dateSeries.push(series[startIndex]);
           if (series[startIndex].includes("2018-09-16")) { // Tape-out
-                  this.mileStoneIndex = startIndex;
-                }
+            this.mileStoneIndex = startIndex;
+          }
           while (startIndex >= endIndex) {
-              if (keyValue[series[startIndex]] != -1) {
-                total += keyValue[series[startIndex]];
-                count++;
-              }
+            if (keyValue[series[startIndex]] != -1) {
+              total += keyValue[series[startIndex]];
+              count++;
+            }
             startIndex--;
-           }
+          }
           if (count !== 0) {
             let average = total / count;
             values.push(average);

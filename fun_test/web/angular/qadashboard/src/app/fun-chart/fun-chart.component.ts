@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnChanges, OnInit} from '@angular/core';
 import {Chart} from 'angular-highcharts';
 
 @Component({
@@ -6,7 +6,7 @@ import {Chart} from 'angular-highcharts';
   templateUrl: './fun-chart.component.html',
   styleUrls: ['./fun-chart.component.css']
 })
-export class FunChartComponent implements OnInit {
+export class FunChartComponent implements OnInit, OnChanges {
   @Input() y1Values: any[];
   @Input() xValues: any[];
   @Input() title: string;
