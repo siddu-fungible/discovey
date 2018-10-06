@@ -14,6 +14,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() modelName: any;
   @Input() minimal: boolean = false;
   @Input() id: number = null;
+  @Input() previewDataSets: any = null;
 
   status: any;
   showingTable: boolean;
@@ -26,7 +27,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   editingDescription: boolean = false;
   inner: any = {};
   atomic: boolean = false;
-  previewDataSets: any = null;
   currentDescription: any;
   waitTime: number = 0;
   values: any;
@@ -67,12 +67,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.values = null;
     this.charting = true;
     this.buildInfo = null;
-    this.setDefault();
-
-    if (this.chartName) {
-      this.fetchInfo();
-    }
-
     this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
@@ -82,6 +76,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.populateNames();
   }
 
+  //set the chart and model name based in metric id
   populateNames() {
     this.route.params.subscribe(params => {
       if (params['id']) {
@@ -100,10 +95,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.loggerService.error("fetching by metric id failed");
       });
     }
-    else {
-      this.setDefault();
-      this.fetchInfo();
-    }
+    // else {
+    //   this.setDefault();
+    //   this.fetchInfo();
+    // }
 
   }
 
@@ -187,7 +182,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
       this.chartInfo = response.data;
       if (this.chartInfo !== null) {
-        this.previewDataSets = this.chartInfo.data_sets;
+        if(!this.previewDataSets) {
+          this.previewDataSets = this.chartInfo.data_sets;
+        }
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
         this.negativeGradient = !this.chartInfo.positive;
