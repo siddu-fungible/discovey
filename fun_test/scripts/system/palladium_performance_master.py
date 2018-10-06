@@ -4,7 +4,7 @@ from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance,
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
-from web.fun_test.metrics_models import WuStackSpeedTestPerformance
+from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, SoakClassicMallocPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 from web.fun_test.analytics_models_helper import prepare_status_db
@@ -660,6 +660,78 @@ class WuStackSpeedTestPerformanceTC(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="WuStackSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class SoakFunMallocPerformanceTC(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+
+    def describe(self):
+        self.set_test_details(id=11,
+                              summary="Soak fun malloc Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_fun_malloc_fun_free)\]:\s+(?P<latency>\d+.\d+)\s+ops/sec',
+                    line)
+                if m:
+                    output_latency = int(m.group("latency"))
+                    input_app = "soak_malloc_fun_malloc"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("latency: {}, metric_name: {}".format(output_latency, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_latency"] = output_latency
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=SoakFunMallocPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="SoakFunMallocPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class SoakClassicMallocPerformanceTC(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+
+    def describe(self):
+        self.set_test_details(id=12,
+                              summary="Soak classic malloc Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]:\s+(?P<latency>\d+.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_latency = int(m.group("latency"))
+                    input_app = "soak_malloc_classic"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("latency: {}, metric_name: {}".format(output_latency, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_latency"] = output_latency
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=SoakClassicMallocPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="SoakClassicMallocPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -690,6 +762,8 @@ if __name__ == "__main__":
     myscript.add_test_case(WuSendSpeedTestPerformanceTc())
     myscript.add_test_case(FunMagentPerformanceTestTC())
     myscript.add_test_case(WuStackSpeedTestPerformanceTC())
+    myscript.add_test_case(SoakFunMallocPerformanceTC())
+    myscript.add_test_case(SoakClassicMallocPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
