@@ -140,6 +140,12 @@ export class PerformanceComponent implements OnInit {
     return node;
   }
 
+  getKeys(map) {
+    //console.log(map.keys());
+    let a = Array.from(map.keys());
+    return a;
+  }
+
   getSumChildWeights = (currentNode) => {
     let sumOfWeights = 0;
     currentNode.childrenInfo.forEach((childInfo, key) => {
