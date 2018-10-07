@@ -1,4 +1,4 @@
-<div class="" style="padding-top: 20px">
+<div class="container" style="padding-top: 20px; min-width: 100%;">
   <div class="row">
     <!-- left side of the performance page containing tree structure -->
     <div class="col-lg-4 col-md-4 col-xxl-4 col-xl-4">
@@ -28,13 +28,13 @@
             </span>
           </td>
           <td class="text-center">
-            <div ng-if="flatNode.node.chartName !== 'All metrics'" class="score-label"><span style="vertical-align: top"
+            <div *ngIf="flatNode.node.chartName !== 'All metrics'" class="score-label"><span style="vertical-align: top"
                                                                                              [innerHTML]="getTrendHtml(flatNode.node) | safeHtml"></span>{{
               flatNode.node.lastScore | number: '1.1-1' }}
             </div>
           </td>
           <td class="text-center">
-            <span ng-if="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
+            <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
           </td>
 
           <td [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
