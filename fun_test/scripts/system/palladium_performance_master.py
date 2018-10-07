@@ -585,7 +585,7 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="WuSendSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-class FunMagentPerformanceTestTC(PalladiumPerformanceTc):
+class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
     def describe(self):
         self.set_test_details(id=9,
@@ -624,7 +624,7 @@ class FunMagentPerformanceTestTC(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="FunMagentPerformanceTest")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-class WuStackSpeedTestPerformanceTC(PalladiumPerformanceTc):
+class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
 
     def describe(self):
@@ -660,7 +660,7 @@ class WuStackSpeedTestPerformanceTC(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="WuStackSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-class SoakFunMallocPerformanceTC(PalladiumPerformanceTc):
+class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
 
     def describe(self):
@@ -675,16 +675,16 @@ class SoakFunMallocPerformanceTC(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_fun_malloc_fun_free)\]:\s+(?P<latency>\d+.\d+)\s+ops/sec',
+                    r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_fun_malloc_fun_free)\]:\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
                     line)
                 if m:
-                    output_latency = int(m.group("latency"))
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
                     input_app = "soak_malloc_fun_malloc"
                     input_metric_name = m.group("metric_name")
-                    fun_test.log("latency: {}, metric_name: {}".format(output_latency, input_metric_name))
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
-                    metrics["output_latency"] = output_latency
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=SoakFunMallocPerformance).add_entry(**d)
 
@@ -696,7 +696,7 @@ class SoakFunMallocPerformanceTC(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="SoakFunMallocPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-class SoakClassicMallocPerformanceTC(PalladiumPerformanceTc):
+class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
 
     def describe(self):
@@ -711,16 +711,16 @@ class SoakClassicMallocPerformanceTC(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                        r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]:\s+(?P<latency>\d+.\d+)\s+ops/sec',
+                        r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]:\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
                         line)
                 if m:
-                    output_latency = int(m.group("latency"))
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
                     input_app = "soak_malloc_classic"
                     input_metric_name = m.group("metric_name")
-                    fun_test.log("latency: {}, metric_name: {}".format(output_latency, input_metric_name))
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
-                    metrics["output_latency"] = output_latency
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=SoakClassicMallocPerformance).add_entry(**d)
 
@@ -760,10 +760,10 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestPerformanceTc())
     myscript.add_test_case(WuDispatchTestPerformanceTc())
     myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTC())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTC())
-    myscript.add_test_case(SoakFunMallocPerformanceTC())
-    myscript.add_test_case(SoakClassicMallocPerformanceTC())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

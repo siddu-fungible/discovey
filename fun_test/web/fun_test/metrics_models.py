@@ -975,7 +975,7 @@ class SoakFunMallocPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="soak_malloc_fun_malloc", choices=[(0, "soak_malloc_fun_malloc")])
     input_metric_name = models.CharField(max_length=40, default="soak_two_fun_malloc_fun_free", choices=[(0, "soak_two_fun_malloc_fun_free")])
-    output_latency = models.IntegerField(verbose_name="Soak Fun Malloc Test Latency", default=-1)
+    output_ops_per_sec = models.IntegerField(verbose_name="Soak Fun Malloc Test ops per sec", default=-1)
     tag = "analytics"
 
     def __str__(self):
@@ -991,7 +991,7 @@ class SoakClassicMallocPerformance(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="soak_malloc_classic", choices=[(0, "soak_malloc_classic")])
     input_metric_name = models.CharField(max_length=40, default="soak_two_classic_malloc_free", choices=[(0, "soak_two_classic_malloc_free")])
-    output_latency = models.IntegerField(verbose_name="Soak Classic Malloc Test Latency", default=-1)
+    output_ops_per_sec = models.IntegerField(verbose_name="Soak Classic Malloc Test ops per sec", default=-1)
     tag = "analytics"
 
     def __str__(self):
