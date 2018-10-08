@@ -20,9 +20,6 @@
       <a (click)="setTimeMode('all')"> All </a>
     </div>
   </div>
-  <div *ngFor="let dataset of previewDataSets">
-    {{ dataset.name }}
-  </div>
   <!-- fun chart component -->
   <fun-chart [mileStoneIndex]="mileStoneIndex" [y1Values]="values" [xValues]="series" [title]="chartName"
              [xAxisLabel]="chart1XaxisTitle"

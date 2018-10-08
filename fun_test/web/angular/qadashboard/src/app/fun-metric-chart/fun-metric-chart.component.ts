@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, OnChanges, AfterViewChecked} from '@angular/core';
+import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Observable} from "rxjs";
@@ -9,7 +9,7 @@ import {ActivatedRoute} from "@angular/router";
   templateUrl: './fun-metric-chart.component.html',
   styleUrls: ['./fun-metric-chart.component.css']
 })
-export class FunMetricChartComponent implements OnInit, OnChanges, AfterViewChecked {
+export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() chartName: any;
   @Input() modelName: any;
   @Input() minimal: boolean = false;
@@ -76,10 +76,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges, AfterViewChec
     this.populateNames();
   }
 
-   ngAfterViewChecked() {
-     console.log("preview:", this.previewDataSets.length);
-   }
-
   //set the chart and model name based in metric id
   populateNames() {
     this.route.params.subscribe(params => {
@@ -99,11 +95,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges, AfterViewChec
         this.loggerService.error("fetching by metric id failed");
       });
     }
-    // else {
-    //   this.setDefault();
-    //   this.fetchInfo();
-    // }
-
   }
 
   //formats the string displayed on xaxis of the chart
@@ -198,7 +189,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges, AfterViewChec
         this.status = "idle";
       }
       setTimeout(() => {
-        this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, null);
+        this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
       }, this.waitTime);
     }, error => {
       this.loggerService.error("fun_metric_chart: chart_info");

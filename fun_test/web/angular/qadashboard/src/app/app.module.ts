@@ -9,8 +9,8 @@ import { AppRoutingModule }     from './app-routing.module';
 import { PerformanceComponent } from './performance/performance.component';
 import { HttpClientModule } from '@angular/common/http';
 import { FunTableComponent } from './fun-table/fun-table.component';
-import {ApiService} from "./services/api/api.service";
-import {LoggerService} from "./services/logger/logger.service";
+import { ApiService } from "./services/api/api.service";
+import { LoggerService } from "./services/logger/logger.service";
 import { TestComponent } from './test/test.component';
 import { FunTableFilterPipe } from './pipes/fun-table-filter.pipe';
 import { FunChartComponent } from './fun-chart/fun-chart.component';
@@ -23,7 +23,7 @@ import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawe
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
 import { Demo1Component } from './demo1/demo1.component';
-// import { CreateChartComponent } from './create-chart/create-chart.component';
+import { CreateChartComponent } from './create-chart/create-chart.component';
 
 @NgModule({
   declarations: [
@@ -36,6 +36,7 @@ import { Demo1Component } from './demo1/demo1.component';
     FunChartComponent,
     FunMetricChartComponent,
     SafeHtmlPipe,
+    CreateChartComponent,
     Demo1Component
   ],
   imports: [

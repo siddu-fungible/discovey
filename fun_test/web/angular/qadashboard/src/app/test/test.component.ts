@@ -166,6 +166,7 @@ export class TestComponent implements OnInit, OnChanges {
     }
 
     if (!error) {
+      // using temp to change the reference of previewdatasets so that the onchanges is triggered
       let temp = Object.assign([], this.previewDataSets);
       this.previewDataSets = null;
       temp.push(validDataSet);
@@ -178,8 +179,13 @@ export class TestComponent implements OnInit, OnChanges {
 
 
   removeClick = (index) => {
+     // using temp to change the reference of previewdatasets so that the onchanges is triggered
     //this.copyChartInfo.data_sets.splice(index, 1);
     this.previewDataSets.splice(index, 1);
+    let temp = Object.assign([], this.previewDataSets);
+    this.previewDataSets = null;
+    this.previewDataSets = temp;
+
     //= this.copyChartInfo.data_sets;
   };
 
