@@ -72,7 +72,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.tooltip = this.tooltipFormatter.bind(this);
   }
 
-  ngOnChanges() {
+  ngOnChanges() {     
     this.populateNames();
   }
 
@@ -177,7 +177,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
       this.chartInfo = response.data;
       if (this.chartInfo !== null) {
-        if(!this.previewDataSets) {
+        if (!this.previewDataSets) {
           this.previewDataSets = this.chartInfo.data_sets;
         }
         this.currentDescription = this.chartInfo.description;
@@ -327,6 +327,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //check for all dates and if not present add the respective date to the list
   fixMissingDates(dates): any {
+    let finalDates = [];
+    if (dates.length !== 0) {
     let firstString = dates[0].replace(/\s+/g, 'T');
     //firstString = firstString.replace('+', 'Z');
     //firstString = firstString.substring(0, firstString.indexOf('Z'));
@@ -339,7 +341,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
     let currentDate = firstDate;
     let datesIndex = 0;
-    let finalDates = [];
     while (currentDate <= yesterday) {
 
       //console.log(currentDate);
@@ -361,7 +362,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    let j = 0;
+    }
     return finalDates;
   }
 

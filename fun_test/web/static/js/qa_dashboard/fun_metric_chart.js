@@ -282,41 +282,42 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     }
 
     $scope.fixMissingDates = (dates) => {
-        let firstString = dates[0].replace(/\s+/g, 'T');
-        //firstString = firstString.replace('+', 'Z');
-        //firstString = firstString.substring(0, firstString.indexOf('Z'));
-        let firstDate = new Date(firstString);
-        let today = new Date();
-        let yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(23, 59, 59);
-        let lastDate = yesterday;
-
-        let currentDate = firstDate;
-        let datesIndex = 0;
         let finalDates = [];
-        while (currentDate <= yesterday) {
+        if (dates.length !== 0) {
+            let firstString = dates[0].replace(/\s+/g, 'T');
+            //firstString = firstString.replace('+', 'Z');
+            //firstString = firstString.substring(0, firstString.indexOf('Z'));
+            let firstDate = new Date(firstString);
+            let today = new Date();
+            let yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(23, 59, 59);
+            let lastDate = yesterday;
 
-            //console.log(currentDate);
-            if ((datesIndex < dates.length) && sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
-                finalDates.push(dates[datesIndex]);
-                datesIndex++;
-                while ((datesIndex < dates.length) && sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
-                    //finalDates.push(dates[datesIndex]);
+            let currentDate = firstDate;
+            let datesIndex = 0;
+            while (currentDate <= yesterday) {
+
+                //console.log(currentDate);
+                if ((datesIndex < dates.length) && sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
+                    finalDates.push(dates[datesIndex]);
                     datesIndex++;
+                    while ((datesIndex < dates.length) && sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
+                        //finalDates.push(dates[datesIndex]);
+                        datesIndex++;
+                    }
+                } else {
+                    //currentDate.setHours(currentDate.getHours() - currentDate.getTimezoneOffset() / 60);
+                    let tempDate = currentDate;
+                    tempDate.setHours(0);
+                    tempDate.setMinutes(0);
+                    tempDate.setSeconds(1);
+                    tempDate = new Date(tempDate.getTime() - (tempDate.getTimezoneOffset() * 60000));
+                    finalDates.push(tempDate.toISOString().replace('T', ' ')); //TODO: convert zone correctly
                 }
-            } else {
-                //currentDate.setHours(currentDate.getHours() - currentDate.getTimezoneOffset() / 60);
-                let tempDate = currentDate;
-                tempDate.setHours(0);
-                tempDate.setMinutes(0);
-                tempDate.setSeconds(1);
-                tempDate = new Date(tempDate.getTime() - (tempDate.getTimezoneOffset() * 60000));
-                finalDates.push(tempDate.toISOString().replace('T', ' ')); //TODO: convert zone correctly
+                currentDate.setDate(currentDate.getDate() + 1);
             }
-            currentDate.setDate(currentDate.getDate() + 1);
         }
-        let j = 0;
         return finalDates;
     };
 
