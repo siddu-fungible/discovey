@@ -140,7 +140,7 @@ def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=Non
                 if stat_type == key.split('_')[4]:
                     if tx:
                         if not 'TX' == key.split('_')[3]:
-                            break
+                            continue
                         result = output[key]
                         break
                     elif 'RX' == key.split('_')[3]:

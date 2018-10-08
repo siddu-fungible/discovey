@@ -705,7 +705,10 @@ class TestCcFlows(FunTestCase):
             # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in self.dut_config['ports']:
-                clear_stats = dpcsh_obj.clear_port_stats(port_num=port)
+                shape = 0
+                if port == 1 or port == 2:
+                    shape = 1
+                clear_stats = dpcsh_obj.clear_port_stats(port_num=port, shape=shape)
                 fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
             fun_test.add_checkpoint(checkpoint)
 
@@ -778,8 +781,16 @@ class TestCcFlows(FunTestCase):
             fun_test.add_checkpoint(checkpoint)
 
             checkpoint = "Get FPG port stats for all ports"
-            dut_tx_port_stats = dpcsh_obj.peek_fpg_port_stats(port_num=self.dut_config['ports'][0])
-            dut_rx_port_stats = dpcsh_obj.peek_fpg_port_stats(port_num=self.dut_config['ports'][2])
+            dut_port_1 = self.dut_config['ports'][0]
+            dut_port_2 = self.dut_config['ports'][2]
+            hnu = False
+            if dut_port_1 == 1 or dut_port_1 == 2:
+                hnu = True
+            dut_tx_port_stats = dpcsh_obj.peek_fpg_port_stats(port_num=dut_port_1, hnu=hnu)
+            hnu = False
+            if dut_port_2 == 1 or dut_port_2 == 2:
+                hnu = True
+            dut_rx_port_stats = dpcsh_obj.peek_fpg_port_stats(port_num=dut_port_2, hnu=hnu)
             fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
 
             fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
@@ -850,10 +861,7 @@ class TestCcFlows(FunTestCase):
                                           message=checkpoint)
 
             checkpoint = "Ensure VP total packets IN == VP total packets OUT"
-            fun_test.test_assert_expected(expected=frames_received,
-                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_IN],
-                                          message=checkpoint)
-            fun_test.test_assert_expected(expected=frames_received,
+            fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
                                           actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
                                           message=checkpoint)
             # ERP stats validation
@@ -1177,12 +1185,16 @@ class TestVpFlows(FunTestCase):
             set_pfc = dpcsh_obj.enable_qos_pfc(hnu=True)
             fun_test.test_assert(set_pfc, "Enable HNU qos pfc")
 
-            buffer = dpcsh_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=MAX_FRAME_SIZE,
-                                                          fcp_xoff_thr=MAX_FRAME_SIZE)
+            buffer = dpcsh_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=7000,
+                                                          fcp_xoff_thr=7000, df_thr=4000, dx_thr=4000, fcp_thr=8000,
+                                                          nonfcp_thr=8000, sample_copy_thr=255, sf_thr=4000,
+                                                          sf_xoff_thr=3500, sx_thr=4000)
             fun_test.test_assert(buffer, "Set non fcp xoff threshold")
 
-            buffer = dpcsh_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=MAX_FRAME_SIZE,
-                                                          fcp_xoff_thr=MAX_FRAME_SIZE, mode='hnu')
+            buffer = dpcsh_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=3500,
+                                                          fcp_xoff_thr=900, mode='hnu', df_thr=2000, dx_thr=1000,
+                                                          fcp_thr=1000, nonfcp_thr=9000,
+                                                          sample_copy_thr=255,sf_thr=2000, sf_xoff_thr=1900, sx_thr=250)
             fun_test.test_assert(buffer, "Set HNU non fcp xoff threshold")
 
             # Set mtu on DUT
@@ -1560,6 +1572,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
+        self.fps = 50
 
         self.configure_cadence_pcs_for_fcp()
         self.configure_ports()
@@ -1597,8 +1610,8 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 if __name__ == "__main__":
     ts = SpirentSetup()
     # Transit NU --> NU Flow
-    # ts.add_test_case(TransitSweep())
-    # ts.add_test_case(TransitV6Sweep())
+    ts.add_test_case(TransitSweep())
+    ts.add_test_case(TransitV6Sweep())
 
     # CC NU --> CC Flow
     ts.add_test_case(TestArpRequestFlow1())
@@ -1607,12 +1620,12 @@ if __name__ == "__main__":
     ts.add_test_case(TestArpRequestFlow2())
 
     # VP NU --> HNU Flow
-    # ts.add_test_case(VPPathIPv4TCP())
+    ts.add_test_case(VPPathIPv4TCP())
 
     # VP HNU --> HNU (NFCP) Flow
-    # ts.add_test_case(VPPathIPv4TCPNFCP())
+    ts.add_test_case(VPPathIPv4TCPNFCP())
 
     # VP HNU --> HNU (FCP) Flow
-    # ts.add_test_case(VPPathIPv4TCPFCP())
+    ts.add_test_case(VPPathIPv4TCPFCP())
 
     ts.run()
