@@ -166,7 +166,10 @@ export class TestComponent implements OnInit, OnChanges {
     }
 
     if (!error) {
-      this.previewDataSets.push(validDataSet);
+      let temp = Object.assign([], this.previewDataSets);
+      this.previewDataSets = null;
+      temp.push(validDataSet);
+      this.previewDataSets = temp;
       this.showOutputSelection = false;
       // this.addDataSet = null;
     }
