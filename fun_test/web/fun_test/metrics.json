@@ -478,6 +478,24 @@
                 "label": "Malloc agent rate",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "info": "Soak test for malloc",
+                "metric_model_name": "SoakClassicMallocPerformance",
+                "leaf": true,
+                "name": "Soak test for malloc",
+                "label": "Soak test for malloc",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Soak test for fun_malloc",
+                "metric_model_name": "SoakFunMallocPerformance",
+                "leaf": true,
+                "name": "Soak test for fun_malloc",
+                "label": "Soak test for fun_malloc",
+                "children": [],
+                "weight": 1
               }
             ]
           },
@@ -549,6 +567,24 @@
                 "leaf": true,
                 "name": "Average wustack alloc/free cycles",
                 "label": "Average wustack alloc/free cycles",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Soak test for malloc",
+                "metric_model_name": "SoakClassicMallocPerformance",
+                "leaf": true,
+                "name": "Soak test for malloc",
+                "label": "Soak test for malloc",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "Soak test for fun_malloc",
+                "metric_model_name": "SoakFunMallocPerformance",
+                "leaf": true,
+                "name": "Soak test for fun_malloc",
+                "label": "Soak test for fun_malloc",
                 "children": [],
                 "weight": 1
               }
