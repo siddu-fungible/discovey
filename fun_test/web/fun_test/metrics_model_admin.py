@@ -10,6 +10,7 @@ from web.fun_test.metrics_models import EcPerformance, BcopyPerformance, BcopyFl
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, EcVolPerformance, NuTransitPerformance
 from web.fun_test.metrics_models import VoltestPerformance, ShaxPerformance, WuDispatchTestPerformance
 from web.fun_test.metrics_models import HuRawVolumePerformance, FunMagentPerformanceTest
+from web.fun_test.metrics_models import SoakClassicMallocPerformance, SoakFunMallocPerformance
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance
 from web.fun_test.metrics_models import MetricChartStatus
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance
@@ -102,6 +103,14 @@ class FunMagentPerformanceTestAdmin(admin.ModelAdmin):
 
 @admin.register(WuStackSpeedTestPerformance)
 class WuStackSpeedTestPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(SoakFunMallocPerformance)
+class SoakFunMallocPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(SoakClassicMallocPerformance)
+class SoakClassicMallocPerformanceAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
 @admin.register(ShaxPerformance)
