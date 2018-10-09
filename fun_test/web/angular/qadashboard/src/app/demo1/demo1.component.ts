@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class Demo1Component implements OnInit {
 
-  sideBarClass: boolean = true;
+  sideBarClass: boolean = false;
   constructor() { }
 
   ngOnInit() {

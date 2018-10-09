@@ -21,6 +21,7 @@ from . import common_views
 from . import metrics_views
 from . import tests_views
 from . import upgrade_views
+from . import demo_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 
@@ -138,6 +139,10 @@ upgrade_urls = [
     url(r'^.*$', upgrade_views.home)
 ]
 
+demo_urls = [
+    url(r'^.*$', demo_views.home)
+]
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^performance/', include(performance_urls)),
@@ -152,6 +157,7 @@ urlpatterns = [
     url(r'^initialize$', metrics_views.initialize),
     url(r'^test/', include(test_urls)),
     url(r'^upgrade/', include(upgrade_urls)),
+    url(r'^demo/', include(demo_urls)),
     url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
 
 ]
