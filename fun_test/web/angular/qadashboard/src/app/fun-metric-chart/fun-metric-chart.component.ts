@@ -50,7 +50,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   public formatter: Function;
   public tooltip: Function;
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute) {
+  constructor(public apiService: ApiService, public loggerService: LoggerService, public route: ActivatedRoute) {
   }
 
   ngOnInit() {
@@ -177,9 +177,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
       this.chartInfo = response.data;
       if (this.chartInfo !== null) {
-        if (!this.previewDataSets) {
-          this.previewDataSets = this.chartInfo.data_sets;
-        }
+        this.previewDataSets = this.chartInfo.data_sets;
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
         this.negativeGradient = !this.chartInfo.positive;
