@@ -10,24 +10,20 @@ import {ActivatedRoute} from "@angular/router";
   styleUrls: ['./fun-metric-chart.component.css']
 })
 export class FunMetricChartComponent implements OnInit, OnChanges {
-  @Input() chartName: any;
-  @Input() modelName: any;
   @Input() minimal: boolean = false;
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
 
-  status: any;
+  status: string;
   showingTable: boolean;
   showingConfigure: boolean;
   chartInfo: any;
   headers: any;
-  allData: any;
-  data: any = {};
-  metricId: any;
+  data: any = {}; //used for fun table
+  metricId: number;
   editingDescription: boolean = false;
   inner: any = {};
-  atomic: boolean = false;
-  currentDescription: any;
+  currentDescription: string;
   waitTime: number = 0;
   values: any;
   charting: any;
@@ -46,6 +42,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   chart1YaxisTitle: any;
   y1AxisTitle: any;
   mileStoneIndex: number = null;
+  chartName: string;
+  modelName: string;
 
   public formatter: Function;
   public tooltip: Function;
@@ -54,7 +52,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    this.populateNames();
+    this.fetchNames();
     this.status = "idle";
     this.showingTable = false;
     this.showingConfigure = false;
@@ -73,11 +71,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {     
-    this.populateNames();
+    this.fetchNames();
   }
 
   //set the chart and model name based in metric id
-  populateNames() {
+  fetchNames() {
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.id = params['id'];
@@ -424,7 +422,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       keyList = this.getDatesByTimeMode(keyList);
       let chartDataSets = [];
       let seriesDates = [];
-      this.allData = allDataSets;
       this.status = "Preparing chart data-sets";
       for (let j = 0; j < this.filterDataSets.length; j++) {
         let oneChartDataArray = [];
@@ -484,7 +481,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.data["headers"].push(this.headers[key].verbose_name);
         }
       });
-      let dataSet = this.allData[0];
+      let dataSet = allDataSets[0];
       let index = 0;
       for (let rowData of dataSet) {
         let row = [];
