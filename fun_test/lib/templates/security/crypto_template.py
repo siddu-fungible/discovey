@@ -1,8 +1,6 @@
 from lib.system.fun_test import fun_test
 
 
-
-
 class CryptoTemplate:
 
     # common variables used
@@ -15,7 +13,6 @@ class CryptoTemplate:
     FILE_128MB = "134217728"
     TOOLS_PATH = "/bin/"
     TOOLS = ["mygendata_big"]
-
 
     def __init__(self, host):
         self.host = host
@@ -31,7 +28,7 @@ class CryptoTemplate:
                      recursive=True)
 
     def create_huge_file(self):
-        #tool_path = fun_test.get_script_parent_directory() + self.TOOLS_PATH + CryptoTemplate.CREATE_FILE
+        # tool_path = fun_test.get_script_parent_directory() + self.TOOLS_PATH + CryptoTemplate.CREATE_FILE
         tool_path = "/tmp/" + CryptoTemplate.CREATE_FILE
         create_file_command = tool_path + " " + self.FILE_128MB + " > " + "/home/root/" + self.FILE_128MB + ".txt"
         print "command: ", create_file_command

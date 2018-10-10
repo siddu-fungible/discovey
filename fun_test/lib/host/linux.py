@@ -1,4 +1,5 @@
-import pexpect, paramiko
+import pexpect
+import paramiko
 from paramiko_expect import SSHClientInteraction
 import re
 import collections
@@ -8,6 +9,7 @@ import time
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 import commentjson
+
 
 class NoLogger:
     def __init__(self):
@@ -149,7 +151,7 @@ class Linux(object, ToDictMixin):
         return d
 
     def __setstate__(self, state):
-        state["logger"] = self.logger = LinuxLogger()  #TODO? What is the current logger?
+        state["logger"] = self.logger = LinuxLogger()  # TODO? What is the current logger?
         state["handle"] = None
         self.__dict__.update(state)
 
@@ -1150,6 +1152,10 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def modprobe(self, module):
         return self.sudo_command("modprobe {}".format(module))
+
+    @fun_test.safe
+    def rmmod(self, module):
+        return self.sudo_command("modprobe -r {}".format(module))
 
     @fun_test.safe
     def lsmod(self, module):
