@@ -28,9 +28,9 @@ tr.example-element-row:not(.example-expanded-row):active {
   min-width: 80px;
   border: 2px solid black;
   padding: 8px;
-  font-weight: lighter;
+  /*font-weight: lighter;*/
   margin: 8px 0;
-  height: 204px;
+  /*height: 204px;*/
 }
 
 .example-element-symbol {

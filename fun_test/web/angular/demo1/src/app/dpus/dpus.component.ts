@@ -2,27 +2,34 @@ import {SelectionModel} from '@angular/cdk/collections';
 import {Component} from '@angular/core';
 import {MatTableDataSource} from '@angular/material';
 import {animate, state, style, transition, trigger} from '@angular/animations';
+import {FormControl} from '@angular/forms';
+
 
 
 export interface PeriodicElement {
   name: string;
   position: number;
-  weight: number;
-  symbol: string;
+  online: boolean;
+  num_raw_volumes: number;
 }
 
 const ELEMENT_DATA: PeriodicElement[] = [
-  {position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H'},
-  {position: 2, name: 'Helium', weight: 4.0026, symbol: 'He'},
-  {position: 3, name: 'Lithium', weight: 6.941, symbol: 'Li'},
-  {position: 4, name: 'Beryllium', weight: 9.0122, symbol: 'Be'},
-  {position: 5, name: 'Boron', weight: 10.811, symbol: 'B'},
-  {position: 6, name: 'Carbon', weight: 12.0107, symbol: 'C'},
-  {position: 7, name: 'Nitrogen', weight: 14.0067, symbol: 'N'},
-  {position: 8, name: 'Oxygen', weight: 15.9994, symbol: 'O'},
-  {position: 9, name: 'Fluorine', weight: 18.9984, symbol: 'F'},
-  {position: 10, name: 'Neon', weight: 20.1797, symbol: 'Ne'},
+  {position: 1, name: 'DPU-1', online: true, num_raw_volumes: 4},
+  {position: 2, name: 'DPU-2', online: true, num_raw_volumes: 5},
+  {position: 3, name: 'DPU-3', online: true, num_raw_volumes: 7},
 ];
+
+
+export interface Action {
+  value: number;
+  viewValue: string;
+}
+
+export interface ActionGroup {
+  name: string;
+  actions: Action[];
+}
+
 
 /**
  * @title Table with selection
@@ -39,10 +46,19 @@ const ELEMENT_DATA: PeriodicElement[] = [
     ])]
 })
 export class DpusComponent {
-  displayedColumns: string[] = ['select', 'position', 'name', 'weight', 'symbol'];
+  displayedColumns: string[] = ['select', 'position', 'name', 'online', 'num_raw_volumes'];
   dataSource = new MatTableDataSource<PeriodicElement>(ELEMENT_DATA);
   selection = new SelectionModel<PeriodicElement>(true, []);
   expandedElement: PeriodicElement;
+  actionControl = new FormControl();
+
+
+  actionGroups: ActionGroup[] = [
+    {name: "Storage", actions: [{value: 1, viewValue: "Create Raw Volume"}]}
+  ];
+  constructor() {
+
+  }
 
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
