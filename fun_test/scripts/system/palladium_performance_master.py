@@ -66,12 +66,14 @@ class PalladiumPerformanceTc(FunTestCase):
         lines = job_info["output_text"].split("\n")
         job_id = job_info["job_id"]
         dt = job_info["date_time"]
+        log = job_info["log"].split("\n")
 
         fun_test.test_assert(is_job_from_today(dt), "Last job is from today")
         self.job_info = job_info
         self.lines = lines
         self.dt = dt
         self.job_id = job_id
+        self.log = log
         return True
 
     def metrics_to_dict(self, metrics, result):
@@ -732,6 +734,110 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="SoakClassicMallocPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
+class BootTimingPerformanceTc(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+
+    def describe(self):
+        self.set_test_details(id=13,
+                              summary="Boot Timing Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        reset_cut_done = False
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.log:
+                if "Reset CUT done!" in line:
+                    reset_cut_done = True
+                if reset_cut_done:
+                    m = re.search(
+                            r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware(?:$|\r)',
+                            line)
+                    if m:
+                        output_firmware_boot_time = int(m.group("time"))
+                        output_firmware_boot_cycles = int(m.group("cycle"))
+                        fun_test.log("boot type: Firmware, boot time: {}, boot cycles: {}".format(output_firmware_boot_time, output_firmware_boot_cycles))
+                        metrics["output_firmware_boot_time"] = output_firmware_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection(?:$|\r)',
+                        line)
+                    if m:
+                        output_flash_type_boot_time = int(m.group("time"))
+                        output_flash_type_boot_cycles = int(m.group("cycle"))
+                        fun_test.log("boot type: Flash type detection, boot time: {}, boot cycles: {}".format(output_flash_type_boot_time,
+                                                                                                  output_flash_type_boot_cycles))
+                        metrics["output_flash_type_boot_time"] = output_flash_type_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading(?:$|\r)',
+                        line)
+                    if m:
+                        output_eeprom_boot_time = int(m.group("time"))
+                        output_eeprom_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: EEPROM Loading, boot time: {}, boot cycles: {}".format(output_eeprom_boot_time,
+                                                                                         output_eeprom_boot_cycles))
+                        metrics["output_eeprom_boot_time"] = output_eeprom_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading(?:$|\r)',
+                        line)
+                    if m:
+                        output_sbus_boot_time = int(m.group("time"))
+                        output_sbus_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: SBUS Loading, boot time: {}, boot cycles: {}".format(output_sbus_boot_time,
+                                                                                         output_sbus_boot_cycles))
+                        metrics["output_sbus_boot_time"] = output_sbus_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT(?:$|\r)',
+                        line)
+                    if m:
+                        output_host_boot_time = int(m.group("time"))
+                        output_host_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: Host BOOT, boot time: {}, boot cycles: {}".format(output_host_boot_time,
+                                                                                             output_host_boot_cycles))
+                        metrics["output_host_boot_time"] = output_host_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop(?:$|\r)',
+                        line)
+                    if m:
+                        output_main_loop_boot_time = int(m.group("time"))
+                        output_main_loop_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: Main Loop, boot time: {}, boot cycles: {}".format(output_main_loop_boot_time,
+                                                                                          output_main_loop_boot_cycles))
+                        metrics["output_main_loop_boot_time"] = output_main_loop_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success(?:$|\r)',
+                        line)
+                    if m:
+                        output_boot_success_boot_time = int(m.group("time"))
+                        output_boot_success_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: Boot success, boot time: {}, boot cycles: {}".format(output_boot_success_boot_time,
+                                                                                          output_boot_success_boot_cycles))
+                        metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
+
+                # d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                # MetricHelper(model=SoakClassicMallocPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="SoakClassicMallocPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -752,18 +858,19 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(EcVolPerformanceTc())
+    # myscript.add_test_case(VoltestPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
