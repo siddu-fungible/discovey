@@ -5,6 +5,7 @@ class CryptoTemplate:
 
     # common variables used
     FUNCRYPTO = "funcrypto"
+    AESNI_INTEL = "aesni_intel"
     VERSION = "version"
     ENGINE = "engine"
     AF_ALG = "af_alg"
@@ -36,6 +37,15 @@ class CryptoTemplate:
 
     def load_funcrypto(self):
         self.host.modprobe(self.FUNCRYPTO)
+
+    def unload_funcrypto(self):
+        self.host.rmmod(self.FUNCRYPTO)
+
+    def load_aesni(self):
+        self.host.modprobe(self.AESNI_INTEL)
+
+    def unload_aesni(self):
+        self.host.rmmod(self.AESNI_INTEL)
 
     def verify_funcrypto(self):
         # check if funcrypto module is loaded
