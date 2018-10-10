@@ -15,23 +15,27 @@ class Setup(FunTestScript):
 
     def setup(self):
         self.docker_host = AssetManager().get_any_docker_host()
-        self.container_name = "this_container"
+
         image_name = "ubuntu_template:latest"
 
-        self.container_asset = self.docker_host.setup_container(image_name=image_name,
-                                                                container_name=self.container_name,
-                                                                pool0_internal_ports=[22],
-                                                                auto_remove=True)
-
-        fun_test.test_assert(self.container_asset, "Container launched")
-
-        fun_test.test_assert(self.docker_host.ensure_container_idling(container_name=self.container_name), "Container UP")
-        fun_test.shared_variables["container_asset"] = self.container_asset
+        container_assets = []
+        for i in xrange(2):
+            container_name = "this_container_{}".format(i)
+            container_asset = self.docker_host.setup_container(image_name=image_name,
+                                                                    container_name=container_name,
+                                                                    pool0_internal_ports=[22],
+                                                                    auto_remove=True)
+            fun_test.test_assert(container_asset, "Container launched")
+            container_assets.append(container_asset)
+            fun_test.test_assert(self.docker_host.ensure_container_idling(container_name=container_name), "Container {} UP".format(container_name))
+        fun_test.shared_variables["container_assets"] = container_assets
 
     def cleanup(self):
-        self.docker_host.destroy_container(
-            container_name=self.container_name,
-            ignore_error=True)
+        container_assets = fun_test.shared_variables["container_assets"]
+        for container_asset in container_assets:
+            self.docker_host.destroy_container(
+                container_name=container_asset["name"],
+                ignore_error=True)
 
 
 class TestCase1(FunTestCase):
@@ -46,16 +50,15 @@ class TestCase1(FunTestCase):
         pass
 
     def run(self):
+        container_assets = fun_test.shared_variables["container_assets"]
+        for container_asset in container_assets:
+            linux_obj = Linux(host_ip=container_asset["host_ip"],
+                              ssh_username=container_asset["mgmt_ssh_username"],
+                              ssh_password=container_asset["mgmt_ssh_password"],
+                              ssh_port=container_asset["mgmt_ssh_port"])
 
-        container_asset = fun_test.shared_variables["container_asset"]
-
-        linux_obj = Linux(host_ip=container_asset["host_ip"],
-                          ssh_username=container_asset["mgmt_ssh_username"],
-                          ssh_password=container_asset["mgmt_ssh_password"],
-                          ssh_port=container_asset["mgmt_ssh_port"])
-
-        linux_obj.command("ls -l /var")
-        fun_test.test_assert(True, "Done")
+            linux_obj.command("ifconfig")
+            fun_test.test_assert(True, "Done")
 
     def cleanup(self):
         pass
