@@ -1,6 +1,8 @@
 import {SelectionModel} from '@angular/cdk/collections';
 import {Component} from '@angular/core';
 import {MatTableDataSource} from '@angular/material';
+import {animate, state, style, transition, trigger} from '@angular/animations';
+
 
 export interface PeriodicElement {
   name: string;
@@ -29,11 +31,18 @@ const ELEMENT_DATA: PeriodicElement[] = [
   selector: 'dpus',
   styleUrls: ['dpus.component.css'],
   templateUrl: 'dpus.component.html',
+    animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({height: '0px', minHeight: '0', display: 'none'})),
+      state('expanded', style({height: '*'})),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ])]
 })
 export class DpusComponent {
   displayedColumns: string[] = ['select', 'position', 'name', 'weight', 'symbol'];
   dataSource = new MatTableDataSource<PeriodicElement>(ELEMENT_DATA);
   selection = new SelectionModel<PeriodicElement>(true, []);
+  expandedElement: PeriodicElement;
 
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
