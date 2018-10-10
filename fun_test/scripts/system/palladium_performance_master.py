@@ -5,7 +5,7 @@ from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, SoakClassicMallocPerformance
-from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
+from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 from web.fun_test.analytics_models_helper import prepare_status_db
 from web.fun_test.models import TimeKeeper
@@ -827,15 +827,14 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                                                                                           output_boot_success_boot_cycles))
                         metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
 
-                # d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                # MetricHelper(model=SoakClassicMallocPerformance).add_entry(**d)
-
+            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+            MetricHelper(model=BootTimePerformance).add_entry(**d)
             self.result = fun_test.PASSED
 
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="SoakClassicMallocPerformance")
+        set_last_build_status_for_charts(result=self.result, model_name="BootTimePerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class PrepareDbTc(FunTestCase):
@@ -871,6 +870,6 @@ if __name__ == "__main__":
     # myscript.add_test_case(SoakFunMallocPerformanceTc())
     # myscript.add_test_case(SoakClassicMallocPerformanceTc())
     myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
