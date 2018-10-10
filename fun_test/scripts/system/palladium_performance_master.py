@@ -754,7 +754,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                     reset_cut_done = True
                 if reset_cut_done:
                     m = re.search(
-                            r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware(?:$|\r)',
+                            r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware',
                             line)
                     if m:
                         output_firmware_boot_time = int(m.group("time"))
@@ -763,7 +763,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_firmware_boot_time"] = output_firmware_boot_time
 
                     m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection(?:$|\r)',
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection',
                         line)
                     if m:
                         output_flash_type_boot_time = int(m.group("time"))
@@ -773,7 +773,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_flash_type_boot_time"] = output_flash_type_boot_time
 
                     m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading(?:$|\r)',
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading',
                         line)
                     if m:
                         output_eeprom_boot_time = int(m.group("time"))
@@ -784,7 +784,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_eeprom_boot_time"] = output_eeprom_boot_time
 
                     m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading(?:$|\r)',
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading',
                         line)
                     if m:
                         output_sbus_boot_time = int(m.group("time"))
@@ -795,7 +795,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_sbus_boot_time"] = output_sbus_boot_time
 
                     m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT(?:$|\r)',
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT',
                         line)
                     if m:
                         output_host_boot_time = int(m.group("time"))
@@ -806,7 +806,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_host_boot_time"] = output_host_boot_time
 
                     m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop(?:$|\r)',
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop',
                         line)
                     if m:
                         output_main_loop_boot_time = int(m.group("time"))
@@ -817,7 +817,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_main_loop_boot_time"] = output_main_loop_boot_time
 
                     m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success(?:$|\r)',
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success',
                         line)
                     if m:
                         output_boot_success_boot_time = int(m.group("time"))
@@ -857,19 +857,19 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
     myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
