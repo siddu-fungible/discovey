@@ -2,7 +2,6 @@ import {Component, OnInit} from '@angular/core';
 import {Location} from '@angular/common';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
-import {isSameDay} from "ngx-bootstrap/chronos/utils/date-getters";
 
 class ChildInfo {
   lastScore: number;
@@ -108,6 +107,7 @@ export class PerformanceComponent implements OnInit {
       this.dag = response.data;
       this.walkDag(this.dag);
       this.flatNodes[0].hide = false;
+      this.expandNode(this.flatNodes[0]);
       let i = 0;
     }, error => {
       this.loggerService.error("fetchDag");
