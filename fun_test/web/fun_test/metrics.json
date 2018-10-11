@@ -657,6 +657,25 @@
         ]
       },
       {
+        "info": "System",
+        "metric_model_name": "MetricContainer",
+        "leaf": false,
+        "name": "System",
+        "label": "System",
+        "weight": 1,
+        "children": [
+          {
+            "info": "Boot timings",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "Boot timings",
+            "label": "Boot timings",
+            "children": [],
+            "weight": 1
+          }
+        ]
+      },
+      {
         "info": "TeraMarks",
         "metric_model_name": "MetricContainer",
         "leaf": false,
