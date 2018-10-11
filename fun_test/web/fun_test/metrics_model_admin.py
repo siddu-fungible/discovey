@@ -13,7 +13,7 @@ from web.fun_test.metrics_models import HuRawVolumePerformance, FunMagentPerform
 from web.fun_test.metrics_models import SoakClassicMallocPerformance, SoakFunMallocPerformance
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance
 from web.fun_test.metrics_models import MetricChartStatus
-from web.fun_test.metrics_models import WuSendSpeedTestPerformance
+from web.fun_test.metrics_models import WuSendSpeedTestPerformance, BootTimePerformance
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -111,6 +111,10 @@ class SoakFunMallocPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(SoakClassicMallocPerformance)
 class SoakClassicMallocPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(BootTimePerformance)
+class BootTimePerformanceAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
 @admin.register(ShaxPerformance)
