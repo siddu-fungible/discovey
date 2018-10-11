@@ -10,24 +10,20 @@ import {ActivatedRoute} from "@angular/router";
   styleUrls: ['./fun-metric-chart.component.css']
 })
 export class FunMetricChartComponent implements OnInit, OnChanges {
-  @Input() chartName: any;
-  @Input() modelName: any;
   @Input() minimal: boolean = false;
   @Input() id: number = null;
+  @Input() previewDataSets: any = null;
 
-  status: any;
+  status: string;
   showingTable: boolean;
   showingConfigure: boolean;
   chartInfo: any;
   headers: any;
-  allData: any;
-  data: any = {};
-  metricId: any;
+  data: any = {}; //used for fun table
+  metricId: number;
   editingDescription: boolean = false;
   inner: any = {};
-  atomic: boolean = false;
-  previewDataSets: any = null;
-  currentDescription: any;
+  currentDescription: string;
   waitTime: number = 0;
   values: any;
   charting: any;
@@ -46,6 +42,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   chart1YaxisTitle: any;
   y1AxisTitle: any;
   mileStoneIndex: number = null;
+  chartName: string;
+  modelName: string;
 
   public formatter: Function;
   public tooltip: Function;
@@ -54,7 +52,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    this.populateNames();
+    this.fetchNames();
     this.status = "idle";
     this.showingTable = false;
     this.showingConfigure = false;
@@ -67,22 +65,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.values = null;
     this.charting = true;
     this.buildInfo = null;
-    this.setDefault();
-
-    if (this.chartName) {
-      this.fetchInfo();
-    }
-
     this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
   }
 
-  ngOnChanges() {
-    this.populateNames();
+  ngOnChanges() {     
+    this.fetchNames();
   }
 
-  populateNames() {
+  //set the chart and model name based in metric id
+  fetchNames() {
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.id = params['id'];
@@ -100,11 +93,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.loggerService.error("fetching by metric id failed");
       });
     }
-    else {
-      this.setDefault();
-      this.fetchInfo();
-    }
-
   }
 
   //formats the string displayed on xaxis of the chart
@@ -187,7 +175,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
       this.chartInfo = response.data;
       if (this.chartInfo !== null) {
-        this.previewDataSets = this.chartInfo.data_sets;
+        this.previewDataSets = this.getPreviewDataSets();
+        if(!this.previewDataSets) {
+          this.loggerService.error("No Preview Datasets");
+          return;
+        }
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
         this.negativeGradient = !this.chartInfo.positive;
@@ -197,7 +189,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.status = "idle";
       }
       setTimeout(() => {
-        this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, null);
+        this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
       }, this.waitTime);
     }, error => {
       this.loggerService.error("fun_metric_chart: chart_info");
@@ -210,6 +202,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.mileStoneIndex = null;
     this.showingTable = false;
     this.showingConfigure = false;
+  }
+
+  getPreviewDataSets(): any {
+    return this.chartInfo.data_sets;
   }
 
   //closes the div of show tables
@@ -335,6 +331,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //check for all dates and if not present add the respective date to the list
   fixMissingDates(dates): any {
+    let finalDates = [];
+    if (dates.length !== 0) {
     let firstString = dates[0].replace(/\s+/g, 'T');
     //firstString = firstString.replace('+', 'Z');
     //firstString = firstString.substring(0, firstString.indexOf('Z'));
@@ -347,7 +345,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
     let currentDate = firstDate;
     let datesIndex = 0;
-    let finalDates = [];
     while (currentDate <= yesterday) {
 
       //console.log(currentDate);
@@ -369,7 +366,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    let j = 0;
+    }
     return finalDates;
   }
 
@@ -433,7 +430,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       keyList = this.getDatesByTimeMode(keyList);
       let chartDataSets = [];
       let seriesDates = [];
-      this.allData = allDataSets;
       this.status = "Preparing chart data-sets";
       for (let j = 0; j < this.filterDataSets.length; j++) {
         let oneChartDataArray = [];
@@ -493,7 +489,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.data["headers"].push(this.headers[key].verbose_name);
         }
       });
-      let dataSet = this.allData[0];
+      let dataSet = allDataSets[0];
       let index = 0;
       for (let rowData of dataSet) {
         let row = [];

@@ -4,14 +4,14 @@
         <h3 ng-if="mode === 'Create'" class="modal-title">Create chart</h3>
     </div>
     <div class="modal-body edit-modal-body">
-        <fun-metric-chart [id]="metricId" [minimal]="'true'" [previewDataSets]="previewDataSets" style="width:350px; height:350px;"></fun-metric-chart>
+        <preview-fun-metric [id]="metricId" [minimal]="'true'" [previewDataSets]="previewDataSets" style="width:350px; height:350px;"></preview-fun-metric>
         <div *ngIf="mode === 'Create'">
             <table class="table table-nonfluid">
                 <tr>
                     <td><label>Chart name: </label></td>
                     <td>
                         <input type="text" required
-                                   [(ngModel)]="chartName">
+                                   [(ngModel)]="chartName"/>
                     </td>
                 </tr>
             <tr>
@@ -21,9 +21,14 @@
                                        [(ngModel)]="y1AxisTitle"/>
                 </td>
             </tr>
+              <tr>
+                <td>
+                  Negative gradient&nbsp;<input type="checkbox" [(ngModel)]="negativeGradient"/>
+                </td>
+              </tr>
         </table>
         </div>
-        <div *ngIf="((mode==='Create') && chartName) || (mode==='Edit')">
+        <div *ngIf="((mode === 'Create') && chartName) || (mode === 'Edit')">
             <span class="fa fa-plus"></span>
             <a [routerLink]="" (click)="addDataSetClick()">Add data-set</a>
         </div>
@@ -53,7 +58,7 @@
                     <td>
                         <select (change)="outputChange()"
                                     [(ngModel)]="addDataSet.output.name">
-                          <option *ngFor="let output of outputList">{{ output }}</option>
+                          <option *ngFor="let output of outputOptions">{{ output }}</option>
 
                         </select>
                     </td>
@@ -72,7 +77,6 @@
             <button class="btn btn-primary" (click)="addClick()">Add</button>
 
         </div>
-        <p><input type="checkbox" [(ngModel)]="negativeGradient">&nbsp;Negative gradient</p>
 
         <table class="table table-nonfluid table-bordered">
             <tr>

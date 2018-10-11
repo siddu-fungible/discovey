@@ -3,16 +3,14 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 
 @Component({
-  selector: 'app-test',
-  templateUrl: './test.component.html',
-  styleUrls: ['./test.component.css']
+  selector: 'create-chart',
+  templateUrl: './create-chart.component.html',
+  styleUrls: ['./create-chart.component.css']
 })
-export class TestComponent implements OnInit, OnChanges {
-  yValues: any = [];
+export class CreateChartComponent implements OnInit, OnChanges {
   xValues: any = [];
   title: string;
   xAxisLabel: string;
-  yAxisLabel: string;
   @Input() chartName: string;
   @Input() modelName: string;
   @Input() mode: string;
@@ -22,37 +20,22 @@ export class TestComponent implements OnInit, OnChanges {
   copyChartInfo: any = null;
   previewDataSets: any = [];
   addDataSet: any = null;
-  outputList: any = [];
+  outputOptions: any = [];
   tableInfo: any = null;
   dummyChartInfo: any;
   showOutputSelection: boolean;
   negativeGradient: boolean = false;
-  inputNames: any;
+  inputNames: any;//name headers
   selectedOutput: any;
   metricId: any;
-  addData: boolean = false;
 
 
   constructor(private apiService: ApiService, private logger: LoggerService) {
   }
 
   ngOnInit() {
-    // let temp = [];
-    // temp["name"] = 'series 1';
-    // temp["data"] = [1,2,3,4,5];
-    // this.yValues[0] = temp;
-    this.yValues.push({name: 'series 1', data: [1, 2, 3, 4, 5]});
-    this.yValues.push({name: 'series 2', data: [6, 7, 8, 9, 10]});
-    this.yValues.push({name: 'series 3', data: [11, 12, 13, 14, 15]});
-    this.yValues.push({name: 'series 4', data: [16, 17, 18, 19, 20]});
-    this.yValues.push({name: 'series 5', data: [21, 22, 23, 24, 25]});
-    this.xValues.push([0, 1, 2, 3, 4]);
-    this.title = "Funchart";
-    this.xAxisLabel = "Date";
-    this.yAxisLabel = "Range";
     this.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
     this.showOutputSelection = false;
-
 
     if (this.chartName) {
       let payload = {};
@@ -69,19 +52,12 @@ export class TestComponent implements OnInit, OnChanges {
       }, error => {
         this.logger.error("EditChartController: chart_info");
       });
-    } else {
     }
-
     this.describeTable();
 
   }
 
   ngOnChanges(){
-
-  }
-
-  dismiss() {
-
   }
 
   describeTable = () => {
@@ -100,7 +76,7 @@ export class TestComponent implements OnInit, OnChanges {
           self.inputNames.push(oneField);
         }
         if (oneField["name"].startsWith("output")) {
-          self.outputList.push(oneField["name"]);
+          self.outputOptions.push(oneField["name"]);
         }
       });
     }, error => {
@@ -131,7 +107,6 @@ export class TestComponent implements OnInit, OnChanges {
     validDataSet["inputs"] = {};
     validDataSet["output"] = {};
     if (this.addDataSet) {
-
       // lets validate all inputs
       this.addDataSet["inputs"].forEach((oneField) => {
         if (!oneField.selectedChoice && oneField.name !== "input_date_time" && oneField.choices.length) {
@@ -141,7 +116,6 @@ export class TestComponent implements OnInit, OnChanges {
           return this.logger.error(message);
         } else {
           validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
-
         }
       });
       if (!error) {
@@ -168,7 +142,6 @@ export class TestComponent implements OnInit, OnChanges {
     if (!error) {
       // using temp to change the reference of previewdatasets so that the onchanges is triggered
       let temp = Object.assign([], this.previewDataSets);
-      this.previewDataSets = null;
       temp.push(validDataSet);
       this.previewDataSets = temp;
       this.showOutputSelection = false;
@@ -180,16 +153,11 @@ export class TestComponent implements OnInit, OnChanges {
 
   removeClick = (index) => {
      // using temp to change the reference of previewdatasets so that the onchanges is triggered
-    //this.copyChartInfo.data_sets.splice(index, 1);
     this.previewDataSets.splice(index, 1);
-    let temp = Object.assign([], this.previewDataSets);
-    this.previewDataSets = null;
-    this.previewDataSets = temp;
-
-    //= this.copyChartInfo.data_sets;
+    this.previewDataSets = Object.assign([], this.previewDataSets);
   };
 
-  submit = () => {
+  submit(): void {
     //this.previewDataSets = this.copyChartInfo.data_sets;
     let payload = {};
     payload["metric_model_name"] = this.modelName;
@@ -212,5 +180,8 @@ export class TestComponent implements OnInit, OnChanges {
     });
   }
 
-
+  dismiss() {
+    window.history.back();
+  }
+  
 }
