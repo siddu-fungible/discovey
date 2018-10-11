@@ -61,20 +61,18 @@ class PalladiumPerformanceTc(FunTestCase):
         pass
 
     def validate_job(self):
-        lsf_status_server = LsfStatusServer()
-        job_info = lsf_status_server.get_last_job(tag=self.tag)
+        self.lsf_status_server = LsfStatusServer()
+        job_info = self.lsf_status_server.get_last_job(tag=self.tag)
         fun_test.test_assert(job_info, "Ensure one last job exists")
         lines = job_info["output_text"].split("\n")
         job_id = job_info["job_id"]
         dt = job_info["date_time"]
-        log = job_info["log"].split("\n")
 
         fun_test.test_assert(is_job_from_today(dt), "Last job is from today")
         self.job_info = job_info
         self.lines = lines
         self.dt = dt
         self.job_id = job_id
-        self.log = log
         return True
 
     def metrics_to_dict(self, metrics, result):
@@ -749,8 +747,10 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         reset_cut_done = False
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-
-            for line in self.log:
+            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
+            fun_test.test_assert(log, "fetched uart log")
+            log = log.split("\n")
+            for line in log:
                 if "Reset CUT done!" in line:
                     reset_cut_done = True
                 if reset_cut_done:
@@ -858,19 +858,19 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(EcVolPerformanceTc())
+    # myscript.add_test_case(VoltestPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
     myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

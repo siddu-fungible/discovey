@@ -92,11 +92,8 @@ class LsfStatusServer:
                     response_dict = json.loads(response)
                     fun_test.log(json.dumps(response_dict, indent=4))
                     output_text = response_dict["output_text"]
-                    logs = response_dict["logs"]
-                    log = self.get_raw_logs(job_id=job_info["job_id"], logs=logs)
                     past_job["date_time"] = dt
                     past_job["output_text"] = output_text
-                    past_job["log"] = log
                 except Exception as ex:
                     fun_test.log("Actual response:" + response)
                     fun_test.critical(str(ex))
@@ -106,13 +103,24 @@ class LsfStatusServer:
         url = "{}/job/{}?format=json".format(self.base_url, job_id)
         return self._get(url=url)
 
-    def get_raw_logs(self, job_id, logs):
-        for item in logs:
-            for name in item:
-                if "cdn_uartout1.txt" in name:
-                    log = name
-        url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log)
-        return self._get(url=url)
+    def get_raw_file(self, job_id, file_name):
+        result = None
+        response = self.get_job_by_id(job_id=job_id)
+        try:
+            response_dict = json.loads(response)
+            logs = response_dict["logs"]
+            for item in logs:
+                for name in item:
+                    if file_name in name:
+                        log = name
+                        url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log)
+                        result = self._get(url=url)
+                        break
+        except Exception as ex:
+            fun_test.log("Actual response:" + response)
+            fun_test.critical(str(ex))
+
+        return result
 
     def add_palladium_job_info(self, job_info):
         try:
