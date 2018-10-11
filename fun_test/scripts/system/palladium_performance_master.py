@@ -13,6 +13,7 @@ import re
 from datetime import datetime
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
+BOOT_TIMING_TEST_TAG = "boot_timing_test"
 VOLTEST_TAG = "voltest_performance"
 
 def get_rounded_time():
@@ -736,7 +737,7 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
 
 
 class BootTimingPerformanceTc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG
+    tag = BOOT_TIMING_TEST_TAG
 
     def describe(self):
         self.set_test_details(id=13,
