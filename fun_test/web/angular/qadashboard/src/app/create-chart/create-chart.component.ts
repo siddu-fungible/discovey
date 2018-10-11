@@ -8,11 +8,9 @@ import {LoggerService} from "../services/logger/logger.service";
   styleUrls: ['./create-chart.component.css']
 })
 export class CreateChartComponent implements OnInit, OnChanges {
-  yValues: any = [];
   xValues: any = [];
   title: string;
   xAxisLabel: string;
-  yAxisLabel: string;
   @Input() chartName: string;
   @Input() modelName: string;
   @Input() mode: string;
@@ -22,15 +20,14 @@ export class CreateChartComponent implements OnInit, OnChanges {
   copyChartInfo: any = null;
   previewDataSets: any = [];
   addDataSet: any = null;
-  outputList: any = [];
+  outputOptions: any = [];
   tableInfo: any = null;
   dummyChartInfo: any;
   showOutputSelection: boolean;
   negativeGradient: boolean = false;
-  inputNames: any;
+  inputNames: any;//name headers
   selectedOutput: any;
   metricId: any;
-  addData: boolean = false;
 
 
   constructor(private apiService: ApiService, private logger: LoggerService) {
@@ -79,7 +76,7 @@ export class CreateChartComponent implements OnInit, OnChanges {
           self.inputNames.push(oneField);
         }
         if (oneField["name"].startsWith("output")) {
-          self.outputList.push(oneField["name"]);
+          self.outputOptions.push(oneField["name"]);
         }
       });
     }, error => {
@@ -110,7 +107,6 @@ export class CreateChartComponent implements OnInit, OnChanges {
     validDataSet["inputs"] = {};
     validDataSet["output"] = {};
     if (this.addDataSet) {
-
       // lets validate all inputs
       this.addDataSet["inputs"].forEach((oneField) => {
         if (!oneField.selectedChoice && oneField.name !== "input_date_time" && oneField.choices.length) {
@@ -120,7 +116,6 @@ export class CreateChartComponent implements OnInit, OnChanges {
           return this.logger.error(message);
         } else {
           validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
-
         }
       });
       if (!error) {
@@ -159,8 +154,7 @@ export class CreateChartComponent implements OnInit, OnChanges {
   removeClick = (index) => {
      // using temp to change the reference of previewdatasets so that the onchanges is triggered
     this.previewDataSets.splice(index, 1);
-    let temp = Object.assign([], this.previewDataSets);
-    this.previewDataSets = temp;
+    this.previewDataSets = Object.assign([], this.previewDataSets);
   };
 
   submit(): void {

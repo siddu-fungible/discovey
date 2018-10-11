@@ -11,7 +11,7 @@
                     <td><label>Chart name: </label></td>
                     <td>
                         <input type="text" required
-                                   [(ngModel)]="chartName">
+                                   [(ngModel)]="chartName"/>
                     </td>
                 </tr>
             <tr>
@@ -23,12 +23,12 @@
             </tr>
               <tr>
                 <td>
-                  Negative gradient&nbsp;<input type="checkbox" [(ngModel)]="negativeGradient">
+                  Negative gradient&nbsp;<input type="checkbox" [(ngModel)]="negativeGradient"/>
                 </td>
               </tr>
         </table>
         </div>
-        <div *ngIf="((mode==='Create') && chartName) || (mode==='Edit')">
+        <div *ngIf="((mode === 'Create') && chartName) || (mode === 'Edit')">
             <span class="fa fa-plus"></span>
             <a [routerLink]="" (click)="addDataSetClick()">Add data-set</a>
         </div>
@@ -58,7 +58,7 @@
                     <td>
                         <select (change)="outputChange()"
                                     [(ngModel)]="addDataSet.output.name">
-                          <option *ngFor="let output of outputList">{{ output }}</option>
+                          <option *ngFor="let output of outputOptions">{{ output }}</option>
 
                         </select>
                     </td>
