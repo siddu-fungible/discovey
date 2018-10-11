@@ -70,7 +70,7 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                       '-append "root=/dev/vda rw highres=off ip=:::255.255.255.0:qemu-yocto:eth0:on oprofile.timer=1 console=ttyS0 console=tty0 mem={}M" ' \
                       '-drive file={},format=raw,if=none,id=rootfs ' \
                       '-device ioh3420,id=root_port1,addr=1c.0,port=1,chassis=1 ' \
-                      '-device nvme-rem-fe,hu=0,controller=0,sim_id=nvme_test,bus=root_port1 -device virtio-rng-pci ' \
+                      '-device nvme-rem-fe,hu=0,controller=0,sim_id=epnvme_test,bus=root_port1 -device virtio-rng-pci ' \
                       '-device virtio-blk-pci,drive=rootfs -redir tcp:{}::22 -redir tcp:40220::40220'.\
                 format(self.QEMU_PROCESS, qemu_num_cpus, qemu_memory, self.QEMU_BIOS, self.QEMU_KERNEL, qemu_memory,
                        self.QEMU_FS, internal_ssh_port)
@@ -118,6 +118,7 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
             instance = i
         except Exception as ex:
             fun_test.critical(str(ex))
+            self.command("cat {}".format(self.QEMU_LOG))
         return instance
 
     @fun_test.safe
