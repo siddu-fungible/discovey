@@ -2,7 +2,7 @@
   <div class="row">
     <div class="col" [ngClass]="{'d-none': started }">
       <div class="container" [@nextStage]="currentStage" (@nextStage.done)="stageAnimationDone($event)">
-        <p class="h2">DPUs</p>
+        <!--p class="h2">DPUs</p-->
         <div class="row">
           <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8">
             <!-- Checkbox Column -->
