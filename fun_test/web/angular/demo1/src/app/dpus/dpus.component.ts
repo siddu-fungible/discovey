@@ -103,7 +103,10 @@ export class DpusComponent {
   }
 
   stageAnimationDone($event) {
-
+    if ($event.toState === "stage2") {
+      this.started = true;
+    }
+    console.log("Animation done");
   }
 }
 

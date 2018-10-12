@@ -207,9 +207,6 @@ def prepare_status(chart, purge_old_status=False):
             replacement = False
             while current_date <= to_date:
                 valid_dates.append(current_date)
-                if current_score:  # Bertrand wanted to keep track of the last good score
-                    penultimate_good_score = last_good_score
-                    last_good_score = current_score
 
                 # print current_date
 
@@ -275,6 +272,11 @@ def prepare_status(chart, purge_old_status=False):
                         replacement = True
                         # is_leaf_degrade = penultimate_good_score > current_score
 
+                    if not replacement:  # Bertrand wanted to keep track of the last good score
+                        if last_good_score:
+                            penultimate_good_score = last_good_score
+                        last_good_score = current_score
+
                     scores[current_date] = current_score
 
                 if data_set_mofified:
@@ -287,18 +289,23 @@ def prepare_status(chart, purge_old_status=False):
                                         chart_name=chart_name,
                                         data_sets=data_sets,
                                         score=current_score)
-                mcs.save()
+
                 current_date = current_date + timedelta(days=1)
-                # current_date = get_localized_time(current_date)
 
+                is_leaf_degrade = current_score < last_good_score
 
-            # print current_score, last_good_score
-
-            is_leaf_degrade = current_score < last_good_score
-            if replacement:
-                is_leaf_degrade = current_score < penultimate_good_score
-            if is_leaf_degrade or not current_score:
-                result["num_degrades"] += 1
+                if replacement:
+                    mcs.copied_score = True
+                    is_leaf_degrade = current_score < penultimate_good_score
+                    if (current_score - penultimate_good_score) > 0:
+                        mcs.copied_score_disposition = 1
+                    elif (current_score - penultimate_good_score) < 0:
+                        mcs.copied_score_disposition = -1
+                    else:
+                        mcs.copied_score_disposition = 0
+                mcs.save()
+                if is_leaf_degrade or not current_score:
+                    result["num_degrades"] = 1
 
 
         result["scores"] = scores
@@ -333,6 +340,7 @@ def prepare_status(chart, purge_old_status=False):
     return result
 
 if __name__ == "__main__":
+    "Malloc agent rate : FunMagentPerformanceTest : 185"
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=True)
 
