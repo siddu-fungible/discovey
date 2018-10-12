@@ -61,6 +61,9 @@ import {
   MatTooltipModule,
   MatTreeModule,
 } from '@angular/material';
+import { Workflow1Component } from './workflows/workflow1/workflow1.component';
+import { Workflow1Stage1Component } from './workflows/workflow1/workflow1-stage1/workflow1-stage1.component';
+import { Workflow1Stage2Component } from './workflows/workflow1/workflow1-stage2/workflow1-stage2.component';
 
 
 @NgModule({
@@ -75,7 +78,10 @@ import {
     FunMetricChartComponent,
     SafeHtmlPipe,
     Demo1Component,
-    DpusComponent
+    DpusComponent,
+    Workflow1Component,
+    Workflow1Stage1Component,
+    Workflow1Stage2Component
   ],
   imports: [
     BsDropdownModule,
