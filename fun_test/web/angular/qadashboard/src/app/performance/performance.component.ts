@@ -106,8 +106,9 @@ export class PerformanceComponent implements OnInit {
     this.apiService.post("/metrics/dag", payload).subscribe(response => {
       this.dag = response.data;
       this.walkDag(this.dag);
+      //total container should always appear
       this.flatNodes[0].hide = false;
-      this.expandNode(this.flatNodes[0]);
+      this.expandNode(this.flatNodes[0]);//expand total container on page load
       let i = 0;
     }, error => {
       this.loggerService.error("fetchDag");
