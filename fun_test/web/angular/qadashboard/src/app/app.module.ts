@@ -25,6 +25,7 @@ import { AngularCollapseModule } from 'angular-collapse';
 import { Demo1Component } from './demo1/demo1.component';
 import { CreateChartComponent } from './create-chart/create-chart.component';
 import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
+import { ScrollToDirective } from './scroll-to.directive';
 
 @NgModule({
   declarations: [
@@ -39,7 +40,8 @@ import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric
     SafeHtmlPipe,
     CreateChartComponent,
     Demo1Component,
-    PreviewFunMetricComponent
+    PreviewFunMetricComponent,
+    ScrollToDirective
   ],
   imports: [
     BsDropdownModule,
@@ -52,7 +54,7 @@ import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric
     AngularFontAwesomeModule,
     FormsModule,
     Angular2FontawesomeModule,  // Add this line
-    AngularCollapseModule
+    AngularCollapseModule,
   ],
 
   providers: [ApiService, LoggerService],

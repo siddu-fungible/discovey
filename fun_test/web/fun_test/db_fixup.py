@@ -126,6 +126,10 @@ def prepare_status(chart, purge_old_status=False):
     result["children_score_map"] = {}
     result["valid_dates"] = []
     result["num_leaves"] = 0
+    result["last_good_score"] = -1
+    result["penultimate_good_score"] = -1
+    result["copied_score"] = False
+    result["copied_score_disposition"] = 0
     today = datetime.now()
 
     from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
@@ -331,11 +335,21 @@ def prepare_status(chart, purge_old_status=False):
             result["scores"][j["date_time"]] = j
 
     # chart.last_build_status = result["last_build_status"]
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
+    if chart_status_entries:
+        result["last_good_score"] = chart_status_entries[0].score
+        result["penultimate_good_score"] = chart_status_entries[1].score
+        result["copied_score_disposition"] = chart_status_entries[0].copied_score_disposition
+        result["copied_score"] = chart_status_entries[0].copied_score
     chart.score_cache_valid = True
     chart.last_num_degrades = result["num_degrades"]
     chart.last_status_update_date = get_current_time()
     chart.last_num_build_failed = result["num_build_failed"]
     chart.num_leaves = result["num_leaves"]
+    chart.last_good_score = result["last_good_score"]
+    chart.penultimate_good_score = result["penultimate_good_score"]
+    chart.copied_score = result["copied_score"]
+    chart.copied_score_disposition = result["copied_score_disposition"]
     chart.save()
     return result
 
