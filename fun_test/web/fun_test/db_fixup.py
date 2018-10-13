@@ -18,7 +18,7 @@ from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
-start_month = 6
+start_month = 4
 start_day = 1
 minute = 59
 hour = 23
@@ -207,7 +207,7 @@ def prepare_status(chart, purge_old_status=False):
             last_good_score = 0
             penultimate_good_score = 0  # The good score before the previous good score
             current_score = 0
-
+            is_leaf_degrade = False
             replacement = False
             while current_date <= to_date:
                 result["num_degrades"] = 0
@@ -280,6 +280,7 @@ def prepare_status(chart, purge_old_status=False):
                     if not replacement:  # Bertrand wanted to keep track of the last good score
                         if last_good_score:
                             penultimate_good_score = last_good_score
+                        is_leaf_degrade = current_score < last_good_score
                         last_good_score = current_score
 
                     scores[current_date] = current_score
@@ -288,7 +289,7 @@ def prepare_status(chart, purge_old_status=False):
                     chart.data_sets = json.dumps(data_sets)
                     chart.save()
                 # print current_date, scores
-
+                print "Chart: {} Dtae: {} score: {}".format(chart.chart_name, current_date, scores[current_date])
                 mcs = MetricChartStatus(date_time=current_date,
                                         metric_id=metric_id,
                                         chart_name=chart_name,
@@ -297,7 +298,6 @@ def prepare_status(chart, purge_old_status=False):
 
                 current_date = current_date + timedelta(days=1)
 
-                is_leaf_degrade = current_score < last_good_score
 
                 if replacement:
                     mcs.copied_score = True
@@ -351,6 +351,8 @@ def prepare_status(chart, purge_old_status=False):
     chart.penultimate_good_score = result["penultimate_good_score"]
     chart.copied_score = result["copied_score"]
     chart.copied_score_disposition = result["copied_score_disposition"]
+    if chart.leaf:
+        print "Leaf Chart: {} num_degrades: {}".format(chart.chart_name, result["num_degrades"])
     chart.save()
     return result
 
