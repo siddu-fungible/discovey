@@ -210,6 +210,7 @@ def prepare_status(chart, purge_old_status=False):
 
             replacement = False
             while current_date <= to_date:
+                result["num_degrades"] = 0
                 valid_dates.append(current_date)
 
                 # print current_date
