@@ -52,7 +52,7 @@
         <span *ngIf="showingTable" class="arrow-down"></span>
       </a>
     </span>
-    <div *ngIf="showingTable">
+    <div *ngIf="showingTable" scrollTo>
       <h3 style="float: left;">{{ chartName }}</h3>
       <fun-table [data]="data"></fun-table>
     </div>
