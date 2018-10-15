@@ -493,13 +493,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let index = 0;
       for (let rowData of dataSet) {
         let row = [];
+        let rowInTable = [];
         Object.keys(this.headers).forEach((key) => {
           if (this.isFieldRelevant(key)) {
             let value = rowData[key];
+            rowInTable.push(value);
             row.push(this.cleanValue(key, value));
           }
         });
-        this.data["rows"][index++] = row;
+        this.data["rows"][index++] = rowInTable;
       }
       this.data["totalLength"] = this.data["rows"].length;
     }, error => {

@@ -1,5 +1,5 @@
 <div>
-  <div>
+  <div class="show-table-text">
     <!-- pager -->
     <div id="pageDiv" *ngIf="pager.pages && pager.pages.length">
         <span [ngClass]="{disabled:pager.currentPage === 1}">
@@ -52,6 +52,6 @@
         </table>
       </div>
     </div>
-    <a [routerLink]="" (click)="editColumns()">Close</a>
+    <a class="close-tables" [routerLink]="" (click)="editColumns()">Close</a>
   </div>
 </div>
