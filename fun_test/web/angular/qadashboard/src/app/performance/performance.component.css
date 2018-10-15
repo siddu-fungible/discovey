@@ -137,3 +137,7 @@ arrow-icon {
 .table td {
   padding: 5px;
 }
+
+.container a {
+  color: #337ab7;
+}

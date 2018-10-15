@@ -71,6 +71,9 @@ a {
 #advancedLink {
   margin: 5px;
 }
+.showTableText a {
+  color: #337ab7;
+}
 /*.switch {*/
   /*width: 40px;*/
   /*margin: 5px;*/
