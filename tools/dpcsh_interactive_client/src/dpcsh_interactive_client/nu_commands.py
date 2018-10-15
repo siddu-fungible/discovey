@@ -531,7 +531,7 @@ class QosCommands(object):
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
                 if q_avg_en is not None:
-                    config["avg_en"] = q_avg_en
+                    config["q_avg_en"] = q_avg_en
                     # del config['avg_en']
                 if cap_avg_sz is not None:
                     config['cap_avg_sz'] = cap_avg_sz
@@ -637,7 +637,7 @@ class QosCommands(object):
                 strict_priority_config['strict_priority_enable'] = strict_priority_enable
             if extra_bandwidth is not None:
                 strict_priority_config['extra_bandwidth'] = extra_bandwidth
-            set_cmd_args = ['set', 'scheduler_config', 'shaper', strict_priority_config]
+            set_cmd_args = ['set', 'scheduler_config', 'strict_priority', strict_priority_config]
             if not mode == 'nu':
                 set_cmd_args.insert(1, mode)
             result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
