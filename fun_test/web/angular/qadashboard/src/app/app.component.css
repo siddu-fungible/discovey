@@ -1,3 +1,6 @@
-.dropdown-item{
+body, .dropdown-item{
   font-size: 14px;
+}
+.navbar-brand {
+  font-size: 1rem;
 }
