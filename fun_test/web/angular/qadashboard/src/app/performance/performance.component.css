@@ -141,3 +141,8 @@ arrow-icon {
 .container a {
   color: #337ab7;
 }
+.container {
+  margin: 0;
+  max-width: 3000px;
+  padding-top: 20px;
+}
