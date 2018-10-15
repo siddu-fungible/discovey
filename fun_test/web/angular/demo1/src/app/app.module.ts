@@ -64,6 +64,7 @@ import {
 import { Workflow1Component } from './workflows/workflow1/workflow1.component';
 import { Workflow1Stage1Component } from './workflows/workflow1/workflow1-stage1/workflow1-stage1.component';
 import { Workflow1Stage2Component } from './workflows/workflow1/workflow1-stage2/workflow1-stage2.component';
+import { PoolsComponent } from './workflows/pools/pools.component';
 
 
 @NgModule({
@@ -81,7 +82,8 @@ import { Workflow1Stage2Component } from './workflows/workflow1/workflow1-stage2
     DpusComponent,
     Workflow1Component,
     Workflow1Stage1Component,
-    Workflow1Stage2Component
+    Workflow1Stage2Component,
+    PoolsComponent
   ],
   imports: [
     BsDropdownModule,
