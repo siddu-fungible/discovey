@@ -343,7 +343,7 @@
         "leaf": false,
         "name": "FunOS",
         "label": "FunOS",
-        "weight": 0.25,
+        "weight": 1,
         "children": [
           {
             "info": "Nucleus",
@@ -682,7 +682,7 @@
         "name": "TeraMarks",
         "label": "TeraMarks",
         "children": [],
-        "weight": 1
+        "weight": 0
       }
     ]
   }
