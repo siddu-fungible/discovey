@@ -1,0 +1,22 @@
+<div>
+    <table class="table table-bordered">
+        <h4>Chartname: {{ chartName }}</h4>
+           <h4>Modelname: {{ modelName }}</h4>
+        <tr>
+            <th>
+                Date
+            </th>
+            <th>
+                Score
+            </th>
+        </tr>
+        <tr ng-repeat="(key, value) in rows">
+            <td>
+                {{ key }}
+            </td>
+            <td>
+                {{ value }}
+            </td>
+        </tr>
+    </table>
+</div>
