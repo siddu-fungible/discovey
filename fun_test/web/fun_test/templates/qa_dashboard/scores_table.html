@@ -1,11 +1,13 @@
 <div>
     <table class="table table-bordered">
+        <h4>Chartname: {{ chartName }}</h4>
+           <h4>Modelname: {{ modelName }}</h4>
         <tr>
             <th>
-                {{ chartName }}
+                Date
             </th>
             <th>
-                {{ modelName }}
+                Score
             </th>
         </tr>
         <tr ng-repeat="(key, value) in rows">
