@@ -24,7 +24,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         self.stc_connected = False
 
     def setup(self, no_of_ports_needed, flow_type=NuConfigManager.TRANSIT_FLOW_TYPE,
-              flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU):
+              flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU, ports_map={}):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
 
         project_handle = self.stc_manager.create_project(project_name=self.session_name)
@@ -37,9 +37,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             self.stc_connected = True
 
         try:
-            ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
-                                                                  flow_type=flow_type,
-                                                                  flow_direction=flow_direction)
+            if not ports_map:
+                ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
+                                                                      flow_type=flow_type,
+                                                                      flow_direction=flow_direction)
+            else:
+                fun_test.simple_assert(int(no_of_ports_needed) == len(ports_map),
+                                       message="Number of ports needed is %s and provided in ports_map is %s "
+                                               % (no_of_ports_needed, len(ports_map)))
             for key, val in ports_map.iteritems():
                 fun_test.log("Using %s -----> %s" % (key, val))
                 port_handle = self.stc_manager.create_port(location=val)
@@ -1012,7 +1017,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-    def configure_pause_mac_control_header(self, stream_obj, source_mac, destination_mac, length="8808", pause_time=0,
+    def configure_pause_mac_control_header(self, stream_obj, source_mac="00:10:94:00:00:02",
+                                           destination_mac="01:80:C2:00:00:01", length="8808", pause_time=0,
                                            op_code="0001", preamble="55555555555555d5"):
         result = {}
         result['result'] = False
