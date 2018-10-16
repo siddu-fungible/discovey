@@ -1,0 +1,20 @@
+<div>
+    <table class="table table-bordered">
+        <tr>
+            <th>
+                {{ chartName }}
+            </th>
+            <th>
+                {{ modelName }}
+            </th>
+        </tr>
+        <tr ng-repeat="(key, value) in rows">
+            <td>
+                {{ key }}
+            </td>
+            <td>
+                {{ value }}
+            </td>
+        </tr>
+    </table>
+</div>

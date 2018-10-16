@@ -153,6 +153,10 @@ def atomic(request, chart_name, model_name):
     return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
 
 @csrf_exempt
+def score_table(request, chart_name, model_name):
+    return render(request, 'qa_dashboard/score_table_page.html', locals())
+
+@csrf_exempt
 def table_view(request, model_name):
     return render(request, 'qa_dashboard/table_view_page.html', locals())
 
