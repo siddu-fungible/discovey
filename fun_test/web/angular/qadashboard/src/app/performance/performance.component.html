@@ -28,7 +28,7 @@
             </span>
           </td>
           <td class="text-center">
-            <div *ngIf="flatNode.node.chartName !== 'All metrics'" class="score-label"><span style="vertical-align: top" [innerHTML]="getTrendHtml(flatNode.node) | safeHtml"></span>{{
+            <div class="score-label"><span style="vertical-align: top" [innerHTML]="getTrendHtml(flatNode.node) | safeHtml"></span>{{
               flatNode.node.lastScore | number: '1.1-1' }}
             </div>
           </td>

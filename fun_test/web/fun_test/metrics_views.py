@@ -162,7 +162,7 @@ def update_child_weight(request):
     request_json = json.loads(request.body)
     child_id = request_json["child_id"]
     metric_id = request_json["metric_id"]
-    lineage = request_json["lineage"]
+    # lineage = request_json["lineage"]
     weight = request_json["weight"]
     '''
     Enable it later
@@ -173,7 +173,7 @@ def update_child_weight(request):
     '''
     c = MetricChart.objects.get(metric_id=metric_id)
     children_weights = c.get_children_weights()
-    if child_id in children_weights:
+    if str(child_id) in children_weights.keys():
         c.add_child_weight(child_id=child_id, weight=weight)
     invalidate_goodness_cache()
 
