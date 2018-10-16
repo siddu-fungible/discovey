@@ -665,11 +665,38 @@
         "weight": 1,
         "children": [
           {
-            "info": "Boot timings",
+            "info": "FunOS Boot Timing",
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
-            "name": "Boot timings",
-            "label": "Boot timings",
+            "name": "FunOS Boot Timing",
+            "label": "FunOS Boot Timing",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "SBP Boot Timing (Main-loop)",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "SBP Boot Timing (Main-loop)",
+            "label": "SBP Boot Timing (Main-loop)",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "SBP Boot Timing (Host-boot)",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "SBP Boot Timing (Host-boot)",
+            "label": "SBP Boot Timing (Host-boot)",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "SBP Boot Timing (Pre-host-boot)",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "SBP Boot Timing (Pre-host-boot)",
+            "label": "PSBP Boot Timing (Pre-host-boot)",
             "children": [],
             "weight": 1
           }
