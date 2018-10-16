@@ -76,25 +76,8 @@
     </div>
 
     <div class="col" *ngIf="started">
-      <!--div [@enterAnimation]>
-        <mat-form-field>
-          <mat-select [(value)]="selected">
-            <mat-option>None</mat-option>
-            <mat-option value="option1">Option 1</mat-option>
-            <mat-option value="option2">Option 2</mat-option>
-            <mat-option value="option3">Option 3</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div-->
-
       <app-workflow1></app-workflow1>
-      <!--div class="float-left">
-        <button *ngIf="actionSelected" mat-raised-button color="primary"
-                      (click)="started = true; currentStage = 'stage2';"><< Back</button>
-      </div>
-      <div class="float-right">
-        <button *ngIf="actionSelected" mat-raised-button color="primary">Next >></button>
-      </div-->
+
     </div>
   </div>
 </div>
