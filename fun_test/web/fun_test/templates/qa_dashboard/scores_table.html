@@ -9,13 +9,25 @@
             <th>
                 Score
             </th>
+            <th>
+                Copied Score
+            </th>
+            <th>
+                Copied Score Disposition
+            </th>
         </tr>
         <tr ng-repeat="(key, value) in rows">
             <td>
                 {{ key }}
             </td>
             <td>
-                {{ value }}
+                {{ value.score }}
+            </td>
+            <td>
+                {{ value.copiedScore }}
+            </td>
+            <td>
+                {{ value.copiedDisposition }}
             </td>
         </tr>
     </table>

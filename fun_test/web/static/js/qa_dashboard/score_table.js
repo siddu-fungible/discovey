@@ -27,7 +27,10 @@ function ScoreTableController($scope, commonService, $timeout) {
                         keyList.sort();
                         keyList.forEach((dateTime) => {
                             let d = new Date(dateTime * 1000).toISOString();
-                            rows[d] = response.scores[dateTime].score;
+                            let score = response.scores[dateTime].score;
+                            let copiedScore = response.scores[dateTime].copied_score;
+                            let copiedDisposition = response.scores[dateTime].copied_score_disposition;
+                            rows[d] = {score: score, copiedScore: copiedScore, copiedDisposition: copiedDisposition};
                         });
                     }
                     self.rows = rows;
