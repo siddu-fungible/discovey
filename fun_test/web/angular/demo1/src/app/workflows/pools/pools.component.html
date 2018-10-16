@@ -35,13 +35,16 @@
         </mat-panel-description>
       </mat-expansion-panel-header>
 
-  <mat-form-field>
-    <input matInput placeholder="Name">
-  </mat-form-field>
 
-  <mat-form-field>
-    <input matInput placeholder="Capacity">
-  </mat-form-field>
+      <div class="example-container123">
+        <mat-form-field>
+          <input matInput placeholder="Name">
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput placeholder="Capacity">
+        </mat-form-field>
+      </div>
+
       <mat-action-row>
         <button mat-button color="warn" (click)="prevStep()">Previous</button>
         <button mat-button color="primary" (click)="nextStep()">Next</button>
@@ -57,36 +60,32 @@
       </mat-expansion-panel-header>
       <mat-action-row>
         <button mat-button color="warn" (click)="prevStep()">Previous</button>
-        <button mat-button color="primary" (click)="nextStep()">End</button>
+        <button mat-button color="primary" (click)="submit()">Submit</button>
       </mat-action-row>
     </mat-expansion-panel>
   </mat-accordion>
 </div>
 <div style="padding-top: 20px">
   <p class="h4">Available pools</p>
-  <table mat-table [dataSource]="dataSource" class="mat-elevation-z81">
-    <ng-container matColumnDef="position">
-      <th mat-header-cell *matHeaderCellDef> No.</th>
-      <td mat-cell *matCellDef="let element"> {{ element.position }} </td>
-    </ng-container>
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef> Name</th>
       <td mat-cell *matCellDef="let element"> {{ element.name }} </td>
     </ng-container>
 
-    <ng-container matColumnDef="weight">
-      <th mat-header-cell *matHeaderCellDef> Weight</th>
-      <td mat-cell *matCellDef="let element"> {{ element.weight }} </td>
+    <ng-container matColumnDef="capacity">
+      <th mat-header-cell *matHeaderCellDef> Capacity</th>
+      <td mat-cell *matCellDef="let element"> {{ element.capacity }} </td>
     </ng-container>
 
     <!-- Symbol Column -->
-    <ng-container matColumnDef="symbol">
-      <th mat-header-cell *matHeaderCellDef> Symbol</th>
-      <td mat-cell *matCellDef="let element"> {{ element.symbol }} </td>
+    <ng-container matColumnDef="volumes">
+      <th mat-header-cell *matHeaderCellDef> Volumes</th>
+      <td mat-cell *matCellDef="let element"> {{ element.volumes }} </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" [class.highlighted-row]="row.id == selectedRowIndex"></tr>
   </table>
 </div>

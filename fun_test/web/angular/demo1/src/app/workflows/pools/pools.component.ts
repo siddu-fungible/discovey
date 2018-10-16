@@ -1,25 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import {ActionGroup} from "../../dpus/dpus.component";
+import {ActionGroup, DpuElement} from "../../dpus/dpus.component";
 import {FormControl} from "@angular/forms";
 
-export interface PeriodicElement {
+export interface PoolElement {
+  id: number;
   name: string;
-  position: number;
-  weight: number;
-  symbol: string;
+  capacity: number;
+  volumes: number[];
 }
 
-const ELEMENT_DATA: PeriodicElement[] = [
-  {position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H'},
-  {position: 2, name: 'Helium', weight: 4.0026, symbol: 'He'},
-  {position: 3, name: 'Lithium', weight: 6.941, symbol: 'Li'},
-  {position: 4, name: 'Beryllium', weight: 9.0122, symbol: 'Be'},
-  {position: 5, name: 'Boron', weight: 10.811, symbol: 'B'},
-  {position: 6, name: 'Carbon', weight: 12.0107, symbol: 'C'},
-  {position: 7, name: 'Nitrogen', weight: 14.0067, symbol: 'N'},
-  {position: 8, name: 'Oxygen', weight: 15.9994, symbol: 'O'},
-  {position: 9, name: 'Fluorine', weight: 18.9984, symbol: 'F'},
-  {position: 10, name: 'Neon', weight: 20.1797, symbol: 'Ne'},
+const ELEMENT_DATA: PoolElement[] = [
+  {id: 0, name: 'Pool-1', capacity: 1024, volumes: [1, 2, 3]},
+  {id: 1, name: 'Pool-2', capacity: 2048, volumes: [2, 3]}
 ];
 
 
@@ -29,10 +21,11 @@ const ELEMENT_DATA: PeriodicElement[] = [
   styleUrls: ['./pools.component.css']
 })
 export class PoolsComponent implements OnInit {
-  displayedColumns: string[] = ['position', 'name', 'weight', 'symbol'];
+  displayedColumns: string[] = ['name', 'capacity', 'volumes'];
   dataSource = ELEMENT_DATA;
-    actionControl = new FormControl();
+  actionControl = new FormControl();
   actionSelected: string = null;
+  selectedRowIndex: number = null;
   constructor() { }
 
     actionGroups: ActionGroup[] = [
@@ -55,6 +48,18 @@ export class PoolsComponent implements OnInit {
 
   prevStep() {
     this.step--;
+  }
+
+  submit() {
+    const pe: PoolElement = {name: 'Pool-3', capacity: 1024, volumes: [1, 2, 3], id: this.dataSource.length};
+    this.dataSource.push(pe);
+    this.dataSource = [...this.dataSource];
+    this.actionSelected = null;
+    this.selectedRowIndex = this.dataSource.length - 1;
+    setTimeout(()=>{    //<<<---    using ()=> syntax
+      this.selectedRowIndex = null;
+    }, 2000);
+
   }
 
 }
