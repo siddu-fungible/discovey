@@ -25,6 +25,8 @@ IF_OUT_UCAST_PKTS = "ifOutUcastPkts"
 IF_IN_BROADCAST_PKTS = "ifInBroadcastPkts"
 CBFC_PAUSE_FRAMES_RECEIVED = "CBFCPAUSEFramesReceived"
 CBFC_PAUSE_FRAMES_TRANSMITTED = "CBFCPAUSEFramesTransmitted"
+PAUSE_MAC_CONTROL_FRAMES_TRANSMITTED = "aPAUSEMACCtrlFramesTransmitted"
+PAUSE_MAC_CONTROL_FRAMES_RECEIVED = "aPAUSEMACCtrlFramesReceived"
 FRAME_CHECK_SEQUENCE_ERROR = "aFrameCheckSequenceErrors"
 CLASS_0 = "0"
 CLASS_1 = "1"
@@ -119,7 +121,7 @@ def __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_val
             if stat_type == key.split('_')[4] and str(class_value) == key.split('_')[5]:
                 if tx:
                     if not 'TX' == key.split('_')[3]:
-                        break
+                        continue
                     result = output[key]
                     break
                 elif 'RX' == key.split('_')[3]:
@@ -140,7 +142,7 @@ def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=Non
                 if stat_type == key.split('_')[4]:
                     if tx:
                         if not 'TX' == key.split('_')[3]:
-                            break
+                            continue
                         result = output[key]
                         break
                     elif 'RX' == key.split('_')[3]:
@@ -429,6 +431,28 @@ def get_fpg_port_cbfcpause_counters(network_controller_obj, dut_port, shape, tx=
     return output_dict
 
 
+def get_fpg_port_pause_mac_ctrl_counters(network_controller_obj, dut_port, shape, tx=False, hnu=False):
+    output = False
+    try:
+        stat_type = PAUSE_MAC_CONTROL_FRAMES_RECEIVED
+        if tx:
+            stat_type = PAUSE_MAC_CONTROL_FRAMES_TRANSMITTED
+        output = False
+        out = network_controller_obj.clear_port_stats(dut_port, shape=shape)
+        fun_test.simple_assert(out, "Clear port stats on dut port %s" % dut_port)
+        fun_test.sleep('Stats clear', seconds=2)
+        stats = network_controller_obj.peek_fpg_port_stats(dut_port, hnu=hnu)
+        fun_test.simple_assert(stats, "Fpg stats on port %s" % dut_port)
+
+        value = get_dut_output_stats_value(stats, stat_type=stat_type, tx=tx)
+        if value:
+            fun_test.log("Value seen for type %s is %s" % (stat_type, value))
+            output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
 def get_psw_port_enqueue_dequeue_counters(network_controller_obj, dut_port, hnu, pg=False, priority_list=None):
     output_dict = {}
     if not priority_list:
@@ -436,9 +460,11 @@ def get_psw_port_enqueue_dequeue_counters(network_controller_obj, dut_port, hnu,
     dequeue = 'dequeue'
     enqueue = 'enqueue'
     if pg:
+        q_type = "pg"
         dequeue_type = 'pg_deq'
         enqueue_type = 'pg_enq'
     else:
+        q_type = "q"
         dequeue_type = 'q_deq'
         enqueue_type = 'q_enq'
     try:
@@ -465,10 +491,10 @@ def get_psw_port_enqueue_dequeue_counters(network_controller_obj, dut_port, hnu,
             old_enqueue_val = int(stats_1[q_no]['count'][enqueue_type]['pkts'])
             new_enqueue_val = int(stats_2[q_no]['count'][enqueue_type]['pkts'])
 
-            fun_test.log("Values of dequeue seen for queue %s are:- Old: %s ; New: %s" % (q_no,
+            fun_test.log("Values of %s dequeue seen on %s for queue %s are:- Old: %s ; New: %s" % (q_type, dut_port, q_no,
                                                                                            old_dequeue_val,
                                                                                            new_dequeue_val))
-            fun_test.log("Values of enqueue seen for queue %s are:- Old: %s ; New: %s" % (q_no,
+            fun_test.log("Values of %s enqueue seen on %s for queue %s are:- Old: %s ; New: %s" % (q_type, dut_port, q_no,
                                                                                           old_enqueue_val,
                                                                                           new_enqueue_val))
 
