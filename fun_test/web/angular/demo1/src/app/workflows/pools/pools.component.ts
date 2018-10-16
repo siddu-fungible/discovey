@@ -1,19 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import {ActionGroup, DpuElement} from "../../dpus/dpus.component";
 import {FormControl} from "@angular/forms";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {SelectionModel} from "@angular/cdk/collections";
+import {MatTableDataSource} from "@angular/material";
 
 export interface PoolElement {
   id: number;
   name: string;
   capacity: number;
   volumes: number[];
+  dpus: number[];
 }
 
 const ELEMENT_DATA: PoolElement[] = [
-  {id: 0, name: 'Pool-1', capacity: 1024, volumes: [1, 2, 3]},
-  {id: 1, name: 'Pool-2', capacity: 2048, volumes: [2, 3]}
+  {id: 0, name: 'Pool-1', capacity: 1024, volumes: [1, 2, 3], dpus:[1, 2, 3]},
+  {id: 1, name: 'Pool-2', capacity: 2048, volumes: [2, 3], dpus: [2, 3]}
 ];
 
 
@@ -57,15 +59,16 @@ const VOLUME_DATA: VolumeElement[] = [
     ])]
 })
 export class PoolsComponent implements OnInit {
-  displayedColumns: string[] = ['name', 'capacity', 'volumes'];
-  dataSource = ELEMENT_DATA;
+  @Input() action: boolean = true;
+
+  displayedColumns: string[] = ['select', 'name', 'capacity', 'volumes', 'dpus'];
+  dataSource = new MatTableDataSource<PoolElement>(ELEMENT_DATA);
   actionControl = new FormControl();
   actionSelected: string = null;
   selectedRowIndex: number = null;
-    selection = new SelectionModel<PoolElement>(true, []);
+  selection = new SelectionModel<PoolElement>(true, []);
   displayedVolumesColumns: string[] = ['position', 'name', 'weight', 'symbol'];
-
-    expandedElement: PoolElement;
+  expandedElement: PoolElement;
   volumes = VOLUME_DATA;
 
   constructor() { }
@@ -93,15 +96,37 @@ export class PoolsComponent implements OnInit {
   }
 
   submit() {
-    const pe: PoolElement = {name: 'Pool-3', capacity: 1024, volumes: [1, 2, 3], id: this.dataSource.length};
-    this.dataSource.push(pe);
-    this.dataSource = [...this.dataSource];
+    const pe: PoolElement = {name: 'Pool-3', capacity: 1024, volumes: [1, 2, 3], id: this.dataSource.data.length, dpus: [1, 3]};
+    this.dataSource.data.push(pe);
+    this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
-    this.selectedRowIndex = this.dataSource.length - 1;
+    this.selectedRowIndex = this.dataSource.data.length - 1;
     setTimeout(()=> {
       this.selectedRowIndex = null;
     }, 2000);
 
   }
+
+      /** Whether the number of selected elements matches the total number of rows. */
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows;
+  }
+
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  masterToggle() {
+    this.isAllSelected() ?
+      this.selection.clear() :
+      this.dataSource.data.forEach(row => this.selection.select(row));
+  }
+
+  stageAnimationDone($event) {
+    if ($event.toState === "stage2") {
+    }
+    console.log("Animation done");
+  }
+
 
 }
