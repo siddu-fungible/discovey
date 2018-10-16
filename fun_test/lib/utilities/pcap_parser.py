@@ -16,7 +16,7 @@ class PcapParser(object):
         self.filename = filename
         fun_test.simple_assert(os.path.exists(self.filename), "File %s does not exists locally" % self.filename)
 
-    def __get_captures_from_file(self, display_filter=None):
+    def get_captures_from_file(self, display_filter=None):
         return pyshark.FileCapture(self.filename, use_json=True, display_filter=display_filter)
 
     def _get_key_val(self, key):
@@ -50,13 +50,13 @@ class PcapParser(object):
         return current_dict
 
     def get_filter_captures(self, display_filter):
-        return self.__get_captures_from_file(display_filter)
+        return self.get_captures_from_file(display_filter)
 
     def get_first_packet(self, display_filter=None):
-        return self.__get_captures_from_file(display_filter)[0]
+        return self.get_captures_from_file(display_filter)[0]
 
     def get_last_packet(self, display_filter=None):
-        out = self.__get_captures_from_file(display_filter)
+        out = self.get_captures_from_file(display_filter)
         total_packets = len([packet for packet in out])
         return out[total_packets - 1]
 
@@ -151,6 +151,30 @@ class PcapParser(object):
                 fun_test.test_assert_expected(expected=str(op_code),
                                               actual=str(layer['macc_opcode']),
                                               message="Check opcode value in packet")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def verify_pause_header_fields(self, first_packet=False, last_packet=False, packet=None, op_code=None, time=None):
+        result = False
+        try:
+            current_packet = self._get_packet_specified(first_packet=first_packet, last_packet=last_packet,
+                                                        packet=packet)
+            output_dict = self.get_all_packet_fields(current_packet)
+            layer = output_dict[self.LAYER_MACC]
+            fun_test.simple_assert(layer, "Check %s header fields are present in packet" %
+                                   self.PAUSE)
+
+            if op_code is not None:
+                fun_test.test_assert_expected(expected=str(op_code),
+                                              actual=str(layer['macc_opcode']),
+                                              message="Check opcode value in packet")
+            if time is not None:
+                fun_test.test_assert_expected(expected=str(time),
+                                              actual=str(layer['macc_pause_time']),
+                                              message="Check time value in packet")
+
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
