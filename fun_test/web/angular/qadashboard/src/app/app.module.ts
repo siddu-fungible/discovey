@@ -27,6 +27,7 @@ import { CreateChartComponent } from './create-chart/create-chart.component';
 import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
 import { ScrollToDirective } from './scroll-to.directive';
 import { RegressionComponent } from './regression/regression.component';
+import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { RegressionComponent } from './regression/regression.component';
     Demo1Component,
     PreviewFunMetricComponent,
     ScrollToDirective,
-    RegressionComponent
+    RegressionComponent,
+    FunSpinnerComponent
   ],
   imports: [
     BsDropdownModule,
