@@ -97,7 +97,9 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxWidth = '25%';
     }
     this.status = null;
-
+    // interval(10000).subscribe(i => {
+    //this.status = null;
+    // });
   }
 
   getGuid(): number {

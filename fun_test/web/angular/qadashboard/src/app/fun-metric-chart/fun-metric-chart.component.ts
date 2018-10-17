@@ -51,7 +51,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    this.status = "Updating"
+    this.status = "Updating";
     this.fetchNames();
     this.showingTable = false;
     this.showingConfigure = false;

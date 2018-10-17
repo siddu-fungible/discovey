@@ -2,7 +2,9 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 
 @Component({
   selector: 'fun-spinner',
-  templateUrl: './fun-spinner.component.html',
+  template: "<div [hidden]='status === null'>" +
+            "<span><i class='fa fa-refresh fa-spin fa-2x fa-fw' style='color: green'></i>Status: {{ status }}</span>" +
+            "</div>",
   styleUrls: ['./fun-spinner.component.css']
 })
 export class FunSpinnerComponent implements OnInit, OnChanges {
