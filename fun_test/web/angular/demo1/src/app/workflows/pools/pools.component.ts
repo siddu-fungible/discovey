@@ -128,5 +128,8 @@ export class PoolsComponent implements OnInit {
     console.log("Animation done");
   }
 
+  public getSelected(): PoolElement[] {
+    return this.selection.selected;
+  }
 
 }

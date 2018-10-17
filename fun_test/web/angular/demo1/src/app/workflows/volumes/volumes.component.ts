@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {ActionGroup, DpuElement} from "../../dpus/dpus.component";
 import {FormControl} from "@angular/forms";
 import {SelectionModel} from "@angular/cdk/collections";
-import {PoolElement} from "../pools/pools.component";
+import {PoolElement, PoolsComponent} from "../pools/pools.component";
 import {MatTableDataSource} from "@angular/material";
+import {AlertComponent} from "ngx-bootstrap";
 
 
 export interface VolumeElement {
@@ -18,7 +19,6 @@ const ELEMENT_DATA: VolumeElement[] = [
   {id: 0, name: 'Volume-1', capacity: 1024, pool: "Pool-1"},
   {id: 1, name: 'Volume-2', capacity: 2048, pool: "Pool-2"}
 ];
-
 
 
 @Component({
@@ -41,32 +41,36 @@ const ELEMENT_DATA: VolumeElement[] = [
         animate('500ms')
       ])
     ]),
-  trigger('nextStage', [
+    trigger('nextStage', [
       state('stage1', style({opacity: 1, 'width': '100%'})),
-      state('stage2', style({ opacity: 0, 'width': 0, 'visibility': 'hidden', transform: 'translateX(100%)'})),
+      state('stage2', style({opacity: 0, 'width': 0, 'visibility': 'hidden', transform: 'translateX(100%)'})),
       transition('stage1 <=> stage2', animate('225ms')),
     ])]
 })
 export class VolumesComponent implements OnInit {
+  @ViewChild(PoolsComponent) pools: PoolsComponent;
+
+
   displayedColumns: string[] = ['select', 'name', 'capacity', 'pool'];
   dataSource = new MatTableDataSource<VolumeElement>(ELEMENT_DATA);
-    actionControl = new FormControl();
-    selection = new SelectionModel<VolumeElement>(true, []);
+  actionControl = new FormControl();
+  selection = new SelectionModel<VolumeElement>(true, []);
   actionSelected: string = null;
   selectedRowIndex: number = null;
 
 
-    dataProtection: boolean = true;
-   actionGroups: ActionGroup[] = [
+  dataProtection: boolean = true;
+  actionGroups: ActionGroup[] = [
     {name: "Storage", actions: [{value: 1, viewValue: "Add a new volume"}]}
   ];
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit() {
   }
 
-      step = 0;
+  step = 0;
 
   setStep(index: number) {
     this.step = index;
@@ -80,7 +84,8 @@ export class VolumesComponent implements OnInit {
     this.step--;
 
   }
-    /** Whether the number of selected elements matches the total number of rows. */
+
+  /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
     const numRows = this.dataSource.data.length;
@@ -101,16 +106,22 @@ export class VolumesComponent implements OnInit {
     console.log("Animation done");
   }
 
-    submit() {
-    const pe: VolumeElement =  {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
+  submit() {
+    const pe: VolumeElement = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
 
     this.dataSource.data.push(pe);
     this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
     this.selectedRowIndex = this.dataSource.data.length - 1;
-    setTimeout(()=> {
+    setTimeout(() => {
       this.selectedRowIndex = null;
     }, 2000);
+
+    let pe2 = this.pools.getSelected();
+    pe2.forEach((pe) => {
+      console.log(pe.name);
+    })
+
 
   }
 
