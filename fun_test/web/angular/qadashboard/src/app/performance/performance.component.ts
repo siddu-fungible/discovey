@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {Location} from '@angular/common';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
+import {Observable, interval} from "rxjs";
 
 class ChildInfo {
   lastScore: number;
@@ -56,6 +57,7 @@ enum Mode {
   templateUrl: './performance.component.html',
   styleUrls: ['./performance.component.css']
 })
+
 export class PerformanceComponent implements OnInit {
   numGridColumns: number;
   lastStatusUpdateTime: any;
@@ -74,6 +76,8 @@ export class PerformanceComponent implements OnInit {
   currentNodeInfo: string;
   showScoreInfo: boolean = false;
   miniGridMaxWidth: string;
+  status: string = "";
+  hideOnIdle: boolean = true;
 
   constructor(
     private location: Location,
@@ -93,6 +97,11 @@ export class PerformanceComponent implements OnInit {
       this.numGridColumns = 4;
       this.miniGridMaxWidth = '25%';
     }
+    interval(10000)
+    .subscribe(i => {
+      this.hideOnIdle = false;
+    });
+
   }
 
   getGuid(): number {

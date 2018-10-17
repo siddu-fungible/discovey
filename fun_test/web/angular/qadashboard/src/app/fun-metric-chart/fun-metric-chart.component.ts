@@ -15,6 +15,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() previewDataSets: any = null;
 
   status: string;
+  hideOnIdle: boolean = true;
   showingTable: boolean;
   showingConfigure: boolean;
   chartInfo: any;
@@ -52,6 +53,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    this.hideOnIdle = true;
     this.fetchNames();
     this.status = "idle";
     this.showingTable = false;
@@ -68,10 +70,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
+    this.hideOnIdle = false;
   }
 
-  ngOnChanges() {     
+  ngOnChanges() {
+    this.hideOnIdle = true;
     this.fetchNames();
+    this.hideOnIdle = false;
   }
 
   //set the chart and model name based in metric id
