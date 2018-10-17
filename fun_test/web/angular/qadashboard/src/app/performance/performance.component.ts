@@ -56,6 +56,7 @@ enum Mode {
   templateUrl: './performance.component.html',
   styleUrls: ['./performance.component.css']
 })
+
 export class PerformanceComponent implements OnInit {
   numGridColumns: number;
   lastStatusUpdateTime: any;
@@ -74,6 +75,7 @@ export class PerformanceComponent implements OnInit {
   currentNodeInfo: string;
   showScoreInfo: boolean = false;
   miniGridMaxWidth: string;
+  status: string = null;
 
   constructor(
     private location: Location,
@@ -83,6 +85,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.status = "Loading";
     let myMap = new Map().set('a', 1).set('b', 2);
     let keys = Array.from(myMap.keys());
     console.log(keys);
@@ -93,6 +96,7 @@ export class PerformanceComponent implements OnInit {
       this.numGridColumns = 4;
       this.miniGridMaxWidth = '25%';
     }
+    this.status = null;
   }
 
   getGuid(): number {

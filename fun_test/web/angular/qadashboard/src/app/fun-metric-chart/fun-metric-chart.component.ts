@@ -1,7 +1,6 @@
 import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
-import {Observable} from "rxjs";
 import {ActivatedRoute} from "@angular/router";
 
 @Component({
@@ -14,7 +13,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() id: number = null;
   @Input() previewDataSets: any = null;
 
-  status: string;
+  status: string = null;
   showingTable: boolean;
   showingConfigure: boolean;
   chartInfo: any;
@@ -52,8 +51,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    this.status = "Updating";
     this.fetchNames();
-    this.status = "idle";
     this.showingTable = false;
     this.showingConfigure = false;
     this.headers = null;
@@ -68,10 +67,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
+    this.status = null;
   }
 
-  ngOnChanges() {     
+  ngOnChanges() {
+    this.status = "Updating";
     this.fetchNames();
+    this.status = null;
   }
 
   //set the chart and model name based in metric id
@@ -186,7 +188,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
         this.inner.leaf = this.leaf;
-        this.status = "idle";
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -397,7 +398,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //fetching leaf data
   fetchLeafData(chartInfo, previewDataSets, tableInfo, payload): void {
-    this.status = "idle";
     this.tableInfo = tableInfo;
     let filterDataSets = [];
     if (previewDataSets) {
@@ -408,10 +408,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }
     }
     this.filterDataSets = filterDataSets;
-    this.status = "Fetch data";
     this.apiService.post("/metrics/data", payload).subscribe((response: any) => {
       let allDataSets = response.data;
-      self.status = "idle";
       if (allDataSets.length === 0) {
         this.values = null;
         return;
@@ -430,7 +428,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       keyList = this.getDatesByTimeMode(keyList);
       let chartDataSets = [];
       let seriesDates = [];
-      this.status = "Preparing chart data-sets";
       for (let j = 0; j < this.filterDataSets.length; j++) {
         let oneChartDataArray = [];
         for (let i = 0; i < keyList.length; i++) {
@@ -474,7 +471,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         let oneChartDataSet = {name: this.filterDataSets[j].name, data: oneChartDataArray};
         chartDataSets.push(oneChartDataSet);
       }
-      this.status = "idle";
       this.series = seriesDates;
       this.values = chartDataSets;
       this.headers = this.tableInfo;
@@ -511,10 +507,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //fetching container data
   fetchContainerData(payload): void {
-    this.status = "Fetch data";
     console.log("Fetch Scores");
     this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
-      self.status = "idle";
       if (response.data.length === 0) {
         this.values = null;
         return;
@@ -563,7 +557,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.chart1XaxisTitle = "Date";
         this.values = [{data: values}];
         this.series = dateSeries;
-        this.status = "idle";
       }
     });
   }
