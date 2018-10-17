@@ -2,7 +2,6 @@ import {Component, OnInit} from '@angular/core';
 import {Location} from '@angular/common';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
-import {Observable, interval} from "rxjs";
 
 class ChildInfo {
   lastScore: number;
@@ -76,8 +75,7 @@ export class PerformanceComponent implements OnInit {
   currentNodeInfo: string;
   showScoreInfo: boolean = false;
   miniGridMaxWidth: string;
-  status: string = "";
-  hideOnIdle: boolean = true;
+  status: string = null;
 
   constructor(
     private location: Location,
@@ -87,6 +85,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.status = "Loading";
     let myMap = new Map().set('a', 1).set('b', 2);
     let keys = Array.from(myMap.keys());
     console.log(keys);
@@ -97,10 +96,7 @@ export class PerformanceComponent implements OnInit {
       this.numGridColumns = 4;
       this.miniGridMaxWidth = '25%';
     }
-    interval(10000)
-    .subscribe(i => {
-      this.hideOnIdle = false;
-    });
+    this.status = null;
 
   }
 

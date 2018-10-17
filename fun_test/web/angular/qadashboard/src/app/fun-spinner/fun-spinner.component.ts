@@ -6,17 +6,16 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
   styleUrls: ['./fun-spinner.component.css']
 })
 export class FunSpinnerComponent implements OnInit, OnChanges {
-@Input() hideOnIdle: boolean;
 @Input() status: string;
 
   constructor() { }
 
   ngOnInit() {
-    console.log(this.hideOnIdle);
+    console.log(this.status);
   }
 
   ngOnChanges() {
-    console.log(this.hideOnIdle);
+    console.log(this.status);
   }
 
 }

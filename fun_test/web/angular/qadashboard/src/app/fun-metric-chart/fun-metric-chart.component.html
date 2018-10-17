@@ -1,6 +1,7 @@
 <link rel="stylesheet" type="text/css"
       href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
-<fun-spinner [status]="status" [hideOnIdle]="hideOnIdle"></fun-spinner>
+<fun-spinner [status]="status"></fun-spinner>
+<div *ngIf="status === null">
 <div style="max-width: 1000px; margin: auto;">
   <br>
   <!-- showing week month and all time mode for leafs -->
@@ -100,4 +101,5 @@
       </div>
     </div>
   </div>
+</div>
 </div>
