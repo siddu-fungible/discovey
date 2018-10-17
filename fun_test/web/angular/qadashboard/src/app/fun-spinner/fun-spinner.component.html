@@ -1,0 +1,7 @@
+<div [hidden]="!hideOnIdle" [ngSwitch]="status">
+  <i class="fa fa-refresh fa-spin fa-2x fa-fw" style="color: green"></i>
+  <span *ngSwitchCase="'idle'">Status: IDLE</span>
+  <span *ngSwitchCase="''">Status: Fetching Data</span>
+  <!--<span *ngSwitchCase="'pass'" class="fa fa-check" style="color:green">PASS</span>-->
+  <!--<span *ngSwitchCase="'fail'" class="fa fa-remove" style="color:red">FAIL</span>-->
+</div>
