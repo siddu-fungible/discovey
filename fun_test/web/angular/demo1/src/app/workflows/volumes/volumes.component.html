@@ -61,7 +61,7 @@
               [displayWith]="formatLabel"
               tickInterval="1"
               min="0"
-              max="5">Effort</mat-slider>
+              max="5" style="margin-left: 5px">Effort</mat-slider>
           <br>
         </mat-card>
       </div>
@@ -93,7 +93,7 @@
 
 
     <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef> Name</th>
+      <th mat-header-cell *matHeaderCellDef style="width: 400px"> Name</th>
       <td mat-cell *matCellDef="let element"> <a href="/demo/demo1/volume/{{ element.name }}">{{ element.name }}</a> </td>
     </ng-container>
 
