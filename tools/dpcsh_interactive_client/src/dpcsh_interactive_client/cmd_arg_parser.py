@@ -1007,6 +1007,7 @@ peek_mpg_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=N
 
 # Nu per vppkts
 peek_pervppkts_stats_parser = peek_stats_parsers.add_parser('pervppkts', help='Peek per vppkts stats')
+peek_pervppkts_stats_parser.add_argument('cluster_id', type=int, help="Cluster ID")
 peek_pervppkts_stats_parser.add_argument('-vp_num', type=int, help="VP number", default=None)
 peek_pervppkts_stats_parser.add_argument('-grep', help='Grep regex pattern', default=None)
 

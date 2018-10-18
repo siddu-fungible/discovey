@@ -704,9 +704,10 @@ class CmdController(Cmd):
         self._peek_cmd_obj.peek_mpg_stats()
 
     def peek_pervppkts_stats(self, args):
+        cluster_id = args.cluster_id
         grep_regex = args.grep
         vp_num = args.vp_num
-        self._peek_cmd_obj.peek_pervppkts_stats(vp_number=vp_num, grep_regex=grep_regex)
+        self._peek_cmd_obj.peek_pervppkts_stats(vp_number=vp_num, cluster_id=cluster_id, grep_regex=grep_regex)
 
     def peek_stats_nhp(self, args):
         grep_regex = args.grep
