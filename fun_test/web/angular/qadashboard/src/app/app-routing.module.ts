@@ -9,9 +9,9 @@ import {Demo1Component} from "./demo1/demo1.component";
 
 const routes: Routes = [
   { path: 'upgrade', component: DashboardComponent },
-  { path: 'upgrade/dashboard', component: DashboardComponent },
-  { path: 'upgrade/performance', component: PerformanceComponent },
-  { path: 'upgrade/performance/atomic/:id', component: FunMetricChartComponent},
+  { path: 'dashboard', component: DashboardComponent },
+  { path: 'performance', component: PerformanceComponent },
+  { path: 'performance/atomic/:id', component: FunMetricChartComponent},
   { path: 'upgrade/test', component: TestComponent },
   { path: 'upgrade/demo1', component: Demo1Component }
 ];

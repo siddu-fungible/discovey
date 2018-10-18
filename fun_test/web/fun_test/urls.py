@@ -133,7 +133,8 @@ performance_urls = [
 ]
 
 test_urls = [
-    url(r'^datetime$', tests_views.date_test)
+    url(r'^datetime$', tests_views.date_test),
+    url(r'^bg$', tests_views.bg)
 ]
 
 upgrade_urls = [

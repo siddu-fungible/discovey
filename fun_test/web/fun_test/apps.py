@@ -1,5 +1,7 @@
 from django.apps import AppConfig
 from lib.utilities.jira_manager import JiraManager
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 class FunTestConfig(AppConfig):
 
@@ -16,6 +18,12 @@ class FunTestConfig(AppConfig):
         if not hasattr(self, "jira_manager"):
             self.jira_manager = JiraManager()
         return self.jira_manager
+
+    def get_background_scheduler(self):
+        if not hasattr(self, "background_scheduler"):
+            self.background_scheduler = BackgroundScheduler()
+            self.background_scheduler.start()
+        return self.background_scheduler
 
     def set_metric_models(self):
         for model in self.get_models():
