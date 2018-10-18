@@ -57,6 +57,7 @@ export class VolumesComponent implements OnInit {
   selection = new SelectionModel<VolumeElement>(true, []);
   actionSelected: string = null;
   selectedRowIndex: number = null;
+  encryptionOn: boolean = true;
 
 
   dataProtection: boolean = true;

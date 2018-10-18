@@ -30,17 +30,26 @@
           <input matInput placeholder="Capacity">
         </mat-form-field>
       </div>
+      <br>
+      <p><b>Please select a pool</b></p>
+      <app-pools [action]="false" [radioSelection]="true"></app-pools>
+
+      <br>
       <mat-slide-toggle [(ngModel)]="dataProtection" [checked]="true">Data-protection</mat-slide-toggle>
       <div *ngIf="dataProtection">
         <mat-card>
-          <p><b>Please select a pool</b></p>
-          <app-pools [action]="false" [radioSelection]="true"></app-pools>
+
 
 
           <p><b>Fault-tolerance options</b></p>
           <li>
             <mat-form-field>
-              <input matInput placeholder="# of fault tolerant volumes">
+              <input matInput placeholder="# of disk failures">
+            </mat-form-field>
+          </li>
+          <li>
+            <mat-form-field>
+              <input matInput placeholder="# of DPU failures">
             </mat-form-field>
           </li>
 
@@ -52,8 +61,7 @@
               </mat-radio-button>
             </mat-radio-group>
           </li>
-          <p><b>Encryption options</b></p>
-            <mat-checkbox>Encrypt</mat-checkbox>
+
           <br>
           <p><b>Compression options</b></p>
             Effort<mat-slider
@@ -64,6 +72,23 @@
               max="5" style="margin-left: 5px">Effort</mat-slider>
           <br>
         </mat-card>
+
+        <span (click)="encryptionOn = !encryptionOn" style="padding-top: 20px">
+          <ng-container *ngIf="encryptionOn">
+            <button class="btn"><i class="fa fa-lock"></i>
+              </button>
+            Encryption ON
+          </ng-container>
+          <ng-container *ngIf="!encryptionOn">
+            <button class="btn"><i class="fa fa-unlock"></i>
+              </button>
+            Encryption OFF
+          </ng-container>
+        </span>
+
+        <!--button *ngIf="!encryptionOn" mat-icon-button (click)="encryptionOn = !encryptionOn">
+          <mat-icon>lock_open</mat-icon><mat-label>Encryption OFF</mat-label>
+        </button-->
       </div>
 
       <mat-action-row>
