@@ -1,42 +1,42 @@
-<div style="margin: 10px;">
+<div class="card">
     <!-- button ng-click="test()">Test</button -->
     <div class="card card-primary">
-        <div class="card-header">Suite Executions</div>
+      <div class="card-header"><b>Suite Executions</b></div>
         <div class="card-block">
             <div class="text-center">
                 <!-- pager -->
-                <div id="pageDiv" *ngIf="pager.pages && pager.pages.length" class="pagination">
-                    <span [ngClass]="{disabled:pager.currentPage === 1}">
-                        <a [routerLink]="" (click)="setPage(1)">First </a>
-                    </span>
-                    <span [ngClass]="{disabled:pager.currentPage === 1}">
-                        <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
-                    </span>
-                    <span *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
-                        <a [routerLink]="" (click)="setPage(page)">{{ page }}</a>
-                    </span>
-                    <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
-                        <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
-                    </span>
-                    <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
-                        <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
-                    </span>
-                </div>
+                <ul id="pageDiv" *ngIf="pager.pages && pager.pages.length" class="pagination">
+                    <li class="page-item" [ngClass]="{disabled:pager.currentPage === 1}">
+                        <a class="page-link" [routerLink]="" (click)="setPage(1)">First </a>
+                    </li>
+                    <li class="page-item" [ngClass]="{disabled:pager.currentPage === 1}">
+                        <a class="page-link" [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
+                    </li>
+                    <li class="page-item" *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
+                        <a class="page-link" [routerLink]="" (click)="setPage(page)">{{ page }}</a>
+                    </li>
+                    <li class="page-item" [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+                        <a class="page-link" [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
+                    </li>
+                    <li class="page-item" [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+                        <a class="page-link" [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
+                    </li>
+                </ul>
             </div>
             <table class="table table-hover table-responsive table-bordered">
                 <tr style="text-align: center">
                     <th>Id</th>
                     <th>Result</th>
                     <th><label data-placement="top" data-toggle="tooltip" title="Passed"
-                               class="badge badge-success">P</label></th>
+                               class="badge badge-success">Passed</label></th>
                     <th><label data-placement="top" data-toggle="tooltip" title="Failed"
-                               class="badge badge-danger">F</label></th>
+                               class="badge badge-danger">Failed</label></th>
                     <th><label data-placement="top" data-toggle="tooltip" title="Not Run"
-                               class="badge badge-secondary">N</label></th>
+                               class="badge badge-secondary">Not Run</label></th>
                     <th><label data-placement="top" data-toggle="tooltip" title="In Progress"
-                               class="badge badge-info">I</label></th>
+                               class="badge badge-info">In Progress</label></th>
                     <th><label data-placement="top" data-toggle="tooltip" title="Skipped"
-                               class="badge badge-warning">S</label></th>
+                               class="badge badge-warning">Skipped</label></th>
                     <th># TC</th>
                     <th>Version</th>
                     <th>Scheduled At</th>
@@ -49,7 +49,6 @@
                 </tr>
                 <tr style="text-align: center" *ngFor="let suiteExecution of items">
                     <td>{{ suiteExecution.fields.execution_id }}</td>
-
                     <td>
                         <button (click)="getSuiteDetail(suiteExecution.fields.execution_id)" [ngClass]="'btn btn-sm btn-outline-'+
                           resultToClass(suiteExecution.suite_result)">{{ suiteExecution.suite_result }}

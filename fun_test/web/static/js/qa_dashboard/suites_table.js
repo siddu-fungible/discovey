@@ -15,7 +15,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
             payload["tags"] = ctrl.tags;
         }
         $http.post("/regression/suite_executions_count/"  + ctrl.filterString, payload).then(function(result) {
-            $scope.suiteExecutionsCount = (parseInt(result.data));
+            $scope.suiteExecutionsCount = (parseInt(result.data.data));
             $scope.setPage(1);
 
         });
