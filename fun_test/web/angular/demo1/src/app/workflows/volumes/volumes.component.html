@@ -53,20 +53,15 @@
             </mat-radio-group>
           </li>
           <p><b>Encryption options</b></p>
-          <li>Encrypt
-            <mat-slide-toggle [checked]="true"></mat-slide-toggle>
-          </li>
+            <mat-checkbox>Encrypt</mat-checkbox>
           <br>
           <p><b>Compression options</b></p>
-          <li>Effort
-            <mat-slider
+            Effort<mat-slider
               thumbLabel
               [displayWith]="formatLabel"
               tickInterval="1"
               min="0"
-              max="5"></mat-slider>
-          </li>
-
+              max="5">Effort</mat-slider>
           <br>
         </mat-card>
       </div>
@@ -99,7 +94,7 @@
 
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef> Name</th>
-      <td mat-cell *matCellDef="let element"> {{ element.name }} </td>
+      <td mat-cell *matCellDef="let element"> <a href="/demo/demo1/volume/{{ element.name }}">{{ element.name }}</a> </td>
     </ng-container>
 
     <ng-container matColumnDef="capacity">
