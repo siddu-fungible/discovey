@@ -1,0 +1,7 @@
+#pageDiv{
+  float: right;
+}
+.table td {
+  padding: 1px;
+  vertical-align: center;
+}

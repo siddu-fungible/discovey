@@ -159,6 +159,7 @@ def suites(request):
 
 
 @csrf_exempt
+@api_safe_json_response
 def suite_executions_count(request, filter_string):
     tags = None
     if request.method == 'POST':
@@ -168,9 +169,10 @@ def suite_executions_count(request, filter_string):
                 tags = request_json["tags"]
                 tags = json.loads(tags)
     count = _get_suite_executions(get_count=True, filter_string=filter_string, tags=tags)
-    return HttpResponse(count)
+    return count
 
 @csrf_exempt
+@api_safe_json_response
 def suite_executions(request, records_per_page=10, page=None, filter_string="ALL"):
     tags = None
     if request.method == 'POST':
@@ -184,7 +186,7 @@ def suite_executions(request, records_per_page=10, page=None, filter_string="ALL
                                              records_per_page=records_per_page,
                                              filter_string=filter_string,
                                              tags=tags)
-    return HttpResponse(json.dumps(all_objects_dict))
+    return json.dumps(all_objects_dict)
 
 def suite_execution(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
