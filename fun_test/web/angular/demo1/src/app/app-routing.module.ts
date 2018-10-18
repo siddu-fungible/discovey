@@ -9,13 +9,15 @@ import {DpusComponent} from "./dpus/dpus.component";
 import {AppComponent} from "./app.component";
 import {PoolsComponent} from "./workflows/pools/pools.component";
 import {VolumesComponent} from "./workflows/volumes/volumes.component";
+import {VolumeComponent} from "./volume/volume.component";
 
 const routes: Routes = [
   {
     path: 'demo/demo1', component: Demo1Component, children: [
       {path: 'dpus', component: DpusComponent},
       {path: 'pools', component: PoolsComponent},
-      {path: 'volumes', component: VolumesComponent}
+      {path: 'volumes', component: VolumesComponent},
+      {path: 'volume/:name', component: VolumeComponent}
     ]
   },
 ];

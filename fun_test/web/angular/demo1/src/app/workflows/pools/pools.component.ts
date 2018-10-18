@@ -60,8 +60,11 @@ const VOLUME_DATA: VolumeElement[] = [
 })
 export class PoolsComponent implements OnInit {
   @Input() action: boolean = true;
+  @Input() radioSelection: boolean = false;
 
-  displayedColumns: string[] = ['select', 'name', 'capacity', 'volumes', 'dpus'];
+  //displayedColumns: string[] = ['select', 'name', 'capacity', 'volumes', 'dpus'];
+  displayedColumns: string[] = []; //['name', 'capacity', 'volumes', 'dpus'];
+
   dataSource = new MatTableDataSource<PoolElement>(ELEMENT_DATA);
   actionControl = new FormControl();
   actionSelected: string = null;
@@ -71,7 +74,10 @@ export class PoolsComponent implements OnInit {
   expandedElement: PoolElement;
   volumes = VOLUME_DATA;
 
-  constructor() { }
+  constructor() {
+
+
+  }
 
     actionGroups: ActionGroup[] = [
     {name: "Storage", actions: [{value: 1, viewValue: "Add a new pool"}]}
@@ -79,6 +85,12 @@ export class PoolsComponent implements OnInit {
 
 
   ngOnInit() {
+
+        if (this.radioSelection) {
+      this.displayedColumns = ['select', 'name', 'capacity', 'volumes', 'dpus'];
+    } else {
+      this.displayedColumns = ['select', 'name', 'capacity', 'volumes', 'dpus'];
+    }
   }
 
     step = 0;
