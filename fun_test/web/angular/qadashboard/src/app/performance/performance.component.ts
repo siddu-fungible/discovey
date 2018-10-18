@@ -495,7 +495,7 @@ export class PerformanceComponent implements OnInit {
   };
 
   openAtomicTab = () => {
-        let url = "/upgrade/performance/atomic/" + this.currentNode.metricId;
+        let url = "/performance/atomic/" + this.currentNode.metricId;
         window.open(url, '_blank');
     };
 
