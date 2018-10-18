@@ -354,3 +354,8 @@ input:checked + .slider:before {
     content: "\e080";
     color: #337ab7;
 }
+
+.mat-form-field-div {
+  display: flex;
+  flex-direction: column;
+}
