@@ -33,25 +33,38 @@
       <mat-slide-toggle [(ngModel)]="dataProtection" [checked]="true">Data-protection</mat-slide-toggle>
       <div *ngIf="dataProtection">
         <mat-card>
+          <p><b>Please select a pool</b></p>
+            <app-pools [action]="false"></app-pools>
+
+
           <p><b>Fault-tolerance options</b></p>
-          <mat-form-field>
-            <input matInput placeholder="# of fault tolerant volumes">
-          </mat-form-field>
-          <br>
-          <label class="mat-radio-label" for="md-radio-2-input">
-            Protection Scheme
+          <li>
+            <mat-form-field>
+              <input matInput placeholder="# of fault tolerant volumes">
+            </mat-form-field>
+          </li>
+
+          <li>Protection Scheme
             <mat-radio-group id="md-radio-2-input" class="example-radio-group" [(ngModel)]="protectionScheme">
               <mat-radio-button style="padding: 10px" class="example-radio-button" *ngFor="let scheme of ['Replication', 'Erasure-coding']" [value]="scheme">
                 {{ scheme }}
               </mat-radio-button>
             </mat-radio-group>
-          </label>
-          <p>Please select a pool</p>
-          <app-pools [action]="false"></app-pools>
-          <p><b>Encryption</b></p>
-          <mat-slide-toggle [checked]="true">Encryption</mat-slide-toggle>
+          </li>
+          <p><b>Encryption options</b></p>
+            <li>Encrypt
+            <mat-slide-toggle [checked]="true"></mat-slide-toggle>
+              </li>
+          <br>
+          <p><b>Compression options</b></p>
+          <li>Effort          <mat-slider
+            thumbLabel
+            [displayWith]="formatLabel"
+            tickInterval="1"
+            min="0"
+            max="5"></mat-slider></li>
 
-
+          <br>
         </mat-card>
       </div>
 
