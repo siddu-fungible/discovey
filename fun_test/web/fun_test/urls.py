@@ -127,11 +127,6 @@ metric_urls = [
     url(r'^dag$', metrics_views.dag)
 ]
 
-performance_urls = [
-    url(r'^$', metrics_views.summary_page),
-    url(r'^(.*)/(.*)$', metrics_views.atomic)
-]
-
 test_urls = [
     url(r'^datetime$', tests_views.date_test),
     url(r'^bg$', tests_views.bg)
@@ -147,7 +142,7 @@ demo_urls = [
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^performance/', include(performance_urls)),
+    url(r'^performance/', metrics_views.summary_page),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
     # url(r'^tools/', include('tools.urls')),
