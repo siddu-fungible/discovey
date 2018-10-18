@@ -199,6 +199,53 @@ def last_jenkins_hourly_execution_status(request):
         result = suite_executions[0]["suite_result"]
     return HttpResponse(result)
 
+@csrf_exempt
+@api_safe_json_response
+def suite_executions_count1(request, filter_string):
+    tags = None
+    if request.method == 'POST':
+        if request.body:
+            request_json = json.loads(request.body)
+            if "tags" in request_json:
+                tags = request_json["tags"]
+                tags = json.loads(tags)
+    count = _get_suite_executions(get_count=True, filter_string=filter_string, tags=tags)
+    return count
+
+@csrf_exempt
+@api_safe_json_response
+def suite_executions1(request, records_per_page=10, page=None, filter_string="ALL"):
+    tags = None
+    if request.method == 'POST':
+        if request.body:
+            request_json = json.loads(request.body)
+            if "tags" in request_json:
+                tags = request_json["tags"]
+                tags = json.loads(tags)
+    all_objects_dict = _get_suite_executions(execution_id=None,
+                                             page=page,
+                                             records_per_page=records_per_page,
+                                             filter_string=filter_string,
+                                             tags=tags)
+    return json.dumps(all_objects_dict)
+
+@csrf_exempt
+@api_safe_json_response
+def suite_execution1(request, execution_id):
+    all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
+    return json.dumps(all_objects_dict[0]) #TODO: Validate
+
+@csrf_exempt
+@api_safe_json_response
+def last_jenkins_hourly_execution_status1(request):
+    result = RESULTS["UNKNOWN"]
+    suite_executions = _get_suite_executions(tags=["jenkins-hourly"],
+                                             filter_string=SUITE_EXECUTION_FILTERS["COMPLETED"],
+                                             page=1, records_per_page=10)
+    if suite_executions:
+        result = suite_executions[0]["suite_result"]
+    return result
+
 def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]

@@ -1,87 +1,89 @@
 <div class="card">
-    <!-- button ng-click="test()">Test</button -->
-    <div class="card card-primary">
-      <div class="card-header"><b>Suite Executions</b></div>
-        <div class="card-block">
-            <div class="text-center">
-                <!-- pager -->
-                <ul id="pageDiv" *ngIf="pager.pages && pager.pages.length" class="pagination">
-                    <li class="page-item" [ngClass]="{disabled:pager.currentPage === 1}">
-                        <a class="page-link" [routerLink]="" (click)="setPage(1)">First </a>
-                    </li>
-                    <li class="page-item" [ngClass]="{disabled:pager.currentPage === 1}">
-                        <a class="page-link" [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
-                    </li>
-                    <li class="page-item" *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
-                        <a class="page-link" [routerLink]="" (click)="setPage(page)">{{ page }}</a>
-                    </li>
-                    <li class="page-item" [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
-                        <a class="page-link" [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
-                    </li>
-                    <li class="page-item" [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
-                        <a class="page-link" [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
-                    </li>
-                </ul>
-            </div>
-            <table class="table table-hover table-responsive table-bordered">
-                <tr style="text-align: center">
-                    <th>Id</th>
-                    <th>Result</th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="Passed"
-                               class="badge badge-success">Passed</label></th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="Failed"
-                               class="badge badge-danger">Failed</label></th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="Not Run"
-                               class="badge badge-secondary">Not Run</label></th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="In Progress"
-                               class="badge badge-info">In Progress</label></th>
-                    <th><label data-placement="top" data-toggle="tooltip" title="Skipped"
-                               class="badge badge-warning">Skipped</label></th>
-                    <th># TC</th>
-                    <th>Version</th>
-                    <th>Scheduled At</th>
-                    <th>Path</th>
-                    <th>Log</th>
-                    <th>Log Dir</th>
-                    <th>Action</th>
-                    <th>Tags</th>
-
-                </tr>
-                <tr style="text-align: center" *ngFor="let suiteExecution of items">
-                    <td>{{ suiteExecution.fields.execution_id }}</td>
-                    <td>
-                        <button (click)="getSuiteDetail(suiteExecution.fields.execution_id)" [ngClass]="'btn btn-sm btn-outline-'+
-                          resultToClass(suiteExecution.suite_result)">{{ suiteExecution.suite_result }}
-                        </button>
-                    </td>
-                    <td>{{ suiteExecution.num_passed }}</td>
-                    <td>{{ suiteExecution.num_failed }}</td>
-                    <td>{{ suiteExecution.num_not_run }}</td>
-                    <td>{{ suiteExecution.num_in_progress }}</td>
-                    <td>{{ suiteExecution.num_skipped }}</td>
-                    <td>{{ testCaseLength(suiteExecution.fields.test_case_execution_ids) }}</td>
-                    <td>{{ suiteExecution.fields.version }}</td>
-                    <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
-                    <td>{{ suiteExecution.fields.suite_path }}</td>
-                    <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) }}">Log</a></td>
-                    <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) }}">s_{{suiteExecution.fields.execution_id}}</a>
-                    </td>
-                    <td>
-                        <button data-placement="top" data-toggle="tooltip" title="Re-run"
-                                (click)="rerunClick(suiteExecution.fields.execution_id)" class="btn btn-outline-warning btn-sm">
-                                        <i class="fa fa-refresh"></i></button>
-                          &nbsp;
-                        <button ng-show="(suiteExecution.fields.result != 'KILLED') && ((suiteExecution.suite_result != 'PASSED') && (suiteExecution.suite_result != 'FAILED'))"
-                                data-placement="top" data-toggle="tooltip" title="Stop/Kill"
-                                (click)="killClick(suiteExecution.fields.execution_id)" class="btn btn-sm
-                                btn-outline-danger"><i class="fa fa-ban"></i></button>
-                    </td>
-                    <td>
-                        <label *ngFor="let tag of getTagList(suiteExecution.fields.tags)" class="badge badge-primary">{{ tag }}</label>
-                    </td>
-                </tr>
-            </table>
+  <!-- button ng-click="test()">Test</button -->
+  <div class="card card-primary">
+    <div class="card-header"><b>Suite Executions</b></div>
+    <div class="card-body">
+      <div class="text-center">
+        <!-- pager -->
+        <div id="pageDiv" *ngIf="pager.pages && pager.pages.length">
+          <span [ngClass]="{disabled:pager.currentPage === 1}">
+          <a [routerLink]="" (click)="setPage(1)">First </a>
+          </span>
+          <span [ngClass]="{disabled:pager.currentPage === 1}">
+          <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
+          </span>
+          <span *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
+          <a [routerLink]="" (click)="setPage(page)">{{page}} </a>
+          </span>
+          <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+          <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
+          </span>
+          <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+          <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
+          </span>
         </div>
+      </div>
+      <table class="table table-hover table-responsive table-bordered">
+        <tr style="text-align: center">
+          <th>Id</th>
+          <th>Result</th>
+          <th><label data-placement="top" data-toggle="tooltip" title="Passed"
+                     class="badge badge-success">Passed</label></th>
+          <th><label data-placement="top" data-toggle="tooltip" title="Failed"
+                     class="badge badge-danger">Failed</label></th>
+          <th><label data-placement="top" data-toggle="tooltip" title="Not Run"
+                     class="badge badge-secondary">Not Run</label></th>
+          <th><label data-placement="top" data-toggle="tooltip" title="In Progress"
+                     class="badge badge-info">In Progress</label></th>
+          <th><label data-placement="top" data-toggle="tooltip" title="Skipped"
+                     class="badge badge-warning">Skipped</label></th>
+          <th># TC</th>
+          <th>Version</th>
+          <th>Scheduled At</th>
+          <th>Path</th>
+          <th>Log</th>
+          <th>Log Dir</th>
+          <th>Action</th>
+          <th>Tags</th>
+
+        </tr>
+        <tr style="text-align: center" *ngFor="let suiteExecution of items">
+          <td>{{ suiteExecution.fields.execution_id }}</td>
+          <td>
+            <a [routerLink]="" (click)="getSuiteDetail(suiteExecution.fields.execution_id)" [ngClass]="'text-'+
+                          resultToClass(suiteExecution.suite_result)">{{ suiteExecution.suite_result }}
+            </a>
+          </td>
+          <td>{{ suiteExecution.num_passed }}</td>
+          <td>{{ suiteExecution.num_failed }}</td>
+          <td>{{ suiteExecution.num_not_run }}</td>
+          <td>{{ suiteExecution.num_in_progress }}</td>
+          <td>{{ suiteExecution.num_skipped }}</td>
+          <td>{{ testCaseLength(suiteExecution.fields.test_case_execution_ids) }}</td>
+          <td>{{ suiteExecution.fields.version }}</td>
+          <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
+          <td>{{ suiteExecution.fields.suite_path }}</td>
+          <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) }}">Log</a></td>
+          <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) }}">s_{{suiteExecution.fields.execution_id}}</a>
+          </td>
+          <td>
+            <button data-placement="top" data-toggle="tooltip" title="Re-run"
+                    (click)="rerunClick(suiteExecution.fields.execution_id)" class="btn btn-outline-warning btn-sm">
+              <i class="fa fa-refresh"></i></button>
+            &nbsp;
+            <button
+              [hidden]="(suiteExecution.suite_result === 'KILLED') || ((suiteExecution.suite_result === 'PASSED') || (suiteExecution.suite_result === 'FAILED'))"
+              data-placement="top" data-toggle="tooltip" title="Stop/Kill"
+              (click)="killClick(suiteExecution.fields.execution_id)" class="btn btn-sm
+                                btn-outline-danger"><i class="fa fa-ban"></i></button>
+          </td>
+          <td>
+            <label *ngFor="let tag of getTagList(suiteExecution.fields.tags)" class="badge badge-primary">{{ tag
+              }}</label>
+          </td>
+        </tr>
+      </table>
     </div>
+  </div>
 
 </div>

@@ -41,7 +41,7 @@ function SuitesTableController($scope, $http, resultToClass, $window, PagerServi
             payload["tags"] = ctrl.tags;
         }
         $http.post("/regression/suite_executions/" + $scope.recordsPerPage + "/" + page + "/" + ctrl.filterString, payload).then(function (result) {
-            $scope.items = JSON.parse(result.data);
+            $scope.items = result.data;
         });
     };
 

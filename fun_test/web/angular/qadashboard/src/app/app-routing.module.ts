@@ -14,6 +14,8 @@ const routes: Routes = [
   { path: 'performance', component: PerformanceComponent },
   { path: 'performance/atomic/:id', component: FunMetricChartComponent},
   { path: 'upgrade/regression', component: RegressionComponent },
+  { path: 'upgrade/regression/jenkins_jobs', component: RegressionComponent, data: {tags: '["jenkins-hourly", "jenkins-nightly"]'}},
+  { path: 'upgrade/regression/:filterString', component: RegressionComponent },
   { path: 'upgrade/test', component: TestComponent },
   { path: 'upgrade/demo1', component: Demo1Component }
 ];

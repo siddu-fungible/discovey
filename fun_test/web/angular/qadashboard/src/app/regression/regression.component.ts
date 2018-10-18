@@ -1,6 +1,7 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, Input} from '@angular/core';
 import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
+import {ActivatedRoute} from "@angular/router";
 
 @Component({
   selector: 'app-regression',
@@ -11,15 +12,33 @@ export class RegressionComponent implements OnInit {
   pager: any = {};
   suiteExecutionsCount: number;
   recordsPerPage: number;
-  tags: string;
-  filterString: string = "ALL";
+  @Input() tags: string;
+  @Input() filterString: string = "ALL";
   items: any;
   logDir: any;
 
-  constructor(private pagerService: PagerService, private apiService: ApiService) {
+  constructor(private pagerService: PagerService, private apiService: ApiService, private route: ActivatedRoute) {
   }
 
   ngOnInit() {
+    if (this.route.snapshot.data["tags"]) {
+      this.tags = this.route.snapshot.data["tags"];
+    }
+    this.route.params.subscribe(params => {
+      if (params['filterString']) {
+        let urlString = params['filterString'];
+        if (urlString === "completed_jobs") {
+          this.filterString = "COMPLETED";
+        } else if (urlString === "pending_jobs") {
+          this.filterString = "PENDING";
+        } else {
+          this.filterString = "ALL";
+        }
+      }
+      if (params['tags']) {
+        this.tags = params["tags"];
+      }
+    });
     this.recordsPerPage = 20;
     this.logDir = null;
     this.suiteExecutionsCount = 0;
@@ -27,8 +46,8 @@ export class RegressionComponent implements OnInit {
     if (this.tags) {
       payload["tags"] = this.tags;
     }
-    let self= this;
-    this.apiService.post("/regression/suite_executions_count/" + this.filterString, payload).subscribe((result) => {
+    let self = this;
+    this.apiService.post("/regression/suite_executions_count1/" + this.filterString, payload).subscribe((result) => {
       this.suiteExecutionsCount = (parseInt(result.data));
       this.setPage(1);
     });
@@ -50,71 +69,71 @@ export class RegressionComponent implements OnInit {
     if (this.tags) {
       payload["tags"] = this.tags;
     }
-    this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + this.filterString, payload).subscribe(result => {
+    this.apiService.post("/regression/suite_executions1/" + this.recordsPerPage + "/" + page + "/" + this.filterString, payload).subscribe(result => {
       this.items = JSON.parse(result.data);
     });
   }
 
   testCaseLength = function (testCases) {
-        return JSON.parse(testCases).length;
-    };
+    return JSON.parse(testCases).length;
+  };
 
-    trimTime(t) {
-        return t.replace(/\..*$/, "").replace(/T/, " ");
+  trimTime(t) {
+    return t.replace(/\..*$/, "").replace(/T/, " ");
+  }
+
+  getSuiteDetail(suiteId) {
+    console.log(suiteId);
+    window.location.href = "/regression/suite_detail/" + suiteId;
+  }
+
+  getSchedulerLog(suiteId) {
+    if (this.logDir) {
+      return this.logDir + suiteId + "/scheduler.log.txt"; // TODO
     }
+  }
 
-    getSuiteDetail(suiteId) {
-        console.log(suiteId);
-        window.location.href = "/regression/suite_detail/" + suiteId;
+  getSchedulerLogDir(suiteId) {
+    if (this.logDir) {
+      return "/regression/static_serve_log_directory/" + suiteId;
     }
+  }
 
-    getSchedulerLog(suiteId) {
-        if(this.logDir) {
-            return this.logDir + suiteId + "/scheduler.log.txt"; // TODO
-        }
+  rerunClick(suiteId) {
+    this.apiService.get("/regression/suite_re_run/" + suiteId).subscribe(function (result) {
+      let jobId = parseInt(result.data);
+      window.location.href = "/regression/suite_detail/" + jobId;
+    });
+  }
+
+  killClick(suiteId) {
+    this.apiService.get("/regression/kill_job/" + suiteId).subscribe(function (result) {
+      let jobId = parseInt(result.data);
+      window.location.href = "/regression/";
+    });
+  }
+
+  getTagList = function (tagsString) {
+    return JSON.parse(tagsString);
+  }
+
+  resultToClass(result): any {
+    result = result.toUpperCase();
+    let klass = "default";
+    if (result === "FAILED") {
+      klass = "danger";
+    } else if (result === "PASSED") {
+      klass = "success";
+    } else if (result === "SKIPPED") {
+      klass = "warning";
+    } else if (result === "NOT_RUN") {
+      klass = "default";
+    } else if (result === "IN_PROGRESS") {
+      klass = "info";
+    } else if (result === "BLOCKED") {
+      klass = "blocked";
     }
-
-    getSchedulerLogDir(suiteId) {
-        if(this.logDir) {
-            return "/regression/static_serve_log_directory/" + suiteId;
-        }
-    }
-
-    rerunClick(suiteId) {
-        this.apiService.get("/regression/suite_re_run/" + suiteId).subscribe(function (result) {
-            let jobId = parseInt(result.data);
-            window.location.href = "/regression/suite_detail/" + jobId;
-        });
-    }
-
-    killClick(suiteId) {
-        this.apiService.get("/regression/kill_job/" + suiteId).subscribe(function (result) {
-            let jobId = parseInt(result.data);
-            window.location.href = "/regression/";
-        });
-    }
-
-    getTagList = function (tagsString) {
-        return JSON.parse(tagsString);
-    }
-
-    resultToClass(result): any {
-       result = result.toUpperCase();
-            let klass = "default";
-            if (result === "FAILED") {
-                klass = "danger";
-            } else if (result === "PASSED") {
-                klass = "success";
-            } else if (result === "SKIPPED") {
-                klass = "warning";
-            } else if (result === "NOT_RUN") {
-                klass = "default";
-            } else if (result === "IN_PROGRESS") {
-                klass = "info";
-            } else if (result === "BLOCKED") {
-                klass = "blocked";
-            }
     return klass;
-    }
+  }
 
 }
