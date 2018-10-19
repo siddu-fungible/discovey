@@ -15,6 +15,18 @@ export interface VolumeElement {
   pool: string;
 }
 
+export interface  AddNewVolumeConfigInterface {
+  name: string;
+  capacity: number;
+  pool_name: string;
+}
+
+export class AddNewVolumeConfig implements AddNewVolumeConfigInterface {
+  name: string = null;
+  capacity: number = null;
+  pool_name: string = null;
+}
+
 const ELEMENT_DATA: VolumeElement[] = [
   {id: 0, name: 'Volume-1', capacity: 1024, pool: "Pool-1"},
   {id: 1, name: 'Volume-2', capacity: 2048, pool: "Pool-2"}
@@ -48,7 +60,7 @@ const ELEMENT_DATA: VolumeElement[] = [
     ])]
 })
 export class VolumesComponent implements OnInit {
-  @ViewChild(PoolsComponent) pools: PoolsComponent;
+  @ViewChild(PoolsComponent) addNewVolumePools: PoolsComponent;
 
 
   displayedColumns: string[] = ['select', 'name', 'capacity', 'pool'];
@@ -57,7 +69,8 @@ export class VolumesComponent implements OnInit {
   selection = new SelectionModel<VolumeElement>(true, []);
   actionSelected: string = null;
   selectedRowIndex: number = null;
-
+  encryptionOn: boolean = true;
+  addNewVolumeConfig: AddNewVolumeConfig = new AddNewVolumeConfig();
 
   dataProtection: boolean = true;
   actionGroups: ActionGroup[] = [
@@ -106,7 +119,22 @@ export class VolumesComponent implements OnInit {
     console.log("Animation done");
   }
 
+  private _getSelectedPool() {
+    let pe = this.addNewVolumePools.getSelected();
+    let poolName = null;
+    pe.forEach((pe) => {
+      //console.log(pe.name);
+      poolName = pe.name;
+    });
+    return poolName;
+  }
+
   submit() {
+
+    this.addNewVolumeConfig.pool_name = this._getSelectedPool();
+    console.log(this.addNewVolumeConfig);
+
+
     const pe: VolumeElement = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
 
     this.dataSource.data.push(pe);
@@ -117,7 +145,7 @@ export class VolumesComponent implements OnInit {
       this.selectedRowIndex = null;
     }, 2000);
 
-    let pe2 = this.pools.getSelected();
+    let pe2 = this.addNewVolumePools.getSelected();
     pe2.forEach((pe) => {
       console.log(pe.name);
     })

@@ -69,6 +69,7 @@ export class PoolsComponent implements OnInit {
   actionControl = new FormControl();
   actionSelected: string = null;
   selectedRowIndex: number = null;
+  selectedElement: string = null;
   selection = new SelectionModel<PoolElement>(true, []);
   displayedVolumesColumns: string[] = ['position', 'name', 'weight', 'symbol'];
   expandedElement: PoolElement;

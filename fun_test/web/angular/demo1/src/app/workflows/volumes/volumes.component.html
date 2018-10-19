@@ -11,7 +11,7 @@
 
 
 <div *ngIf="actionSelected">
-  <mat-accordion class="example-headers-align">
+  <mat-accordion>
     <mat-expansion-panel [expanded]="step === 0" (opened)="setStep(0)" hideToggle>
       <mat-expansion-panel-header>
         <mat-panel-title>
@@ -21,49 +21,70 @@
         </mat-panel-description>
       </mat-expansion-panel-header>
 
+        <div class="mat-form-field-div">
+        <mat-form-field>
+          <input matInput placeholder="Name" [(ngModel)]="addNewVolumeConfig.name">
+        </mat-form-field>
+        <mat-form-field>
+          <input type="number" matInput placeholder="Capacity" [(ngModel)]="addNewVolumeConfig.capacity">
+        </mat-form-field>
+        </div>
+      <br>
+      <p><b>Please select a pool</b></p>
+      <app-pools [action]="false" [radioSelection]="true"></app-pools>
 
-      <div class="example-container123">
-        <mat-form-field>
-          <input matInput placeholder="Name">
-        </mat-form-field>
-        <mat-form-field>
-          <input matInput placeholder="Capacity">
-        </mat-form-field>
-      </div>
+      <br>
       <mat-slide-toggle [(ngModel)]="dataProtection" [checked]="true">Data-protection</mat-slide-toggle>
       <div *ngIf="dataProtection">
         <mat-card>
-          <p><b>Please select a pool</b></p>
-          <app-pools [action]="false" [radioSelection]="true"></app-pools>
 
 
           <p><b>Fault-tolerance options</b></p>
           <li>
             <mat-form-field>
-              <input matInput placeholder="# of fault tolerant volumes">
+              <input matInput placeholder="# of disk failures">
+            </mat-form-field>
+          </li>
+          <li>
+            <mat-form-field>
+              <input matInput placeholder="# of DPU failures">
             </mat-form-field>
           </li>
 
           <li>Protection Scheme
-            <mat-radio-group id="md-radio-2-input" class="example-radio-group" [(ngModel)]="protectionScheme">
-              <mat-radio-button style="padding: 10px" class="example-radio-button"
+            <mat-radio-group id="md-radio-2-input" [(ngModel)]="protectionScheme">
+              <mat-radio-button style="padding: 10px"
                                 *ngFor="let scheme of ['Replication', 'Erasure-coding']" [value]="scheme">
                 {{ scheme }}
               </mat-radio-button>
             </mat-radio-group>
           </li>
-          <p><b>Encryption options</b></p>
-            <mat-checkbox>Encrypt</mat-checkbox>
+
           <br>
           <p><b>Compression options</b></p>
-            Effort<mat-slider
-              thumbLabel
-              [displayWith]="formatLabel"
-              tickInterval="1"
-              min="0"
-              max="5" style="margin-left: 5px">Effort</mat-slider>
+          Effort
+          <mat-slider
+            thumbLabel
+            [displayWith]="formatLabel"
+            tickInterval="1"
+            min="0"
+            max="5" style="margin-left: 5px">Effort
+          </mat-slider>
           <br>
         </mat-card>
+
+        <span (click)="encryptionOn = !encryptionOn" style="padding-top: 20px">
+          <ng-container *ngIf="encryptionOn">
+            <button class="btn"><i class="fa fa-lock"></i>
+              </button>
+            Encryption ON
+          </ng-container>
+          <ng-container *ngIf="!encryptionOn">
+            <button class="btn"><i class="fa fa-unlock"></i>
+              </button>
+            Encryption OFF
+          </ng-container>
+        </span>
       </div>
 
       <mat-action-row>
@@ -94,7 +115,7 @@
 
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef style="width: 400px"> Name</th>
-      <td mat-cell *matCellDef="let element"> <a href="/demo/demo1/volume/{{ element.name }}">{{ element.name }}</a> </td>
+      <td mat-cell *matCellDef="let element"><a href="/demo/demo1/volume/{{ element.name }}">{{ element.name }}</a></td>
     </ng-container>
 
     <ng-container matColumnDef="capacity">
@@ -114,12 +135,11 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
 
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-        class="example-element-row"
-        [class.example-expanded-row]="expandedElement === row"
+        class="mat-table-element-row"
+        [class.mat-table-expanded-row]="expandedElement === row"
         (click)="selection.toggle(row); expandedElement = row;">
     </tr>
 
-    <!--tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr-->
 
   </table>
 </div>
