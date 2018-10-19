@@ -28,6 +28,7 @@ import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric
 import { ScrollToDirective } from './scroll-to.directive';
 import { RegressionComponent } from './regression/regression.component';
 import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
+import { SubmitJobComponent } from './regression/submit-job/submit-job.component';
 
 @NgModule({
   declarations: [
@@ -45,7 +46,8 @@ import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
     PreviewFunMetricComponent,
     ScrollToDirective,
     RegressionComponent,
-    FunSpinnerComponent
+    FunSpinnerComponent,
+    SubmitJobComponent
   ],
   imports: [
     BsDropdownModule,

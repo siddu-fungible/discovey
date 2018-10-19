@@ -36,7 +36,7 @@ export class RegressionComponent implements OnInit {
         }
       }
       if (params['tags']) {
-        this.tags = params["tags"];
+        this.tags = '["' + params["tags"] + '"]';
       }
     });
     this.recordsPerPage = 20;
