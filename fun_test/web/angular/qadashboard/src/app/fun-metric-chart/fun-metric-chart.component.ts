@@ -415,12 +415,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         return;
       }
       let keyList = [];
-      let keyValue = {};
+      let keyValue = [];
+      let dataSetIndex = 0;
       for (let oneDataSet of allDataSets) {
+        keyValue[dataSetIndex] = [];
         for (let oneRecord of oneDataSet) {
           keyList.push(oneRecord.input_date_time.toString());
-          keyValue[oneRecord.input_date_time.toString()] = oneRecord;
+          keyValue[dataSetIndex][oneRecord.input_date_time.toString()] = oneRecord;
         }
+        dataSetIndex++;
       }
       keyList.sort();
       keyList = this.fixMissingDates(keyList);
@@ -442,8 +445,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             this.mileStoneIndex = startIndex;
           }
           while (startIndex >= endIndex) {
-            if (keyValue[originalKeyList[startIndex]]) {
-              let oneRecord = keyValue[originalKeyList[startIndex]];
+            if (keyValue[j][originalKeyList[startIndex]]) {
+              let oneRecord = keyValue[j][originalKeyList[startIndex]];
               matchingDateFound = true;
               let outputName = this.filterDataSets[j].output.name;
               output = oneRecord[outputName];

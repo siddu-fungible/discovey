@@ -43,7 +43,10 @@ class MyScript(FunTestScript):
         2. Step 2""")
 
     def setup(self):
-        pass
+        self.lsf_status_server = LsfStatusServer()
+        tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG]
+        self.lsf_status_server.workaround(tags=tags)
+        fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
     def cleanup(self):
         invalidate_goodness_cache()
@@ -55,13 +58,12 @@ class PalladiumPerformanceTc(FunTestCase):
     dt = get_rounded_time()
 
     def setup(self):
-        pass
+        self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def cleanup(self):
         pass
 
     def validate_job(self):
-        self.lsf_status_server = LsfStatusServer()
         job_info = self.lsf_status_server.get_last_job(tag=self.tag)
         fun_test.test_assert(job_info, "Ensure one last job exists")
         lines = job_info["output_text"].split("\n")
@@ -82,6 +84,7 @@ class PalladiumPerformanceTc(FunTestCase):
         for key, value in metrics.iteritems():
             d[key] = value
         return d
+
 
 class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
     def describe(self):

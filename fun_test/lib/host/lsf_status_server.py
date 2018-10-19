@@ -19,6 +19,21 @@ class LsfStatusServer:
         response = requests.get(url)
         return response.status_code == 200
 
+    def workaround(self, tags):
+        try:
+            for tag in tags:
+                past_jobs = self.get_jobs_by_tag(tag=tag)
+                if past_jobs:
+                    response_dict = json.loads(past_jobs)
+                    fun_test.log(json.dumps(response_dict, indent=4))
+                    past_jobs = response_dict["past_jobs"]
+                for past_job in past_jobs:
+                    job_id = past_job["job_id"]
+                    response = self.get_job_by_id(job_id=job_id)
+                    response = self.get_job_by_id(job_id=job_id)
+        except Exception as ex:
+            fun_test.critical("Workaround failed:" + str(ex))
+
     def _get(self, url):
         data = None
         response = requests.get(url)
