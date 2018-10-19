@@ -1,6 +1,6 @@
 <mat-form-field>
   <mat-select placeholder="actions" [formControl]="actionControl" [(value)]="actionSelected">
-    <mat-option>-- None --</mat-option>
+    <mat-option></mat-option>
     <mat-optgroup *ngFor="let group of actionGroups" [label]="group.name">
       <mat-option *ngFor="let action of group.actions" [value]="action.value">
         {{ action.viewValue }}
@@ -10,7 +10,7 @@
 </mat-form-field>
 
 
-<div *ngIf="actionSelected">
+<div *ngIf="actionSelected" style="padding-bottom: 20px">
   <mat-accordion>
     <mat-expansion-panel [expanded]="step === 0" (opened)="setStep(0)" hideToggle>
       <mat-expansion-panel-header>
@@ -73,7 +73,7 @@
           <br>
         </mat-card>
 
-        <span (click)="encryptionOn = !encryptionOn" style="padding-top: 20px">
+        <span (click)="encryptionOn = !encryptionOn">
           <ng-container *ngIf="encryptionOn">
             <button class="btn"><i class="fa fa-lock"></i>
               </button>
@@ -93,7 +93,7 @@
     </mat-expansion-panel>
   </mat-accordion>
 </div>
-<div style="padding-top: 20px">
+<div>
   <p>Available volumes</p>
   <table mat-table multiTemplateDataRows [dataSource]="dataSource" class="mat-elevation-z8">
 

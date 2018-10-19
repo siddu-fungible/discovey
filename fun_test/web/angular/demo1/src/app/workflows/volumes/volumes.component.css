@@ -63,3 +63,33 @@ mat-cell:nth-child(5),
 mat-header-cell:nth-child(5) {
     flex: 0 0 10%;
 }
+
+
+mat-expansion-panel-header {
+  background-color: #337ab7;
+  color: white;
+  max-height: 60px;
+}
+
+.mat-expansion-panel-header-title {
+  color: white;
+  display: flex;
+  flex-direction: row;
+}
+
+.mat-expansion-panel-header-description {
+  flex-grow: unset;
+
+}
+
+.mat-expansion-panel-header.mat-expanded {
+  background: #337ab7;
+}
+
+.mat-expansion-panel-header.mat-expanded:before {
+  background: #337ab7;
+}
+
+.mat-expansion-panel-header.mat-expanded:hover {
+  background: #337ab7;
+}

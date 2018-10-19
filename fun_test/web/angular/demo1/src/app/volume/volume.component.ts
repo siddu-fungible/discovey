@@ -18,6 +18,7 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 })
 export class VolumeComponent {
   dataSource = ELEMENT_DATA;
+  volumeTypes = {ec: "EC", lsv: "LSV"};
   columnsToDisplay = ['name',
     'type',
     'capacity',
@@ -46,7 +47,7 @@ export class VolumeComponent {
   expandedElement: VolumeElement;
 
   constructor() {
-    this.columnsToDisplay = Object.keys(this.columnToHeader);
+    this.columnsToDisplay = ["name", "type", "capacity", "encrypted", "pool_name", "read_iops"];
   }
 
 }
