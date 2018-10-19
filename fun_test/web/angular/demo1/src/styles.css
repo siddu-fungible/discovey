@@ -359,3 +359,12 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
 }
+
+
+tr.mat-table-element-row:not(.mat-table-expanded-row):hover {
+  background: #f5f5f5;
+}
+
+tr.mat-table-element-row:not(.mat-table-expanded-row):active {
+  background: #efefef;
+}

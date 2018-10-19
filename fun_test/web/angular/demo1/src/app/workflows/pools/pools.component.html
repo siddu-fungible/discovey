@@ -62,7 +62,7 @@
 </div>
 <div>
   <p *ngIf="action">Available pools</p>
-  <mat-radio-group [(ngModel)]="selectedElement">
+  <mat-radio-group [(ngModel)]="selectedElement" [required]="true">
     <table mat-table multiTemplateDataRows [dataSource]="dataSource" class="mat-elevation-z81">
 
       <ng-container *ngIf="!radioSelection"  matColumnDef="select">
@@ -85,7 +85,7 @@
         </th>
 
         <td mat-cell *matCellDef="let row">
-          <mat-radio-button [value]="row">
+          <mat-radio-button [value]="row" (click)="selection.select(row);" [checked]="selection.isSelected(row)">
           </mat-radio-button>
         </td>
       </ng-container>
@@ -170,7 +170,7 @@
       </tr>
       </ng-container>
       <ng-container *ngIf="radioSelection">
-      <tr  mat-row *matRowDef="let row; columns: displayedColumns;">
+      <tr  mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.select(row);">
       </tr>
       </ng-container>
 

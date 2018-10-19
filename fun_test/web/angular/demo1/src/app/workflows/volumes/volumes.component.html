@@ -11,7 +11,7 @@
 
 
 <div *ngIf="actionSelected">
-  <mat-accordion class="example-headers-align">
+  <mat-accordion>
     <mat-expansion-panel [expanded]="step === 0" (opened)="setStep(0)" hideToggle>
       <mat-expansion-panel-header>
         <mat-panel-title>
@@ -23,10 +23,10 @@
 
         <div class="mat-form-field-div">
         <mat-form-field>
-          <input matInput placeholder="Name">
+          <input matInput placeholder="Name" [(ngModel)]="addNewVolumeConfig.name">
         </mat-form-field>
         <mat-form-field>
-          <input matInput placeholder="Capacity">
+          <input type="number" matInput placeholder="Capacity" [(ngModel)]="addNewVolumeConfig.capacity">
         </mat-form-field>
         </div>
       <br>
@@ -52,8 +52,8 @@
           </li>
 
           <li>Protection Scheme
-            <mat-radio-group id="md-radio-2-input" class="example-radio-group" [(ngModel)]="protectionScheme">
-              <mat-radio-button style="padding: 10px" class="example-radio-button"
+            <mat-radio-group id="md-radio-2-input" [(ngModel)]="protectionScheme">
+              <mat-radio-button style="padding: 10px"
                                 *ngFor="let scheme of ['Replication', 'Erasure-coding']" [value]="scheme">
                 {{ scheme }}
               </mat-radio-button>
@@ -85,10 +85,6 @@
             Encryption OFF
           </ng-container>
         </span>
-
-        <!--button *ngIf="!encryptionOn" mat-icon-button (click)="encryptionOn = !encryptionOn">
-          <mat-icon>lock_open</mat-icon><mat-label>Encryption OFF</mat-label>
-        </button-->
       </div>
 
       <mat-action-row>
@@ -139,12 +135,11 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
 
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-        class="example-element-row"
-        [class.example-expanded-row]="expandedElement === row"
+        class="mat-table-element-row"
+        [class.mat-table-expanded-row]="expandedElement === row"
         (click)="selection.toggle(row); expandedElement = row;">
     </tr>
 
-    <!--tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr-->
 
   </table>
 </div>
