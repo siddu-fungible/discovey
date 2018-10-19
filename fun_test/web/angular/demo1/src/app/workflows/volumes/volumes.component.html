@@ -42,7 +42,7 @@
           <p><b>Fault-tolerance options</b></p>
           <li>
             <mat-form-field>
-              <input matInput placeholder="# of disk failures">
+              <input type="number" matInput placeholder="# of disk failures" [(ngModel)]="addNewVolumeConfig.data_protection.fault_tolerance">
             </mat-form-field>
           </li>
           <li>
@@ -52,9 +52,9 @@
           </li>
 
           <li>Protection Scheme
-            <mat-radio-group id="md-radio-2-input" [(ngModel)]="protectionScheme">
+            <mat-radio-group id="md-radio-2-input" [(ngModel)]="addNewVolumeConfig.data_protection.type">
               <mat-radio-button style="padding: 10px"
-                                *ngFor="let scheme of ['Replication', 'Erasure-coding']" [value]="scheme">
+                                *ngFor="let scheme of ['Replication', 'Erasure-coding']" [value]="getSchemeValue(scheme)">
                 {{ scheme }}
               </mat-radio-button>
             </mat-radio-group>
@@ -63,7 +63,7 @@
           <br>
           <p><b>Compression options</b></p>
           Effort
-          <mat-slider
+          <mat-slider [(ngModel)]="addNewVolumeConfig.compression_effort"
             thumbLabel
             [displayWith]="formatLabel"
             tickInterval="1"

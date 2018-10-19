@@ -15,16 +15,47 @@ export interface VolumeElement {
   pool: string;
 }
 
+
+export interface DataProtectionInterface {
+  type: string;
+  fault_tolerance: number;
+}
+/*
+export interface IHash {
+    [details: boolean] : string;
+    t: boolean;
+}
+
+export interface Abc {
+  
+}*/
+
 export interface  AddNewVolumeConfigInterface {
   name: string;
   capacity: number;
   pool_name: string;
+  compression_effort: number;
+  encryption: boolean;
+  data_protection: DataProtectionInterface;
 }
 
 export class AddNewVolumeConfig implements AddNewVolumeConfigInterface {
   name: string = null;
   capacity: number = null;
   pool_name: string = null;
+  compression_effort = null;
+  encryption: boolean = null;
+  data_protection: DataProtectionInterface = null;
+}
+
+export interface AddNewVolumeDataProtectionInterface {
+  type: string;
+  fault_tolerance: number;
+}
+
+export class AddNewVolumeDataProtectionConfig implements AddNewVolumeDataProtectionInterface {
+    type: string = null;
+    fault_tolerance: number = null;
 }
 
 const ELEMENT_DATA: VolumeElement[] = [
@@ -78,9 +109,20 @@ export class VolumesComponent implements OnInit {
   ];
 
   constructor() {
+    if (this.dataProtection) {
+      this.addNewVolumeConfig.data_protection = {type: "EC", fault_tolerance: 0};
+    }
   }
 
   ngOnInit() {
+  }
+
+  getSchemeValue(scheme): string {
+    let result = "ec";
+    if (scheme === "Replication") {
+      result = "replication"
+    }
+    return result;
   }
 
   step = 0;
@@ -132,7 +174,8 @@ export class VolumesComponent implements OnInit {
   submit() {
 
     this.addNewVolumeConfig.pool_name = this._getSelectedPool();
-    console.log(this.addNewVolumeConfig);
+    this.addNewVolumeConfig.encryption = this.encryptionOn;
+    console.log(JSON.stringify(this.addNewVolumeConfig));
 
 
     const pe: VolumeElement = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
