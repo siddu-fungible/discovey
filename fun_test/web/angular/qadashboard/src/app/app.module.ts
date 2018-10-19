@@ -26,7 +26,9 @@ import { Demo1Component } from './demo1/demo1.component';
 import { CreateChartComponent } from './create-chart/create-chart.component';
 import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
 import { ScrollToDirective } from './scroll-to.directive';
+import { RegressionComponent } from './regression/regression.component';
 import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
+import { SubmitJobComponent } from './regression/submit-job/submit-job.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +45,9 @@ import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
     Demo1Component,
     PreviewFunMetricComponent,
     ScrollToDirective,
-    FunSpinnerComponent
+    RegressionComponent,
+    FunSpinnerComponent,
+    SubmitJobComponent
   ],
   imports: [
     BsDropdownModule,

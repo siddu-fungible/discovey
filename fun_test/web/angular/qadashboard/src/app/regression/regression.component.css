@@ -1,0 +1,16 @@
+.table td {
+  padding: 1px;
+  padding-left: 2px;
+  padding-right: 2px;
+  vertical-align: center;
+}
+/*.show-table-text a {*/
+  /*color: #337ab7;*/
+/*}*/
+#pageDiv {
+  float: left;
+  padding: 10px;
+}
+a {
+  cursor: pointer;
+}
