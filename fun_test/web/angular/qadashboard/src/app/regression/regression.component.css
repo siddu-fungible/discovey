@@ -7,10 +7,13 @@
 /*.show-table-text a {*/
   /*color: #337ab7;*/
 /*}*/
-#pageDiv {
+#page-div {
   float: left;
   padding: 10px;
 }
 a {
   cursor: pointer;
+}
+.table-danger {
+  background-color: #fbe9eb;
 }

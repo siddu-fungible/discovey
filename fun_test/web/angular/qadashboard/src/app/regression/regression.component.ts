@@ -3,19 +3,27 @@ import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
 import {ActivatedRoute} from "@angular/router";
 
+enum Filter {
+    All = "ALL",
+    Completed = "COMPLETED",
+    Pending = "PENDING"
+}
+
 @Component({
   selector: 'app-regression',
   templateUrl: './regression.component.html',
   styleUrls: ['./regression.component.css']
 })
+
 export class RegressionComponent implements OnInit {
   pager: any = {};
   suiteExecutionsCount: number;
   recordsPerPage: number;
   @Input() tags: string;
-  @Input() filterString: string = "ALL";
+  @Input() filterString: string = Filter.All;
   items: any;
   logDir: any;
+  status: string = "Fetching Data";
 
   constructor(private pagerService: PagerService, private apiService: ApiService, private route: ActivatedRoute) {
   }
@@ -28,11 +36,11 @@ export class RegressionComponent implements OnInit {
       if (params['filterString']) {
         let urlString = params['filterString'];
         if (urlString === "completed_jobs") {
-          this.filterString = "COMPLETED";
+          this.filterString = Filter.Completed;
         } else if (urlString === "pending_jobs") {
-          this.filterString = "PENDING";
+          this.filterString = Filter.Pending;
         } else {
-          this.filterString = "ALL";
+          this.filterString = Filter.All;
         }
       }
       if (params['tags']) {
@@ -58,9 +66,11 @@ export class RegressionComponent implements OnInit {
         self.logDir = "/static/logs/s_";
       });
     }
+    this.status = null;
   }
 
   setPage(page) {
+    this.status = "Fetching Data";
     this.pager = this.pagerService.getPager(this.suiteExecutionsCount, page, this.recordsPerPage);
     if (page === 0 || (page > this.pager.endPage)) {
       return;
@@ -72,6 +82,7 @@ export class RegressionComponent implements OnInit {
     this.apiService.post("/regression/suite_executions1/" + this.recordsPerPage + "/" + page + "/" + this.filterString, payload).subscribe(result => {
       this.items = JSON.parse(result.data);
     });
+    this.status = null;
   }
 
   testCaseLength = function (testCases) {
