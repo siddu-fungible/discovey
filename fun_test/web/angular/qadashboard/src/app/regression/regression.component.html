@@ -5,24 +5,25 @@
     <div class="card-body">
       <div class="text-center">
         <!-- pager -->
-        <div id="pageDiv" *ngIf="pager.pages && pager.pages.length">
-          <span [ngClass]="{disabled:pager.currentPage === 1}">
-          <a [routerLink]="" (click)="setPage(1)">First </a>
+        <div id="page-div" *ngIf="pager.pages && pager.pages.length">
+          <span [ngClass]="{'disabled': pager.currentPage === 1}">
+          <a [routerLink]="" (click)="setPage(1)"><< </a>
           </span>
-          <span [ngClass]="{disabled:pager.currentPage === 1}">
-          <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
+          <span [ngClass]="{'disabled': pager.currentPage === 1}">
+          <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">< </a>
           </span>
           <span *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
           <a [routerLink]="" (click)="setPage(page)">{{page}} </a>
           </span>
-          <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
-          <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
+          <span [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
+          <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">> </a>
           </span>
-          <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
-          <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
+          <span [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
+          <a [routerLink]="" (click)="setPage(pager.totalPages)">>> </a>
           </span>
         </div>
       </div>
+      <fun-spinner [status]="status"></fun-spinner>
       <table class="table table-hover table-responsive table-bordered">
         <tr style="text-align: center">
           <th>Id</th>
@@ -41,7 +42,7 @@
           <th>Version</th>
           <th>Scheduled At</th>
           <th>Path</th>
-          <th>Log</th>
+          <th>Scheduler Log</th>
           <th>Log Dir</th>
           <th>Action</th>
           <th>Tags</th>
@@ -49,7 +50,7 @@
         </tr>
         <tr style="text-align: center" *ngFor="let suiteExecution of items">
           <td>{{ suiteExecution.fields.execution_id }}</td>
-          <td>
+          <td [ngClass]="{'table-danger': suiteExecution.suite_result === 'FAILED'}">
             <a [routerLink]="" (click)="getSuiteDetail(suiteExecution.fields.execution_id)" [ngClass]="'text-'+
                           resultToClass(suiteExecution.suite_result)">{{ suiteExecution.suite_result }}
             </a>
