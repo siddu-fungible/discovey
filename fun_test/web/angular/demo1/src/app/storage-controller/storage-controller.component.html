@@ -2,82 +2,29 @@
   <button mat-button (click)="addingNewController = !addingNewController"><u class="anchor-button">Add a new controller</u></button>
 </div>
 <div>
-  <!--mat-accordion>
-    <mat-expansion-panel [expanded]="addingNewVolume" (opened)="setStep(0)" hideToggle>
+  <mat-accordion>
+    <mat-expansion-panel [expanded]="addingNewController" (opened)="setStep(0)" hideToggle>
       <div class="mat-form-field-div">
         <mat-form-field>
-          <input matInput placeholder="Name" [(ngModel)]="addNewVolumeConfig.name">
+          <input matInput placeholder="ip" [(ngModel)]="newControllerConfig.ip">
         </mat-form-field>
         <mat-form-field>
-          <input type="number" matInput placeholder="Capacity" [(ngModel)]="addNewVolumeConfig.capacity">
+          <input type="number" matInput placeholder="port" [(ngModel)]="newControllerConfig.port">
         </mat-form-field>
       </div>
       <br>
-      <p><b>Please select a pool</b></p>
-      <app-pools [action]="false" [radioSelection]="true"></app-pools>
 
       <br>
-      <mat-slide-toggle [(ngModel)]="dataProtection" [checked]="true">Data-protection</mat-slide-toggle>
-      <div *ngIf="dataProtection">
-        <mat-card>
-          <p><b>Fault-tolerance options</b></p>
-          <li>
-            <mat-form-field>
-              <input type="number" matInput placeholder="# of disk failures"
-                     [(ngModel)]="addNewVolumeConfig.data_protection.fault_tolerance">
-            </mat-form-field>
-          </li>
-          <li>
-            <mat-form-field>
-              <input matInput placeholder="# of DPU failures">
-            </mat-form-field>
-          </li>
-
-          <li>Protection Scheme
-            <mat-radio-group id="md-radio-2-input" [(ngModel)]="addNewVolumeConfig.data_protection.type">
-              <mat-radio-button style="padding: 10px"
-                                *ngFor="let scheme of ['Replication', 'Erasure-coding']"
-                                [value]="getSchemeValue(scheme)">
-                {{ scheme }}
-              </mat-radio-button>
-            </mat-radio-group>
-          </li>
-
-          <br>
-          <p><b>Compression options</b></p>
-          Effort
-          <mat-slider [(ngModel)]="addNewVolumeConfig.compression_effort"
-                      thumbLabel
-                      [displayWith]="formatLabel"
-                      tickInterval="1"
-                      min="0"
-                      max="5" style="margin-left: 5px">Effort
-          </mat-slider>
-          <br>
-        </mat-card>
-
-        <span (click)="encryptionOn = !encryptionOn">
-          <ng-container *ngIf="encryptionOn">
-            <button class="btn"><i class="fa fa-lock"></i>
-              </button>
-            Encryption ON
-          </ng-container>
-          <ng-container *ngIf="!encryptionOn">
-            <button class="btn"><i class="fa fa-unlock"></i>
-              </button>
-            Encryption OFF
-          </ng-container>
-        </span>
-      </div>
-
       <mat-action-row>
         <button mat-button color="primary" (click)="submit()">Submit</button>
       </mat-action-row>
     </mat-expansion-panel>
-  </mat-accordion-->
+  </mat-accordion>
 </div>
+<br>
+<br>
 
-<div>
+<mat-card *ngIf="dataSource.data.length > 0">
   <p>Available Controllers</p>
   <mat-radio-group [(ngModel)]="selectedElement" [required]="true">
     <table mat-table multiTemplateDataRows [dataSource]="dataSource">
@@ -129,4 +76,4 @@
 
     </table>
   </mat-radio-group>
-</div>
+</mat-card>

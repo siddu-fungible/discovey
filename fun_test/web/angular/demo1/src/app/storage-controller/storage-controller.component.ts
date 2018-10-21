@@ -4,6 +4,7 @@ import {FormControl} from "@angular/forms";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {SelectionModel} from "@angular/cdk/collections";
 import {MatTableDataSource} from "@angular/material";
+import {AddNewVolumeConfigInterface, DataProtectionInterface} from "../workflows/volumes/volumes.component";
 
 export interface ControllerElement {
   id: number;
@@ -11,21 +12,19 @@ export interface ControllerElement {
   port: number;
 }
 
-const ELEMENT_DATA: ControllerElement[] = [
-  {id: 0, ip: 'qa-ubuntu-02', port: 50022}
-];
-
-
-export interface VolumeElement {
-  name: string;
-  position: number;
-  weight: number;
-  symbol: string;
+export class AddNewControllerConfig{
+  id: number = 0;
+  ip: string;
+  port: number;
 }
 
-const VOLUME_DATA: VolumeElement[] = [
-  {position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H'},
-  {position: 2, name: 'Helium', weight: 4.0026, symbol: 'He'}
+/*
+const ELEMENT_DATA: ControllerElement[] = [
+  {id: 0, ip: 'qa-ubuntu-02', port: 50022}
+];*/
+
+const ELEMENT_DATA: ControllerElement[] = [
+
 ];
 
 
@@ -70,10 +69,9 @@ export class StorageControllerComponent implements OnInit {
   selectedRowIndex: number = null;
   selectedElement: string = null;
   selection = new SelectionModel<ControllerElement>(true, []);
-  displayedVolumesColumns: string[] = ['position', 'name', 'weight', 'symbol'];
   expandedElement: ControllerElement;
-  volumes = VOLUME_DATA;
-  addingNewController: boolean = true;
+  addingNewController: boolean = false;
+  newControllerConfig: AddNewControllerConfig = new AddNewControllerConfig();
 
   constructor() {
 
@@ -109,7 +107,7 @@ export class StorageControllerComponent implements OnInit {
   }
 
   submit() {
-    const pe: ControllerElement = {id: 0, ip: "qa-ubuntu-02", port: 50022};
+    const pe: ControllerElement = {id: 0, ip: this.newControllerConfig.ip, port: this.newControllerConfig.port};
     this.dataSource.data.push(pe);
     this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
@@ -117,6 +115,7 @@ export class StorageControllerComponent implements OnInit {
     setTimeout(()=> {
       this.selectedRowIndex = null;
     }, 2000);
+    this.addingNewController = false;
 
   }
 
@@ -144,5 +143,6 @@ export class StorageControllerComponent implements OnInit {
   public getSelected(): ControllerElement[] {
     return this.selection.selected;
   }
+
 
 }
