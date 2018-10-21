@@ -10,8 +10,6 @@
 </mat-form-field-->
 
 
-
-
 <div style="padding-bottom: 20px">
   <button mat-button (click)="addingNewVolume = !addingNewVolume"><u class="anchor-button">Add a new volume</u></button>
 </div>
@@ -102,19 +100,18 @@
 
   <mat-card-header>
     Available volumes
-        <!--button mat-button [matMenuTriggerFor]="actions">Actions</button>
+    <!--button mat-button [matMenuTriggerFor]="actions">Actions</button>
 
-    <mat-menu #actions="matMenu">
-      <button mat-menu-item [matMenuTriggerFor]="add_new_volume">Vertebrates</button>
-    </mat-menu>
+<mat-menu #actions="matMenu">
+	<button mat-menu-item [matMenuTriggerFor]="add_new_volume">Vertebrates</button>
+</mat-menu>
 
-    <mat-menu #add_new_volume="matMenu">
-      <button mat-menu-item>Birds</button>
-      <button mat-menu-item>Mammals</button>
-    </mat-menu-->
+<mat-menu #add_new_volume="matMenu">
+	<button mat-menu-item>Birds</button>
+	<button mat-menu-item>Mammals</button>
+</mat-menu-->
 
   </mat-card-header>
-
 
 
   <table mat-table multiTemplateDataRows [dataSource]="dataSource" class="mat-elevation-z81">
