@@ -912,9 +912,13 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return prob_value
 
-    def set_qos_scheduler_config(self, port_num, queue_num, scheduler_type, weight=None, shaper_enable=None,
-                                 min_rate=None, max_rate=None, strict_priority_enable=None, extra_bandwidth=None):
+    def set_qos_scheduler_config(self, port_num, queue_num, scheduler_type=SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN,
+                                 weight=None, shaper_enable=None,
+                                 min_rate=None, max_rate=None, strict_priority_enable=False, extra_bandwidth=None):
         result = False
+        strict_priority_enable_value = 0
+        if strict_priority_enable:
+            strict_priority_enable_value = 1
         try:
             input_dict = {"port": port_num, "queue": queue_num}
             if scheduler_type == self.SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN:
@@ -926,7 +930,7 @@ class NetworkController(DpcshClient):
                 input_dict["min_rate"] = min_rate
                 input_dict["max_rate"] = max_rate
             elif scheduler_type == self.SCHEDULER_TYPE_STRICT_PRIORITY:
-                input_dict["strict_priority_enable"] = strict_priority_enable
+                input_dict["strict_priority_enable"] = strict_priority_enable_value
                 input_dict["extra_bandwidth"] = extra_bandwidth
 
             scheduler_config_args = ['set', 'scheduler_config %s' % scheduler_type, input_dict]
