@@ -1,0 +1,37 @@
+<div *ngIf="!activeController">
+  No controller available
+</div>
+<div *ngIf="activeController">
+  Controller Info:
+  <p>
+    {{ activeController.ip }}
+  </p>
+  <p>
+    {{ activeController.port }}
+  </p>
+  <mat-card>
+    <mat-card-header>
+      DPUs
+    </mat-card-header>
+  <table class="table">
+    <tr>
+      <th>Name</th>
+      <th>Dataplane IP</th>
+      <th>Management IP</th>
+      <th>Management SSH port</th>
+      <th>Storage Agent Port</th>
+    </tr>
+    <tr *ngFor="let f1 of topoF1s">
+      <td>{{ f1.name }}</td>
+      <td>{{ f1.dataplane_ip }}</td>
+      <td>{{ f1.mgmt_ip }}</td>
+      <td>{{ f1.mgmt_ssh_port }}</td>
+      <td>{{ f1.storage_agent_port }}</td>
+    </tr>
+
+  </table>
+  </mat-card>
+</div>
+
+
+

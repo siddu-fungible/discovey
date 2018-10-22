@@ -13,6 +13,7 @@ import {VolumeComponent} from "./volume/volume.component";
 import {DpuComponent} from "./dpu/dpu.component";
 import {PoolComponent} from "./pool/pool.component";
 import {StorageControllerComponent} from "./storage-controller/storage-controller.component";
+import {TopologyComponent} from "./topology/topology.component";
 
 const routes: Routes = [
   {
@@ -23,7 +24,8 @@ const routes: Routes = [
       {path: 'volumes', component: VolumesComponent},
       {path: 'volume/:name', component: VolumeComponent},
       {path: 'dpu/:name', component: DpuComponent},
-      {path: 'storage-controller', component: StorageControllerComponent}
+      {path: 'storage-controller', component: StorageControllerComponent},
+      {path: 'topology', component: TopologyComponent}
     ]
   },
 ];

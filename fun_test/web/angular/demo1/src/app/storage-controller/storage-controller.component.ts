@@ -6,6 +6,7 @@ import {SelectionModel} from "@angular/cdk/collections";
 import {MatTableDataSource} from "@angular/material";
 import {AddNewVolumeConfigInterface, DataProtectionInterface} from "../workflows/volumes/volumes.component";
 import {ApiService} from "../services/api/api.service";
+import {CommonService, Controller} from "../services/common/common.service";
 
 export interface ControllerElement {
   id: number;
@@ -73,7 +74,7 @@ export class StorageControllerComponent implements OnInit {
   newControllerConfig: AddNewControllerConfig = new AddNewControllerConfig();
   healthChecking: boolean = false;
 
-  constructor(private apiService: ApiService) {
+  constructor(private apiService: ApiService, private commonService: CommonService) {
     this.startHealthCheck();
   }
 
@@ -140,9 +141,16 @@ export class StorageControllerComponent implements OnInit {
     return this.selection.selected;
   }
 
-  printCurrentSelection() {
-    console.log(this.getSelected());
-    this.getSelected()[0].health = true;
+  activeControllerSelected(activeController: ControllerElement) {
+    //console.log(this.getSelected());
+    //this.getSelected()[0].health = true;
+    let c: Controller = new Controller();
+    c.id = activeController.id;
+    c.health = activeController.health;
+    c.ip = activeController.ip;
+    c.port = activeController.port;
+    this.commonService.setActiveController(c);
+
   }
 
   public getActiveController() {
