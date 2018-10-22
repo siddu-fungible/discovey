@@ -6,10 +6,10 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
-from web.fun_test.demo1_models import LastBgExecution
+from web.fun_test.demo1_models import LastBgExecution, BgExecutionStatus
 from web.web_global import initialize_result, api_safe_json_response
 from django.http import HttpResponse
-
+from fun_global import RESULTS
 
 @csrf_exempt
 def home(request):
@@ -29,11 +29,19 @@ def get_new_bg_execution():
 
 
 def fio_task(bg_execution_id, fio_args):
-    print "Fio task"
-    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
-    scheduler = app_config.get_background_scheduler()
-    print "Fio args: " + str(fio_args)
-    scheduler.remove_job(str(bg_execution_id))
+    bg_execution_id = int(bg_execution_id)
+    status = BgExecutionStatus.objects.get(execution_id=bg_execution_id)
+    try:
+        print "Fio task"
+        app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+        scheduler = app_config.get_background_scheduler()
+        print "Fio args: " + str(fio_args)
+        scheduler.remove_job(str(bg_execution_id))
+        status.status = RESULTS["PASSED"]
+    except Exception as ex:
+        status.output = str(ex)
+    status.save()
+    pass
 
 
 @csrf_exempt
@@ -48,5 +56,7 @@ def schedule_fio_job(request):
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     scheduler = app_config.get_background_scheduler()
     bg_execution_id = get_new_bg_execution()
+    status = BgExecutionStatus(execution_id=bg_execution_id)
+    status.save()
     scheduler.add_job(fio_task, 'interval', seconds=1, args=[bg_execution_id, fio_args], id=str(bg_execution_id))
     return HttpResponse("Ok")
