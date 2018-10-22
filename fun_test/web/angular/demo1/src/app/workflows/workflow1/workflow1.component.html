@@ -1,0 +1,59 @@
+<!--div>
+<p>
+  <ng-container [ngSwitch]="currentStageIndex">
+    <ng-container *ngSwitchCase="0">
+      <app-workflow1-stage1></app-workflow1-stage1>
+    </ng-container>
+    <ng-container *ngSwitchCase="1">
+      <app-workflow1-stage2></app-workflow1-stage2>
+    </ng-container>
+  </ng-container>
+
+</p>
+<div class="float-left" *ngIf="currentStageIndex > 0">
+  <button mat-raised-button color="primary"
+          (click)="previousStage()"><< Back
+  </button>
+</div>
+<div class="float-right" *ngIf="currentStageIndex < (numStages - 1)" >
+  <button mat-raised-button color="primary" (click)="nextStage()">Next >></button>
+</div>
+</div-->
+
+<h4>Create Raw Volume</h4>
+
+<br>
+
+<mat-horizontal-stepper [linear]="isLinear" #stepper>
+  <mat-step [stepControl]="firstFormGroup">
+    <form [formGroup]="firstFormGroup">
+      <ng-template matStepLabel>Stage1</ng-template>
+      <mat-form-field>
+        <input matInput placeholder="Last name, First name" formControlName="firstCtrl" required>
+      </mat-form-field>
+      <div>
+        <button mat-button matStepperNext>Next</button>
+      </div>
+    </form>
+  </mat-step>
+  <mat-step [stepControl]="secondFormGroup">
+    <form [formGroup]="secondFormGroup">
+      <ng-template matStepLabel>Stage2</ng-template>
+      <mat-form-field>
+        <input matInput placeholder="Address" formControlName="secondCtrl" required>
+      </mat-form-field>
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext>Next</button>
+      </div>
+    </form>
+  </mat-step>
+  <mat-step>
+    <ng-template matStepLabel>Done</ng-template>
+    You are now done.
+    <div>
+      <button mat-button matStepperPrevious>Back</button>
+      <button mat-button (click)="stepper.reset()">Reset</button>
+    </div>
+  </mat-step>
+</mat-horizontal-stepper>
