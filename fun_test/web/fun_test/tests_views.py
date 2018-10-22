@@ -16,10 +16,9 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-
-def tick(h):
+def tick(job_id, h):
     try:
-        print('Tick!')  # The time is: %s %s' % datetime.now(), h)
+        print('Tick!' + str(job_id) + " " + str(h))  # The time is: %s %s' % datetime.now(), h)
     except Exception as ex:
         print str(ex)
     # scheduler.remove_job('my_job_id')
@@ -50,6 +49,6 @@ def date_test(request):
 def bg(request):
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     scheduler = app_config.get_background_scheduler()
-    scheduler.add_job(tick, 'interval', seconds=3, args=['89'], id='my_job_id')
+    scheduler.add_job(tick, 'interval', seconds=3, args=[123, {"pool": 89}], id=str(123))
     # scheduler.add_job(tick, 'cron', day_of_week='mon', hour=18, minute=33, args=['89'])
     return HttpResponse("OK")
