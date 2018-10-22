@@ -511,3 +511,36 @@ def get_psw_port_enqueue_dequeue_counters(network_controller_obj, dut_port, hnu,
     except Exception as ex:
         fun_test.critical(str(ex))
     return output_dict
+
+
+def set_strict_priority_on_queue(network_controller_obj, dut_port, set_queue_list):
+    result = False
+    try:
+        full_list = [x for x in range(16)]
+        for queue in full_list:
+            if queue in set_queue_list:
+                output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
+                                                                         strict_priority_enable=True)
+                fun_test.simple_assert(output, "Set strict priority on queue %s on port %s" % (queue, dut_port))
+            else:
+                output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
+                                                                         strict_priority_enable=False)
+                fun_test.simple_assert(output, "Remove strict priority on queue %s on port %s" % (queue, dut_port))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def remove_strict_priority_from_queue(network_controller_obj, dut_port):
+    result = False
+    try:
+        full_list = [x for x in range(16)]
+        for queue in full_list:
+            output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
+                                                                     strict_priority_enable=False)
+            fun_test.simple_assert(output, "Remove strict priority on queue %s on port %s" % (queue, dut_port))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
