@@ -54,12 +54,6 @@ priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_o
                  'priority_15': {'priority_val': 15, 'ls_octet': '00000000', 'ms_octet': '10000000',
                                  'quanta_val': {'0': '0' * multiplyer, 'F': 'F' * multiplyer}, 'dscp_high': '1', 'dscp_low': '7'}}
 
-priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_octet': '00000000',
-                                'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '0'},
-                 'priority_1': {'priority_val': 1, 'ls_octet': '00000010', 'ms_octet': '00000000',
-                                'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '1'}}
-
-
 priority_list = [val['priority_val'] for val in priority_dict.itervalues()]
 k_list = [x for x in range(0, 16)]
 k_list.reverse()
