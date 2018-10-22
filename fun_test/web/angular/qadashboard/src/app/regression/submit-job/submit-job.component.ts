@@ -11,18 +11,19 @@ export class SubmitJobComponent implements OnInit {
   scheduleInMinutes: number;
   scheduleInMinutesRadio: boolean;
   buildUrl: string;
-  selectedSuite: any;
+  selectedSuite: string = null;
   selectedInfo: any;
   jobId: number;
   suitesInfo: any;
   selectedTags: any;
   tags: any;
   emailOnFailOnly: boolean;
-  schedulingOptions: any;
+  schedulingOptions: boolean;
   scheduleInMinutesRepeat: any;
   scheduleAt: any;
   scheduleAtRepeat: any;
   emails: any;
+  suitesInfoKeys: any = [];
 
 
   constructor(private apiService: ApiService, private logger: LoggerService) {
@@ -36,8 +37,12 @@ export class SubmitJobComponent implements OnInit {
     this.selectedInfo = null;
     this.jobId = null;
     let self = this;
-    this.apiService.get("/regression/suites").subscribe(function (result) {
-      self.suitesInfo = result.data;
+    this.apiService.get("/regression/suites1").subscribe((result) => {
+      let suitesInfo = JSON.parse(result.data);
+      self.suitesInfo = suitesInfo;
+      for (let suites of Object.keys(suitesInfo)) {
+        self.suitesInfoKeys.push(suites);
+      }
     });
     this.selectedTags = [];
     this.tags = [];
@@ -47,12 +52,11 @@ export class SubmitJobComponent implements OnInit {
 
   fetchTags(): void {
     let self = this;
-    this.apiService.get('/regression/tags').subscribe(function (result) {
-      let data = result.data;
-      data.forEach(function (item) {
+    this.apiService.get('/regression/tags1').subscribe(function (result) {
+      let data = JSON.parse(result.data);
+      for (let item of data) {
         self.tags.push({name: item.fields.tag});
-      });
-
+      }
     }, error => {
       this.logger.error("unable to fetch tags");
     });

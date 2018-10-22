@@ -135,6 +135,11 @@ def kill_job(request, suite_execution_id):
 def tags(request):
     return HttpResponse(serializers.serialize('json', Tag.objects.all()))
 
+@csrf_exempt
+@api_safe_json_response
+def tags1(request):
+    return serializers.serialize('json', Tag.objects.all())
+
 def engineers(request):
     result = initialize_result(failed=True)
     s = serializers.serialize('json', Engineer.objects.all())
@@ -156,6 +161,22 @@ def suites(request):
         except Exception as ex:
             pass
     return HttpResponse(json.dumps(suites_info))
+
+@csrf_exempt
+@api_safe_json_response
+def suites1(request):
+    suites_info = collections.OrderedDict()
+    suite_files = glob.glob(SUITES_DIR + "/*.json")
+    for suite_file in suite_files:
+        try:
+            with open(suite_file, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents)
+                suites_info[os.path.basename(suite_file)] = result
+
+        except Exception as ex:
+            pass
+    return json.dumps(suites_info)
 
 
 @csrf_exempt

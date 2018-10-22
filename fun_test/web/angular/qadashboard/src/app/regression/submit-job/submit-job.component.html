@@ -1,17 +1,17 @@
-<div class="container">
+<div class="container" style="margin: 0px">
 <div class="row">
     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
         <div class="card">
             <div class="card-header">Submit Job</div>
             <div class="card-body">
-                <form name="submissionForm">
+                <!--<form name="submissionForm">-->
                     <table class="table table-nonfluid">
                         <tr>
                             <td>
                                 <label for="build-url">Build URL</label>
                             </td>
                             <td>
-                                <input id="build-url" name="build-url" ng-model="buildUrl" type="text" required/>
+                                <input id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
                             </td>
                         </tr>
                         <tr>
@@ -19,9 +19,11 @@
                                 <label for="suite-select">Select a suite</label>
                             </td>
                             <td>
-                                <select id="suite-select"
-                                ng-options="suiteName as suiteName for (suiteName, suiteInfo) in suitesInfo track by suiteName"
-                                ng-model="selectedSuite" ng-change="changedValue(selectedSuite)">
+                                <select id="suite-select" [(ngModel)]="selectedSuite" (change)="changedValue(selectedSuite)">
+                                  <option></option>
+                                  <option *ngFor="let suiteName of suitesInfoKeys">
+                                    {{ suiteName }}
+                                  </option>
 
                                 </select>
                             </td>
@@ -49,22 +51,22 @@
                                 <label for="emails">Specify comma-separated e-mail</label>
                             </td>
                             <td>
-                                <input id="emails" name="emails" ng-model="emails" type="text" required/>
+                                <input id="emails" name="emails" [(ngModel)]="emails" type="text" required/>
                             </td>
                             <td>
                                 <label for="email-on-fail-only">Email on failures only</label>
                             </td>
                             <td>
-                                <input id="email-on-fail-only" type="checkbox" ng-checked="emailOnFailOnly" ng-model="emailOnFailOnly">
+                                <input id="email-on-fail-only" type="checkbox" [(ngModel)]="emailOnFailOnly">
                             </td>
                         </tr>
                         <tr>
                             <td>
-                               <input class="form-check-input" type="checkbox" value="" ng-model="schedulingOptions"/>
+                               <input class="form-check-input" type="checkbox" [(ngModel)]="schedulingOptions"/>
                                 Show Scheduling Options
                             </td>
                             <td>
-                                <button *ngIf="selectedInfo" (click)="submitClick(submissionForm.$valid)"
+                                <button *ngIf="selectedInfo" (click)="submitClick()"
                                     class="btn btn-primary">Submit
                                 </button>
                             </td>
@@ -84,49 +86,49 @@
                                         Scripts
                                     </th>
                                 </tr>
-                                <tr *ngFor="let scriptInfo of selectedInfo">
-                                    <td>{{ $index }}</td>
+                                <tr *ngFor="let scriptInfo of selectedInfo; index as i">
+                                    <td>{{ i }}</td>
                                     <td>{{ scriptInfo.path }}</td>
                                 </tr>
                             </table>
                         </div>
                     </fieldset>
 
-                </form>
+                <!--</form>-->
             </div>
 
 
         </div>
     </div>
-    <div class="col-xxl-6 col-lg-6 col-md-6 col-sm-6" [hidden]="!schedulingOptions">
+    <div *ngIf="schedulingOptions" class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
         <div class="card">
             <div class="card-header">Scheduling options</div>
             <div class="card-body">
 
                 <div class="radio">
                     <label for="schedule-in-minutes">
-                        <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="true"
+                        <input type="radio" name="schedule-radio" [(ngModel)]="scheduleInMinutesRadio" ng-value="true"
                                checked="true">Schedule in minutes:
                     </label>
-                    <form name="scheduleInForm" ng-show="scheduleInMinutesRadio" novalidate>
+                    <form name="scheduleInForm" [hidden]="!scheduleInMinutesRadio" novalidate>
                         <input id="schedule-in-minutes" klass="" type="number" min="1" max="1439"
-                                   bind-value="scheduleInMinutes">/
+                                   ng-bind="scheduleInMinutes">/
                         <label for="repeat-in-minutes"> Repeat in minutes
                         </label>
                         <input id="repeat-in-minutes" klass="" type="number" min="1" max="1439"
-                                   [innerHt]="scheduleInMinutesRepeat"/>
+                                   ng-bind="scheduleInMinutesRepeat"/>
                     </form>
                     <br>
                     <br>
                     <label for="schedule-at">
-                        <input type="radio" name="schedule-radio" ng-model="scheduleInMinutesRadio" ng-value="false">Schedule
+                        <input type="radio" name="schedule-radio" [(ngModel)]="scheduleInMinutesRadio" ng-value="false">Schedule
                         At:
                     </label>
                     <form ng-hide="scheduleInMinutesRadio">
                         <input id="schedule-at" klass="" type="time" min="5"
-                                   bind-value="scheduleAt"/>
+                                   ng-bind="scheduleAt"/>
                         <label class="form-check-label">
-                            <input class="form-check-input" type="checkbox" value="" ng-model="scheduleAtRepeat">
+                            <input class="form-check-input" type="checkbox" value="" [(ngModel)]="scheduleAtRepeat">
                             Repeat
                         </label>
                     </form>
