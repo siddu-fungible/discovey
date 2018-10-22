@@ -9,6 +9,7 @@ from django.db import models
 from fun_global import RESULTS
 from fun_global import is_performance_server
 from web.fun_test.jira_models import *
+from web.fun_test.demo1_models import *
 from rest_framework.serializers import ModelSerializer
 from datetime import datetime
 import logging

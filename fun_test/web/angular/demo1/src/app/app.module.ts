@@ -69,6 +69,8 @@ import { VolumesComponent } from './workflows/volumes/volumes.component';
 import { VolumeComponent } from './volume/volume.component';
 import { DpuComponent } from './dpu/dpu.component';
 import { PoolComponent } from './pool/pool.component';
+import { StorageControllerComponent } from './storage-controller/storage-controller.component';
+import { TopologyComponent } from './topology/topology.component';
 
 
 @NgModule({
@@ -91,7 +93,9 @@ import { PoolComponent } from './pool/pool.component';
     VolumesComponent,
     VolumeComponent,
     DpuComponent,
-    PoolComponent
+    PoolComponent,
+    StorageControllerComponent,
+    TopologyComponent
   ],
   imports: [
     BsDropdownModule,

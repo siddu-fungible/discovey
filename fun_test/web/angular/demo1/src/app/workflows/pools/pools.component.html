@@ -65,7 +65,7 @@
   <mat-radio-group [(ngModel)]="selectedElement" [required]="true">
     <table mat-table multiTemplateDataRows [dataSource]="dataSource" class="mat-elevation-z81">
 
-      <ng-container *ngIf="!radioSelection"  matColumnDef="select">
+      <ng-container *ngIf="!radioSelection" matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef>
           <mat-checkbox (change)="$event ? masterToggle() : null"
                         [checked]="selection.hasValue() && isAllSelected()"
@@ -163,15 +163,15 @@
 					(click)="selection.toggle(row); expandedElement = row;"></tr-->
 
       <ng-container *ngIf="!radioSelection">
-      <tr  mat-row *matRowDef="let row; columns: displayedColumns;"
-          class="example-element-row"
-          [class.example-expanded-row]="expandedElement === row"
-          (click)="selection.toggle(row); expandedElement = row;">
-      </tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="example-element-row"
+            [class.example-expanded-row]="expandedElement === row"
+            (click)="selection.toggle(row); expandedElement = row;">
+        </tr>
       </ng-container>
       <ng-container *ngIf="radioSelection">
-      <tr  mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.select(row);">
-      </tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.select(row);">
+        </tr>
       </ng-container>
 
 

@@ -102,6 +102,7 @@ export class VolumesComponent implements OnInit {
   selectedRowIndex: number = null;
   encryptionOn: boolean = true;
   addNewVolumeConfig: AddNewVolumeConfig = new AddNewVolumeConfig();
+  addingNewVolume: boolean = false;
 
   dataProtection: boolean = true;
   actionGroups: ActionGroup[] = [

@@ -1023,9 +1023,13 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         result = {}
         result['result'] = False
         try:
-            ethernet_header_obj = Ethernet8023MacControlHeader(destination_mac=destination_mac,
+            ethernet_header_obj = MacControlHeader(destination_mac=destination_mac,
                                                                source_mac=source_mac, length=length, preamble=preamble)
             pause_header_obj = PauseMacControlHeader(op_code=op_code, pause_time=pause_time)
+
+            fun_test.log("Removing ethernet and ip header from streamblock")
+            self.stc_manager.stc.config(stream_obj.spirent_handle, FrameConfig='')
+
             fun_test.log("Creating Pause Mac Control Frame with Ethernet 802.3 Mac Control header")
             header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
                                                                     header_obj=ethernet_header_obj)

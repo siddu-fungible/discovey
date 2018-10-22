@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {catchError, map} from 'rxjs/operators';
 import {Observable, of} from "rxjs";
 
@@ -57,9 +57,15 @@ export class ApiService {
   }
 
   get(url: string): Observable<ApiResponse> {
-    return this.httpClient.get<ApiResponse>(url)
+    const httpOptions = {
+  headers: new HttpHeaders({
+    'Content-Type':  'application/json',
+    'Access-Control-Allow-Origin': '*'
+  })};
+    return this.httpClient.get<ApiResponse>(url, httpOptions)
       .pipe(
         map(response => {
+
           if (!response.status) {
             throw response;
           } else {
