@@ -33,7 +33,7 @@
     "images": [
       {
         "category":  "storage_basic",
-        "name": "storage_x86_64:v2"
+        "name": "storage_x86_64:v3"
       },
       {
         "category": "fio_traffic_generator",
