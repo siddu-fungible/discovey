@@ -6,15 +6,14 @@
     <mat-expansion-panel [expanded]="addingNewController" (opened)="setStep(0)" hideToggle>
       <div class="mat-form-field-div">
         <mat-form-field>
-          <input matInput placeholder="ip" [(ngModel)]="newControllerConfig.ip">
+          <input matInput placeholder="ip" [(ngModel)]="newControllerConfig.ip" [value]="qa-ubuntu-02" >
         </mat-form-field>
         <mat-form-field>
-          <input type="number" matInput placeholder="port" [(ngModel)]="newControllerConfig.port">
+          <input type="number" matInput placeholder="port" [(ngModel)]="newControllerConfig.port" [value]="50220" >
         </mat-form-field>
       </div>
       <br>
 
-      <br>
       <mat-action-row>
         <button mat-button color="primary" (click)="submit()">Submit</button>
       </mat-action-row>
@@ -35,7 +34,7 @@
         </th>
 
         <td mat-cell *matCellDef="let row">
-          <mat-radio-button [value]="row" (click)="selection.select(row);" [checked]="selection.isSelected(row)">
+          <mat-radio-button [value]="row" (click)="selection.select(row); printCurrentSelection();" [checked]="selection.isSelected(row)">
           </mat-radio-button>
         </td>
       </ng-container>
@@ -46,7 +45,7 @@
         </th>
 
         <td mat-cell *matCellDef="let row">
-          <div class="heart">&#x2665;</div>
+          <div [ngClass]='{"heart": row.health}'>&#x2665;</div>
         </td>
       </ng-container>
 
@@ -56,7 +55,7 @@
       </ng-container>
 
       <ng-container matColumnDef="port">
-        <th mat-header-cell *matHeaderCellDef> Capacity</th>
+        <th mat-header-cell *matHeaderCellDef> Port</th>
         <td mat-cell *matCellDef="let element"> {{ element.port }} </td>
       </ng-container>
 

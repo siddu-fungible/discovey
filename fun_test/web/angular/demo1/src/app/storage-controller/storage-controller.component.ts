@@ -5,14 +5,16 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {SelectionModel} from "@angular/cdk/collections";
 import {MatTableDataSource} from "@angular/material";
 import {AddNewVolumeConfigInterface, DataProtectionInterface} from "../workflows/volumes/volumes.component";
+import {ApiService} from "../services/api/api.service";
 
 export interface ControllerElement {
   id: number;
+  health: boolean;
   ip: string;
   port: number;
 }
 
-export class AddNewControllerConfig{
+export class AddNewControllerConfig {
   id: number = 0;
   ip: string;
   port: number;
@@ -23,10 +25,7 @@ const ELEMENT_DATA: ControllerElement[] = [
   {id: 0, ip: 'qa-ubuntu-02', port: 50022}
 ];*/
 
-const ELEMENT_DATA: ControllerElement[] = [
-
-];
-
+const ELEMENT_DATA: ControllerElement[] = [];
 
 
 @Component({
@@ -34,7 +33,7 @@ const ELEMENT_DATA: ControllerElement[] = [
   templateUrl: './storage-controller.component.html',
   styleUrls: ['./storage-controller.component.css'],
 
-    animations: [
+  animations: [
     trigger('detailExpand', [
       state('collapsed', style({height: '0px', minHeight: '0', display: 'none'})),
       state('expanded', style({height: '*'})),
@@ -50,9 +49,9 @@ const ELEMENT_DATA: ControllerElement[] = [
         animate('500ms')
       ])
     ]),
-  trigger('nextStage', [
+    trigger('nextStage', [
       state('stage1', style({opacity: 1, 'width': '100%'})),
-      state('stage2', style({ opacity: 0, 'width': 0, 'visibility': 'hidden', transform: 'translateX(100%)'})),
+      state('stage2', style({opacity: 0, 'width': 0, 'visibility': 'hidden', transform: 'translateX(100%)'})),
       transition('stage1 <=> stage2', animate('225ms')),
     ])]
 })
@@ -68,31 +67,28 @@ export class StorageControllerComponent implements OnInit {
   actionSelected: string = null;
   selectedRowIndex: number = null;
   selectedElement: string = null;
-  selection = new SelectionModel<ControllerElement>(true, []);
+  selection = new SelectionModel<ControllerElement>(false, []);
   expandedElement: ControllerElement;
   addingNewController: boolean = false;
   newControllerConfig: AddNewControllerConfig = new AddNewControllerConfig();
+  healthChecking: boolean = false;
 
-  constructor() {
-
-
+  constructor(private apiService: ApiService) {
+    this.startHealthCheck();
   }
-
-    actionGroups: ActionGroup[] = [
-    {name: "Storage", actions: [{value: 1, viewValue: "Add a new pool"}]}
-  ];
 
 
   ngOnInit() {
-
-        if (this.radioSelection) {
+    if (this.radioSelection) {
       this.displayedColumns = ['active', 'health', 'ip', 'port'];
     } else {
       this.displayedColumns = ['active', 'health', 'name', 'capacity', 'volumes', 'dpus'];
     }
+    this.newControllerConfig.ip = "qa-ubuntu-02";
+    this.newControllerConfig.port = 50220;
   }
 
-    step = 0;
+  step = 0;
 
   setStep(index: number) {
     this.step = index;
@@ -107,19 +103,19 @@ export class StorageControllerComponent implements OnInit {
   }
 
   submit() {
-    const pe: ControllerElement = {id: 0, ip: this.newControllerConfig.ip, port: this.newControllerConfig.port};
+    const pe: ControllerElement = {id: 0, health: false, ip: this.newControllerConfig.ip, port: this.newControllerConfig.port};
     this.dataSource.data.push(pe);
     this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
     this.selectedRowIndex = this.dataSource.data.length - 1;
-    setTimeout(()=> {
+    setTimeout(() => {
       this.selectedRowIndex = null;
     }, 2000);
     this.addingNewController = false;
 
   }
 
-      /** Whether the number of selected elements matches the total number of rows. */
+  /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
     const numRows = this.dataSource.data.length;
@@ -142,6 +138,53 @@ export class StorageControllerComponent implements OnInit {
 
   public getSelected(): ControllerElement[] {
     return this.selection.selected;
+  }
+
+  printCurrentSelection() {
+    console.log(this.getSelected());
+    this.getSelected()[0].health = true;
+  }
+
+  public getActiveController() {
+    let result = null;
+    let selectedControllers = this.getSelected();
+    if (selectedControllers.length > 0) {
+      result = selectedControllers[0];
+    }
+    return result;
+  }
+
+  healthCheck() {
+     //curl -H "Content-Type: application/json" -X GET http://localhost:50220/api_server/health
+
+
+    this.dataSource.data.forEach((data) => {
+      let url = "http://" + data.ip + ":" + data.port + "/api_server/health";
+      this.apiService.get(url).subscribe((response) => {
+        console.log(response);
+        data.health = response.message === "healthy";
+      }, error => {
+        data.health = false;
+      });
+      //console.log(data);
+
+    });
+
+    if (this.healthChecking) {
+      setTimeout(() => {
+        this.healthCheck();
+      }, 5000);
+    }
+  };
+
+
+  startHealthCheck() {
+    this.healthChecking = true;
+    this.healthCheck();
+  }
+
+  stopHealthCheck() {
+    this.healthChecking = false;
   }
 
 
