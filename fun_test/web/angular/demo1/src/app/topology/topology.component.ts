@@ -140,7 +140,7 @@ export class TopologyComponent implements OnInit {
     }
   }
 
-  startTraffic() {
+  sendTraffic() {
     let url = "/demo/schedule_fio_job";
     let payload = {};
     this.apiService.post(url, payload).subscribe((response) => {
