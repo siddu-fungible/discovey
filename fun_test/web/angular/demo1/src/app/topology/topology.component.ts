@@ -54,7 +54,7 @@ export class TopologyComponent implements OnInit {
   bgPollCount: number = 0;
   loadOutput: string = null;
   maxBgPoll: number = 20;
-  loadStopped: boolean = false;
+  loadStopped: boolean = true;
 
   constructor(private commonService: CommonService, private apiService: ApiService) {
 
