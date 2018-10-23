@@ -1,37 +1,139 @@
 <div *ngIf="!activeController">
   No controller available
 </div>
-<div *ngIf="activeController">
-  Controller Info:
-  <p>
-    {{ activeController.ip }}
-  </p>
-  <p>
-    {{ activeController.port }}
-  </p>
-  <mat-card>
-    <mat-card-header>
-      DPUs
-    </mat-card-header>
-  <table class="table">
-    <tr>
-      <th>Name</th>
-      <th>Dataplane IP</th>
-      <th>Management IP</th>
-      <th>Management SSH port</th>
-      <th>Storage Agent Port</th>
-    </tr>
-    <tr *ngFor="let f1 of topoF1s">
-      <td>{{ f1.name }}</td>
-      <td>{{ f1.dataplane_ip }}</td>
-      <td>{{ f1.mgmt_ip }}</td>
-      <td>{{ f1.mgmt_ssh_port }}</td>
-      <td>{{ f1.storage_agent_port }}</td>
-    </tr>
+
+
+<mat-card>
+  <mat-card-header>DPUs</mat-card-header>
+  <table mat-table multiTemplateDataRows [dataSource]="dataSource" class="mat-elevation-z81">
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef> Name</th>
+      <td mat-cell *matCellDef="let element"> {{ element.name }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="dataplane_ip">
+      <th mat-header-cell *matHeaderCellDef> Dataplane IP</th>
+      <td mat-cell *matCellDef="let element"> {{ element.dataplane_ip }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="mgmt_ip">
+      <th mat-header-cell *matHeaderCellDef> Mgmt IP</th>
+      <td mat-cell *matCellDef="let element"> {{ element.mgmt_ip }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="mgmt_ssh_port">
+      <th mat-header-cell *matHeaderCellDef> Mgmt SSH Port</th>
+      <td mat-cell *matCellDef="let element"> {{ element.mgmt_ssh_port }} </td>
+    </ng-container>
+
+
+    <ng-container matColumnDef="storage_agent_port">
+      <th mat-header-cell *matHeaderCellDef> Storage Agent Port</th>
+      <td mat-cell *matCellDef="let element"> {{ element.storage_agent_port }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="action">
+      <th mat-header-cell *matHeaderCellDef> Action</th>
+      <td mat-cell *matCellDef="let element">
+        <button *ngIf="!element.hasOwnProperty('tgs') || !tgsExist(element.tgs)" class="btn btn-primary btn-sm" (click)="attachTg(element)">Attach TG</button>
+        <p *ngIf="element.hasOwnProperty('tgs') && tgsExist(element.tgs)" class="pseudo-anchor"><u class="anchor-button">TG details</u></p>
+      </td>
+    </ng-container>
+
+
+    <ng-container matColumnDef="expandedDetail">
+      <td mat-cell *matCellDef="let element" [attr.colspan]="displayedTgColumns.length">
+
+
+        <div *ngIf="element.hasOwnProperty('tgs') && tgsExist(element.tgs)" class="example-element-detail"
+             [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
+          <mat-card>
+            <mat-card-header>
+              <u>Traffic generators</u>
+            </mat-card-header>
+            <div>
+              <table mat-table [dataSource]="getTgDataSource(element.tgs)">
+
+                <ng-container matColumnDef="name">
+                  <th mat-header-cell *matHeaderCellDef> Name</th>
+                  <td mat-cell *matCellDef="let elementTg"> {{ elementTg.name }} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="dataplane_ip">
+                  <th mat-header-cell *matHeaderCellDef> Dataplane IP</th>
+                  <td mat-cell *matCellDef="let elementTg"> {{ elementTg.dataplane_ip }} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="mgmt_ip">
+                  <th mat-header-cell *matHeaderCellDef> Mgmt IP</th>
+                  <td mat-cell *matCellDef="let elementTg"> {{ elementTg.mgmt_ip }} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="mgmt_ssh_port">
+                  <th mat-header-cell *matHeaderCellDef> Mgmt SSH Port</th>
+                  <td mat-cell *matCellDef="let elementTg"> {{ elementTg.mgmt_ssh_port }} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="action">
+                  <th mat-header-cell *matHeaderCellDef> Action</th>
+                  <td mat-cell *matCellDef="let elementTg">
+                    <button class="btn btn-info btn-sm" (click)="load(element, elementTg)">Load</button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedTgColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedTgColumns;"></tr>
+              </table>
+            </div>
+          </mat-card>
+        </div>
+
+
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+    <ng-container>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          class="example-element-row"
+          [class.example-expanded-row]="expandedElement === row"
+          (click)="selection.toggle(row); expandedElement = row;">
+      </tr>
+    </ng-container>
+
+    <ng-container>
+      <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+    </ng-container>
 
   </table>
-  </mat-card>
+</mat-card>
+
+<div *ngIf="showingLoadWindow" scrollTo id="load-div">
+  <mat-card >
+  <mat-card-header>Traffic generator load</mat-card-header>
+  <table mat-table [dataSource]="loadDataSource">
+    <ng-container matColumnDef="attribute">
+          <th mat-header-cell *matHeaderCellDef> Attribute</th>
+
+      <td mat-cell *matCellDef="let element"> {{ element.attribute }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef> Value </th>
+
+      <td mat-cell *matCellDef="let element"> {{ element.value }} </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedLoadColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedLoadColumns;"></tr>
+  </table>
+
+
+  <mat-card-footer>
+    <button mat-button (click)="showingLoadWindow = false">Close</button>
+  </mat-card-footer>
+</mat-card>
 </div>
-
-
 

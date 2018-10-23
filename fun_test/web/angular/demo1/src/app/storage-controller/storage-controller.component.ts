@@ -73,6 +73,8 @@ export class StorageControllerComponent implements OnInit {
   addingNewController: boolean = false;
   newControllerConfig: AddNewControllerConfig = new AddNewControllerConfig();
   healthChecking: boolean = false;
+  bgPollCount: number = 0;
+  loadOutput: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
     this.startHealthCheck();
@@ -193,6 +195,43 @@ export class StorageControllerComponent implements OnInit {
 
   stopHealthCheck() {
     this.healthChecking = false;
+  }
+
+  testBg() {
+    let url = "/demo/schedule_fio_job";
+    let payload = {};
+    this.apiService.post(url, payload).subscribe((response) => {
+      let bgExecutionId = response.data;
+      let payload = {bg_execution_id: bgExecutionId};
+      this.pollStatus(bgExecutionId);
+      console.log("BgExecutionID:" + bgExecutionId);
+    }, error => {
+
+    });
+  }
+
+  pollStatus(executionId) {
+    this.bgPollCount++;
+    let url = "/demo/bg_job_status";
+    let payload = {bg_execution_id: executionId};
+    this.apiService.post(url, payload).subscribe((response) => {
+      console.log(response.data.status + ":" + response.data.output);
+      let executionStatus = response.data.status;
+      if (executionStatus !== "PASSED" && executionStatus !== "FAILED") {
+        setTimeout(() => {
+          this.pollStatus(executionId);
+          }, 10000);
+      } else {
+        this.loadOutput = response.data.output;
+      }
+
+
+
+    }, error => {
+
+    });
+
+
   }
 
 
