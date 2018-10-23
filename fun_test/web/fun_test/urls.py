@@ -45,6 +45,7 @@ regression_urls = [
     url(r'^log_path$', regression_views.log_path),
     url(r'^submit_job_page', regression_views.submit_job_page),
     url(r'^submit_job$', regression_views.submit_job),
+    url(r'^submit_job1$', regression_views.submit_job1),
     url(r'^suites$', regression_views.suites),
     url(r'^suites1$', regression_views.suites1),
     url(r'^static_serve_log_directory/(\d+)$', regression_views.static_serve_log_directory),

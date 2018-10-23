@@ -120,24 +120,13 @@ export class SubmitJobComponent implements OnInit {
   _getSelectedtags() {
     let tags = [];
     this.selectedTags.forEach(function (item) {
-      tags.push(item.name);
+      tags.push(item.item_text);
     });
     return tags;
   }
 
-  testClick() {
-    this._getSelectedtags().forEach(function (item) {
-      console.log(item);
-    });
-
-  }
-
-  submitClick(formIsValid) {
+  submitClick() {
     let self = this;
-    if (!formIsValid) {
-      this.logger.error("Form is invalid");
-      return;
-    }
     this.jobId = null;
     let payload = {};
     payload["suite_path"] = this.selectedSuite;
