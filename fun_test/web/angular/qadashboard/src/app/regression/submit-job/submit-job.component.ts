@@ -15,7 +15,7 @@ export class SubmitJobComponent implements OnInit {
   selectedInfo: any;
   jobId: number;
   suitesInfo: any;
-  selectedTags: any;
+  selectedTags: any[] = [];
   tags: any;
   emailOnFailOnly: boolean;
   schedulingOptions: boolean;
@@ -24,17 +24,33 @@ export class SubmitJobComponent implements OnInit {
   scheduleAtRepeat: any;
   emails: any;
   suitesInfoKeys: any = [];
+  selectTags: any[] = [];
+  dropdownSettings = {};
 
 
   constructor(private apiService: ApiService, private logger: LoggerService) {
   }
 
   ngOnInit() {
+    this.dropdownSettings = {
+      singleSelection: false,
+      idField: 'item_id',
+      textField: 'item_text',
+      selectAllText: 'Select All',
+      unSelectAllText: 'UnSelect All',
+      itemsShowLimit: 3,
+      allowSearchFilter: true
+    };
     this.scheduleInMinutes = 1;
+    this.scheduleAtRepeat = false;
+    this.scheduleInMinutesRepeat = null;
+    this.selectTags = [];
+    this.scheduleAt = null;
     this.scheduleInMinutesRadio = true;
     this.buildUrl = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/";
     this.selectedSuite = null;
     this.selectedInfo = null;
+    this.schedulingOptions = false;
     this.jobId = null;
     let self = this;
     this.apiService.get("/regression/suites1").subscribe((result) => {
@@ -50,13 +66,24 @@ export class SubmitJobComponent implements OnInit {
     this.emailOnFailOnly = false;
   }
 
+  onItemSelect (item:any): void {
+    console.log(item);
+  }
+  onSelectAll (items: any): void {
+    console.log(items);
+  }
+
   fetchTags(): void {
     let self = this;
     this.apiService.get('/regression/tags1').subscribe(function (result) {
       let data = JSON.parse(result.data);
+      let i = 1;
+      self.selectTags = [];
       for (let item of data) {
         self.tags.push({name: item.fields.tag});
+        self.selectTags.push({item_id: i++, item_text: item.fields.tag});
       }
+      //self.selectedTags = self.tags
     }, error => {
       this.logger.error("unable to fetch tags");
     });

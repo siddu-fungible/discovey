@@ -1,0 +1,24 @@
+#email-set {
+  display: inline-block;
+  width: 40em;
+}
+#email-set > label#emails-label, #emailset > input#emails {
+  display: block;
+  text-align: left;
+  width: 20em;
+}
+#build-url {
+  width: 27em;
+}
+#emails {
+  width: 27em;
+}
+#suite-select {
+  width: 27em;
+}
+#emails-label {
+  margin: 0px;
+}
+table {
+  margin: 0px;
+}
