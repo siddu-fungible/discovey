@@ -167,7 +167,7 @@ export class TopologyComponent implements OnInit {
       if (executionStatus !== "PASSED" && executionStatus !== "FAILED" && (this.bgPollCount < this.maxBgPoll)) {
         setTimeout(() => {
           this.pollStatus(executionId);
-        }, 10000);
+        }, 5000);
       } else {
         this.loadOutput = response.data.output;
         this.loadStopped = true;

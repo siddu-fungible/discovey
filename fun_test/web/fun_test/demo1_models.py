@@ -28,6 +28,14 @@ class BgExecutionStatus(models.Model):
         s = "{} {} {}".format(self.execution_id, self.status, self.output)
         return s
 
+class StorageController(models.Model):
+    active = models.BooleanField(default=False)
+    ip = models.TextField(default="qa-ubuntu-02")
+    port = models.IntegerField(default=50220)
+
+    def __str__(self):
+        return "{} {} {}".format(self.active, self.ip, self.port)
+
 if __name__ == "__main__":
     #import django
     #import os
