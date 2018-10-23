@@ -11,8 +11,14 @@
   width: 27em;
 }
 #emails-label {
-  margin: 0px;
+  margin: 0;
 }
 table {
-  margin: 0px;
+  margin: 0;
+}
+.header {
+  background-color: rgba(0,0,0,.03);
+}
+.side-table {
+  padding: 4px;
 }
