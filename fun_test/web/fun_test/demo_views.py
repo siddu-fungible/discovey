@@ -59,4 +59,4 @@ def schedule_fio_job(request):
     status = BgExecutionStatus(execution_id=bg_execution_id)
     status.save()
     scheduler.add_job(fio_task, 'interval', seconds=1, args=[bg_execution_id, fio_args], id=str(bg_execution_id))
-    return HttpResponse("Ok")
+    return bg_execution_id

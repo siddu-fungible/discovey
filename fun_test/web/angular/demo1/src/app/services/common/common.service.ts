@@ -7,12 +7,22 @@ export class Controller {
   port: number;
 }
 
+export class TopoTg {
+  name: string;
+  mgmt_ip: string;
+  dataplane_ip: string;
+  mgmt_ssh_port: number;
+}
+
 export class TopoF1 {
   name: string;
   dataplane_ip: string;
   mgmt_ip: string;
   mgmt_ssh_port: number;
   storage_agent_port: number;
+  tgs: {
+    [name: string]: TopoTg;
+  }
 
 }
 
