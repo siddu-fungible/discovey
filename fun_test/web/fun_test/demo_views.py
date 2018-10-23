@@ -10,6 +10,8 @@ from web.fun_test.demo1_models import LastBgExecution, BgExecutionStatus
 from web.web_global import initialize_result, api_safe_json_response
 from django.http import HttpResponse
 from fun_global import RESULTS
+import json
+from lib.host.linux import Linux
 
 @csrf_exempt
 def home(request):
@@ -31,15 +33,23 @@ def get_new_bg_execution():
 def fio_task(bg_execution_id, fio_args):
     bg_execution_id = int(bg_execution_id)
     status = BgExecutionStatus.objects.get(execution_id=bg_execution_id)
+    output = ""
     try:
         print "Fio task"
+        try:
+            linux_obj = Linux(host_ip="qa-ubuntu-01", ssh_username="auto_admin", ssh_password="fun123")
+            output = linux_obj.command("date")
+        except Exception as ex:
+            print "Exception: " + str(ex)
         app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
         scheduler = app_config.get_background_scheduler()
         print "Fio args: " + str(fio_args)
         scheduler.remove_job(str(bg_execution_id))
         status.status = RESULTS["PASSED"]
+        status.output = output
     except Exception as ex:
         status.output = str(ex)
+        print "Exception: " + str(ex)
     status.save()
     pass
 
@@ -57,6 +67,23 @@ def schedule_fio_job(request):
     scheduler = app_config.get_background_scheduler()
     bg_execution_id = get_new_bg_execution()
     status = BgExecutionStatus(execution_id=bg_execution_id)
-    status.save()
-    scheduler.add_job(fio_task, 'interval', seconds=1, args=[bg_execution_id, fio_args], id=str(bg_execution_id))
+    try:
+        status.save()
+        scheduler.add_job(fio_task, 'interval', seconds=1, args=[bg_execution_id, fio_args], id=str(bg_execution_id))
+    except Exception as ex:
+        print "Exception:" + str(ex)
     return bg_execution_id
+
+
+@csrf_exempt
+@api_safe_json_response
+def job_status(request):
+    request_json = json.loads(request.body)
+    bg_execution_id = int(request_json["bg_execution_id"])
+    result = {}
+    result["status"] = -1
+    status = BgExecutionStatus.objects.get(execution_id=bg_execution_id)
+    result["status"] = status.status
+    result["output"] = status.output
+
+    return result

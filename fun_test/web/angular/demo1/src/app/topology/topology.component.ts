@@ -138,4 +138,8 @@ export class TopologyComponent implements OnInit {
     }
   }
 
+  startTraffic() {
+    let payload = {tg: this.loadTg.name, f1: this.loadF1.name}
+  }
+
 }
