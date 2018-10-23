@@ -53,6 +53,8 @@ export class TopologyComponent implements OnInit {
   loadDataSource: MatTableDataSource<Load> = null;
   bgPollCount: number = 0;
   loadOutput: string = null;
+  maxBgPoll: number = 20;
+  loadStopped: boolean = true;
 
   constructor(private commonService: CommonService, private apiService: ApiService) {
 
@@ -144,6 +146,8 @@ export class TopologyComponent implements OnInit {
     let url = "/demo/schedule_fio_job";
     let payload = {};
     this.apiService.post(url, payload).subscribe((response) => {
+      this.bgPollCount = 0;
+      this.loadStopped = false;
       let bgExecutionId = response.data;
       let payload = {bg_execution_id: bgExecutionId};
       this.pollStatus(bgExecutionId);
@@ -160,12 +164,17 @@ export class TopologyComponent implements OnInit {
     this.apiService.post(url, payload).subscribe((response) => {
       console.log(response.data.status + ":" + response.data.output);
       let executionStatus = response.data.status;
-      if (executionStatus !== "PASSED" && executionStatus !== "FAILED") {
+      if (executionStatus !== "PASSED" && executionStatus !== "FAILED" && (this.bgPollCount < this.maxBgPoll)) {
         setTimeout(() => {
           this.pollStatus(executionId);
         }, 10000);
       } else {
         this.loadOutput = response.data.output;
+        this.loadStopped = true;
+      }
+
+      if (this.bgPollCount >= this.maxBgPoll) {
+        this.loadStopped = true;
       }
 
 
