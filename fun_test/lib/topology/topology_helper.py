@@ -62,7 +62,11 @@ class TopologyHelper:
                         if not 'type' in interface_info:
                             raise FunTestLibException("We must define an interface type")
                         if dut_interface_obj.type == DutInterface.INTERFACE_TYPE_PCIE:
-                            dut_interface_obj.add_qemu_colocated_hypervisor(num_vms=interface_info["vms"])
+                            vm_start_mode = None
+                            if "vm_start_mode" in interface_info:
+                                vm_start_mode = interface_info["vm_start_mode"]
+                            dut_interface_obj.add_qemu_colocated_hypervisor(num_vms=interface_info["vms"],
+                                                                            vm_start_mode=vm_start_mode)
                         elif dut_interface_obj.type == DutInterface.INTERFACE_TYPE_ETHERNET:
                             dut_interface_obj.add_hypervisor(num_vms=interface_info["vms"])
                     elif 'ssds' in interface_info:
@@ -176,9 +180,16 @@ class TopologyHelper:
                 for i in range(hypervisor_end_point.num_vms):
                     internal_ssh_port = qemu_ssh_ports[i]["internal"]
                     external_ssh_port = qemu_ssh_ports[i]["external"]
+                    vm_start_mode = None
+
+                    if hasattr(hypervisor_end_point, "vm_start_mode"):
+                        if hypervisor_end_point.vm_start_mode == "VM_START_MODE_NORMAL":
+                            vm_start_mode = "VM_START_MODE_NORMAL"
+
                     instance = orchestrator_obj.launch_host_instance(instance_type=SimulationOrchestrator.INSTANCE_TYPE_QEMU,
                                                                 external_ssh_port=external_ssh_port,
-                                                                internal_ssh_port=internal_ssh_port)
+                                                                internal_ssh_port=internal_ssh_port,
+                                                                     vm_start_mode=vm_start_mode)
                     fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(i))
                     hypervisor_end_point.add_instance(instance=instance)
                     fun_test.counter += 1
