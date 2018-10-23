@@ -131,12 +131,15 @@
   </table>
 
   <div>
-  <button class="btn btn-success btn-sm" (click)="sendTraffic()">Send Traffic</button>
-  <p *ngIf="bgPollCount">
-    <span matBadge="{{ bgPollCount }}" matBadgeOverlap="false">Polling</span>
-  </p>
+  <button class="btn btn-success btn-sm" (click)="sendTraffic()">{{ loadStopped? "Send Traffic": "Sending Traffic..." }}</button>
+  <span *ngIf="bgPollCount">
+    <span matBadge="{{ bgPollCount }}" matBadgeOverlap="false">Load status check</span>
+  </span>
 
     <mat-card>
+      <mat-card-header>
+        Output
+      </mat-card-header>
         <p *ngIf="loadOutput">
       {{ loadOutput }}
     </p>
