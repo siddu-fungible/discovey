@@ -130,6 +130,21 @@
     <tr mat-row *matRowDef="let row; columns: displayedLoadColumns;"></tr>
   </table>
 
+  <div>
+  <button class="btn btn-success btn-sm" (click)="sendTraffic()">Send Traffic</button>
+  <p *ngIf="bgPollCount">
+    <span matBadge="{{ bgPollCount }}" matBadgeOverlap="false">Polling</span>
+  </p>
+
+    <mat-card>
+        <p *ngIf="loadOutput">
+      {{ loadOutput }}
+    </p>
+    </mat-card>
+
+  </div>
+
+
 
   <mat-card-footer>
     <button mat-button (click)="showingLoadWindow = false">Close</button>
