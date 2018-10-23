@@ -33,7 +33,7 @@
             <label>Select a tag: </label>
           </td>
             <td>
-              <div style="width: 27em;">
+              <div class="field-width">
                 <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags" [settings]="dropdownSettings">
         </ng-multiselect-dropdown>
               </div>
@@ -45,7 +45,7 @@
           </td>
           <td>
             <fieldset id="email-set">
-              <input style="width: 27em;" id="emails" name="emails" [(ngModel)]="emails" type="text" required/>
+              <input id="emails" name="emails" [(ngModel)]="emails" type="text" required/>
               <label id="emails-label" for="emails"><i>separated by comma</i></label>
               <input id="email-on-fail-only" type="checkbox" [(ngModel)]="emailOnFailOnly">
               <label id="email-only" for="email-on-fail-only">&nbsp;Email on failures only</label>

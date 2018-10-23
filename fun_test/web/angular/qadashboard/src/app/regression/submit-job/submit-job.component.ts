@@ -141,7 +141,7 @@ export class SubmitJobComponent implements OnInit {
     if (this.schedulingOptions) {
       payload = this.getSchedulingOptions(payload);
     }
-    this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
+    this.apiService.post('/regression/submit_job1', payload).subscribe(function (result) {
       self.jobId = parseInt(result.data);
       window.location.href = "/regression/suite_detail/" + self.jobId;
       console.log("Job " + self.jobId + " Submitted");
