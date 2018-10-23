@@ -2,18 +2,12 @@
   display: inline-block;
   width: 40em;
 }
-#email-set > label#emails-label, #emailset > input#emails {
+#email-set > label#emails-label, #email-set > input#emails {
   display: block;
   text-align: left;
   width: 20em;
 }
-#build-url {
-  width: 27em;
-}
-#emails {
-  width: 27em;
-}
-#suite-select {
+.field-width {
   width: 27em;
 }
 #emails-label {

@@ -10,7 +10,7 @@
             <label for="build-url">Build URL</label>
           </td>
           <td>
-            <input id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
+            <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
           </td>
         </tr>
         <tr>
@@ -18,7 +18,7 @@
             <label for="suite-select">Select a suite</label>
           </td>
           <td>
-            <select id="suite-select" [(ngModel)]="selectedSuite" (change)="changedValue(selectedSuite)">
+            <select class="field-width" id="suite-select" [(ngModel)]="selectedSuite" (change)="changedValue(selectedSuite)">
               <option></option>
               <option *ngFor="let suiteName of suitesInfoKeys">
                 {{ suiteName }}
@@ -32,9 +32,11 @@
           <td>
             <label>Select a tag: </label>
           </td>
-            <td style="width: 27em;">
-        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags" [settings]="dropdownSettings">
+            <td>
+              <div style="width: 27em;">
+                <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags" [settings]="dropdownSettings">
         </ng-multiselect-dropdown>
+              </div>
           </td>
         </tr>
         <tr>
@@ -43,8 +45,8 @@
           </td>
           <td>
             <fieldset id="email-set">
-              <input id="emails" name="emails" [(ngModel)]="emails" type="text" required/>
-              <label id="emails-label" for="emails"><i>seperated by comma</i></label>
+              <input style="width: 27em;" id="emails" name="emails" [(ngModel)]="emails" type="text" required/>
+              <label id="emails-label" for="emails"><i>separated by comma</i></label>
               <input id="email-on-fail-only" type="checkbox" [(ngModel)]="emailOnFailOnly">
               <label id="email-only" for="email-on-fail-only">&nbsp;Email on failures only</label>
             </fieldset>
@@ -55,27 +57,7 @@
       <a *ngIf="schedulingOptions" [routerLink]="" (click)="schedulingOptions = !schedulingOptions">Hide Scheduling Options</a>
     </div>
   </div>
-</div>
-  <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
-    <div class="card" *ngIf="selectedInfo" class="title">
-    <!--<legend>{{ selectedSuite }}</legend>-->
-    <div style="padding: 4px;">
-      <table class="table table-nonfluid">
-        <tr>
-          <th colspan="2" style="background-color: rgba(0,0,0,.03);">
-            Scripts for Suite: {{ selectedSuite }}
-          </th>
-        </tr>
-        <tr *ngFor="let scriptInfo of selectedInfo; index as i">
-          <td>{{ i }}</td>
-          <td>{{ scriptInfo.path }}</td>
-        </tr>
-      </table>
-    </div>
-  </div>
-  </div>
-</div>
-  <div *ngIf="schedulingOptions" style="padding: 4px;">
+    <div *ngIf="schedulingOptions" style="padding: 4px;">
     <div class="card">
       <div class="card-header">Scheduling options</div>
       <div class="card-body">
@@ -111,6 +93,27 @@
       </div>
     </div>
   </div>
+</div>
+  <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
+    <div class="card" *ngIf="selectedInfo" class="title">
+    <!--<legend>{{ selectedSuite }}</legend>-->
+    <div style="padding: 4px;">
+      <table class="table table-bordered">
+        <tr>
+          <th colspan="2" style="background-color: rgba(0,0,0,.03);">
+            Scripts for Suite: {{ selectedSuite }}
+          </th>
+        </tr>
+        <tr *ngFor="let scriptInfo of selectedInfo; index as i">
+          <td>{{ i }}</td>
+          <td>{{ scriptInfo.path }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  </div>
+</div>
+
 <div style="padding: 5px;">
     <button *ngIf="selectedInfo" (click)="submitClick()"
                     class="btn btn-primary">Submit
