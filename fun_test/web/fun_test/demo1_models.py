@@ -19,7 +19,14 @@ RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 class LastBgExecution(models.Model):
     last_bg_execution_id = models.IntegerField(unique=True, default=10)
 
+class BgExecutionStatus(models.Model):
+    execution_id = models.IntegerField(unique=True)
+    status = models.TextField(choices=RESULT_CHOICES, default=RESULTS["SCHEDULED"])
+    output = models.TextField(default="")
 
+    def __str__(self):
+        s = "{} {} {}".format(self.execution_id, self.status, self.output)
+        return s
 
 if __name__ == "__main__":
     #import django

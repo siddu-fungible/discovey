@@ -142,7 +142,7 @@ upgrade_urls = [
 ]
 
 demo_urls = [
-    url(r'^$', demo_views.home),
+    url(r'^demo1$', demo_views.home),
     url(r'^schedule_fio_job$', demo_views.schedule_fio_job)
 ]
 
