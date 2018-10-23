@@ -19,4 +19,6 @@ tr.example-element-row:not(.example-expanded-row):active {
   color: #007bff;
 }
 
-
+.pseudo-anchor:hover {
+  cursor: pointer;
+}

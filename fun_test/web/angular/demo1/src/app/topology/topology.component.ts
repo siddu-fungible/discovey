@@ -7,6 +7,11 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {SelectionModel} from "@angular/cdk/collections";
 import {PoolElement} from "../workflows/pools/pools.component";
 
+class Load {
+  attribute: string;
+  value: string;
+}
+
 @Component({
   selector: 'app-topology',
   templateUrl: './topology.component.html',
@@ -38,10 +43,14 @@ export class TopologyComponent implements OnInit {
   topoF1s: TopoF1[] = [];
   dataSource = new MatTableDataSource<TopoF1>();
   displayedColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
-  displayedTgColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port'];
+  displayedTgColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
+  displayedLoadColumns: string[] = ['attribute', 'value'];
   expandedElement: TopoF1;
   selection = new SelectionModel<TopoF1>(false, []);
-
+  loadF1: TopoF1 = null;
+  loadTg: TopoTg = null;
+  showingLoadWindow: boolean = false;
+  loadDataSource: MatTableDataSource<Load> = null;
 
   constructor(private commonService: CommonService, private apiService: ApiService) {
 
@@ -109,6 +118,24 @@ export class TopologyComponent implements OnInit {
   tgsExist(tgs) {
     let tgNames = Object.keys(tgs);
     return tgNames.length;
+  }
+
+  load(f1, tg) {
+    this.loadF1 = f1;
+    this.loadTg = tg;
+    console.log(this.loadF1);
+    console.log(this.loadTg);
+    this.loadDataSource = new MatTableDataSource<Load>([{attribute: "DPU", value: this.loadF1.name},
+      {attribute: "TG", value: this.loadTg.name}]);
+    this.showingLoadWindow = true;
+    this.scroll();
+  }
+
+  scroll() {
+    let x = document.querySelector("#load-div");
+    if (x){
+        x.scrollIntoView();
+    }
   }
 
 }
