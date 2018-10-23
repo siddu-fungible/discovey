@@ -132,8 +132,8 @@
 
   <div>
   <button class="btn btn-success btn-sm" (click)="sendTraffic()">{{ loadStopped? "Send Traffic": "Sending Traffic..." }}</button>
-  <span *ngIf="bgPollCount">
-    <span matBadge="{{ bgPollCount }}" matBadgeOverlap="false">Load status check</span>
+  <span *ngIf="bgPollCount && !loadStopped">
+    <span style="padding: 20px" matBadge="{{ bgPollCount }}" matBadgeOverlap="false">Checking status</span>
   </span>
 
     <mat-card>

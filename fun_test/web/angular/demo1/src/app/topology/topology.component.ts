@@ -146,6 +146,7 @@ export class TopologyComponent implements OnInit {
     let url = "/demo/schedule_fio_job";
     let payload = {};
     this.apiService.post(url, payload).subscribe((response) => {
+      this.bgPollCount = 0;
       this.loadStopped = false;
       let bgExecutionId = response.data;
       let payload = {bg_execution_id: bgExecutionId};
