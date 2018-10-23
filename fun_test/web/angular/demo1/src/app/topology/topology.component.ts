@@ -163,17 +163,16 @@ export class TopologyComponent implements OnInit {
       if (executionStatus !== "PASSED" && executionStatus !== "FAILED") {
         setTimeout(() => {
           this.pollStatus(executionId);
-          }, 10000);
+        }, 10000);
       } else {
         this.loadOutput = response.data.output;
       }
 
 
-
     }, error => {
 
     });
-
+  }
 
 
 }
