@@ -78,13 +78,15 @@
 </mat-card>
 
 <!--div>
-  <button (click)="testBg()">testbg</button>
+  <button class="btn btn-success btn-sm" (click)="testBg()">Send Traffic</button>
   <p *ngIf="bgPollCount">
     <span matBadge="{{ bgPollCount }}" matBadgeOverlap="false">Polling</span>
   </p>
 
-  <p *ngIf="loadOutput">
+  <mat-card>
+      <p *ngIf="loadOutput">
     {{ loadOutput }}
   </p>
+  </mat-card>
 
 </div-->
