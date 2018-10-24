@@ -27,6 +27,7 @@ export class ApiViewerComponent implements OnInit {
   constructor(private apiService: ApiService) { }
 
   ngOnInit() {
+    this.refresh();
 
   }
 

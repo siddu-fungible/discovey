@@ -21,6 +21,11 @@ table {
   max-height: 20px;
 }
 
+.api-viewer-link {
+  display: flex;
+  justify-content: flex-end
+}
+
 /* Heart beat animation */
 @keyframes beat{
 	to { transform: scale(1.4); }

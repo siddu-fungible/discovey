@@ -18,9 +18,11 @@
   color: white;
 }
 .url-font {
-  font-weight: 100;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+  font-size: 14px;
 }
-
+/*  font-weight: 100;
+*/
 .response-div {
   background-color: #eee;
   border: 1px solid #999;
