@@ -6,6 +6,8 @@ import {SelectionModel} from "@angular/cdk/collections";
 import {PoolElement, PoolsComponent} from "../pools/pools.component";
 import {MatTableDataSource} from "@angular/material";
 import {AlertComponent} from "ngx-bootstrap";
+import {ApiService} from "../../services/api/api.service";
+import {CommonService} from "../../services/common/common.service";
 
 
 export interface VolumeElement {
@@ -109,7 +111,7 @@ export class VolumesComponent implements OnInit {
     {name: "Storage", actions: [{value: 1, viewValue: "Add a new volume"}]}
   ];
 
-  constructor() {
+  constructor(private apiService: ApiService, private commonService: CommonService) {
     if (this.dataProtection) {
       this.addNewVolumeConfig.data_protection = {type: "EC", fault_tolerance: 0};
     }
@@ -174,13 +176,32 @@ export class VolumesComponent implements OnInit {
 
   submit() {
 
+    let url = this.commonService.getBaseUrl();
+    url = url + "/storage/pools";
+    this.apiService.get(url).subscribe( (response) => {
+      let pools = response.data;
+      let poolIds = Object.keys(pools);
+
+      let url = this.commonService.getBaseUrl();
+      url = url + "/storage/pools/" + poolIds[0] + "/volumes";
+      let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2}, "name": "repvol1", "compress": 1};
+      this.apiService.post(url, payload).subscribe((response)=> {
+
+      }, error => {
+
+      });
+
+
+    }, error => {
+
+    });
+
+
+
     this.addNewVolumeConfig.pool_name = this._getSelectedPool();
     this.addNewVolumeConfig.encryption = this.encryptionOn;
     console.log(JSON.stringify(this.addNewVolumeConfig));
-
-
     const pe: VolumeElement = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
-
     this.dataSource.data.push(pe);
     this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
@@ -193,9 +214,5 @@ export class VolumesComponent implements OnInit {
     pe2.forEach((pe) => {
       console.log(pe.name);
     })
-
-
   }
-
-
 }
