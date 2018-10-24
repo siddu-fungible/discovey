@@ -863,7 +863,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def validate_performance_result(self, tx_subscribe_handle, rx_subscribe_handle, stream_objects,
                                     jitter=False, expected_performance_data=[],
                                     tx_port=None, rx_port=None,
-                                    tolerance_percent=10, flow_type=None, spray_enabled=False):
+                                    tolerance_percent=10, flow_type=None, spray_enabled=False, dut_stats_success=False):
         result = {'result': False}
         try:
             expected_performance_data.reverse()
@@ -888,9 +888,13 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         stream_obj.FixedFrameLength, int(tx_port_result['GeneratorFrameCount']),
                         int(rx_port_result['TotalFrameCount'])
                     ))
-                    fun_test.test_assert_expected(expected=int(tx_port_result['GeneratorFrameCount']),
-                                                  actual=int(rx_port_result['TotalFrameCount']),
-                                                  message=checkpoint)
+                    if (int(tx_port_result['GeneratorFrameCount']) != int(rx_port_result['TotalFrameCount'])) and \
+                            dut_stats_success:
+                        fun_test.test_assert(dut_stats_success, checkpoint)
+                    else:
+                        fun_test.test_assert_expected(expected=int(tx_port_result['GeneratorFrameCount']),
+                                                      actual=int(rx_port_result['TotalFrameCount']),
+                                                      message=checkpoint)
                 else:
                     checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
                     rx_result = self.stc_manager.get_rx_stream_block_results(
