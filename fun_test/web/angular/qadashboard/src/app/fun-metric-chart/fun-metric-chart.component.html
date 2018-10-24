@@ -81,18 +81,18 @@
         <tr>
           <td>{{ dataSet.name }}</td>
           <td>{{ dataSet.output.name }}</td>
-          <td><input type="number" [ngModel]="dataSet.output.min" ng-value="dataSet.output.min"
+          <td><input type="number" [(ngModel)]="dataSet.output.min" [value]="dataSet.output.min"
                      style="width: 100px"></td>
-          <td><input type="number" [ngModel]="dataSet.output.max" ng-value="dataSet.output.max"
+          <td><input type="number" [(ngModel)]="dataSet.output.max" [value]="dataSet.output.max"
                      style="width: 100px"></td>
-          <td><input type="number" [ngModel]="dataSet.output.expected"
-                     ng-value="dataSet.output.expected"
+          <td><input type="number" [(ngModel)]="dataSet.output.expected"
+                     [value]="dataSet.output.expected"
                      style="width: 100px"></td>
         </tr>
       </table>
-      <p><input type="checkbox" [checked]="negativeGradient" [ngModel]="inner.negativeGradient">&nbsp;Negative gradient
+      <p><input type="checkbox" [checked]="negativeGradient" [(ngModel)]="inner.negativeGradient">&nbsp;Negative gradient
       </p>
-      <p><input type="checkbox" [checked]="leaf" [ngModel]="inner.leaf">&nbsp;Leaf</p>
+      <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
       <div class="row">
         <div style="padding: 10px;">
           <button class="btn btn-success" (click)="submit()">Submit</button>
