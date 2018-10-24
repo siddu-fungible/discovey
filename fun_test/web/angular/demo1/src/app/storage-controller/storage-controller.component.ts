@@ -76,6 +76,7 @@ export class StorageControllerComponent implements OnInit {
   healthChecking: boolean = false;
   bgPollCount: number = 0;
   loadOutput: string = null;
+  showingApiViewer: boolean = false;
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
     this.startHealthCheck();
