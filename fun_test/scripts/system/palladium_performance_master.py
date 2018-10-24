@@ -864,7 +864,7 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     output_ops_per_sec = float(m.group("ops_per_sec"))
                     input_app = "pke_rsa_crt_dec_no_pad_soak"
-                    input_metric_name = m.group("metric_name").replace(" ","_")
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
@@ -901,7 +901,7 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
                 if m:
                     output_ops_per_sec = float(m.group("ops_per_sec"))
                     input_app = "pke_ecdh_soak_256"
-                    input_metric_name = m.group("metric_name").replace(" ","_")
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
@@ -938,7 +938,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
                 if m:
                     output_ops_per_sec = float(m.group("ops_per_sec"))
                     input_app = "pke_ecdh_soak_25519"
-                    input_metric_name = m.group("metric_name").replace(" ","_")
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
