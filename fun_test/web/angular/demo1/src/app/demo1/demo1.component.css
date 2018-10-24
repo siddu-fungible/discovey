@@ -167,3 +167,10 @@ a.article:hover {
         display: none;
     }
 }
+
+
+.api-viewer-link {
+  display: flex;
+  justify-content: flex-end;
+  color: white;
+}
