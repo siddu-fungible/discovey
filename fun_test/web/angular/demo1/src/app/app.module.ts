@@ -71,6 +71,7 @@ import { DpuComponent } from './dpu/dpu.component';
 import { PoolComponent } from './pool/pool.component';
 import { StorageControllerComponent } from './storage-controller/storage-controller.component';
 import { TopologyComponent } from './topology/topology.component';
+import { ApiViewerComponent } from './api-viewer/api-viewer.component';
 
 
 @NgModule({
@@ -95,7 +96,8 @@ import { TopologyComponent } from './topology/topology.component';
     DpuComponent,
     PoolComponent,
     StorageControllerComponent,
-    TopologyComponent
+    TopologyComponent,
+    ApiViewerComponent
   ],
   imports: [
     BsDropdownModule,
