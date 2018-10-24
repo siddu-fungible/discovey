@@ -13,6 +13,7 @@ export interface ControllerElement {
   health: boolean;
   ip: string;
   port: number;
+  active: boolean;
 }
 
 export class AddNewControllerConfig {
@@ -75,6 +76,7 @@ export class StorageControllerComponent implements OnInit {
   healthChecking: boolean = false;
   bgPollCount: number = 0;
   loadOutput: string = null;
+  showingApiViewer: boolean = false;
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
     this.startHealthCheck();
@@ -89,6 +91,7 @@ export class StorageControllerComponent implements OnInit {
     }
     this.newControllerConfig.ip = "qa-ubuntu-02";
     this.newControllerConfig.port = 50220;
+    this.getControllers();
   }
 
   step = 0;
@@ -105,8 +108,31 @@ export class StorageControllerComponent implements OnInit {
     this.step--;
   }
 
-  submit() {
-    const pe: ControllerElement = {id: 0, health: false, ip: this.newControllerConfig.ip, port: this.newControllerConfig.port};
+  getControllers () {
+    this.dataSource.data = [];
+    this.apiService.get("/demo/get_controllers").subscribe((response)=> {
+      let controllers = response.data;
+      controllers.forEach((controller) => {
+        const pe: ControllerElement = {id: 0,
+          health: false,
+          ip: controller.ip,
+          port: controller.port,
+        active: controller.active};
+        this.dataSource.data.push(pe);
+        if (pe.active) {
+          this.activeControllerSelected(pe, false);
+        }
+        this.actionSelected = null;
+      })
+
+    }, error => {
+
+    });
+    /*
+    const pe: ControllerElement = {id: 0,
+      health: false,
+      ip: this.newControllerConfig.ip,
+      port: this.newControllerConfig.port};
     this.dataSource.data.push(pe);
     this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
@@ -114,7 +140,23 @@ export class StorageControllerComponent implements OnInit {
     setTimeout(() => {
       this.selectedRowIndex = null;
     }, 2000);
-    this.addingNewController = false;
+    this.addingNewController = false;*/
+
+
+  }
+
+  submit() {
+    let payload = {};
+    payload["ip"] = this.newControllerConfig.ip;
+    payload["port"] = this.newControllerConfig.port;
+    this.apiService.post("/demo/add_controller", payload).subscribe((response)=> {
+      this.addingNewController = false;
+      this.getControllers();
+
+    }, error => {
+
+    });
+
 
   }
 
@@ -143,7 +185,16 @@ export class StorageControllerComponent implements OnInit {
     return this.selection.selected;
   }
 
-  activeControllerSelected(activeController: ControllerElement) {
+  activeControllerSelected(activeController: ControllerElement, setControllerStatus: boolean = true) {
+    let payload = {ip: activeController.ip, port: activeController.port, active: true};
+    if (setControllerStatus) {
+      this.apiService.post('/demo/set_controller_status', payload).subscribe((response) => {
+        this.getControllers();
+      }, error => {
+
+      });
+    }
+
     //console.log(this.getSelected());
     //this.getSelected()[0].health = true;
     let c: Controller = new Controller();
@@ -169,7 +220,7 @@ export class StorageControllerComponent implements OnInit {
 
 
     this.dataSource.data.forEach((data) => {
-      let url = "http://" + data.ip + ":" + data.port + "/api_server/health";
+      let url = this.commonService.getBaseUrl() + "/api_server/health";
       this.apiService.get(url).subscribe((response) => {
         console.log(response);
         data.health = response.message === "healthy";

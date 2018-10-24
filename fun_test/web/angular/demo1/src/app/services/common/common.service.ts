@@ -26,6 +26,8 @@ export class TopoF1 {
 
 }
 
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -44,9 +46,12 @@ export class CommonService {
   getBaseUrl(): string {
     let url = null;
     if (this.activeController) {
-      url = "http://" + this.activeController.ip + ":" + this.activeController.port;
+      url = "http://" + this.activeController.ip + ":" + this.activeController.port + "/FunCC/v1";
     }
     return url;
   }
+
+
+
 
 }

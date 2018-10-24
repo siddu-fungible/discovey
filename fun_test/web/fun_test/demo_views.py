@@ -6,12 +6,14 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
-from web.fun_test.demo1_models import LastBgExecution, BgExecutionStatus
+from web.fun_test.demo1_models import LastBgExecution, BgExecutionStatus, StorageController
 from web.web_global import initialize_result, api_safe_json_response
 from django.http import HttpResponse
 from fun_global import RESULTS
 import json
 from lib.host.linux import Linux
+from django.core.exceptions import ObjectDoesNotExist
+
 
 @csrf_exempt
 def home(request):
@@ -86,4 +88,41 @@ def job_status(request):
     result["status"] = status.status
     result["output"] = status.output
 
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def add_controller(request):
+    request_json = json.loads(request.body)
+    ip = request_json["ip"]
+    port = int(request_json["port"])
+    try:
+        StorageController.objects.get(ip=ip, port=port)
+    except ObjectDoesNotExist:
+        s = StorageController(ip=ip, port=port)
+        s.save()
+
+@csrf_exempt
+@api_safe_json_response
+def set_controller_status(request):
+    request_json = json.loads(request.body)
+    ip = request_json["ip"]
+    port = int(request_json["port"])
+    active = request_json["active"]
+    try:
+        s = StorageController.objects.get(ip=ip, port=port)
+        s.active = active
+        s.save()
+    except ObjectDoesNotExist:
+        pass
+
+@csrf_exempt
+@api_safe_json_response
+def get_controllers(request):
+    result = []
+    all_objects = StorageController.objects.all()
+    for o in all_objects:
+        c = {"active": o.active, "ip": o.ip, "port": o.port}
+        result.append(c)
     return result

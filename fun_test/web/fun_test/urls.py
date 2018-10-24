@@ -142,9 +142,12 @@ upgrade_urls = [
 ]
 
 demo_urls = [
-    url(r'^demo1$', demo_views.home),
+    url(r'^demo1/.*$', demo_views.home),
     url(r'^schedule_fio_job$', demo_views.schedule_fio_job),
-    url(r'^bg_job_status$', demo_views.job_status)
+    url(r'^bg_job_status$', demo_views.job_status),
+    url(r'^add_controller$', demo_views.add_controller),
+    url(r'^set_controller_status$', demo_views.set_controller_status),
+    url(r'^get_controllers$', demo_views.get_controllers)
 ]
 
 urlpatterns = [
