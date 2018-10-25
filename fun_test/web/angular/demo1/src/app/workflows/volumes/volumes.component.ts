@@ -92,6 +92,8 @@ export class VolumesComponent implements OnInit {
   addingNewVolume: boolean = false;
   dataProtection: boolean = true;
 
+  showingDetails: boolean = false;
+
   constructor(private apiService: ApiService, private commonService: CommonService) {
     if (this.dataProtection) {
       this.addNewVolumeConfig.data_protection = {type: "EC", fault_tolerance: 0};
@@ -134,6 +136,14 @@ export class VolumesComponent implements OnInit {
     let result = "ec";
     if (scheme === "Replication") {
       result = "replication"
+    }
+    return result;
+  }
+
+  getVolumeTypeSchemeValue(scheme): string {
+    let result = "durable";
+    if (scheme === "Raw") {
+      result = "raw";
     }
     return result;
   }

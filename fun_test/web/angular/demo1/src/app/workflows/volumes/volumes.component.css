@@ -100,3 +100,6 @@ mat-expansion-panel-header {
   color: #007bff;
 }
 
+.pseudo-anchor:hover {
+  cursor: pointer;
+}

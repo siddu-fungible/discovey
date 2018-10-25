@@ -13,10 +13,10 @@
       </mat-expansion-panel-header-->
 
       <div class="mat-form-field-div">
-        <mat-form-field>
+        <mat-form-field style="max-width: 200px">
           <input matInput placeholder="Name" [(ngModel)]="addNewVolumeConfig.name">
         </mat-form-field>
-        <mat-form-field>
+        <mat-form-field style="max-width: 200px">
           <input type="number" matInput placeholder="Capacity" [(ngModel)]="addNewVolumeConfig.capacity">
         </mat-form-field>
       </div>
@@ -25,8 +25,65 @@
       <app-pools [action]="false" [radioSelection]="true"></app-pools>
 
       <br>
-      <mat-slide-toggle [(ngModel)]="dataProtection" [checked]="true">Data-protection</mat-slide-toggle>
-      <div *ngIf="dataProtection">
+      <p><b>Please select a volume type</b></p>
+      <mat-radio-group id="volume-type-radio">
+        <mat-radio-button style="padding: 10px"
+                          *ngFor="let scheme of ['Durable', 'Raw']"
+                          [value]="getVolumeTypeSchemeValue(scheme)">
+          {{ scheme }}
+        </mat-radio-button>
+      </mat-radio-group>
+      <u class="anchor-button pseudo-anchor mat-radio-label-content" (click)="showingDetails = !showingDetails" >Details</u>
+
+      <mat-card *ngIf="showingDetails">
+              <form >
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">Protection scheme</label>
+          <div class="col-sm-9">
+            <input type="text" readonly class="form-control-plaintext" value="Erasure-coding">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">Number of disk failures</label>
+          <div class="col-sm-9">
+            <input type="text" readonly class="form-control-plaintext" value="2">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">DPU redundancy</label>
+          <div class="col-sm-9">
+            <input type="text" readonly class="form-control-plaintext" value="2">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">Compression effort</label>
+          <div class="col-sm-9">
+            <input type="text" readonly class="form-control-plaintext" value="4">
+          </div>
+        </div>
+      </form>
+
+      </mat-card>
+
+
+      <br>
+        <span (click)="encryptionOn = !encryptionOn">
+          <ng-container *ngIf="encryptionOn">
+            <button class="btn"><i class="fa fa-lock"></i>
+              </button>
+            Encryption ON
+          </ng-container>
+          <ng-container *ngIf="!encryptionOn">
+            <button class="btn"><i class="fa fa-unlock"></i>
+              </button>
+            Encryption OFF
+          </ng-container>
+        </span>
+
+
+      <!--mat-slide-toggle [(ngModel)]="dataProtection" [checked]="true">Data-protection</mat-slide-toggle-->
+      <!--div *ngIf="dataProtection">
         <mat-card>
           <p><b>Fault-tolerance options</b></p>
           <li>
@@ -40,6 +97,7 @@
               <input matInput placeholder="# of DPU failures">
             </mat-form-field>
           </li>
+
 
           <li>Protection Scheme
             <mat-radio-group id="md-radio-2-input" [(ngModel)]="addNewVolumeConfig.data_protection.type">
@@ -76,7 +134,7 @@
             Encryption OFF
           </ng-container>
         </span>
-      </div>
+      </div-->
 
       <mat-action-row>
         <button mat-button color="primary" (click)="submit()">Submit</button>
@@ -84,25 +142,16 @@
     </mat-expansion-panel>
   </mat-accordion>
 </div>
-<mat-card>
 
+
+<br>
+<mat-card *ngIf="dataSource.data.length > 0">
   <mat-card-header>
     Available volumes
-    <!--button mat-button [matMenuTriggerFor]="actions">Actions</button>
-
-<mat-menu #actions="matMenu">
-	<button mat-menu-item [matMenuTriggerFor]="add_new_volume">Vertebrates</button>
-</mat-menu>
-
-<mat-menu #add_new_volume="matMenu">
-	<button mat-menu-item>Birds</button>
-	<button mat-menu-item>Mammals</button>
-</mat-menu-->
-
   </mat-card-header>
 
 
-  <table mat-table multiTemplateDataRows [dataSource]="dataSource" class="mat-elevation-z81">
+  <table mat-table multiTemplateDataRows [dataSource]="dataSource">
 
     <ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef>
