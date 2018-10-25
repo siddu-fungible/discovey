@@ -86,6 +86,8 @@ export class VolumesComponent implements OnInit {
   dataSource = new MatTableDataSource<VolumeElement>(ELEMENT_DATA);
   actionControl = new FormControl();
   selection = new SelectionModel<VolumeElement>(true, []);
+  volumeTypeSelection = new SelectionModel<string>(false, []);
+
   actionSelected: string = null;
   selectedRowIndex: number = null;
   encryptionOn: boolean = true;
@@ -240,5 +242,10 @@ export class VolumesComponent implements OnInit {
     pe2.forEach((pe) => {
       console.log(pe.uuid);
     })
+  }
+
+  whatSelection() {
+    console.log(this.volumeTypeSelection);
+    console.log("hi");
   }
 }

@@ -29,13 +29,13 @@
       <mat-radio-group id="volume-type-radio">
         <mat-radio-button style="padding: 10px"
                           *ngFor="let scheme of ['Durable', 'Raw']"
-                          [value]="getVolumeTypeSchemeValue(scheme)">
+                          [value]="getVolumeTypeSchemeValue(scheme)" (click)="volumeTypeSelection.select(getVolumeTypeSchemeValue(scheme)); whatSelection()">
           {{ scheme }}
         </mat-radio-button>
       </mat-radio-group>
-      <u class="anchor-button pseudo-anchor mat-radio-label-content" (click)="showingDetails = !showingDetails" >Details</u>
+      <u *ngIf="volumeTypeSelection.selected.length > 0 && volumeTypeSelection.selected[0] === 'durable'" class="anchor-button pseudo-anchor mat-radio-label-content" (click)="showingDetails = !showingDetails" >Details</u>
 
-      <mat-card *ngIf="showingDetails">
+      <mat-card *ngIf="showingDetails && volumeTypeSelection.selected.length > 0 && volumeTypeSelection.selected[0] === 'durable'">
               <form >
         <div class="form-group row">
           <label class="col-sm-3 col-form-label">Protection scheme</label>
