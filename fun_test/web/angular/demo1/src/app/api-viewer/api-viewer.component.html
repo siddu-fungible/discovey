@@ -1,24 +1,30 @@
 <button mat-button (click)="refresh()">
-    <mat-icon>refresh</mat-icon>
-    Refresh
+  <mat-icon>refresh</mat-icon>
+  Refresh
 </button>
 <table class="table">
   <tr *ngFor="let row of apiLogs">
     <td>
-      <div class="row">
-        <div class="col-xl-4 col-xxl-4 col-lg-4 col-md-4">
-          <span class="method-button-text-color badge {{ getButtonColorClass(row.method) }}" data-toggle="collapse" [attr.data-target]="'#' + row.id">{{ row.method }}</span>
-          &nbsp;
-          <span *ngIf="row.http_status_code === 200 || row.http_status_code === 201" class="badge badge-success">{{ row.http_status_code }}</span>
+      <div class="container">
+        <div class="row">
+          <div class="col-xl-3 col-xxl-3 col-lg-3 col-md-3">
+            <span class="method-button-text-color badge {{ getButtonColorClass(row.method) }}" data-toggle="collapse"
+                  [attr.data-target]="'#' + row.id">{{ row.method }}</span>
+            &nbsp;
+            <span *ngIf="row.http_status_code === 200 || row.http_status_code === 201"
+                  class="badge badge-success">{{ row.http_status_code }}</span>
 
-          <span *ngIf="row.http_status_code !== 200 && row.http_status_code !== 201" class="badge badge-danger">{{ row.http_status_code }}</span>
+            <span *ngIf="row.http_status_code !== 200 && row.http_status_code !== 201"
+                  class="badge badge-danger">{{ row.http_status_code }}</span>
+          </div>
+
+          <div class="url-font">
+            <span class="badge badge-pill">url:</span> {{ row.url }}
+          </div>
 
         </div>
-
-        <p  class="col-xl-8 col-xxl-8 col-lg-8 col-md-8 url-font">
-          <span class="badge badge-pill">url:</span> {{ row.url }}
-        </p>
       </div>
+
       <div id="{{ row.id }}" class="collapse">
         <div class="response-div" *ngIf="row.payload">
           <div class="row">
