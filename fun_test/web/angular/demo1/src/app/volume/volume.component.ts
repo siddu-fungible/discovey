@@ -52,18 +52,20 @@ export class VolumeComponent {
 
 }
 
-export interface VolumeElement {
+export class VolumeElement {
   name: string;
+  uuid: string;
+  f1: string;
   type: string;
   capacity: number;
   description: string;
   compression_effort: number;
-  encrypted: boolean;
+  encrypt: boolean;
   namespace_id: number;
   num_data_volumes: number;
   num_parity_volumes: number;
   num_replica_volumes: number;
-  pool_name: string;
+  pool: string;
   read_iops: number;
   write_iops: number;
   dpus: string[];
@@ -72,16 +74,18 @@ export interface VolumeElement {
 
 const ELEMENT_DATA: VolumeElement[] = [
   {
+    f1: "1",
+    uuid: "1",
     name: "Volume-1",
     type: 'EC',
     capacity: 1024,
     compression_effort: 1,
-    encrypted: true,
+    encrypt: true,
     namespace_id: 233,
     num_data_volumes: 4,
     num_parity_volumes: 2,
     num_replica_volumes: 3,
-    pool_name: "Pool-1",
+    pool: "Pool-1",
     description: `Some description`,
     read_iops: 14,
     write_iops: 54,

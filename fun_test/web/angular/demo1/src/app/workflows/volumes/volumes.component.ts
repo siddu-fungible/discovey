@@ -8,9 +8,10 @@ import {MatTableDataSource} from "@angular/material";
 import {AlertComponent} from "ngx-bootstrap";
 import {ApiService} from "../../services/api/api.service";
 import {CommonService} from "../../services/common/common.service";
+import {VolumeComponent} from "../../volume/volume.component";
+import {VolumeElement} from "../../volume/volume.component";
 
-
-export interface VolumeElement {
+export interface VolumeElement2 {
   id: number;
   name: string;
   capacity: number;
@@ -60,7 +61,7 @@ export class AddNewVolumeDataProtectionConfig implements AddNewVolumeDataProtect
     fault_tolerance: number = null;
 }
 
-const ELEMENT_DATA: VolumeElement[] = [
+const ELEMENT_DATA: VolumeElement2[] = [
   {id: 0, name: 'Volume-1', capacity: 1024, pool: "Pool-1"},
   {id: 1, name: 'Volume-2', capacity: 2048, pool: "Pool-2"}
 ];
@@ -97,9 +98,9 @@ export class VolumesComponent implements OnInit {
 
 
   displayedColumns: string[] = ['select', 'name', 'capacity', 'pool'];
-  dataSource = new MatTableDataSource<VolumeElement>(ELEMENT_DATA);
+  dataSource = new MatTableDataSource<VolumeElement2>(ELEMENT_DATA);
   actionControl = new FormControl();
-  selection = new SelectionModel<VolumeElement>(true, []);
+  selection = new SelectionModel<VolumeElement2>(true, []);
   actionSelected: string = null;
   selectedRowIndex: number = null;
   encryptionOn: boolean = true;
@@ -118,6 +119,34 @@ export class VolumesComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.getVolumes();
+  }
+
+  getVolumes() {
+    let url = this.commonService.getBaseUrl();
+    if (!url) {
+      return;
+    }
+    url = url + "/storage/volumes";
+    this.apiService.get(url).subscribe((response) => {
+      let volumesData = response.data;
+      for (let key in volumesData) {
+        let value = volumesData[key];
+        let newVolumeElement: VolumeElement = new VolumeElement();
+        newVolumeElement.f1 = value.f1;
+        newVolumeElement.uuid = value.uuid;
+        newVolumeElement.encrypt = value.encrypt;
+        newVolumeElement.capacity = value.capacity;
+        newVolumeElement.type = value.type;
+        newVolumeElement.pool = value.pool;
+        newVolumeElement.name = value.name;
+
+      }
+
+
+    }, error => {
+
+    });
   }
 
   getSchemeValue(scheme): string {
@@ -201,7 +230,7 @@ export class VolumesComponent implements OnInit {
     this.addNewVolumeConfig.pool_name = this._getSelectedPool();
     this.addNewVolumeConfig.encryption = this.encryptionOn;
     console.log(JSON.stringify(this.addNewVolumeConfig));
-    const pe: VolumeElement = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
+    const pe: VolumeElement2 = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
     this.dataSource.data.push(pe);
     this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
