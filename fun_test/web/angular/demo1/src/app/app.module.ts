@@ -73,6 +73,7 @@ import { StorageControllerComponent } from './storage-controller/storage-control
 import { TopologyComponent } from './topology/topology.component';
 import { ApiViewerComponent } from './api-viewer/api-viewer.component';
 import { StorageAgentLogViewerComponent } from './storage-agent-log-viewer/storage-agent-log-viewer.component';
+import {FunSpinnerComponent} from "./fun-spinner/fun-spinner.component";
 
 
 @NgModule({
@@ -85,6 +86,7 @@ import { StorageAgentLogViewerComponent } from './storage-agent-log-viewer/stora
     FunTableFilterPipe,
     FunChartComponent,
     FunMetricChartComponent,
+    FunSpinnerComponent,
     SafeHtmlPipe,
     Demo1Component,
     DpusComponent,

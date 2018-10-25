@@ -1,5 +1,5 @@
 <div style="padding-bottom: 20px">
-  <button mat-button (click)="addingNewVolume = !addingNewVolume"><u class="anchor-button">Add a new volume</u></button>
+  <button mat-button (click)="addingNewVolume = !addingNewVolume"><u class="anchor-button">+ Add a new volume</u></button>
 </div>
 <div>
   <mat-accordion>
@@ -145,6 +145,7 @@
 
 
 <br>
+<fun-spinner [status]="status"></fun-spinner>
 <mat-card *ngIf="dataSource.data.length > 0">
   <mat-card-header>
     Available volumes
@@ -153,7 +154,7 @@
 
   <table mat-table multiTemplateDataRows [dataSource]="dataSource">
 
-    <ng-container matColumnDef="select">
+    <!--ng-container matColumnDef="select">
       <th mat-header-cell *matHeaderCellDef>
         <mat-checkbox (change)="$event ? masterToggle() : null"
                       [checked]="selection.hasValue() && isAllSelected()"
@@ -166,12 +167,12 @@
                       [checked]="selection.isSelected(row)">
         </mat-checkbox>
       </td>
-    </ng-container>
+    </ng-container-->
 
 
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef style="width: 400px"> Name</th>
-      <td mat-cell *matCellDef="let element"><a href="/demo/demo1/volume/{{ element.name }}">{{ element.name }}</a></td>
+      <td mat-cell *matCellDef="let element"><a href="/demo/demo1/volume/{{ element.uuid }}">{{ element.name }}</a></td>
     </ng-container>
 
     <ng-container matColumnDef="type">
@@ -203,6 +204,11 @@
     <ng-container matColumnDef="encrypt">
       <th mat-header-cell *matHeaderCellDef> Encrypted</th>
       <td mat-cell *matCellDef="let element"> {{ element.encrypt }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="action">
+      <th mat-header-cell *matHeaderCellDef> Action </th>
+      <td mat-cell *matCellDef="let element"> <u (click)="attach(element.uuid)" class="anchor-button pseudo-anchor">Attach</u> </td>
     </ng-container>
 
     <ng-container matColumnDef="expandedDetail">

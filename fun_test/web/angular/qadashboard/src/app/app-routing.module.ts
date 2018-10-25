@@ -14,11 +14,11 @@ const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'performance', component: PerformanceComponent },
   { path: 'performance/atomic/:id', component: FunMetricChartComponent},
-  { path: 'upgrade/regression', component: RegressionComponent },
-  { path: 'upgrade/regression/jenkins_jobs', component: RegressionComponent, data: {tags: '["jenkins-hourly", "jenkins-nightly"]'}},
-  { path: 'upgrade/regression/jobs_by_tag/:tags', component: RegressionComponent},
-  { path: 'upgrade/regression/submit_job_page', component: SubmitJobComponent },
-  { path: 'upgrade/regression/:filterString', component: RegressionComponent },
+  { path: 'regression', component: RegressionComponent },
+  { path: 'regression/jenkins_jobs', component: RegressionComponent, data: {tags: '["jenkins-hourly", "jenkins-nightly"]'}},
+  { path: 'regression/jobs_by_tag/:tags', component: RegressionComponent},
+  { path: 'regression/submit_job_page', component: SubmitJobComponent },
+  { path: 'regression/:filterString', component: RegressionComponent },
   { path: 'upgrade/test', component: TestComponent },
   { path: 'upgrade/demo1', component: Demo1Component }
 ];
