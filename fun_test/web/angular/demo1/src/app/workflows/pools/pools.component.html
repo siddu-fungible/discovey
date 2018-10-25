@@ -66,13 +66,13 @@
     <table mat-table multiTemplateDataRows [dataSource]="dataSource" class="mat-elevation-z81">
 
       <ng-container *ngIf="!radioSelection" matColumnDef="select">
-        <th mat-header-cell *matHeaderCellDef>
+        <th [ngClass]="'customWidthClass'" mat-header-cell *matHeaderCellDef>
           <mat-checkbox (change)="$event ? masterToggle() : null"
                         [checked]="selection.hasValue() && isAllSelected()"
                         [indeterminate]="selection.hasValue() && !isAllSelected()">
           </mat-checkbox>
         </th>
-        <td mat-cell *matCellDef="let row">
+        <td [ngClass]="'customWidthClass'" mat-cell *matCellDef="let row">
           <mat-checkbox (click)="$event.stopPropagation()"
                         (change)="$event ? selection.toggle(row) : null"
                         [checked]="selection.isSelected(row)">
@@ -81,10 +81,10 @@
       </ng-container>
 
       <ng-container *ngIf="radioSelection" matColumnDef="select">
-        <th mat-header-cell *matHeaderCellDef>
+        <th [ngClass]="'customWidthClass'" mat-header-cell *matHeaderCellDef>
         </th>
 
-        <td mat-cell *matCellDef="let row">
+        <td [ngClass]="'customWidthClass'" mat-cell *matCellDef="let row">
           <mat-radio-button [value]="row" (click)="selection.select(row);" [checked]="selection.isSelected(row)">
           </mat-radio-button>
         </td>
@@ -98,7 +98,10 @@
 
       <ng-container matColumnDef="f1s">
         <th mat-header-cell *matHeaderCellDef> DPUs</th>
-        <td mat-cell *matCellDef="let element"> {{ element.f1s }} </td>
+        <td mat-cell *matCellDef="let element">
+          <button type="button" class="btn btn-primary btn-sm">
+            {{ element.f1s.length }}
+          </button> </td>
       </ng-container>
 
       <ng-container matColumnDef="expandedDetail">
@@ -106,39 +109,14 @@
           <div class="example-element-detail"
                [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
             <div>
-              <table mat-table [dataSource]="volumes" class="mat-elevation-z8">
-
-                <!--- Note that these columns can be defined in any order.
-											The actual rendered columns are set as a property on the row definition" -->
-
-                <!-- Position Column -->
-                <ng-container matColumnDef="position">
-                  <th mat-header-cell *matHeaderCellDef> No.</th>
-                  <td mat-cell *matCellDef="let element"> {{ element.position }} </td>
-                </ng-container>
-
-                <!-- Name Column -->
-                <ng-container matColumnDef="name">
-                  <th mat-header-cell *matHeaderCellDef> Name</th>
-                  <td mat-cell *matCellDef="let element"> {{ element.name }} </td>
-                </ng-container>
-
-                <!-- Weight Column -->
-                <ng-container matColumnDef="weight">
-                  <th mat-header-cell *matHeaderCellDef> Weight</th>
-                  <td mat-cell *matCellDef="let element"> {{ element.weight }} </td>
-                </ng-container>
-
-                <!-- Symbol Column -->
-                <ng-container matColumnDef="symbol">
-                  <th mat-header-cell *matHeaderCellDef> Symbol</th>
-                  <td mat-cell *matCellDef="let element"> {{ element.symbol }} </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="displayedVolumesColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedVolumesColumns;"></tr>
+              <table>
+                <tr>
+                  <th>DPUs</th>
+                </tr>
+                <tr *ngFor="let dpu of element.f1s">
+                  <td>{{ dpu }}</td>
+                </tr>
               </table>
-
 
             </div>
           </div>
@@ -155,11 +133,14 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
             class="example-element-row"
             [class.example-expanded-row]="expandedElement === row"
-            (click)="selection.toggle(row); expandedElement = row;">
+            (click)="selection.toggle(row); toggleExpandedElement(row);">
         </tr>
       </ng-container>
       <ng-container *ngIf="radioSelection">
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.select(row);">
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="example-element-row"
+            [class.example-expanded-row]="expandedElement === row"
+            (click)="selection.select(row); toggleExpandedElement(row);">
         </tr>
       </ng-container>
 

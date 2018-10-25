@@ -170,4 +170,12 @@ export class PoolsComponent implements OnInit {
     return this.selection.selected;
   }
 
+  toggleExpandedElement(row) {
+    if (this.expandedElement) {
+      this.expandedElement = null;
+    } else {
+      this.expandedElement = row;
+    }
+  }
+
 }

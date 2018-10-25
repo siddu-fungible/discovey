@@ -1,5 +1,5 @@
 table {
-  width: 100%;
+  width: 50%;
 }
 
 .example-container123 {
@@ -61,13 +61,6 @@ tr.example-element-row:not(.example-expanded-row):active {
   opacity: 0.5;
 }
 
-
-mat-cell:nth-child(1),
-mat-header-cell:nth-child(1) {
-    flex: 0 0 30%;
-}
-
-mat-cell:nth-child(5),
-mat-header-cell:nth-child(5) {
-    flex: 0 0 10%;
+.customWidthClass{
+   flex: 0 0 175px;
 }
