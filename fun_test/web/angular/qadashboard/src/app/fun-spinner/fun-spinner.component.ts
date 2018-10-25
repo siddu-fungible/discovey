@@ -13,11 +13,11 @@ export class FunSpinnerComponent implements OnInit, OnChanges {
   constructor() { }
 
   ngOnInit() {
-    console.log(this.status);
+    // console.log(this.status);
   }
 
   ngOnChanges() {
-    console.log(this.status);
+    // console.log(this.status);
   }
 
 }

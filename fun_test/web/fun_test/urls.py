@@ -27,10 +27,10 @@ from django.views.generic import RedirectView
 
 
 regression_urls = [
-    url(r'^$', regression_views.index),
-    url(r'^completed_jobs$', regression_views.completed_jobs),
-    url(r'^pending_jobs$', regression_views.pending_jobs),
-    url(r'^jenkins_jobs', regression_views.jenkins_jobs),
+    url(r'^$', views.angular_home),
+    url(r'^completed_jobs$', views.angular_home),
+    url(r'^pending_jobs$', views.angular_home),
+    url(r'^jenkins_jobs', views.angular_home),
     url(r'^jobs_by_tag/(.*)$', regression_views.jobs_by_tag),
     url(r'^suite_executions/(\d+)/(\d+)/(.*)$', regression_views.suite_executions),
     url(r'^suite_executions1/(\d+)/(\d+)/(.*)$', regression_views.suite_executions1),
@@ -43,7 +43,7 @@ regression_urls = [
     url(r'^suite_re_run/(\d+)$', regression_views.suite_re_run),
     url(r'^test_case_re_run$', regression_views.test_case_re_run),
     url(r'^log_path$', regression_views.log_path),
-    url(r'^submit_job_page', regression_views.submit_job_page),
+    url(r'^submit_job_page', views.angular_home),
     url(r'^submit_job$', regression_views.submit_job),
     url(r'^submit_job1$', regression_views.submit_job1),
     url(r'^suites$', regression_views.suites),
@@ -152,7 +152,7 @@ demo_urls = [
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^performance/', metrics_views.summary_page),
+    url(r'^performance/', views.angular_home),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
     # url(r'^tools/', include('tools.urls')),
