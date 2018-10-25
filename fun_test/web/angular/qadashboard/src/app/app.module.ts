@@ -29,6 +29,7 @@ import { ScrollToDirective } from './scroll-to.directive';
 import { RegressionComponent } from './regression/regression.component';
 import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
 import { SubmitJobComponent } from './regression/submit-job/submit-job.component';
+import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
 @NgModule({
   declarations: [
@@ -61,6 +62,7 @@ import { SubmitJobComponent } from './regression/submit-job/submit-job.component
     FormsModule,
     Angular2FontawesomeModule,  // Add this line
     AngularCollapseModule,
+    NgMultiSelectDropDownModule,
   ],
 
   providers: [ApiService, LoggerService],
