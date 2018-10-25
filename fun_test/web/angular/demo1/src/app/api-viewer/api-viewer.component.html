@@ -20,7 +20,16 @@
         </p>
       </div>
       <div id="{{ row.id }}" class="collapse">
-        <div class="container response-div" *ngIf="row.response">
+        <div class="response-div" *ngIf="row.payload">
+          <div class="row">
+            Payload:
+            <br>
+            <pre>{{ row.payload | json }} </pre>
+          </div>
+
+        </div>
+        <br>
+        <div class="response-div" *ngIf="row.response">
           <div class="row">
             Status: {{ row.response.status }}
           </div>
@@ -31,7 +40,9 @@
             Error message: {{ row.response.error_message }}
           </div>
           <div class="row" *ngIf="row.response.data">
-            Data: <pre>{{ row.response.data | json }}</pre>
+            Data:
+            <br>
+            <pre>{{ row.response.data | json }}</pre>
           </div>
         </div>
       </div>

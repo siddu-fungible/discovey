@@ -72,6 +72,7 @@ import { PoolComponent } from './pool/pool.component';
 import { StorageControllerComponent } from './storage-controller/storage-controller.component';
 import { TopologyComponent } from './topology/topology.component';
 import { ApiViewerComponent } from './api-viewer/api-viewer.component';
+import { StorageAgentLogViewerComponent } from './storage-agent-log-viewer/storage-agent-log-viewer.component';
 
 
 @NgModule({
@@ -97,7 +98,8 @@ import { ApiViewerComponent } from './api-viewer/api-viewer.component';
     PoolComponent,
     StorageControllerComponent,
     TopologyComponent,
-    ApiViewerComponent
+    ApiViewerComponent,
+    StorageAgentLogViewerComponent
   ],
   imports: [
     BsDropdownModule,

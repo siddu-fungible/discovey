@@ -55,6 +55,8 @@ export class TopologyComponent implements OnInit {
   loadOutput: string = null;
   maxBgPoll: number = 20;
   loadStopped: boolean = true;
+  showingAgentLog: boolean = false;
+  currentAgengLogF1: string = null;
 
   constructor(private commonService: CommonService, private apiService: ApiService) {
 
@@ -181,6 +183,10 @@ export class TopologyComponent implements OnInit {
     }, error => {
 
     });
+  }
+
+  showAgentLog(f1Name, f1MgmtIp, f1MgmtSshPport) {
+    this.showingAgentLog = !this.showingAgentLog;
   }
 
 

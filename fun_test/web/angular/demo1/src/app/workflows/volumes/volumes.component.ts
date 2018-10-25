@@ -184,7 +184,7 @@ export class VolumesComponent implements OnInit {
 
       let url = this.commonService.getBaseUrl();
       url = url + "/storage/pools/" + poolIds[0] + "/volumes";
-      let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2}, "name": "repvol1", "compress": 1};
+      let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_LOCAL_THIN"}, "name": "repvol1"};
       this.apiService.post(url, payload).subscribe((response)=> {
 
       }, error => {
