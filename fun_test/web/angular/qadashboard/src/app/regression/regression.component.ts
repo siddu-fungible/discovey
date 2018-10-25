@@ -76,6 +76,7 @@ export class RegressionComponent implements OnInit {
     this.status = "Fetching Data";
     this.pager = this.pagerService.getPager(this.suiteExecutionsCount, page, this.recordsPerPage);
     if (page === 0 || (page > this.pager.endPage)) {
+      this.status = null;
       return;
     }
     let payload = {};
