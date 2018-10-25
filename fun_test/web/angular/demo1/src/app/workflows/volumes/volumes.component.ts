@@ -11,27 +11,13 @@ import {CommonService} from "../../services/common/common.service";
 import {VolumeComponent} from "../../volume/volume.component";
 import {VolumeElement} from "../../volume/volume.component";
 
-export interface VolumeElement2 {
-  id: number;
-  name: string;
-  capacity: number;
-  pool: string;
-}
 
 
 export interface DataProtectionInterface {
   type: string;
   fault_tolerance: number;
 }
-/*
-export interface IHash {
-    [details: boolean] : string;
-    t: boolean;
-}
 
-export interface Abc {
-  
-}*/
 
 export interface  AddNewVolumeConfigInterface {
   name: string;
@@ -61,9 +47,7 @@ export class AddNewVolumeDataProtectionConfig implements AddNewVolumeDataProtect
     fault_tolerance: number = null;
 }
 
-const ELEMENT_DATA: VolumeElement2[] = [
-  {id: 0, name: 'Volume-1', capacity: 1024, pool: "Pool-1"},
-  {id: 1, name: 'Volume-2', capacity: 2048, pool: "Pool-2"}
+const ELEMENT_DATA: VolumeElement[] = [
 ];
 
 
@@ -97,20 +81,16 @@ export class VolumesComponent implements OnInit {
   @ViewChild(PoolsComponent) addNewVolumePools: PoolsComponent;
 
 
-  displayedColumns: string[] = ['select', 'name', 'capacity', 'pool'];
-  dataSource = new MatTableDataSource<VolumeElement2>(ELEMENT_DATA);
+  displayedColumns: string[] = ['select', 'name', 'type', 'capacity', 'pool', 'uuid', 'f1', 'encrypt'];
+  dataSource = new MatTableDataSource<VolumeElement>(ELEMENT_DATA);
   actionControl = new FormControl();
-  selection = new SelectionModel<VolumeElement2>(true, []);
+  selection = new SelectionModel<VolumeElement>(true, []);
   actionSelected: string = null;
   selectedRowIndex: number = null;
   encryptionOn: boolean = true;
   addNewVolumeConfig: AddNewVolumeConfig = new AddNewVolumeConfig();
   addingNewVolume: boolean = false;
-
   dataProtection: boolean = true;
-  actionGroups: ActionGroup[] = [
-    {name: "Storage", actions: [{value: 1, viewValue: "Add a new volume"}]}
-  ];
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
     if (this.dataProtection) {
@@ -140,7 +120,8 @@ export class VolumesComponent implements OnInit {
         newVolumeElement.type = value.type;
         newVolumeElement.pool = value.pool;
         newVolumeElement.name = value.name;
-
+        this.dataSource.data.push(newVolumeElement);
+        this.dataSource.data = [...this.dataSource.data];
       }
 
 
@@ -230,9 +211,9 @@ export class VolumesComponent implements OnInit {
     this.addNewVolumeConfig.pool_name = this._getSelectedPool();
     this.addNewVolumeConfig.encryption = this.encryptionOn;
     console.log(JSON.stringify(this.addNewVolumeConfig));
-    const pe: VolumeElement2 = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
+    /*const pe: VolumeElement2 = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
     this.dataSource.data.push(pe);
-    this.dataSource.data = [...this.dataSource.data];
+    this.dataSource.data = [...this.dataSource.data];*/
     this.actionSelected = null;
     this.selectedRowIndex = this.dataSource.data.length - 1;
     setTimeout(() => {

@@ -1,15 +1,3 @@
-<!--mat-form-field>
-  <mat-select placeholder="actions" [formControl]="actionControl" [(value)]="actionSelected">
-    <mat-option></mat-option>
-    <mat-optgroup *ngFor="let group of actionGroups" [label]="group.name">
-      <mat-option *ngFor="let action of group.actions" [value]="action.value">
-        {{ action.viewValue }}
-      </mat-option>
-    </mat-optgroup>
-  </mat-select>
-</mat-form-field-->
-
-
 <div style="padding-bottom: 20px">
   <button mat-button (click)="addingNewVolume = !addingNewVolume"><u class="anchor-button">Add a new volume</u></button>
 </div>
@@ -137,15 +125,35 @@
       <td mat-cell *matCellDef="let element"><a href="/demo/demo1/volume/{{ element.name }}">{{ element.name }}</a></td>
     </ng-container>
 
+    <ng-container matColumnDef="type">
+      <th mat-header-cell *matHeaderCellDef> Type</th>
+      <td mat-cell *matCellDef="let element"> {{ element.type }} </td>
+    </ng-container>
+
+
     <ng-container matColumnDef="capacity">
       <th mat-header-cell *matHeaderCellDef> Capacity</th>
       <td mat-cell *matCellDef="let element"> {{ element.capacity }} </td>
     </ng-container>
 
-    <!-- Symbol Column -->
     <ng-container matColumnDef="pool">
       <th mat-header-cell *matHeaderCellDef> Pool</th>
       <td mat-cell *matCellDef="let element"> {{ element.pool }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="uuid">
+      <th mat-header-cell *matHeaderCellDef> UUID</th>
+      <td mat-cell *matCellDef="let element"> {{ element.uuid }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="f1">
+      <th mat-header-cell *matHeaderCellDef> DPU</th>
+      <td mat-cell *matCellDef="let element"> {{ element.f1 }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="encrypt">
+      <th mat-header-cell *matHeaderCellDef> Encrypted</th>
+      <td mat-cell *matCellDef="let element"> {{ element.encrypt }} </td>
     </ng-container>
 
     <ng-container matColumnDef="expandedDetail">
