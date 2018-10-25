@@ -23,7 +23,10 @@ export class ApiLog {
 })
 export class ApiViewerComponent implements OnInit {
   apiLogs: ApiLog[];
-  buttonColors = {"GET": "button-color-get", "POST": "button-color-post", "DELETE": "button-color-delete", "PUT": "button-color-put"};
+  buttonColors = {"GET": "button-color-get",
+    "POST": "button-color-post",
+    "DELETE": "button-color-delete",
+    "PUT": "button-color-put"};
   constructor(private apiService: ApiService) { }
 
   ngOnInit() {
