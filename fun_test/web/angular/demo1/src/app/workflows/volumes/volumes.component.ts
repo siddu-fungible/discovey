@@ -96,6 +96,7 @@ export class VolumesComponent implements OnInit {
   dataProtection: boolean = true;
   showingDetails: boolean = false;
   pools: PoolElement[] = [];
+  status: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
     if (this.dataProtection) {
@@ -107,14 +108,27 @@ export class VolumesComponent implements OnInit {
     this.getVolumes();
   }
 
+  refresh() {
+    if (this.dataSource.data.length === 0) {
+      this.getVolumes();
+    }
+    setTimeout(()=> this.refresh(), 1000);
+  }
+
   getVolumes() {
     let url = this.commonService.getBaseUrl();
     if (!url) {
+      setTimeout(() => {
+        this.refresh();
+      }, 50);
       return;
     }
-    this.dataSource.data = [];
+
     url = url + "/storage/volumes";
+    this.status = "Fetching volumes";
     this.apiService.get(url).subscribe((response) => {
+      this.status = null;
+      this.dataSource.data = [];
       let volumesData = response.data;
       for (let key in volumesData) {
         let value = volumesData[key];
@@ -129,10 +143,11 @@ export class VolumesComponent implements OnInit {
         this.dataSource.data.push(newVolumeElement);
         this.dataSource.data = [...this.dataSource.data];
       }
+      this.refresh();
 
 
     }, error => {
-
+      this.refresh();
     });
   }
 

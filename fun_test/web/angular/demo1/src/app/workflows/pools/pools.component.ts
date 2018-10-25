@@ -114,6 +114,9 @@ export class PoolsComponent implements OnInit {
     this.pools = [];
     let url = this.commonService.getBaseUrl();
     if (!url) {
+      setTimeout(() => {
+        this.getPools();
+      }, 50);
       return;
     }
     url = url + "/storage/pools";
