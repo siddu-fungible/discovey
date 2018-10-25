@@ -3,34 +3,22 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {ActionGroup, DpuElement} from "../../dpus/dpus.component";
 import {FormControl} from "@angular/forms";
 import {SelectionModel} from "@angular/cdk/collections";
-import {PoolElement, PoolsComponent} from "../pools/pools.component";
+import {PoolElement} from "../../pool/pool.component";
 import {MatTableDataSource} from "@angular/material";
 import {AlertComponent} from "ngx-bootstrap";
 import {ApiService} from "../../services/api/api.service";
 import {CommonService} from "../../services/common/common.service";
+import {VolumeComponent} from "../../volume/volume.component";
+import {VolumeElement} from "../../volume/volume.component";
+import {PoolsComponent} from "../pools/pools.component";
 
-
-export interface VolumeElement {
-  id: number;
-  name: string;
-  capacity: number;
-  pool: string;
-}
 
 
 export interface DataProtectionInterface {
   type: string;
   fault_tolerance: number;
 }
-/*
-export interface IHash {
-    [details: boolean] : string;
-    t: boolean;
-}
 
-export interface Abc {
-  
-}*/
 
 export interface  AddNewVolumeConfigInterface {
   name: string;
@@ -61,8 +49,6 @@ export class AddNewVolumeDataProtectionConfig implements AddNewVolumeDataProtect
 }
 
 const ELEMENT_DATA: VolumeElement[] = [
-  {id: 0, name: 'Volume-1', capacity: 1024, pool: "Pool-1"},
-  {id: 1, name: 'Volume-2', capacity: 2048, pool: "Pool-2"}
 ];
 
 
@@ -96,20 +82,20 @@ export class VolumesComponent implements OnInit {
   @ViewChild(PoolsComponent) addNewVolumePools: PoolsComponent;
 
 
-  displayedColumns: string[] = ['select', 'name', 'capacity', 'pool'];
+  displayedColumns: string[] = ['select', 'name', 'type', 'capacity', 'pool', 'uuid', 'f1', 'encrypt'];
   dataSource = new MatTableDataSource<VolumeElement>(ELEMENT_DATA);
   actionControl = new FormControl();
   selection = new SelectionModel<VolumeElement>(true, []);
+  volumeTypeSelection = new SelectionModel<string>(false, []);
+
   actionSelected: string = null;
   selectedRowIndex: number = null;
   encryptionOn: boolean = true;
   addNewVolumeConfig: AddNewVolumeConfig = new AddNewVolumeConfig();
   addingNewVolume: boolean = false;
-
   dataProtection: boolean = true;
-  actionGroups: ActionGroup[] = [
-    {name: "Storage", actions: [{value: 1, viewValue: "Add a new volume"}]}
-  ];
+  showingDetails: boolean = false;
+  pools: PoolElement[] = [];
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
     if (this.dataProtection) {
@@ -118,12 +104,49 @@ export class VolumesComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.getVolumes();
+  }
+
+  getVolumes() {
+    let url = this.commonService.getBaseUrl();
+    if (!url) {
+      return;
+    }
+    url = url + "/storage/volumes";
+    this.apiService.get(url).subscribe((response) => {
+      let volumesData = response.data;
+      for (let key in volumesData) {
+        let value = volumesData[key];
+        let newVolumeElement: VolumeElement = new VolumeElement();
+        newVolumeElement.f1 = value.f1;
+        newVolumeElement.uuid = value.uuid;
+        newVolumeElement.encrypt = value.encrypt;
+        newVolumeElement.capacity = value.capacity;
+        newVolumeElement.type = value.type;
+        newVolumeElement.pool = value.pool;
+        newVolumeElement.name = value.name;
+        this.dataSource.data.push(newVolumeElement);
+        this.dataSource.data = [...this.dataSource.data];
+      }
+
+
+    }, error => {
+
+    });
   }
 
   getSchemeValue(scheme): string {
     let result = "ec";
     if (scheme === "Replication") {
       result = "replication"
+    }
+    return result;
+  }
+
+  getVolumeTypeSchemeValue(scheme): string {
+    let result = "durable";
+    if (scheme === "Raw") {
+      result = "raw";
     }
     return result;
   }
@@ -169,10 +192,12 @@ export class VolumesComponent implements OnInit {
     let poolName = null;
     pe.forEach((pe) => {
       //console.log(pe.name);
-      poolName = pe.name;
+      poolName = pe.uuid;
     });
     return poolName;
   }
+
+
 
   submit() {
 
@@ -184,7 +209,10 @@ export class VolumesComponent implements OnInit {
 
       let url = this.commonService.getBaseUrl();
       url = url + "/storage/pools/" + poolIds[0] + "/volumes";
-      let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2}, "name": "repvol1", "compress": 1};
+      //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_LOCAL_THIN"}, "name": "repvol1"};
+            //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2, "encrypt": true}, "name": "repvol2", "compress": 4};
+            let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2}, "name": "repvol2", "compress": 4};
+
       this.apiService.post(url, payload).subscribe((response)=> {
 
       }, error => {
@@ -201,9 +229,9 @@ export class VolumesComponent implements OnInit {
     this.addNewVolumeConfig.pool_name = this._getSelectedPool();
     this.addNewVolumeConfig.encryption = this.encryptionOn;
     console.log(JSON.stringify(this.addNewVolumeConfig));
-    const pe: VolumeElement = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
+    /*const pe: VolumeElement2 = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
     this.dataSource.data.push(pe);
-    this.dataSource.data = [...this.dataSource.data];
+    this.dataSource.data = [...this.dataSource.data];*/
     this.actionSelected = null;
     this.selectedRowIndex = this.dataSource.data.length - 1;
     setTimeout(() => {
@@ -212,7 +240,12 @@ export class VolumesComponent implements OnInit {
 
     let pe2 = this.addNewVolumePools.getSelected();
     pe2.forEach((pe) => {
-      console.log(pe.name);
+      console.log(pe.uuid);
     })
+  }
+
+  whatSelection() {
+    console.log(this.volumeTypeSelection);
+    console.log("hi");
   }
 }

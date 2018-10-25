@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 
+export class PoolElement {
+  uuid: string;
+  f1s: string[];
+}
+
 @Component({
   selector: 'app-pool',
   templateUrl: './pool.component.html',

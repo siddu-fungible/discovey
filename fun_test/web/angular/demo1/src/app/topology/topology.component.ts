@@ -5,7 +5,7 @@ import {MatTableDataSource} from "@angular/material";
 import {ControllerElement} from "../storage-controller/storage-controller.component";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {SelectionModel} from "@angular/cdk/collections";
-import {PoolElement} from "../workflows/pools/pools.component";
+import {PoolElement} from "../pool/pool.component";
 
 class Load {
   attribute: string;
@@ -55,6 +55,8 @@ export class TopologyComponent implements OnInit {
   loadOutput: string = null;
   maxBgPoll: number = 20;
   loadStopped: boolean = true;
+  showingAgentLog: boolean = false;
+  currentAgengLogF1: string = null;
 
   constructor(private commonService: CommonService, private apiService: ApiService) {
 
@@ -181,6 +183,10 @@ export class TopologyComponent implements OnInit {
     }, error => {
 
     });
+  }
+
+  showAgentLog(f1Name, f1MgmtIp, f1MgmtSshPport) {
+    this.showingAgentLog = !this.showingAgentLog;
   }
 
 

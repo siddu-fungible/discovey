@@ -8,6 +8,7 @@ import { Component, OnInit } from '@angular/core';
 export class Demo1Component implements OnInit {
 
   sideBarClass: boolean = false;
+  showingApiViewer: boolean = false;
   constructor() { }
 
   ngOnInit() {
