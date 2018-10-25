@@ -3,7 +3,7 @@
 }
 
 .button-color-post {
-  background-color: green;
+  background-color: orange;
 }
 
 .button-color-get {
@@ -11,7 +11,7 @@
 }
 
 .button-color-put {
-  background-color: orange;
+  background-color: lightsteelblue;
 }
 
 .method-button-text-color {
@@ -19,7 +19,7 @@
 }
 .url-font {
   font-family: Roboto,"Helvetica Neue",sans-serif;
-  font-size: 14px;
+  font-size: 12px;
 }
 /*  font-weight: 100;
 */

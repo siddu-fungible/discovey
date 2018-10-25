@@ -69,6 +69,7 @@ export class VolumeElement {
   read_iops: number;
   write_iops: number;
   dpus: string[];
+  attached: boolean = false;
 
 }
 
@@ -89,7 +90,8 @@ const ELEMENT_DATA: VolumeElement[] = [
     description: `Some description`,
     read_iops: 14,
     write_iops: 54,
-    dpus: ["DPU-1", "DPU-2"]
+    dpus: ["DPU-1", "DPU-2"],
+    attached: false
   }
 
 ];
