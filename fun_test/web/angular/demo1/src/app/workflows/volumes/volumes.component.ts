@@ -3,13 +3,14 @@ import {animate, state, style, transition, trigger} from "@angular/animations";
 import {ActionGroup, DpuElement} from "../../dpus/dpus.component";
 import {FormControl} from "@angular/forms";
 import {SelectionModel} from "@angular/cdk/collections";
-import {PoolElement, PoolsComponent} from "../pools/pools.component";
+import {PoolElement} from "../../pool/pool.component";
 import {MatTableDataSource} from "@angular/material";
 import {AlertComponent} from "ngx-bootstrap";
 import {ApiService} from "../../services/api/api.service";
 import {CommonService} from "../../services/common/common.service";
 import {VolumeComponent} from "../../volume/volume.component";
 import {VolumeElement} from "../../volume/volume.component";
+import {PoolsComponent} from "../pools/pools.component";
 
 
 
@@ -91,8 +92,8 @@ export class VolumesComponent implements OnInit {
   addNewVolumeConfig: AddNewVolumeConfig = new AddNewVolumeConfig();
   addingNewVolume: boolean = false;
   dataProtection: boolean = true;
-
   showingDetails: boolean = false;
+  pools: PoolElement[] = [];
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
     if (this.dataProtection) {
@@ -189,10 +190,12 @@ export class VolumesComponent implements OnInit {
     let poolName = null;
     pe.forEach((pe) => {
       //console.log(pe.name);
-      poolName = pe.name;
+      poolName = pe.uuid;
     });
     return poolName;
   }
+
+
 
   submit() {
 
@@ -204,7 +207,10 @@ export class VolumesComponent implements OnInit {
 
       let url = this.commonService.getBaseUrl();
       url = url + "/storage/pools/" + poolIds[0] + "/volumes";
-      let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_LOCAL_THIN"}, "name": "repvol1"};
+      //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_LOCAL_THIN"}, "name": "repvol1"};
+            //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2, "encrypt": true}, "name": "repvol2", "compress": 4};
+            let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2}, "name": "repvol2", "compress": 4};
+
       this.apiService.post(url, payload).subscribe((response)=> {
 
       }, error => {
@@ -232,7 +238,7 @@ export class VolumesComponent implements OnInit {
 
     let pe2 = this.addNewVolumePools.getSelected();
     pe2.forEach((pe) => {
-      console.log(pe.name);
+      console.log(pe.uuid);
     })
   }
 }

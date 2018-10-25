@@ -5,7 +5,7 @@ import {MatTableDataSource} from "@angular/material";
 import {ControllerElement} from "../storage-controller/storage-controller.component";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {SelectionModel} from "@angular/cdk/collections";
-import {PoolElement} from "../workflows/pools/pools.component";
+import {PoolElement} from "../pool/pool.component";
 
 class Load {
   attribute: string;
