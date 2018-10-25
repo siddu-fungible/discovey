@@ -112,6 +112,7 @@ export class VolumesComponent implements OnInit {
     if (!url) {
       return;
     }
+    this.dataSource.data = [];
     url = url + "/storage/volumes";
     this.apiService.get(url).subscribe((response) => {
       let volumesData = response.data;
@@ -209,12 +210,14 @@ export class VolumesComponent implements OnInit {
 
       let url = this.commonService.getBaseUrl();
       url = url + "/storage/pools/" + poolIds[0] + "/volumes";
-      //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_LOCAL_THIN"}, "name": "repvol1"};
-            //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2, "encrypt": true}, "name": "repvol2", "compress": 4};
-            let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2}, "name": "repvol2", "compress": 4};
+      let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_LOCAL_THIN"}, "name": "repvol1"};
+      //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2, "encrypt": true}, "name": "repvol2", "compress": 4};
+      //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2}, "name": "repvol2", "compress": 4};
 
       this.apiService.post(url, payload).subscribe((response)=> {
-
+        alert("Volume added");
+        this.getVolumes();
+        this.addingNewVolume = false;
       }, error => {
 
       });
@@ -225,13 +228,13 @@ export class VolumesComponent implements OnInit {
     });
 
 
-
+/*
     this.addNewVolumeConfig.pool_name = this._getSelectedPool();
     this.addNewVolumeConfig.encryption = this.encryptionOn;
     console.log(JSON.stringify(this.addNewVolumeConfig));
     /*const pe: VolumeElement2 = {id: 1, name: 'Volume-3', capacity: 2048, pool: "Pool-3"};
     this.dataSource.data.push(pe);
-    this.dataSource.data = [...this.dataSource.data];*/
+    this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
     this.selectedRowIndex = this.dataSource.data.length - 1;
     setTimeout(() => {
@@ -241,7 +244,9 @@ export class VolumesComponent implements OnInit {
     let pe2 = this.addNewVolumePools.getSelected();
     pe2.forEach((pe) => {
       console.log(pe.uuid);
-    })
+    })*/
+
+
   }
 
   whatSelection() {
