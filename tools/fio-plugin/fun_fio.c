@@ -23,7 +23,7 @@ struct fun_options{
         uint16_t io_queues;
         char *nvme_mode;
         char *nqn;
-        uint16_t nr_namespaces;
+        uint16_t nsid;
 };
 
 #define FUN_CREATE_AND_IO 1
@@ -79,12 +79,12 @@ static struct fio_option options[] = {
                 .group  = FIO_OPT_G_FUN,
         },
         {
-                .name   = "nr_namespaces",
-                .lname  = "number of name spaces",
+                .name   = "nsid",
+                .lname  = "namespace id",
                 .type   = FIO_OPT_INT,
-                .off1   = offsetof(struct fun_options, nr_namespaces),
+                .off1   = offsetof(struct fun_options, nsid),
 		.def	= "1",
-                .help   = "number of name spaces",
+                .help   = "namespace id",
                 .category = FIO_OPT_C_ENGINE,
                 .group  = FIO_OPT_G_FUN,
         },
@@ -153,17 +153,17 @@ static int fio_fun_getevents(struct thread_data *td, unsigned int min_events,
 
 uint8_t qid = 1;
 uint16_t io_queues;
+uint16_t nsid;
 
 static int fio_fun_queue(struct thread_data *td, struct io_u *io_u)
 {
 	int rc = 0;
 
-	/* nsid = io_u->file->fileno + 1   as filenumber starts from 0*/
-
         switch (io_u->ddir) {
         case DDIR_READ:
         case DDIR_WRITE:
-		rc = fun_read_write( io_u, io_u->file->fileno + 1, io_u->buf, io_u->offset, io_u->xfer_buflen, qid);
+		//rc = fun_read_write( io_u, io_u->file->fileno + 1, io_u->buf, io_u->offset, io_u->xfer_buflen, qid);
+		rc = fun_read_write( io_u, nsid, io_u->buf, io_u->offset, io_u->xfer_buflen, qid);
                 break;
         default:
                 assert(false);
@@ -186,13 +186,22 @@ static int fio_fun_init(struct thread_data *td)
 
 	if (!foptions->source_ip | !foptions->dest_ip){
 		printf("\n Required source and destination IP: --source_ip  and --dest_ip\n");
+		return 1;		
 	} 
+	if (td->o.nr_files > 1){
+		printf("\n Only one namespace supported as of now\n");
+		return 1;		
+	}
+
 	if (!foptions->io_queues) io_queues = 1;
 	else io_queues = foptions->io_queues;
 
-	printf("\nClient IP=%s, F1 IP=%s, number of NS=%d, IO Queues = %d, Mode = %s and NQN = %s \n\n",\
+	if (!foptions->nsid) nsid = 1;
+	else nsid = foptions->nsid;
+
+	printf("\nClient IP=%s, F1 IP=%s, number of NSs=%d, NSID=%d, IO Queues = %d, Mode = %s and NQN = %s \n\n",\
 		 foptions->source_ip, foptions->dest_ip, td->o.nr_files,\
-		 io_queues, foptions->nvme_mode, foptions->nqn); 
+		 nsid, io_queues, foptions->nvme_mode, foptions->nqn); 
 
         rc = fun_client_start(inet_addr(foptions->source_ip), inet_addr(foptions->dest_ip));
 
