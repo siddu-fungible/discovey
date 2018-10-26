@@ -110,11 +110,8 @@
         </ul>
       </li>
       <li>
-        <a href="#">Acceleration</a>
-      </li>
-      <li>
         <ng-container *ngIf="controller">
-        <span style="font-size: 10px;">Controller: {{ controller.ip }}</span>
+        <span style="font-size: 10px;">Controller: {{ controller.ip }}</span>&nbsp;
           <span *ngIf="controller.health" class="badge badge-success">Online</span>
           <span *ngIf="!controller.health" class="badge badge-danger">Offline</span>
         </ng-container>

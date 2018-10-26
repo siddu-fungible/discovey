@@ -1,5 +1,11 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {animate, state, style, transition, trigger} from '@angular/animations';
+import {ActivatedRoute} from "@angular/router";
+import {LoggerService} from "../services/logger/logger.service";
+import {ApiService} from "../services/api/api.service";
+import {CommonService} from "../services/common/common.service";
+import {MatTableDataSource} from "@angular/material";
+
 
 /**
  * @title Table with expandable rows
@@ -16,40 +22,87 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
     ]),
   ],
 })
-export class VolumeComponent {
-  dataSource = ELEMENT_DATA;
+export class VolumeComponent implements OnInit {
+  status: string = null;
+  uuid: string = null;
+  //dataSource = ELEMENT_DATA;
+  dataSource = new MatTableDataSource<VolumeElement>();
+
   volumeTypes = {ec: "EC", lsv: "LSV"};
   columnsToDisplay = ['name',
     'type',
     'capacity',
     'compression_effort',
-    'encrypted',
+    'encrypt',
     'namespace_id',
-    'pool_name',
+    'pool',
     'num_data_volumes',
     'num_parity_volumes',
     'num_replica_volumes',
     'read_iops',
     'write_iops',
-    'dpus'];
+    'dpus',
+  'actions'];
 
   columnToHeader = {
     'name': "Name",
     "type": "Type",
     "capacity": "Capacity",
     "compression_effort": "Compression effort",
-    "encrypted": "Encrypted",
+    "encrypt": "Encrypted",
     "namespace_id": "Namespace ID",
-    "pool_name": "Pool",
+    "pool": "Pool",
     "read_iops": "Read IOPS",
-    "write_iops": "Write IOPS"
+    "write_iops": "Write IOPS",
+    'actions': "Actions"
   };
   expandedElement: VolumeElement;
 
-  constructor() {
-    this.columnsToDisplay = ["name", "type", "capacity", "encrypted", "pool_name", "read_iops"];
+  constructor(private apiService: ApiService, private commonService: CommonService, private route: ActivatedRoute) {
+    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "read_iops", "actions"];
   }
 
+  ngOnInit() {
+    this.route.params.subscribe(params => {
+      if (params['name']) {
+        this.uuid = params['name'];
+      }
+    });
+    this.getVolumeInfo();
+  }
+
+  getVolumeInfo() {
+    if (this.uuid) {
+      let url = this.commonService.getBaseUrl();
+      if (!url) {
+        setTimeout(() => {
+        this.getVolumeInfo();
+        }, 1000);
+        return;
+      }
+      url = url + "/storage/volumes/" + this.uuid;
+      this.status = "Fetching volume info";
+      this.apiService.get(url).subscribe((response) => {
+        let value = response.data;
+        let newVolumeElement: VolumeElement = new VolumeElement();
+        newVolumeElement.f1 = value.f1;
+        newVolumeElement.uuid = value.uuid;
+        newVolumeElement.encrypt = value.encrypt;
+        newVolumeElement.capacity = value.capacity;
+        newVolumeElement.type = value.type;
+        newVolumeElement.pool = value.pool;
+        newVolumeElement.name = value.name;
+        this.dataSource.data.push(newVolumeElement);
+        this.dataSource.data = [...this.dataSource.data];
+        this.status = null;
+
+      }, error => {
+        this.status = null;
+      })
+
+
+    }
+  }
 }
 
 export class VolumeElement {

@@ -76,14 +76,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.status = null;
   }
 
-  //set the chart and model name based in metric id
-  fetchNames() {
-    this.route.params.subscribe(params => {
-      if (params['id']) {
-        this.id = params['id'];
-      }
-    });
-    if (this.id) {
+  fetchMetricsById(): void {
       let payload = {};
       payload["metric_id"] = this.id;
       this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
@@ -94,7 +87,19 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       }, error => {
         this.loggerService.error("fetching by metric id failed");
       });
-    }
+  }
+
+  //set the chart and model name based in metric id
+  fetchNames() {
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.id = params['id'];
+        this.fetchMetricsById();
+      }
+      else if (this.id) {
+        this.fetchMetricsById();
+      }
+    });
   }
 
   //formats the string displayed on xaxis of the chart
