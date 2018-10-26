@@ -27,3 +27,7 @@ a {
   transform: rotate(45deg);
   -webkit-transform: rotate(45deg);
 }
+
+.a-text a {
+  color: #337ab7;
+}

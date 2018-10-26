@@ -52,7 +52,7 @@ def jobs_by_tag(request, tag):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     tags = json.dumps([tag])
     # tags = json.dumps(["none"])
-    return render(request, 'qa_dashboard/regression.html', locals())
+    return render(request, 'qa_dashboard/upgrade.html', locals())
 
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
@@ -119,6 +119,55 @@ def submit_job(request):
                                email_on_fail_only=email_on_fail_only)
     return HttpResponse(job_id)
 
+@csrf_exempt
+@api_safe_json_response
+def submit_job1(request):
+    job_id = 0
+    if request.method == 'POST':
+        request_json = json.loads(request.body)
+        suite_path = request_json["suite_path"]
+        build_url = request_json["build_url"]
+        tags = request_json["tags"]
+        email_list = None
+        email_on_fail_only = None
+        if "email_list" in request_json:
+            email_list = request_json["email_list"]
+        if "email_on_fail_only" in request_json:
+            email_on_fail_only = request_json["email_on_fail_only"]
+
+        if "schedule_at" in request_json and request_json["schedule_at"]:
+            schedule_at_value = request_json["schedule_at"]
+            schedule_at_value = str(timezone.localtime(dateutil.parser.parse(schedule_at_value)))
+            schedule_at_repeat = False
+            if "schedule_at_repeat" in request_json:
+                schedule_at_repeat = request_json["schedule_at_repeat"]
+            job_id = queue_job(suite_path=suite_path,
+                               build_url=build_url,
+                               schedule_at=schedule_at_value,
+                               repeat=schedule_at_repeat,
+                               email_list=email_list,
+                               email_on_fail_only=email_on_fail_only)
+
+        elif "schedule_in_minutes" in request_json and request_json["schedule_in_minutes"]:
+            schedule_in_minutes_value = request_json["schedule_in_minutes"]
+            schedule_in_minutes_repeat = None
+            if "schedule_in_minutes_repeat" in request_json:
+                schedule_in_minutes_repeat = request_json["schedule_in_minutes_repeat"]
+            job_id = queue_job(suite_path=suite_path,
+                               build_url=build_url,
+                               schedule_in_minutes=schedule_in_minutes_value,
+                               repeat_in_minutes=schedule_in_minutes_repeat,
+                               tags=tags,
+                               email_list=email_list,
+                               email_on_fail_only=email_on_fail_only)
+        else:
+            job_id = queue_job(suite_path=suite_path,
+                               build_url=build_url,
+                               tags=tags,
+                               email_list=email_list,
+                               email_on_fail_only=email_on_fail_only)
+    return job_id
+
 def static_serve_log_directory(request, suite_execution_id):
     path = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(suite_execution_id) + "/*"
     files = glob.glob(path)
@@ -134,6 +183,11 @@ def kill_job(request, suite_execution_id):
 
 def tags(request):
     return HttpResponse(serializers.serialize('json', Tag.objects.all()))
+
+@csrf_exempt
+@api_safe_json_response
+def tags1(request):
+    return serializers.serialize('json', Tag.objects.all())
 
 def engineers(request):
     result = initialize_result(failed=True)
@@ -156,6 +210,22 @@ def suites(request):
         except Exception as ex:
             pass
     return HttpResponse(json.dumps(suites_info))
+
+@csrf_exempt
+@api_safe_json_response
+def suites1(request):
+    suites_info = collections.OrderedDict()
+    suite_files = glob.glob(SUITES_DIR + "/*.json")
+    for suite_file in suite_files:
+        try:
+            with open(suite_file, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents)
+                suites_info[os.path.basename(suite_file)] = result
+
+        except Exception as ex:
+            pass
+    return json.dumps(suites_info)
 
 
 @csrf_exempt
@@ -198,6 +268,53 @@ def last_jenkins_hourly_execution_status(request):
     if suite_executions:
         result = suite_executions[0]["suite_result"]
     return HttpResponse(result)
+
+@csrf_exempt
+@api_safe_json_response
+def suite_executions_count1(request, filter_string):
+    tags = None
+    if request.method == 'POST':
+        if request.body:
+            request_json = json.loads(request.body)
+            if "tags" in request_json:
+                tags = request_json["tags"]
+                tags = json.loads(tags)
+    count = _get_suite_executions(get_count=True, filter_string=filter_string, tags=tags)
+    return count
+
+@csrf_exempt
+@api_safe_json_response
+def suite_executions1(request, records_per_page=10, page=None, filter_string="ALL"):
+    tags = None
+    if request.method == 'POST':
+        if request.body:
+            request_json = json.loads(request.body)
+            if "tags" in request_json:
+                tags = request_json["tags"]
+                tags = json.loads(tags)
+    all_objects_dict = _get_suite_executions(execution_id=None,
+                                             page=page,
+                                             records_per_page=records_per_page,
+                                             filter_string=filter_string,
+                                             tags=tags)
+    return json.dumps(all_objects_dict)
+
+@csrf_exempt
+@api_safe_json_response
+def suite_execution1(request, execution_id):
+    all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
+    return json.dumps(all_objects_dict[0]) #TODO: Validate
+
+@csrf_exempt
+@api_safe_json_response
+def last_jenkins_hourly_execution_status1(request):
+    result = RESULTS["UNKNOWN"]
+    suite_executions = _get_suite_executions(tags=["jenkins-hourly"],
+                                             filter_string=SUITE_EXECUTION_FILTERS["COMPLETED"],
+                                             page=1, records_per_page=10)
+    if suite_executions:
+        result = suite_executions[0]["suite_result"]
+    return result
 
 def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)

@@ -9,8 +9,6 @@
 <div class="content" ng-controller="metricsController">
     <label>Select module</label>
     <select ng-options="module.name as module.verbose_name for module in modules" ng-model="selectedModule" ng-change="moduleChange()"></select>
-
-
     <div ng-if="selectedModule">
         <a target="_blank" href="/metrics/view_all_storage_charts">View all storage charts</a>
         <br>
@@ -21,7 +19,6 @@
             <table class="table table-bordered table-nonfluid">
                 <tr>
                     <th>
-
                     </th>
                     <th>
                         Charts <a href="#" ng-click="addChartClick(modelName)">+ Add chart</a>
@@ -34,12 +31,12 @@
                     <td class="fun-center">
                         {{ chartInfo }}&nbsp<a href="#" ng-click="editChartClick(chartInfo, modelName)">Edit</a>
                         <a target="_blank" href="/metrics/tables/{{ modelName }}/{{ chartInfo }}">Tables</a>
+                        <a href="" ng-click="showScores(chartInfo, modelName)">Scores</a>
                     </td>
                 </tr>
             </table>
         </div>
     </div>
-
 </div>
 {% endverbatim %}
 {% endblock %}

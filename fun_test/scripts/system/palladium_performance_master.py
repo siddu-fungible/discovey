@@ -4,8 +4,9 @@ from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance,
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
-from web.fun_test.metrics_models import WuStackSpeedTestPerformance
-from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated
+from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, SoakClassicMallocPerformance
+from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance
+from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance, TeraMarkPkeRsaPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 from web.fun_test.analytics_models_helper import prepare_status_db
 from web.fun_test.models import TimeKeeper
@@ -13,7 +14,9 @@ import re
 from datetime import datetime
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
+BOOT_TIMING_TEST_TAG = "boot_timing_test"
 VOLTEST_TAG = "voltest_performance"
+TERAMARK_PKE = "pke_teramark"
 
 def get_rounded_time():
     dt = get_current_time()
@@ -42,7 +45,10 @@ class MyScript(FunTestScript):
         2. Step 2""")
 
     def setup(self):
-        pass
+        self.lsf_status_server = LsfStatusServer()
+        tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE]
+        self.lsf_status_server.workaround(tags=tags)
+        fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
     def cleanup(self):
         invalidate_goodness_cache()
@@ -54,14 +60,13 @@ class PalladiumPerformanceTc(FunTestCase):
     dt = get_rounded_time()
 
     def setup(self):
-        pass
+        self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def cleanup(self):
         pass
 
     def validate_job(self):
-        lsf_status_server = LsfStatusServer()
-        job_info = lsf_status_server.get_last_job(tag=self.tag)
+        job_info = self.lsf_status_server.get_last_job(tag=self.tag)
         fun_test.test_assert(job_info, "Ensure one last job exists")
         lines = job_info["output_text"].split("\n")
         job_id = job_info["job_id"]
@@ -81,6 +86,7 @@ class PalladiumPerformanceTc(FunTestCase):
         for key, value in metrics.iteritems():
             d[key] = value
         return d
+
 
 class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
     def describe(self):
@@ -585,7 +591,7 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="WuSendSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-class FunMagentPerformanceTestTC(PalladiumPerformanceTc):
+class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
     def describe(self):
         self.set_test_details(id=9,
@@ -624,7 +630,7 @@ class FunMagentPerformanceTestTC(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="FunMagentPerformanceTest")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-class WuStackSpeedTestPerformanceTC(PalladiumPerformanceTc):
+class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
 
     def describe(self):
@@ -660,6 +666,295 @@ class WuStackSpeedTestPerformanceTC(PalladiumPerformanceTc):
         set_last_build_status_for_charts(result=self.result, model_name="WuStackSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+
+    def describe(self):
+        self.set_test_details(id=11,
+                              summary="Soak fun malloc Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_fun_malloc_fun_free)\]:\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "soak_malloc_fun_malloc"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=SoakFunMallocPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="SoakFunMallocPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
+    tag = ALLOC_SPEED_TEST_TAG
+
+    def describe(self):
+        self.set_test_details(id=12,
+                              summary="Soak classic malloc Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]:\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "soak_malloc_classic"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=SoakClassicMallocPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="SoakClassicMallocPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class BootTimingPerformanceTc(PalladiumPerformanceTc):
+    tag = BOOT_TIMING_TEST_TAG
+
+    def describe(self):
+        self.set_test_details(id=13,
+                              summary="Boot Timing Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        reset_cut_done = False
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
+            fun_test.test_assert(log, "fetched uart log")
+            log = log.split("\n")
+            for line in log:
+                if "Reset CUT done!" in line:
+                    reset_cut_done = True
+                if reset_cut_done:
+                    m = re.search(
+                            r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware',
+                            line)
+                    if m:
+                        output_firmware_boot_time = int(m.group("time"))
+                        output_firmware_boot_cycles = int(m.group("cycle"))
+                        fun_test.log("boot type: Firmware, boot time: {}, boot cycles: {}".format(output_firmware_boot_time, output_firmware_boot_cycles))
+                        metrics["output_firmware_boot_time"] = output_firmware_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection',
+                        line)
+                    if m:
+                        output_flash_type_boot_time = int(m.group("time"))
+                        output_flash_type_boot_cycles = int(m.group("cycle"))
+                        fun_test.log("boot type: Flash type detection, boot time: {}, boot cycles: {}".format(output_flash_type_boot_time,
+                                                                                                  output_flash_type_boot_cycles))
+                        metrics["output_flash_type_boot_time"] = output_flash_type_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading',
+                        line)
+                    if m:
+                        output_eeprom_boot_time = int(m.group("time"))
+                        output_eeprom_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: EEPROM Loading, boot time: {}, boot cycles: {}".format(output_eeprom_boot_time,
+                                                                                         output_eeprom_boot_cycles))
+                        metrics["output_eeprom_boot_time"] = output_eeprom_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading',
+                        line)
+                    if m:
+                        output_sbus_boot_time = int(m.group("time"))
+                        output_sbus_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: SBUS Loading, boot time: {}, boot cycles: {}".format(output_sbus_boot_time,
+                                                                                         output_sbus_boot_cycles))
+                        metrics["output_sbus_boot_time"] = output_sbus_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT',
+                        line)
+                    if m:
+                        output_host_boot_time = int(m.group("time"))
+                        output_host_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: Host BOOT, boot time: {}, boot cycles: {}".format(output_host_boot_time,
+                                                                                             output_host_boot_cycles))
+                        metrics["output_host_boot_time"] = output_host_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop',
+                        line)
+                    if m:
+                        output_main_loop_boot_time = int(m.group("time"))
+                        output_main_loop_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: Main Loop, boot time: {}, boot cycles: {}".format(output_main_loop_boot_time,
+                                                                                          output_main_loop_boot_cycles))
+                        metrics["output_main_loop_boot_time"] = output_main_loop_boot_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success',
+                        line)
+                    if m:
+                        output_boot_success_boot_time = int(m.group("time"))
+                        output_boot_success_boot_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "boot type: Boot success, boot time: {}, boot cycles: {}".format(output_boot_success_boot_time,
+                                                                                          output_boot_success_boot_cycles))
+                        metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
+
+            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+            MetricHelper(model=BootTimePerformance).add_entry(**d)
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="BootTimePerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=14,
+                              summary="TeraMark PKE RSA Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+(?P<metric_name>RSA\s+CRT\s+2048\s+decryptions):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_rsa_crt_dec_no_pad_soak"
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkPkeRsaPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkPkeRsaPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=15,
+                              summary="TeraMark PKE ECDH P256 Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+(?P<metric_name>ECDH\s+P256):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_ecdh_soak_256"
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkPkeEcdh256Performance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkPkeEcdh256Performance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=16,
+                              summary="TeraMark PKE ECDH 25519 Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+(?P<metric_name>ECDH\s+25519):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_ecdh_soak_25519"
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkPkeEcdh25519Performance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkPkeEcdh25519Performance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -688,8 +983,14 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestPerformanceTc())
     myscript.add_test_case(WuDispatchTestPerformanceTc())
     myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTC())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTC())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

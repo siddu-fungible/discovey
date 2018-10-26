@@ -9,11 +9,10 @@ import { AppRoutingModule }     from './app-routing.module';
 import { PerformanceComponent } from './performance/performance.component';
 import { HttpClientModule } from '@angular/common/http';
 import { FunTableComponent } from './fun-table/fun-table.component';
-import {ApiService} from "./services/api/api.service";
-import {LoggerService} from "./services/logger/logger.service";
+import { ApiService } from "./services/api/api.service";
+import { LoggerService } from "./services/logger/logger.service";
 import { TestComponent } from './test/test.component';
 import { FunTableFilterPipe } from './pipes/fun-table-filter.pipe';
-import { ChartComponent } from './chart/chart.component';
 import { FunChartComponent } from './fun-chart/fun-chart.component';
 import { ChartModule } from 'angular-highcharts';
 import { FunMetricChartComponent } from './fun-metric-chart/fun-metric-chart.component';
@@ -22,6 +21,15 @@ import { FormsModule } from '@angular/forms';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { Angular2FontawesomeModule } from 'angular2-fontawesome/angular2-fontawesome'
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { AngularCollapseModule } from 'angular-collapse';
+import { Demo1Component } from './demo1/demo1.component';
+import { CreateChartComponent } from './create-chart/create-chart.component';
+import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
+import { ScrollToDirective } from './scroll-to.directive';
+import { RegressionComponent } from './regression/regression.component';
+import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
+import { SubmitJobComponent } from './regression/submit-job/submit-job.component';
+import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
 @NgModule({
   declarations: [
@@ -31,10 +39,16 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
     FunTableComponent,
     TestComponent,
     FunTableFilterPipe,
-    ChartComponent,
     FunChartComponent,
     FunMetricChartComponent,
-    SafeHtmlPipe
+    SafeHtmlPipe,
+    CreateChartComponent,
+    Demo1Component,
+    PreviewFunMetricComponent,
+    ScrollToDirective,
+    RegressionComponent,
+    FunSpinnerComponent,
+    SubmitJobComponent
   ],
   imports: [
     BsDropdownModule,
@@ -46,7 +60,9 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
     ChartModule,
     AngularFontAwesomeModule,
     FormsModule,
-    Angular2FontawesomeModule  // Add this line
+    Angular2FontawesomeModule,  // Add this line
+    AngularCollapseModule,
+    NgMultiSelectDropDownModule,
   ],
 
   providers: [ApiService, LoggerService],

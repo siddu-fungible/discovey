@@ -27,20 +27,30 @@ export class ApiService {
 
   }
 
-  private static handleError(error: HttpErrorResponse): Observable<ApiResponse> {
+  private static handleError(error: any): Observable<ApiResponse> {
     let result: ApiResponse = new ApiResponse();
     result.status = false;
     result.data = null;
-    result.error_message = `Http Error: Status: ${error.status} Text: ${error.statusText} URL: ${error.url}`; // TODO: Improve this
+    if (error.hasOwnProperty('statusText')) {
+      result.error_message = `Http Error: Status: ${error.status} Text: ${error.statusText} URL: ${error.url}`; // TODO: Improve this
+    } else {
+      result.error_message = error.error_message;
+    }
     throw of(result);
-
+  }
+  private static handleApiError(apiResponse: ApiResponse): Observable<ApiResponse> {
+    throw of(apiResponse);
   }
 
   post(url: string, payload: any): Observable<ApiResponse> {
     return this.httpClient.post<ApiResponse>(url, payload)
       .pipe(
         map(response => {
-          return response;
+          if (!response.status) {
+            throw response;
+          } else {
+            return response;
+          }
         }),
         catchError(ApiService.handleError)
       );
@@ -50,7 +60,11 @@ export class ApiService {
     return this.httpClient.get<ApiResponse>(url)
       .pipe(
         map(response => {
-          return response;
+          if (!response.status) {
+            throw response;
+          } else {
+            return response;
+          }
         }),
         catchError(ApiService.handleError)
       );

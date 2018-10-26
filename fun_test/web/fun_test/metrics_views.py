@@ -153,6 +153,10 @@ def atomic(request, chart_name, model_name):
     return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
 
 @csrf_exempt
+def score_table(request, chart_name, model_name):
+    return render(request, 'qa_dashboard/score_table_page.html', locals())
+
+@csrf_exempt
 def table_view(request, model_name):
     return render(request, 'qa_dashboard/table_view_page.html', locals())
 
@@ -162,7 +166,7 @@ def update_child_weight(request):
     request_json = json.loads(request.body)
     child_id = request_json["child_id"]
     metric_id = request_json["metric_id"]
-    lineage = request_json["lineage"]
+    # lineage = request_json["lineage"]
     weight = request_json["weight"]
     '''
     Enable it later
@@ -173,13 +177,13 @@ def update_child_weight(request):
     '''
     c = MetricChart.objects.get(metric_id=metric_id)
     children_weights = c.get_children_weights()
-    if child_id in children_weights:
+    if str(child_id) in children_weights.keys():
         c.add_child_weight(child_id=child_id, weight=weight)
     invalidate_goodness_cache()
 
 @csrf_exempt
 def summary_page(request):
-    return render(request, 'qa_dashboard/metrics_summary.html', locals())
+    return render(request, 'qa_dashboard/upgrade.html', locals())
 
 @csrf_exempt
 def initialize(request):
@@ -360,6 +364,17 @@ def status(request):
 
 @csrf_exempt
 @api_safe_json_response
+def metric_by_id(request):
+    request_json = json.loads(request.body)
+    metric_id = request_json["metric_id"]
+    chart = MetricChart.objects.get(metric_id=metric_id)
+    result = {}
+    result["metric_model_name"] = chart.metric_model_name
+    result["chart_name"] = chart.chart_name
+    return result
+
+@csrf_exempt
+@api_safe_json_response
 def data(request):
     request_json = json.loads(request.body)
     metric_model_name = request_json["metric_model_name"]
@@ -415,12 +430,27 @@ def traverse_dag(metric_id):
     result["last_num_build_failed"] = chart.last_num_build_failed
     result["positive"] = chart.positive
 
-    chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
-    # only get the first two entries
-    # print "Chart status entry for {}".format(chart.chart_name)
-    # for chart_status_entry in chart_status_entries:
-    #    print chart_status_entry.date_time
-    result["last_two_scores"] = [x.score for x in chart_status_entries]
+
+
+    # chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
+    # # only get the first two entries
+    # # print "Chart status entry for {}".format(chart.chart_name)
+    # # for chart_status_entry in chart_status_entries:
+    # #    print chart_status_entry.date_time
+    # result["last_two_scores"] = [x.score for x in chart_status_entries]
+    # last_entry = chart_status_entries.last()
+    # if last_entry:
+    #     result["copied_score"] = chart_status_entries.last().copied_score
+    #     result["copied_score_disposition"] = chart_status_entries.last().copied_score_disposition
+    # else:
+    #     result["copied_score"] = False
+
+    result["copied_score"] = chart.copied_score
+    result["copied_score_disposition"] = chart.copied_score_disposition
+    if chart.last_good_score >= 0:
+        result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
+    else:
+        result["last_two_scores"] = [0,0]
     if not chart.leaf:
         children_info = result["children_info"]
         for child_id in result["children"]:

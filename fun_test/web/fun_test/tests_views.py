@@ -1,6 +1,8 @@
 import logging
 from django.http import HttpResponse
 import json
+import time
+import os
 from django.apps import apps
 from fun_settings import MAIN_WEB_APP
 from fun_global import get_datetime_from_epoch_time, get_epoch_time_from_datetime
@@ -11,6 +13,15 @@ from datetime import datetime
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+def tick(job_id, h):
+    try:
+        print('Tick!' + str(job_id) + " " + str(h))  # The time is: %s %s' % datetime.now(), h)
+    except Exception as ex:
+        print str(ex)
+    # scheduler.remove_job('my_job_id')
 
 @csrf_exempt
 def date_test(request):
@@ -32,3 +43,12 @@ def date_test(request):
         return HttpResponse("OK")
     else:
         return render(request, 'qa_dashboard/datetime_conversion.html', locals())
+
+
+@csrf_exempt
+def bg(request):
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    scheduler = app_config.get_background_scheduler()
+    scheduler.add_job(tick, 'interval', seconds=3, args=[123, {"pool": 89}], id=str(123))
+    # scheduler.add_job(tick, 'cron', day_of_week='mon', hour=18, minute=33, args=['89'])
+    return HttpResponse("OK")

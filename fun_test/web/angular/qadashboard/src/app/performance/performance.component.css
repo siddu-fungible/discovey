@@ -133,3 +133,16 @@ arrow-icon {
   border-radius: 1.5px;
 
 }
+
+.table td {
+  padding: 5px;
+}
+
+.container a {
+  color: #337ab7;
+}
+.container {
+  margin: 0;
+  max-width: 3000px;
+  padding-top: 20px;
+}

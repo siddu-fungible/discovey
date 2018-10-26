@@ -354,3 +354,7 @@ input:checked + .slider:before {
     content: "\e080";
     color: #337ab7;
 }
+.panel-with-table {
+    width: 1250px;
+}
+

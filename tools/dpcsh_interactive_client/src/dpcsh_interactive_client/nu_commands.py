@@ -531,7 +531,7 @@ class QosCommands(object):
             config = self.dpc_client.execute(verb='qos', arg_list=get_cmd_args)
             if update:
                 if q_avg_en is not None:
-                    config["avg_en"] = q_avg_en
+                    config["q_avg_en"] = q_avg_en
                     # del config['avg_en']
                 if cap_avg_sz is not None:
                     config['cap_avg_sz'] = cap_avg_sz
@@ -637,7 +637,7 @@ class QosCommands(object):
                 strict_priority_config['strict_priority_enable'] = strict_priority_enable
             if extra_bandwidth is not None:
                 strict_priority_config['extra_bandwidth'] = extra_bandwidth
-            set_cmd_args = ['set', 'scheduler_config', 'shaper', strict_priority_config]
+            set_cmd_args = ['set', 'scheduler_config', 'strict_priority', strict_priority_config]
             if not mode == 'nu':
                 set_cmd_args.insert(1, mode)
             result = self.dpc_client.execute(verb='qos', arg_list=set_cmd_args)
@@ -1792,12 +1792,12 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def peek_pervppkts_stats(self, vp_number=None, grep_regex=None, get_result_only=False):
+    def peek_pervppkts_stats(self, vp_number=None, cluster_id=0, grep_regex=None, get_result_only=False):
         try:
             prev_result = None
             while True:
                 try:
-                    cmd = "stats/pervppkts"
+                    cmd = "stats/pervppkts/[%d]" % cluster_id
                     result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
                     master_table_obj = PrettyTable()
                     master_table_obj.align = 'l'
@@ -2044,7 +2044,7 @@ class PeekCommands(object):
         if get_result_only:
             return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
-            self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+            return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
     def peek_hu_resource_stats(self, hu_id, wqsi=None, wqse=None, resource_id=None, grep_regex=None):
         try:

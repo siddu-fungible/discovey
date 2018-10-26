@@ -18,6 +18,8 @@ generator_config_objs = {}
 generator_dict = {}
 multiplyer = 52
 default_quanta = 65535
+pause_dut_port_quanta = 60000
+pause_dut_port_threshold = 600
 capture_priority_limit = 8
 priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_octet': '00000000',
                                 'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '0'},
@@ -57,147 +59,6 @@ k_list = [x for x in range(0, 16)]
 k_list.reverse()
 
 
-def verify_spirent_stats(result_dict):
-    for stream_key in result_dict.iterkeys():
-        fun_test.test_assert_expected(expected=result_dict[stream_key]['tx_result']['FrameCount'],
-                                      actual=result_dict[stream_key]['rx_result']['FrameCount'],
-                                      message="Check results for %s" % stream_key)
-    result = True
-    return result
-
-
-def get_key_to_change(class_dict, priority_val):
-    result = None
-    for key in class_dict.iterkeys():
-        if 'time' in key:
-            out = int(filter(str.isdigit, key))
-            if out == priority_val:
-                result = key
-                break
-    return result
-
-
-def find_spirent_rx_counters_stopped(template_obj, subscribe_result, streamblock_handle_list=None, pfc_stream=False,
-                                     port_handle=None):
-    result_dict = {}
-    value_dict = {}
-    for i in range(2):        # Get value of rx counter of stream in 2 runs to check if it has stopped or not
-        if not pfc_stream:
-            value_dict[i] = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_result,
-                                                                               streamblock_handle_list=streamblock_handle_list,
-                                                                               rx_result=True)
-        else:
-            value_dict[i] = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_result,
-                                                                               port_handle_list=[port_handle],
-                                                                               analyzer_result=True)
-        fun_test.sleep("Sleeping 5 seconds", seconds=5)
-    if not pfc_stream:
-        for stream in streamblock_handle_list:
-            result_dict[stream] = None
-            old_rx_counter = int(value_dict[0][stream]['rx_result']['FrameCount'])
-            new_rx_counter = int(value_dict[1][stream]['rx_result']['FrameCount'])
-            fun_test.log("Values of rx counter for stream %s are:- Old: %s ; New: %s" % (stream, old_rx_counter,
-                                                                                         new_rx_counter))
-
-            if old_rx_counter < new_rx_counter:
-                result_dict[stream] = False
-            elif old_rx_counter == new_rx_counter:
-                result_dict[stream] = True
-
-    if pfc_stream:
-        old_rx_counter = int(value_dict[0][port_handle]['analyzer_result']['TotalFrameCount'])
-        new_rx_counter = int(value_dict[1][port_handle]['analyzer_result']['TotalFrameCount'])
-        fun_test.log("Values of rx counter for stream %s are:- Old: %s ; New: %s" % (port_handle, old_rx_counter,
-                                                                                     new_rx_counter))
-
-        if old_rx_counter < new_rx_counter:
-            result_dict[port_handle] = False
-        elif old_rx_counter == new_rx_counter:
-            result_dict[port_handle] = True
-
-    return result_dict
-
-
-def get_fpg_port_cbfcpause_counters(network_controller_obj, dut_port, shape, tx=False):
-    output_dict = {}
-    try:
-        stat_type = CBFC_PAUSE_FRAMES_RECEIVED
-        if tx:
-            stat_type = CBFC_PAUSE_FRAMES_TRANSMITTED
-        out = network_controller_obj.clear_port_stats(dut_port, shape=shape)
-        fun_test.simple_assert(out, "Clear port stats on dut port %s" % dut_port)
-        fun_test.sleep('Stats clear', seconds=2)
-        stats = network_controller_obj.peek_fpg_port_stats(dut_port, hnu=hnu)
-        fun_test.simple_assert(stats, "Fpg stats on port %s" % dut_port)
-
-        for priority in priority_list:
-            output_dict[priority] = False
-            value = get_dut_output_stats_value(stats, stat_type=stat_type,
-                                               tx=tx, class_value=priority)
-            if value:
-                fun_test.log("Value seen for priority %s is %s" % (priority, value))
-                output_dict[priority] = True
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return output_dict
-
-
-def get_psw_port_enqueue_dequeue_counters(network_controller_obj, dut_port, hnu, pg=False):
-    output_dict = {}
-    dequeue = 'dequeue'
-    enqueue = 'enqueue'
-    if pg:
-        dequeue_type = 'pg_deq'
-        enqueue_type = 'pg_enq'
-    else:
-        dequeue_type = 'q_deq'
-        enqueue_type = 'q_enq'
-    try:
-        stats_1 = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu)
-        fun_test.simple_assert(stats_1, "Ensure psw command is executed for 1st time on port %s" % dut_port)
-
-        fun_test.sleep("Letting queries to be executed", seconds=5)
-
-        stats_2 = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu)
-        fun_test.simple_assert(stats_2, "Ensure psw command is executed for 2nd time on port %s" % dut_port)
-
-        for queue_num in priority_list:
-            output_dict[queue_num] = {}
-            output_dict[queue_num][dequeue] = True
-            output_dict[queue_num][enqueue] = False
-            if len(str(queue_num)) == 1:
-                updated_queue = '0' + str(queue_num)
-            else:
-                updated_queue = str(queue_num)
-            q_no = 'q_' + updated_queue
-
-            old_dequeue_val = int(stats_1[q_no]['count'][dequeue_type]['pkts'])
-            new_dequeue_val = int(stats_2[q_no]['count'][dequeue_type]['pkts'])
-            old_enqueue_val = int(stats_1[q_no]['count'][enqueue_type]['pkts'])
-            new_enqueue_val = int(stats_2[q_no]['count'][enqueue_type]['pkts'])
-
-            fun_test.log("Values of dequeue seen for queue %s are:- Old: %s ; New: %s" % (q_no,
-                                                                                           old_dequeue_val,
-                                                                                           new_dequeue_val))
-            fun_test.log("Values of enqueue seen for queue %s are:- Old: %s ; New: %s" % (q_no,
-                                                                                          old_enqueue_val,
-                                                                                          new_enqueue_val))
-
-            if old_dequeue_val < new_dequeue_val:
-                output_dict[queue_num][dequeue] = True
-            elif old_dequeue_val == new_dequeue_val:
-                output_dict[queue_num][dequeue] = False
-
-            if old_enqueue_val < new_enqueue_val:
-                output_dict[queue_num][enqueue] = True
-            elif old_enqueue_val == new_enqueue_val:
-                output_dict[queue_num][enqueue] = False
-
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return output_dict
-
-
 class SpirentSetup(FunTestScript):
     min_thr = 512
     shr_thr = 2000
@@ -218,7 +79,7 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape
+            dut_port_1, hnu, shape, pause_obj, dut_port_list, pause_streamblock, interface_obj_list
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
@@ -234,6 +95,7 @@ class SpirentSetup(FunTestScript):
 
         good_load = 100
         pfc_load = 10
+        pause_load = 60
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_multi_stream", spirent_config=spirent_config,
                                                       chassis_type=chassis_type)
@@ -241,8 +103,11 @@ class SpirentSetup(FunTestScript):
 
         destination_mac1 = spirent_config['l2_config']['destination_mac']
         destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        dut_port_list = []
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
+        dut_port_list.append(dut_port_1)
+        dut_port_list.append(dut_port_2)
 
         # Create network controller object
         dpcsh_server_ip = dut_config['dpcsh_tcp_proxy_ip']
@@ -301,6 +166,15 @@ class SpirentSetup(FunTestScript):
         port_obj_list = result['port_list']
         port_1 = port_obj_list[0]
         port_2 = port_obj_list[1]
+        interface_obj_list = result['interface_obj_list']
+
+        # Enable flow control on both spirent ports
+        for current_interface_obj in interface_obj_list:
+            current_interface_obj.FlowControl = True
+
+            update_result = template_obj.configure_physical_interface(interface_obj=current_interface_obj)
+            fun_test.simple_assert(update_result, "Enable flow control on interface %s" %
+                                   current_interface_obj._spirent_handle)
 
         # Configure Generator
         for port in port_obj_list:
@@ -385,6 +259,19 @@ class SpirentSetup(FunTestScript):
                     pfc_streamblock_objs[key]['pfc_header_obj'] = out['pfc_header_obj']
                     pfc_stream_obj_list.append(create_streamblock_2)
                     pfc_stream_list.append(create_streamblock_2._spirent_handle)
+
+                # Create stream on port 2
+                pause_streamblock = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND,
+                                                load=pause_load,
+                                                fixed_frame_length=64, insert_signature=False)
+                streamblock_2 = template_obj.configure_stream_block(pause_streamblock, port_handle=port_2)
+                fun_test.test_assert(streamblock_2, message="Creating streamblock on port %s" % port_2)
+
+                # Configure pause frame on stream 2
+                out = template_obj.configure_pause_mac_control_header(pause_streamblock)
+                fun_test.test_assert(out['result'], message="Added frame stack")
+                pause_obj = out['pause_mac_control_header_obj']
+                pause_ethernet_obj = out['ethernet8023_mac_control_header_obj']
         # Applying configuration
         apply = template_obj.stc_manager.apply_configuration()
         fun_test.test_assert(apply, "Applying Generator config")
@@ -1622,11 +1509,277 @@ class TestCase17(TestCase16):
         super(TestCase17, self).run()
 
 
+class TestCase18(FunTestCase):
+    current_pause_quanta = 0
+    dut_pause_enable = True
+    will_streams_stop = False
+
+    def describe(self):
+        self.set_test_details(id=18,
+                              summary="Test link pause when quanta value is 0",
+                              steps="""
+                              1. Enable link pause on both ports
+                              2. Set quanta to 0 in link pause frame on spirent
+                              3. Start traffic from port 1
+                              4. Start link pause frame from port 2
+                              5. Ensure tx of stream is not stopped
+                              6. Ensure no pause frames seen on port_1
+                              """)
+
+    def setup(self):
+        for dut_port in dut_port_list:
+            disable_pfc = network_controller_obj.disable_priority_flow_control(port_num=dut_port, shape=shape)
+            fun_test.test_assert(disable_pfc, "Ensure pfc is disabled on %s" % dut_port)
+
+            if self.dut_pause_enable:
+                enable_tx_pause = network_controller_obj.enable_link_pause(port_num=dut_port, shape=shape)
+                fun_test.test_assert(enable_tx_pause, "Enable link pause in %s" % dut_port)
+            else:
+                disable_tx_pause = network_controller_obj.disable_link_pause(port_num=dut_port, shape=shape)
+                fun_test.test_assert(disable_tx_pause, "Disable link pause in %s" % dut_port)
+
+            # Clear port results on DUT
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port, shape=shape)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port)
+
+            quanta = network_controller_obj.set_link_pause_quanta(port_num=dut_port, quanta=pause_dut_port_quanta)
+            fun_test.test_assert(quanta, "Assign quanta value %s on port %s" % (pause_dut_port_quanta, dut_port))
+
+            threshold = network_controller_obj.set_link_pause_threshold(port_num=dut_port, threshold=pause_dut_port_threshold)
+            fun_test.test_assert(threshold, "Assign threshold value %s on port %s" % (pause_dut_port_threshold, dut_port))
+
+        # Activate pfc streams
+        enable_pfc_stream = template_obj.activate_stream_blocks(stream_obj_list=[pause_streamblock])
+        fun_test.simple_assert(enable_pfc_stream, "Enable stream %s" % pause_streamblock._spirent_handle)
+
+        pause_obj.pauseTime = self.current_pause_quanta
+        modify_pause = template_obj.stc_manager.configure_frame_stack(stream_block_handle=pause_streamblock.spirent_handle,
+                                                                      header_obj=pause_obj, update=True)
+        fun_test.test_assert(modify_pause, "Change quanta value to %s" % self.current_pause_quanta)
+
+    def cleanup(self):
+        for dut_port in dut_port_list:
+            disable_tx_pause = network_controller_obj.disable_link_pause(port_num=dut_port, shape=shape)
+            fun_test.test_assert(disable_tx_pause, "Disable link pause in %s" % dut_port)
+
+        all_stream_handles = good_stream_list + [pause_streamblock.spirent_handle]
+
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=all_stream_handles)
+        fun_test.test_assert(stop_streams, "Ensure all streams are stopped")
+
+        disable_pfc_stream = template_obj.deactivate_stream_blocks(stream_obj_list=[pause_streamblock])
+        fun_test.simple_assert(disable_pfc_stream, "Disable stream %s" % pause_streamblock._spirent_handle)
+
+    def run(self):
+        result_dict = {}
+        spirent_rx_counters = 'spirent_rx_counters'
+        psw_port_pg_counters = 'psw_port_pg_counters'
+        psw_port_q_counters = 'psw_port_q_counters'
+        dequeue = 'dequeue'
+        enqueue = 'enqueue'
+        pause_mac_ctrl_rx = "pause_mac_ctrl_rx"
+        pause_mac_ctrl_tx = "pause_mac_ctrl_tx"
+        # Start regular stream
+        start_streams = template_obj.stc_manager.start_traffic_stream(
+            stream_blocks_list=good_stream_list)
+        fun_test.test_assert(start_streams, "Ensure good stream is started")
+
+        fun_test.sleep("Letting traffic to be run")
+
+        # Start pause stream
+        start_streams = template_obj.stc_manager.start_traffic_stream(
+            stream_blocks_list=pause_streamblock._spirent_handle)
+        fun_test.test_assert(start_streams, "Ensure link pause stream is started")
+
+        fun_test.sleep("Letting traffic to be run", seconds=10)
+
+        fun_test.log("Fetch spirent rx counter results for all good streams")
+        result_dict[spirent_rx_counters] = find_spirent_rx_counters_stopped(template_obj=template_obj,
+                                                                            subscribe_result=subscribe_results,
+                                                                            streamblock_handle_list=good_stream_list)
+
+        fun_test.log("Get psw port group enqueue dequeue counters")
+        result_dict[psw_port_pg_counters] = \
+            get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
+                                                  dut_port=dut_port_1, pg=True, hnu=hnu)
+
+        fun_test.log("Get psw port queue enqueue dequeue counters")
+        result_dict[psw_port_q_counters] = \
+            get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
+                                                  dut_port=dut_port_2, hnu=hnu)
+
+        fun_test.log("Check pause mac control stat")
+        result_dict[pause_mac_ctrl_rx] = \
+            get_fpg_port_pause_mac_ctrl_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2,
+                                                 tx=False, shape=shape)
+
+        fun_test.log("Check pause mac control stat")
+        result_dict[pause_mac_ctrl_tx] = \
+            get_fpg_port_pause_mac_ctrl_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1,
+                                                 tx=True, shape=shape)
+
+        dut_2_stats_2 = network_controller_obj.peek_fpg_port_stats(port_num=dut_port_2, hnu=hnu)
+        dut_2_tx_frames_1 = get_dut_output_stats_value(dut_2_stats_2, FRAMES_TRANSMITTED_OK, tx=True)
+
+        dut_2_stats_2 = network_controller_obj.peek_fpg_port_stats(port_num=dut_port_2, hnu=hnu)
+        dut_2_tx_frames_2 = get_dut_output_stats_value(dut_2_stats_2, FRAMES_TRANSMITTED_OK, tx=True)
+
+        # Check pause streams on both ports. They must not be seen
+        spirent_counters_dict = result_dict[spirent_rx_counters]
+        pg_queue_counters_dict = result_dict[psw_port_pg_counters]
+        q_queue_counters_dict = result_dict[psw_port_q_counters]
+
+        if not self.dut_pause_enable:
+            if int(dut_2_tx_frames_2) > int(dut_2_tx_frames_1):
+                for key in spirent_counters_dict.keys():
+                    spirent_counters_dict[key] = False
+
+        for key, val in spirent_counters_dict.iteritems():
+            if self.will_streams_stop:
+                fun_test.test_assert(spirent_counters_dict[key], "Ensure rx on spirent is not happening for stream %s "
+                                                                     "when pause with quanta %s is sent" % (key, self.current_pause_quanta))
+            else:
+                fun_test.test_assert(not spirent_counters_dict[key], "Ensure rx on spirent is happening for stream %s "
+                                                                     "when pause with quanta %s is sent" % (key, self.current_pause_quanta))
+
+        for key, val in priority_dict.iteritems():
+            if self.will_streams_stop:
+                fun_test.test_assert(not pg_queue_counters_dict[val['priority_val']][dequeue],
+                                     message="Ensure pg_dequeue is not happening for queue q_%s when pause with quanta %s "
+                                             "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+                fun_test.test_assert(not q_queue_counters_dict[val['priority_val']][dequeue],
+                                     message="Ensure q_dequeue is not happening for queue q_%s when pause with quanta %s "
+                                             "is sent" % (val['priority_val'], self.current_pause_quanta))
+            else:
+
+                fun_test.test_assert(pg_queue_counters_dict[val['priority_val']][dequeue],
+                                     message="Ensure pg_dequeue is happening for queue q_%s when pause  with quanta %s "
+                                             "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+                fun_test.test_assert(q_queue_counters_dict[val['priority_val']][dequeue],
+                                     message="Ensure q_dequeue is happening for queue q_%s when pause  with quanta %s "
+                                             "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+            fun_test.test_assert(pg_queue_counters_dict[val['priority_val']][enqueue],
+                                 message="Ensure pg_enqueue is happening for queue q_%s when pause with quanta %s "
+                                         "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+            fun_test.test_assert(q_queue_counters_dict[val['priority_val']][enqueue],
+                                 message="Ensure q_enqueue is happening for queue q_%s when pause with quanta %s "
+                                         "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+        if self.will_streams_stop:
+            fun_test.test_assert(result_dict[pause_mac_ctrl_tx], "Check pause mac cntrl tx seen on %s" % dut_port_1)
+        else:
+            fun_test.test_assert(not result_dict[pause_mac_ctrl_tx], "Check pause mac cntrl tx not seen on %s" % dut_port_1)
+        fun_test.test_assert(result_dict[pause_mac_ctrl_rx], "Check pause mac cntrl rx seen on %s" % dut_port_2)
+
+
+class TestCase19(TestCase18):
+    current_pause_quanta = 65535
+    dut_pause_enable = False
+
+    def describe(self):
+        self.set_test_details(id=19,
+                              summary="Test link pause when quanta value is 60000 and link pause is disabled on DUT port",
+                              steps="""
+                              1. Enable link pause on both ports
+                              2. Set quanta to 0 in link pause frame on spirent
+                              3. Start traffic from port 1
+                              4. Start link pause frame from port 2
+                              5. Ensure tx of stream is not stopped as link pause is disabled on DUT
+                              6. Ensure no pause frames seen on port_1
+                              """)
+
+    def setup(self):
+        super(TestCase19, self).setup()
+
+        # Disable flow control on both spirent ports
+        for current_interface_obj in interface_obj_list:
+            current_interface_obj.FlowControl = False
+
+            update_result = template_obj.configure_physical_interface(interface_obj=current_interface_obj)
+            fun_test.simple_assert(update_result, "Disable flow control on interface %s" %
+                                   current_interface_obj._spirent_handle)
+
+    def cleanup(self):
+        super(TestCase19, self).cleanup()
+
+        # Enable flow control on both spirent ports
+        for current_interface_obj in interface_obj_list:
+            current_interface_obj.FlowControl = True
+
+            update_result = template_obj.configure_physical_interface(interface_obj=current_interface_obj)
+            fun_test.simple_assert(update_result, "Enable flow control on interface %s" %
+                                   current_interface_obj._spirent_handle)
+
+
+class TestCase20(TestCase18):
+    current_pause_quanta = 65535
+    dut_pause_enable = True
+    will_streams_stop = True
+
+    def describe(self):
+        self.set_test_details(id=20,
+                              summary="Test link pause when quanta value is 60000 and link pause is enabled on DUT port",
+                              steps="""
+                              1. Enable link pause on both ports
+                              2. Set quanta to 65535 in link pause frame on spirent
+                              3. Start traffic from port 1
+                              4. Start link pause frame from port 2
+                              5. Ensure tx of stream is stopped as link pause is enabled on DUT
+                              6. Ensure pause frames seen on port_1 and port 2
+                              7. start capture on port 1 and then Stop pause frames from spirent
+                              8. Ensure tx is started from dut port 2
+                              9. Stop capture and check quanta value in captured packet. First packet to have quanta %s
+                                 and last packet to have quanta 0 
+                              """)
+
+    def run(self):
+        super(TestCase20, self).run()
+        '''
+        # start capture
+        capture_obj = Capture()
+        start_capture = template_obj.stc_manager.start_capture_command(capture_obj=capture_obj, port_handle=port_1)
+        fun_test.test_assert(start_capture, "Starting capture on %s" % port_1)
+
+        fun_test.sleep("Letting capture to start on %s" % port_1)
+
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=[pause_streamblock._spirent_handle])
+        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+
+        fun_test.sleep("Letting pause to stop")
+
+        stop_capture = template_obj.stc_manager.stop_capture_command(capture_obj._spirent_handle)
+        fun_test.test_assert(stop_capture, "Stopped capture on port %s" % port_1)
+
+        file = fun_test.get_temp_file_name()
+        file_name_1 = file + '.pcap'
+        file_path = SYSTEM_TMP_DIR
+        self.pcap_file_path_1 = file_path + "/" + file_name_1
+
+        saved = template_obj.stc_manager.save_capture_data_command(capture_handle=capture_obj._spirent_handle,
+                                                                   file_name=file_name_1,
+                                                                   file_name_path=file_path)
+        fun_test.test_assert(saved, "Saved pcap %s to local machine" % self.pcap_file_path_1)
+
+        fun_test.test_assert(os.path.exists(self.pcap_file_path_1), message="Check pcap file exists locally")
+
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        out = pcap_parser_1.verify_pause_header_fields(first_packet=True, time=self.current_pause_quanta)
+        fun_test.test_assert(out, "Ensure first packet capture shows quanta value %s" % self.current_pause_quanta)
+
+        out = pcap_parser_1.verify_pause_header_fields(last_packet=True, time=0)
+        fun_test.test_assert(out, "Ensure last packet capture shows quanta value 0")
+        '''
+
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
-    '''
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())
     ts.add_test_case(TestCase3())
@@ -1641,8 +1794,12 @@ if __name__ == "__main__":
     ts.add_test_case(TestCase12())
     ts.add_test_case(TestCase13())
     ts.add_test_case(TestCase14())
-    ts.add_test_case(TestCase15())
     '''
+    ts.add_test_case(TestCase15())
     ts.add_test_case(TestCase16())
     ts.add_test_case(TestCase17())
+    '''
+    ts.add_test_case(TestCase18())
+    ts.add_test_case(TestCase19())
+    ts.add_test_case(TestCase20())
     ts.run()

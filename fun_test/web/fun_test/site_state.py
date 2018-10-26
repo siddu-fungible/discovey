@@ -132,7 +132,7 @@ class SiteState():
                     m.add_child_weight(child_id=c.metric_id, weight=child_weight)
                     if "leaf" in child and child["leaf"]:
                         all_metrics_chart.add_child(child_id=c.metric_id)
-                        all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=0)
+                        all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
 
         return m
 

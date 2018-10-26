@@ -18,3 +18,4 @@ commentjson==0.6
 django-rest-framework==0.1.0
 psycopg2==2.7.5
 psycopg2-binary==2.7.5
+apscheduler==3.5.3

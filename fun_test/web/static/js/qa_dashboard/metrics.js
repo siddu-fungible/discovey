@@ -1,6 +1,6 @@
 'use strict';
 
-function MetricsController($scope, $http, commonService, $timeout, $modal) {
+function MetricsController($scope, $http, $window, commonService, $timeout, $modal) {
     let ctrl = this;
 
     ctrl.$onInit = function () {
@@ -67,6 +67,11 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         }).result.then(function () {
         }).catch(function () {
         });
+    };
+
+    $scope.showScores = (chartName, modelName) => {
+        let url = "/metrics/score_table/" + chartName + "/" + modelName;
+        $window.open(url, '_blank');
     };
 
     function EditChartController($modalInstance, $scope, commonService, $http, chartName, modelName) {

@@ -10,9 +10,11 @@ from web.fun_test.metrics_models import EcPerformance, BcopyPerformance, BcopyFl
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, EcVolPerformance, NuTransitPerformance
 from web.fun_test.metrics_models import VoltestPerformance, ShaxPerformance, WuDispatchTestPerformance
 from web.fun_test.metrics_models import HuRawVolumePerformance, FunMagentPerformanceTest
+from web.fun_test.metrics_models import SoakClassicMallocPerformance, SoakFunMallocPerformance
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance
 from web.fun_test.metrics_models import MetricChartStatus
-from web.fun_test.metrics_models import WuSendSpeedTestPerformance
+from web.fun_test.metrics_models import WuSendSpeedTestPerformance, BootTimePerformance
+from web.fun_test.metrics_models import TeraMarkPkeEcdh25519Performance, TeraMarkPkeEcdh256Performance, TeraMarkPkeRsaPerformance
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -102,6 +104,30 @@ class FunMagentPerformanceTestAdmin(admin.ModelAdmin):
 
 @admin.register(WuStackSpeedTestPerformance)
 class WuStackSpeedTestPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(SoakFunMallocPerformance)
+class SoakFunMallocPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(SoakClassicMallocPerformance)
+class SoakClassicMallocPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(BootTimePerformance)
+class BootTimePerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(TeraMarkPkeEcdh256Performance)
+class TeraMarkPkeEcdh256PerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(TeraMarkPkeRsaPerformance)
+class TeraMarkPkeRsaPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(TeraMarkPkeEcdh25519Performance)
+class TeraMarkPkeEcdh25519PerformanceAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
 @admin.register(ShaxPerformance)

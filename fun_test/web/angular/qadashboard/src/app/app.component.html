@@ -3,6 +3,7 @@
 <head>
   <title>QA Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="static/js/qa_dashboard/qa_dashboard.js"></script>
 </head>
 <body>
 
@@ -18,7 +19,7 @@
   <div class="collapse navbar-collapse" id="qa-dashboard-navbar">
     <ul class="navbar-nav mr-auto">
       <li class="nav-item">
-        <a class="nav-link" href="/upgrade/performance" style="color: white;background-color: #337ab7" role="button">Performance</a>
+        <a class="nav-link" href="/performance" style="color: white;background-color: #337ab7" role="button">Performance</a>
       </li>
 
       <li class="nav-item dropdown">
@@ -30,7 +31,7 @@
           <a class="dropdown-item" href="/regression/completed_jobs">Completed Jobs</a>
           <a class="dropdown-item" href="/regression/pending_jobs">Pending Jobs</a>
           <a class="dropdown-item" href="/regression/submit_job_page">Submit Job</a>
-          <a class="dropdown-divider"></a>
+          <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/regression/jenkins_jobs">Jenkins Jobs</a>
           <a class="dropdown-item" href="/regression/jobs_by_tag/network-sanity">Networking Sanity</a>
           <a class="dropdown-item" href="/metrics/atomic/Unit-Tests/UnitTestPerformance">FunOS Unit-Tests</a>
@@ -51,7 +52,7 @@
            aria-expanded="false">Administration</a>
         <div class="dropdown-menu">
           <a class="dropdown-item" href="/metrics">All</a>
-          <a class="dropdown-item" href="/metrics/summary">Summary</a>
+          <!--<a class="dropdown-item" href="/metrics/summary">Summary</a>-->
           <a class="dropdown-item" href="/initialize">Initialize</a>
         </div>
       </li>
