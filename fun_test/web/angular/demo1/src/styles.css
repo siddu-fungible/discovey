@@ -368,3 +368,13 @@ tr.mat-table-element-row:not(.mat-table-expanded-row):hover {
 tr.mat-table-element-row:not(.mat-table-expanded-row):active {
   background: #efefef;
 }
+
+.anchor-button {
+  color: #007bff;
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+
+}
+
+.pseudo-anchor:hover {
+  cursor: pointer;
+}

@@ -56,19 +56,24 @@
      [ngStyle]="{'color': 'white', 'padding-left': '10px'}">menu</i>
 
 
-  <div class="navbar-brand d-flex align-items-center justify-content-between col-sm-12 col-md-2 mr-0">
+  <div class="navbar-nav mr-auto">
+      <div class="navbar-brand d-flex align-items-center justify-content-between col-sm-12 col-md-2 mr-0">
     <a class="mr-1 d-md-none text-light" href="#sidenav" data-toggle="collapse" data-target="#sidenav">
-      <span data-feather="menu" class="my-1"></span>
     </a>
-
-
     <a class="text-light" href="">Fungible</a>
-    <a class="navbar-toggler border-0 p-0" href="#topnav" data-toggle="collapse" data-target="#topnav">
-      <span data-feather="menu" class="my-1"></span>
-    </a>
   </div>
-  <div class="navbar-collapse collapse" id="topnav">
+
   </div>
+
+
+  <div class="navbar-nav">
+    <li class="nav-item" style="padding-right: 10px">
+      <u (click)="showingApiViewer = !showingApiViewer" class="nav-item anchor-button api-viewer-link">API viewer</u>
+    </li>
+
+
+  </div>
+
 </nav>
 
 
@@ -105,18 +110,41 @@
         </ul>
       </li>
       <li>
-        <a href="#">Acceleration</a>
+        <ng-container *ngIf="controller">
+        <span style="font-size: 10px;">Controller: {{ controller.ip }}</span>&nbsp;
+          <span *ngIf="controller.health" class="badge badge-success">Online</span>
+          <span *ngIf="!controller.health" class="badge badge-danger">Offline</span>
+        </ng-container>
+        <ng-container *ngIf="!controller">
+          <span style="background-color: red">No controllers available</span>
+        </ng-container>
       </li>
-      <li>
-        <a href="#">System</a>
-      </li>
+
     </ul>
   </nav>
 
   <!-- Page Content  -->
   <div id="content">
+    <div class="row">
+      <div class="col">
+        <router-outlet></router-outlet>
+      </div>
+      <div *ngIf="showingApiViewer" class="col">
 
-    <router-outlet></router-outlet>
+          <app-api-viewer></app-api-viewer>
+      </div>
+
+    </div>
+
+    <!--div class="container">
+      <div class="row">
+        <router-outlet></router-outlet>
+              <div *ngIf="showingApiViewer">
+                <div  class="col"><app-api-viewer></app-api-viewer></div>
+              </div>
+      </div>
+    </div-->
+
   </div>
 </div>
 <!--router-outlet></router-outlet-->

@@ -48,6 +48,11 @@
           <th>Tags</th>
 
         </tr>
+        <tr *ngIf="suiteExecutionsCount === 0">
+          <td colspan="15">
+            No Data Found
+          </td>
+        </tr>
         <tr style="text-align: center" *ngFor="let suiteExecution of items">
           <td>{{ suiteExecution.fields.execution_id }}</td>
           <td [ngClass]="{'table-danger': suiteExecution.suite_result === 'FAILED'}">

@@ -69,24 +69,45 @@ export class ApiService {
     throw of(apiResponse);
   }
 
-  post(url: string, payload: any, log: boolean = true): Observable<ApiResponse> {
+  post(url: string, payload: any, log: boolean = true): Observable<any> {
     let newApiLog: ApiLog = null;
 
     if (log) {
       newApiLog = this.addApiLog(HttpMethod.POST, url, payload, "");
     }
 
-    return this.httpClient.post<ApiResponse>(url, payload)
+    return this.httpClient.post<any>(url, payload, {observe : 'response'})
       .pipe(
-        map(response => {
-          if (!response.status) {
-            throw response;
+        map((response) => {
+          let httpStatus = response.status;
+          //let o = JSON.parse(response.body);
+          let newApiResponse: ApiResponse = new ApiResponse(response.body);
+          if (log) {
+            newApiLog.setResponse(response.status, newApiResponse);
+          }
+          if (!newApiResponse.status) {
+            throw newApiResponse;
           } else {
-            return response;
+            return newApiResponse;
           }
         }),
-        catchError(ApiService.handleError)
-      );
+        catchError ((error: any) => {
+            let result: ApiResponse = new ApiResponse();
+            result.status = false;
+            result.data = null;
+            if (error.hasOwnProperty('statusText')) {
+              result.error_message = `Http Error: Status: ${error.status} Text: ${error.statusText} URL: ${error.url}`; // TODO: Improve this
+            } else {
+              result.error_message = error.error_message;
+            }
+            if (log) {
+              newApiLog.setResponse(error.status, result);
+            }
+
+            throw of(result);
+          }
+        //catchError(ApiService.handleError)
+      ));
   }
 
   get(url: string, log: boolean = true): Observable<any> {
@@ -105,7 +126,9 @@ export class ApiService {
           let httpStatus = response.status;
           //let o = JSON.parse(response.body);
           let newApiResponse: ApiResponse = new ApiResponse(response.body);
-          newApiLog.setResponse(response.status, newApiResponse);
+          if (log) {
+            newApiLog.setResponse(response.status, newApiResponse);
+          }
           if (!newApiResponse.status) {
             throw newApiResponse;
           } else {
