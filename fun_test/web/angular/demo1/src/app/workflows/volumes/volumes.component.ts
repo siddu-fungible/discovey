@@ -140,11 +140,9 @@ export class VolumesComponent implements OnInit {
         this.dataSource.data.push(newVolumeElement);
         this.dataSource.data = [...this.dataSource.data];
       }
-      this.refresh();
-
 
     }, error => {
-      this.refresh();
+      //this.refresh();
     });
   }
 
@@ -300,7 +298,7 @@ export class VolumesComponent implements OnInit {
   attach(volumeUuid) {
     let url = this.commonService.getBaseUrl();
     url = url + "/storage/volumes/" + volumeUuid + "/ports";
-    let payload = {"remote_ip": "127.0.0.1"};
+    let payload = {}; //{"remote_ip": "127.0.0.1"};
     this.apiService.post(url, payload).subscribe((response) => {
       alert("Attached");
       this.getVolumes();
