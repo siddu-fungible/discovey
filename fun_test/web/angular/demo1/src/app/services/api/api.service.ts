@@ -82,7 +82,9 @@ export class ApiService {
           let httpStatus = response.status;
           //let o = JSON.parse(response.body);
           let newApiResponse: ApiResponse = new ApiResponse(response.body);
-          newApiLog.setResponse(response.status, newApiResponse);
+          if (log) {
+            newApiLog.setResponse(response.status, newApiResponse);
+          }
           if (!newApiResponse.status) {
             throw newApiResponse;
           } else {
@@ -124,7 +126,9 @@ export class ApiService {
           let httpStatus = response.status;
           //let o = JSON.parse(response.body);
           let newApiResponse: ApiResponse = new ApiResponse(response.body);
-          newApiLog.setResponse(response.status, newApiResponse);
+          if (log) {
+            newApiLog.setResponse(response.status, newApiResponse);
+          }
           if (!newApiResponse.status) {
             throw newApiResponse;
           } else {
