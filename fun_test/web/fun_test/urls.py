@@ -147,7 +147,8 @@ demo_urls = [
     url(r'^bg_job_status$', demo_views.job_status),
     url(r'^add_controller$', demo_views.add_controller),
     url(r'^set_controller_status$', demo_views.set_controller_status),
-    url(r'^get_controllers$', demo_views.get_controllers)
+    url(r'^get_controllers$', demo_views.get_controllers),
+    url(r'^get_container_logs', demo_views.get_container_logs)
 ]
 
 urlpatterns = [

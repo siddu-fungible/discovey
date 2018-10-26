@@ -41,7 +41,8 @@ export class VolumeComponent implements OnInit {
     'num_replica_volumes',
     'read_iops',
     'write_iops',
-    'dpus'];
+    'dpus',
+  'actions'];
 
   columnToHeader = {
     'name': "Name",
@@ -52,12 +53,13 @@ export class VolumeComponent implements OnInit {
     "namespace_id": "Namespace ID",
     "pool": "Pool",
     "read_iops": "Read IOPS",
-    "write_iops": "Write IOPS"
+    "write_iops": "Write IOPS",
+    'actions': "Actions"
   };
   expandedElement: VolumeElement;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private route: ActivatedRoute) {
-    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "read_iops"];
+    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "read_iops", "actions"];
   }
 
   ngOnInit() {

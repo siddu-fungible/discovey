@@ -17,14 +17,21 @@
               <br>
             </ng-container>
           </ng-container>
-          <ng-container *ngSwitchCase="'encrypted'">
-            <i *ngIf="element[column].encrypt" class="material-icons">lock</i>
-            <i *ngIf="!element[column].encrypt" class="material-icons">unlock</i>
+
+
+          <ng-container *ngSwitchCase="'encrypt'">
+            <i *ngIf="element.encrypt" class="material-icons">lock</i>
+            <i *ngIf="!element.encrypt" class="material-icons">unlock</i>
 
           </ng-container>
           <ng-container *ngSwitchCase="'pool'">
             <a href="/demo/demo1/pool/{{ element[column] }}">{{ element[column] }}</a>
           </ng-container>
+
+          <ng-container *ngSwitchCase="'actions'">
+            <button class="btn btn-sm btn-info">Load</button>
+          </ng-container>
+
           <ng-container *ngSwitchDefault>
             {{ element[column]}}
           </ng-container>

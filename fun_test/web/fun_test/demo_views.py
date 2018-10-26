@@ -126,3 +126,20 @@ def get_controllers(request):
         c = {"active": o.active, "ip": o.ip, "port": o.port}
         result.append(c)
     return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def get_container_logs(request):
+    request_json = json.loads(request.body)
+    container_ip = request_json["container_ip"]
+    container_ssh_port = request_json["container_ssh_port"]
+    container_ssh_username = request_json["container_ssh_username"]
+    container_ssh_password = request_json["container_ssh_password"]
+    file_name = request_json["file_name"]
+    linux_obj = Linux(host_ip=container_ip,
+                      ssh_username=container_ssh_username,
+                      ssh_port=container_ssh_port, ssh_password=container_ssh_password)
+    output = linux_obj.read_file(file_name=file_name)
+
+    return output
