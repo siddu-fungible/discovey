@@ -1025,7 +1025,7 @@ class TeraMarkPkeRsa4kPerformance(models.Model):
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_app = models.CharField(max_length=30, default="pke_rsa_crt_dec_no_pad_4096_soak", choices=[(0, "pke_rsa_crt_dec_no_pad_4096_soak")])
+    input_app = models.CharField(max_length=50, default="pke_rsa_crt_dec_no_pad_4096_soak", choices=[(0, "pke_rsa_crt_dec_no_pad_4096_soak")])
     input_metric_name = models.CharField(max_length=40, default="RSA_CRT_4096_decryptions", choices=[(0, "RSA_CRT_4096_decryptions")])
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     tag = "analytics"
