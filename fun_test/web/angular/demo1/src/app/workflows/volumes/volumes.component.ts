@@ -30,7 +30,8 @@ export interface AddNewVolumeConfigInterface {
 
 export class AddNewVolumeConfig implements AddNewVolumeConfigInterface {
   name: string = null;
-  capacity: number = 104857600;
+  //capacity: number = 104857600;
+  capacity: number = 100;
   pool_name: string = null;
   compression_effort = null;
   encryption: boolean = null;
@@ -235,7 +236,7 @@ export class VolumesComponent implements OnInit {
       alert("Please specify a capacity");
       return;
     }
-
+    this.addNewVolumeConfig.capacity = this.addNewVolumeConfig.capacity * 1024 * 1024;
     let selectedPool = this._getSelectedPool();
     if (!selectedPool) {
       alert("Please select a pool");
@@ -254,7 +255,7 @@ export class VolumesComponent implements OnInit {
       capacity: this.addNewVolumeConfig.capacity,
       data_protection: dp,
       name: this.addNewVolumeConfig.name,
-      enrypt: this.encryptionOn
+      encrypt: this.encryptionOn
     };
     let url = this.commonService.getBaseUrl();
     url = url + "/storage/pools/" + selectedPool + "/volumes";

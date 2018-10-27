@@ -43,9 +43,7 @@ export class ApiViewerComponent implements OnInit {
     this.apiLogs = [...this.apiService.getApiLogs()];
     setTimeout(() => {
       this.refresh();
-    }, error => {
-
-    }, 200)
+    },200);
   }
 
 
