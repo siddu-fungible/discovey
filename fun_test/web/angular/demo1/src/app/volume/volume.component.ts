@@ -133,6 +133,7 @@ export class VolumeElement {
   dpus: string[];
   attached: boolean = false;
   port: {};
+  attachingStatus: string = null;
 
 }
 

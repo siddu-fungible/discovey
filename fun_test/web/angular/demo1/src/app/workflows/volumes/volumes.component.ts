@@ -98,6 +98,7 @@ export class VolumesComponent implements OnInit {
   showingDetails: boolean = false;
   pools: PoolElement[] = [];
   status: string = null;
+  attachingStatus: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
   }
@@ -236,7 +237,7 @@ export class VolumesComponent implements OnInit {
       alert("Please specify a capacity");
       return;
     }
-    this.addNewVolumeConfig.capacity = this.addNewVolumeConfig.capacity * 1024 * 1024;
+    let capacity = this.addNewVolumeConfig.capacity * 1024 * 1024;
     let selectedPool = this._getSelectedPool();
     if (!selectedPool) {
       alert("Please select a pool");
@@ -252,7 +253,7 @@ export class VolumesComponent implements OnInit {
     volumeType = this.volumeTypeSelection.selected[0];
     let dp = this.getDataProtection(volumeType);
     let payload = {
-      capacity: this.addNewVolumeConfig.capacity,
+      capacity: capacity,
       data_protection: dp,
       name: this.addNewVolumeConfig.name,
       encrypt: this.encryptionOn
@@ -303,15 +304,18 @@ export class VolumesComponent implements OnInit {
     console.log("hi");
   }
 
-  attach(volumeUuid) {
+  attach(element, volumeUuid) {
     let url = this.commonService.getBaseUrl();
     url = url + "/storage/volumes/" + volumeUuid + "/ports";
     let payload = {}; //{"remote_ip": "127.0.0.1"};
+    element.attachingStatus = "Attaching...";
     this.apiService.post(url, payload).subscribe((response) => {
       alert("Attached");
+      element.attachingStatus = "Refreshing";
       this.getVolumes();
     }, error => {
       alert("Attach failed");
+      element.attachingStatus = "Refreshing";
     })
   }
 

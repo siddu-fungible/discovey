@@ -201,16 +201,17 @@
       <th mat-header-cell *matHeaderCellDef> Encrypted</th>
       <td mat-cell *matCellDef="let element">
 
-        <p><i *ngIf="element.encrypt" class="fa fa-lock" aria-hidden="true"></i></p>
-        <p><i *ngIf="!element.encrypt" class="fa fa-unlock" aria-hidden="true"></i></p>
+        <button class="btn"><i *ngIf="element.encrypt" class="fa fa-lock" aria-hidden="true"></i></button>
+        <button class="btn"><i *ngIf="!element.encrypt" class="fa fa-unlock" aria-hidden="true"></i></button>
       </td>
     </ng-container>
 
     <ng-container matColumnDef="action">
       <th mat-header-cell *matHeaderCellDef> Port </th>
       <td mat-cell *matCellDef="let element">
-          <u *ngIf="!element.port" (click)="attach(element.uuid)" class="anchor-button pseudo-anchor">Attach</u>
-          <span *ngIf="element.port" class="badge badge-info">Port: 1</span>
+          <u *ngIf="!element.port && !element.attachingStatus" (click)="attach(element, element.uuid)" class="anchor-button pseudo-anchor">Attach</u>
+          <fun-spinner [status]="element.attachingStatus"></fun-spinner>
+          <h6><span *ngIf="element.port" class="badge badge-info">Port: 1</span></h6>
       </td>
     </ng-container>
 
