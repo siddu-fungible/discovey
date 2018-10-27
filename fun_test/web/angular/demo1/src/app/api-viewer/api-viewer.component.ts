@@ -41,7 +41,9 @@ export class ApiViewerComponent implements OnInit {
 
   refresh() {
     this.apiLogs = [...this.apiService.getApiLogs()];
-    let i = 0;
+    setTimeout(() => {
+      this.refresh();
+    },200);
   }
 
 

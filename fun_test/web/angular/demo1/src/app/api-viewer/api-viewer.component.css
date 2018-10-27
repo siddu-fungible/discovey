@@ -19,7 +19,7 @@
 }
 .url-font {
   font-family: Roboto,"Helvetica Neue",sans-serif;
-  font-size: 12px;
+  font-size: 14px;
 }
 /*  font-weight: 100;
 */
@@ -35,4 +35,8 @@
 {
   padding:1px;
   line-height: unset;
+}
+
+table {
+  width: 100%;
 }

@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {Location} from '@angular/common';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
+import {Title} from "@angular/platform-browser";
 
 class ChildInfo {
   lastScore: number;
@@ -80,11 +81,13 @@ export class PerformanceComponent implements OnInit {
   constructor(
     private location: Location,
     private apiService: ApiService,
-    private loggerService: LoggerService
+    private loggerService: LoggerService,
+    private title: Title
   ) {
   }
 
   ngOnInit() {
+    this.title.setTitle('Performance');
     this.status = "Loading";
     let myMap = new Map().set('a', 1).set('b', 2);
     let keys = Array.from(myMap.keys());

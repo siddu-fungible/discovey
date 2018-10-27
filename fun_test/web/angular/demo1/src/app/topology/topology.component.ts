@@ -42,7 +42,9 @@ export class TopologyComponent implements OnInit {
   activeController: Controller = null;
   topoF1s: TopoF1[] = [];
   dataSource = new MatTableDataSource<TopoF1>();
-  displayedColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
+  //displayedColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
+  displayedColumns: string[] = ['name', 'dataplane_ip', 'action'];
+
   displayedTgColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
   displayedLoadColumns: string[] = ['attribute', 'value'];
   expandedElement: TopoF1;
@@ -57,6 +59,8 @@ export class TopologyComponent implements OnInit {
   loadStopped: boolean = true;
   showingAgentLog: boolean = false;
   currentAgengLogF1: TopoF1 = null;
+  tgMap: {[name: string]: TopoTg} = this.commonService.getTgMap();
+
 
   constructor(private commonService: CommonService, private apiService: ApiService) {
 
@@ -110,6 +114,12 @@ export class TopologyComponent implements OnInit {
         newF1.storage_agent_port = f1s[key].storage_agent_port;
         if (f1s[key].hasOwnProperty("tgs")) {
           newF1.tgs = f1s[key].tgs;
+          if (newF1.tgs) {
+            for (let key2 of Object.keys(newF1.tgs)) {
+              this.tgMap[key2] = newF1.tgs[key2];
+            }
+          }
+
         }
         this.topoF1s.push(newF1);
         this.dataSource.data = this.topoF1s;
@@ -117,8 +127,6 @@ export class TopologyComponent implements OnInit {
     }, error => {
 
     })
-
-
   }
 
   tgsExist(tgs) {
@@ -192,6 +200,10 @@ export class TopologyComponent implements OnInit {
   fetchAgentLog(topoF1) {
     this.currentAgengLogF1 = topoF1;
     console.log(topoF1);
+  }
+
+  getTgInfo() {
+
   }
 
 

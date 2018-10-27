@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
+import {Title} from "@angular/platform-browser";
 
 @Component({
   selector: 'app-submit-job',
@@ -28,10 +29,12 @@ export class SubmitJobComponent implements OnInit {
   dropdownSettings = {};
 
 
-  constructor(private apiService: ApiService, private logger: LoggerService) {
+  constructor(private apiService: ApiService, private logger: LoggerService,
+              private title: Title) {
   }
 
   ngOnInit() {
+    this.title.setTitle('Submit Jobs');
     this.dropdownSettings = {
       singleSelection: false,
       idField: 'item_id',

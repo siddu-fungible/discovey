@@ -74,6 +74,8 @@ import { TopologyComponent } from './topology/topology.component';
 import { ApiViewerComponent } from './api-viewer/api-viewer.component';
 import { StorageAgentLogViewerComponent } from './storage-agent-log-viewer/storage-agent-log-viewer.component';
 import {FunSpinnerComponent} from "./fun-spinner/fun-spinner.component";
+import { ReversePipe } from './pipes/reverse.pipe';
+import {FlexLayoutModule} from '@angular/flex-layout';
 
 
 @NgModule({
@@ -101,7 +103,8 @@ import {FunSpinnerComponent} from "./fun-spinner/fun-spinner.component";
     StorageControllerComponent,
     TopologyComponent,
     ApiViewerComponent,
-    StorageAgentLogViewerComponent
+    StorageAgentLogViewerComponent,
+    ReversePipe
   ],
   imports: [
     BsDropdownModule,
@@ -151,6 +154,7 @@ import {FunSpinnerComponent} from "./fun-spinner/fun-spinner.component";
   MatToolbarModule,
   MatTooltipModule,
   MatTreeModule,
+    FlexLayoutModule
   ],
   exports: [
         MatAutocompleteModule,

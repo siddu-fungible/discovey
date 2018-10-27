@@ -21,29 +21,10 @@ tr.example-detail-row {
   display: flex;
 }
 
-.example-element-diagram {
-  min-width: 80px;
-  border: 2px solid black;
-  padding: 8px;
-  /*font-weight: lighter;*/
-  margin: 8px 0;
-  /*height: 204px;*/
-}
 
-.example-element-symbol {
-  font-weight: bold;
-  font-size: 40px;
-  line-height: normal;
+.mat-form-field-div {
+  padding-top: 20px;
 }
-
-.example-element-description {
-  padding: 16px;
-}
-
-.example-element-description-attribution {
-  opacity: 0.5;
-}
-
 
 mat-cell:nth-child(1),
 mat-header-cell:nth-child(1) {
@@ -102,4 +83,17 @@ mat-expansion-panel-header {
 
 .pseudo-anchor:hover {
   cursor: pointer;
+}
+
+.capacity-field {
+  max-width: 100px;
+}
+
+
+app-pools {
+  max-width: 200px;
+}
+
+.mat-action-row {
+  justify-content: flex-start;
 }

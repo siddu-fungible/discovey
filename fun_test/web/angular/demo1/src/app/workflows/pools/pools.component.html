@@ -63,16 +63,16 @@
 <div>
   <p *ngIf="action">Available pools</p>
   <mat-radio-group [(ngModel)]="selectedElement" [required]="true" *ngIf="dataSource.data.length > 0">
-    <table mat-table multiTemplateDataRows [dataSource]="dataSource" class="mat-elevation-z81">
+    <table mat-table multiTemplateDataRows [dataSource]="dataSource">
 
       <ng-container *ngIf="!radioSelection" matColumnDef="select">
-        <th [ngClass]="'customWidthClass'" mat-header-cell *matHeaderCellDef>
+        <th [ngClass]="'radioButtonClass'" mat-header-cell *matHeaderCellDef>
           <mat-checkbox (change)="$event ? masterToggle() : null"
                         [checked]="selection.hasValue() && isAllSelected()"
                         [indeterminate]="selection.hasValue() && !isAllSelected()">
           </mat-checkbox>
         </th>
-        <td [ngClass]="'customWidthClass'" mat-cell *matCellDef="let row">
+        <td [ngClass]="'radioButtonClass'" mat-cell *matCellDef="let row">
           <mat-checkbox (click)="$event.stopPropagation()"
                         (change)="$event ? selection.toggle(row) : null"
                         [checked]="selection.isSelected(row)">
@@ -81,10 +81,10 @@
       </ng-container>
 
       <ng-container *ngIf="radioSelection" matColumnDef="select">
-        <th [ngClass]="'customWidthClass'" mat-header-cell *matHeaderCellDef>
+        <th [ngClass]="'radioButtonClass'" mat-header-cell *matHeaderCellDef>
         </th>
 
-        <td [ngClass]="'customWidthClass'" mat-cell *matCellDef="let row">
+        <td [ngClass]="'radioButtonClass'" mat-cell *matCellDef="let row">
           <mat-radio-button [value]="row" (click)="selection.select(row);" [checked]="selection.isSelected(row)">
           </mat-radio-button>
         </td>
@@ -92,8 +92,8 @@
 
 
       <ng-container matColumnDef="uuid">
-        <th mat-header-cell *matHeaderCellDef> UUID </th>
-        <td mat-cell *matCellDef="let element"> {{ element.uuid }} </td>
+        <th [ngClass]="'uuidClass'" mat-header-cell *matHeaderCellDef> UUID </th>
+        <td [ngClass]="'uuidClass'" mat-cell *matCellDef="let element"> {{ element.uuid }} </td>
       </ng-container>
 
       <ng-container matColumnDef="f1s">
@@ -101,7 +101,11 @@
         <td mat-cell *matCellDef="let element">
           <button type="button" class="btn btn-primary btn-sm">
             {{ element.f1s.length }}
-          </button> </td>
+          </button>
+          &nbsp;<u *ngIf="element.f1s.length > 0" (click)="selection.select(element); toggleExpandedElement(element);" class="anchor-button pseudo-anchor">More info...</u>
+
+
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="expandedDetail">
@@ -140,7 +144,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
             class="example-element-row"
             [class.example-expanded-row]="expandedElement === row"
-            (click)="selection.select(row); toggleExpandedElement(row);">
+            (click)="selection.select(row);">
         </tr>
       </ng-container>
 

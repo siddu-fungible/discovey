@@ -11,8 +11,6 @@
   <title>Collapsible sidebar using Bootstrap 4</title>
 
 
-
-
   <!-- Bootstrap CSS CDN -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
         integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
@@ -57,22 +55,33 @@
 
 
   <div class="navbar-nav mr-auto">
-      <div class="navbar-brand d-flex align-items-center justify-content-between col-sm-12 col-md-2 mr-0">
-    <a class="mr-1 d-md-none text-light" href="#sidenav" data-toggle="collapse" data-target="#sidenav">
-    </a>
-    <a class="text-light" href="">Fungible</a>
-  </div>
+    <div class="navbar-brand d-flex align-items-center justify-content-between col-sm-12 col-md-2 mr-0">
+      <a class="mr-1 d-md-none text-light" href="#sidenav" data-toggle="collapse" data-target="#sidenav">
+      </a>
+      <a class="text-light" href="">Fungible</a>
+    </div>
 
   </div>
 
 
   <div class="navbar-nav">
     <li class="nav-item" style="padding-right: 10px">
-      <u (click)="showingApiViewer = !showingApiViewer" class="nav-item anchor-button api-viewer-link">API viewer</u>
+      <u (click)="showingApiViewer = !showingApiViewer" class="nav-item anchor-button api-viewer-link pseudo-anchor">API
+        viewer</u>
     </li>
-
-
   </div>
+    <div class="navbar-nav">
+    <li class="nav-item" style="padding-right: 10px">
+            <ng-container *ngIf="controller">
+          <span *ngIf="controller.health" class="badge badge-success">Online</span>
+          <span *ngIf="!controller.health" class="badge badge-danger">Offline</span>
+        </ng-container>
+        <ng-container *ngIf="!controller">
+          <span style="background-color: red">No controllers available</span>
+        </ng-container>
+      </li>
+  </div>
+
 
 </nav>
 
@@ -95,55 +104,40 @@
         </ul>
       </li>
       <li>
-        <a href="#network-sub-menu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Networking</a>
+        <a href="#network-sub-menu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Topology</a>
         <ul class="collapse list-unstyled" id="network-sub-menu">
           <li>
             <a [routerLink]="['storage-controller']">Controller</a>
           </li>
           <li>
-            <a [routerLink]="['topology']">Topology</a>
+            <a [routerLink]="['topology']">DPUs</a>
           </li>
-          <li>
+          <!--li>
             <a [routerLink]="['dpus']">DPUs</a>
-          </li>
+          </li-->
 
         </ul>
       </li>
-      <li>
-        <ng-container *ngIf="controller">
-        <span style="font-size: 10px;">Controller: {{ controller.ip }}</span>&nbsp;
-          <span *ngIf="controller.health" class="badge badge-success">Online</span>
-          <span *ngIf="!controller.health" class="badge badge-danger">Offline</span>
-        </ng-container>
-        <ng-container *ngIf="!controller">
-          <span style="background-color: red">No controllers available</span>
-        </ng-container>
-      </li>
-
     </ul>
   </nav>
 
   <!-- Page Content  -->
   <div id="content">
-    <div class="row">
-      <div class="col">
-        <router-outlet></router-outlet>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <router-outlet></router-outlet>
+        </div>
       </div>
-      <div *ngIf="showingApiViewer" class="col">
-
+      <br>
+      <div *ngIf="showingApiViewer" class="row">
+        <div class="col">
           <app-api-viewer></app-api-viewer>
+        </div>
+
       </div>
 
     </div>
-
-    <!--div class="container">
-      <div class="row">
-        <router-outlet></router-outlet>
-              <div *ngIf="showingApiViewer">
-                <div  class="col"><app-api-viewer></app-api-viewer></div>
-              </div>
-      </div>
-    </div-->
 
   </div>
 </div>
