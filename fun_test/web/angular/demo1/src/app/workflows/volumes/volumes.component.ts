@@ -30,7 +30,8 @@ export interface AddNewVolumeConfigInterface {
 
 export class AddNewVolumeConfig implements AddNewVolumeConfigInterface {
   name: string = null;
-  capacity: number = 104857600;
+  //capacity: number = 104857600;
+  capacity: number = 100;
   pool_name: string = null;
   compression_effort = null;
   encryption: boolean = null;
@@ -97,6 +98,7 @@ export class VolumesComponent implements OnInit {
   showingDetails: boolean = false;
   pools: PoolElement[] = [];
   status: string = null;
+  attachingStatus: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
   }
@@ -137,6 +139,13 @@ export class VolumesComponent implements OnInit {
         newVolumeElement.type = value.type;
         newVolumeElement.pool = value.pool;
         newVolumeElement.name = value.name;
+        if (value.hasOwnProperty('port')) {
+          newVolumeElement.port = value.port;
+        } else {
+          newVolumeElement.port = null;
+        }
+
+
         this.dataSource.data.push(newVolumeElement);
         this.dataSource.data = [...this.dataSource.data];
       }
@@ -228,7 +237,7 @@ export class VolumesComponent implements OnInit {
       alert("Please specify a capacity");
       return;
     }
-
+    let capacity = this.addNewVolumeConfig.capacity * 1024 * 1024;
     let selectedPool = this._getSelectedPool();
     if (!selectedPool) {
       alert("Please select a pool");
@@ -244,10 +253,10 @@ export class VolumesComponent implements OnInit {
     volumeType = this.volumeTypeSelection.selected[0];
     let dp = this.getDataProtection(volumeType);
     let payload = {
-      capacity: this.addNewVolumeConfig.capacity,
+      capacity: capacity,
       data_protection: dp,
       name: this.addNewVolumeConfig.name,
-      enrypt: this.encryptionOn
+      encrypt: this.encryptionOn
     };
     let url = this.commonService.getBaseUrl();
     url = url + "/storage/pools/" + selectedPool + "/volumes";
@@ -295,15 +304,18 @@ export class VolumesComponent implements OnInit {
     console.log("hi");
   }
 
-  attach(volumeUuid) {
+  attach(element, volumeUuid) {
     let url = this.commonService.getBaseUrl();
     url = url + "/storage/volumes/" + volumeUuid + "/ports";
     let payload = {}; //{"remote_ip": "127.0.0.1"};
+    element.attachingStatus = "Attaching...";
     this.apiService.post(url, payload).subscribe((response) => {
       alert("Attached");
+      element.attachingStatus = "Refreshing";
       this.getVolumes();
     }, error => {
       alert("Attach failed");
+      element.attachingStatus = null;
     })
   }
 

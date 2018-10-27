@@ -33,6 +33,8 @@ export class TopoF1 {
 })
 export class CommonService {
   activeController: Controller = null;
+  tgMap: {[name: string]: TopoTg} = {};
+
   constructor() { }
 
   setActiveController(controller: Controller) {
@@ -51,7 +53,8 @@ export class CommonService {
     return url;
   }
 
-
-
+  getTgMap() {
+    return this.tgMap;
+  }
 
 }

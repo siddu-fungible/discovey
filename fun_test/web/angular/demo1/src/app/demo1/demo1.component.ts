@@ -27,7 +27,7 @@ export class Demo1Component implements OnInit {
   }
 
   checkControllerStatus() {
-    this.apiService.get("/demo/get_controllers").subscribe((response) => {
+    this.apiService.get("/demo/get_controllers", false).subscribe((response) => {
       let controllers = response.data;
       controllers.forEach((controller) => {
 
@@ -50,7 +50,7 @@ export class Demo1Component implements OnInit {
   healthCheck() {
 
       let url = this.commonService.getBaseUrl() + "/api_server/health";
-      this.apiService.get(url).subscribe((response) => {
+      this.apiService.get(url, false).subscribe((response) => {
         console.log(response);
         this.controller.health = response.message === "healthy";
       }, error => {
