@@ -2,6 +2,7 @@ import {Component, OnInit, Input} from '@angular/core';
 import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
 import {ActivatedRoute} from "@angular/router";
+import {Title} from "@angular/platform-browser";
 
 enum Filter {
     All = "ALL",
@@ -25,10 +26,12 @@ export class RegressionComponent implements OnInit {
   logDir: any;
   status: string = "Fetching Data";
 
-  constructor(private pagerService: PagerService, private apiService: ApiService, private route: ActivatedRoute) {
+  constructor(private pagerService: PagerService, private apiService: ApiService, private route: ActivatedRoute,
+              private title: Title) {
   }
 
   ngOnInit() {
+    this.title.setTitle('Regression');
     if (this.route.snapshot.data["tags"]) {
       this.tags = this.route.snapshot.data["tags"];
     }
