@@ -25,6 +25,8 @@ import {MatTableDataSource} from "@angular/material";
 export class VolumeComponent implements OnInit {
   status: string = null;
   uuid: string = null;
+  name: string = null;
+  showingLoadPanel: boolean = false;
   //dataSource = ELEMENT_DATA;
   dataSource = new MatTableDataSource<VolumeElement>();
 
@@ -42,7 +44,8 @@ export class VolumeComponent implements OnInit {
     'read_iops',
     'write_iops',
     'dpus',
-  'actions'];
+  'actions',
+  'more_info'];
 
   columnToHeader = {
     'name': "Name",
@@ -54,12 +57,13 @@ export class VolumeComponent implements OnInit {
     "pool": "Pool",
     "read_iops": "Read IOPS",
     "write_iops": "Write IOPS",
-    'actions': "Actions"
+    'actions': "Actions",
+    'more_info': ""
   };
   expandedElement: VolumeElement;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private route: ActivatedRoute) {
-    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "read_iops", "actions"];
+    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "read_iops", "actions", "more_info"];
   }
 
   ngOnInit() {
@@ -92,6 +96,11 @@ export class VolumeComponent implements OnInit {
         newVolumeElement.type = value.type;
         newVolumeElement.pool = value.pool;
         newVolumeElement.name = value.name;
+        if (value.hasOwnProperty('port')) {
+          newVolumeElement.port = value.port;
+        } else {
+          newVolumeElement.port = null;
+        }
         this.dataSource.data.push(newVolumeElement);
         this.dataSource.data = [...this.dataSource.data];
         this.status = null;
@@ -123,30 +132,11 @@ export class VolumeElement {
   write_iops: number;
   dpus: string[];
   attached: boolean = false;
+  port: {};
 
 }
 
 const ELEMENT_DATA: VolumeElement[] = [
-  {
-    f1: "1",
-    uuid: "1",
-    name: "Volume-1",
-    type: 'EC',
-    capacity: 1024,
-    compression_effort: 1,
-    encrypt: true,
-    namespace_id: 233,
-    num_data_volumes: 4,
-    num_parity_volumes: 2,
-    num_replica_volumes: 3,
-    pool: "Pool-1",
-    description: `Some description`,
-    read_iops: 14,
-    write_iops: 54,
-    dpus: ["DPU-1", "DPU-2"],
-    attached: false
-  }
-
 ];
 
 

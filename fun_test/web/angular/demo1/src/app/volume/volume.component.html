@@ -1,9 +1,9 @@
 <fun-spinner [status]="status"></fun-spinner>
 <mat-card *ngIf="dataSource.data.length > 0">
   <mat-card-header>
-    Volume {{ uuid }}
+    Volume: {{ uuid }}
   </mat-card-header>
-  <table  mat-table
+  <table mat-table
          [dataSource]="dataSource" multiTemplateDataRows>
     <ng-container matColumnDef="{{ column }}" *ngFor="let column of columnsToDisplay">
       <th mat-header-cell *matHeaderCellDef> {{ columnToHeader[column] }}</th>
@@ -20,16 +20,24 @@
 
 
           <ng-container *ngSwitchCase="'encrypt'">
-            <i *ngIf="element.encrypt" class="material-icons">lock</i>
-            <i *ngIf="!element.encrypt" class="material-icons">unlock</i>
+            <p><i *ngIf="element.encrypt" class="fa fa-lock" aria-hidden="true"></i></p>
+            <p><i *ngIf="!element.encrypt" class="fa fa-unlock" aria-hidden="true"></i></p>
 
           </ng-container>
+
+          <ng-container *ngSwitchCase="'more_info'">
+            <u class="anchor-button pseudo-anchor" (click)="expandedElement = element">More info...</u>
+          </ng-container>
+
+
           <ng-container *ngSwitchCase="'pool'">
             <a href="/demo/demo1/pool/{{ element[column] }}">{{ element[column] }}</a>
           </ng-container>
 
+
           <ng-container *ngSwitchCase="'actions'">
-            <button class="btn btn-sm btn-info">Load</button>
+            <button *ngIf="element.port" class="btn btn-sm btn-info" (click)="showingLoadPanel = !showingLoadPanel">Load</button>
+            <span *ngIf="!element.port" class="badge badge-info">No port</span>
           </ng-container>
 
           <ng-container *ngSwitchDefault>
@@ -65,6 +73,26 @@
             </table>
           </div>
 
+          <div *ngIf="element.port">
+            <mat-divider></mat-divider>
+              <form style="width: 500px">
+                <div class="form-group row">
+                  <label class="col-sm-3 col-form-label">Remote IP</label>
+                  <div class="col-sm-9">
+                    <input type="text" readonly class="form-control-plaintext" value="{{ element.port.remote_ip }}">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-3 col-form-label">Namespace ID</label>
+                  <div class="col-sm-9">
+                    <input type="text" readonly class="form-control-plaintext" value="{{ element.port.nsid }}">
+                  </div>
+                </div>
+              </form>
+
+
+          </div>
+
 
         </div>
       </td>
@@ -74,8 +102,36 @@
     <tr mat-row *matRowDef="let element; columns: columnsToDisplay;"
         class="example-element-row"
         [class.example-expanded-row]="expandedElement === element"
-        (click)="expandedElement = element">
+        >
     </tr>
     <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
   </table>
 </mat-card>
+
+<br>
+<div *ngIf="showingLoadPanel" class="load-container col-lg-6 col-md-6 col-xl-6 col-xxl-6">
+  <mat-card>
+      <mat-card-header>
+    FIO
+  </mat-card-header>
+    <mat-form-field>
+    <input matInput placeholder="Input">
+  </mat-form-field>
+  <br>
+  <mat-form-field>
+    <textarea matInput placeholder="Textarea"></textarea>
+  </mat-form-field>
+  <br>
+  <mat-form-field>
+    <mat-select placeholder="Select">
+      <mat-option value="option">Option</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <br>
+      <mat-form-field>
+<button class="btn btn-primary btn-sm">Send traffic</button>
+  </mat-form-field>
+  </mat-card>
+
+
+</div>

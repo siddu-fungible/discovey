@@ -1,61 +1,73 @@
-<button mat-button (click)="refresh()">
-  <mat-icon>refresh</mat-icon>
-  Refresh
-</button>
-<table class="table">
-  <tr *ngFor="let row of apiLogs">
-    <td>
-      <div class="container">
-        <div class="row">
-          <div class="col-xl-3 col-xxl-3 col-lg-3 col-md-3">
+<mat-card>
+  <mat-card-header>
+    API view
+  </mat-card-header>
+  <!--button mat-button (click)="refresh()">
+    <mat-icon>refresh</mat-icon>
+    Refresh
+  </button-->
+  <table class="table">
+    <tr *ngFor="let row of apiLogs | reverse ;  index as i ">
+      <td>
+        {{ apiLogs.length - i }}
+      </td>
+      <td>
+        <div class="container">
+          <div class="row">
+            <div class="col-xl-3 col-xxl-3 col-lg-3 col-md-3">
             <span class="method-button-text-color badge {{ getButtonColorClass(row.method) }}" data-toggle="collapse"
                   [attr.data-target]="'#' + row.id">{{ row.method }}</span>
-            &nbsp;
-            <span *ngIf="row.http_status_code === 200 || row.http_status_code === 201"
-                  class="badge badge-success">{{ row.http_status_code }}</span>
+              &nbsp;
+              <span *ngIf="row.http_status_code === 200 || row.http_status_code === 201"
+                    class="badge badge-success">{{ row.http_status_code }}</span>
 
-            <span *ngIf="row.http_status_code !== 200 && row.http_status_code !== 201"
-                  class="badge badge-danger">{{ row.http_status_code }}</span>
+              <span *ngIf="row.http_status_code !== 200 && row.http_status_code !== 201"
+                    class="badge badge-danger">{{ row.http_status_code }}</span>
+            </div>
+
+            <div class="url-font col-xl-9 col-xxl-9 col-lg-9 col-md-9">
+              <span class="badge badge-pill">url:</span> {{ row.url }}
+            </div>
+
           </div>
-
-          <div class="url-font">
-            <span class="badge badge-pill">url:</span> {{ row.url }}
-          </div>
-
         </div>
-      </div>
 
-      <div id="{{ row.id }}" class="collapse">
-        <div class="response-div" *ngIf="row.payload">
-          <div class="row">
-            Payload:
-            <br>
-            <pre>
+        <div class="container">
+          <div id="{{ row.id }}" class="collapse row">
+            <div class="response-div" *ngIf="row.payload">
+              <div class="row">
+                Payload:
+                <br>
+                <pre>
 
 {{ row.payload | json }} </pre>
-          </div>
+              </div>
 
-        </div>
-        <br>
-        <div class="response-div" *ngIf="row.response">
-          <div class="row">
-            Status: {{ row.response.status }}
-          </div>
-          <div class="row">
-            Message: {{ row.response.message }}
-          </div>
-          <div class="row">
-            Error message: {{ row.response.error_message }}
-          </div>
-          <div class="row" *ngIf="row.response.data">
-            Data:
+            </div>
             <br>
-            <pre>
+            <div class="response-div" *ngIf="row.response">
+              <div class="row">
+                Status: {{ row.response.status }}
+              </div>
+              <div class="row">
+                Message: {{ row.response.message }}
+              </div>
+              <div class="row">
+                Error message: {{ row.response.error_message }}
+              </div>
+              <div class="row" *ngIf="row.response.data">
+                Data:
+                <br>
+                <pre>
 
 {{ row.response.data | json }}</pre>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </td>
-  </tr>
-</table>
+      </td>
+    </tr>
+  </table>
+
+</mat-card>
+

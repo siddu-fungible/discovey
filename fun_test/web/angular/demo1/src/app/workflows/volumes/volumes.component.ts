@@ -137,6 +137,13 @@ export class VolumesComponent implements OnInit {
         newVolumeElement.type = value.type;
         newVolumeElement.pool = value.pool;
         newVolumeElement.name = value.name;
+        if (value.hasOwnProperty('port')) {
+          newVolumeElement.port = value.port;
+        } else {
+          newVolumeElement.port = null;
+        }
+
+
         this.dataSource.data.push(newVolumeElement);
         this.dataSource.data = [...this.dataSource.data];
       }

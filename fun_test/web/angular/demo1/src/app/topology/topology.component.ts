@@ -42,7 +42,9 @@ export class TopologyComponent implements OnInit {
   activeController: Controller = null;
   topoF1s: TopoF1[] = [];
   dataSource = new MatTableDataSource<TopoF1>();
-  displayedColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
+  //displayedColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
+  displayedColumns: string[] = ['name', 'dataplane_ip', 'action'];
+
   displayedTgColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
   displayedLoadColumns: string[] = ['attribute', 'value'];
   expandedElement: TopoF1;
