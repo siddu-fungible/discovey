@@ -3,7 +3,7 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import {ActivatedRoute} from "@angular/router";
 import {LoggerService} from "../services/logger/logger.service";
 import {ApiService} from "../services/api/api.service";
-import {CommonService} from "../services/common/common.service";
+import {CommonService, TopoF1} from "../services/common/common.service";
 import {MatTableDataSource} from "@angular/material";
 
 
@@ -29,7 +29,7 @@ export class VolumeComponent implements OnInit {
   showingLoadPanel: boolean = false;
   //dataSource = ELEMENT_DATA;
   dataSource = new MatTableDataSource<VolumeElement>();
-
+  volumeElement: VolumeElement;
   volumeTypes = {ec: "EC", lsv: "LSV"};
   columnsToDisplay = ['name',
     'type',
@@ -75,6 +75,11 @@ export class VolumeComponent implements OnInit {
     this.getVolumeInfo();
   }
 
+  fetchTg(tgName) {
+
+  }
+
+
   getVolumeInfo() {
     if (this.uuid) {
       let url = this.commonService.getBaseUrl();
@@ -89,20 +94,21 @@ export class VolumeComponent implements OnInit {
       this.status = "Fetching volume info";
       this.apiService.get(url).subscribe((response) => {
         let value = response.data;
-        let newVolumeElement: VolumeElement = new VolumeElement();
-        newVolumeElement.f1 = value.f1;
-        newVolumeElement.uuid = value.uuid;
-        newVolumeElement.encrypt = value.encrypt;
-        newVolumeElement.capacity = value.capacity;
-        newVolumeElement.type = value.type;
-        newVolumeElement.pool = value.pool;
-        newVolumeElement.name = value.name;
+        this.volumeElement = new VolumeElement();
+        this.volumeElement.f1 = value.f1;
+        this.volumeElement.uuid = value.uuid;
+        this.volumeElement.encrypt = value.encrypt;
+        this.volumeElement.capacity = value.capacity;
+        this.volumeElement.type = value.type;
+        this.volumeElement.pool = value.pool;
+        this.volumeElement.name = value.name;
         if (value.hasOwnProperty('port')) {
-          newVolumeElement.port = value.port;
+          this.volumeElement.port = value.port;
+          console.log(this.commonService.tgMap[this.volumeElement.port.tg]);
         } else {
-          newVolumeElement.port = null;
+          this.volumeElement.port = null;
         }
-        this.dataSource.data.push(newVolumeElement);
+        this.dataSource.data.push(this.volumeElement);
         this.dataSource.data = [...this.dataSource.data];
         this.status = null;
 
@@ -129,6 +135,45 @@ export class VolumeComponent implements OnInit {
     })
   }
 
+  sendTraffic() {
+    let result = null;
+    let url = this.commonService.getBaseUrl();
+    url = url + '/topology/get_spec';
+    this.apiService.get(url).subscribe((response) => {
+      console.log(response);
+      let data = response.data;
+      let f1s = data.F1;
+      for (let key of Object.keys(f1s)) {
+        let newF1 = new TopoF1();
+        newF1.name = key;
+        newF1.mgmt_ip = f1s[key].mgmt_ip;
+        newF1.mgmt_ssh_port = f1s[key].mgmt_ssh_port;
+        newF1.dataplane_ip = f1s[key].dataplane_ip;
+        newF1.storage_agent_port = f1s[key].storage_agent_port;
+        if (f1s[key].hasOwnProperty("tgs")) {
+          newF1.tgs = f1s[key].tgs;
+          if (newF1.tgs) {
+            for (let key2 of Object.keys(newF1.tgs)) {
+              if (key2 === this.volumeElement.port.tg) {
+                result = newF1.tgs[key2];
+                let payload = {};
+                payload["f1_ip"] = this.volumeElement.port.ip;
+                payload["tg_ip"] = this.volumeElement.port.remote_ip;
+                payload["tg_mgmt_ip"] = result.mgmt_ip;
+                payload["tg_mgmt_port"] = result.mgmt_ssh_port;
+                console.log(payload);
+              }
+            }
+          }
+
+        }
+      }
+    }, error => {
+
+    })
+
+  }
+
 }
 
 export class VolumeElement {
@@ -149,7 +194,7 @@ export class VolumeElement {
   write_iops: number;
   dpus: string[];
   attached: boolean = false;
-  port: {};
+  port: any = {};
   attachingStatus: string = null;
 
 }
