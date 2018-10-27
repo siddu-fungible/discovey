@@ -711,34 +711,53 @@
         "weight": 1,
         "children": [
           {
-            "info": "RSA CRT 2048 decryptions",
-            "metric_model_name": "TeraMarkPkeRsaPerformance",
-            "leaf": true,
-            "name": "RSA CRT 2048 decryptions",
-            "label": "RSA CRT 2048 decryptions",
-            "children": [],
-            "weight": 1
-          },
-          {
-            "info": "ECDH P256",
-            "metric_model_name": "TeraMarkPkeEcdh256Performance",
-            "leaf": true,
-            "name": "ECDH P256",
-            "label": "ECDH P256",
-            "children": [],
-            "weight": 1
-          },
-          {
-            "info": "ECDH 25519",
-            "metric_model_name": "TeraMarkPkeEcdh25519Performance",
-            "leaf": true,
-            "name": "ECDH 25519",
-            "label": "ECDH 25519",
-            "children": [],
-            "weight": 1
+            "info": "PKE",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "PKE",
+            "label": "PKE",
+            "weight": 1,
+            "children": [
+              {
+                "info": "RSA CRT 2048 decryptions",
+                "metric_model_name": "TeraMarkPkeRsaPerformance",
+                "leaf": true,
+                "name": "RSA CRT 2048 decryptions",
+                "label": "RSA CRT 2048 decryptions",
+                "children": [],
+                "weight": 1
+              },
+//              {
+//                "info": "RSA CRT 4096 decryptions",
+//                "metric_model_name": "TeraMarkPkeRsa4kPerformance",
+//                "leaf": true,
+//                "name": "RSA CRT 4096 decryptions",
+//                "label": "RSA CRT 4096 decryptions",
+//                "children": [],
+//                "weight": 1
+//              },
+              {
+                "info": "ECDH P256",
+                "metric_model_name": "TeraMarkPkeEcdh256Performance",
+                "leaf": true,
+                "name": "ECDH P256",
+                "label": "ECDH P256",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "ECDH 25519",
+                "metric_model_name": "TeraMarkPkeEcdh25519Performance",
+                "leaf": true,
+                "name": "ECDH 25519",
+                "label": "ECDH 25519",
+                "children": [],
+                "weight": 1
+              }
+            ]
+          }
+            ]
           }
         ]
       }
     ]
-  }
-]

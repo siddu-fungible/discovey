@@ -14,7 +14,8 @@ from web.fun_test.metrics_models import SoakClassicMallocPerformance, SoakFunMal
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance
 from web.fun_test.metrics_models import MetricChartStatus
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, BootTimePerformance
-from web.fun_test.metrics_models import TeraMarkPkeEcdh25519Performance, TeraMarkPkeEcdh256Performance, TeraMarkPkeRsaPerformance
+from web.fun_test.metrics_models import TeraMarkPkeEcdh25519Performance, TeraMarkPkeEcdh256Performance
+from web.fun_test.metrics_models import TeraMarkPkeRsaPerformance, TeraMarkPkeRsa4kPerformance
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -124,6 +125,10 @@ class TeraMarkPkeEcdh256PerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(TeraMarkPkeRsaPerformance)
 class TeraMarkPkeRsaPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(TeraMarkPkeRsa4kPerformance)
+class TeraMarkPkeRsa4kPerformanceAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
 @admin.register(TeraMarkPkeEcdh25519Performance)

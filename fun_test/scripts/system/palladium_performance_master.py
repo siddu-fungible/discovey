@@ -6,7 +6,8 @@ from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, Voltest
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, SoakClassicMallocPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance
-from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance, TeraMarkPkeRsaPerformance
+from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
+from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 from web.fun_test.analytics_models_helper import prepare_status_db
 from web.fun_test.models import TimeKeeper
@@ -881,11 +882,48 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
-class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
+class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
     def describe(self):
         self.set_test_details(id=15,
+                              summary="TeraMark PKE RSA 4K Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+(?P<metric_name>RSA\s+CRT\s+4096\s+decryptions):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_rsa_crt_dec_no_pad_4096_soak"
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkPkeRsa4kPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkPkeRsa4kPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=16,
                               summary="TeraMark PKE ECDH P256 Performance Test",
                               steps="Steps 1")
 
@@ -922,7 +960,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
     def describe(self):
-        self.set_test_details(id=16,
+        self.set_test_details(id=17,
                               summary="TeraMark PKE ECDH 25519 Performance Test",
                               steps="Steps 1")
 
@@ -989,6 +1027,7 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakClassicMallocPerformanceTc())
     myscript.add_test_case(BootTimingPerformanceTc())
     myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
     myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
     myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
     myscript.add_test_case(PrepareDbTc())
