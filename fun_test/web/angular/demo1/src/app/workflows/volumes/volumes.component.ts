@@ -315,7 +315,7 @@ export class VolumesComponent implements OnInit {
       this.getVolumes();
     }, error => {
       alert("Attach failed");
-      element.attachingStatus = "Refreshing";
+      element.attachingStatus = null;
     })
   }
 

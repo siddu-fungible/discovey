@@ -84,6 +84,7 @@ export class VolumeComponent implements OnInit {
         }, 1000);
         return;
       }
+      this.dataSource.data = [];
       url = url + "/storage/volumes/" + this.uuid;
       this.status = "Fetching volume info";
       this.apiService.get(url).subscribe((response) => {
@@ -112,6 +113,22 @@ export class VolumeComponent implements OnInit {
 
     }
   }
+
+  attach(element, volumeUuid) {
+    let url = this.commonService.getBaseUrl();
+    url = url + "/storage/volumes/" + volumeUuid + "/ports";
+    let payload = {}; //{"remote_ip": "127.0.0.1"};
+    element.attachingStatus = "Attaching...";
+    this.apiService.post(url, payload).subscribe((response) => {
+      alert("Attached");
+      element.attachingStatus = "Refreshing";
+      this.getVolumeInfo();
+    }, error => {
+      alert("Attach failed");
+      element.attachingStatus = null;
+    })
+  }
+
 }
 
 export class VolumeElement {
@@ -139,6 +156,8 @@ export class VolumeElement {
 
 const ELEMENT_DATA: VolumeElement[] = [
 ];
+
+
 
 
 /**  Copyright 2018 Google Inc. All Rights Reserved.

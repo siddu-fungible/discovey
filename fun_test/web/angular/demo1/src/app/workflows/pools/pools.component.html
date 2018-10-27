@@ -101,7 +101,11 @@
         <td mat-cell *matCellDef="let element">
           <button type="button" class="btn btn-primary btn-sm">
             {{ element.f1s.length }}
-          </button> </td>
+          </button>
+          &nbsp;<u *ngIf="element.f1s.length > 0" (click)="selection.select(element); toggleExpandedElement(element);" class="anchor-button pseudo-anchor">More info...</u>
+
+
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="expandedDetail">
@@ -140,7 +144,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"
             class="example-element-row"
             [class.example-expanded-row]="expandedElement === row"
-            (click)="selection.select(row); toggleExpandedElement(row);">
+            (click)="selection.select(row);">
         </tr>
       </ng-container>
 
