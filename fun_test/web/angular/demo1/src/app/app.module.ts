@@ -153,8 +153,7 @@ import { ReversePipe } from './pipes/reverse.pipe';
   MatTabsModule,
   MatToolbarModule,
   MatTooltipModule,
-  MatTreeModule,
-    FlexLayoutModule
+  MatTreeModule
   ],
   exports: [
         MatAutocompleteModule,
