@@ -7,6 +7,14 @@ import {CommonService, TopoF1} from "../services/common/common.service";
 import {MatTableDataSource} from "@angular/material";
 
 
+export class TopologyVolumeElement {
+  f1_id: string = null;
+  type: string = null;
+  indent: number = 0;
+  uuid: string = null;
+  stats: any = {};
+}
+
 /**
  * @title Table with expandable rows
  */
@@ -36,6 +44,9 @@ export class VolumeComponent implements OnInit {
   loadReadIops: number = 0;
   loadWriteIops: number = 0;
   volumeTypes = {ec: "EC", lsv: "LSV"};
+  topoVolElements: TopologyVolumeElement[] = [];
+  topologyFetchStatus: string = null;
+
   columnsToDisplay = ['name',
     'type',
     'capacity',
@@ -101,8 +112,10 @@ export class VolumeComponent implements OnInit {
       return;
     }
     url = url + "/storage/volumes/" + uuid + "/topology";
+    this.topologyFetchStatus = "Fetching underlying volume(s) info";
     this.apiService.get(url).subscribe((response)=> {
-
+      this.topologyFetchStatus = null;
+      this.descendTopoTree(response.data);
     }, error => {
 
     })
@@ -208,6 +221,36 @@ export class VolumeComponent implements OnInit {
     });
 
   }
+
+  descendTopoTree(node, indent = 0) {
+    let topoVolElement = new TopologyVolumeElement();
+    topoVolElement.f1_id = node.f1_id;
+    topoVolElement.type = node.type;
+    topoVolElement.indent = indent;
+    topoVolElement.uuid = node.uuid;
+    topoVolElement.stats = node.stats;
+    this.topoVolElements.push(topoVolElement);
+
+    node.src_vols.forEach((src_vol) => {
+      this.descendTopoTree(src_vol, indent + 1);
+    });
+  }
+
+  getIndentHtml = (node) => {
+    let s = "";
+    if (node.hasOwnProperty("indent")) {
+      for (let i = 0; i < node.indent - 1; i++) {
+        s += "<span style=\"color: white\">&rarr;</span>";
+      }
+      if (node.indent)
+        s += "<span>&nbsp;&nbsp;</span>";
+    }
+
+    return s;
+  };
+
+
+
 
   getLoadProgress() {
     return (this.bgPollCount * 100/this.loadMaxWaitTime);

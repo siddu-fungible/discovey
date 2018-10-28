@@ -37,7 +37,8 @@
 
 
           <ng-container *ngSwitchCase="'more_info'">
-            <u class="anchor-button pseudo-anchor" (click)="expandedElement = element">More info...</u>
+            <fun-spinner [status]="topologyFetchStatus"></fun-spinner>
+            <u *ngIf="element.port || (topoVolElements.length > 0)" class="anchor-button pseudo-anchor" (click)="expandedElement = element">More info...</u>
           </ng-container>
 
 
@@ -122,6 +123,24 @@
 
           </div>
 
+          <table *ngIf="topoVolElements.length > 0" class="table table-nonfluid">
+            <tr>
+              <th>Type</th>
+              <th>UUID</th>
+              <th>DPU</th>
+              <th>Reads</th>
+              <th>Writes</th>
+            </tr>
+            <tr *ngFor="let row of topoVolElements">
+              <td><span [innerHTML]="getIndentHtml(row) | safeHtml"></span>{{ row.type }}</td>
+              <td>{{ row.uuid }}</td>
+              <td>{{ row.f1_id }}</td>
+              <td>{{ row.stats.num_reads }}</td>
+              <td>{{ row.stats.num_writes }}</td>
+            </tr>
+
+          </table>
+
 
         </div>
       </td>
@@ -174,3 +193,6 @@
 
 
 </div>
+
+
+

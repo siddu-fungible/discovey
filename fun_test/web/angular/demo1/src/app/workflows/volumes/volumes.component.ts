@@ -48,6 +48,7 @@ export class AddNewVolumeDataProtectionConfig implements AddNewVolumeDataProtect
   fault_tolerance: number = null;
 }
 
+
 const ELEMENT_DATA: VolumeElement[] = [];
 
 
@@ -99,12 +100,160 @@ export class VolumesComponent implements OnInit {
   pools: PoolElement[] = [];
   status: string = null;
   attachingStatus: string = null;
+  sampleTopology = {
+  "f1_id": "0-4",
+  "stats": {
+    "write_bytes": 0,
+    "fault_injection": 0,
+    "num_reads": 0,
+    "sblk_reads": 0,
+    "flvm_block_size": 4096,
+    "cache_reads": 0,
+    "flvm_vol_size_blocks": 25600,
+    "num_writes": 0,
+    "sblk_writes": 0,
+    "read_bytes": 0,
+    "rmw_blks": 0,
+    "compact_blks": 0,
+    "volume_id": 0,
+    "rmw_bytes": 0,
+    "type": 6,
+    "compact_bytes": 0
+  },
+  "type": "VOL_TYPE_BLK_LSV",
+  "uuid": "9724765456ea43de",
+  "src_vols": [
+    {
+      "f1_id": "0-4",
+      "stats": {
+        "fault_injection": 0,
+        "num_reads": 1,
+        "flvm_block_size": 4096,
+        "flvm_vol_size_blocks": 38408,
+        "volume_id": 0,
+        "type": 9,
+        "num_writes": 1
+      },
+      "type": "VOL_TYPE_BLK_EC",
+      "uuid": "40c34bb626584022",
+      "src_vols": [
+        {
+          "f1_id": "0-6",
+          "stats": {
+            "fault_injection": 0,
+            "num_reads": 1,
+            "flvm_block_size": 4096,
+            "flvm_vol_size_blocks": 9603,
+            "volume_id": 4096,
+            "type": 1,
+            "num_writes": 2
+          },
+          "type": "VOL_TYPE_BLK_LOCAL_THIN",
+          "uuid": "c5940a7fe2cb4264",
+          "src_vols": []
+        },
+        {
+          "f1_id": "0-7",
+          "stats": {
+            "fault_injection": 0,
+            "num_reads": 0,
+            "flvm_block_size": 4096,
+            "flvm_vol_size_blocks": 9603,
+            "volume_id": 4096,
+            "type": 1,
+            "num_writes": 2
+          },
+          "type": "VOL_TYPE_BLK_LOCAL_THIN",
+          "uuid": "4f3f049a6af64362",
+          "src_vols": []
+        },
+        {
+          "f1_id": "0-1",
+          "stats": {
+            "fault_injection": 0,
+            "num_reads": 0,
+            "flvm_block_size": 4096,
+            "flvm_vol_size_blocks": 9603,
+            "volume_id": 4096,
+            "type": 1,
+            "num_writes": 2
+          },
+          "type": "VOL_TYPE_BLK_LOCAL_THIN",
+          "uuid": "f0ff6f3854554900",
+          "src_vols": []
+        },
+        {
+          "f1_id": "0-2",
+          "stats": {
+            "fault_injection": 0,
+            "num_reads": 0,
+            "flvm_block_size": 4096,
+            "flvm_vol_size_blocks": 9603,
+            "volume_id": 4096,
+            "type": 1,
+            "num_writes": 2
+          },
+          "type": "VOL_TYPE_BLK_LOCAL_THIN",
+          "uuid": "e995a7d2d25a4f94",
+          "src_vols": []
+        },
+        {
+          "f1_id": "0-3",
+          "stats": {
+            "fault_injection": 0,
+            "num_reads": 0,
+            "flvm_block_size": 4096,
+            "flvm_vol_size_blocks": 9603,
+            "volume_id": 4096,
+            "type": 1,
+            "num_writes": 2
+          },
+          "type": "VOL_TYPE_BLK_LOCAL_THIN",
+          "uuid": "cb5a3aebd8f94d4f",
+          "src_vols": []
+        },
+        {
+          "f1_id": "0-8",
+          "stats": {
+            "fault_injection": 0,
+            "num_reads": 0,
+            "flvm_block_size": 4096,
+            "flvm_vol_size_blocks": 9603,
+            "volume_id": 4096,
+            "type": 1,
+            "num_writes": 2
+          },
+          "type": "VOL_TYPE_BLK_LOCAL_THIN",
+          "uuid": "2896e640f9c34b89",
+          "src_vols": []
+        }
+      ]
+    },
+    {
+      "f1_id": "0-4",
+      "stats": {
+        "fault_injection": 0,
+        "num_reads": 0,
+        "flvm_block_size": 512,
+        "flvm_vol_size_blocks": 2048,
+        "volume_id": 16384,
+        "type": 5,
+        "num_writes": 0
+      },
+      "type": "VOL_TYPE_BLK_NV_MEMORY",
+      "uuid": "551a3c50ca834e64",
+      "src_vols": []
+    }
+  ]
+};
+
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
   }
 
   ngOnInit() {
     this.getVolumes();
+    let i = 0;
   }
 
   refresh() {
