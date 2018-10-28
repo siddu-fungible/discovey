@@ -218,11 +218,16 @@ export class VolumesComponent implements OnInit {
   }
 
   getDataProtection(volumeType) {
+    let dp;
     let volTypeString = "VOL_TYPE_BLK_LOCAL_THIN";
     if (volumeType.toLowerCase() === "durable") {
       volTypeString = "VOL_TYPE_BLK_EC";
+       dp = {vol_type: volTypeString, num_failed_disks: 2};
+    } else {
+
+      dp = {vol_type: volTypeString};
     }
-    let dp = {vol_type: volTypeString};
+
     return dp;
   }
 
@@ -256,6 +261,7 @@ export class VolumesComponent implements OnInit {
     let payload = {
       capacity: capacity,
       data_protection: dp,
+      compress: 4,
       name: this.addNewVolumeConfig.name,
       encrypt: this.encryptionOn
     };
