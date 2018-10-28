@@ -63,6 +63,9 @@ def schedule_fio_job(request):
     # mgmt_ip
     # mgmt_ssh_port
     # fio args
+    request_json = json.loads(request.body)
+    traffic_context = request_json["traffic_context"]
+
     print "Scheduler fio job"
     fio_args = {"mgmt_ip": "127.0.0.1"}
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)

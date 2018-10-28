@@ -30,6 +30,8 @@ export class VolumeComponent implements OnInit {
   //dataSource = ELEMENT_DATA;
   dataSource = new MatTableDataSource<VolumeElement>();
   volumeElement: VolumeElement;
+  bgPollCount: number = 0;
+  loadOutput: string = null;
   volumeTypes = {ec: "EC", lsv: "LSV"};
   columnsToDisplay = ['name',
     'type',
@@ -135,6 +137,59 @@ export class VolumeComponent implements OnInit {
     })
   }
 
+  pollStatus(executionId) {
+    this.bgPollCount++;
+    let url = "/demo/bg_job_status";
+    let payload = {bg_execution_id: executionId};
+    this.apiService.post(url, payload).subscribe((response) => {
+      console.log(response.data.status + ":" + response.data.output);
+      let executionStatus = response.data.status;
+      if (executionStatus !== "PASSED" && executionStatus !== "FAILED") {
+        setTimeout(() => {
+          this.pollStatus(executionId);
+          }, 5000);
+      } else {
+        this.loadOutput = response.data.output;
+      }
+
+
+
+    }, error => {
+
+    });
+
+
+  }
+
+
+  testBg() {
+    let url = "/demo/schedule_fio_job";
+    let payload = {};
+    this.apiService.post(url, payload).subscribe((response) => {
+      let bgExecutionId = response.data;
+      let payload = {bg_execution_id: bgExecutionId};
+      this.bgPollCount = 0;
+      this.pollStatus(bgExecutionId);
+      console.log("BgExecutionID:" + bgExecutionId);
+    }, error => {
+
+    });
+  }
+
+
+  _doSendTraffic(context) {
+    let url = "/demo/schedule_fio_job";
+    let payload = {traffic_context: context};
+    this.apiService.post(url, payload).subscribe((response) => {
+      let bgExecutionId = response.data;
+      let payload = {bg_execution_id: bgExecutionId};
+      this.pollStatus(bgExecutionId);
+      console.log("BgExecutionID:" + bgExecutionId);
+    }, error => {
+
+    });
+  }
+
   sendTraffic() {
     let result = null;
     let url = this.commonService.getBaseUrl();
@@ -162,6 +217,7 @@ export class VolumeComponent implements OnInit {
                 payload["tg_mgmt_ip"] = result.mgmt_ip;
                 payload["tg_mgmt_port"] = result.mgmt_ssh_port;
                 console.log(payload);
+                this._doSendTraffic(payload);
               }
             }
           }
