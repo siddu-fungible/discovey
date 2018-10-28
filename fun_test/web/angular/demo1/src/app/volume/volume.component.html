@@ -26,6 +26,16 @@
 
           </ng-container>
 
+          <ng-container *ngSwitchCase="'num_reads'">
+            {{ element?.stats?.num_reads }}
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'num_writes'">
+            {{ element?.stats?.num_writes }}
+
+          </ng-container>
+
+
           <ng-container *ngSwitchCase="'more_info'">
             <u class="anchor-button pseudo-anchor" (click)="expandedElement = element">More info...</u>
           </ng-container>
@@ -145,8 +155,19 @@
       </div>
     </div>
 
+    <table class="table table-nonfluid">
+      <tr>
+        <th>Read IOPS</th>
+        <th>Write IOPS</th>
+      </tr>
+      <tr>
+        <td>{{ loadReadIops }}</td>
+        <td>{{ loadWriteIops }}</td>
+      </tr>
+    </table>
+
     <u>Output:</u>
-    <pre>{{ loadOutput }}</pre>
+    <p>{{ loadOutput }}</p>
     <br>
     <button class="btn btn-primary btn-sm" (click)="sendTraffic()">Send traffic</button>
   </mat-card>

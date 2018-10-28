@@ -33,6 +33,8 @@ export class VolumeComponent implements OnInit {
   loadMaxWaitTime: number = 60;
   bgPollCount: number = this.loadMaxWaitTime;
   loadOutput: string = null;
+  loadReadIops: number = 0;
+  loadWriteIops: number = 0;
   volumeTypes = {ec: "EC", lsv: "LSV"};
   columnsToDisplay = ['name',
     'type',
@@ -44,8 +46,8 @@ export class VolumeComponent implements OnInit {
     'num_data_volumes',
     'num_parity_volumes',
     'num_replica_volumes',
-    'read_iops',
-    'write_iops',
+    'num_reads',
+    'num_writes',
     'dpus',
   'actions',
   'more_info'];
@@ -58,15 +60,15 @@ export class VolumeComponent implements OnInit {
     "encrypt": "Encrypted",
     "namespace_id": "Namespace ID",
     "pool": "Pool",
-    "read_iops": "Read IOPS",
-    "write_iops": "Write IOPS",
+    "num_reads": "Reads",
+    "num_writes": "Writes",
     'actions': "Actions",
     'more_info': ""
   };
   expandedElement: VolumeElement;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private route: ActivatedRoute) {
-    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "read_iops", "actions", "more_info"];
+    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "num_reads", "num_writes", "actions", "more_info"];
   }
 
   ngOnInit() {
@@ -77,6 +79,13 @@ export class VolumeComponent implements OnInit {
     });
     this.getVolumeInfo();
   }
+
+  resetLoadCounters() {
+    this.bgPollCount = 0;
+    this.loadReadIops = 0;
+    this.loadWriteIops = 0;
+  }
+
 
   fetchTg(tgName) {
 
@@ -111,6 +120,11 @@ export class VolumeComponent implements OnInit {
         } else {
           this.volumeElement.port = null;
         }
+
+        if (value.hasOwnProperty('stats')) {
+          this.volumeElement.stats = value.stats;
+        }
+
         this.dataSource.data.push(this.volumeElement);
         this.dataSource.data = [...this.dataSource.data];
         this.status = null;
@@ -151,6 +165,19 @@ export class VolumeComponent implements OnInit {
           }, 1000);
       } else {
         this.loadOutput = response.data.output;
+        this.loadOutput = this.loadOutput.replace("\n", "<br>");
+        this.loadOutput = 'fun_nvmeof: (g=0): rw=rw, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-4096B, ioengine=fun, iodepth=8 fio-3.3 Starting 1 process fun_nvmeof: Laying out IO file (1 file / 0MiB) Client IP=172.16.0.33, F1 IP=172.16.0.38, number of NS=1, IO Queues = 1, Mode = IO_ONLY and NQN = nqn.2017-05.com.fungible:nss-uuid1 Connected on RD socket 1099 Initiating ADMIN connection...Received Admin Connect Response Sending Fabric Property Set Command ...Received Property Set Response Initiating I/O connection 1...Received IO Connect Response fun_nvmeof: (groupid=0, jobs=1): err= 0: pid=199: Sun Oct 28 04:41:06 2018 read: IOPS=83, BW=333KiB/s (341kB/s)(60.0KiB/180msec) slat (nsec): min=29416, max=87638, avg=51622.00, stdev=15989.47 clat (usec): min=11975, max=60745, avg=29234.12, stdev=12966.38 lat (usec): min=12021, max=60776, avg=29285.75, stdev=12962.79 clat percentiles (usec): | 1.00th=[11994], 5.00th=[11994], 10.00th=[13173], 20.00th=[16057], | 30.00th=[23725], 40.00th=[23725], 50.00th=[28705], 60.00th=[31589], | 70.00th=[34341], 80.00th=[35390], 90.00th=[42730], 95.00th=[60556], | 99.00th=[60556], 99.50th=[60556], 99.90th=[60556], 99.95th=[60556], | 99.99th=[60556] write: IOPS=94, BW=378KiB/s (387kB/s)(68.0KiB/180msec) slat (nsec): min=22242, max=76884, avg=50544.82, stdev=17253.61 clat (usec): min=28957, max=84685, avg=51442.52, stdev=15233.17 lat (usec): min=29020, max=84725, avg=51493.07, stdev=15232.74 clat percentiles (usec): | 1.00th=[28967], 5.00th=[28967], 10.00th=[38536], 20.00th=[38536], | 30.00th=[43254], 40.00th=[44303], 50.00th=[46400], 60.00th=[55837], | 70.00th=[55837], 80.00th=[61080], 90.00th=[83362], 95.00th=[84411], | 99.00th=[84411], 99.50th=[84411], 99.90th=[84411], 99.95th=[84411], | 99.99th=[84411] lat (msec) : 20=12.50%, 50=62.50%, 100=25.00% cpu : usr=4.47%, sys=0.00%, ctx=994, majf=0, minf=40 IO depths : 1=3.1%, 2=9.4%, 4=40.6%, 8=46.9%, 16=0.0%, 32=0.0%, >=64=0.0% submit : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0% complete : 0=0.0%, 4=95.8%, 8=4.2%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0% issued rwt: total=15,17,0, short=0,0,0, dropped=0,0,0 latency : target=0, window=0, percentile=100.00%, depth=8 Run status group 0 (all jobs): READ: bw=333KiB/s (341kB/s), 333KiB/s-333KiB/s (341kB/s-341kB/s), io=60.0KiB (61.4kB), run=180-180msec WRITE: bw=378KiB/s (387kB/s), 378KiB/s-378KiB/s (387kB/s-387kB/s), io=68.0KiB (69.6kB), run=180-180msec \n';
+        let reg = /read: IOPS=(\d+)/g;
+        let match = reg.exec(this.loadOutput);
+        if (match) {
+          this.loadReadIops = parseInt(match[1]);
+        }
+        reg = /write: IOPS=(\d+)/g;
+        match = reg.exec(this.loadOutput);
+        if (match) {
+          this.loadWriteIops = parseInt(match[1]);
+        }
+
         this.bgPollCount = this.loadMaxWaitTime;
       }
     }, error => {
@@ -167,6 +194,7 @@ export class VolumeComponent implements OnInit {
     let url = "/demo/schedule_fio_job";
     let payload = {traffic_context: context};
     this.bgPollCount = 0;
+    this.resetLoadCounters();
     this.apiService.post(url, payload).subscribe((response) => {
       let bgExecutionId = response.data;
       let payload = {bg_execution_id: bgExecutionId};
@@ -236,6 +264,7 @@ export class VolumeElement {
   attached: boolean = false;
   port: any = {};
   attachingStatus: string = null;
+  stats: any = {};
 
 }
 
