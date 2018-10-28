@@ -32,15 +32,20 @@ def get_new_bg_execution():
     return last_execution.last_bg_execution_id
 
 
-def fio_task(bg_execution_id, fio_args):
+def fio_task(bg_execution_id, traffic_context, fio_args):
+    f1_ip = traffic_context["f1_ip"]
+    tg_ip = traffic_context["tg_ip"]
+    tg_mgmt_ip = traffic_context["tg_mgmt_ip"]
+    tg_mgmt_ssh_port = traffic_context["tg_mgmt_ssh_port"]
+
     bg_execution_id = int(bg_execution_id)
     status = BgExecutionStatus.objects.get(execution_id=bg_execution_id)
     output = ""
     try:
         print "Fio task"
         try:
-            linux_obj = Linux(host_ip="qa-ubuntu-01", ssh_username="auto_admin", ssh_password="fun123")
-            output = linux_obj.command("date")
+            linux_obj = Linux(host_ip=tg_mgmt_ip, ssh_username="root", ssh_password="fun123", ssh_port=tg_mgmt_ssh_port)
+            output = linux_obj.command("fio")
         except Exception as ex:
             print "Exception: " + str(ex)
         app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -74,7 +79,7 @@ def schedule_fio_job(request):
     status = BgExecutionStatus(execution_id=bg_execution_id)
     try:
         status.save()
-        scheduler.add_job(fio_task, 'interval', seconds=1, args=[bg_execution_id, fio_args], id=str(bg_execution_id))
+        scheduler.add_job(fio_task, 'interval', seconds=1, args=[bg_execution_id, traffic_context, fio_args], id=str(bg_execution_id))
     except Exception as ex:
         print "Exception:" + str(ex)
     return bg_execution_id

@@ -252,6 +252,7 @@ export class VolumesComponent implements OnInit {
 
     volumeType = this.volumeTypeSelection.selected[0];
     let dp = this.getDataProtection(volumeType);
+
     let payload = {
       capacity: capacity,
       data_protection: dp,
@@ -261,6 +262,9 @@ export class VolumesComponent implements OnInit {
     let url = this.commonService.getBaseUrl();
     url = url + "/storage/pools/" + selectedPool + "/volumes";
     this.status = "Creating volume";
+
+    //let payload = {"capacity": 104857600, "data_protection": {"vol_type": "VOL_TYPE_BLK_EC", "num_failed_disks": 2}, "name": "repvol2", "compress": 4, "encrypt": true};
+
 
     this.apiService.post(url, payload).subscribe((response) => {
       alert("Volume added");

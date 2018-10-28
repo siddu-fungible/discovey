@@ -30,7 +30,8 @@ export class VolumeComponent implements OnInit {
   //dataSource = ELEMENT_DATA;
   dataSource = new MatTableDataSource<VolumeElement>();
   volumeElement: VolumeElement;
-  bgPollCount: number = 0;
+  loadMaxWaitTime: number = 60;
+  bgPollCount: number = this.loadMaxWaitTime;
   loadOutput: string = null;
   volumeTypes = {ec: "EC", lsv: "LSV"};
   columnsToDisplay = ['name',
@@ -141,45 +142,31 @@ export class VolumeComponent implements OnInit {
     this.bgPollCount++;
     let url = "/demo/bg_job_status";
     let payload = {bg_execution_id: executionId};
-    this.apiService.post(url, payload).subscribe((response) => {
+    this.apiService.post(url, payload, false).subscribe((response) => {
       console.log(response.data.status + ":" + response.data.output);
       let executionStatus = response.data.status;
-      if (executionStatus !== "PASSED" && executionStatus !== "FAILED") {
+      if (executionStatus !== "PASSED" && executionStatus !== "FAILED" && (this.bgPollCount < this.loadMaxWaitTime)) {
         setTimeout(() => {
           this.pollStatus(executionId);
-          }, 5000);
+          }, 1000);
       } else {
         this.loadOutput = response.data.output;
+        this.bgPollCount = this.loadMaxWaitTime;
       }
-
-
-
     }, error => {
 
     });
-
-
   }
 
-
-  testBg() {
-    let url = "/demo/schedule_fio_job";
-    let payload = {};
-    this.apiService.post(url, payload).subscribe((response) => {
-      let bgExecutionId = response.data;
-      let payload = {bg_execution_id: bgExecutionId};
-      this.bgPollCount = 0;
-      this.pollStatus(bgExecutionId);
-      console.log("BgExecutionID:" + bgExecutionId);
-    }, error => {
-
-    });
+  getLoadProgress() {
+    return (this.bgPollCount * 100/this.loadMaxWaitTime);
   }
 
 
   _doSendTraffic(context) {
     let url = "/demo/schedule_fio_job";
     let payload = {traffic_context: context};
+    this.bgPollCount = 0;
     this.apiService.post(url, payload).subscribe((response) => {
       let bgExecutionId = response.data;
       let payload = {bg_execution_id: bgExecutionId};
@@ -215,7 +202,7 @@ export class VolumeComponent implements OnInit {
                 payload["f1_ip"] = this.volumeElement.port.ip;
                 payload["tg_ip"] = this.volumeElement.port.remote_ip;
                 payload["tg_mgmt_ip"] = result.mgmt_ip;
-                payload["tg_mgmt_port"] = result.mgmt_ssh_port;
+                payload["tg_mgmt_ssh_port"] = result.mgmt_ssh_port;
                 console.log(payload);
                 this._doSendTraffic(payload);
               }
@@ -225,11 +212,8 @@ export class VolumeComponent implements OnInit {
         }
       }
     }, error => {
-
     })
-
   }
-
 }
 
 export class VolumeElement {

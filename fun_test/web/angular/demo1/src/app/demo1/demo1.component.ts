@@ -12,7 +12,7 @@ import {Controller} from "../services/common/common.service";
 export class Demo1Component implements OnInit {
 
   sideBarClass: boolean = false;
-  showingApiViewer: boolean = false;
+  showingApiViewer: boolean = true;
   controller: Controller = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService) {
