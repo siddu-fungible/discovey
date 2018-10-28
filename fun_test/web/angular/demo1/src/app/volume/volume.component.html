@@ -132,7 +132,7 @@
               <th>Writes</th>
             </tr>
             <tr *ngFor="let row of topoVolElements">
-              <td class="text-xs-left"><span [innerHTML]="getIndentHtml(row) | safeHtml"></span>{{ row.type }}</td>
+              <td class="text-left"><span  class="text-left" [innerHTML]="getIndentHtml(row) | safeHtml"></span>{{ row.type }}</td>
               <td>{{ row.uuid }}</td>
               <td>{{ row.f1_id }}</td>
               <td>{{ row.stats.num_reads }}</td>
