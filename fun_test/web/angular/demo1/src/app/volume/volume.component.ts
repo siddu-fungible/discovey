@@ -92,18 +92,21 @@ export class VolumeComponent implements OnInit {
   }
 
 
-  getVolumeInfo() {
+  getVolumeInfo(disableStatus = false) {
     if (this.uuid) {
       let url = this.commonService.getBaseUrl();
       if (!url) {
         setTimeout(() => {
-        this.getVolumeInfo();
+        this.getVolumeInfo(disableStatus);
         }, 1000);
         return;
       }
-      this.dataSource.data = [];
+
       url = url + "/storage/volumes/" + this.uuid;
       this.status = "Fetching volume info";
+      if (disableStatus) {
+        this.status = null;
+      }
       this.apiService.get(url).subscribe((response) => {
         let value = response.data;
         this.volumeElement = new VolumeElement();
@@ -125,6 +128,7 @@ export class VolumeComponent implements OnInit {
           this.volumeElement.stats = value.stats;
         }
 
+        this.dataSource.data = [];
         this.dataSource.data.push(this.volumeElement);
         this.dataSource.data = [...this.dataSource.data];
         this.status = null;
@@ -163,7 +167,7 @@ export class VolumeComponent implements OnInit {
         setTimeout(() => {
           this.pollStatus(executionId);
           }, 1000);
-        this.getVolumeInfo();
+        this.getVolumeInfo(true);
       } else {
         this.loadOutput = response.data.output;
         this.loadOutput = this.loadOutput.replace("\n", "<br>");
@@ -180,7 +184,7 @@ export class VolumeComponent implements OnInit {
         }
 
         this.bgPollCount = this.loadMaxWaitTime;
-        this.getVolumeInfo();
+        this.getVolumeInfo(true);
       }
     }, error => {
 
