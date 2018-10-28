@@ -112,9 +112,11 @@ export class VolumeComponent implements OnInit {
       return;
     }
     url = url + "/storage/volumes/" + uuid + "/topology";
+
     this.topologyFetchStatus = "Fetching underlying volume(s) info";
     this.apiService.get(url).subscribe((response)=> {
       this.topologyFetchStatus = null;
+      this.topoVolElements = [];
       this.descendTopoTree(response.data);
     }, error => {
 

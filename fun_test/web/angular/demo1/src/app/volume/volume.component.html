@@ -125,14 +125,14 @@
 
           <table *ngIf="topoVolElements.length > 0" class="table table-nonfluid">
             <tr>
-              <th>Type</th>
+              <th class="text-xs-left">Type</th>
               <th>UUID</th>
               <th>DPU</th>
               <th>Reads</th>
               <th>Writes</th>
             </tr>
             <tr *ngFor="let row of topoVolElements">
-              <td><span [innerHTML]="getIndentHtml(row) | safeHtml"></span>{{ row.type }}</td>
+              <td class="text-xs-left"><span [innerHTML]="getIndentHtml(row) | safeHtml"></span>{{ row.type }}</td>
               <td>{{ row.uuid }}</td>
               <td>{{ row.f1_id }}</td>
               <td>{{ row.stats.num_reads }}</td>
