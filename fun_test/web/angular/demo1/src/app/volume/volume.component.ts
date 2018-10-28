@@ -92,6 +92,22 @@ export class VolumeComponent implements OnInit {
   }
 
 
+  getVolumeTopology(uuid) {
+    let url = this.commonService.getBaseUrl();
+    if (!url) {
+      setTimeout(() => {
+      this.getVolumeTopology(uuid);
+      }, 1000);
+      return;
+    }
+    url = url + "/storage/volumes/" + uuid + "/topology";
+    this.apiService.get(url).subscribe((response)=> {
+
+    }, error => {
+
+    })
+  }
+
   getVolumeInfo(disableStatus = false) {
     if (this.uuid) {
       let url = this.commonService.getBaseUrl();
@@ -132,6 +148,7 @@ export class VolumeComponent implements OnInit {
         this.dataSource.data.push(this.volumeElement);
         this.dataSource.data = [...this.dataSource.data];
         this.status = null;
+        this.getVolumeTopology(this.volumeElement.uuid);
 
       }, error => {
         this.status = null;
