@@ -378,3 +378,16 @@ tr.mat-table-element-row:not(.mat-table-expanded-row):active {
 .pseudo-anchor:hover {
   cursor: pointer;
 }
+
+@media all {
+    .closed-banner {
+        height: 4px;
+        overflow: hidden;
+        background: lightgrey;
+    }
+    .closed-section {
+        height: 2px;
+        overflow: hidden;
+        background: lightgrey;
+    }
+}

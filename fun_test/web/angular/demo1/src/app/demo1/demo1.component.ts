@@ -3,6 +3,9 @@ import {ControllerElement} from "../storage-controller/storage-controller.compon
 import {ApiService} from "../services/api/api.service";
 import {CommonService} from "../services/common/common.service";
 import {Controller} from "../services/common/common.service";
+import {ActivatedRoute, Router} from "@angular/router";
+//import {LoggerService} from "../../../../qadashboard/src/app/services/logger/logger.service";
+
 
 @Component({
   selector: 'app-demo1',
@@ -14,12 +17,22 @@ export class Demo1Component implements OnInit {
   sideBarClass: boolean = false;
   showingApiViewer: boolean = true;
   controller: Controller = null;
+  mainPage: boolean = false;
 
-  constructor(private apiService: ApiService, private commonService: CommonService) {
+  constructor(private apiService: ApiService, private commonService: CommonService, private router: Router) {
   }
 
   ngOnInit() {
     this.checkControllerStatus();
+    /*
+    if (this.router.url.endsWith("demo1")) {
+      this.mainPage = true;
+    }*/
+
+  }
+
+  isMainPage() {
+    return this.router.url.endsWith("demo1");
   }
 
   sideBarCollapseClick() {

@@ -58,7 +58,7 @@
     <div class="navbar-brand d-flex align-items-center justify-content-between col-sm-12 col-md-2 mr-0">
       <a class="mr-1 d-md-none text-light" href="#sidenav" data-toggle="collapse" data-target="#sidenav">
       </a>
-      <a class="text-light" href="">Fungible</a>
+      <a class="text-light" href="/demo/demo1">Fungible</a>
     </div>
 
   </div>
@@ -70,16 +70,16 @@
         viewer</u>
     </li>
   </div>
-    <div class="navbar-nav">
+  <div class="navbar-nav">
     <li class="nav-item" style="padding-right: 10px">
-            <ng-container *ngIf="controller">
-          <span *ngIf="controller.health" class="badge badge-success">Online</span>
-          <span *ngIf="!controller.health" class="badge badge-danger">Offline</span>
-        </ng-container>
-        <ng-container *ngIf="!controller">
-          <span style="background-color: red">No controllers available</span>
-        </ng-container>
-      </li>
+      <ng-container *ngIf="controller">
+        <span *ngIf="controller.health" class="badge badge-success">Online</span>
+        <span *ngIf="!controller.health" class="badge badge-danger">Offline</span>
+      </ng-container>
+      <ng-container *ngIf="!controller">
+        <span style="background-color: red">No controllers available</span>
+      </ng-container>
+    </li>
   </div>
 
 
@@ -91,6 +91,7 @@
   <nav id="sidebar" [ngClass]="{'active': sideBarClass}">
     <ul class="list-unstyled components">
       <p></p>
+
       <li class="active">
 
         <a href="#storage-sub-menu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Storage</a>
@@ -124,6 +125,53 @@
   <!-- Page Content  -->
   <div id="content">
     <div class="container">
+      <div class="row" *ngIf="isMainPage()">
+        <div class="col-md-6 col-xl-6 col-lg-6 col-xxl-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Controller</h5>
+              <div class="closed-section"></div>
+              <p class="card-text"></p>
+              <div class="row">
+                <div class="col-lg-4 col-md-4 col-xl-4 col-xxl-4">qa-ubuntu-02</div>
+                <button *ngIf="controller && controller.health" class="badge badge-success">Online</button>
+                <button *ngIf="!controller || !controller.health" class="badge badge-danger">Offline</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-6 col-lg-6 col-xxl-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Storage pools</h5>
+              <div class="closed-section"></div>
+
+              <p class="card-text"></p>
+              <div class="row">
+                <div class="col-lg-2 col-md-2 col-xl-2 col-xxl-2"><i class="fa fa-server" aria-hidden="true"></i></div>
+                <h6 class="col-lg-2 col-md-2 col-xl-2 col-xxl-2">1</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row" *ngIf="isMainPage()">
+        <div class="col-md-6 col-xl-6 col-lg-6 col-xxl-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">DPUs</h5>
+              <div class="closed-section"></div>
+              <p class="card-text"></p>
+              <div class="row">
+                <div class="col-lg-4 col-md-4 col-xl-4 col-xxl-4">FS-1600 icon</div>
+                <h6 class="col-lg-2 col-md-2 col-xl-2 col-xxl-2">8</h6>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="row">
         <div class="col">
           <router-outlet></router-outlet>
