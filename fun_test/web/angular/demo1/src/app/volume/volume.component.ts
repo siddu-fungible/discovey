@@ -199,7 +199,7 @@ export class VolumeComponent implements OnInit {
         setTimeout(() => {
           this.pollStatus(executionId);
           }, 1000);
-        this.getVolumeInfo(true);
+        //this.getVolumeInfo(true);
       } else {
         this.loadOutput = response.data.output;
         this.loadOutput = this.loadOutput.replace("\n", "<br>");
@@ -251,8 +251,9 @@ export class VolumeComponent implements OnInit {
     return s;
   };
 
-
-
+  refresh() {
+    this.getVolumeInfo();
+  }
 
   getLoadProgress() {
     return (this.bgPollCount * 100/this.loadMaxWaitTime);

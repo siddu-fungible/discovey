@@ -41,9 +41,15 @@ mat-header-cell:nth-child(7) {
     width: 200px;
 }
 
+mat-cell:nth-child(9),
+mat-header-cell:nth-child(7) {
+    width: 200px;
+}
+
+
 
 .actionsClass {
-  width: 200px;
+  width: 100px;
 }
 
 .load-button {

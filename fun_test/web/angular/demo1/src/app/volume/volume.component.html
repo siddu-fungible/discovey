@@ -38,7 +38,8 @@
 
           <ng-container *ngSwitchCase="'more_info'">
             <fun-spinner [status]="topologyFetchStatus"></fun-spinner>
-            <u *ngIf="element.port || (topoVolElements.length > 0)" class="anchor-button pseudo-anchor" (click)="expandedElement = element">More info...</u>
+            <u *ngIf="element.port || (topoVolElements.length > 0)" class="anchor-button pseudo-anchor"
+               (click)="expandedElement = element">More info...</u>
           </ng-container>
 
 
@@ -51,14 +52,14 @@
             <div class="load-button">
               <u *ngIf="!element.port && !element.attachingStatus" (click)="attach(element, element.uuid)"
                  class="anchor-button pseudo-anchor">Attach</u>
+              &nbsp;
+              <u (click)="refresh()"
+                 class="anchor-button pseudo-anchor">Refresh</u>
+              &nbsp;
               <fun-spinner [status]="element.attachingStatus"></fun-spinner>
               <!--h6><span *ngIf="element.port" class="badge badge-info">Port: 1</span></h6-->
-
-
-              <button *ngIf="element.port" class="btn btn-sm btn-info " (click)="showingLoadPanel = !showingLoadPanel">
-                Load
-              </button>
-
+              <u *ngIf="element.port" (click)="showingLoadPanel = !showingLoadPanel"
+                 class="anchor-button pseudo-anchor">Load</u>
             </div>
 
           </ng-container>
@@ -117,12 +118,8 @@
                   <input type="text" readonly class="form-control-plaintext" value="{{ element.port.tg }}">
                 </div>
               </div>
-
             </form>
-
-
           </div>
-
           <table *ngIf="topoVolElements.length > 0" class="table table-nonfluid">
             <tr>
               <th class="text-xs-left">Type</th>
@@ -132,13 +129,13 @@
               <th>Writes</th>
             </tr>
             <tr *ngFor="let row of topoVolElements">
-              <td class="text-left"><span  class="text-left" [innerHTML]="getIndentHtml(row) | safeHtml"></span>{{ row.type }}</td>
+              <td class="text-left"><span class="text-left"
+                                          [innerHTML]="getIndentHtml(row) | safeHtml"></span>{{ row.type }}</td>
               <td>{{ row.uuid }}</td>
               <td>{{ row.f1_id }}</td>
               <td>{{ row.stats.num_reads }}</td>
               <td>{{ row.stats.num_writes }}</td>
             </tr>
-
           </table>
 
 
