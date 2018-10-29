@@ -33,7 +33,7 @@ jitter_results = None
 INTERFACE_LOAD_SPEC = fun_test.get_script_parent_directory() + "/interface_loads.json"
 TOLERANCE_PERCENT = 10
 TRAFFIC_DURATION = 60
-IPV4_FRAMES = [64]
+IPV4_FRAMES = [64, 1500]
 LOAD = 1200
 chassis_type = None
 FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_HU
@@ -104,18 +104,33 @@ class NuVpPerformance(FunTestScript):
             checkpoint = "Configure QoS settings"
             enable_pfc = network_controller_obj.enable_qos_pfc()
             fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
-            buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=16380,
-                                                                                nonfcp_xoff_thr=16380)
+            buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=7000,
+                                                                                nonfcp_xoff_thr=7000,
+                                                                                df_thr=4000,
+                                                                                dx_thr=4000,
+                                                                                fcp_thr=8000,
+                                                                                nonfcp_thr=8000,
+                                                                                sample_copy_thr=255,
+                                                                                sf_thr=4000,
+                                                                                sf_xoff_thr=3500,
+                                                                                sx_thr=4000)
             fun_test.test_assert(buffer_pool_set, checkpoint)
 
-            if "HNU" in FLOW_DIRECTION:
-                checkpoint = "Configure HNU QoS settings"
-                enable_pfc = network_controller_obj.enable_qos_pfc(hnu=True)
-                fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
-                buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=16380,
-                                                                                    nonfcp_xoff_thr=16380,
-                                                                                    mode="hnu")
-                fun_test.test_assert(buffer_pool_set, checkpoint)
+            checkpoint = "Configure HNU QoS settings"
+            enable_pfc = network_controller_obj.enable_qos_pfc(hnu=True)
+            fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
+            buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=900,
+                                                                                nonfcp_xoff_thr=3500,
+                                                                                df_thr=2000,
+                                                                                dx_thr=1000,
+                                                                                fcp_thr=1000,
+                                                                                nonfcp_thr=4000,
+                                                                                sample_copy_thr=255,
+                                                                                sf_thr=2000,
+                                                                                sf_xoff_thr=1900,
+                                                                                sx_thr=250,
+                                                                                mode="hnu")
+            fun_test.test_assert(buffer_pool_set, checkpoint)
 
         checkpoint = "Read Performance expected data for fixed size scenario"
         file_path = LOGS_DIR + "/" + self.EXPECTED_PERFORMANCE_DATA_FILE_NAME
@@ -232,7 +247,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 dest_ip = l3_config['hnu_fcp_destination_ip1']
             else:
                 recycle_count = 200
-                dest_ip = l3_config['destination_ip2']
+                dest_ip = l3_config['destination_ip1']
             ip_header_obj = Ipv4Header(destination_address=dest_ip,
                                        protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
             result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
@@ -288,7 +303,10 @@ class NuVpLatencyIPv4Test(FunTestCase):
         if dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG port stats on DUT"
             for port_num in dut_config['ports']:
-                result = network_controller_obj.clear_port_stats(port_num=port_num)
+                shape = 0
+                if port_num == 1 or port_num == 2:
+                    shape = 1
+                result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             fun_test.add_checkpoint(checkpoint=checkpoint)
 
@@ -340,6 +358,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
             fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
 
+            dut_stats_success = False
             if dut_config['enable_dpcsh']:
                 checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (
                     dut_config['ports'][0], dut_config['ports'][1])
@@ -362,8 +381,8 @@ class NuVpLatencyIPv4Test(FunTestCase):
                     fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
 
                 frames_transmitted = get_dut_output_stats_value(result_stats=port1_result,
-                                                                stat_type=FRAMES_TRANSMITTED_OK)
-                frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_RECEIVED_OK)
+                                                                stat_type=FRAMES_RECEIVED_OK, tx=False)
+                frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_TRANSMITTED_OK)
 
                 fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
                                               message=checkpoint)
@@ -378,25 +397,29 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
                                               actual=actual_vp_stats,
                                               message=checkpoint)
-
+                dut_stats_success = True
             checkpoint = "Validate Latency Results"
+            rx_subscribe_handle = self.subscribe_results['rx_summary_subscribe']
+            tx_subscribe_handle = self.subscribe_results['tx_subscribe']
+            tx_port = port1
+            rx_port = rx_port
+            if stream_obj.FixedFrameLength == 64:
+                rx_subscribe_handle = self.subscribe_results['analyzer_subscribe']
+                tx_subscribe_handle = self.subscribe_results['generator_subscribe']
+
             latency_result = template_obj.validate_performance_result(
-                tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
-                rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
+                tx_subscribe_handle=tx_subscribe_handle,
+                rx_subscribe_handle=rx_subscribe_handle,
                 stream_objects=[stream_obj], expected_performance_data=self.expected_latency_data,
-                tolerance_percent=TOLERANCE_PERCENT, flow_type=FLOW_DIRECTION, spray_enabled=SPRAY_ENABLE)
+                tx_port=tx_port, rx_port=rx_port, tolerance_percent=TOLERANCE_PERCENT,
+                flow_type=FLOW_DIRECTION, spray_enabled=SPRAY_ENABLE, dut_stats_success=dut_stats_success)
             fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[rx_port]
             analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
                 port_handle=rx_port, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
             result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            if (FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU or FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_FPG) \
-                    and SPRAY_ENABLE:
-                fun_test.log("Error Counters are seen Reordered Frame Count: %d \n PrbsErrorFrameCount: %d" % (
-                    result['ReorderedFrameCount'], result['PrbsErrorFrameCount']))
-            else:
-                fun_test.test_assert(expression=result['result'], message=checkpoint)
+            fun_test.test_assert(expression=result['result'], message=checkpoint)
 
             checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
             result = template_obj.deactivate_stream_blocks(stream_obj_list=[stream_obj])
@@ -417,6 +440,13 @@ class NuVpLatencyIPv4Test(FunTestCase):
 
     def cleanup(self):
         template_obj.delete_streamblocks(stream_obj_list=stream_port_obj_dict[self.port])
+
+        mode = dut_config['interface_mode']
+        output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
+        template_obj.populate_performance_counters_json(mode=mode, flow_type=FLOW_DIRECTION,
+                                                        latency_results=latency_results,
+                                                        jitter_results=jitter_results,
+                                                        file_name=output_file_path, spray_enable=SPRAY_ENABLE)
 
 
 class NuVpJitterTest(FunTestCase):
@@ -648,7 +678,7 @@ class NuVpJitterTest(FunTestCase):
         template_obj.delete_streamblocks(stream_obj_list=stream_port_obj_dict[self.port])
 
         mode = dut_config['interface_mode']
-        output_file_path = LOGS_DIR + "/nu_vp_performance_data.json"
+        output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
         template_obj.populate_performance_counters_json(mode=mode, flow_type=FLOW_DIRECTION,
                                                         latency_results=latency_results,
                                                         jitter_results=jitter_results,
