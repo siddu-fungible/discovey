@@ -36,6 +36,7 @@ export class AddNewVolumeConfig implements AddNewVolumeConfigInterface {
   compression_effort = null;
   encryption: boolean = null;
   data_protection: DataProtectionInterface = null;
+  type: string = "raw";
 }
 
 export interface AddNewVolumeDataProtectionInterface {
@@ -100,6 +101,9 @@ export class VolumesComponent implements OnInit {
   pools: PoolElement[] = [];
   status: string = null;
   attachingStatus: string = null;
+  globalPoolUuid: string = null;
+
+
   sampleTopology = {
   "f1_id": "0-4",
   "stats": {
@@ -252,6 +256,7 @@ export class VolumesComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.getGlobalPool();
     this.getVolumes();
     let i = 0;
   }
@@ -380,6 +385,32 @@ export class VolumesComponent implements OnInit {
     return dp;
   }
 
+  getGlobalPool() {
+    let result = null;
+        let url = this.commonService.getBaseUrl();
+    if (!url) {
+      setTimeout(() => {
+        this.getGlobalPool();
+      }, 50);
+      return;
+    }
+    url = url + "/storage/pools";
+    this.apiService.get(url).subscribe((response) => {
+      let pools = response.data;
+      let poolIds = Object.keys(pools);
+      poolIds.forEach((poolId) => {
+        let newPoolElement: PoolElement = new PoolElement();
+        newPoolElement.uuid = poolId;
+        newPoolElement.f1s = pools[poolId].f1s;
+        this.pools.push(newPoolElement);
+        this.globalPoolUuid = newPoolElement.uuid;
+      })
+    }, error => {
+
+    });
+
+    return result;
+  }
 
   submit() {
     if (!this.addNewVolumeConfig.name) {
@@ -392,28 +423,41 @@ export class VolumesComponent implements OnInit {
       return;
     }
     let capacity = this.addNewVolumeConfig.capacity * 1024 * 1024;
-    let selectedPool = this._getSelectedPool();
+    let selectedPool = this.globalPoolUuid; //this._getSelectedPool();
+
     if (!selectedPool) {
       alert("Please select a pool");
       return;
     }
 
+    /*
     let volumeType = null;
     if (this.volumeTypeSelection.selected.length === 0) {
       alert("Please select a volume type");
       return;
+    }*/
+
+    if (!this.addNewVolumeConfig.type) {
+      alert("Please select a volume type");
+      return;
     }
 
-    volumeType = this.volumeTypeSelection.selected[0];
-    let dp = this.getDataProtection(volumeType);
+    //volumeType = this.volumeTypeSelection.selected[0];
+    //let dp = this.getDataProtection(volumeType);
+    let dp = this.getDataProtection(this.addNewVolumeConfig.type);
 
     let payload = {
       capacity: capacity,
       data_protection: dp,
-      compress: 4,
       name: this.addNewVolumeConfig.name,
       encrypt: this.encryptionOn
     };
+
+    if (this.addNewVolumeConfig.type === 'durable') {
+      payload["compress"] = 4;
+    }
+
+
     let url = this.commonService.getBaseUrl();
     url = url + "/storage/pools/" + selectedPool + "/volumes";
     this.status = "Creating volume";
@@ -476,6 +520,10 @@ export class VolumesComponent implements OnInit {
       alert("Attach failed");
       element.attachingStatus = null;
     })
+  }
+
+  test() {
+    console.log(this.addNewVolumeConfig.type);
   }
 
 }

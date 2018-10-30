@@ -23,6 +23,9 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
 import { Demo1Component } from './demo1/demo1.component';
 import { DpusComponent } from './dpus/dpus.component';
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+//import { NgbdDropdownBasic } from '@ng-bootstrap/ng-bootstrap'
+
 // import { CreateChartComponent } from './create-chart/create-chart.component';
 import {
   MatAutocompleteModule,
@@ -153,7 +156,8 @@ import { ReversePipe } from './pipes/reverse.pipe';
   MatTabsModule,
   MatToolbarModule,
   MatTooltipModule,
-  MatTreeModule
+  MatTreeModule,
+    NgbModule
   ],
   exports: [
         MatAutocompleteModule,

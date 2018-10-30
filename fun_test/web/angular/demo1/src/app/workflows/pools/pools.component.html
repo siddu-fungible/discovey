@@ -92,9 +92,15 @@
 
 
       <ng-container matColumnDef="uuid">
-        <th [ngClass]="'uuidClass'" mat-header-cell *matHeaderCellDef> UUID </th>
+        <th [ngClass]="'uuidClass'" mat-header-cell *matHeaderCellDef>Pool UUID </th>
         <td [ngClass]="'uuidClass'" mat-cell *matCellDef="let element"> {{ element.uuid }} </td>
       </ng-container>
+
+      <ng-container matColumnDef="pool_name">
+        <th [ngClass]="'uuidClass'" mat-header-cell *matHeaderCellDef>Pool Name </th>
+        <td [ngClass]="'uuidClass'" mat-cell *matCellDef="let element"> global_pool </td>
+      </ng-container>
+
 
       <ng-container matColumnDef="f1s">
         <th mat-header-cell *matHeaderCellDef> DPUs</th>

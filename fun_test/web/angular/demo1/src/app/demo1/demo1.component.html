@@ -66,15 +66,14 @@
 
   <div class="navbar-nav">
     <li class="nav-item" style="padding-right: 10px">
-      <u (click)="showingApiViewer = !showingApiViewer" class="nav-item anchor-button api-viewer-link pseudo-anchor">API
-        viewer</u>
+      <u (click)="showingApiViewer = !showingApiViewer" class="nav-item anchor-button api-viewer-link pseudo-anchor">{{ showingApiViewer? "Hide API logs": "Show API logs" }}</u>
     </li>
   </div>
-  <div class="navbar-nav">
+  <div class="navbar-nav" *ngIf="!isMainPage()">
     <li class="nav-item" style="padding-right: 10px">
       <ng-container *ngIf="controller">
-        <span *ngIf="controller.health" class="badge badge-success">Online</span>
-        <span *ngIf="!controller.health" class="badge badge-danger">Offline</span>
+        <span *ngIf="controller.health" class="badge badge-success">Controller online</span>
+        <span *ngIf="!controller.health" class="badge badge-danger">Controller offline</span>
       </ng-container>
       <ng-container *ngIf="!controller">
         <span style="background-color: red">No controllers available</span>

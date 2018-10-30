@@ -24,6 +24,7 @@
     "@angular/platform-browser": "^7.0.1",
     "@angular/platform-browser-dynamic": "^7.0.1",
     "@angular/router": "^7.0.1",
+    "@ng-bootstrap/ng-bootstrap": "^4.0.0",
     "angular-collapse": "0.0.5",
     "angular-font-awesome": "^3.1.2",
     "angular-highcharts": "^7.0.2",

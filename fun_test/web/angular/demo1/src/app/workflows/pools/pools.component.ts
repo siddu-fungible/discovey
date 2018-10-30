@@ -88,9 +88,9 @@ export class PoolsComponent implements OnInit {
     console.log("Pools oninit");
 
         if (this.radioSelection) {
-      this.displayedColumns = ['select', 'uuid', 'f1s'];
+      this.displayedColumns = ['select', 'pool_name', 'uuid', 'f1s'];
     } else {
-      this.displayedColumns = ['select', 'uuid', 'f1s'];
+      this.displayedColumns = ['select', 'pool_name', 'uuid', 'f1s'];
     }
     this.getPools();
 
