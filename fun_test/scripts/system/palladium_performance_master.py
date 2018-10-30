@@ -7,7 +7,7 @@ from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTe
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, SoakClassicMallocPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
-from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance
+from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, TeraMarkCryptoPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 from web.fun_test.analytics_models_helper import prepare_status_db
 from web.fun_test.models import TimeKeeper
@@ -18,6 +18,7 @@ ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
 VOLTEST_TAG = "voltest_performance"
 TERAMARK_PKE = "pke_teramark"
+TERAMARK_CRYPTO = "crypto_teramark"
 
 def get_rounded_time():
     dt = get_current_time()
@@ -993,6 +994,61 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
+class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_CRYPTO
+
+    def describe(self):
+        self.set_test_details(id=18,
+                              summary="TeraMark Crypto Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'{"alg":\s+"(?P<algorithm>\S+)",\s+"operation":\s+"(?P<operation>\S+)",\s+"results":\[(?P<results>.*)\]}',
+                    line)
+                if m:
+                    input_app = "crypto_test_perf"
+                    input_algorithm = m.group("algorithm")
+                    input_operation = m.group("operation")
+                    output_results = json.loads(m.group("results"))
+                    input_pkt_size = int(output_results['pktsize']['value'])
+
+                    output_ops_unit = "ops/sec"
+                    output_ops_per_sec = int(output_results['ops']['value'])
+
+                    output_throughput_unit = "Mbps"
+                    output_throughput = int(output_results['throughput']['value'])
+
+                    output_latency_unit = "ns"
+                    output_latency_min = int(output_results['latency']['value']['min'])
+                    output_latency_avg = int(output_results['latency']['value']['avg'])
+                    output_latency_max = int(output_results['latency']['value']['max'])
+
+                    metrics["input_app"] = input_app
+                    metrics["input_algorithm"] = input_algorithm
+                    metrics["input_operation"] = input_operation
+                    metrics["input_pkt_size"] = input_pkt_size
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_throughput"] = output_throughput
+                    metrics["output_latency_min"] = output_latency_min
+                    metrics["output_latency_avg"] = output_latency_avg
+                    metrics["output_latency_max"] = output_latency_max
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkCryptoPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkCryptoPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -1013,23 +1069,24 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(EcVolPerformanceTc())
+    # myscript.add_test_case(VoltestPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(BootTimingPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
