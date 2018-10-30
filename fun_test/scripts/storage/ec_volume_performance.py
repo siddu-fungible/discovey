@@ -198,7 +198,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.uuids = {}
             self.uuids["blt"] = []
             self.uuids["ec"] = []
-            self.uuids["lsv"] = []
 
             # Configuring the controller
             command_result = {}
@@ -238,17 +237,28 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Create EC volume on DUT instance 0")
             attach_uuid = this_uuid
 
-            # Configuring LS volume based on the script config settting
+            # Configuring Journal & LS volume based on the script config settting
             if self.use_lsv:
-                this_uuid = generate_uuid()
-                self.uuids["lsv"].append(this_uuid)
+
+                # Configuring the Journal volume which is a mandatory one for the LSV
+                self.uuids["jvol"] = generate_uuid()
+                command_result = self.storage_controller.create_volume(
+                    type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
+                    block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids["jvol"],
+                    command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Create Journal volume on DUT instance 0")
+
+                # Configuring the LSV
+                self.uuids["lsv"] = generate_uuid()
                 command_result = self.storage_controller.create_volume(
                     type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
-                    block_size=self.volume_block["lsv"], name="lsv1", uuid=this_uuid, group=self.ec_coding["ndata"],
-                    pvol_id=self.uuids["ec"], command_duration=self.command_timeout)
+                    block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids["lsv"],
+                    group=self.ec_coding["ndata"], jvol_uuid=self.uuids["jvol"], pvol_id=self.uuids["ec"],
+                    command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create LS volume on DUT instance 0")
-                attach_uuid = this_uuid
+                attach_uuid = self.uuids["lsv"]
 
             # Attaching/Exporting the EC/LS volume to the external server
             command_result = {}
