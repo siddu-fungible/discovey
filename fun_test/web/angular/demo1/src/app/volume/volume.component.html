@@ -2,6 +2,7 @@
 <mat-card *ngIf="dataSource.data.length > 0">
   <mat-card-header>
     Volume: {{ uuid }}
+
   </mat-card-header>
   <table mat-table
          [dataSource]="dataSource" multiTemplateDataRows>
@@ -52,9 +53,6 @@
             <div class="load-button">
               <u *ngIf="!element.port && !element.attachingStatus" (click)="attach(element, element.uuid)"
                  class="anchor-button pseudo-anchor">Attach</u>
-              &nbsp;
-              <u (click)="refresh()"
-                 class="anchor-button pseudo-anchor">Refresh</u>
               &nbsp;
               <fun-spinner [status]="element.attachingStatus"></fun-spinner>
               <!--h6><span *ngIf="element.port" class="badge badge-info">Port: 1</span></h6-->
@@ -151,6 +149,9 @@
     </tr>
     <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
   </table>
+  <mat-card-footer>
+    <button (click)="refresh()" type="button" class="btn btn-link">Refresh</button>
+  </mat-card-footer>
 </mat-card>
 
 <br>

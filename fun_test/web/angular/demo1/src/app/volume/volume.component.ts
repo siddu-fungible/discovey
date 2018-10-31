@@ -241,7 +241,7 @@ export class VolumeComponent implements OnInit {
   getIndentHtml = (node) => {
     let s = "";
     if (node.hasOwnProperty("indent")) {
-      for (let i = 0; i < node.indent - 1; i++) {
+      for (let i = 0; i < 2 * (node.indent - 1); i++) {
         s += "<span style=\"color: white\">&rarr;</span>";
       }
       if (node.indent)
