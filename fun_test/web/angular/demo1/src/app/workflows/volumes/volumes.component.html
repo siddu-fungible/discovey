@@ -1,8 +1,13 @@
 <div>
-  <u (click)="addingNewVolume = !addingNewVolume" class="anchor-button pseudo-anchor mat-radio-label-content">
-    {{ addingNewVolume? '- Add a new volume' : '+ Add a new volume' }}</u>
+    <button (click)="addingNewVolume = !addingNewVolume" class="btn btn-primary btn-sm">
+    {{ addingNewVolume? 'Add a new volume' : 'Add a new volume' }}</button>
+
 </div>
-<br>
+
+<div *ngIf="dataSource.data.length === 0 && !addingNewVolume">
+  <br>No volumes available
+</div>
+
 <mat-accordion>
   <mat-expansion-panel [expanded]="addingNewVolume" (opened)="setStep(0)" hideToggle>
     <div class="mat-form-field-div">
@@ -12,7 +17,18 @@
         &nbsp;&nbsp;&nbsp;&nbsp;
         <label for="capacity"><b>Capacity:</b></label>&nbsp;
         <input type="number" name="capacity" class="form-control capacity-field" id="capacity"
-               [(ngModel)]="addNewVolumeConfig.capacity">MB
+               [(ngModel)]="addNewVolumeConfig.capacity">
+
+        <div ngbDropdown class="d-inline-block">
+          <button class="btn btn-sm btn-outline-secondary" id="dropdownBasic1" ngbDropdownToggle>{{ currentVolumeUnits }}
+          </button>
+          <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+            <button class="dropdown-item" (click)="currentVolumeUnits = 'GB'">GB</button>
+            <button class="dropdown-item" (click)="currentVolumeUnits = 'TB'">TB</button>
+            <button class="dropdown-item" (click)="currentVolumeUnits = 'PB'">PB</button>
+          </div>
+        </div>
+
       </form>
 
     </div>
@@ -58,10 +74,10 @@
     <!--u *ngIf="volumeTypeSelection.selected.length > 0 && volumeTypeSelection.selected[0] === 'durable'"
        class="anchor-button pseudo-anchor mat-radio-label-content"
        (click)="showingDetails = !showingDetails">Details</u-->
-
+    &nbsp;&nbsp;
     <u *ngIf="addNewVolumeConfig.type === 'durable'"
        class="anchor-button pseudo-anchor mat-radio-label-content"
-       (click)="showingDetails = !showingDetails">&nbsp;Details</u>
+       (click)="showingDetails = !showingDetails">Details</u>
 
     <mat-card
       *ngIf="showingDetails && addNewVolumeConfig.type === 'durable'">
@@ -114,61 +130,6 @@
           </ng-container>
         </span>
 
-
-    <!--mat-slide-toggle [(ngModel)]="dataProtection" [checked]="true">Data-protection</mat-slide-toggle-->
-    <!--div *ngIf="dataProtection">
-        <mat-card>
-          <p><b>Fault-tolerance options</b></p>
-          <li>
-            <mat-form-field>
-              <input type="number" matInput placeholder="# of disk failures"
-                     [(ngModel)]="addNewVolumeConfig.data_protection.fault_tolerance">
-            </mat-form-field>
-          </li>
-          <li>
-            <mat-form-field>
-              <input matInput placeholder="# of DPU failures">
-            </mat-form-field>
-          </li>
-
-
-          <li>Protection Scheme
-            <mat-radio-group id="md-radio-2-input" [(ngModel)]="addNewVolumeConfig.data_protection.type">
-              <mat-radio-button style="padding: 10px"
-                                *ngFor="let scheme of ['Replication', 'Erasure-coding']"
-                                [value]="getSchemeValue(scheme)">
-                {{ scheme }}
-              </mat-radio-button>
-            </mat-radio-group>
-          </li>
-
-          <br>
-          <p><b>Compression options</b></p>
-          Effort
-          <mat-slider [(ngModel)]="addNewVolumeConfig.compression_effort"
-                      thumbLabel
-                      [displayWith]="formatLabel"
-                      tickInterval="1"
-                      min="0"
-                      max="5" style="margin-left: 5px">Effort
-          </mat-slider>
-          <br>
-        </mat-card>
-
-        <span (click)="encryptionOn = !encryptionOn">
-          <ng-container *ngIf="encryptionOn">
-            <button class="btn"><i class="fa fa-lock"></i>
-              </button>
-            Encryption ON
-          </ng-container>
-          <ng-container *ngIf="!encryptionOn">
-            <button class="btn"><i class="fa fa-unlock"></i>
-              </button>
-            Encryption OFF
-          </ng-container>
-        </span>
-      </div-->
-
     <mat-action-row>
       <button class="btn btn-success btn-sm" (click)="submit()">Submit</button>
     </mat-action-row>
@@ -201,10 +162,16 @@
       </td>
     </ng-container-->
 
+    <ng-container matColumnDef="delete">
+      <th [ngClass]="'deleteButtonClass'" mat-header-cell *matHeaderCellDef > </th>
+      <td [ngClass]="'deleteButtonClass'" mat-cell *matCellDef="let element" (click)="deleteVolume(element.uuid)"><i class="fa fa-trash pseudo-anchor" aria-hidden="true"></i>
+</td>
+    </ng-container>
+
 
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef style="width: 400px"> Name</th>
-      <td mat-cell *matCellDef="let element"><a href="/demo/demo1/volume/{{ element.uuid }}">{{ element.name }}</a></td>
+      <td mat-cell *matCellDef="let element"><a routerLink="/demo/demo1/volume/{{ element.uuid }}">{{ element.name }}</a></td>
     </ng-container>
 
     <ng-container matColumnDef="type">

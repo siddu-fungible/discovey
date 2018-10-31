@@ -31,7 +31,7 @@ export interface AddNewVolumeConfigInterface {
 export class AddNewVolumeConfig implements AddNewVolumeConfigInterface {
   name: string = null;
   //capacity: number = 104857600;
-  capacity: number = 100;
+  capacity: number = 1;
   pool_name: string = null;
   compression_effort = null;
   encryption: boolean = null;
@@ -84,7 +84,7 @@ export class VolumesComponent implements OnInit {
 
 
   //displayedColumns: string[] = ['select', 'name', 'type', 'capacity', 'pool', 'uuid', 'f1', 'encrypt', 'action'];
-  displayedColumns: string[] = ['name', 'type', 'capacity', 'pool', 'uuid', 'f1', 'encrypt', 'action'];
+  displayedColumns: string[] = ['delete', 'name', 'type', 'capacity', 'pool', 'uuid', 'f1', 'encrypt', 'action'];
 
   dataSource = new MatTableDataSource<VolumeElement>(ELEMENT_DATA);
   actionControl = new FormControl();
@@ -102,6 +102,7 @@ export class VolumesComponent implements OnInit {
   status: string = null;
   attachingStatus: string = null;
   globalPoolUuid: string = null;
+  currentVolumeUnits: string = "GB";
 
 
   sampleTopology = {
@@ -422,7 +423,7 @@ export class VolumesComponent implements OnInit {
       alert("Please specify a capacity");
       return;
     }
-    let capacity = this.addNewVolumeConfig.capacity * 1024 * 1024;
+    let capacity = this.addNewVolumeConfig.capacity * 1024 * 1024 * 1024;
     let selectedPool = this.globalPoolUuid; //this._getSelectedPool();
 
     if (!selectedPool) {
@@ -524,6 +525,21 @@ export class VolumesComponent implements OnInit {
 
   test() {
     console.log(this.addNewVolumeConfig.type);
+    console.log(this.currentVolumeUnits);
+  }
+
+  deleteVolume(volumeUuid) {
+    let url = this.commonService.getBaseUrl();
+    url = url + "/storage/volumes/" + volumeUuid;
+    this.status = "Deleting volume";
+    this.apiService.delete(url).subscribe((response) => {
+      this.status = null;
+      alert("Volume deleted");
+      this.getVolumes();
+
+    }, error => {
+      alert("Delete failed");
+    })
   }
 
 }

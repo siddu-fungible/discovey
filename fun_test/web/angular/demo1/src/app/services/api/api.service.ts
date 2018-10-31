@@ -35,6 +35,7 @@ export class ApiLog {
   payload: any;
   response: ApiResponse;
   http_status_code: number = null;
+  elapsed: number = 0;
   setResponse(http_status_code: number, response: ApiResponse) {
     this.response = response;
     this.http_status_code = http_status_code;
@@ -49,10 +50,25 @@ export class ApiLog {
 })
 export class ApiService {
   apiLogs: ApiLog[] = [];
+  startTime: Date = new Date();
 
   constructor(private httpClient: HttpClient) {
 
   }
+
+  start() {
+    this.startTime = new Date();
+  };
+
+  elapsed() {
+    let endTime: Date = new Date();
+    let timeDiff: number = +endTime - +this.startTime; //in ms
+    timeDiff /= 1000;
+
+    let seconds = Math.round(timeDiff);
+    return seconds;
+}
+
 
   private static handleError(error: any): Observable<ApiResponse> {
     let result: ApiResponse = new ApiResponse();
@@ -110,6 +126,51 @@ export class ApiService {
       ));
   }
 
+  delete(url: string, log: boolean = true): Observable<any> {
+    let newApiLog: ApiLog = null;
+    if (log) {
+      newApiLog = this.addApiLog(HttpMethod.DELETE, url, null, "");
+    }
+    const httpOptions = {
+  headers: new HttpHeaders({
+    'Content-Type':  'application/json',
+    'Access-Control-Allow-Origin': '*'
+  })};
+    return this.httpClient.delete<any>(url, {observe : 'response'})
+      .pipe(
+        map((response) => {
+          let httpStatus = response.status;
+          //let o = JSON.parse(response.body);
+          let newApiResponse: ApiResponse = new ApiResponse(response.body);
+          if (log) {
+            newApiLog.setResponse(response.status, newApiResponse);
+          }
+          if (!newApiResponse.status) {
+            throw newApiResponse;
+          } else {
+            return newApiResponse;
+          }
+        }),
+        catchError ((error: any) => {
+            let result: ApiResponse = new ApiResponse();
+            result.status = false;
+            result.data = null;
+            if (error.hasOwnProperty('statusText')) {
+              result.error_message = `Http Error: Status: ${error.status} Text: ${error.statusText} URL: ${error.url}`; // TODO: Improve this
+            } else {
+              result.error_message = error.error_message;
+            }
+            if (log) {
+              newApiLog.setResponse(error.status, result);
+            }
+
+            throw of(result);
+          }
+        //catchError(ApiService.handleError)
+      ));
+  }
+
+
   get(url: string, log: boolean = true): Observable<any> {
     let newApiLog: ApiLog = null;
     if (log) {
@@ -161,6 +222,7 @@ export class ApiService {
     newApiLog.method = method;
     newApiLog.payload = payload;
     newApiLog.id = uuid();
+    newApiLog.elapsed = this.elapsed();
 
     this.apiLogs.push(newApiLog);
     /*setTimeout(() => {
