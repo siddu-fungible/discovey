@@ -51,7 +51,10 @@ def fio_task(bg_execution_id, traffic_context, fio_args):
                 tg_ip, f1_ip, ns_id)
 
             print fio_command
+
             output = linux_obj.command(fio_command)
+            output = "cmd: " + fio_command + output
+
 
         except Exception as ex:
             print "Exception: " + str(ex)
