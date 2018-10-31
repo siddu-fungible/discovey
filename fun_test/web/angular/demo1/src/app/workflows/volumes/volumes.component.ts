@@ -31,7 +31,7 @@ export interface AddNewVolumeConfigInterface {
 export class AddNewVolumeConfig implements AddNewVolumeConfigInterface {
   name: string = null;
   //capacity: number = 104857600;
-  capacity: number = 100;
+  capacity: number = 1;
   pool_name: string = null;
   compression_effort = null;
   encryption: boolean = null;
@@ -102,6 +102,7 @@ export class VolumesComponent implements OnInit {
   status: string = null;
   attachingStatus: string = null;
   globalPoolUuid: string = null;
+  currentVolumeUnits: string = "GB";
 
 
   sampleTopology = {
@@ -422,7 +423,7 @@ export class VolumesComponent implements OnInit {
       alert("Please specify a capacity");
       return;
     }
-    let capacity = this.addNewVolumeConfig.capacity * 1024 * 1024;
+    let capacity = this.addNewVolumeConfig.capacity * 1024 * 1024 * 1024;
     let selectedPool = this.globalPoolUuid; //this._getSelectedPool();
 
     if (!selectedPool) {
@@ -524,6 +525,7 @@ export class VolumesComponent implements OnInit {
 
   test() {
     console.log(this.addNewVolumeConfig.type);
+    console.log(this.currentVolumeUnits);
   }
 
 }
