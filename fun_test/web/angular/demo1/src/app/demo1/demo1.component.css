@@ -112,10 +112,15 @@ a[aria-expanded="true"] {
     background: lightblue;
 }*/
 
-#sidebar ul li.active a[data-toggle="collapse"]{
+ #sidebar ul li.active a[data-toggle="collapse"]{
     color: #fff;
     background: lightblue;
 }
+
+ #sidebar>ul>li.active>a:focus {
+      color: #fff;
+    background: lightblue;
+ }
 
 #sidebar>ul>li>ul>li>a:focus{
     color: #000000;
