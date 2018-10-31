@@ -176,3 +176,9 @@ a.article:hover {
   justify-content: flex-end;
   color: white;
 }
+
+
+.resizable {
+  resize: both;
+  overflow: auto;
+}

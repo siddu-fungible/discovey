@@ -221,7 +221,7 @@ export class StorageControllerComponent implements OnInit {
 
     this.dataSource.data.forEach((data) => {
       let url = this.commonService.getBaseUrl() + "/api_server/health";
-      this.apiService.get(url).subscribe((response) => {
+      this.apiService.get(url, false).subscribe((response) => {
         console.log(response);
         data.health = response.message === "healthy";
       }, error => {
