@@ -61,7 +61,7 @@
 
     <u *ngIf="addNewVolumeConfig.type === 'durable'"
        class="anchor-button pseudo-anchor mat-radio-label-content"
-       (click)="showingDetails = !showingDetails">Details</u>
+       (click)="showingDetails = !showingDetails">&nbsp;Details</u>
 
     <mat-card
       *ngIf="showingDetails && addNewVolumeConfig.type === 'durable'">
