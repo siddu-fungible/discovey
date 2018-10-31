@@ -117,7 +117,7 @@ a[aria-expanded="true"] {
     background: lightblue;
 }
 
- #sidebar>ul>li.active>a:focus {
+ #sidebar>ul>li.active>a:hover {
       color: #fff;
     background: lightblue;
  }

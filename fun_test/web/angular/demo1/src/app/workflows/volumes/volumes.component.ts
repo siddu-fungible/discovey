@@ -103,6 +103,7 @@ export class VolumesComponent implements OnInit {
   attachingStatus: string = null;
   globalPoolUuid: string = null;
   currentVolumeUnits: string = "GB";
+  showingLoadOutput: boolean = false;
 
 
   sampleTopology = {

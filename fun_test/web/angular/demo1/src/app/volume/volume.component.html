@@ -168,7 +168,7 @@
     <br>
     <div class="progress" *ngIf="getLoadProgress() < 100">
       <div class="progress-bar" role="progressbar" style="width: {{ getLoadProgress() }}%;">
-        {{ getLoadProgress() | number: '1.1' }}%
+        {{ getLoadProgress() | number: '1.1-1' }}%
       </div>
     </div>
 
@@ -183,10 +183,15 @@
       </tr>
     </table>
 
-    <u>Output:</u>
-    <p>{{ loadOutput }}</p>
-    <br>
     <button class="btn btn-primary btn-sm" (click)="sendTraffic()">Send traffic</button>
+
+    <button *ngIf="loadOutput" class="btn btn-link" (click)="showingLoadOutput = !showingLoadOutput">Show FIO output</button>
+    <div *ngIf="showingLoadOutput">
+        <u>Output:</u>
+        <p>{{ loadOutput }}</p>
+        <br>
+    </div>
+
   </mat-card>
 
 

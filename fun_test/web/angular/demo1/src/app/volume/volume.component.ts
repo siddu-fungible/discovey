@@ -95,6 +95,7 @@ export class VolumeComponent implements OnInit {
     this.bgPollCount = 0;
     this.loadReadIops = 0;
     this.loadWriteIops = 0;
+    this.loadOutput = null;
   }
 
 
