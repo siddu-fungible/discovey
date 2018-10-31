@@ -41,10 +41,11 @@ mat-header-cell:nth-child(7) {
     width: 200px;
 }
 
+/*
 mat-cell:nth-child(9),
-mat-header-cell:nth-child(7) {
-    width: 200px;
-}
+mat-header-cell:nth-child(9) {
+    width: 100px;
+}*/
 
 
 
@@ -57,6 +58,11 @@ mat-header-cell:nth-child(7) {
   justify-content: center;
 }
 
+mat-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 20px;
+}
   /*text-align: center;*/
 
 
