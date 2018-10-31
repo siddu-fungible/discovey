@@ -456,7 +456,7 @@ export class VolumesComponent implements OnInit {
     };
 
     if (this.addNewVolumeConfig.type === 'durable') {
-      payload["compress"] = 4;
+      payload["compression_effort"] = 4;
     }
 
 
