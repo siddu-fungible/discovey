@@ -15,7 +15,7 @@ from web.fun_test.metrics_models import WuStackSpeedTestPerformance
 from web.fun_test.metrics_models import MetricChartStatus
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, BootTimePerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh25519Performance, TeraMarkPkeEcdh256Performance
-from web.fun_test.metrics_models import TeraMarkPkeRsaPerformance, TeraMarkPkeRsa4kPerformance
+from web.fun_test.metrics_models import TeraMarkPkeRsaPerformance, TeraMarkPkeRsa4kPerformance, TeraMarkCryptoPerformance
 
 @admin.register(Performance1)
 class Performance1Admin(admin.ModelAdmin):
@@ -133,6 +133,10 @@ class TeraMarkPkeRsa4kPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(TeraMarkPkeEcdh25519Performance)
 class TeraMarkPkeEcdh25519PerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(TeraMarkCryptoPerformance)
+class TeraMarkCryptoPerformanceAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
 @admin.register(ShaxPerformance)

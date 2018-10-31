@@ -1,15 +1,17 @@
-<mat-card>
-  <mat-card-header>
+<!--mat-card-->
+  <h6>API logs</h6>
+  <!--mat-card-header>
     API logs
-  </mat-card-header>
+  </mat-card-header-->
   <!--button mat-button (click)="refresh()">
     <mat-icon>refresh</mat-icon>
     Refresh
   </button-->
   <table class="table">
+    <!--tr><th>Elapsed time</th><th>HTTP method/status</th><th>URL</th></tr-->
     <tr *ngFor="let row of apiLogs | reverse ;  index as i ">
       <td>
-        {{ apiLogs.length - i }}
+        {{ row.elapsed }}s
       </td>
       <td>
         <div class="container">
@@ -70,5 +72,5 @@
   </table>
   <div *ngIf="apiLogs.length === 0">No logs available</div>
 
-</mat-card>
+<!--/mat-card-->
 
