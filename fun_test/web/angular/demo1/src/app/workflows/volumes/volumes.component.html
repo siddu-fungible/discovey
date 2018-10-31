@@ -171,7 +171,7 @@
 
 
     <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef style="width: 400px"> Name</th>
+      <th mat-header-cell *matHeaderCellDef> Name</th>
       <td mat-cell *matCellDef="let element"><a routerLink="/demo/demo1/volume/{{ element.uuid }}">{{ element.name }}</a></td>
     </ng-container>
 
@@ -188,7 +188,7 @@
 
     <ng-container matColumnDef="pool">
       <th mat-header-cell *matHeaderCellDef> Pool</th>
-      <td mat-cell *matCellDef="let element"> {{ element.pool }} </td>
+      <td mat-cell *matCellDef="let element"> global_pool </td>
     </ng-container>
 
     <ng-container matColumnDef="uuid">
