@@ -4,3 +4,6 @@ body, .dropdown-item{
 .navbar-brand {
   font-size: 1rem;
 }
+a {
+  cursor: pointer;
+}
