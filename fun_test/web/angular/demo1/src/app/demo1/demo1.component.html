@@ -144,18 +144,23 @@
           </div>
         </div>
         <div class="col-md-6 col-xl-6 col-lg-6 col-xxl-6">
-          <div class="card">
+                    <div class="card">
             <div class="card-body">
               <h5 class="card-title">Storage pools</h5>
               <div class="closed-section"></div>
-
-              <p class="card-text"></p>
-              <div class="row">
-                <div class="col-lg-2 col-md-2 col-xl-2 col-xxl-2"><i class="fa fa-server" aria-hidden="true"></i></div>
-                <h6 class="col-lg-2 col-md-2 col-xl-2 col-xxl-2">1</h6>
-              </div>
+              <span class="card-text">
+                <div style="text-align: left">
+                  <span style="display: inline-flex; justify-content: space-between; padding-right: 50px">
+                  <i class="fa fa-server" aria-hidden="true"></i>
+                  </span>
+                  <span style="display: inline-flex; justify-content: space-between">
+                    <a [routerLink]="'/demo/demo1/pools'"><h1 class="pseudo-anchor anchor-button">1</h1></a>
+                  </span>
+                </div>
+              </span>
             </div>
           </div>
+
         </div>
       </div>
       <div class="row" *ngIf="isMainPage()">
@@ -164,12 +169,16 @@
             <div class="card-body">
               <h5 class="card-title">DPUs</h5>
               <div class="closed-section"></div>
-              <p class="card-text"></p>
-              <div class="row">
-                <div class="col-lg-4 col-md-4 col-xl-4 col-xxl-4">FS-1600 icon</div>
-                <h6 class="col-lg-2 col-md-2 col-xl-2 col-xxl-2">8</h6>
-
-              </div>
+              <span class="card-text">
+                <div style="text-align: left">
+                  <span style="display: inline-flex; justify-content: space-between; padding-right: 50px">
+                  FS-1600
+                  </span>
+                  <span style="display: inline-flex; justify-content: space-between">
+                    <a [routerLink]="'/demo/demo1/topology'"><h1 class="pseudo-anchor anchor-button">8</h1></a>
+                  </span>
+                </div>
+              </span>
             </div>
           </div>
         </div>
