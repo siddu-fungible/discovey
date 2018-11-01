@@ -41,6 +41,17 @@
 
           </ng-container>
 
+          <ng-container *ngSwitchCase="'f1'">
+            {{ element.f1 }}
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'f1_cpu'">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" [ngStyle]="{'width': f1_cpu?.usage_percent + '%'}">
+                  {{ f1_cpu?.usage_percent| number: '1.1-1' }}%
+                </div>
+            </div>
+          </ng-container>
 
           <ng-container *ngSwitchCase="'more_info'">
             <fun-spinner [status]="topologyFetchStatus"></fun-spinner>

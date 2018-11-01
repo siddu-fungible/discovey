@@ -46,6 +46,8 @@ export class VolumeComponent implements OnInit {
   volumeTypes = {ec: "EC", lsv: "LSV"};
   topoVolElements: TopologyVolumeElement[] = [];
   topologyFetchStatus: string = null;
+  f1_cpu: any = {};
+  currentF1Id: string = null;
 
   columnsToDisplay = ['name',
     'type',
@@ -74,12 +76,14 @@ export class VolumeComponent implements OnInit {
     "num_reads": "Reads",
     "num_writes": "Writes",
     'actions': "Actions",
-    'more_info': ""
+    'more_info': "",
+    'f1': "DPU",
+    'f1_cpu': "CPU usage"
   };
   expandedElement: VolumeElement;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private route: ActivatedRoute) {
-    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "num_reads", "num_writes", "actions", "more_info"];
+    this.columnsToDisplay = ["name", "type", "capacity", "encrypt", "pool", "num_reads", "num_writes", "f1", "f1_cpu", "actions", "more_info"];
   }
 
   ngOnInit() {
@@ -164,6 +168,8 @@ export class VolumeComponent implements OnInit {
         this.dataSource.data.push(this.volumeElement);
         this.dataSource.data = [...this.dataSource.data];
         this.status = null;
+        this.currentF1Id = this.volumeElement.f1;
+        this.fetchDpuStat();
         this.getVolumeTopology(this.volumeElement.uuid);
 
       }, error => {
@@ -172,6 +178,20 @@ export class VolumeComponent implements OnInit {
 
 
     }
+  }
+
+  fetchDpuStat() {
+    let f1_name = this.currentF1Id;
+    if (f1_name) {
+      let url = this.commonService.getBaseUrl();
+      url = url + "/storage/f1/" + f1_name;
+      this.apiService.get(url, false).subscribe((response) => {
+        this.f1_cpu = response.data.cpu;
+      }, error => {
+
+      });
+    }
+    setTimeout(() => {this.fetchDpuStat()}, 2000);
   }
 
   attach(element, volumeUuid) {
