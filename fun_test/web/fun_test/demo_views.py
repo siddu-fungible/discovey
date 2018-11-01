@@ -47,11 +47,14 @@ def fio_task(bg_execution_id, traffic_context, fio_args):
         try:
             linux_obj = Linux(host_ip=tg_mgmt_ip, ssh_username="root", ssh_password="fun123", ssh_port=tg_mgmt_ssh_port)
             # fio_command = 'fio --name=fun_nvmeof --ioengine=fun --rw=readwrite --bs="4096" --size=128k --numjobs=1  --iodepth=8 --do_verify=0 --verify=md5 --verify_fatal=1 --source_ip={} --dest_ip={} --io_queues=1 --nrfiles=1 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY'.format(tg_ip, f1_ip)
-            fio_command = 'fio --name=fun_nvmeof --ioengine=fun --rw=randrw --bs="4096" --size=128k --numjobs=1  --iodepth=8 --do_verify=0 --verify=md5 --verify_fatal=1 --source_ip={} --dest_ip={} --io_queues=1 --nrfiles=1 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY --nsid={} --time_based --runtime=20  --verify_pattern="1232"'.format(
+            fio_command = 'fio --name=fun_nvmeof --ioengine=fun --rw=randrw --bs="4096" --size=128k --numjobs=1  --iodepth=1 --do_verify=0 --verify=md5 --verify_fatal=1 --source_ip={} --dest_ip={} --io_queues=1 --nrfiles=1 --nqn=nqn.2017-05.com.fungible:nss-uuid1 --nvme_mode=IO_ONLY --nsid={} --time_based --runtime=20  --verify_pattern="1232"'.format(
                 tg_ip, f1_ip, ns_id)
 
             print fio_command
+
             output = linux_obj.command(fio_command)
+            output = "cmd: " + fio_command + output
+
 
         except Exception as ex:
             print "Exception: " + str(ex)

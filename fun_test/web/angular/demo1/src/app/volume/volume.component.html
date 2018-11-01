@@ -167,7 +167,7 @@
     </form>
     <br>
     <div class="progress" *ngIf="getLoadProgress() < 100">
-      <div class="progress-bar" role="progressbar" style="width: {{ getLoadProgress() }}%;">
+      <div class="progress-bar" role="progressbar" [ngStyle]="{'width': getLoadProgress() + '%'}">
         {{ getLoadProgress() | number: '1.1-1' }}%
       </div>
     </div>
