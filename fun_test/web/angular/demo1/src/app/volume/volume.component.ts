@@ -276,6 +276,15 @@ export class VolumeComponent implements OnInit {
     });
   }
 
+  moreInfoClick(element) {
+    if (!this.expandedElement) {
+      this.expandedElement = element;
+    } else {
+      this.expandedElement = null;
+    }
+
+  }
+
   sendTraffic() {
     let result = null;
     let url = this.commonService.getBaseUrl();
