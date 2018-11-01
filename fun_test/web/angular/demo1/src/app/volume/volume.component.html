@@ -40,7 +40,7 @@
           <ng-container *ngSwitchCase="'more_info'">
             <fun-spinner [status]="topologyFetchStatus"></fun-spinner>
             <u *ngIf="element.port || (topoVolElements.length > 0)" class="anchor-button pseudo-anchor"
-               (click)="expandedElement = element">More info...</u>
+               (click)="moreInfoClick(element)">More info...</u>
           </ng-container>
 
 
