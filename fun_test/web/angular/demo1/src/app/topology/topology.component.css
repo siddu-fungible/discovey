@@ -22,3 +22,19 @@ tr.example-element-row:not(.example-expanded-row):active {
 .pseudo-anchor:hover {
   cursor: pointer;
 }
+
+
+mat-cell:nth-child(3),
+mat-header-cell:nth-child(3) {
+    padding: 20px;
+}
+
+.mat-header-cell, .mat-cell {
+    text-align: center;
+
+}
+
+td.progressClass {
+  width: 200px;
+  padding: 20px;
+}

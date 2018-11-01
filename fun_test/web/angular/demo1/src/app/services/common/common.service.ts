@@ -22,7 +22,8 @@ export class TopoF1 {
   storage_agent_port: number;
   tgs: {
     [name: string]: TopoTg;
-  }
+  };
+  cpu: any;
 
 }
 

@@ -1,9 +1,14 @@
 <fun-spinner [status]="status"></fun-spinner>
 <mat-card *ngIf="dataSource.data.length > 0">
-  <mat-card-header>
+  <!--mat-card-header>
     Volume: {{ uuid }}
 
-  </mat-card-header>
+  </mat-card-header-->
+  <h6>
+      Volume: {{ uuid }}
+  </h6>
+    <mat-divider></mat-divider>
+
   <table mat-table
          [dataSource]="dataSource" multiTemplateDataRows>
     <ng-container matColumnDef="{{ column }}" *ngFor="let column of columnsToDisplay">

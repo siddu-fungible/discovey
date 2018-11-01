@@ -43,7 +43,7 @@ export class TopologyComponent implements OnInit {
   topoF1s: TopoF1[] = [];
   dataSource = new MatTableDataSource<TopoF1>();
   //displayedColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
-  displayedColumns: string[] = ['name', 'dataplane_ip', 'action'];
+  displayedColumns: string[] = ['name', 'dataplane_ip', 'cpu', 'action'];
 
   displayedTgColumns: string[] = ['name', 'dataplane_ip', 'mgmt_ip', 'mgmt_ssh_port', 'action'];
   displayedLoadColumns: string[] = ['attribute', 'value'];
@@ -97,18 +97,32 @@ export class TopologyComponent implements OnInit {
 
   }
 
-  fetchDpuStat(f1_name) {
+  fetchDpuStat(f1) {
     let url = this.commonService.getBaseUrl();
-    url = url + "/storage/f1/" + f1_name;
+    url = url + "/storage/f1/" + f1.name;
     this.apiService.get(url, false).subscribe((response) => {
-
+      f1.cpu = response.data.cpu;
     }, error => {
 
-    })
+    });
+
+    setTimeout(() => {this.fetchDpuStat(f1)}, 3000);
   }
+
+
+
 
   fetchTopology() {
     let url = this.commonService.getBaseUrl();
+    if (!url) {
+      setTimeout(() => {
+        this.fetchTopology();
+      }, 1000);
+      return;
+    }
+    this.activeController = this.commonService.getActiveController();
+
+
     url = url + '/topology/get_spec';
     this.apiService.get(url).subscribe((response) => {
       console.log(response);
@@ -122,7 +136,7 @@ export class TopologyComponent implements OnInit {
         newF1.mgmt_ssh_port = f1s[key].mgmt_ssh_port;
         newF1.dataplane_ip = f1s[key].dataplane_ip;
         newF1.storage_agent_port = f1s[key].storage_agent_port;
-        this.fetchDpuStat(newF1.name);
+        this.fetchDpuStat(newF1);
         if (f1s[key].hasOwnProperty("tgs")) {
           newF1.tgs = f1s[key].tgs;
           if (newF1.tgs) {
