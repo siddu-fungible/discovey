@@ -30,6 +30,7 @@ import { RegressionComponent } from './regression/regression.component';
 import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
 import { SubmitJobComponent } from './regression/submit-job/submit-job.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
@@ -63,6 +64,7 @@ import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
     Angular2FontawesomeModule,  // Add this line
     AngularCollapseModule,
     NgMultiSelectDropDownModule,
+    NgbModule
   ],
 
   providers: [ApiService, LoggerService],
