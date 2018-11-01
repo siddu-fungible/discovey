@@ -18,6 +18,7 @@ export class Demo1Component implements OnInit {
   showingApiViewer: boolean = true;
   controller: Controller = null;
   mainPage: boolean = false;
+  successAlert: string = null;
 
   constructor(private apiService: ApiService, private commonService: CommonService, private router: Router) {
   }
@@ -30,6 +31,11 @@ export class Demo1Component implements OnInit {
     }*/
 
   }
+
+  isSuccessAlert() {
+    return this.commonService.getSuccessAlert();
+  }
+
 
   isMainPage() {
     return this.router.url.endsWith("demo1");

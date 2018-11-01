@@ -468,7 +468,7 @@ export class VolumesComponent implements OnInit {
 
 
     this.apiService.post(url, payload).subscribe((response) => {
-      alert("Volume added");
+      this.commonService.setSuccessAlert("Volume added");
       this.getVolumes();
       this.addingNewVolume = false;
       this.status = null;
@@ -515,7 +515,7 @@ export class VolumesComponent implements OnInit {
     let payload = {}; //{"remote_ip": "127.0.0.1"};
     element.attachingStatus = "Attaching...";
     this.apiService.post(url, payload).subscribe((response) => {
-      alert("Attached");
+      this.commonService.setSuccessAlert("Attached");
       element.attachingStatus = "Refreshing";
       this.getVolumes();
     }, error => {
@@ -535,7 +535,7 @@ export class VolumesComponent implements OnInit {
     this.status = "Deleting volume";
     this.apiService.delete(url).subscribe((response) => {
       this.status = null;
-      alert("Volume deleted");
+      this.commonService.setSuccessAlert("Volume deleted");
       this.getVolumes();
 
     }, error => {

@@ -34,6 +34,7 @@ export class TopoF1 {
 export class CommonService {
   activeController: Controller = null;
   tgMap: {[name: string]: TopoTg} = {};
+  successAlert: string = null;
 
   constructor() { }
 
@@ -55,6 +56,17 @@ export class CommonService {
 
   getTgMap() {
     return this.tgMap;
+  }
+
+  getSuccessAlert() {
+    return this.successAlert;
+  }
+
+  setSuccessAlert(successAlert) {
+    this.successAlert = successAlert;
+    setTimeout(()=> {
+      this.setSuccessAlert(null);
+    }, 3000);
   }
 
 }

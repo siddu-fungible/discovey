@@ -180,7 +180,7 @@ export class VolumeComponent implements OnInit {
     let payload = {}; //{"remote_ip": "127.0.0.1"};
     element.attachingStatus = "Attaching...";
     this.apiService.post(url, payload).subscribe((response) => {
-      alert("Attached");
+      this.commonService.setSuccessAlert("Attached");
       element.attachingStatus = "Refreshing";
       this.getVolumeInfo();
     }, error => {

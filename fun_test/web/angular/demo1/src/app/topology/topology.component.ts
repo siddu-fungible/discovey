@@ -97,6 +97,16 @@ export class TopologyComponent implements OnInit {
 
   }
 
+  fetchDpuStat(f1_name) {
+    let url = this.commonService.getBaseUrl();
+    url = url + "/storage/f1/" + f1_name;
+    this.apiService.get(url, false).subscribe((response) => {
+
+    }, error => {
+
+    })
+  }
+
   fetchTopology() {
     let url = this.commonService.getBaseUrl();
     url = url + '/topology/get_spec';
@@ -112,6 +122,7 @@ export class TopologyComponent implements OnInit {
         newF1.mgmt_ssh_port = f1s[key].mgmt_ssh_port;
         newF1.dataplane_ip = f1s[key].dataplane_ip;
         newF1.storage_agent_port = f1s[key].storage_agent_port;
+        this.fetchDpuStat(newF1.name);
         if (f1s[key].hasOwnProperty("tgs")) {
           newF1.tgs = f1s[key].tgs;
           if (newF1.tgs) {
