@@ -765,38 +765,38 @@
             "weight": 1,
             "children": [
               {
-                "info": "AES_ECB Encryption",
+                "info": "AES_ECB Encryption Throughput",
                 "metric_model_name": "TeraMarkCryptoPerformance",
                 "leaf": true,
-                "name": "AES_ECB Encryption",
-                "label": "AES_ECB Encryption",
+                "name": "AES_ECB Encryption Throughput",
+                "label": "AES_ECB Encryption Throughput",
                 "children": [],
                 "weight": 1
               },
               {
-                "info": "AES_CBC Encryption",
+                "info": "AES_CBC Encryption Throughput",
                 "metric_model_name": "TeraMarkCryptoPerformance",
                 "leaf": true,
-                "name": "AES_CBC Encryption",
-                "label": "AES_CBC Encryption",
+                "name": "AES_CBC Encryption Throughput",
+                "label": "AES_CBC Encryption Throughput",
                 "children": [],
                 "weight": 1
               },
               {
-                "info": "AES_GCM Encryption",
+                "info": "AES_GCM Encryption Throughput",
                 "metric_model_name": "TeraMarkCryptoPerformance",
                 "leaf": true,
-                "name": "AES_GCM Encryption",
-                "label": "AES_GCM Encryption",
+                "name": "AES_GCM Encryption Throughput",
+                "label": "AES_GCM Encryption Throughput",
                 "children": [],
                 "weight": 1
               },
               {
-                "info": "AES_XTS Encryption",
+                "info": "AES_XTS Encryption Throughput",
                 "metric_model_name": "TeraMarkCryptoPerformance",
                 "leaf": true,
-                "name": "AES_XTS Encryption",
-                "label": "AES_XTS Encryption",
+                "name": "AES_XTS Encryption Throughput",
+                "label": "AES_XTS Encryption Throughput",
                 "children": [],
                 "weight": 1
               }
