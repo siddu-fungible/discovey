@@ -72,6 +72,18 @@ def test_case_re_run(request):
                                      script_path=script_path))
 
 @csrf_exempt
+@api_safe_json_response
+def test_case_re_run1(request):
+    request_json = json.loads(request.body)
+    suite_execution_id = request_json["suite_execution_id"]
+    test_case_execution_id = request_json["test_case_execution_id"]
+    script_path = request_json["script_path"]
+
+    return re_queue_job(suite_execution_id=suite_execution_id,
+                                     test_case_execution_id=test_case_execution_id,
+                                     script_path=script_path)
+
+@csrf_exempt
 def submit_job(request):
     job_id = 0
     if request.method == 'POST':
@@ -320,7 +332,15 @@ def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
-    return render(request, 'qa_dashboard/suite_detail.html', locals())
+    return render(request, 'qa_dashboard/upgrade.html', locals())
+
+@csrf_exempt
+@api_safe_json_response
+def suite_execution_attributes(request, execution_id):
+    all_objects_dict = _get_suite_executions(execution_id=execution_id)
+    suite_execution = all_objects_dict[0]
+    suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
+    return suite_execution_attributes
 
 def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj = TestCaseExecution.objects.get(suite_execution_id=suite_execution_id,
@@ -333,6 +353,22 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
 
 def log_path(request):
     return HttpResponse(LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX)
+
+@csrf_exempt
+@api_safe_json_response
+def log_path1(request):
+    return LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX
+
+@csrf_exempt
+@api_safe_json_response
+def test_case_execution1(request, suite_execution_id, test_case_execution_id):
+    test_case_execution_obj = TestCaseExecution.objects.get(suite_execution_id=suite_execution_id,
+                                                        execution_id=test_case_execution_id)
+    test_case_execution_obj.started_time = timezone.localtime(test_case_execution_obj.started_time)
+    test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
+
+    data = serializers.serialize('json', [test_case_execution_obj])
+    return data
 
 def get_catalog_test_case_execution_summary_result_multiple_jiras(suite_execution_id, jira_ids):
     summary_result = {}

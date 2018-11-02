@@ -130,7 +130,7 @@ export class RegressionComponent implements OnInit {
 
   getTagList = function (tagsString) {
     return JSON.parse(tagsString);
-  }
+  };
 
   resultToClass(result): any {
     result = result.toUpperCase();

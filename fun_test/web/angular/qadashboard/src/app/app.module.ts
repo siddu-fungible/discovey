@@ -31,6 +31,7 @@ import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
 import { SubmitJobComponent } from './regression/submit-job/submit-job.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+import { SuiteDetailComponent } from './regression/suite-detail/suite-detail.component';
 
 @NgModule({
   declarations: [
@@ -49,7 +50,8 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
     ScrollToDirective,
     RegressionComponent,
     FunSpinnerComponent,
-    SubmitJobComponent
+    SubmitJobComponent,
+    SuiteDetailComponent
   ],
   imports: [
     BsDropdownModule,
