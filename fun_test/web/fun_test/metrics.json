@@ -755,6 +755,52 @@
                 "weight": 1
               }
             ]
+          },
+          {
+            "info": "Crypto",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Crypto",
+            "label": "Crypto",
+            "weight": 1,
+            "children": [
+              {
+                "info": "AES_ECB Encryption",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "AES_ECB Encryption",
+                "label": "AES_ECB Encryption",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "AES_CBC Encryption",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "AES_CBC Encryption",
+                "label": "AES_CBC Encryption",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "AES_GCM Encryption",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "AES_GCM Encryption",
+                "label": "AES_GCM Encryption",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "AES_XTS Encryption",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "AES_XTS Encryption",
+                "label": "AES_XTS Encryption",
+                "children": [],
+                "weight": 1
+              }
+            ]
           }
             ]
           }
