@@ -12,7 +12,8 @@ from web.fun_test.site_state import site_state
 from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, VolumePerformanceSerializer, WuLatencyAllocStack
 from web.fun_test.metrics_models import LastMetricId
-from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, BcopyPerformanceSerializer
+from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, \
+    BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, LsvZipCryptoPerformanceSerializer
@@ -26,12 +27,14 @@ from django.forms.models import model_to_dict
 from analytics_models_helper import invalidate_goodness_cache
 from datetime import datetime
 from dateutil import parser
+
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 
 def index(request):
     return render(request, 'qa_dashboard/metrics.html', locals())
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -42,6 +45,7 @@ def get_leaves(request):
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     leaves = chart.get_leaves()
     return leaves
+
 
 @api_safe_json_response
 def metrics_list(request):
@@ -90,6 +94,7 @@ def chart_info(request):
                   "last_status_update_date": chart.last_status_update_date,
                   "last_num_build_failed": chart.last_num_build_failed}
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -148,17 +153,21 @@ def view_all_system_charts(request):
 def tables(request, metric_model_name, chart_name):
     return render(request, 'qa_dashboard/analytics_tables.html', locals())
 
+
 @csrf_exempt
 def atomic(request, chart_name, model_name):
     return render(request, 'qa_dashboard/atomic_metric_page.html', locals())
+
 
 @csrf_exempt
 def score_table(request, chart_name, model_name):
     return render(request, 'qa_dashboard/score_table_page.html', locals())
 
+
 @csrf_exempt
 def table_view(request, model_name):
     return render(request, 'qa_dashboard/table_view_page.html', locals())
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -181,14 +190,17 @@ def update_child_weight(request):
         c.add_child_weight(child_id=child_id, weight=weight)
     invalidate_goodness_cache()
 
+
 @csrf_exempt
 def summary_page(request):
     return render(request, 'qa_dashboard/upgrade.html', locals())
+
 
 @csrf_exempt
 def initialize(request):
     call_command('initialize')
     return HttpResponseRedirect('/')
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -209,7 +221,6 @@ def metric_info(request):
     # serialized_data["num_child_degrades"] = result["num_child_degrades"]
     serialized_data["children_info"] = result["children_info"]
     return serialized_data
-
 
 
 @csrf_exempt
@@ -237,6 +248,7 @@ def scores(request):
         result["children_score_map"] = j["children_score_map"]
 
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -283,6 +295,7 @@ def table_data(request, page=None, records_per_page=10):
     s = serializer(all_entries, many=True)
     data["data"] = s.data
     return data
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -347,6 +360,7 @@ def models_by_module(request):
             model_charts.append(chart.chart_name)
     return result
 
+
 @csrf_exempt
 @api_safe_json_response
 def status(request):
@@ -362,6 +376,7 @@ def status(request):
         pass
     return data
 
+
 @csrf_exempt
 @api_safe_json_response
 def metric_by_id(request):
@@ -372,6 +387,7 @@ def metric_by_id(request):
     result["metric_model_name"] = chart.metric_model_name
     result["chart_name"] = chart.chart_name
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -403,11 +419,59 @@ def data(request):
         today = today.replace(hour=0, minute=0, second=1)
         d["input_date_time__lt"] = today
         try:
-            result = model.objects.filter(**d)   #unpack, pack
+            result = model.objects.filter(**d)  # unpack, pack
             data.append([model_to_dict(x) for x in result])
         except ObjectDoesNotExist:
             logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
     return data
+
+
+@csrf_exempt
+@api_safe_json_response
+def get_data_by_model(request):
+    request_json = json.loads(request.body)
+    metric_model_name = request_json["metric_model_name"]
+    chart_name = request_json["chart_name"]
+    preview_data_sets = request_json["preview_data_sets"]
+    chart = None
+    try:
+        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+    except ObjectDoesNotExist:
+        pass
+    model = app_config.get_metric_models()[metric_model_name]
+    if preview_data_sets is not None:
+        data_sets = preview_data_sets
+    else:
+        data_sets = chart.data_sets
+        data_sets = json.loads(data_sets)
+    data = []
+    modified_data = []
+    d = {}
+    duplicate = True
+    for data_set in data_sets:
+        inputs = data_set["inputs"]
+        for input_name, input_value in inputs.iteritems():
+            if input_name in d:
+                if d.get(input_name) != input_value:
+                    duplicate = False
+            d[input_name] = input_value
+        # skip today's  #TODO
+        # del d["input_date_time"]
+        today = get_current_time()
+        today = today.replace(hour=0, minute=0, second=1)
+        d["input_date_time__lt"] = today
+        try:
+            result = model.objects.filter(**d)  # unpack, pack
+            data.append([model_to_dict(x) for x in result])
+        except ObjectDoesNotExist:
+            logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
+    if duplicate == False:
+        for data_set in data:
+            for record in data_set:
+                modified_data.append(record)
+    else:
+        modified_data = data[0]
+    return modified_data
 
 
 @csrf_exempt
@@ -430,8 +494,6 @@ def traverse_dag(metric_id):
     result["last_num_build_failed"] = chart.last_num_build_failed
     result["positive"] = chart.positive
 
-
-
     # chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
     # # only get the first two entries
     # # print "Chart status entry for {}".format(chart.chart_name)
@@ -450,13 +512,14 @@ def traverse_dag(metric_id):
     if chart.last_good_score >= 0:
         result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
     else:
-        result["last_two_scores"] = [0,0]
+        result["last_two_scores"] = [0, 0]
     if not chart.leaf:
         children_info = result["children_info"]
         for child_id in result["children"]:
             child_chart = MetricChart.objects.get(metric_id=child_id)
             children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
