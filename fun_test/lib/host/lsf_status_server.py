@@ -7,7 +7,7 @@ import pytz
 from datetime import datetime
 from dateutil import parser
 
-LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
+LSF_WEB_SERVER_BASE_URL = "http://palladium-jobs.fungible.local:8080"
 
 
 class LsfStatusServer:
