@@ -3,6 +3,7 @@ import django
 import json
 import random
 import re
+import pytz
 from datetime import datetime, timedelta
 from web.web_global import PRIMARY_SETTINGS_FILE
 from fun_global import get_localized_time, get_current_time
@@ -25,8 +26,9 @@ hour = 23
 second = 59
 
 def get_rounded_time(dt):
-    rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=second)
-    rounded_d = get_localized_time(rounded_d)
+    rounded_d = dt.replace(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=0, microsecond=0)
+    # rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=second)
+    # rounded_d = get_localized_time(rounded_d)
     return rounded_d
 
 def get_day_bounds(dt):
@@ -130,11 +132,16 @@ def prepare_status(chart, purge_old_status=False):
     result["penultimate_good_score"] = -1
     result["copied_score"] = False
     result["copied_score_disposition"] = 0
-    today = datetime.now()
+    # today = datetime.now()
+    today = datetime.now(pytz.timezone('US/Pacific'))
 
-    from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
+    # from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
+    from_date = today.replace(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=0, microsecond=0)
+    # from_date = get_localized_time(from_date)
 
-    yesterday = today - timedelta(days=0) # Just use today
+    # yesterday = today - timedelta(days=0) # Just use today
+    yesterday = today # - timedelta(days=0) # Just use today
+
     yesterday = get_rounded_time(yesterday)
     to_date = yesterday
     current_date = get_rounded_time(from_date)
