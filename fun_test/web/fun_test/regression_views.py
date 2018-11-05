@@ -410,7 +410,8 @@ def build_to_date_map(request):
         try:
             key = entry.completion_date
             dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
-            if (dt.day >= 4 and dt.month == 11 and dt.year == 2018) and (dt.day < 10 and dt.month <= 3 and dt.year == 2019):
+
+            if (dt.year == 2018 and ((dt.month == 11 and dt.day >= 4) or dt.month > 11)) or (dt.year == 2019 and ((dt.month < 3) or (dt.month == 3 and dt.day < 10))):
                 dt = dt + timedelta(hours=8)  #TODO: hardcoded
             else:
                 dt = dt + timedelta(hours=7)  # TODO: hardcoded
