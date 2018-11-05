@@ -493,21 +493,29 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           this.data["headers"].push(this.headers[key].verbose_name);
         }
       });
-      let dataSet = allDataSets[0];
+      // let dataSet = allDataSets[0];
       let index = 0;
+      let self = this;
+      let payload = {};
+      payload["metric_model_name"] = this.modelName;
+      payload["chart_name"] = this.chartName;
+      payload["preview_data_sets"] = this.filterDataSets;
+      this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
+      let dataSet = response.data;
       for (let rowData of dataSet) {
         let row = [];
         let rowInTable = [];
-        Object.keys(this.headers).forEach((key) => {
-          if (this.isFieldRelevant(key)) {
+        Object.keys(self.headers).forEach((key) => {
+          if (self.isFieldRelevant(key)) {
             let value = rowData[key];
             rowInTable.push(value);
-            row.push(this.cleanValue(key, value));
+            row.push(self.cleanValue(key, value));
           }
         });
-        this.data["rows"][index++] = rowInTable;
+        self.data["rows"][index++] = rowInTable;
       }
-      this.data["totalLength"] = this.data["rows"].length;
+      self.data["totalLength"] = self.data["rows"].length;
+      });
     }, error => {
       this.loggerService.error("fetchMetricsData");
     });
