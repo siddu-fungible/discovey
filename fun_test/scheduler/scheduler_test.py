@@ -21,7 +21,7 @@ def process_killed_jobs():
 
 
 if __name__ == "__main__":
-    suite_path = "storage_sanity.json"
+    suite_path = "test2.json"
     build_url = "http://dochub.fungible.local/doc/jenkins/funos/latest/"
     schedule_in_minutes = 1
 
