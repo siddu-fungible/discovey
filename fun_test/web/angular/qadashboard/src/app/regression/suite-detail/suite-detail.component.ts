@@ -88,11 +88,11 @@ export class SuiteDetailComponent implements OnInit {
   }
 
   getHtmlLogPath(path) {
-    return this._getFlatPath(path) + this.HTML_LOG_EXTENSION;
+    window.open(this._getFlatPath(path) + this.HTML_LOG_EXTENSION);
   }
 
   getConsoleLogPath(path) {
-    return this._getFlatPath(path) + this.CONSOLE_LOG_EXTENSION;
+    window.open(this._getFlatPath(path) + this.CONSOLE_LOG_EXTENSION);
   }
 
   rerunClick(suiteExecutionId, testCaseExecutionId, scriptPath) {
