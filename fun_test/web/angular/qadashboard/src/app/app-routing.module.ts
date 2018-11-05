@@ -8,6 +8,7 @@ import {FunMetricChartComponent} from "./fun-metric-chart/fun-metric-chart.compo
 import {Demo1Component} from "./demo1/demo1.component";
 import {RegressionComponent} from "./regression/regression.component";
 import {SubmitJobComponent} from "./regression/submit-job/submit-job.component";
+import {SuiteDetailComponent} from "./regression/suite-detail/suite-detail.component";
 
 const routes: Routes = [
   { path: 'upgrade', component: DashboardComponent },
@@ -18,6 +19,7 @@ const routes: Routes = [
   { path: 'regression/jenkins_jobs', component: RegressionComponent, data: {tags: '["jenkins-hourly", "jenkins-nightly"]'}},
   { path: 'regression/jobs_by_tag/:tags', component: RegressionComponent},
   { path: 'regression/submit_job_page', component: SubmitJobComponent },
+  { path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent},
   { path: 'regression/:filterString', component: RegressionComponent },
   { path: 'upgrade/test', component: TestComponent },
   { path: 'upgrade/demo1', component: Demo1Component }

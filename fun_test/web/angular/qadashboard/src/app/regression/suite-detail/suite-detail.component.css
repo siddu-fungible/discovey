@@ -1,0 +1,18 @@
+.table td {
+  padding: 1px;
+  padding-left: 2px;
+  padding-right: 2px;
+  vertical-align: middle;
+  text-align: center;
+}
+.table-danger {
+  background-color: #fbe9eb;
+}
+.cell {
+  width: 50%;
+}
+.top-card {
+  max-width: 50%;
+  border: 0;
+  padding-top: 60px;
+}
