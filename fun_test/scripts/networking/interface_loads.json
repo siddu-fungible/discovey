@@ -16,20 +16,23 @@
       "spray_disable": {"64": 115, "200": 115, "1000": 115, "1500": 115, "3000": 115, "9000": 78}
     },
     "FPG_HNU": {
-      "spray_enable": {"64": 300, "1500": 200},
-      "spray_disable": {"64": 150, "1500": 100}
+      "spray_enable": {"64": 460, "1500": 450},
+      "spray_disable": {"64": 210, "1500": 190}
     },
     "HNU_FPG": {
-      "spray_enable": {"64": 480, "1500": 270},
-      "spray_disable": {"64": 135, "1500": 110}
+      "spray_enable": {"64": 580, "1500": 530},
+      "spray_disable": {"64": 180, "1500": 180}
     },
     "FCP_HNU_HNU": {
       "spray_enable": {"64": 220, "1000": 130},
       "spray_disable": {"64": 140, "1000": 110}
     },
     "HNU_HNU": {
-      "spray_enable": {"64": 250, "1500": 230},
-      "spray_disable": {"64": 150, "1500": 130}
+      "spray_enable": {"64": 230, "1500": 200},
+      "spray_disable": {"64": 115, "1500": 110}
+    },
+    "FPG_FPG": {
+      "spray_disable": {"64": 9500, "1500": 530}
     },
     "duration": 60
   }
