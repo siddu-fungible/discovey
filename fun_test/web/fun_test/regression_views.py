@@ -410,7 +410,10 @@ def build_to_date_map(request):
         try:
             key = entry.completion_date
             dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
-            dt = dt + timedelta(hours=7)  #TODO: hardcoded
+            if (dt.day >= 4 and dt.month == 11 and dt.year == 2018) and (dt.day < 10 and dt.month <= 3 and dt.year == 2019):
+                dt = dt + timedelta(hours=8)  #TODO: hardcoded
+            else:
+                dt = dt + timedelta(hours=7)  # TODO: hardcoded
             key = str(dt)
             key = re.sub(r':\d{2}-.*', '', key)
             build_info[key] = {"software_date": entry.software_date,

@@ -62,3 +62,9 @@ def determine_version(build_url):
         content = content.strip()
         version = int(content)
     return version
+
+
+def get_utc_offset():
+    now = datetime.datetime.now(pytz.timezone(TIME_ZONE))
+    offset = now.utcoffset().total_seconds() / 60 / 60
+    return offset
