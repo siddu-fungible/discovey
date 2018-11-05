@@ -500,7 +500,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       payload["metric_model_name"] = this.modelName;
       payload["chart_name"] = this.chartName;
       payload["preview_data_sets"] = this.filterDataSets;
-      this.apiService.post("/metrics/data_by_model", payload).subscribe((response: any) => {
+      this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
       let dataSet = response.data;
       for (let rowData of dataSet) {
         let row = [];
