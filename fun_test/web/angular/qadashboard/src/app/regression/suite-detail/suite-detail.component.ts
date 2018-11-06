@@ -33,20 +33,21 @@ export class SuiteDetailComponent implements OnInit {
     this.CONSOLE_LOG_EXTENSION = ".logs.txt";  //TIED to scheduler_helper.py  TODO
     this.HTML_LOG_EXTENSION = ".html";         //TIED to scheduler_helper.py  TODO
     if (!this.logDir) {
-      this.apiService.get("/regression/log_path1").subscribe(function (result) {
+      this.apiService.get("/regression/log_path").subscribe(function (result) {
         self.logDir = result.data;
       }, error => {
         self.logDir = "/static/logs/s_";
       });
     }
     this.testCaseExecutions = [];
-    this.apiService.get("/regression/suite_execution1/" + this.executionId).subscribe(function (result) {
+    this.apiService.get("/regression/suite_execution/" + this.executionId).subscribe(function (result) {
       self.suiteExecution = result.data; // TODO: validate
-      let testCaseExecutionIds = JSON.parse(self.suiteExecution).fields.test_case_execution_ids;
-      testCaseExecutionIds = testCaseExecutionIds.substring(1, testCaseExecutionIds.length-1).split(", ");
+      let suiteExecutionJson = JSON.parse(self.suiteExecution);
+      let suiteFields = suiteExecutionJson.fields;
+      let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
 
       for(let testCaseExecutionId of testCaseExecutionIds) {
-        self.apiService.get('/regression/test_case_execution1/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {
+        self.apiService.get('/regression/test_case_execution/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {
           self.testCaseExecutions.push(JSON.parse(result.data)[0]);
         });
       }
@@ -100,8 +101,9 @@ export class SuiteDetailComponent implements OnInit {
     payload["suite_execution_id"] = suiteExecutionId;
     payload["test_case_execution_id"] = testCaseExecutionId;
     payload["script_path"] = scriptPath;
-    this.apiService.post("/regression/test_case_re_run1", payload).subscribe(function (result) {
+    this.apiService.post("/regression/test_case_re_run", payload).subscribe(function (result) {
       let jobId = parseInt(result.data);
+      alert("Rerun Successful");
       window.location.href = "/regression/suite_detail/" + jobId;
     });
   }
