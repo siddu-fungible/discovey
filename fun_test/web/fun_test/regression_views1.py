@@ -52,31 +52,26 @@ def jobs_by_tag(request, tag):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     tags = json.dumps([tag])
     # tags = json.dumps(["none"])
-    return render(request, 'qa_dashboard/upgrade.html', locals())
+    return render(request, 'qa_dashboard/regression.html', locals())
 
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
 
-
-@csrf_exempt
-@api_safe_json_response
 def suite_re_run(request, suite_execution_id):
-    return re_queue_job(suite_execution_id=suite_execution_id)
+    return HttpResponse(re_queue_job(suite_execution_id=suite_execution_id))
 
 @csrf_exempt
-@api_safe_json_response
 def test_case_re_run(request):
     request_json = json.loads(request.body)
     suite_execution_id = request_json["suite_execution_id"]
     test_case_execution_id = request_json["test_case_execution_id"]
     script_path = request_json["script_path"]
 
-    return re_queue_job(suite_execution_id=suite_execution_id,
+    return HttpResponse(re_queue_job(suite_execution_id=suite_execution_id,
                                      test_case_execution_id=test_case_execution_id,
-                                     script_path=script_path)
+                                     script_path=script_path))
 
 @csrf_exempt
-@api_safe_json_response
 def submit_job(request):
     job_id = 0
     if request.method == 'POST':
@@ -122,7 +117,7 @@ def submit_job(request):
                                tags=tags,
                                email_list=email_list,
                                email_on_fail_only=email_on_fail_only)
-    return job_id
+    return HttpResponse(job_id)
 
 def static_serve_log_directory(request, suite_execution_id):
     path = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(suite_execution_id) + "/*"
@@ -130,20 +125,15 @@ def static_serve_log_directory(request, suite_execution_id):
     files = [os.path.basename(f) for f in files]
     return render(request, 'qa_dashboard/list_directory.html', locals())
 
-
-@csrf_exempt
-@api_safe_json_response
 def kill_job(request, suite_execution_id):
     scheduler.scheduler_helper.kill_job(job_id=suite_execution_id)
     suite_execution = SuiteExecution.objects.get(execution_id=suite_execution_id)
     suite_execution.result = RESULTS["KILLED"]
     suite_execution.save()
-    return "OK"
+    return HttpResponse("OK")
 
-@csrf_exempt
-@api_safe_json_response
 def tags(request):
-    return serializers.serialize('json', Tag.objects.all())
+    return HttpResponse(serializers.serialize('json', Tag.objects.all()))
 
 def engineers(request):
     result = initialize_result(failed=True)
@@ -153,8 +143,6 @@ def engineers(request):
     result["status"] = True
     return HttpResponse(json.dumps(result))
 
-@csrf_exempt
-@api_safe_json_response
 def suites(request):
     suites_info = collections.OrderedDict()
     suite_files = glob.glob(SUITES_DIR + "/*.json")
@@ -167,10 +155,10 @@ def suites(request):
 
         except Exception as ex:
             pass
-    return json.dumps(suites_info)
+    return HttpResponse(json.dumps(suites_info))
+
 
 @csrf_exempt
-@api_safe_json_response
 def suite_executions_count(request, filter_string):
     tags = None
     if request.method == 'POST':
@@ -180,10 +168,9 @@ def suite_executions_count(request, filter_string):
                 tags = request_json["tags"]
                 tags = json.loads(tags)
     count = _get_suite_executions(get_count=True, filter_string=filter_string, tags=tags)
-    return count
+    return HttpResponse(count)
 
 @csrf_exempt
-@api_safe_json_response
 def suite_executions(request, records_per_page=10, page=None, filter_string="ALL"):
     tags = None
     if request.method == 'POST':
@@ -197,16 +184,12 @@ def suite_executions(request, records_per_page=10, page=None, filter_string="ALL
                                              records_per_page=records_per_page,
                                              filter_string=filter_string,
                                              tags=tags)
-    return json.dumps(all_objects_dict)
+    return HttpResponse(json.dumps(all_objects_dict))
 
-@csrf_exempt
-@api_safe_json_response
 def suite_execution(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
-    return json.dumps(all_objects_dict[0]) #TODO: Validate
+    return HttpResponse(json.dumps(all_objects_dict[0])) #TODO: Validate
 
-@csrf_exempt
-@api_safe_json_response
 def last_jenkins_hourly_execution_status(request):
     result = RESULTS["UNKNOWN"]
     suite_executions = _get_suite_executions(tags=["jenkins-hourly"],
@@ -214,29 +197,14 @@ def last_jenkins_hourly_execution_status(request):
                                              page=1, records_per_page=10)
     if suite_executions:
         result = suite_executions[0]["suite_result"]
-    return result
+    return HttpResponse(result)
 
 def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
-    return render(request, 'qa_dashboard/upgrade.html', locals())
+    return render(request, 'qa_dashboard/suite_detail.html', locals())
 
-@csrf_exempt
-@api_safe_json_response
-def suite_execution_attributes(request, execution_id):
-    all_objects_dict = _get_suite_executions(execution_id=execution_id)
-    suite_execution = all_objects_dict[0]
-    suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
-    return suite_execution_attributes
-
-@csrf_exempt
-@api_safe_json_response
-def log_path(request):
-    return LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX
-
-@csrf_exempt
-@api_safe_json_response
 def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj = TestCaseExecution.objects.get(suite_execution_id=suite_execution_id,
                                                         execution_id=test_case_execution_id)
@@ -244,7 +212,10 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
 
     data = serializers.serialize('json', [test_case_execution_obj])
-    return data
+    return HttpResponse(data)
+
+def log_path(request):
+    return HttpResponse(LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX)
 
 def get_catalog_test_case_execution_summary_result_multiple_jiras(suite_execution_id, jira_ids):
     summary_result = {}
@@ -322,11 +293,7 @@ def build_to_date_map(request):
         try:
             key = entry.completion_date
             dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
-
-            if (dt.year == 2018 and ((dt.month == 11 and dt.day >= 4) or dt.month > 11)) or (dt.year == 2019 and ((dt.month < 3) or (dt.month == 3 and dt.day < 10))):
-                dt = dt + timedelta(hours=8)  #TODO: hardcoded
-            else:
-                dt = dt + timedelta(hours=7)  # TODO: hardcoded
+            dt = dt + timedelta(hours=7)  #TODO: hardcoded
             key = str(dt)
             key = re.sub(r':\d{2}-.*', '', key)
             build_info[key] = {"software_date": entry.software_date,

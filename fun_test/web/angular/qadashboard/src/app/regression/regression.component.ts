@@ -58,7 +58,7 @@ export class RegressionComponent implements OnInit {
       payload["tags"] = this.tags;
     }
     let self = this;
-    this.apiService.post("/regression/suite_executions_count1/" + this.filterString, payload).subscribe((result) => {
+    this.apiService.post("/regression/suite_executions_count/" + this.filterString, payload).subscribe((result) => {
       this.suiteExecutionsCount = (parseInt(result.data));
       this.setPage(1);
     });
@@ -83,7 +83,7 @@ export class RegressionComponent implements OnInit {
     if (this.tags) {
       payload["tags"] = this.tags;
     }
-    this.apiService.post("/regression/suite_executions1/" + this.recordsPerPage + "/" + page + "/" + this.filterString, payload).subscribe(result => {
+    this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + this.filterString, payload).subscribe(result => {
       this.items = JSON.parse(result.data);
     });
     this.status = null;
@@ -117,13 +117,15 @@ export class RegressionComponent implements OnInit {
   rerunClick(suiteId) {
     this.apiService.get("/regression/suite_re_run/" + suiteId).subscribe(function (result) {
       let jobId = parseInt(result.data);
-      window.location.href = "/regression/suite_detail/" + jobId;
+      alert("Rerun Successful");
+      window.location.href = "/regression";
     });
   }
 
   killClick(suiteId) {
     this.apiService.get("/regression/kill_job/" + suiteId).subscribe(function (result) {
       let jobId = parseInt(result.data);
+      alert("Killed Successfully");
       window.location.href = "/regression/";
     });
   }

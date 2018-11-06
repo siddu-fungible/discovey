@@ -56,7 +56,7 @@ export class SubmitJobComponent implements OnInit {
     this.schedulingOptions = false;
     this.jobId = null;
     let self = this;
-    this.apiService.get("/regression/suites1").subscribe((result) => {
+    this.apiService.get("/regression/suites").subscribe((result) => {
       let suitesInfo = JSON.parse(result.data);
       self.suitesInfo = suitesInfo;
       for (let suites of Object.keys(suitesInfo)) {
@@ -78,7 +78,7 @@ export class SubmitJobComponent implements OnInit {
 
   fetchTags(): void {
     let self = this;
-    this.apiService.get('/regression/tags1').subscribe(function (result) {
+    this.apiService.get('/regression/tags').subscribe(function (result) {
       let data = JSON.parse(result.data);
       let i = 1;
       self.selectTags = [];
@@ -144,7 +144,7 @@ export class SubmitJobComponent implements OnInit {
     if (this.schedulingOptions) {
       payload = this.getSchedulingOptions(payload);
     }
-    this.apiService.post('/regression/submit_job1', payload).subscribe(function (result) {
+    this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
       self.jobId = parseInt(result.data);
       window.location.href = "/regression/suite_detail/" + self.jobId;
       console.log("Job " + self.jobId + " Submitted");
