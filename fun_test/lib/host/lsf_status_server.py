@@ -36,7 +36,9 @@ class LsfStatusServer:
 
     def _get(self, url):
         data = None
-        response = requests.get(url)
+        username = ""
+        password = ""
+        response = requests.get(url, auth=(username, password))
         if response.status_code == 200:
             data = response.text
         return data
@@ -146,12 +148,22 @@ class LsfStatusServer:
         result = {}
         if "completion_date" in job_info:
             completion_date = "20" + job_info["completion_date"]
+            jenkins_url = job_info["jenkins_url"]
+            build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
+            build_properties = self._get(url=build_properties_url) #TODO: create a regression jenkins account to validate and then do the get to fetch real data
+            build_properties = '''{"version": 1, "product": "palladium", "gitHubSha1s": {
+                                "FunDevelopment": "bc9b8bb53f9bcf9995cf71e70788d0b7e102d6be", "FunSDK": "147c1cf84f751be8b594ff6bd9444242eef968c9",
+                                "pdclibc": "bd4a3b26f3ac68ad9f99f74a0eabe22fdb1dfb3e", "SBPFirmware": "c1e9b06f3772dddd07cacae53c4d65933ba6d42d",
+                                "FunOS": "5e1b29681cff2ed02a78dfb558f6133becd934e2", "u-boot": "e01c9daeaca9768361661f5c9e99d9b26241f0d8"}}'''
+            if build_properties == None:
+                build_properties = ""
             add_jenkins_job_id_map(jenkins_job_id=job_info["jenkins_build_number"],
                                                  fun_sdk_branch=job_info["branch_funsdk"],
                                                  git_commit=job_info["git_commit"],
                                                  software_date=job_info["software_date"],
                                                  hardware_version=job_info["hardware_version"],
-                                                 completion_date=completion_date)
+                                                 completion_date=completion_date,
+                                                 build_properties=build_properties)
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response = self.get_job_by_id(job_id=job_info["job_id"])

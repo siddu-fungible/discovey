@@ -77,6 +77,7 @@ export class PerformanceComponent implements OnInit {
   showScoreInfo: boolean = false;
   miniGridMaxWidth: string;
   status: string = null;
+  buildInfo: any;
 
   constructor(
     private location: Location,
@@ -99,7 +100,16 @@ export class PerformanceComponent implements OnInit {
       this.numGridColumns = 4;
       this.miniGridMaxWidth = '25%';
     }
+    this.fetchBuildInfo();
     this.status = null;
+  }
+
+  fetchBuildInfo(): void {
+    this.apiService.get('/regression/build_to_date_map').subscribe((response) => {
+      this.buildInfo = response.data;
+    }, error => {
+      this.loggerService.error("regression/build_to_date_map");
+    });
   }
 
   getGuid(): number {
