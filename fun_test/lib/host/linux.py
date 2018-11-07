@@ -559,6 +559,27 @@ class Linux(object, ToDictMixin):
 
         return pid
 
+
+    @fun_test.safe
+    def get_process_id_by_pattern(self, process_pat):
+        pid = None
+        command = "ps -ef | grep '" + process_pat + "'"
+        try:
+            output = self.command(command)
+            # Converting the multi line output into list of lines
+            output = output.split('\n')
+            # If the output contains 2 lines, then the process matching the given pattern exists
+            if len(output) == 2:
+                # Extracting the pid of the process matched the given pattern
+                pid = output[0].split()[1]
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+
+        return pid
+
+
     @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, **kwargs):
 
@@ -642,7 +663,7 @@ class Linux(object, ToDictMixin):
                          nohup=True):
         command = command.rstrip()
         if output_file != "":
-            command += r' &>' + output_file + " "
+            command += r' >&' + output_file + " "
         command += r'&'
         if nohup:
             command = "nohup " + command
@@ -692,7 +713,8 @@ class Linux(object, ToDictMixin):
                      signal=15,
                      override=False,
                      kill_seconds=5,
-                     minimum_process_id=50):
+                     minimum_process_id=50,
+                     sudo=True):
         if not process_id and not job_id:
             fun_test.critical(message="Please provide a valid process-id or job-id")
             return
@@ -705,7 +727,10 @@ class Linux(object, ToDictMixin):
             job_str = "%"
         command = "kill -%s %s%s" % (str(signal), str(job_str), str(process_id))
         try:
-            self.sudo_command(command=command)
+            if sudo:
+                self.sudo_command(command=command)
+            else:
+                self.command(command=command)
         except pexpect.ExceptionPexpect:
             pass
         fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds)
@@ -1454,6 +1479,85 @@ class Linux(object, ToDictMixin):
         fun_test.debug(fio_dict)
         return fio_dict
 
+
+    @fun_test.safe
+    def pcie_fio(self, filename, timeout=60, **kwargs):
+
+        fio_command = "sudo fio"
+        fio_result = ""
+        fio_dict = {}
+
+        fun_test.debug(kwargs)
+
+        # Building the fio command
+        if 'name' not in kwargs:
+            fio_command += " --name=nvme_pcie"
+
+        if 'ioengine' not in kwargs:
+            fio_command += " --ioengine=libaio"
+
+        fio_command += " --filename={}".format(filename)
+
+        if 'numjobs' not in kwargs:
+            fio_command += " --numjobs=1"
+
+        if 'output-format' not in kwargs:
+            fio_command += " --output-format=json"
+
+        if kwargs:
+            for key in kwargs:
+                fio_command += " --" + key + "=" + str(kwargs[key])
+
+        fun_test.debug(fio_command)
+
+        # Executing the fio command
+        fio_result = self.command(command=fio_command, timeout=timeout)
+        # fio_result += '\n'
+        fun_test.debug(fio_result)
+
+        # Checking there is no error occured during the FIO test
+        match = ""
+        match = re.search(r'Assertion .* failed', fio_result, re.I)
+        if match:
+            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+            return fio_dict
+
+        # Trimming initial few lines to convert the output into a valid json format
+        before, sep, after = fio_result.partition("{")
+        trim_fio_result = sep + after
+        fun_test.debug(trim_fio_result)
+
+        # Converting the json into python dictionary
+        fio_result_dict = commentjson.loads(trim_fio_result)
+        fun_test.debug(fio_result_dict)
+
+        # Populating the resultant fio_dict dictionary
+        for operation in ["write", "read"]:
+            fio_dict[operation] = {}
+            for stat in ["bw", "iops", "latency"]:
+                if stat != "latency":
+                    fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][stat]))
+                else:
+                    for key in fio_result_dict["jobs"][0][operation].keys():
+                        if key.startswith("lat"):
+                            # Extracting the latency unit
+                            unit = key[-2:]
+                            # Converting the units into microseconds
+                            if unit == "ns":
+                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                value /= 1000
+                                fio_dict[operation][stat] = value
+                            elif unit == "us":
+                                fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                            else:
+                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                value *= 1000
+                                fio_dict[operation][stat] = value
+
+        fun_test.debug(fio_dict)
+        return fio_dict
+
+
     @fun_test.safe
     def fio(self, destination_ip, timeout=60, **kwargs):
 
@@ -1531,6 +1635,78 @@ class Linux(object, ToDictMixin):
 
         fun_test.debug(fio_dict)
         return fio_dict
+
+    @fun_test.safe
+    def stop_dpcsh_proxy(self, dpcsh_proxy_name="dpcsh", dpcsh_proxy_port=40221, dpcsh_proxy_tty="ttyUSB8"):
+        process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
+        current_dpcsh_proxy_pid = self.get_process_id_by_pattern(process_pat)
+        if current_dpcsh_proxy_pid:
+            self.kill_process(process_id=current_dpcsh_proxy_pid, sudo=False)
+            current_dpcsh_proxy_pid = self.get_process_id_by_pattern(process_pat)
+            if current_dpcsh_proxy_pid:
+                fun_test.critical("Unable to kill the existing dpcsh proxy process")
+                return False
+        return True
+
+    @fun_test.safe
+    def start_dpcsh_proxy(self, dpcsh_env="/project/tools/glibc-2.14/lib",
+                          dpcsh_proxy_path="/home/gliang/ws/FunSDK/bin", dpcsh_proxy_name="dpcsh",
+                          dpcsh_proxy_port=40221, dpcsh_proxy_tty="/dev/ttyUSB8",
+                          dpcsh_proxy_log="/tmp/dpcsh_proxy_log"):
+        # Killling any existing dpcsh TCP proxy server running outside the qemu host
+        self.stop_dpcsh_proxy(dpcsh_proxy_name, dpcsh_proxy_port, dpcsh_proxy_tty)
+
+        dpcsh_proxy_cmd = "env LD_LIBRARY_PATH={} {}/{} -D {} --tcp_proxy {}".format(dpcsh_env, dpcsh_proxy_path,
+                                                                                     dpcsh_proxy_name, dpcsh_proxy_tty,
+                                                                                     dpcsh_proxy_port)
+        dpcsh_proxy_process_id = self.start_bg_process(command=dpcsh_proxy_cmd, output_file=dpcsh_proxy_log)
+        # Checking whether the dpcsh proxy is started properly
+        if dpcsh_proxy_process_id:
+            self.command("\n")
+            process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
+            current_dpcsh_proxy_process_id = self.get_process_id_by_pattern(process_pat)
+            if not current_dpcsh_proxy_process_id:
+                return False
+        else:
+            return False
+        return True
+
+
+    @fun_test.safe
+    def reboot(self, timeout=5, retries=6):
+
+        result = True
+        disconnect = True
+
+        # Rebooting the host
+        try:
+            self.sudo_command(command="reboot", timeout=timeout)
+        except Exception as ex:
+            self.disconnect()
+            self._set_defaults()
+            disconnect = False
+
+        fun_test.sleep("Waiting for the host to go down", timeout)
+        if disconnect:
+            self.disconnect()
+            self._set_defaults()
+
+        for i in range(retries):
+            command_output = ""
+            try:
+                command_output = self.command(command="pwd", timeout=timeout)
+                if command_output:
+                    break
+            except Exception as ex:
+                fun_test.sleep("Sleeping for the host to come up from reboot", timeout)
+                self.disconnect()
+                self._set_defaults()
+                continue
+        else:
+            fun_test.critical("Host didn't came up from reboot even after {} seconds".format(retries * timeout))
+            result = False
+
+        return result
 
 
 class LinuxBackup:
