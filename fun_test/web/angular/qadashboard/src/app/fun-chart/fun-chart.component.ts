@@ -1,5 +1,6 @@
-import {Component, Input, OnChanges, OnInit} from '@angular/core';
+import {Component, Input, Output, OnChanges, OnInit} from '@angular/core';
 import {Chart} from 'angular-highcharts';
+import {EventEmitter} from "@angular/core";
 
 @Component({
   selector: 'fun-chart',
@@ -15,7 +16,10 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() mileStoneIndex: number = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
+  @Input() public pointDetail: Function;
+  @Output() pointInfo: EventEmitter<any> = new EventEmitter();
   chart: any;
+  point: any = null;
 
   constructor() {
   }
@@ -61,7 +65,16 @@ export class FunChartComponent implements OnInit, OnChanges {
           }
         },
         series: {
-          animation: false
+            allowPointSelect: true,
+            cursor: 'pointer',
+            point: {
+                events: {
+                    select: function () {
+                        self.point = self.pointDetail(this.category, this.y);
+                        self.pointInfo.emit(self.point);
+                    }
+                }
+            }
         }
       },
       series: this.y1Values

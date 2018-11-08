@@ -43,9 +43,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   mileStoneIndex: number = null;
   chartName: string;
   modelName: string;
+  clicked: boolean = false;
+  pointInfo: any;
 
   public formatter: Function;
   public tooltip: Function;
+  public pointDetails: Function;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute) {
   }
@@ -67,6 +70,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
+    this.pointDetails = this.pointDetail.bind(this);
     this.status = null;
   }
 
@@ -76,17 +80,34 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.status = null;
   }
 
+  showPointDetails(pointInfo): void {
+    let self = this;
+    self.pointInfo = [];
+    Object.keys(pointInfo).forEach((point) => {
+        if(point === "Build Properties") {
+
+        }
+        else{
+          let property = [];
+          property["name"] = point;
+          property["value"] = pointInfo[point];
+          self.pointInfo.push(property);
+        }
+    });
+    self.clicked = true;
+  }
+
   fetchMetricsById(): void {
-      let payload = {};
-      payload["metric_id"] = this.id;
-      this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
-        this.chartName = data.data["chart_name"];
-        this.modelName = data.data["metric_model_name"];
-        this.setDefault();
-        this.fetchInfo();
-      }, error => {
-        this.loggerService.error("fetching by metric id failed");
-      });
+    let payload = {};
+    payload["metric_id"] = this.id;
+    this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
+      this.chartName = data.data["chart_name"];
+      this.modelName = data.data["metric_model_name"];
+      this.setDefault();
+      this.fetchInfo();
+    }, error => {
+      this.loggerService.error("fetching by metric id failed");
+    });
   }
 
   //set the chart and model name based in metric id
@@ -161,16 +182,46 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let s = "Error";
     if (this.buildInfo && key in this.buildInfo) {
       softwareDate = this.buildInfo[key]["software_date"];
-      hardwareVersion = this.buildInfo[key]["hardware_version"];
-      sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
-      s = "<b>SDK branch:</b> " + sdkBranch + "<br>";
-      s += "<b>Software date:</b> " + softwareDate + "<br>";
-      s += "<b>Hardware version:</b> " + hardwareVersion + "<br>";
-      s += "<b>Git commit:</b> " + this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "") + "<br>";
-      s += "<b>Build Properties:</b> " + this.buildInfo[key]["build_properties"] + "<br>";
+      s = "<b>Software date:</b> " + softwareDate + "<br>";
       s += "<b>Value:</b> " + y + "<br>";
     } else {
       s = "<b>Value:</b> " + y + "<br>";
+    }
+    return s;
+  }
+
+  //display details about the points in the chart
+  pointDetail(x, y): any {
+    let softwareDate = "Unknown";
+    let hardwareVersion = "Unknown";
+    let sdkBranch = "Unknown";
+    let gitCommit = "Unknown";
+    let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
+    let match = r.exec(x);
+    let key = "";
+    if (match) {
+      key = match[1];
+    } else {
+      let reg = /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/g;
+      match = reg.exec(x);
+      if (match) {
+        key = match[1].replace('T', ' ');
+      }
+    }
+    let s = {};
+    if (this.buildInfo && key in this.buildInfo) {
+      softwareDate = this.buildInfo[key]["software_date"];
+      hardwareVersion = this.buildInfo[key]["hardware_version"];
+      sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
+      s["SDK branch"] = sdkBranch;
+      s["Software date"] = softwareDate;
+      s["Hardware version"] = hardwareVersion;
+      s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
+      let buildProperties = JSON.parse(this.buildInfo[key]["build_properties"]);
+      s["Build Properties"] = buildProperties;
+      s["Value"] = y;
+    } else {
+      s["Value"] = y;
     }
     return s;
   }
@@ -184,7 +235,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.chartInfo = response.data;
       if (this.chartInfo !== null) {
         this.previewDataSets = this.getPreviewDataSets();
-        if(!this.previewDataSets) {
+        if (!this.previewDataSets) {
           this.loggerService.error("No Preview Datasets");
           return;
         }
@@ -340,39 +391,39 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   fixMissingDates(dates): any {
     let finalDates = [];
     if (dates.length !== 0) {
-    let firstString = dates[0].replace(/\s+/g, 'T');
-    //firstString = firstString.replace('+', 'Z');
-    //firstString = firstString.substring(0, firstString.indexOf('Z'));
-    let firstDate = new Date(firstString);
-    let today = new Date();
-    let yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(23, 59, 59);
-    let lastDate = yesterday;
+      let firstString = dates[0].replace(/\s+/g, 'T');
+      //firstString = firstString.replace('+', 'Z');
+      //firstString = firstString.substring(0, firstString.indexOf('Z'));
+      let firstDate = new Date(firstString);
+      let today = new Date();
+      let yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(23, 59, 59);
+      let lastDate = yesterday;
 
-    let currentDate = firstDate;
-    let datesIndex = 0;
-    while (currentDate <= yesterday) {
+      let currentDate = firstDate;
+      let datesIndex = 0;
+      while (currentDate <= yesterday) {
 
-      //console.log(currentDate);
-      if ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
-        finalDates.push(dates[datesIndex]);
-        datesIndex++;
-        while ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
-          //finalDates.push(dates[datesIndex]);
+        //console.log(currentDate);
+        if ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
+          finalDates.push(dates[datesIndex]);
           datesIndex++;
+          while ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
+            //finalDates.push(dates[datesIndex]);
+            datesIndex++;
+          }
+        } else {
+          //currentDate.setHours(currentDate.getHours() - currentDate.getTimezoneOffset() / 60);
+          let tempDate = currentDate;
+          tempDate.setHours(0);
+          tempDate.setMinutes(0);
+          tempDate.setSeconds(1);
+          tempDate = new Date(tempDate.getTime() - (tempDate.getTimezoneOffset() * 60000));
+          finalDates.push(tempDate.toISOString().replace('T', ' ')); //TODO: convert zone correctly
         }
-      } else {
-        //currentDate.setHours(currentDate.getHours() - currentDate.getTimezoneOffset() / 60);
-        let tempDate = currentDate;
-        tempDate.setHours(0);
-        tempDate.setMinutes(0);
-        tempDate.setSeconds(1);
-        tempDate = new Date(tempDate.getTime() - (tempDate.getTimezoneOffset() * 60000));
-        finalDates.push(tempDate.toISOString().replace('T', ' ')); //TODO: convert zone correctly
+        currentDate.setDate(currentDate.getDate() + 1);
       }
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
     }
     return finalDates;
   }
@@ -502,20 +553,20 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       payload["chart_name"] = this.chartName;
       payload["preview_data_sets"] = this.filterDataSets;
       this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
-      let dataSet = response.data;
-      for (let rowData of dataSet) {
-        let row = [];
-        let rowInTable = [];
-        Object.keys(self.headers).forEach((key) => {
-          if (self.isFieldRelevant(key)) {
-            let value = rowData[key];
-            rowInTable.push(value);
-            row.push(self.cleanValue(key, value));
-          }
-        });
-        self.data["rows"][index++] = rowInTable;
-      }
-      self.data["totalLength"] = self.data["rows"].length;
+        let dataSet = response.data;
+        for (let rowData of dataSet) {
+          let row = [];
+          let rowInTable = [];
+          Object.keys(self.headers).forEach((key) => {
+            if (self.isFieldRelevant(key)) {
+              let value = rowData[key];
+              rowInTable.push(value);
+              row.push(self.cleanValue(key, value));
+            }
+          });
+          self.data["rows"][index++] = rowInTable;
+        }
+        self.data["totalLength"] = self.data["rows"].length;
       });
     }, error => {
       this.loggerService.error("fetchMetricsData");

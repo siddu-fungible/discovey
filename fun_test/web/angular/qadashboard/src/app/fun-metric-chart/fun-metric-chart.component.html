@@ -23,7 +23,21 @@
   <!-- fun chart component -->
   <fun-chart [mileStoneIndex]="mileStoneIndex" [y1Values]="values" [xValues]="series" [title]="chartName"
              [xAxisLabel]="chart1XaxisTitle"
-             [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"></fun-chart>
+             [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip" [pointDetail]="pointDetails" (pointInfo)="showPointDetails($event)"></fun-chart>
+  <div *ngIf="clicked">
+    <table>
+      <tr *ngFor="let point of pointInfo">
+        <td>
+          {{ point.name }}:
+        </td>
+          <td>
+        {{ point.value }}
+        </td>
+      </tr>
+    </table>
+    <button class="button btn-sm" (click)="clicked = !clicked">close
+    </button>
+  </div>
   <!-- showing description only when leaf charts are clicked -->
   <div *ngIf="!minimal">
     <br>
