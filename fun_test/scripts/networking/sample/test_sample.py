@@ -76,9 +76,9 @@ class SpirentSetup(FunTestScript):
 
         # Subscribe to all results
         project = template_obj.stc_manager.get_project_handle()
-        subscribe_results = template_obj.subscribe_to_all_results(parent=project)
-        fun_test.test_assert(subscribe_results['result'], "Subscribing to all results")
-        del subscribe_results['result']
+        subscribed_results = template_obj.subscribe_to_all_results(parent=project)
+        fun_test.test_assert(subscribed_results['result'], "Subscribing to all results")
+        del subscribed_results['result']
 
         if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
@@ -133,7 +133,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
                                  b. Payload Type: PRBS
                                  c. Insert Signature
                                  d. Load: 1 Mbps
-                              2. Configure ingress sampling rule on FPG%d and dest: FPG%d
+                              2. Configure ingress sampling rule on FPG5 and dest: FPG15
                               3. Start Traffic for %d secs
                               4. Start packet capture sampling port 
                               5. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count
@@ -144,7 +144,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
                                   frames
                               10. Ensure no errors are seen on spirent ports
                               11. Ensure sample packets are exactly same as ingress packets 
-                              """ % (dut_config['ports'][0], dut_config['ports'][2], TRAFFIC_DURATION))
+                              """ % TRAFFIC_DURATION)
 
     def setup(self):
         self.l2_config = spirent_config['l2_config']
@@ -213,10 +213,12 @@ class SampleIngressFPGtoFPG(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        checkpoint = "Start packet capture on %s sample port" % sample_port
+        checkpoint = "Packet captured on %s sample port" % sample_port
         capture_results = template_obj.start_default_capture_save_locally(port_handle=sample_port,
                                                                           sleep_time=TRAFFIC_DURATION)
         fun_test.test_assert(capture_results['result'], checkpoint)
+
+        fun_test.sleep("Traffic to complete")
 
         # Getting Spirent results
         checkpoint = "Fetch Tx Port Results for %s" % tx_port
@@ -277,13 +279,24 @@ class SampleIngressFPGtoFPG(FunTestCase):
         fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
 
         checkpoint = "Ensure PSW sample_pkt counter must be equal to no of frames transmitted"
-        psw_diff_stats = get_diff_stats(old_stats=psw_stats_before, new_stats=psw_stats)
+        parsed_input_stats_1 = get_psw_global_stats_values(input=True, psw_stats_output=psw_stats_before,
+                                                           input_key_list=[PSW_SAMPLED_PACKET_COUNT])
+
+        parsed_input_stats_2 = get_psw_global_stats_values(input=True, psw_stats_output=psw_stats,
+                                                           input_key_list=[PSW_SAMPLED_PACKET_COUNT])
+
+        psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
+                                        new_stats=parsed_input_stats_2['input'],
+                                        stats_list=[PSW_SAMPLED_PACKET_COUNT])
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
-        sample_diff_stats = get_diff_stats(old_stats=sample_stats_before, new_stats=sample_stats)
-        #TODO: Add support for sample stats diff
+        sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
+                                           new_stats=sample_stats[str(self.sample_id)])
+        fun_test.test_assert_expected(expected=frames_received,
+                                      actual=int(sample_diff_stats['count']),
+                                      message=checkpoint)
 
         # Validate Spirent stats
         checkpoint = "Ensure Tx spirent Port FrameCount must be equal to Rx spirent port FrameCount"
@@ -302,7 +315,15 @@ class SampleIngressFPGtoFPG(FunTestCase):
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
         fun_test.test_assert(result['result'], checkpoint)
 
-        # Validate Sample packet
+        # TODO: Validate Sample packet
 
     def cleanup(self):
+        # TODO: Delete sample rule
+        # TODO: cleanup pcap files
         pass
+
+
+if __name__ == '__main__':
+    ts = SpirentSetup()
+    ts.add_test_case(SampleIngressFPGtoFPG())
+    ts.run()
