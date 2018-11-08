@@ -178,8 +178,16 @@ class JiraCache(models.Model):
     jira_id = models.IntegerField()
     module = models.CharField(max_length=100, default="networking")
 
+class RegresssionScripts(models.Model):
+    """
+    This is probably a temporary model. We can store the path to several scripts that can be considered as regression
+    scripts
+    """
+    script_path = models.TextField(unique=True)
+
 if is_performance_server():
     from web.fun_test.metrics_models import *
+
 
 if __name__ == "__main__":
     #import django

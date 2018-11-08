@@ -15,6 +15,7 @@ import logging
 import datetime
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
+from web.web_global import *
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -27,11 +28,14 @@ class MetricChartStatus(models.Model):
     date_time = models.DateTimeField(default=datetime.now)
     score = models.FloatField(default=-1)
     valid = models.BooleanField(default=False)
-    children_score_map = JSONField(default={})
     copied_score = models.BooleanField(default=False)  # If the score was copied from the last good score
     copied_score_disposition = models.IntegerField(default=0)  # 0 indicates current and last score is identical,
                                                                # 1 indicates last copied score was in upward trend
                                                                # -1 indicates last copied score was in downward trend
+    if get_default_db_engine() == DB_ENGINE_TYPE_POSTGRES:
+        children_score_map = JSONField(default={})
+    else:
+        children_score_map = models.TextField(default="{}")
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
