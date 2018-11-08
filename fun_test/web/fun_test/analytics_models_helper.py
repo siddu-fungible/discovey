@@ -9,7 +9,7 @@ django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
-from web.fun_test.metrics_models import MetricChart, MetricChartStatus
+from web.fun_test.metrics_models import MetricChart
 from web.fun_test.db_fixup import prepare_status
 
 
@@ -100,11 +100,6 @@ class MetricChartHelper(object):
     @staticmethod
     def get_charts_by_model_name(metric_model_name):
         charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
-        return charts
-
-    @staticmethod
-    def get_chart_status_by_model_name(metric_model_name):
-        charts = MetricChartStatus.objects.filter(metric_model_name=metric_model_name)
         return charts
 
 class Performance1Helper(MetricHelper):
