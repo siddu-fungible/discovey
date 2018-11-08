@@ -89,23 +89,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     Object.keys(pointInfo).forEach((point) => {
         if(point === "Build Properties") {
           let properties = pointInfo[point];
-          // Object.keys(properties).forEach((property) => {
-          //   if(property === "gitHubSha1s") {
-          //       let gitCommits = properties[property];
-          //       Object.keys(gitCommits).forEach(commit => {
-          //         let gitCommit = [];
-          //         gitCommit["name"] = commit;
-          //         gitCommit["value"] = gitCommits[commit];
-          //         self.buildProps.push(gitCommit);
-          //       });
-          //   }
-          //   else {
-          //     let gitInfo = [];
-          //     gitInfo["name"] = property;
-          //     gitInfo["value"] = properties[property];
-          //     self.buildProps.push(gitInfo);
-          //   }
-          // });
           self.buildProps["name"] = point;
           self.buildProps["value"] = properties;
         }
