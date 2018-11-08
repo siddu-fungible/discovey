@@ -45,6 +45,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   modelName: string;
   clicked: boolean = false;
   pointInfo: any;
+  buildProps: any;
+  showBuildProps: boolean = false;
 
   public formatter: Function;
   public tooltip: Function;
@@ -83,9 +85,29 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   showPointDetails(pointInfo): void {
     let self = this;
     self.pointInfo = [];
+    self.buildProps = [];
     Object.keys(pointInfo).forEach((point) => {
         if(point === "Build Properties") {
-
+          let properties = pointInfo[point];
+          // Object.keys(properties).forEach((property) => {
+          //   if(property === "gitHubSha1s") {
+          //       let gitCommits = properties[property];
+          //       Object.keys(gitCommits).forEach(commit => {
+          //         let gitCommit = [];
+          //         gitCommit["name"] = commit;
+          //         gitCommit["value"] = gitCommits[commit];
+          //         self.buildProps.push(gitCommit);
+          //       });
+          //   }
+          //   else {
+          //     let gitInfo = [];
+          //     gitInfo["name"] = property;
+          //     gitInfo["value"] = properties[property];
+          //     self.buildProps.push(gitInfo);
+          //   }
+          // });
+          self.buildProps["name"] = point;
+          self.buildProps["value"] = properties;
         }
         else{
           let property = [];
@@ -213,11 +235,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       softwareDate = this.buildInfo[key]["software_date"];
       hardwareVersion = this.buildInfo[key]["hardware_version"];
       sdkBranch = this.buildInfo[key]["fun_sdk_branch"];
+      let buildProperties = this.buildInfo[key]["build_properties"];
       s["SDK branch"] = sdkBranch;
       s["Software date"] = softwareDate;
       s["Hardware version"] = hardwareVersion;
       s["Git commit"] = this.buildInfo[key]["git_commit"].replace("https://github.com/fungible-inc/FunOS/commit/", "");
-      let buildProperties = JSON.parse(this.buildInfo[key]["build_properties"]);
       s["Build Properties"] = buildProperties;
       s["Value"] = y;
     } else {
@@ -260,8 +282,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.mileStoneIndex = null;
     this.showingTable = false;
     this.showingConfigure = false;
+    this.clicked = false;
+    this.showBuildProps = false;
   }
 
+  closePointInfo(): void {
+    this.clicked = false;
+    this.showBuildProps = false;
+  }
   getPreviewDataSets(): any {
     return this.chartInfo.data_sets;
   }

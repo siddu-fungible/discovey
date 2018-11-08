@@ -31,3 +31,9 @@ a {
 .a-text a {
   color: #337ab7;
 }
+.no-wrap {
+  white-space: nowrap;
+}
+.word-break {
+  word-break: break-all;
+}
