@@ -15,13 +15,12 @@ export class CancelBtnLinkComponent implements OnInit {
   }
 
   buttonClose(): void {
-    if(this.prompt) {
-      if(confirm("Are you sure, you want to "+this.text)) {
+    if (this.prompt) {
+      if (confirm("Are you sure, you want to " + this.text)) {
         this.onClick.emit();
       }
     } else {
       this.onClick.emit();
     }
   }
-
 }
