@@ -1,11 +1,11 @@
 import {Component, Input, OnInit, Output, EventEmitter} from '@angular/core';
 
 @Component({
-  selector: 'cancel-btn',
+  selector: 'cancel-btn-link',
   templateUrl: './btn-link.component.html',
   styleUrls: ['./btn-link.component.css']
 })
-export class BtnLinkComponent implements OnInit {
+export class CancelBtnLinkComponent implements OnInit {
 @Input() text: string = "close";
 @Input() prompt: boolean = false;
 @Output() onClick = new EventEmitter();
