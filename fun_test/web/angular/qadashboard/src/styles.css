@@ -357,4 +357,9 @@ input:checked + .slider:before {
 .panel-with-table {
     width: 1250px;
 }
-
+.no-wrap {
+  white-space: nowrap;
+}
+.word-break {
+  word-break: break-all;
+}

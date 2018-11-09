@@ -31,3 +31,7 @@ a {
 .a-text a {
   color: #337ab7;
 }
+.card-button {
+  width: fit-content;
+  margin: 4px;
+}

@@ -334,7 +334,8 @@ def build_to_date_map(request):
             build_info[key] = {"software_date": entry.software_date,
                                                  "hardware_version": entry.hardware_version,
                                                  "fun_sdk_branch": entry.fun_sdk_branch,
-                                                 "git_commit": entry.git_commit}
+                                                 "git_commit": entry.git_commit,
+                                                 "build_properties": entry.build_properties}
             # print str(dt)
         except Exception as ex:
             print ex

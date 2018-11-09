@@ -165,6 +165,7 @@ class JenkinsJobIdMap(models.Model):
     software_date = models.IntegerField(default=0)
     hardware_version = models.TextField(default="")
     completion_date = models.TextField(default="")
+    build_properties = models.TextField(default="")
 
     def __str__(self):
         return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)

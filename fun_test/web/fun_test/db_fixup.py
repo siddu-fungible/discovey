@@ -296,7 +296,7 @@ def prepare_status(chart, purge_old_status=False):
                     chart.data_sets = json.dumps(data_sets)
                     chart.save()
                 # print current_date, scores
-                print "Chart: {} Dtae: {} score: {}".format(chart.chart_name, current_date, scores[current_date])
+                print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date, scores[current_date])
                 mcs = MetricChartStatus(date_time=current_date,
                                         metric_id=metric_id,
                                         chart_name=chart_name,
