@@ -83,7 +83,9 @@ def submit_job(request):
         request_json = json.loads(request.body)
         suite_path = request_json["suite_path"]
         build_url = request_json["build_url"]
-        tags = request_json["tags"]
+        tags = None
+        if "tags" in request_json:
+            tags = request_json["tags"]
         email_list = None
         email_on_fail_only = None
         if "email_list" in request_json:

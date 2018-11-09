@@ -326,6 +326,9 @@ def de_queue_job(job_file):
         # TODO: Ensure job_file is removed
 
 
+def process_external_requests():
+    pass
+
 def ensure_singleton():
     if os.path.exists(SCHEDULER_PID):
         raise SchedulerException("Only one instance of scheduler.py is permitted")
@@ -348,7 +351,7 @@ if __name__ == "__main1__":
     pass
 
 if __name__ == "__main__":
-    ensure_singleton()
+    # ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
     while True:
         process_killed_jobs()

@@ -6,7 +6,6 @@ from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR,
 from fun_global import RESULTS, is_regression_server, is_performance_server, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
-from django.utils import timezone
 from fun_settings import TIME_ZONE
 from lib.utilities.http import fetch_text_file
 
@@ -27,6 +26,9 @@ scheduler_logger.setLevel(logging.DEBUG)
 
 TEN_MB = 1e7
 DEBUG = False
+
+
+
 
 
 if not DEBUG:

@@ -7,7 +7,7 @@ import os
 from fun_settings import COMMON_WEB_LOGGER_NAME
 from django.db import models
 from fun_global import RESULTS
-from fun_global import is_performance_server
+from fun_global import is_performance_server, get_current_time
 from web.fun_test.jira_models import *
 from web.fun_test.demo1_models import *
 from rest_framework.serializers import ModelSerializer
@@ -184,6 +184,16 @@ class RegresssionScripts(models.Model):
     scripts
     """
     script_path = models.TextField(unique=True)
+
+
+class SchedulerInfo(models.Model):
+    """
+    A place to store scheduler state such as time started, time restarted, current state
+    """
+    state = models.CharField(max_length=30, default="SCHEDULER_STATE_UNKNOWN")
+    last_start_time = models.DateTimeField()
+    last_restart_request_time = models.DateTimeField()
+
 
 if is_performance_server():
     from web.fun_test.metrics_models import *
