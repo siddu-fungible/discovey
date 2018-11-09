@@ -102,7 +102,7 @@ def interpolate(chart, model, from_date, to_date):
 
 fixup_results_cache = {}
 
-def prepare_status(chart, purge_old_status=False):
+def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=False,):
     metric_id = chart.metric_id
     chart_name = chart.chart_name
     result = {}

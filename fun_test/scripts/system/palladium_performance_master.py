@@ -1056,10 +1056,13 @@ class PrepareDbTc(FunTestCase):
                               steps="Steps 1")
 
     def setup(self):
-        pass
+        self.lsf_status_server = LsfStatusServer()
+        self.suite_execution_id = fun_test.suite_execution_id
+        job_info = self.lsf_status_server.get_last_job(tag="alloc_speed_test")
+        self.jenkins_job_id = job_info["jenkins_build_number"]
 
     def run(self):
-        prepare_status_db()
+        prepare_status_db(self.suite_execution_id, self.jenkins_job_id)
         TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
 
     def cleanup(self):
@@ -1069,24 +1072,24 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(EcVolPerformanceTc())
+    # myscript.add_test_case(VoltestPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(BootTimingPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
