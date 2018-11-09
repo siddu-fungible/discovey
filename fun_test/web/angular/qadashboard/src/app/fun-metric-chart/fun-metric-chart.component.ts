@@ -28,7 +28,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   charting: any;
   width: any;
   height: any;
-  pointClickCallback: any = null;
   tableInfo: any;
   buildInfo: any;
   timeMode: string;
@@ -43,14 +42,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   mileStoneIndex: number = null;
   chartName: string;
   modelName: string;
-  clicked: boolean = false;
+  pointClicked: boolean = false;
   pointInfo: any;
   buildProps: any;
   showBuildProps: boolean = false;
 
   public formatter: Function;
   public tooltip: Function;
-  public pointDetails: Function;
+  public pointClickCallback: Function;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute) {
   }
@@ -72,7 +71,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.fetchBuildInfo();
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
-    this.pointDetails = this.pointDetail.bind(this);
+    this.pointClickCallback = this.pointDetail.bind(this);
     this.status = null;
   }
 
@@ -86,20 +85,19 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let self = this;
     self.pointInfo = [];
     self.buildProps = [];
-    Object.keys(pointInfo).forEach((point) => {
-        if(point === "Build Properties") {
-          let properties = pointInfo[point];
-          self.buildProps["name"] = point;
+    Object.keys(pointInfo).forEach((key) => {
+        if(key === "Build Properties") {
+          let properties = pointInfo[key];
+          self.buildProps["name"] = key;
           self.buildProps["value"] = properties;
-        }
-        else{
+        } else {
           let property = [];
-          property["name"] = point;
-          property["value"] = pointInfo[point];
+          property["name"] = key;
+          property["value"] = pointInfo[key];
           self.pointInfo.push(property);
         }
     });
-    self.clicked = true;
+    self.pointClicked = true;
   }
 
   fetchMetricsById(): void {
@@ -265,12 +263,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.mileStoneIndex = null;
     this.showingTable = false;
     this.showingConfigure = false;
-    this.clicked = false;
+    this.pointClicked = false;
     this.showBuildProps = false;
   }
 
   closePointInfo(): void {
-    this.clicked = false;
+    this.pointClicked = false;
     this.showBuildProps = false;
   }
   getPreviewDataSets(): any {

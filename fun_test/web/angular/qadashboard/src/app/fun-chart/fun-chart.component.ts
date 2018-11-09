@@ -16,7 +16,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() mileStoneIndex: number = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
-  @Input() public pointDetail: Function;
+  @Input() public pointClickCallback: Function;
   @Output() pointInfo: EventEmitter<any> = new EventEmitter();
   chart: any;
   point: any = null;
@@ -70,8 +70,10 @@ export class FunChartComponent implements OnInit, OnChanges {
             point: {
                 events: {
                     select: function () {
-                        self.point = self.pointDetail(this.category, this.y);
+                      if(self.pointClickCallback) {
+                        self.point = self.pointClickCallback(this.category, this.y);
                         self.pointInfo.emit(self.point);
+                      }
                     }
                 }
             }

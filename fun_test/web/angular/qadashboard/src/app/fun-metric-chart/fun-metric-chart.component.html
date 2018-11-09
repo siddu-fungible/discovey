@@ -23,8 +23,9 @@
   <!-- fun chart component -->
   <fun-chart [mileStoneIndex]="mileStoneIndex" [y1Values]="values" [xValues]="series" [title]="chartName"
              [xAxisLabel]="chart1XaxisTitle"
-             [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip" [pointDetail]="pointDetails" (pointInfo)="showPointDetails($event)"></fun-chart>
-  <div *ngIf="clicked && modelName!='MetricContainer'">
+             [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip" [pointClickCallback]="pointClickCallback" (pointInfo)="showPointDetails($event)"></fun-chart>
+  <!--showing clicked point details when selected on a chart-->
+  <div class="card" *ngIf="pointClicked && modelName!='MetricContainer'">
     <table>
       <tr *ngFor="let point of pointInfo">
         <td class="no-wrap">
@@ -40,7 +41,7 @@
     <div *ngIf="showBuildProps && buildProps">
       <pre>{{ buildProps.value }}</pre>
     </div>
-    <button class="button btn-sm" (click)="closePointInfo()">close
+    <button class="card-button button btn-sm" (click)="closePointInfo()">close
     </button>
   </div>
   <!-- showing description only when leaf charts are clicked -->
