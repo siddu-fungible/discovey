@@ -301,9 +301,9 @@
             "reference": true
           },
           {
-            "name": "Crypto",
-            "info": "Crypto",
-            "label": "Crypto",
+            "name": "Crypto Accelerator",
+            "info": "Crypto Accelerator",
+            "label": "Crypto Accelerator",
             "metric_model_name": "MetricContainer",
             "leaf": false,
             "weight": 1,

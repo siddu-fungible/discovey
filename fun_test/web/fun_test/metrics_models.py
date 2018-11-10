@@ -27,6 +27,9 @@ class MetricChartStatus(models.Model):
     data_sets = JSONField()
     date_time = models.DateTimeField(default=datetime.now)
     score = models.FloatField(default=-1)
+    suite_execution_id = models.IntegerField(default=-1)
+    jenkins_job_id = models.IntegerField(default=-1)
+    build_status = models.CharField(max_length=15, default=RESULTS["UNKNOWN"])
     valid = models.BooleanField(default=False)
     copied_score = models.BooleanField(default=False)  # If the score was copied from the last good score
     copied_score_disposition = models.IntegerField(default=0)  # 0 indicates current and last score is identical,

@@ -102,7 +102,7 @@ def interpolate(chart, model, from_date, to_date):
 
 fixup_results_cache = {}
 
-def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=False,):
+def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=False):
     metric_id = chart.metric_id
     chart_name = chart.chart_name
     result = {}
@@ -111,6 +111,9 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
         chart.save()
         entries = MetricChartStatus.objects.filter(chart_name=chart.chart_name, metric_id=chart.metric_id)
         entries.all().delete()
+    else:
+        chart.score_cache_valid = False
+        chart.save()
     if chart.chart_name == "LSV":
         j = 0
     # print "Preparing status for: {}".format(chart.chart_name)
@@ -156,7 +159,7 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
 
                 child_metric = MetricChart.objects.get(metric_id=child)
                 if child_metric.metric_id not in fixup_results_cache:
-                    temp_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
+                    temp_result = prepare_status(chart=child_metric, suite_execution_id=suite_execution_id, jenkins_job_id=jenkins_job_id, purge_old_status=purge_old_status)
                     fixup_results_cache[child_metric.metric_id] = temp_result
                 child_result = fixup_results_cache[child_metric.metric_id]
 
@@ -196,14 +199,16 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
                     scores[date_time] /= sum_of_child_weights
                 else:
                     scores[date_time] = 0
-                mcs = MetricChartStatus(date_time=date_time,
-                                        metric_id=metric_id,
-                                        chart_name=chart_name,
-                                        data_sets=data_sets,
-                                        score=scores[date_time],
-                                        children_score_map=result["children_score_map"])
-                print "Chart: {} Date: {} Score: {}".format(chart.chart_name, date_time, scores[date_time])
-                mcs.save()
+                chart_status = MetricChartStatus.objects.filter(date_time=date_time, metric_id=metric_id)
+                if not chart_status:
+                    mcs = MetricChartStatus(date_time=date_time,
+                                            metric_id=metric_id,
+                                            chart_name=chart_name,
+                                            data_sets=data_sets,
+                                            score=scores[date_time],
+                                            children_score_map=result["children_score_map"])
+                    print "Chart: {} Date: {} Score: {}".format(chart.chart_name, date_time, scores[date_time])
+                    mcs.save()
         else:
             # print "Reached leaf: {}".format(chart.chart_name)
 
@@ -289,35 +294,37 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
                             penultimate_good_score = last_good_score
                         is_leaf_degrade = current_score < last_good_score
                         last_good_score = current_score
+                    else:
+                        is_leaf_degrade = current_score < penultimate_good_score
 
                     scores[current_date] = current_score
 
                 if data_set_mofified:
                     chart.data_sets = json.dumps(data_sets)
                     chart.save()
-                # print current_date, scores
-                print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date, scores[current_date])
-                mcs = MetricChartStatus(date_time=current_date,
-                                        metric_id=metric_id,
-                                        chart_name=chart_name,
-                                        data_sets=data_sets,
-                                        score=current_score)
 
-                current_date = current_date + timedelta(days=1)
-
-
-                if replacement:
-                    mcs.copied_score = True
-                    is_leaf_degrade = current_score < penultimate_good_score
-                    if (current_score - penultimate_good_score) > 0:
-                        mcs.copied_score_disposition = 1
-                    elif (current_score - penultimate_good_score) < 0:
-                        mcs.copied_score_disposition = -1
-                    else:
-                        mcs.copied_score_disposition = 0
-                mcs.save()
+                chart_status = MetricChartStatus.objects.filter(date_time=current_date, metric_id=metric_id)
+                if not chart_status:
+                    mcs = MetricChartStatus(date_time=current_date,
+                                            metric_id=metric_id,
+                                            chart_name=chart_name,
+                                            data_sets=data_sets,
+                                            score=current_score)
+                    if replacement:
+                        mcs.copied_score = True
+                        if (current_score - penultimate_good_score) > 0:
+                            mcs.copied_score_disposition = 1
+                        elif (current_score - penultimate_good_score) < 0:
+                            mcs.copied_score_disposition = -1
+                        else:
+                            mcs.copied_score_disposition = 0
+                    # print current_date, scores
+                    print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
+                                                                        scores[current_date])
+                    mcs.save()
                 if is_leaf_degrade or not current_score:
                     result["num_degrades"] = 1
+                current_date = current_date + timedelta(days=1)
 
 
         result["scores"] = scores
@@ -345,6 +352,11 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
     # chart.last_build_status = result["last_build_status"]
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
     if chart_status_entries:
+        chart_status_update = MetricChartStatus.objects.filter(metric_id=chart.metric_id, date_time=chart_status_entries[0].date_time)
+        chart_status_entries[0].suite_execution_id = suite_execution_id
+        chart_status_entries[0].jenkins_job_id = jenkins_job_id
+        chart_status_entries[0].build_status = chart.last_build_status
+        chart_status_entries[0].save()
         result["last_good_score"] = chart_status_entries[0].score
         result["penultimate_good_score"] = chart_status_entries[1].score
         result["copied_score_disposition"] = chart_status_entries[0].copied_score_disposition
@@ -366,7 +378,7 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
 if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=True)
+    prepare_status(chart=total_chart, suite_execution_id=-1, jenkins_job_id=-1, purge_old_status=True)
 
 
 if __name__ == "__main2__":
