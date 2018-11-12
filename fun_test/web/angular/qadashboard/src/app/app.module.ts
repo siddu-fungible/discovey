@@ -30,8 +30,9 @@ import { RegressionComponent } from './regression/regression.component';
 import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
 import { SubmitJobComponent } from './regression/submit-job/submit-job.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
-import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { SuiteDetailComponent } from './regression/suite-detail/suite-detail.component';
+import { CancelBtnLinkComponent } from "./btn-link/btn-link.component";
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import { SuiteDetailComponent } from './regression/suite-detail/suite-detail.com
     RegressionComponent,
     FunSpinnerComponent,
     SubmitJobComponent,
-    SuiteDetailComponent
+    SuiteDetailComponent,
+    CancelBtnLinkComponent
   ],
   imports: [
     BsDropdownModule,

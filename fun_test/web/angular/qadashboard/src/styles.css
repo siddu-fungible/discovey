@@ -363,3 +363,11 @@ input:checked + .slider:before {
 .word-break {
   word-break: break-all;
 }
+.x-style {
+  color: red;
+  font-weight: 500;
+  vertical-align: middle;
+}
+.no-padding {
+  padding: 0;
+}
