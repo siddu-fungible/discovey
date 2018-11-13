@@ -378,4 +378,4 @@ if __name__ == "__main2__":
     # MetricChart(chart_name="Chart 2", data_sets=json.dumps([data_set3]), metric_model_name="Performance1").save()
 
 if __name__ == "__main__":
-    prepare_status_db(-1,-1)
+    prepare_status_db()
