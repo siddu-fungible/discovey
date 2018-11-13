@@ -11,6 +11,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
 from lib.host.network_controller import *
 from scripts.networking.nu_config_manager import *
 from scripts.networking.helper import *
+from lib.utilities.pcap_parser import *
 
 spirent_config = {}
 subscribed_results = None
@@ -124,6 +125,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
     load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
     stream_obj = None
     sample_id = 50
+    header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
 
     def describe(self):
         self.set_test_details(id=1, summary="Test Ingress Traffic Sampling",
@@ -180,6 +182,10 @@ class SampleIngressFPGtoFPG(FunTestCase):
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=tcp_header_obj, update=False)
         fun_test.simple_assert(result, checkpoint)
+
+        self.header_objs['eth_obj'] = ethernet_obj
+        self.header_objs['ip_obj'] = ip_header_obj
+        self.header_objs['tcp_obj'] = tcp_header_obj
 
     def run(self):
         dut_rx_port = dut_config['ports'][0]
@@ -315,12 +321,19 @@ class SampleIngressFPGtoFPG(FunTestCase):
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
         fun_test.test_assert(result['result'], checkpoint)
 
-        # TODO: Validate Sample packet
+        checkpoint = "Ensure all the fields in a packet is correct"
+        parser_obj = PcapParser(filename=capture_results['pcap_file_path'])
+        packets = parser_obj.get_captures_from_file()
+        result = parser_obj.validate_sample_packets_in_file(packets=packets, header_objs=self.header_objs)
+        fun_test.test_assert(result, checkpoint)
 
     def cleanup(self):
-        # TODO: Delete sample rule
-        # TODO: cleanup pcap files
-        pass
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Delete sample rule for id: %d" % self.sample_id
+        network_controller_obj.disable_sample_rule(id=self.sample_id, fpg=dut_rx_port, dest=dut_sample_port)
+        fun_test.add_checkpoint(checkpoint)
 
 
 if __name__ == '__main__':

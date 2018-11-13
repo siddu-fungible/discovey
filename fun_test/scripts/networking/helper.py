@@ -322,7 +322,7 @@ def get_diff_stats(old_stats, new_stats, stats_list=[]):
         if stats_list:
             for stat in stats_list:
                 fun_test.simple_assert(stat in new_stats, "Stat %s not present in new stats" % stat)
-                if stat in old_stats:
+                if (stat in old_stats) and (old_stats[stat] is not None):
                     result[stat] = int(new_stats[stat]) - int(old_stats[stat])
                 else:
                     result[stat] = int(new_stats[stat])
