@@ -92,7 +92,10 @@ def chart_info(request):
                   "last_build_status": chart.last_build_status,
                   "last_num_degrades": chart.last_num_degrades,
                   "last_status_update_date": chart.last_status_update_date,
-                  "last_num_build_failed": chart.last_num_build_failed}
+                  "last_num_build_failed": chart.last_num_build_failed,
+                  "last_jenkins_job_id": chart.last_jenkins_job_id,
+                  "last_suite_execution_id": chart.last_suite_execution_id,
+                  "last_lsf_job_id": chart.last_lsf_job_id}
     return result
 
 
@@ -249,6 +252,43 @@ def scores(request):
 
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def get_first_failure_build_status(request):
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
+    previous_entry = {}
+    result = {}
+    for entry in chart_status_entries:
+        if entry.build_status == 'PASSED' or entry.copied_score is False:
+            result = {"jenkins_job_id": previous_entry.jenkins_job_id,
+                      "suite_execution_id": previous_entry.suite_execution_id,
+                      "lsf_job_id": previous_entry.lsf_job_id,
+                      "date_time": previous_entry.date_time}
+            return result
+        previous_entry = entry
+    result = {"jenkins_job_id": previous_entry.jenkins_job_id,
+              "suite_execution_id": previous_entry.suite_execution_id,
+              "lsf_job_id": previous_entry.lsf_job_id,
+              "date_time": previous_entry.date_time}
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def get_last_passed_build_status(request):
+    result = {}
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
+    for entry in chart_status_entries:
+        if entry.build_status == 'PASSED' or entry.copied_score is False:
+            result = {"jenkins_job_id": entry.jenkins_job_id,
+                      "suite_execution_id": entry.suite_execution_id,
+                      "lsf_job_id": entry.lsf_job_id,
+                      "date_time": entry.date_time}
+            return result
+    return result
 
 @csrf_exempt
 @api_safe_json_response
