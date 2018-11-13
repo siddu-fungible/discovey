@@ -108,7 +108,7 @@ class F1(Linux, ToDictMixin):
                     self.command("./{} app=mdt_test nvfile=nvfile &> {}".format(self.FUN_OS_SIMULATION_PROCESS_NAME,
                                                                                 self.F1_LOG))
                     new_process_id = self.start_bg_process(
-                        command="./{} app=prem_test sim_id=nvme_test nvfile=nvfile".format(
+                        command="./{} app=prem_test nvfile=nvfile".format(
                             self.FUN_OS_SIMULATION_PROCESS_NAME), output_file=self.F1_LOG)
                     fun_test.sleep("Ensure FunOS is started", seconds=10)
                     fun_test.test_assert(new_process_id, "Started FunOs")

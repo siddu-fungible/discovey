@@ -73,10 +73,10 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                       '-append "root=/dev/vda rw highres=off ip=:::255.255.255.0:qemu-yocto:eth0:on oprofile.timer=1 console=ttyS0 console=tty0 mem={}M" ' \
                       '-drive file={},format=raw,if=none,id=rootfs ' \
                       '-device ioh3420,id=root_port1,addr=1c.0,port=1,chassis=1 ' \
-                      '-device nvme-rem-fe,hu=0,controller=0,sim_id={},bus=root_port1 -device virtio-rng-pci ' \
+                      '-device nvme-rem-fe,hu=0,controller=0,sim_id=0,bus=root_port1 -device virtio-rng-pci ' \
                       '-device virtio-blk-pci,drive=rootfs -redir tcp:{}::22 -redir tcp:40220::40220'.\
                 format(self.QEMU_PROCESS, qemu_num_cpus, qemu_memory, self.QEMU_BIOS, self.QEMU_KERNEL, qemu_memory,
-                       self.QEMU_FS, sim_id, internal_ssh_port)
+                       self.QEMU_FS, internal_ssh_port)
 
             # command = "./{} -L pc-bios -daemonize -machine q35 -m 256 -device nvme-rem-fe,function={},sim_id=0 -redir tcp:{}::22 -drive file=core-image-full-cmdline-qemux86-64.ext4,if=virtio,format=raw -kernel bzImage -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(self.QEMU_PROCESS, function, ssh_port)
             # command = "./{} -L pc-bios -daemonize -vnc :1 -machine q35 -m 256 -device nvme-rem-fe,sim_id=0 -redir tcp:{}::22 -drive file=../{},if=virtio,format=raw -kernel ../{} -append 'root=/dev/vda rw ip=:::255.255.255.0:qemu-yocto:eth0:on mem=256M oprofile.timer=1'".format(
