@@ -57,6 +57,9 @@ class LsfStatusServer:
             if local_past_jobs_index:
                 last_job = past_jobs[int(local_past_jobs_index)]
             job_id = last_job["job_id"]
+            jenkins_job_id = last_job["jenkins_build_number"]
+            result["job_id"] = job_id
+            result["jenkins_build_number"] = jenkins_job_id
             fun_test.add_checkpoint("Validating Job: {}".format(job_id))
             fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
             if validate:

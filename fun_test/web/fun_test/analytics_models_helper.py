@@ -196,9 +196,9 @@ class WuLatencyAllocStackHelper(MetricHelper):
         entry = WuLatencyAllocStack
 
 
-def prepare_status_db(suite_execution_id, jenkins_job_id):
+def prepare_status_db():
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=False, suite_execution_id=suite_execution_id, jenkins_job_id=jenkins_job_id)
+    prepare_status(chart=total_chart, purge_old_status=False)
 
 
 if __name__ == "__main2__":

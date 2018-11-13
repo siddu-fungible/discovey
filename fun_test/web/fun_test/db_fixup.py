@@ -102,7 +102,7 @@ def interpolate(chart, model, from_date, to_date):
 
 fixup_results_cache = {}
 
-def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=False):
+def prepare_status(chart, purge_old_status=False):
     metric_id = chart.metric_id
     chart_name = chart.chart_name
     result = {}
@@ -159,7 +159,7 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
 
                 child_metric = MetricChart.objects.get(metric_id=child)
                 if child_metric.metric_id not in fixup_results_cache:
-                    temp_result = prepare_status(chart=child_metric, suite_execution_id=suite_execution_id, jenkins_job_id=jenkins_job_id, purge_old_status=purge_old_status)
+                    temp_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
                     fixup_results_cache[child_metric.metric_id] = temp_result
                 child_result = fixup_results_cache[child_metric.metric_id]
 
@@ -353,8 +353,10 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
     if chart_status_entries:
         chart_status_update = MetricChartStatus.objects.filter(metric_id=chart.metric_id, date_time=chart_status_entries[0].date_time)
-        chart_status_entries[0].suite_execution_id = suite_execution_id
-        chart_status_entries[0].jenkins_job_id = jenkins_job_id
+        chart_status_entries[0].suite_execution_id = chart.last_suite_execution_id
+        chart_status_entries[0].jenkins_job_id = chart.last_jenkins_job_id
+        chart_status_entries[0].test_case_id = chart.last_test_case_id
+        chart_status_entries[0].lsf_job_id = chart.last_lsf_job_id
         chart_status_entries[0].build_status = chart.last_build_status
         chart_status_entries[0].save()
         result["last_good_score"] = chart_status_entries[0].score
@@ -378,7 +380,7 @@ def prepare_status(chart, suite_execution_id, jenkins_job_id, purge_old_status=F
 if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, suite_execution_id=-1, jenkins_job_id=-1, purge_old_status=True)
+    prepare_status(chart=total_chart, purge_old_status=False)
 
 
 if __name__ == "__main2__":

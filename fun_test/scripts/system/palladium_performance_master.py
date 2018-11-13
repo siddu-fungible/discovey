@@ -31,11 +31,15 @@ def is_job_from_today(job_dt):
     return True # TODO:
     return (job_dt.year == today.year) and (job_dt.month == today.month) and (job_dt.day == today.day)
 
-def set_last_build_status_for_charts(result, model_name):
+def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, model_name):
     charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
     for chart in charts:
         chart.last_build_status = result
         chart.last_build_date = get_current_time()
+        chart.last_suite_execution_id = suite_execution_id
+        chart.last_test_case_id = test_case_id
+        chart.last_lsf_job_id = job_id
+        chart.last_jenkins_job_id = jenkins_job_id
         chart.save()
 
 
@@ -69,16 +73,18 @@ class PalladiumPerformanceTc(FunTestCase):
 
     def validate_job(self):
         job_info = self.lsf_status_server.get_last_job(tag=self.tag)
-        fun_test.test_assert(job_info, "Ensure one last job exists")
+        fun_test.test_assert(job_info, "Ensure Job Info exists")
+        self.jenkins_job_id = job_info["jenkins_build_number"]
+        self.job_id = job_info["job_id"]
+        fun_test.test_assert(not job_info["return_code"], "Ensure one last Job exists")
         lines = job_info["output_text"].split("\n")
-        job_id = job_info["job_id"]
         dt = job_info["date_time"]
 
         fun_test.test_assert(is_job_from_today(dt), "Last job is from today")
         self.job_info = job_info
         self.lines = lines
         self.dt = dt
-        self.job_id = job_id
+
         return True
 
     def metrics_to_dict(self, metrics, result):
@@ -183,9 +189,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                                                               output_avg=wu_alloc_stack_ns_avg,
                                                               input_date_time=self.dt)
 
-        set_last_build_status_for_charts(result=self.result, model_name="AllocSpeedPerformance")
-        set_last_build_status_for_charts(result=self.result, model_name="WuLatencyUngated")
-        set_last_build_status_for_charts(result=self.result, model_name="WuLatencyAllocStack")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="AllocSpeedPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuLatencyUngated")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuLatencyAllocStack")
 
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
@@ -268,7 +274,7 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="BcopyPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="BcopyPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -329,7 +335,7 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="BcopyFloodDmaPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="BcopyFloodDmaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -411,7 +417,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                                                         output_recovery_throughput_max=ec_recovery_throughput_max,
                                                         output_recovery_throughput_avg=ec_recovery_throughput_avg
                                                         )
-        set_last_build_status_for_charts(result=self.result, model_name="EcPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="EcPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class EcVolPerformanceTc(PalladiumPerformanceTc):
@@ -454,7 +460,7 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
             fun_test.critical(str(ex))
 
 
-        set_last_build_status_for_charts(result=self.result, model_name="EcVolPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="EcVolPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -517,7 +523,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="VoltestPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="VoltestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
@@ -553,7 +559,7 @@ class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="WuDispatchTestPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuDispatchTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
@@ -590,7 +596,7 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="WuSendSpeedTestPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuSendSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
@@ -629,7 +635,7 @@ class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="FunMagentPerformanceTest")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="FunMagentPerformanceTest")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
@@ -665,7 +671,7 @@ class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="WuStackSpeedTestPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuStackSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
@@ -701,7 +707,7 @@ class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="SoakFunMallocPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="SoakFunMallocPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
@@ -737,7 +743,7 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="SoakClassicMallocPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="SoakClassicMallocPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -842,7 +848,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="BootTimePerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="BootTimePerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -879,7 +885,7 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkPkeRsaPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkPkeRsaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -916,7 +922,7 @@ class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkPkeRsa4kPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkPkeRsa4kPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -953,7 +959,7 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkPkeEcdh256Performance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkPkeEcdh256Performance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -990,7 +996,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkPkeEcdh25519Performance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkPkeEcdh25519Performance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1046,7 +1052,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="TeraMarkCryptoPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkCryptoPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class PrepareDbTc(FunTestCase):
@@ -1056,13 +1062,10 @@ class PrepareDbTc(FunTestCase):
                               steps="Steps 1")
 
     def setup(self):
-        self.lsf_status_server = LsfStatusServer()
-        self.suite_execution_id = fun_test.suite_execution_id
-        job_info = self.lsf_status_server.get_last_job(tag="alloc_speed_test")
-        self.jenkins_job_id = job_info["jenkins_build_number"]
+        pass
 
     def run(self):
-        prepare_status_db(self.suite_execution_id, self.jenkins_job_id)
+        prepare_status_db()
         TimeKeeper.set_time(name=LAST_ANALYTICS_DB_STATUS_UPDATE, time=get_current_time())
 
     def cleanup(self):
@@ -1072,24 +1075,24 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

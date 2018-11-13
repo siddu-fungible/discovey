@@ -29,7 +29,9 @@ class MetricChartStatus(models.Model):
     score = models.FloatField(default=-1)
     suite_execution_id = models.IntegerField(default=-1)
     jenkins_job_id = models.IntegerField(default=-1)
+    lsf_job_id = models.IntegerField(default=-1)
     build_status = models.CharField(max_length=15, default=RESULTS["UNKNOWN"])
+    test_case_id = models.IntegerField(default=-1)
     valid = models.BooleanField(default=False)
     copied_score = models.BooleanField(default=False)  # If the score was copied from the last good score
     copied_score_disposition = models.IntegerField(default=0)  # 0 indicates current and last score is identical,
@@ -84,6 +86,10 @@ class MetricChart(models.Model):
     penultimate_good_score = models.FloatField(default=-1)
     copied_score = models.BooleanField(default=False)
     copied_score_disposition = models.IntegerField(default=0)
+    last_suite_execution_id = models.IntegerField(default=-1)
+    last_jenkins_job_id = models.IntegerField(default=-1)
+    last_test_case_id = models.IntegerField(default=-1)
+    last_lsf_job_id = models.IntegerField(default=-1)
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
