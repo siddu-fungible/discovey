@@ -423,7 +423,10 @@ export class PerformanceComponent implements OnInit {
     let s = "";
     if (node.leaf) {
       if (node.lastNumBuildFailed > 0) {
-        s = "Bld: <label class=\"badge badge-danger\">FAILED</label>";
+        s = "Bld: <label class=\"badge badge-danger\">" +
+          "<button class='btn btn-sm' (click)='getFailedInfo()'>FAILED" +
+          "</button></label>";
+
       }
     } else {
 
@@ -439,6 +442,10 @@ export class PerformanceComponent implements OnInit {
     }
     return s;
   };
+
+  getFailedInfo(): void {
+    
+  }
 
   getNodeFromData = (data): any => {
     let newNode = {

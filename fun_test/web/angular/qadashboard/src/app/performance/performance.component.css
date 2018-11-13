@@ -146,3 +146,18 @@ arrow-icon {
   max-width: 3000px;
   padding-top: 70px;
 }
+
+::ng-deep .tooltip-inner {
+  background-color: whitesmoke !important;
+  width: 200px !important;
+  height: 200px !important;
+  /*display: table !important;*/
+}
+::ng-deep .arrow::before {
+  border-top-color: whitesmoke !important;
+  border-right-color: whitesmoke !important;
+}
+::ng-deep .tooltip-inner a {
+  /*display: table-cell !important;*/
+  vertical-align: middle !important;
+}
