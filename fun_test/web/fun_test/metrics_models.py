@@ -1087,7 +1087,7 @@ class TeraMarkCryptoPerformance(models.Model):
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_app = models.CharField(max_length=30, default="crypto_test_perf", choices=[(0, "crypto_test_perf")])
-    input_algorithm = models.CharField(max_length=30, default="", choices=[(0, "AES_ECB"), (1, "AES_GCM"), (2, "AES_CBC"), (3, "AES_XTS")])
+    input_algorithm = models.CharField(max_length=30, default="", choices=[(0, "AES_ECB"), (1, "AES_GCM"), (2, "AES_CBC"), (3, "AES_XTS"), (4, "SHA_256")])
     input_operation = models.CharField(max_length=30, default="", choices=[(0, "Encryption"), (1, "Decryption")])
     input_pkt_size = models.IntegerField(verbose_name="bytes", default=-1, choices=[(0, "16"), (1, "256"), (2, "512"), (3, "1024"), (4, "4096"), (5, "8192"), (6, "16000")])
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)

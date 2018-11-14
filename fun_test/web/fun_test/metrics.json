@@ -799,6 +799,15 @@
                 "label": "AES_XTS Encryption Throughput",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "info": "SHA_256 Throughput",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "SHA_256 Throughput",
+                "label": "SHA_256 Throughput",
+                "children": [],
+                "weight": 1
               }
             ]
           }
