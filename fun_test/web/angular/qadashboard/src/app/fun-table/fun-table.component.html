@@ -2,19 +2,19 @@
   <div class="show-table-text">
     <!-- pager -->
     <div id="pageDiv" *ngIf="pager.pages && pager.pages.length">
-        <span [ngClass]="{disabled:pager.currentPage === 1}">
+        <span *ngIf="pager.currentPage > 1" [ngClass]="{disabled:pager.currentPage === 1}">
           <a [routerLink]="" (click)="setPage(1)">First </a>
         </span>
-      <span [ngClass]="{disabled:pager.currentPage === 1}">
+      <span *ngIf="pager.currentPage > 1" [ngClass]="{disabled:pager.currentPage === 1}">
           <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
         </span>
       <span *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
           <a [routerLink]="" (click)="setPage(page)">{{page}} </a>
         </span>
-      <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+      <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
           <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
         </span>
-      <span [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+      <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
           <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
         </span>
     </div>
