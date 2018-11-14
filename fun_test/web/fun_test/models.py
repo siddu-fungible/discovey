@@ -194,8 +194,8 @@ class SchedulerInfo(models.Model):
     A place to store scheduler state such as time started, time restarted, current state
     """
     state = models.CharField(max_length=30, default=SchedulerStates.SCHEDULER_STATE_UNKNOWN)
-    last_start_time = models.DateTimeField(default=get_current_time() - timedelta(days=2000))
-    last_restart_request_time = models.DateTimeField(default=get_current_time() - timedelta(days=2000))
+    last_start_time = models.DateTimeField(default=datetime.now)
+    last_restart_request_time = models.DateTimeField(default=datetime.now)
 
 
 if is_performance_server():

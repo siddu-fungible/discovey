@@ -2075,11 +2075,20 @@ class PeekCommands(object):
         au_sort = False
         prev_result = None
         try:
-            bam_pool_decode_dict ={'pool0': 'BM_POOL_FUNOS', 'pool1': 'BM_POOL_NU_ETP_CMDLIST', 'pool2': 'BM_POOL_HU_REQ',
-                                   'pool3': 'BM_POOL_SW_PREFETCH', 'pool4': 'BM_POOL_NU_ERP_FCP', 'pool5': 'BM_POOL_NU_ERP_NONFCP',
-                                   'pool6': 'BM_POOL_NU_ERP_CC', 'pool7': 'BM_POOL_NU_ERP_SAMPLING',
-                                   'pool8': 'BM_POOL_HNU_NONFCP', 'pool9': 'BM_POOL_REGEX',
-                                   'pool10': 'BM_POOL_REFBUF', 'pool62': 'BM_POOL_HNU_PREFETCH', 'pool63': 'BM_POOL_NU_PREFETCH'}
+            bam_pool_decode_dict ={
+		'pool0': 'BM_POOL_FUNOS',
+		'pool1': 'BM_POOL_NU_ETP_CMDLIST',
+		'pool2': 'BM_POOL_HU_REQ',
+		'pool3': 'BM_POOL_SW_PREFETCH',
+		'pool4': 'BM_POOL_NU_ERP_FCP',
+		'pool19': 'BM_POOL_NU_ERP_CC',
+		'pool20': 'BM_POOL_NU_ERP_SAMPLING',
+		'pool34': 'BM_POOL_REGEX',
+		'pool35': 'BM_POOL_REFBUF',
+		'pool49': 'BM_POOL_NU_ERP_NONFCP',
+		'pool50': 'BM_POOL_HNU_NONFCP',
+		'pool62': 'BM_POOL_HNU_PREFETCH',
+		'pool63': 'BM_POOL_NU_PREFETCH',}
 
             while True:
                 try:
