@@ -186,7 +186,7 @@ class RegresssionScripts(models.Model):
     scripts
     """
     script_path = models.TextField(unique=True)
-    module = models.TextField(default="storage")  # Refers to class Module
+    module = models.TextField(default="['storage']")  # Refers to class Module
 
 
 class SchedulerInfo(models.Model):

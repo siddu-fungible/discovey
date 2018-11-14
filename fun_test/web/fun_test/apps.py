@@ -2,8 +2,9 @@ from django.apps import AppConfig
 from django.contrib import admin
 from lib.utilities.jira_manager import JiraManager
 from apscheduler.schedulers.background import BackgroundScheduler
+
 #from scheduler.scheduler import scheduler
-from web.fun_test.django_scheduler.django_scheduler import SchedulerMainWorker
+#from web.fun_test.django_scheduler.django_scheduler import SchedulerMainWorker
 
 
 class ListAdminMixin(object):
@@ -23,9 +24,16 @@ class FunTestConfig(AppConfig):
 
 
     def start_scheduler(self):
+        """ Not used yet """
         self.scheduler_thread = SchedulerMainWorker()
         print "Starting Scheduler"
         self.scheduler_thread.start()
+
+
+    def scheduler_pre_flight(self):
+        from web.fun_test.models import SchedulerInfo
+        if SchedulerInfo.objects.count() == 0:
+            SchedulerInfo().save()
 
     def ready(self):
         self.set_metric_models()
@@ -40,6 +48,7 @@ class FunTestConfig(AppConfig):
                 pass
 
         # self.start_scheduler()
+        self.scheduler_pre_flight()
 
 
     def get_jira_manager(self):

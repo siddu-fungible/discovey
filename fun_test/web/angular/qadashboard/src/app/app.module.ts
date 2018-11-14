@@ -35,6 +35,7 @@ import { SuiteDetailComponent } from './regression/suite-detail/suite-detail.com
 import { CancelBtnLinkComponent } from "./btn-link/btn-link.component";
 import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { SiteConstructionComponent } from './site-construction/site-construction.component'
+import { RegressionAdminComponent } from './regression/regression-admin/regression-admin.component';
 
 @NgModule({
   declarations: [
@@ -56,7 +57,8 @@ import { SiteConstructionComponent } from './site-construction/site-construction
     SubmitJobComponent,
     SuiteDetailComponent,
     CancelBtnLinkComponent,
-    SiteConstructionComponent
+    SiteConstructionComponent,
+    RegressionAdminComponent
   ],
   imports: [
     BsDropdownModule,

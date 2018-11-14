@@ -2,6 +2,7 @@ import logging.handlers
 from threading import Thread
 import time
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR
+# from scheduler import scheduler
 
 scheduler_logger = logging.getLogger("main_scheduler_log")
 scheduler_logger.setLevel(logging.DEBUG)
@@ -44,7 +45,15 @@ class SchedulerException(Exception):
 
 class SchedulerMainWorker(Thread):
     def run(self):
+        scheduler_logger.debug("Started Scheduler")
         while True:
-            time.sleep(5)
-            print "Thread run"
+            scheduler.process_killed_jobs()
+            try:
+                scheduler.process_queue()
+            except SchedulerException as ex:
+                scheduler_logger.exception(str(ex))
+            except Exception as ex:
+                scheduler_logger.exception(str(ex))
+
+
 

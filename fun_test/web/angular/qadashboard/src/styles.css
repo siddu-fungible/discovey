@@ -374,3 +374,7 @@ input:checked + .slider:before {
 .no-margin {
   margin: 0;
 }
+
+.component {
+  padding-top: 70px;
+}

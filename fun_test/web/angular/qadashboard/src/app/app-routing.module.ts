@@ -9,12 +9,14 @@ import {Demo1Component} from "./demo1/demo1.component";
 import {RegressionComponent} from "./regression/regression.component";
 import {SubmitJobComponent} from "./regression/submit-job/submit-job.component";
 import {SuiteDetailComponent} from "./regression/suite-detail/suite-detail.component";
+import {RegressionAdminComponent} from "./regression/regression-admin/regression-admin.component";
 
 const routes: Routes = [
   { path: 'upgrade', component: DashboardComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'performance', component: PerformanceComponent },
   { path: 'performance/atomic/:id', component: FunMetricChartComponent},
+  { path: 'regression/admin', component: RegressionAdminComponent },
   { path: 'regression', component: RegressionComponent },
   { path: 'regression/jenkins_jobs', component: RegressionComponent, data: {tags: '["jenkins-hourly", "jenkins-nightly"]'}},
   { path: 'regression/jobs_by_tag/:tags', component: RegressionComponent},

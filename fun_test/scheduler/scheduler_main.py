@@ -338,22 +338,13 @@ def ensure_singleton():
             f.write(str(pid))
 
 
-if __name__ == "__main1__":
-    queue_job(suite_name="storage_basic")
-    # queue_job(job_id=2, suite="suite2")
-    # queue_job(job_id=4, suite="suite3")
-    # queue_job(job_id=3, suite="suite4")
-    # queue_job(job_id=5, suite="suite5")
-    while True:
-        process_queue()
-    # process killed jobs
-    # wait
-    pass
-
 if __name__ == "__main__":
     # ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
+    set_scheduler_state(SchedulerStates.SCHEDULER_STATE_STARTING)
+
     while True:
+        set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
         process_killed_jobs()
         try:
             process_queue()

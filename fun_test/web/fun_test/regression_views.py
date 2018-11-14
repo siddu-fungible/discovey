@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from fun_global import get_localized_time
 from datetime import datetime, timedelta
+from web.fun_test.models import RegresssionScripts
 import logging
 import dateutil.parser
 import re
@@ -308,6 +309,12 @@ def jenkins_job_id_map(request):
     # print s
     s = sorted(s, key=lambda x: x["fun_sdk_branch"], reverse=True)
     return s
+
+@csrf_exempt
+@api_safe_json_response
+def scripts_by_module(request, module):
+    result = {}
+    return result
 
 @csrf_exempt
 @api_safe_json_response
