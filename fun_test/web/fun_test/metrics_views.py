@@ -92,7 +92,10 @@ def chart_info(request):
                   "last_build_status": chart.last_build_status,
                   "last_num_degrades": chart.last_num_degrades,
                   "last_status_update_date": chart.last_status_update_date,
-                  "last_num_build_failed": chart.last_num_build_failed}
+                  "last_num_build_failed": chart.last_num_build_failed,
+                  "last_jenkins_job_id": chart.last_jenkins_job_id,
+                  "last_suite_execution_id": chart.last_suite_execution_id,
+                  "last_lsf_job_id": chart.last_lsf_job_id}
     return result
 
 
@@ -249,6 +252,32 @@ def scores(request):
 
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def get_past_build_status(request):
+    result = {}
+    previous_entry = {}
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
+    for entry in chart_status_entries:
+        if entry.build_status == 'PASSED' or entry.copied_score is False:
+            result = {"passed_jenkins_job_id": entry.jenkins_job_id,
+                      "passed_suite_execution_id": entry.suite_execution_id,
+                      "passed_lsf_job_id": entry.lsf_job_id,
+                      "passed_date_time": entry.date_time,
+                      "failed_jenkins_job_id": previous_entry.jenkins_job_id,
+                      "failed_suite_execution_id": previous_entry.suite_execution_id,
+                      "failed_lsf_job_id": previous_entry.lsf_job_id,
+                      "failed_date_time": previous_entry.date_time}
+            return result
+        else:
+            previous_entry = entry
+    result = {"failed_jenkins_job_id": previous_entry.jenkins_job_id,
+              "failed_suite_execution_id": previous_entry.suite_execution_id,
+              "failed_lsf_job_id": previous_entry.lsf_job_id,
+              "failed_date_time": previous_entry.date_time}
+    return result
 
 @csrf_exempt
 @api_safe_json_response

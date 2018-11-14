@@ -198,7 +198,7 @@ class WuLatencyAllocStackHelper(MetricHelper):
 
 def prepare_status_db():
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=True)
+    prepare_status(chart=total_chart, purge_old_status=False)
 
 
 if __name__ == "__main2__":
