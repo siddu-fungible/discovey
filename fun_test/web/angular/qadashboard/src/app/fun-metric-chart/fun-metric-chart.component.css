@@ -33,6 +33,7 @@ a {
 }
 .card-button {
   width: fit-content;
+  cursor: pointer;
 }
 .properties-margin {
   margin: 4px;
