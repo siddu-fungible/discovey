@@ -12,15 +12,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='SchedulerInfo',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('state', models.CharField(default=b'SCHEDULER_STATE_UNKNOWN', max_length=30)),
-                ('last_start_time', models.DateTimeField()),
-                ('last_restart_request_time', models.DateTimeField()),
-            ],
-        ),
         migrations.AddField(
             model_name='metricchartstatus',
             name='build_status',
