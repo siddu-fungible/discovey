@@ -6,19 +6,19 @@
       <div class="text-center">
         <!-- pager -->
         <div id="page-div" *ngIf="pager.pages && pager.pages.length">
-          <span [ngClass]="{'disabled': pager.currentPage === 1}">
+          <span *ngIf="pager.currentPage > 1" [ngClass]="{'disabled': pager.currentPage === 1}">
           <a [routerLink]="" (click)="setPage(1)"><< </a>
           </span>
-          <span [ngClass]="{'disabled': pager.currentPage === 1}">
+          <span *ngIf="pager.currentPage > 1" [ngClass]="{'disabled': pager.currentPage === 1}">
           <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">< </a>
           </span>
           <span *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
           <a [routerLink]="" (click)="setPage(page)">{{page}} </a>
           </span>
-          <span [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
+          <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
           <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">> </a>
           </span>
-          <span [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
+          <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
           <a [routerLink]="" (click)="setPage(pager.totalPages)">>> </a>
           </span>
         </div>
