@@ -171,3 +171,6 @@ arrow-icon {
 hr {
   margin: 0;
 }
+.failed-label {
+  cursor: pointer;
+}

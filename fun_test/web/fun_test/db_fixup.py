@@ -352,7 +352,6 @@ def prepare_status(chart, purge_old_status=False):
     # chart.last_build_status = result["last_build_status"]
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
     if chart_status_entries:
-        chart_status_update = MetricChartStatus.objects.filter(metric_id=chart.metric_id, date_time=chart_status_entries[0].date_time)
         chart_status_entries[0].suite_execution_id = chart.last_suite_execution_id
         chart_status_entries[0].jenkins_job_id = chart.last_jenkins_job_id
         chart_status_entries[0].test_case_id = chart.last_test_case_id

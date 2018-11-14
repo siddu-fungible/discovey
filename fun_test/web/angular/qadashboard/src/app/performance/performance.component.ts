@@ -91,6 +91,9 @@ export class PerformanceComponent implements OnInit {
   failedDateTime: string = null;
   passedDateTime: string = null;
 
+  lsfUrl: string = "http://palladium-jobs.fungible.local:8080/job/";
+  jenkinsUrl: string = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
+  regressionUrl: string = "/regression/suite_detail/";
 
   constructor(
     private location: Location,
@@ -447,66 +450,72 @@ export class PerformanceComponent implements OnInit {
     return s;
   };
 
+  setDefaultUrls(): void {
+    this.currentRegressionUrl = null;
+    this.currentJenkinsUrl = null;
+    this.currentLsfUrl = null;
+    this.passedRegressionUrl = null;
+    this.passedJenkinsUrl = null;
+    this.passedLsfUrl = null;
+    this.failedRegressionUrl = null;
+    this.failedJenkinsUrl = null;
+    this.failedLsfUrl = null;
+    this.failedDateTime = null;
+    this.passedDateTime = null;
+  }
+
   openTooltip(node): void {
-    let lsfUrl = "http://palladium-jobs.fungible.local:8080/job/";
-    let jenkinsUrl = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
-    let regressionUrl = "/regression/suite_detail/";
+    this.setDefaultUrls();
     let payload = {"metric_model_name": node.metricModelName, chart_name: node.chartName};
     this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
       let result = data.data;
       if (result.last_suite_execution_id && result.last_suite_execution_id !== -1) {
-        this.currentRegressionUrl = regressionUrl + result.last_suite_execution_id;
+        this.currentRegressionUrl = this.regressionUrl + result.last_suite_execution_id;
       }
       if (result.last_jenkins_job_id && result.last_jenkins_job_id !== -1) {
-        this.currentJenkinsUrl = jenkinsUrl + result.last_jenkins_job_id;
+        this.currentJenkinsUrl = this.jenkinsUrl + result.last_jenkins_job_id;
       }
       if (result.last_lsf_job_id && result.last_lsf_job_id !== -1) {
-        this.currentLsfUrl = lsfUrl + result.last_lsf_job_id;
+        this.currentLsfUrl = this.lsfUrl + result.last_lsf_job_id;
       }
     }, error => {
       this.loggerService.error("Current Failed Urls");
     });
 
     let payload1 = {"metric_id": node.metricId};
-    this.apiService.post('/metrics/first_failure', payload1).subscribe((data) => {
+    this.apiService.post('/metrics/past_status', payload1).subscribe((data) => {
       let result = data.data;
-      if (result.date_time) {
-        this.failedDateTime = result.date_time;
+      if (result.failed_date_time) {
+        this.failedDateTime = result.failed_date_time;
       }
-      if (result.suite_execution_id && result.suite_execution_id !== -1) {
-        this.failedRegressionUrl = regressionUrl + result.suite_execution_id;
+      if (result.failed_suite_execution_id && result.failed_suite_execution_id !== -1) {
+        this.failedRegressionUrl = this.regressionUrl + result.failed_suite_execution_id;
       }
-      if (result.jenkins_job_id && result.jenkins_job_id !== -1) {
-        this.failedJenkinsUrl = jenkinsUrl + result.jenkins_job_id;
+      if (result.failed_jenkins_job_id && result.failed_jenkins_job_id !== -1) {
+        this.failedJenkinsUrl = this.jenkinsUrl + result.failed_jenkins_job_id;
       }
-      if (result.lsf_job_id && result.lsf_job_id !== -1) {
-        this.failedLsfUrl = lsfUrl + result.lsf_job_id;
+      if (result.failed_lsf_job_id && result.failed_lsf_job_id !== -1) {
+        this.failedLsfUrl = this.lsfUrl + result.failed_lsf_job_id;
+      }
+      if (result.passed_date_time) {
+        this.passedDateTime = result.passed_date_time;
+      }
+      if (result.passed_suite_execution_id && result.passed_suite_execution_id !== -1) {
+        this.passedRegressionUrl = this.regressionUrl + result.passed_suite_execution_id;
+      }
+      if (result.passed_jenkins_job_id && result.passed_jenkins_job_id !== -1) {
+        this.passedJenkinsUrl = this.jenkinsUrl + result.passed_jenkins_job_id;
+      }
+      if (result.passed_lsf_job_id && result.passed_lsf_job_id !== -1) {
+        this.passedLsfUrl = this.lsfUrl + result.passed_lsf_job_id;
       }
     }, error => {
-      this.loggerService.error("First Failed Urls");
-    });
-
-    this.apiService.post('/metrics/last_passed', payload1).subscribe((data) => {
-      let result = data.data;
-      if (result.date_time) {
-        this.passedDateTime = result.date_time;
-      }
-     if (result.suite_execution_id && result.suite_execution_id !== -1) {
-        this.passedRegressionUrl = regressionUrl + result.suite_execution_id;
-      }
-      if (result.jenkins_job_id && result.jenkins_job_id !== -1) {
-        this.passedJenkinsUrl = jenkinsUrl + result.jenkins_job_id;
-      }
-      if (result.lsf_job_id && result.lsf_job_id !== -1) {
-        this.passedLsfUrl = lsfUrl + result.lsf_job_id;
-      }
-    }, error => {
-      this.loggerService.error("Last Passed Urls");
+      this.loggerService.error("Past Status Urls");
     });
 
   }
 
-  openUrl(url): void{
+  openUrl(url): void {
     window.open(url, '_blank');
   }
 

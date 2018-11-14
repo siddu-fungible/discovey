@@ -76,7 +76,8 @@ class PalladiumPerformanceTc(FunTestCase):
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
-        fun_test.test_assert(not job_info["return_code"], "Ensure one last Job exists")
+        fun_test.test_assert(not job_info["return_code"], "Valid return code")
+        fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(self.job_id))
         lines = job_info["output_text"].split("\n")
         dt = job_info["date_time"]
 

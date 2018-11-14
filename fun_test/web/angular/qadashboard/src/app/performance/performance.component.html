@@ -40,7 +40,7 @@
           <td *ngIf="!flatNode.node.leaf" [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
           <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0">
             Bld:<label  data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
-                        [ngbTooltip]="FailedInfo" [autoClose]="'outside'" class="badge no-margin badge-danger">FAILED
+                        [ngbTooltip]="FailedInfo" [autoClose]="'outside'" class="badge failed-label no-margin badge-danger">FAILED
           </label>
           </td>
           <ng-template #FailedInfo>

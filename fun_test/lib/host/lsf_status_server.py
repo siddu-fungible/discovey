@@ -74,7 +74,7 @@ class LsfStatusServer:
                     response_dict = response_dict["job_dict"]
                     print(json.dumps(response_dict, indent=4))
                     return_code = int(response_dict["return_code"])
-                    fun_test.test_assert(not return_code, "Valid return code")
+                    # fun_test.test_assert(not return_code, "Valid return code")
                     result = last_job
                 except Exception as ex:
                     fun_test.log("Actual response:" + response)
@@ -82,7 +82,7 @@ class LsfStatusServer:
 
                 # last_job = response
 
-                fun_test.test_assert("output_text" in last_job, "output_text found in job info: {}".format(job_id))
+                # fun_test.test_assert("output_text" in last_job, "output_text found in job info: {}".format(job_id))
 
         except Exception as ex:
             fun_test.critical(str(ex))
