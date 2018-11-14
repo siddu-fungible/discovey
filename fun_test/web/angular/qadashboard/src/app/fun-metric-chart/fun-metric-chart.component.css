@@ -33,5 +33,7 @@ a {
 }
 .card-button {
   width: fit-content;
+}
+.properties-margin {
   margin: 4px;
 }

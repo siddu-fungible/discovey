@@ -57,6 +57,9 @@ class LsfStatusServer:
             if local_past_jobs_index:
                 last_job = past_jobs[int(local_past_jobs_index)]
             job_id = last_job["job_id"]
+            jenkins_job_id = last_job["jenkins_build_number"]
+            result["job_id"] = job_id
+            result["jenkins_build_number"] = jenkins_job_id
             fun_test.add_checkpoint("Validating Job: {}".format(job_id))
             fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
             if validate:
@@ -71,7 +74,7 @@ class LsfStatusServer:
                     response_dict = response_dict["job_dict"]
                     print(json.dumps(response_dict, indent=4))
                     return_code = int(response_dict["return_code"])
-                    fun_test.test_assert(not return_code, "Valid return code")
+                    # fun_test.test_assert(not return_code, "Valid return code")
                     result = last_job
                 except Exception as ex:
                     fun_test.log("Actual response:" + response)
@@ -79,7 +82,7 @@ class LsfStatusServer:
 
                 # last_job = response
 
-                fun_test.test_assert("output_text" in last_job, "output_text found in job info: {}".format(job_id))
+                # fun_test.test_assert("output_text" in last_job, "output_text found in job info: {}".format(job_id))
 
         except Exception as ex:
             fun_test.critical(str(ex))
