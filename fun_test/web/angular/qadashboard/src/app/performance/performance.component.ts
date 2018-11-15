@@ -203,6 +203,13 @@ export class PerformanceComponent implements OnInit {
     return node;
   };
 
+  getHeight(): string {
+    let height = "";
+    let el = document.getElementById('grid');
+    height = el.style.width;
+    return height;
+  }
+
   evaluateScores = (node) => {
     let [lastScore, penultimateScore] = node.last_two_scores;
     //lastScore = lastScore;
