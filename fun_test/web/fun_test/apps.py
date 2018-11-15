@@ -32,8 +32,11 @@ class FunTestConfig(AppConfig):
 
     def scheduler_pre_flight(self):
         from web.fun_test.models import SchedulerInfo
-        if SchedulerInfo.objects.count() == 0:
-            SchedulerInfo().save()
+        try:
+            if SchedulerInfo.objects.count() == 0:
+                SchedulerInfo().save()
+        except:
+            pass
 
     def ready(self):
         self.set_metric_models()
