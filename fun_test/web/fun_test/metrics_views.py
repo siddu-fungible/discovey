@@ -486,9 +486,9 @@ def get_data_by_model(request):
             d[input_name] = input_value
         # skip today's  #TODO
         # del d["input_date_time"]
-        today = get_current_time()
-        today = today.replace(hour=0, minute=0, second=1)
-        d["input_date_time__lt"] = today
+        # today = get_current_time()
+        # today = today.replace(hour=0, minute=0, second=1)
+        # d["input_date_time__lt"] = today
         try:
             result = model.objects.filter(**d)  # unpack, pack
             data.append([model_to_dict(x) for x in result])
