@@ -29,7 +29,7 @@ class DpcshProxy(object):
     def start(self):
         result = False
         env_cmd = 'setenv LD_LIBRARY_PATH "/project/tools/glibc-2.14/lib"'
-        run_cmd = 'nohup ./dpcsh  -D /dev/{} --tcp_proxy {} > /tmp/start_dpc.out & '.format(self.usb, self.port)
+        run_cmd = 'nohup ./dpcsh  -D /dev/{} --tcp_proxy={} > /tmp/start_dpc.out & '.format(self.usb, self.port)
         try:
             self.linux.command(env_cmd)
             self.pid = self.linux.command(run_cmd).strip().split(' ')[-1]
@@ -73,6 +73,53 @@ class DpcshProxy(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    @fun_test.safe
+    def stop_dpcsh_proxy(self, dpcsh_proxy_name="dpcsh", dpcsh_proxy_port=40221, dpcsh_proxy_tty="ttyUSB8"):
+        process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
+        current_dpcsh_proxy_pid = self.linux.get_process_id_by_pattern(process_pat)
+        if current_dpcsh_proxy_pid:
+            self.linux.kill_process(process_id=current_dpcsh_proxy_pid, sudo=False)
+            current_dpcsh_proxy_pid = self.linux.get_process_id_by_pattern(process_pat)
+            if current_dpcsh_proxy_pid:
+                fun_test.critical("Unable to kill the existing dpcsh proxy process")
+                return False
+        return True
+
+    @fun_test.safe
+    def start_dpcsh_proxy(self, dpcsh_env="/project/tools/glibc-2.14/lib",
+                          dpcsh_proxy_path="/home/gliang/ws/FunSDK/bin", dpcsh_proxy_name="dpcsh",
+                          dpcsh_proxy_port=40221, dpcsh_proxy_tty="/dev/ttyUSB8",
+                          dpcsh_proxy_log="/tmp/dpcsh_proxy_log"):
+        # Killling any existing dpcsh TCP proxy server running outside the qemu host
+        self.stop_dpcsh_proxy(dpcsh_proxy_name, dpcsh_proxy_port, dpcsh_proxy_tty)
+
+        dpcsh_proxy_cmd = "env LD_LIBRARY_PATH={} {}/{} -D {} --tcp_proxy={}".format(dpcsh_env, dpcsh_proxy_path,
+                                                                                     dpcsh_proxy_name, dpcsh_proxy_tty,
+                                                                                     dpcsh_proxy_port)
+        dpcsh_proxy_process_id = self.linux.start_bg_process(command=dpcsh_proxy_cmd, output_file=dpcsh_proxy_log)
+        # Checking whether the dpcsh proxy is started properly
+        if dpcsh_proxy_process_id:
+            self.linux.command("\n")
+            process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
+            current_dpcsh_proxy_process_id = self.linux.get_process_id_by_pattern(process_pat)
+            if not current_dpcsh_proxy_process_id:
+                return False
+        else:
+            return False
+        return True
+
+    @fun_test.safe
+    def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+        return self.linux.ipmi_power_off(host=host, interface=interface, user=user, passwd=passwd)
+
+    @fun_test.safe
+    def ipmi_power_on(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+        return self.linux.ipmi_power_on(host=host, interface=interface, user=user, passwd=passwd)
+
+    @fun_test.safe
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30):
+        return self.linux.ipmi_power_cycle(host=host, interface=interface, user=user, passwd=passwd, interval=interval)
 
 
 class Palladium(object):
