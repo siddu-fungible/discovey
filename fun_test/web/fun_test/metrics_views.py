@@ -196,7 +196,7 @@ def update_child_weight(request):
 
 @csrf_exempt
 def summary_page(request):
-    return render(request, 'qa_dashboard/upgrade.html', locals())
+    return render(request, 'qa_dashboard/angular_home.html', locals())
 
 
 @csrf_exempt

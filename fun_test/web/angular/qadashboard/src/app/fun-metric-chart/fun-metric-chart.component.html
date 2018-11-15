@@ -50,6 +50,19 @@
     </div>
     <!-- showing description only when leaf charts are clicked -->
     <div *ngIf="!minimal">
+      <div>
+        <i style="font-size: 95%; color: grey">Owner: {{ inner.currentOwner }}</i>
+        <!--<a *ngIf="!editingOwner" (click)="toggleOwner()"><i class="fa fa-pencil"></i></a>-->
+        <br>
+        <!--<textarea readonly rows="1" [(ngModel)]="inner.currentOwner" style="min-width: 100%;"></textarea>-->
+        <!--<div [innerHTML]="inner.currentOwner"></div>-->
+        <div *ngIf="editingOwner">
+          <br>
+          <textarea readonly rows="1" [(ngModel)]="inner.currentOwner" style="min-width: 100%;"></textarea>
+          <!--<button class="btn btn-success" (click)="submit()">Submit</button>-->
+          <a style="padding: 5px;" (click)="toggleOwner()">Cancel</a>
+      </div>
+    </div>
       <br>
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
@@ -62,7 +75,6 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
-    </div>
     <br>
   </div>
   <div class="closed-section"></div>

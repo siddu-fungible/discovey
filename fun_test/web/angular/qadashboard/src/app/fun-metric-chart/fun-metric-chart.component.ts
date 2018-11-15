@@ -21,8 +21,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   data: any = {}; //used for fun table
   metricId: number;
   editingDescription: boolean = false;
+  editingOwner: boolean = false;
   inner: any = {};
   currentDescription: string;
+  currentOwner: string;
   waitTime: number = 0;
   values: any;
   charting: any;
@@ -62,8 +64,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.headers = null;
     this.metricId = -1;
     this.editingDescription = false;
+    this.editingOwner = false;
     this.inner = {};
     this.inner.currentDescription = "TBD";
+    this.inner.currentOwner = "Bertrand Serlet(bertrand.serlet@fungible.com)";
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
@@ -283,6 +287,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //toggles the div of description below the chart
   toggleEdit() {
     this.editingDescription = !this.editingDescription;
+  }
+
+  toggleOwner() {
+    this.editingOwner = !this.editingOwner;
   }
 
   //shows the shortened date in show tables

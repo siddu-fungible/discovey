@@ -53,7 +53,7 @@ def jobs_by_tag(request, tag):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     tags = json.dumps([tag])
     # tags = json.dumps(["none"])
-    return render(request, 'qa_dashboard/upgrade.html', locals())
+    return render(request, 'qa_dashboard/angular_home.html', locals())
 
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
@@ -223,7 +223,7 @@ def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
-    return render(request, 'qa_dashboard/upgrade.html', locals())
+    return render(request, 'qa_dashboard/angular_home.html', locals())
 
 @csrf_exempt
 @api_safe_json_response
