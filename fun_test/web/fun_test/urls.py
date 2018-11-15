@@ -59,7 +59,7 @@ regression_urls = [
     url(r'^build_to_date_map$', regression_views.build_to_date_map),
     url(r'^sampler$', regression_views.sampler),
     url(r'^sampler2$', regression_views.sampler2),
-    url(r'^scripts_by_module$', regression_views.scripts_by_module),
+    url(r'^scripts_by_module/(.*)$', regression_views.scripts_by_module),
     url(r'^\w+$', views.angular_home)
 
 ]

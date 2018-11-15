@@ -314,7 +314,13 @@ def jenkins_job_id_map(request):
 @api_safe_json_response
 def scripts_by_module(request, module):
     result = {}
-    return result
+    matched_scripts = []
+    regression_scripts = RegresssionScripts.objects.all()
+    for regression_script in regression_scripts:
+        modules = regression_script.module
+        if module in modules:
+            matched_scripts.append(regression_script)
+    return matched_scripts
 
 @csrf_exempt
 @api_safe_json_response
