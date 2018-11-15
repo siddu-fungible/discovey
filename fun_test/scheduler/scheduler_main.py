@@ -339,7 +339,7 @@ def ensure_singleton():
 
 
 if __name__ == "__main__":
-    # ensure_singleton()
+    ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_STARTING)
 
