@@ -112,13 +112,23 @@ class BLTVolumePerformanceScript(FunTestScript):
     def setup(self):
         # topology_obj_helper = TopologyHelper(spec=topology_dict)
         # topology = topology_obj_helper.deploy()
-        self.dpcsh_host = DpcshProxy(ip=tb_config['dpcsh_proxy']['ip'], user=tb_config['dpcsh_proxy']['user'],
+        self.dpcsh_host = DpcshProxy(ip=tb_config['dpcsh_proxy']['ip'],
+                                     dpcsh_port=tb_config['dpcsh_proxy']['dpcsh_port'],
+                                     user=tb_config['dpcsh_proxy']['user'],
                                      password=tb_config['dpcsh_proxy']['passwd'])
 
+        # Start the dpcsh proxy and ensure that the funos & dpcsh proxy is started to ready to accept inputs
         status = self.dpcsh_host.start_dpcsh_proxy(dpcsh_proxy_port=tb_config['dpcsh_proxy']['dpcsh_port'],
                                                    dpcsh_proxy_tty=tb_config['dpcsh_proxy']['dpcsh_tty'])
         fun_test.test_assert(status, "Start dpcsh with {} in tcp proxy mode".
                              format(tb_config['dpcsh_proxy']['dpcsh_tty']))
+        status = ""
+        status = self.dpcsh_host.ensure_started(max_time=900, interval=10)
+        fun_test.test_assert(status, "dpcsh proxy ready")
+        status = self.dpcsh_host.network_controller_obj.disable_syslog(level=2)
+        fun_test.test_assert(status, "Setting syslog level to 2")
+        self.dpcsh_host.network_controller_obj.disconnect()
+
         fun_test.shared_variables["tb_config"] = tb_config
         fun_test.shared_variables["dpcsh_host"] = self.dpcsh_host
 
@@ -128,7 +138,6 @@ class BLTVolumePerformanceScript(FunTestScript):
                                                   dpcsh_proxy_tty=tb_config['dpcsh_proxy']['dpcsh_tty'])
         fun_test.test_assert(status, "Stopped dpcsh with {} in tcp proxy mode".
                              format(tb_config['dpcsh_proxy']['dpcsh_tty']))
-        pass
 
 
 class BLTVolumePerformanceTestcase(FunTestCase):

@@ -13,7 +13,7 @@ class StorageController(DpcshClient):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": ip}}
         return self.json_execute(verb=self.mode, data=cfg_dict, command_duration=command_duration)
 
-    def create_thin_block_volume(self, capacity, uuid, block_size, name, command_duration=1):
+    def create_thin_block_volume(self, capacity, uuid, block_size, name, use_ls=False, command_duration=1):
         create_dict = {}
         create_dict["class"] = "volume"
         create_dict["opcode"] = "VOL_ADMIN_OPCODE_CREATE"
@@ -23,7 +23,18 @@ class StorageController(DpcshClient):
         create_dict["params"]["block_size"] = block_size
         create_dict["params"]["uuid"] = uuid
         create_dict["params"]["name"] = name
+        if use_ls:
+            create_dict["params"]["use_ls"] = use_ls
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
+
+    def delete_thin_block_volume(self, capacity, uuid, block_size, name, command_duration=1):
+        delete_dict = {"class": "volume", "opcode": "VOL_ADMIN_OPCODE_DELETE", "params": {}}
+        delete_dict["params"]["type"] = "VOL_TYPE_BLK_LOCAL_THIN"
+        delete_dict["params"]["capacity"] = capacity
+        delete_dict["params"]["block_size"] = block_size
+        delete_dict["params"]["uuid"] = uuid
+        delete_dict["params"]["name"] = name
+        return self.json_execute(verb=self.mode, data=delete_dict, command_duration=command_duration)
 
     def volume_attach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=3):
         attach_dict = {"class": "controller",
@@ -31,6 +42,13 @@ class StorageController(DpcshClient):
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
                                   "remote_ip": remote_ip}}
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
+
+    def volume_detach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=3):
+        detach_dict = {"class": "controller",
+                       "opcode": "DETACH",
+                       "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
+                                  "remote_ip": remote_ip}}
+        return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
 
     def volume_attach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=2, command_duration=3):
         attach_dict = {"class": "controller",
