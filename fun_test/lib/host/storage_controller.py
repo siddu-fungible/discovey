@@ -23,7 +23,8 @@ class StorageController(DpcshClient):
         create_dict["params"]["block_size"] = block_size
         create_dict["params"]["uuid"] = uuid
         create_dict["params"]["name"] = name
-        create_dict["params"]["use_ls"] = use_ls
+        if use_ls:
+            create_dict["params"]["use_ls"] = use_ls
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
     def delete_thin_block_volume(self, capacity, uuid, block_size, name, command_duration=1):
