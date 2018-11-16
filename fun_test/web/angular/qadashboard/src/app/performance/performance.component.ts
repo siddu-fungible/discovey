@@ -76,6 +76,7 @@ export class PerformanceComponent implements OnInit {
   currentNodeInfo: string;
   showScoreInfo: boolean = false;
   miniGridMaxWidth: string;
+  miniGridMaxHeight: string;
   status: string = null;
 
   currentRegressionUrl: string = null;
@@ -111,10 +112,12 @@ export class PerformanceComponent implements OnInit {
     console.log(keys);
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
+    this.miniGridMaxHeight = '50%';
     this.fetchDag();
     if (window.screen.width >= 1690) {
       this.numGridColumns = 4;
       this.miniGridMaxWidth = '25%';
+      this.miniGridMaxHeight = '25%';
     }
     this.status = null;
   }
@@ -202,13 +205,6 @@ export class PerformanceComponent implements OnInit {
     let node = this.nodeMap.get(id);
     return node;
   };
-
-  getHeight(): string {
-    let height = "";
-    let el = document.getElementById('grid');
-    height = el.style.width;
-    return height;
-  }
 
   evaluateScores = (node) => {
     let [lastScore, penultimateScore] = node.last_two_scores;
