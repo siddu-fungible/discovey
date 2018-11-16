@@ -6,6 +6,8 @@ ARG     ASIO_DIR=/fun_external/asio-$ASIO_VER
 ARG     ASIO_PKG=/fun_external/asio-$ASIO_VER.tar.bz2
 ARG     ASIO_URL=https://sourceforge.net/projects/asio/files/asio/$ASIO_VER%20%28$ASIO_REL_TRAIN%29/asio-$ASIO_VER.tar.bz2
 ARG     DEP_INSTALL_DIR=/fun_external/
+ARG     REDIS_SO=http://dochub.fungible.local/doc/jenkins/sandbox/frr/libfunjson_redis.so
+ARG     REDIS_SO_LOCAL=/usr/local/lib/libfunjson_redis.so
 
 RUN     apt -y update; apt-get -y upgrade; \
         apt-get install --no-install-recommends --no-install-suggests -y \
@@ -69,10 +71,24 @@ RUN   cd /fun_external; git clone https://github.com/antirez/redis.git; \
 RUN   cd /fun_external; git clone https://github.com/redis/hiredis.git; \
       cd hiredis; make; make install
 
+# Ydk-gen build requirements
+RUN   apt install -y libxml2-dev doxygen graphviz libssh-dev libcurl4-openssl-dev libxslt-dev libtool-bin \
+    libpcre3-dev libxslt1-dev python3-dev python-dev devscripts debhelper
+RUN   pip install -I pyang==1.6
+RUN   pip install -I Sphinx==1.4a1
+RUN   pip install -I sphinx-rtd-theme==0.1.9
+RUN   pip install -I GitPython==1.0.1
+RUN   pip install -I rstr==2.2.6
+
+# Add Tools
+RUN   apt install -y gdb tcpdump strace net-tools
+# HACK around https://github.com/dotcloud/docker/issues/5490
+RUN   mv /usr/sbin/tcpdump /usr/bin/tcpdump
+
 # Set up startup script
 COPY  funcp_start_redis.sh /fun_external
 RUN   chmod 777 /fun_external/funcp_start_redis.sh
-COPY  libfunjson_redis.so   /usr/local/lib/
+RUN   wget -O $REDIS_SO_LOCAL $REDIS_SO
 
 # Enable root SSH access 
 RUN mkdir /var/run/sshd
