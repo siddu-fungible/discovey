@@ -26,25 +26,13 @@ docker build . -t nw-reg-base:v1
 
 ```
 cd user
-docker build . -t reg-nw-user:v1 --build-arg ARG_USER=$USER --build-arg ARG_UID=$UID --build-arg ARG_GID=`id -g`
+docker build . -t nw-reg-user:v1 --build-arg ARG_USER=$USER --build-arg ARG_UID=$UID --build-arg ARG_GID=`id -g`
 ```
 
-5. Create FRR container to be used in control plane (BGP/ISIS) tests using TopoManager.
+
+5. To run FunCP container:
 
 ```
-(a) docker run --privileged=true --rm -d -v /home/$USER:/home/$USER -v $WORKSPACE:/workspace -e WORKSPACE=/workspace -e DOCKER=TRUE -w /workspace --name frr-img --hostname frr-img -u $USER reg-nw-user:v1 /workspace/Integration/tools/docker/funcp/user/fungible/scripts/frr-build.sh
-(b) docker commit frr-img reg-nw-frr:v1
-```
-
-reg-nw-frr image can now be used with TopoManager like so:
-
-```
-docker run --privileged=true --rm -d --name frr-1 --hostname frr-1  reg-nw-frr:v1 /opt/fungible/scripts/frr-run.sh
-```
-
-6. To run a FunCP container that runs the parser tests:
-
-```
-docker run --privileged=true --rm -d -v /home/$USER:/home/$USER -v $WORKSPACE:/workspace -e WORKSPACE=/workspace -e DOCKER=TRUE -w /workspace --name frr-img --hostname frr-img -u $USER reg-nw-user:v1 /workspace/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh
+docker run --privileged=true --rm -d -v /tmp:/tmp  -v /home/$USER:/home/$USER -v $WORKSPACE:/workspace -e WORKSPACE=/workspace -e DOCKER=TRUE -w /workspace --name funcp --hostname funcp -p 40221:40221 -p 8022:22 -u $USER nw-reg-user:v1 /workspace/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh
 ```
 
