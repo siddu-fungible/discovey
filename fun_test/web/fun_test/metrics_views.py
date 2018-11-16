@@ -95,7 +95,8 @@ def chart_info(request):
                   "last_num_build_failed": chart.last_num_build_failed,
                   "last_jenkins_job_id": chart.last_jenkins_job_id,
                   "last_suite_execution_id": chart.last_suite_execution_id,
-                  "last_lsf_job_id": chart.last_lsf_job_id}
+                  "last_lsf_job_id": chart.last_lsf_job_id,
+                  "owner_info": chart.owner_info}
     return result
 
 
@@ -342,6 +343,9 @@ def update_chart(request):
         description = request_json["description"]
     if "leaf" in request_json:
         leaf = request_json["leaf"]
+    owner_info = "Unknown"
+    if "owner_info" in request_json:
+        owner_info = request_json["owner_info"]
 
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, chart_name=chart_name)
@@ -357,6 +361,8 @@ def update_chart(request):
             c.y2axis_title = request_json["y2_axis_title"] if request_json["y2_axis_title"] else ""
         if leaf:
             c.leaf = leaf
+        if owner_info:
+            c.owner_info = owner_info
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,

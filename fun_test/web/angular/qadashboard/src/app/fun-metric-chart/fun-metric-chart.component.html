@@ -48,20 +48,14 @@
         <cancel-btn-link [text]="'close'" (onClick)="closePointInfo()"></cancel-btn-link>
       </div>
     </div>
-    <!-- showing description only when leaf charts are clicked -->
+    <!-- showing owner info and description only when leaf charts are clicked -->
     <div *ngIf="!minimal">
-      <div>
-        <i style="font-size: 95%; color: grey">Owner: {{ inner.currentOwner }}</i>
-        <!--<a *ngIf="!editingOwner" (click)="toggleOwner()"><i class="fa fa-pencil"></i></a>-->
+      <div *ngIf="modelName != 'MetricContainer'" style="float: right">
+        <i *ngIf="!editingOwner" class="grey-text">Owner: <span (click)="editingOwner = true">{{ inner.currentOwner }}</span></i>
+        <i *ngIf="editingOwner" style="font-size: 95%;">Owner: <input type="text" class="owner-text" [(ngModel)]="inner.currentOwner">
+          <span><i class="fa fa-check fa-fw" (click)="submit()"></i></span>
+          <span><i class="fa fa-times fa-fw" (click)="editingOwner = false"></i></span></i>
         <br>
-        <!--<textarea readonly rows="1" [(ngModel)]="inner.currentOwner" style="min-width: 100%;"></textarea>-->
-        <!--<div [innerHTML]="inner.currentOwner"></div>-->
-        <div *ngIf="editingOwner">
-          <br>
-          <textarea readonly rows="1" [(ngModel)]="inner.currentOwner" style="min-width: 100%;"></textarea>
-          <!--<button class="btn btn-success" (click)="submit()">Submit</button>-->
-          <a style="padding: 5px;" (click)="toggleOwner()">Cancel</a>
-      </div>
     </div>
       <br>
       <div>
