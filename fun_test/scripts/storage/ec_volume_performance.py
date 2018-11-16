@@ -331,8 +331,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having the "
                                                                "UUID {}".format(self.uuids["ndata"][index]))
                 fun_test.sleep("Sleeping for a second to enable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                  self.uuids["ndata"][index])
+                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                     self.uuids["ndata"][index], "stats")
                 command_result = self.storage_controller.peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
@@ -387,7 +387,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     initial_volume_status[combo][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         initial_volume_status[combo][mode][type][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type],
+                                                                     uuid, "stats")
                         command_result = {}
                         command_result = self.storage_controller.peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
@@ -437,7 +438,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                     final_volume_status[combo][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         final_volume_status[combo][mode][type][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type],
+                                                                     uuid, "stats")
                         command_result = {}
                         command_result = self.storage_controller.peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
@@ -651,8 +653,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Disable fault_injection from the ndata BLT volume "
                                                                "having the UUID {}".format(self.uuids["ndata"][index]))
                 fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                  self.uuids["ndata"][index])
+                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                     self.uuids["ndata"][index], "stats")
                 command_result = self.storage_controller.peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,

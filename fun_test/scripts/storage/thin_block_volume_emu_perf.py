@@ -6,6 +6,7 @@ from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
 from web.fun_test.analytics_models_helper import VolumePerformanceHelper
 from lib.host.linux import Linux
+from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 import uuid
@@ -42,7 +43,7 @@ tb_config = {
         "ip": "server120",
         "user": REGRESSION_USER,
         "passwd": REGRESSION_USER_PASSWORD,
-        "dpcsh_port": 40221,
+        "dpcsh_port": 50221,
         "dpcsh_tty": "/dev/ttyUSB8"
     },
     "tg_info": {
@@ -50,7 +51,11 @@ tb_config = {
             "type": TrafficGenerator.TRAFFIC_GENERATOR_TYPE_LINUX_HOST,
             "ip": "cadence-pc-5",
             "user": "localadmin",
-            "passwd": "Precious1*"
+            "passwd": "Precious1*",
+            "ipmi_name": "cadence-pc-5-ilo",
+            "ipmi_iface": "lanplus",
+            "ipmi_user": "ADMIN",
+            "ipmi_passwd": "ADMIN",
         }
     }
 }
@@ -107,17 +112,22 @@ class BLTVolumePerformanceScript(FunTestScript):
     def setup(self):
         # topology_obj_helper = TopologyHelper(spec=topology_dict)
         # topology = topology_obj_helper.deploy()
-        dpcsh_host = Linux(host_ip=tb_config['dpcsh_proxy']['ip'], ssh_username=tb_config['dpcsh_proxy']['user'],
-                           ssh_password=tb_config['dpcsh_proxy']['passwd'])
+        self.dpcsh_host = DpcshProxy(ip=tb_config['dpcsh_proxy']['ip'], user=tb_config['dpcsh_proxy']['user'],
+                                     password=tb_config['dpcsh_proxy']['passwd'])
 
-        result = dpcsh_host.start_dpcsh_proxy(dpcsh_proxy_port=tb_config['dpcsh_proxy']['dpcsh_port'],
-                                              dpcsh_proxy_tty=tb_config['dpcsh_proxy']['dpcsh_tty'])
-        fun_test.test_assert(result, "Started dpcsh with %s in tcp proxy mode".
+        status = self.dpcsh_host.start_dpcsh_proxy(dpcsh_proxy_port=tb_config['dpcsh_proxy']['dpcsh_port'],
+                                                   dpcsh_proxy_tty=tb_config['dpcsh_proxy']['dpcsh_tty'])
+        fun_test.test_assert(status, "Start dpcsh with {} in tcp proxy mode".
                              format(tb_config['dpcsh_proxy']['dpcsh_tty']))
         fun_test.shared_variables["tb_config"] = tb_config
+        fun_test.shared_variables["dpcsh_host"] = self.dpcsh_host
 
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        status = self.dpcsh_host.stop_dpcsh_proxy(dpcsh_proxy_port=tb_config['dpcsh_proxy']['dpcsh_port'],
+                                                  dpcsh_proxy_tty=tb_config['dpcsh_proxy']['dpcsh_tty'])
+        fun_test.test_assert(status, "Stopped dpcsh with {} in tcp proxy mode".
+                             format(tb_config['dpcsh_proxy']['dpcsh_tty']))
         pass
 
 
@@ -188,7 +198,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                      format(testcase, self.expected_volume_stats))
         # End of benchmarking json file parsing
 
-        self.tb_config = fun_test.shared_variables["tb_config"]
+        self.tb_config    = fun_test.shared_variables["tb_config"]
+        self.dpcsh_host   = fun_test.shared_variables["dpcsh_host"]
         self.dut_instance = Linux(host_ip=tb_config['dut_info'][0]['ip'],
                                   ssh_username=tb_config['dut_info'][0]['user'],
                                   ssh_password=tb_config['dut_info'][0]['passwd'])
@@ -231,8 +242,15 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
 
             # Rebooting the host to make the above volume accessible
-            status = self.end_host.reboot(timeout=self.command_timeout, retries=6)
-            fun_test.simple_assert(status, "End Host {} Rebooted".format(self.tb_config['tg_info'][0]['ip']))
+            reboot_status = self.dpcsh_host.ipmi_power_cycle(host=tb_config['tg_info'][0]['ipmi_name'],
+                                                             interface=tb_config['tg_info'][0]['ipmi_iface'],
+                                                             user=tb_config['tg_info'][0]['ipmi_user'],
+                                                             passwd=tb_config['tg_info'][0]['ipmi_passwd'],
+                                                             interval=30)
+            fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(self.tb_config['tg_info'][0]['ip']))
+            host_up_status = self.end_host.isHostUp(timeout=self.command_timeout)
+            fun_test.test_assert(host_up_status, "End Host {} is up".format(self.tb_config['tg_info'][0]['ip']))
+
 
             # Checking that the above created BLT volume is visible to the end host
             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.volume_details["ns_id"])
@@ -258,7 +276,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid)
+        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid,
+                                                     "stats")
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -448,6 +467,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 # Comparing the internal volume stats with the expected value
+                for k, v in diff_volume_stats[combo][mode].items():
+                    fun_test.log("Key: {}; Value: {}".format(k, v))
+
                 for ekey, evalue in expected_volume_stats[mode].items():
                     if ekey in diff_volume_stats[combo][mode]:
                         actual = diff_volume_stats[combo][mode][ekey]

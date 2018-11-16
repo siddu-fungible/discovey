@@ -8,8 +8,8 @@ import os
 import time
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
+import json
 import commentjson
-
 
 class NoLogger:
     def __init__(self):
@@ -1450,7 +1450,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug(trim_fio_result)
 
         # Converting the json into python dictionary
-        fio_result_dict = commentjson.loads(trim_fio_result)
+        fio_result_dict = json.loads(trim_fio_result)
         fun_test.debug(fio_result_dict)
 
         # Populating the resultant fio_dict dictionary
@@ -1478,7 +1478,6 @@ class Linux(object, ToDictMixin):
 
         fun_test.debug(fio_dict)
         return fio_dict
-
 
     @fun_test.safe
     def pcie_fio(self, filename, timeout=60, **kwargs):
@@ -1528,7 +1527,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug(trim_fio_result)
 
         # Converting the json into python dictionary
-        fio_result_dict = commentjson.loads(trim_fio_result)
+        fio_result_dict = json.loads(trim_fio_result)
         fun_test.debug(fio_result_dict)
 
         # Populating the resultant fio_dict dictionary
@@ -1556,7 +1555,6 @@ class Linux(object, ToDictMixin):
 
         fun_test.debug(fio_dict)
         return fio_dict
-
 
     @fun_test.safe
     def fio(self, destination_ip, timeout=60, **kwargs):
@@ -1607,7 +1605,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug(trim_fio_result)
 
         # Converting the json into python dictionary
-        fio_result_dict = commentjson.loads(trim_fio_result)
+        fio_result_dict = json.loads(trim_fio_result)
         fun_test.debug(fio_result_dict)
 
         # Populating the resultant fio_dict dictionary
@@ -1635,42 +1633,6 @@ class Linux(object, ToDictMixin):
 
         fun_test.debug(fio_dict)
         return fio_dict
-
-    @fun_test.safe
-    def stop_dpcsh_proxy(self, dpcsh_proxy_name="dpcsh", dpcsh_proxy_port=40221, dpcsh_proxy_tty="ttyUSB8"):
-        process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
-        current_dpcsh_proxy_pid = self.get_process_id_by_pattern(process_pat)
-        if current_dpcsh_proxy_pid:
-            self.kill_process(process_id=current_dpcsh_proxy_pid, sudo=False)
-            current_dpcsh_proxy_pid = self.get_process_id_by_pattern(process_pat)
-            if current_dpcsh_proxy_pid:
-                fun_test.critical("Unable to kill the existing dpcsh proxy process")
-                return False
-        return True
-
-    @fun_test.safe
-    def start_dpcsh_proxy(self, dpcsh_env="/project/tools/glibc-2.14/lib",
-                          dpcsh_proxy_path="/home/gliang/ws/FunSDK/bin", dpcsh_proxy_name="dpcsh",
-                          dpcsh_proxy_port=40221, dpcsh_proxy_tty="/dev/ttyUSB8",
-                          dpcsh_proxy_log="/tmp/dpcsh_proxy_log"):
-        # Killling any existing dpcsh TCP proxy server running outside the qemu host
-        self.stop_dpcsh_proxy(dpcsh_proxy_name, dpcsh_proxy_port, dpcsh_proxy_tty)
-
-        dpcsh_proxy_cmd = "env LD_LIBRARY_PATH={} {}/{} -D {} --tcp_proxy {}".format(dpcsh_env, dpcsh_proxy_path,
-                                                                                     dpcsh_proxy_name, dpcsh_proxy_tty,
-                                                                                     dpcsh_proxy_port)
-        dpcsh_proxy_process_id = self.start_bg_process(command=dpcsh_proxy_cmd, output_file=dpcsh_proxy_log)
-        # Checking whether the dpcsh proxy is started properly
-        if dpcsh_proxy_process_id:
-            self.command("\n")
-            process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
-            current_dpcsh_proxy_process_id = self.get_process_id_by_pattern(process_pat)
-            if not current_dpcsh_proxy_process_id:
-                return False
-        else:
-            return False
-        return True
-
 
     @fun_test.safe
     def reboot(self, timeout=5, retries=6):
@@ -1708,6 +1670,82 @@ class Linux(object, ToDictMixin):
 
         return result
 
+    @fun_test.safe
+    def isHostUp(self, timeout=5, retries=6):
+
+        result = True
+
+        for i in range(retries):
+            command_output = ""
+            try:
+                command_output = self.command(command="pwd", timeout=timeout)
+                if command_output:
+                    break
+            except Exception as ex:
+                fun_test.sleep("Waiting for the host to become reachable", timeout)
+                self.disconnect()
+                self._set_defaults()
+                continue
+        else:
+            fun_test.critical("Host is not reachable even after trying it for {} seconds".format(retries * timeout))
+            result = False
+
+        return result
+
+    @fun_test.safe
+    def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+        result = True
+        fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}".format(host, interface, user, passwd))
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {} chassis power off".format(interface, host, user, passwd)
+        expected_pat = r'Chassis Power Control: Down/Off'
+        ipmi_out = self.command(command=ipmi_cmd)
+        if ipmi_out:
+            match = re.search(expected_pat, ipmi_out, re.I)
+            if not match:
+                fun_test.critical("IPMI power off: Failed")
+                result = False
+            else:
+                fun_test.log("IPMI power off: Passed")
+        else:
+            fun_test.critical("IPMI power off: Failed")
+            result = False
+
+        return result
+
+    @fun_test.safe
+    def ipmi_power_on(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+        result = True
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {} chassis power on".format(interface, host, user, passwd)
+        expected_pat = r'Chassis Power Control: Up/On'
+        ipmi_out = self.command(command=ipmi_cmd)
+        if ipmi_out:
+            match = re.search(expected_pat, ipmi_out, re.I)
+            if not match:
+                fun_test.critical("IPMI power on: Failed")
+                result = False
+            else:
+                fun_test.log("IPMI power on: Passed")
+        else:
+            fun_test.critical("IPMI power on: Failed")
+            result = False
+
+        return result
+
+    @fun_test.safe
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30):
+        result = True
+        fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}; Interval: {}".format(host, interface, user, passwd,
+                                                                                         interval))
+        off_status = self.ipmi_power_off(host=host, interface=interface, user=user, passwd=passwd)
+        if off_status:
+            fun_test.sleep("Sleeping for {} seconds for the host to go down".format(interval), interval)
+            on_status = self.ipmi_power_on(host=host, interface=interface, user=user, passwd=passwd)
+            if not on_status:
+                result = False
+        else:
+            result = False
+
+        return result
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):

@@ -21,7 +21,7 @@ export class RegressionAdminComponent implements OnInit {
       let modules = response.data;
       modules.forEach((module) => {
         this.info[module.name] = {name: module.name, verboseName: module.verbose_name};
-
+        this.fetchScriptInfo(module.name, this.info[module.name]);
       })
     }, error => {
       this.loggerService.error("Error fetching modules");
@@ -29,7 +29,11 @@ export class RegressionAdminComponent implements OnInit {
   }
 
   fetchScriptInfo(moduleName, moduleInfo) {
+    this.apiService.get("/regression/scripts_by_module/" + moduleName).subscribe((response) => {
 
+    }, error => {
+      this.loggerService.error("Fetching scripts by module");
+    })
   }
 
 }
