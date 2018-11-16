@@ -1,52 +1,74 @@
-<link rel="stylesheet" type="text/css"
-      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
 <fun-spinner [status]="status"></fun-spinner>
-<div *ngIf="status === null">
-<div style="max-width: 1000px; margin: auto;">
-  <br>
-  <!-- showing week month and all time mode for leafs -->
-  <div *ngIf="!minimal" [ngSwitch]="timeMode">
-    <div *ngSwitchCase="'all'">
-      <a (click)="setTimeMode('week')"> Week </a>/
-      <a (click)="setTimeMode('month')"> Month </a>/
-      <b><u><a (click)="setTimeMode('all')"> All </a></u></b>
-    </div>
-    <div *ngSwitchCase="'week'">
-      <b><u><a (click)="setTimeMode('week')"> Week </a></u></b>/
-      <a (click)="setTimeMode('month')"> Month </a>/
-      <a (click)="setTimeMode('all')"> All </a>
-    </div>
-    <div *ngSwitchCase="'month'">
-      <a (click)="setTimeMode('week')"> Week </a>/
-      <b><u><a (click)="setTimeMode('month')"> Month </a></u></b>/
-      <a (click)="setTimeMode('all')"> All </a>
-    </div>
-  </div>
-  <!-- fun chart component -->
-  <fun-chart [mileStoneIndex]="mileStoneIndex" [y1Values]="values" [xValues]="series" [title]="chartName"
-             [xAxisLabel]="chart1XaxisTitle"
-             [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"></fun-chart>
-  <!-- showing description only when leaf charts are clicked -->
-  <div *ngIf="!minimal">
+<div *ngIf="status === null" class="chart-div">
+  <div style="max-width: 1000px; height: 100%; margin: auto;">
     <br>
-    <div>
-      <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
-      <br>
-      <div [innerHTML]="inner.currentDescription"></div>
-      <div *ngIf="editingDescription">
-        <br>
-        <textarea rows="4" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
-        <button class="btn btn-success" (click)="submit()">Submit</button>
-        <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
+    <!-- showing week month and all time mode for leafs -->
+    <div *ngIf="!minimal" [ngSwitch]="timeMode">
+      <div *ngSwitchCase="'all'">
+        <a (click)="setTimeMode('week')"> Week </a>/
+        <a (click)="setTimeMode('month')"> Month </a>/
+        <b><u><a (click)="setTimeMode('all')"> All </a></u></b>
+      </div>
+      <div *ngSwitchCase="'week'">
+        <b><u><a (click)="setTimeMode('week')"> Week </a></u></b>/
+        <a (click)="setTimeMode('month')"> Month </a>/
+        <a (click)="setTimeMode('all')"> All </a>
+      </div>
+      <div *ngSwitchCase="'month'">
+        <a (click)="setTimeMode('week')"> Week </a>/
+        <b><u><a (click)="setTimeMode('month')"> Month </a></u></b>/
+        <a (click)="setTimeMode('all')"> All </a>
       </div>
     </div>
+    <!-- fun chart component -->
+    <fun-chart [mileStoneIndex]="mileStoneIndex" [y1Values]="values" [xValues]="series" [title]="chartName"
+               [xAxisLabel]="chart1XaxisTitle"
+               [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"
+               [pointClickCallback]="pointClickCallback" (pointInfo)="showPointDetails($event)"></fun-chart>
+    <!--showing clicked point details when selected on a chart-->
+    <div class="card" *ngIf="pointClicked && modelName!='MetricContainer'">
+      <div class="properties-margin">
+        <table>
+          <tr *ngFor="let point of pointInfo">
+            <td class="no-wrap">
+              <b>{{ point.name }}:</b>
+            </td>
+            <td class="word-break">
+              {{ point.value }}
+            </td>
+          </tr>
+        </table>
+        <a *ngIf="!showBuildProps" [routerLink]="" (click)="showBuildProps = !showBuildProps">Show Build
+          Properties</a>
+        <a *ngIf="showBuildProps" [routerLink]="" (click)="showBuildProps = !showBuildProps">Hide Build
+          Properties</a><br>
+        <div style="padding: 4px;" *ngIf="showBuildProps && buildProps">
+          <pre>{{ buildProps.value }}</pre>
+        </div>
+        <cancel-btn-link [text]="'close'" (onClick)="closePointInfo()"></cancel-btn-link>
+      </div>
+    </div>
+    <!-- showing description only when leaf charts are clicked -->
+    <div *ngIf="!minimal">
+      <br>
+      <div>
+        <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
+        <br>
+        <div [innerHTML]="inner.currentDescription"></div>
+        <div *ngIf="editingDescription">
+          <br>
+          <textarea rows="4" [(ngModel)]="inner.currentDescription" style="min-width: 100%;"></textarea>
+          <button class="btn btn-success" (click)="submit()">Submit</button>
+          <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
+        </div>
+      </div>
+    </div>
+    <br>
   </div>
-  <br>
-</div>
-<div class="closed-section"></div>
-<!-- Show tables below the leaf chart -->
-<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
-  <div *ngIf="!minimal">
+  <div class="closed-section"></div>
+  <!-- Show tables below the leaf chart -->
+  <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+    <div *ngIf="!minimal">
     <span class="a-text">
       <a *ngIf="!showingTable" [routerLink]="" (click)="showTables()">Show Table </a>
       <a *ngIf="showingTable" [routerLink]="" (click)="showTables()">Hide Table </a>
@@ -54,52 +76,53 @@
         <span *ngIf="showingTable" class="arrow-down"></span>
       </a>
     </span>
-    <div *ngIf="showingTable" scrollTo>
-      <h3 style="float: left;">{{ chartName }}</h3>
-      <fun-table [data]="data"></fun-table>
+      <div *ngIf="showingTable" scrollTo>
+        <h3 style="float: left;">{{ chartName }}</h3>
+        <fun-table [data]="data"></fun-table>
+      </div>
     </div>
   </div>
-</div>
-<!-- configure button below the leaf chart -->
-<div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
-  <div *ngIf="!minimal">
+  <!-- configure button below the leaf chart -->
+  <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+    <div *ngIf="!minimal">
     <span class="a-text">
       <a [routerLink]="" (click)="showConfigure()">Configure </a>
       <a [routerLink]="" (click)="showConfigure()"><span *ngIf="!showingConfigure" class="arrow-right"></span>
         <span *ngIf="showingConfigure" class="arrow-down"></span>
       </a>
     </span>
-    <div *ngIf="showingConfigure">
-      <table class="table table-nonfluid table-borderless" *ngFor="let dataSet of previewDataSets">
-        <tr>
-          <th>Name</th>
-          <th>Field</th>
-          <th>Min</th>
-          <th>Max</th>
-          <th>Expected</th>
-        </tr>
-        <tr>
-          <td>{{ dataSet.name }}</td>
-          <td>{{ dataSet.output.name }}</td>
-          <td><input type="number" [ngModel]="dataSet.output.min" ng-value="dataSet.output.min"
-                     style="width: 100px"></td>
-          <td><input type="number" [ngModel]="dataSet.output.max" ng-value="dataSet.output.max"
-                     style="width: 100px"></td>
-          <td><input type="number" [ngModel]="dataSet.output.expected"
-                     ng-value="dataSet.output.expected"
-                     style="width: 100px"></td>
-        </tr>
-      </table>
-      <p><input type="checkbox" [checked]="negativeGradient" [ngModel]="inner.negativeGradient">&nbsp;Negative gradient
-      </p>
-      <p><input type="checkbox" [checked]="leaf" [ngModel]="inner.leaf">&nbsp;Leaf</p>
-      <div class="row">
-        <div style="padding: 10px;">
-          <button class="btn btn-success" (click)="submit()">Submit</button>
-          <a (click)="showConfigure()"> Cancel</a>
+      <div *ngIf="showingConfigure">
+        <table class="table table-nonfluid table-borderless" *ngFor="let dataSet of previewDataSets">
+          <tr>
+            <th>Name</th>
+            <th>Field</th>
+            <th>Min</th>
+            <th>Max</th>
+            <th>Expected</th>
+          </tr>
+          <tr>
+            <td>{{ dataSet.name }}</td>
+            <td>{{ dataSet.output.name }}</td>
+            <td><input type="number" [(ngModel)]="dataSet.output.min" [value]="dataSet.output.min"
+                       style="width: 100px"></td>
+            <td><input type="number" [(ngModel)]="dataSet.output.max" [value]="dataSet.output.max"
+                       style="width: 100px"></td>
+            <td><input type="number" [(ngModel)]="dataSet.output.expected"
+                       [value]="dataSet.output.expected"
+                       style="width: 100px"></td>
+          </tr>
+        </table>
+        <p><input type="checkbox" [checked]="negativeGradient" [(ngModel)]="inner.negativeGradient">&nbsp;Negative
+          gradient
+        </p>
+        <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
+        <div class="row">
+          <div style="padding: 10px;">
+            <button class="btn btn-success" (click)="submit()">Submit</button>
+            <a (click)="showConfigure()"> Cancel</a>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </div>

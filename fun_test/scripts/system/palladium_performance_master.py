@@ -6,6 +6,8 @@ from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, Voltest
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, SoakClassicMallocPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance
+from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
+from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, TeraMarkCryptoPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 from web.fun_test.analytics_models_helper import prepare_status_db
 from web.fun_test.models import TimeKeeper
@@ -15,6 +17,8 @@ from datetime import datetime
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
 VOLTEST_TAG = "voltest_performance"
+TERAMARK_PKE = "pke_teramark"
+TERAMARK_CRYPTO = "crypto_teramark"
 
 def get_rounded_time():
     dt = get_current_time()
@@ -27,11 +31,15 @@ def is_job_from_today(job_dt):
     return True # TODO:
     return (job_dt.year == today.year) and (job_dt.month == today.month) and (job_dt.day == today.day)
 
-def set_last_build_status_for_charts(result, model_name):
+def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, model_name):
     charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
     for chart in charts:
         chart.last_build_status = result
         chart.last_build_date = get_current_time()
+        chart.last_suite_execution_id = suite_execution_id
+        chart.last_test_case_id = test_case_id
+        chart.last_lsf_job_id = job_id
+        chart.last_jenkins_job_id = jenkins_job_id
         chart.save()
 
 
@@ -43,7 +51,10 @@ class MyScript(FunTestScript):
         2. Step 2""")
 
     def setup(self):
-        pass
+        self.lsf_status_server = LsfStatusServer()
+        tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE]
+        self.lsf_status_server.workaround(tags=tags)
+        fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
     def cleanup(self):
         invalidate_goodness_cache()
@@ -55,24 +66,26 @@ class PalladiumPerformanceTc(FunTestCase):
     dt = get_rounded_time()
 
     def setup(self):
-        pass
+        self.lsf_status_server = fun_test.shared_variables["lsf_status_server"]
 
     def cleanup(self):
         pass
 
     def validate_job(self):
-        self.lsf_status_server = LsfStatusServer()
         job_info = self.lsf_status_server.get_last_job(tag=self.tag)
-        fun_test.test_assert(job_info, "Ensure one last job exists")
+        fun_test.test_assert(job_info, "Ensure Job Info exists")
+        self.jenkins_job_id = job_info["jenkins_build_number"]
+        self.job_id = job_info["job_id"]
+        fun_test.test_assert(not job_info["return_code"], "Valid return code")
+        fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(self.job_id))
         lines = job_info["output_text"].split("\n")
-        job_id = job_info["job_id"]
         dt = job_info["date_time"]
 
         fun_test.test_assert(is_job_from_today(dt), "Last job is from today")
         self.job_info = job_info
         self.lines = lines
         self.dt = dt
-        self.job_id = job_id
+
         return True
 
     def metrics_to_dict(self, metrics, result):
@@ -82,6 +95,7 @@ class PalladiumPerformanceTc(FunTestCase):
         for key, value in metrics.iteritems():
             d[key] = value
         return d
+
 
 class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
     def describe(self):
@@ -176,9 +190,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                                                               output_avg=wu_alloc_stack_ns_avg,
                                                               input_date_time=self.dt)
 
-        set_last_build_status_for_charts(result=self.result, model_name="AllocSpeedPerformance")
-        set_last_build_status_for_charts(result=self.result, model_name="WuLatencyUngated")
-        set_last_build_status_for_charts(result=self.result, model_name="WuLatencyAllocStack")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="AllocSpeedPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuLatencyUngated")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuLatencyAllocStack")
 
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
@@ -261,7 +275,7 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="BcopyPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="BcopyPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -322,7 +336,7 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="BcopyFloodDmaPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="BcopyFloodDmaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -404,7 +418,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                                                         output_recovery_throughput_max=ec_recovery_throughput_max,
                                                         output_recovery_throughput_avg=ec_recovery_throughput_avg
                                                         )
-        set_last_build_status_for_charts(result=self.result, model_name="EcPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="EcPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class EcVolPerformanceTc(PalladiumPerformanceTc):
@@ -447,7 +461,7 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
             fun_test.critical(str(ex))
 
 
-        set_last_build_status_for_charts(result=self.result, model_name="EcVolPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="EcVolPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -510,7 +524,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="VoltestPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="VoltestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG
@@ -546,7 +560,7 @@ class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="WuDispatchTestPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuDispatchTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
@@ -583,7 +597,7 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="WuSendSpeedTestPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuSendSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
@@ -622,7 +636,7 @@ class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="FunMagentPerformanceTest")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="FunMagentPerformanceTest")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
@@ -658,7 +672,7 @@ class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="WuStackSpeedTestPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="WuStackSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
@@ -694,7 +708,7 @@ class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="SoakFunMallocPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="SoakFunMallocPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
@@ -730,7 +744,7 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="SoakClassicMallocPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="SoakClassicMallocPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -835,7 +849,211 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_last_build_status_for_charts(result=self.result, model_name="BootTimePerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="BootTimePerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=14,
+                              summary="TeraMark PKE RSA Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+(?P<metric_name>RSA\s+CRT\s+2048\s+decryptions):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_rsa_crt_dec_no_pad_soak"
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkPkeRsaPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkPkeRsaPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=15,
+                              summary="TeraMark PKE RSA 4K Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+(?P<metric_name>RSA\s+CRT\s+4096\s+decryptions):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_rsa_crt_dec_no_pad_4096_soak"
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkPkeRsa4kPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkPkeRsa4kPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=16,
+                              summary="TeraMark PKE ECDH P256 Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+(?P<metric_name>ECDH\s+P256):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_ecdh_soak_256"
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkPkeEcdh256Performance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkPkeEcdh256Performance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=17,
+                              summary="TeraMark PKE ECDH 25519 Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                        r'soak_bench\s+result\s+(?P<metric_name>ECDH\s+25519):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                        line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_ecdh_soak_25519"
+                    input_metric_name = m.group("metric_name").replace(" ", "_")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkPkeEcdh25519Performance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkPkeEcdh25519Performance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_CRYPTO
+
+    def describe(self):
+        self.set_test_details(id=18,
+                              summary="TeraMark Crypto Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'{"alg":\s+"(?P<algorithm>\S+)",\s+"operation":\s+"(?P<operation>\S+)",\s+"results":\[(?P<results>.*)\]}',
+                    line)
+                if m:
+                    input_app = "crypto_test_perf"
+                    input_algorithm = m.group("algorithm")
+                    input_operation = m.group("operation")
+                    output_results = json.loads(m.group("results"))
+                    input_pkt_size = int(output_results['pktsize']['value'])
+
+                    output_ops_unit = "ops/sec"
+                    output_ops_per_sec = int(output_results['ops']['value'])
+
+                    output_throughput_unit = "Mbps"
+                    output_throughput = int(output_results['throughput']['value'])
+
+                    output_latency_unit = "ns"
+                    output_latency_min = int(output_results['latency']['value']['min'])
+                    output_latency_avg = int(output_results['latency']['value']['avg'])
+                    output_latency_max = int(output_results['latency']['value']['max'])
+
+                    metrics["input_app"] = input_app
+                    metrics["input_algorithm"] = input_algorithm
+                    metrics["input_operation"] = input_operation
+                    metrics["input_pkt_size"] = input_pkt_size
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_throughput"] = output_throughput
+                    metrics["output_latency_min"] = output_latency_min
+                    metrics["output_latency_avg"] = output_latency_avg
+                    metrics["output_latency_max"] = output_latency_max
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=TeraMarkCryptoPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(), test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id, model_name="TeraMarkCryptoPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class PrepareDbTc(FunTestCase):
@@ -871,6 +1089,11 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakFunMallocPerformanceTc())
     myscript.add_test_case(SoakClassicMallocPerformanceTc())
     myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

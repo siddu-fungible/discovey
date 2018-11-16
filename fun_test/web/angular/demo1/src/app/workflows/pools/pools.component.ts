@@ -4,18 +4,16 @@ import {FormControl} from "@angular/forms";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {SelectionModel} from "@angular/cdk/collections";
 import {MatTableDataSource} from "@angular/material";
+import {CommonService} from "../../services/common/common.service";
+import {ApiService} from "../../services/api/api.service";
+import {PoolElement} from "../../pool/pool.component";
 
-export interface PoolElement {
-  id: number;
-  name: string;
-  capacity: number;
-  volumes: number[];
-  dpus: number[];
-}
+
 
 const ELEMENT_DATA: PoolElement[] = [
+  /*
   {id: 0, name: 'Pool-1', capacity: 1024, volumes: [1, 2, 3], dpus:[1, 2, 3]},
-  {id: 1, name: 'Pool-2', capacity: 2048, volumes: [2, 3], dpus: [2, 3]}
+  {id: 1, name: 'Pool-2', capacity: 2048, volumes: [2, 3], dpus: [2, 3]}*/
 ];
 
 
@@ -69,12 +67,14 @@ export class PoolsComponent implements OnInit {
   actionControl = new FormControl();
   actionSelected: string = null;
   selectedRowIndex: number = null;
+  selectedElement: string = null;
   selection = new SelectionModel<PoolElement>(true, []);
   displayedVolumesColumns: string[] = ['position', 'name', 'weight', 'symbol'];
   expandedElement: PoolElement;
   volumes = VOLUME_DATA;
+  pools: PoolElement[] = [];
 
-  constructor() {
+  constructor(private commonService: CommonService, private apiService: ApiService) {
 
 
   }
@@ -85,12 +85,15 @@ export class PoolsComponent implements OnInit {
 
 
   ngOnInit() {
+    console.log("Pools oninit");
 
         if (this.radioSelection) {
-      this.displayedColumns = ['select', 'name', 'capacity', 'volumes', 'dpus'];
+      this.displayedColumns = ['select', 'pool_name', 'uuid', 'f1s'];
     } else {
-      this.displayedColumns = ['select', 'name', 'capacity', 'volumes', 'dpus'];
+      this.displayedColumns = ['select', 'pool_name', 'uuid', 'f1s'];
     }
+    this.getPools();
+
   }
 
     step = 0;
@@ -107,8 +110,34 @@ export class PoolsComponent implements OnInit {
     this.step--;
   }
 
+    getPools() {
+    this.pools = [];
+    let url = this.commonService.getBaseUrl();
+    if (!url) {
+      setTimeout(() => {
+        this.getPools();
+      }, 50);
+      return;
+    }
+    url = url + "/storage/pools";
+    this.apiService.get(url).subscribe((response) => {
+      let pools = response.data;
+      let poolIds = Object.keys(pools);
+      poolIds.forEach((poolId) => {
+        let newPoolElement: PoolElement = new PoolElement();
+        newPoolElement.uuid = poolId;
+        newPoolElement.f1s = pools[poolId].f1s;
+        this.pools.push(newPoolElement);
+      })
+    }, error => {
+
+    });
+    this.dataSource = new MatTableDataSource<PoolElement>(this.pools);
+
+  }
+
   submit() {
-    const pe: PoolElement = {name: 'Pool-3', capacity: 1024, volumes: [1, 2, 3], id: this.dataSource.data.length, dpus: [1, 3]};
+    const pe: PoolElement = {uuid: "123", f1s: ["1-2"]};
     this.dataSource.data.push(pe);
     this.dataSource.data = [...this.dataSource.data];
     this.actionSelected = null;
@@ -142,6 +171,14 @@ export class PoolsComponent implements OnInit {
 
   public getSelected(): PoolElement[] {
     return this.selection.selected;
+  }
+
+  toggleExpandedElement(row) {
+    if (this.expandedElement) {
+      this.expandedElement = null;
+    } else {
+      this.expandedElement = row;
+    }
   }
 
 }

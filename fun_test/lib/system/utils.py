@@ -97,3 +97,15 @@ def parse_file_to_json(file_name):
     else:
         fun_test.critical("{} path does not exist".format(file_name))
     return result
+
+
+def parse_str_to_json(jstr):
+    result = None
+    if isinstance(jstr, str):
+        try:
+            result = commentjson.loads(jstr)
+        except Exception as ex:
+            fun_test.critical("{} has an invalid json format".format(jstr))
+    else:
+        fun_test.critical("Argument received is not valid Python String")
+    return result

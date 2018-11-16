@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {Location} from '@angular/common';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
+import {Title} from "@angular/platform-browser";
 
 class ChildInfo {
   lastScore: number;
@@ -75,26 +76,48 @@ export class PerformanceComponent implements OnInit {
   currentNodeInfo: string;
   showScoreInfo: boolean = false;
   miniGridMaxWidth: string;
+  miniGridMaxHeight: string;
   status: string = null;
+
+  currentRegressionUrl: string = null;
+  currentJenkinsUrl: string = null;
+  currentLsfUrl: string = null;
+  passedRegressionUrl: string = null;
+  passedJenkinsUrl: string = null;
+  passedLsfUrl: string = null;
+  failedRegressionUrl: string = null;
+  failedJenkinsUrl: string = null;
+  failedLsfUrl: string = null;
+
+  failedDateTime: string = null;
+  passedDateTime: string = null;
+
+  lsfUrl: string = "http://palladium-jobs.fungible.local:8080/job/";
+  jenkinsUrl: string = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
+  regressionUrl: string = "/regression/suite_detail/";
 
   constructor(
     private location: Location,
     private apiService: ApiService,
-    private loggerService: LoggerService
+    private loggerService: LoggerService,
+    private title: Title
   ) {
   }
 
   ngOnInit() {
+    this.title.setTitle('Performance');
     this.status = "Loading";
     let myMap = new Map().set('a', 1).set('b', 2);
     let keys = Array.from(myMap.keys());
     console.log(keys);
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
+    this.miniGridMaxHeight = '50%';
     this.fetchDag();
     if (window.screen.width >= 1690) {
       this.numGridColumns = 4;
       this.miniGridMaxWidth = '25%';
+      this.miniGridMaxHeight = '25%';
     }
     this.status = null;
   }
@@ -418,24 +441,86 @@ export class PerformanceComponent implements OnInit {
 
   getStatusHtml = (node) => {
     let s = "";
-    if (node.leaf) {
-      if (node.lastNumBuildFailed > 0) {
-        s = "Bld: <label class=\"badge badge-danger\">FAILED</label>";
-      }
-    } else {
-
+    if (node.numChildrenDegrades) {
+      s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildrenDegrades + "";
+    }
+    if (node.lastNumBuildFailed) {
       if (node.numChildrenDegrades) {
-        s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildrenDegrades + "";
+        s += ",&nbsp";
       }
-      if (node.lastNumBuildFailed) {
-        if (node.numChildrenDegrades) {
-          s += ",&nbsp";
-        }
-        s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
-      }
+      s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
     }
     return s;
   };
+
+  setDefaultUrls(): void {
+    this.currentRegressionUrl = null;
+    this.currentJenkinsUrl = null;
+    this.currentLsfUrl = null;
+    this.passedRegressionUrl = null;
+    this.passedJenkinsUrl = null;
+    this.passedLsfUrl = null;
+    this.failedRegressionUrl = null;
+    this.failedJenkinsUrl = null;
+    this.failedLsfUrl = null;
+    this.failedDateTime = null;
+    this.passedDateTime = null;
+  }
+
+  openTooltip(node): void {
+    this.setDefaultUrls();
+    let payload = {"metric_model_name": node.metricModelName, chart_name: node.chartName};
+    this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
+      let result = data.data;
+      if (result.last_suite_execution_id && result.last_suite_execution_id !== -1) {
+        this.currentRegressionUrl = this.regressionUrl + result.last_suite_execution_id;
+      }
+      if (result.last_jenkins_job_id && result.last_jenkins_job_id !== -1) {
+        this.currentJenkinsUrl = this.jenkinsUrl + result.last_jenkins_job_id;
+      }
+      if (result.last_lsf_job_id && result.last_lsf_job_id !== -1) {
+        this.currentLsfUrl = this.lsfUrl + result.last_lsf_job_id;
+      }
+    }, error => {
+      this.loggerService.error("Current Failed Urls");
+    });
+
+    let payload1 = {"metric_id": node.metricId};
+    this.apiService.post('/metrics/past_status', payload1).subscribe((data) => {
+      let result = data.data;
+      if (result.failed_date_time) {
+        this.failedDateTime = result.failed_date_time;
+      }
+      if (result.failed_suite_execution_id && result.failed_suite_execution_id !== -1) {
+        this.failedRegressionUrl = this.regressionUrl + result.failed_suite_execution_id;
+      }
+      if (result.failed_jenkins_job_id && result.failed_jenkins_job_id !== -1) {
+        this.failedJenkinsUrl = this.jenkinsUrl + result.failed_jenkins_job_id;
+      }
+      if (result.failed_lsf_job_id && result.failed_lsf_job_id !== -1) {
+        this.failedLsfUrl = this.lsfUrl + result.failed_lsf_job_id;
+      }
+      if (result.passed_date_time) {
+        this.passedDateTime = result.passed_date_time;
+      }
+      if (result.passed_suite_execution_id && result.passed_suite_execution_id !== -1) {
+        this.passedRegressionUrl = this.regressionUrl + result.passed_suite_execution_id;
+      }
+      if (result.passed_jenkins_job_id && result.passed_jenkins_job_id !== -1) {
+        this.passedJenkinsUrl = this.jenkinsUrl + result.passed_jenkins_job_id;
+      }
+      if (result.passed_lsf_job_id && result.passed_lsf_job_id !== -1) {
+        this.passedLsfUrl = this.lsfUrl + result.passed_lsf_job_id;
+      }
+    }, error => {
+      this.loggerService.error("Past Status Urls");
+    });
+
+  }
+
+  openUrl(url): void {
+    window.open(url, '_blank');
+  }
 
   getNodeFromData = (data): any => {
     let newNode = {
@@ -495,11 +580,11 @@ export class PerformanceComponent implements OnInit {
   };
 
   openAtomicTab = () => {
-        let url = "/performance/atomic/" + this.currentNode.metricId;
-        window.open(url, '_blank');
-    };
+    let url = "/performance/atomic/" + this.currentNode.metricId;
+    window.open(url, '_blank');
+  };
 
-  expandNode = (flatNode, all=false) => {
+  expandNode = (flatNode, all = false) => {
     flatNode.collapsed = false;
     flatNode.hide = false;
     flatNode.children.forEach((child) => {
@@ -521,7 +606,11 @@ export class PerformanceComponent implements OnInit {
   };
 
   submitWeightClick = (node, childId, info) => {
-    let payload: { [i: string]: string } = {metric_id: node.metricId, child_id: childId, weight: info.weightBeingEdited};
+    let payload: { [i: string]: string } = {
+      metric_id: node.metricId,
+      child_id: childId,
+      weight: info.weightBeingEdited
+    };
     this.apiService.post('/metrics/update_child_weight', payload).subscribe((response) => {
       info.weight = info.weightBeingEdited;
     });
@@ -529,8 +618,8 @@ export class PerformanceComponent implements OnInit {
   };
 
   closeEditingWeightClick = (info) => {
-         info.weightEditing = false;
-     };
+    info.weightEditing = false;
+  };
 
 
 }

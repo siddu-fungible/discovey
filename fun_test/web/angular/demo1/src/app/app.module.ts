@@ -23,6 +23,9 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AngularCollapseModule } from 'angular-collapse';
 import { Demo1Component } from './demo1/demo1.component';
 import { DpusComponent } from './dpus/dpus.component';
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+//import { NgbdDropdownBasic } from '@ng-bootstrap/ng-bootstrap'
+
 // import { CreateChartComponent } from './create-chart/create-chart.component';
 import {
   MatAutocompleteModule,
@@ -69,6 +72,13 @@ import { VolumesComponent } from './workflows/volumes/volumes.component';
 import { VolumeComponent } from './volume/volume.component';
 import { DpuComponent } from './dpu/dpu.component';
 import { PoolComponent } from './pool/pool.component';
+import { StorageControllerComponent } from './storage-controller/storage-controller.component';
+import { TopologyComponent } from './topology/topology.component';
+import { ApiViewerComponent } from './api-viewer/api-viewer.component';
+import { StorageAgentLogViewerComponent } from './storage-agent-log-viewer/storage-agent-log-viewer.component';
+import {FunSpinnerComponent} from "./fun-spinner/fun-spinner.component";
+import { ReversePipe } from './pipes/reverse.pipe';
+//import {FlexLayoutModule} from '@angular/flex-layout';
 
 
 @NgModule({
@@ -81,6 +91,7 @@ import { PoolComponent } from './pool/pool.component';
     FunTableFilterPipe,
     FunChartComponent,
     FunMetricChartComponent,
+    FunSpinnerComponent,
     SafeHtmlPipe,
     Demo1Component,
     DpusComponent,
@@ -91,7 +102,12 @@ import { PoolComponent } from './pool/pool.component';
     VolumesComponent,
     VolumeComponent,
     DpuComponent,
-    PoolComponent
+    PoolComponent,
+    StorageControllerComponent,
+    TopologyComponent,
+    ApiViewerComponent,
+    StorageAgentLogViewerComponent,
+    ReversePipe
   ],
   imports: [
     BsDropdownModule,
@@ -141,6 +157,7 @@ import { PoolComponent } from './pool/pool.component';
   MatToolbarModule,
   MatTooltipModule,
   MatTreeModule,
+    NgbModule
   ],
   exports: [
         MatAutocompleteModule,

@@ -26,7 +26,16 @@ import { Demo1Component } from './demo1/demo1.component';
 import { CreateChartComponent } from './create-chart/create-chart.component';
 import { PreviewFunMetricComponent } from './fun-metric-chart/preview-fun-metric.component';
 import { ScrollToDirective } from './scroll-to.directive';
+import { RegressionComponent } from './regression/regression.component';
 import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
+import { SubmitJobComponent } from './regression/submit-job/submit-job.component';
+import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { SuiteDetailComponent } from './regression/suite-detail/suite-detail.component';
+import { CancelBtnLinkComponent } from "./cancel-btn-link/cancel-btn-link.component";
+import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
+import { SiteConstructionComponent } from './site-construction/site-construction.component'
+import { RegressionAdminComponent } from './regression/regression-admin/regression-admin.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +52,13 @@ import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
     Demo1Component,
     PreviewFunMetricComponent,
     ScrollToDirective,
-    FunSpinnerComponent
+    RegressionComponent,
+    FunSpinnerComponent,
+    SubmitJobComponent,
+    SuiteDetailComponent,
+    CancelBtnLinkComponent,
+    SiteConstructionComponent,
+    RegressionAdminComponent
   ],
   imports: [
     BsDropdownModule,
@@ -57,6 +72,9 @@ import { FunSpinnerComponent } from './fun-spinner/fun-spinner.component';
     FormsModule,
     Angular2FontawesomeModule,  // Add this line
     AngularCollapseModule,
+    NgMultiSelectDropDownModule,
+    NgbModule,
+    NgbTooltipModule
   ],
 
   providers: [ApiService, LoggerService],

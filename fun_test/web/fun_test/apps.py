@@ -1,18 +1,58 @@
 from django.apps import AppConfig
+from django.contrib import admin
 from lib.utilities.jira_manager import JiraManager
 from apscheduler.schedulers.background import BackgroundScheduler
+
+#from scheduler.scheduler import scheduler
+#from web.fun_test.django_scheduler.django_scheduler import SchedulerMainWorker
+
+
+class ListAdminMixin(object):
+    def __init__(self, model, admin_site):
+        self.list_display = [field.name for field in model._meta.fields if field.name != "id"]
+        super(ListAdminMixin, self).__init__(model, admin_site)
 
 
 class FunTestConfig(AppConfig):
 
     name = "web.fun_test"
+    scheduler_thread = None
 
     def __init__(self, *args, **kwargs):
         super(FunTestConfig, self).__init__(*args, **kwargs)
         self.metric_models = {}
 
+
+    def start_scheduler(self):
+        """ Not used yet """
+        self.scheduler_thread = SchedulerMainWorker()
+        print "Starting Scheduler"
+        self.scheduler_thread.start()
+
+
+    def scheduler_pre_flight(self):
+        from web.fun_test.models import SchedulerInfo
+        try:
+            if SchedulerInfo.objects.count() == 0:
+                SchedulerInfo().save()
+        except:
+            pass
+
     def ready(self):
         self.set_metric_models()
+
+        ''' Auto-register models for admin '''
+        models = self.get_models()
+        for model in models:
+            admin_class = type('AdminClass', (ListAdminMixin, admin.ModelAdmin), {})
+            try:
+                admin.site.register(model, admin_class)
+            except admin.sites.AlreadyRegistered:
+                pass
+
+        # self.start_scheduler()
+        self.scheduler_pre_flight()
+
 
     def get_jira_manager(self):
         if not hasattr(self, "jira_manager"):

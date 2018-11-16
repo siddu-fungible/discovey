@@ -73,7 +73,7 @@ class SuiteWorker(Thread):
     def run(self):
         scheduler_logger.debug("Running Job: {}".format(self.job_id))
         models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["IN_PROGRESS"])
-        if "tags" in self.job_spec and "jenkins-hourly" in self.job_spec["tags"]:
+        if "tags" in self.job_spec and self.job_spec["tags"] and "jenkins-hourly" in self.job_spec["tags"]:
             set_jenkins_hourly_execution_status(status=RESULTS["IN_PROGRESS"])
 
         suite_execution_id = self.job_id
@@ -326,6 +326,9 @@ def de_queue_job(job_file):
         # TODO: Ensure job_file is removed
 
 
+def process_external_requests():
+    pass
+
 def ensure_singleton():
     if os.path.exists(SCHEDULER_PID):
         raise SchedulerException("Only one instance of scheduler.py is permitted")
@@ -335,22 +338,13 @@ def ensure_singleton():
             f.write(str(pid))
 
 
-if __name__ == "__main1__":
-    queue_job(suite_name="storage_basic")
-    # queue_job(job_id=2, suite="suite2")
-    # queue_job(job_id=4, suite="suite3")
-    # queue_job(job_id=3, suite="suite4")
-    # queue_job(job_id=5, suite="suite5")
-    while True:
-        process_queue()
-    # process killed jobs
-    # wait
-    pass
-
 if __name__ == "__main__":
     ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
+    set_scheduler_state(SchedulerStates.SCHEDULER_STATE_STARTING)
+
     while True:
+        set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
         process_killed_jobs()
         try:
             process_queue()

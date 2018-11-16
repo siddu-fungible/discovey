@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 
 import django.contrib.postgres.fields.jsonb
 from django.db import migrations
+from fun_global import is_regression_server, is_performance_server
+
 
 
 class Migration(migrations.Migration):
@@ -18,4 +20,4 @@ class Migration(migrations.Migration):
             name='children_score_map',
             field=django.contrib.postgres.fields.jsonb.JSONField(default={}),
         ),
-    ]
+    ] if is_performance_server() else []

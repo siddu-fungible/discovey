@@ -120,7 +120,7 @@ class ECDPULevelScript(FunTestScript):
         topology = topology_obj_helper.deploy()
         fun_test.test_assert(topology, "Ensure deploy is successful")
 
-        # Saving the dut handles in a dictionary by using its EC role as the inded
+        # Saving the dut handles in a dictionary by using its EC role as the index
         self.duts = {}
         start = 0
         for type in sorted(self.ec_coding):
@@ -351,18 +351,27 @@ class ECDPULevelTestcase(FunTestCase):
             attach_uuid = this_uuid
             ns_id = self.ns_id["ec"]
 
-            # Configuring LS volume based on the script config settting
+            # Configuring Journal & LS volume based on the script config settting
             if self.use_lsv:
-                this_uuid = generate_uuid()
-                self.uuids["lsv"].append(this_uuid)
+
+                # Configuring the Journal volume which is a mandatory one for the LSV
+                self.uuids["jvol"] = generate_uuid()
+                command_result = self.storage_controller["ec"][0].create_volume(
+                    type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
+                    block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids["jvol"],
+                    command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Create Journal volume on DUT instance 0")
+
+                self.uuids["lsv"] = generate_uuid()
                 command_result = self.storage_controller["ec"][0].create_volume(
                     type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
-                    block_size=self.volume_block["lsv"], name="lsv-1", uuid=this_uuid,
-                    group=self.global_setup["ec_coding"]["ndata"], pvol_id=self.uuids["ec"],
+                    block_size=self.volume_block["lsv"], name="lsv-1", uuid=self.uuids["lsv"],
+                    group=self.global_setup["ec_coding"]["ndata"], jvol_uuid=self.uuids["jvol"], pvol_id=self.uuids["ec"],
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Create LS volume on the last DUT instance")
-                attach_uuid = this_uuid
+                attach_uuid = self.uuids["lsv"]
                 ns_id = self.ns_id["lsv"]
 
             # Attaching/Exporting the EC/LS volume to the external server
@@ -437,8 +446,8 @@ class ECDPULevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Inject failure to the ndata BLT volume having the "
                                                                "UUID {}".format(self.uuids["ndata"][index]))
                 fun_test.sleep("Sleeping for a second to enable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                  self.uuids["ndata"][index])
+                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                     self.uuids["ndata"][index], "stats")
                 command_result = self.storage_controller["ndata"][index].peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
@@ -496,7 +505,8 @@ class ECDPULevelTestcase(FunTestCase):
                     initial_volume_status[combo][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         initial_volume_status[combo][mode][type][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type],
+                                                                     uuid, "stats")
                         command_result = {}
                         command_result = self.storage_controller[sc_type][index].peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
@@ -556,7 +566,8 @@ class ECDPULevelTestcase(FunTestCase):
                     final_volume_status[combo][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         final_volume_status[combo][mode][type][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type],
+                                                                     uuid, "stats")
                         command_result = {}
                         command_result = self.storage_controller[sc_type][index].peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
@@ -792,8 +803,8 @@ class ECDPULevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Disable fault_injection from the ndata BLT volume "
                                                                "having the UUID {}".format(self.uuids["ndata"][index]))
                 fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                  self.uuids["ndata"][index])
+                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                     self.uuids["ndata"][index], "stats")
                 command_result = self.storage_controller["ndata"][index].peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,

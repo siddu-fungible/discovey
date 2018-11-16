@@ -15,6 +15,7 @@ import logging
 import datetime
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import JSONField
+from web.web_global import *
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
@@ -26,12 +27,20 @@ class MetricChartStatus(models.Model):
     data_sets = JSONField()
     date_time = models.DateTimeField(default=datetime.now)
     score = models.FloatField(default=-1)
+    suite_execution_id = models.IntegerField(default=-1)
+    jenkins_job_id = models.IntegerField(default=-1)
+    lsf_job_id = models.IntegerField(default=-1)
+    build_status = models.CharField(max_length=15, default=RESULTS["UNKNOWN"])
+    test_case_id = models.IntegerField(default=-1)
     valid = models.BooleanField(default=False)
-    children_score_map = JSONField(default={})
     copied_score = models.BooleanField(default=False)  # If the score was copied from the last good score
     copied_score_disposition = models.IntegerField(default=0)  # 0 indicates current and last score is identical,
                                                                # 1 indicates last copied score was in upward trend
                                                                # -1 indicates last copied score was in downward trend
+    if get_default_db_engine() == DB_ENGINE_TYPE_POSTGRES:
+        children_score_map = JSONField(default={})
+    else:
+        children_score_map = models.TextField(default="{}")
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
@@ -77,6 +86,10 @@ class MetricChart(models.Model):
     penultimate_good_score = models.FloatField(default=-1)
     copied_score = models.BooleanField(default=False)
     copied_score_disposition = models.IntegerField(default=0)
+    last_suite_execution_id = models.IntegerField(default=-1)
+    last_jenkins_job_id = models.IntegerField(default=-1)
+    last_test_case_id = models.IntegerField(default=-1)
+    last_lsf_job_id = models.IntegerField(default=-1)
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -996,6 +1009,92 @@ class SoakClassicMallocPerformance(models.Model):
     input_app = models.CharField(max_length=30, default="soak_malloc_classic", choices=[(0, "soak_malloc_classic")])
     input_metric_name = models.CharField(max_length=40, default="soak_two_classic_malloc_free", choices=[(0, "soak_two_classic_malloc_free")])
     output_ops_per_sec = models.IntegerField(verbose_name="Soak Classic Malloc Test ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkPkeRsaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="pke_rsa_crt_dec_no_pad_soak", choices=[(0, "pke_rsa_crt_dec_no_pad_soak")])
+    input_metric_name = models.CharField(max_length=40, default="RSA_CRT_2048_decryptions", choices=[(0, "RSA_CRT_2048_decryptions")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkPkeRsa4kPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=50, default="pke_rsa_crt_dec_no_pad_4096_soak", choices=[(0, "pke_rsa_crt_dec_no_pad_4096_soak")])
+    input_metric_name = models.CharField(max_length=40, default="RSA_CRT_4096_decryptions", choices=[(0, "RSA_CRT_4096_decryptions")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkPkeEcdh256Performance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="pke_ecdh_soak_256", choices=[(0, "pke_ecdh_soak_256")])
+    input_metric_name = models.CharField(max_length=40, default="ECDH_P256", choices=[(0, "ECDH_P256")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkPkeEcdh25519Performance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="pke_ecdh_soak_25519", choices=[(0, "pke_ecdh_soak_25519")])
+    input_metric_name = models.CharField(max_length=40, default="ECDH_25519", choices=[(0, "ECDH_25519")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkCryptoPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="crypto_test_perf", choices=[(0, "crypto_test_perf")])
+    input_algorithm = models.CharField(max_length=30, default="", choices=[(0, "AES_ECB"), (1, "AES_GCM"), (2, "AES_CBC"), (3, "AES_XTS"), (4, "SHA_256")])
+    input_operation = models.CharField(max_length=30, default="", choices=[(0, "Encryption"), (1, "Decryption")])
+    input_pkt_size = models.IntegerField(verbose_name="bytes", default=-1, choices=[(0, "16"), (1, "256"), (2, "512"), (3, "1024"), (4, "4096"), (5, "8192"), (6, "16000")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    output_throughput = models.IntegerField(verbose_name="Mbps", default=-1)
+    output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
     tag = "analytics"
 
     def __str__(self):

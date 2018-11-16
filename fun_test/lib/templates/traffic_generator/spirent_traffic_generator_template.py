@@ -142,8 +142,6 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         file_created = False
         records = []
         try:
-            if len(latency_results) == 0 or len(jitter_results) == 0:
-                return True
             timestamp = get_current_time()
             for key in latency_results:
                 record = OrderedDict()
@@ -155,8 +153,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                 record['frame_size'] = frame_size
                 if flow_type:
                     record['flow_type'] = flow_type
-                if spray_enable:
-                    record['spray_enable'] = spray_enable
+                record['spray'] = spray_enable
                 if jitter_results:
                     if len(latency_results[key]['latency_count']) > 1:
                         record['throughput'] = float(latency_results[key]['throughput_count'])

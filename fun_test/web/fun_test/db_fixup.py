@@ -3,6 +3,7 @@ import django
 import json
 import random
 import re
+import pytz
 from datetime import datetime, timedelta
 from web.web_global import PRIMARY_SETTINGS_FILE
 from fun_global import get_localized_time, get_current_time
@@ -25,8 +26,9 @@ hour = 23
 second = 59
 
 def get_rounded_time(dt):
-    rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=second)
-    rounded_d = get_localized_time(rounded_d)
+    rounded_d = dt.replace(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=0, microsecond=0)
+    # rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=second)
+    # rounded_d = get_localized_time(rounded_d)
     return rounded_d
 
 def get_day_bounds(dt):
@@ -109,6 +111,9 @@ def prepare_status(chart, purge_old_status=False):
         chart.save()
         entries = MetricChartStatus.objects.filter(chart_name=chart.chart_name, metric_id=chart.metric_id)
         entries.all().delete()
+    else:
+        chart.score_cache_valid = False
+        chart.save()
     if chart.chart_name == "LSV":
         j = 0
     # print "Preparing status for: {}".format(chart.chart_name)
@@ -130,11 +135,16 @@ def prepare_status(chart, purge_old_status=False):
     result["penultimate_good_score"] = -1
     result["copied_score"] = False
     result["copied_score_disposition"] = 0
-    today = datetime.now()
+    # today = datetime.now()
+    today = datetime.now(pytz.timezone('US/Pacific'))
 
-    from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
+    # from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
+    from_date = today.replace(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=0, microsecond=0)
+    # from_date = get_localized_time(from_date)
 
-    yesterday = today - timedelta(days=0) # Just use today
+    # yesterday = today - timedelta(days=0) # Just use today
+    yesterday = today # - timedelta(days=0) # Just use today
+
     yesterday = get_rounded_time(yesterday)
     to_date = yesterday
     current_date = get_rounded_time(from_date)
@@ -189,14 +199,16 @@ def prepare_status(chart, purge_old_status=False):
                     scores[date_time] /= sum_of_child_weights
                 else:
                     scores[date_time] = 0
-                mcs = MetricChartStatus(date_time=date_time,
-                                        metric_id=metric_id,
-                                        chart_name=chart_name,
-                                        data_sets=data_sets,
-                                        score=scores[date_time],
-                                        children_score_map=result["children_score_map"])
-                print "Chart: {} Date: {} Score: {}".format(chart.chart_name, date_time, scores[date_time])
-                mcs.save()
+                chart_status = MetricChartStatus.objects.filter(date_time=date_time, metric_id=metric_id)
+                if not chart_status:
+                    mcs = MetricChartStatus(date_time=date_time,
+                                            metric_id=metric_id,
+                                            chart_name=chart_name,
+                                            data_sets=data_sets,
+                                            score=scores[date_time],
+                                            children_score_map=result["children_score_map"])
+                    print "Chart: {} Date: {} Score: {}".format(chart.chart_name, date_time, scores[date_time])
+                    mcs.save()
         else:
             # print "Reached leaf: {}".format(chart.chart_name)
 
@@ -282,35 +294,37 @@ def prepare_status(chart, purge_old_status=False):
                             penultimate_good_score = last_good_score
                         is_leaf_degrade = current_score < last_good_score
                         last_good_score = current_score
+                    else:
+                        is_leaf_degrade = current_score < penultimate_good_score
 
                     scores[current_date] = current_score
 
                 if data_set_mofified:
                     chart.data_sets = json.dumps(data_sets)
                     chart.save()
-                # print current_date, scores
-                print "Chart: {} Dtae: {} score: {}".format(chart.chart_name, current_date, scores[current_date])
-                mcs = MetricChartStatus(date_time=current_date,
-                                        metric_id=metric_id,
-                                        chart_name=chart_name,
-                                        data_sets=data_sets,
-                                        score=current_score)
 
-                current_date = current_date + timedelta(days=1)
-
-
-                if replacement:
-                    mcs.copied_score = True
-                    is_leaf_degrade = current_score < penultimate_good_score
-                    if (current_score - penultimate_good_score) > 0:
-                        mcs.copied_score_disposition = 1
-                    elif (current_score - penultimate_good_score) < 0:
-                        mcs.copied_score_disposition = -1
-                    else:
-                        mcs.copied_score_disposition = 0
-                mcs.save()
+                chart_status = MetricChartStatus.objects.filter(date_time=current_date, metric_id=metric_id)
+                if not chart_status:
+                    mcs = MetricChartStatus(date_time=current_date,
+                                            metric_id=metric_id,
+                                            chart_name=chart_name,
+                                            data_sets=data_sets,
+                                            score=current_score)
+                    if replacement:
+                        mcs.copied_score = True
+                        if (current_score - penultimate_good_score) > 0:
+                            mcs.copied_score_disposition = 1
+                        elif (current_score - penultimate_good_score) < 0:
+                            mcs.copied_score_disposition = -1
+                        else:
+                            mcs.copied_score_disposition = 0
+                    # print current_date, scores
+                    print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
+                                                                        scores[current_date])
+                    mcs.save()
                 if is_leaf_degrade or not current_score:
                     result["num_degrades"] = 1
+                current_date = current_date + timedelta(days=1)
 
 
         result["scores"] = scores
@@ -338,6 +352,12 @@ def prepare_status(chart, purge_old_status=False):
     # chart.last_build_status = result["last_build_status"]
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
     if chart_status_entries:
+        chart_status_entries[0].suite_execution_id = chart.last_suite_execution_id
+        chart_status_entries[0].jenkins_job_id = chart.last_jenkins_job_id
+        chart_status_entries[0].test_case_id = chart.last_test_case_id
+        chart_status_entries[0].lsf_job_id = chart.last_lsf_job_id
+        chart_status_entries[0].build_status = chart.last_build_status
+        chart_status_entries[0].save()
         result["last_good_score"] = chart_status_entries[0].score
         result["penultimate_good_score"] = chart_status_entries[1].score
         result["copied_score_disposition"] = chart_status_entries[0].copied_score_disposition
@@ -359,7 +379,7 @@ def prepare_status(chart, purge_old_status=False):
 if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=True)
+    prepare_status(chart=total_chart, purge_old_status=False)
 
 
 if __name__ == "__main2__":

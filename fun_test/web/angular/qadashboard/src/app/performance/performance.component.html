@@ -37,7 +37,34 @@
             <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
           </td>
 
-          <td [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+          <td *ngIf="!flatNode.node.leaf" [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+          <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0">
+            Bld:<label  data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
+                        [ngbTooltip]="FailedInfo" [autoClose]="'outside'" class="badge failed-label no-margin badge-danger">FAILED
+          </label>
+          </td>
+          <ng-template #FailedInfo>
+            <div *ngIf="passedDateTime" style="color: black;">
+              <b>Last Passed:</b><br> {{ passedDateTime }}
+            <a *ngIf="passedLsfUrl" [routerLink]="" (click)='openUrl(passedLsfUrl)'>Lsf log<br></a>
+         <a *ngIf="passedJenkinsUrl" [routerLink]="" (click)='openUrl(passedJenkinsUrl)'>Jenkins log<br></a>
+         <a *ngIf="passedRegressionUrl" [routerLink]="" (click)='openUrl(passedRegressionUrl)'>Regression log<br></a>
+            </div>
+      <hr>
+         <div *ngIf="currentJenkinsUrl || currentLsfUrl || currentRegressionUrl" style="color: black;">
+              <b>Current Failure:</b><br>
+            <a *ngIf="currentLsfUrl" [routerLink]="" (click)='openUrl(currentLsfUrl)'>Lsf log<br></a>
+         <a *ngIf="currentJenkinsUrl" [routerLink]="" (click)='openUrl(currentJenkinsUrl)'>Jenkins log<br></a>
+         <a *ngIf="currentRegressionUrl" [routerLink]="" (click)='openUrl(currentRegressionUrl)'>Regression log<br></a>
+            </div>
+      <hr>
+         <div *ngIf="failedDateTime" style="color: black;">
+              <b>First Failure:</b><br> {{ failedDateTime }}
+            <a *ngIf="failedLsfUrl" [routerLink]="" (click)='openUrl(failedLsfUrl)'>Lsf log<br></a>
+         <a *ngIf="failedJenkinsUrl" [routerLink]="" (click)='openUrl(failedJenkinsUrl)'>Jenkins log<br></a>
+         <a *ngIf="failedRegressionUrl" [routerLink]="" (click)='openUrl(failedRegressionUrl)'>Regression log<br></a>
+            </div>
+        </ng-template>
         </tr>
       </table>
     </div>
@@ -145,9 +172,9 @@
              style="background-color: whitesmoke; padding-left: 20px; padding-right: 20px">
           <div *ngIf="currentNode.grid.length">
             <div *ngFor="let row of currentNode.grid" class="row">
-              <div *ngFor="let node of row" class="" [ngStyle]="{'width': miniGridMaxWidth, 'padding': '20px'}">
+              <div *ngFor="let node of row" id="grid" [ngStyle]="{'width': miniGridMaxWidth, 'height': miniGridMaxHeight, 'padding': '20px'}">
                 <!-- Fun Metric Chart component -->
-                <fun-metric-chart style="max-height: 300px;" [id]="node.metricId" [minimal]="'true'"></fun-metric-chart>
+                <fun-metric-chart [id]="node.metricId" [minimal]="'true'"></fun-metric-chart>
               </div>
             </div>
             <div class="closed-section"></div>

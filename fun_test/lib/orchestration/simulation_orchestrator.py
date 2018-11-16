@@ -46,7 +46,8 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                              internal_ssh_port=None,
                              external_ssh_port=None,
                              qemu_num_cpus=2,
-                             qemu_memory=256):
+                             qemu_memory=256,
+                             vm_start_mode=None):
         instance = None
         if not internal_ssh_port:
             internal_ssh_port = self.QEMU_INSTANCE_PORT
@@ -63,14 +64,16 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
             function = 0  # Dima: The default F1 config creates 3 PFs (AFAIR 0, 3, 7), all on HU 0, controller 0.
             if fun_test.counter:
                 function = 4
-
+            sim_id = "epnvme_test"
+            if vm_start_mode == "VM_START_MODE_NORMAL":
+                sim_id = "nvme_test"
             command = './{}  -daemonize -vnc :1 -machine q35,iommu=on -smp {} -m {} ' \
                       '-L {} ' \
                       '-kernel {} ' \
                       '-append "root=/dev/vda rw highres=off ip=:::255.255.255.0:qemu-yocto:eth0:on oprofile.timer=1 console=ttyS0 console=tty0 mem={}M" ' \
                       '-drive file={},format=raw,if=none,id=rootfs ' \
                       '-device ioh3420,id=root_port1,addr=1c.0,port=1,chassis=1 ' \
-                      '-device nvme-rem-fe,hu=0,controller=0,sim_id=epnvme_test,bus=root_port1 -device virtio-rng-pci ' \
+                      '-device nvme-rem-fe,hu=0,controller=0,sim_id=0,bus=root_port1 -device virtio-rng-pci ' \
                       '-device virtio-blk-pci,drive=rootfs -redir tcp:{}::22 -redir tcp:40220::40220'.\
                 format(self.QEMU_PROCESS, qemu_num_cpus, qemu_memory, self.QEMU_BIOS, self.QEMU_KERNEL, qemu_memory,
                        self.QEMU_FS, internal_ssh_port)

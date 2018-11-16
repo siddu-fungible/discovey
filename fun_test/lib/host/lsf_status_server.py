@@ -7,7 +7,7 @@ import pytz
 from datetime import datetime
 from dateutil import parser
 
-LSF_WEB_SERVER_BASE_URL = "http://10.1.20.73:8080"
+LSF_WEB_SERVER_BASE_URL = "http://palladium-jobs.fungible.local:8080"
 
 
 class LsfStatusServer:
@@ -19,9 +19,26 @@ class LsfStatusServer:
         response = requests.get(url)
         return response.status_code == 200
 
+    def workaround(self, tags):
+        try:
+            for tag in tags:
+                past_jobs = self.get_jobs_by_tag(tag=tag)
+                if past_jobs:
+                    response_dict = json.loads(past_jobs)
+                    fun_test.log(json.dumps(response_dict, indent=4))
+                    past_jobs = response_dict["past_jobs"]
+                for past_job in past_jobs:
+                    job_id = past_job["job_id"]
+                    response = self.get_job_by_id(job_id=job_id)
+                    response = self.get_job_by_id(job_id=job_id)
+        except Exception as ex:
+            fun_test.critical("Workaround failed:" + str(ex))
+
     def _get(self, url):
         data = None
-        response = requests.get(url)
+        username = "jenkins.service"
+        password = "117071d3cb2cae6c964099664b271e4011"
+        response = requests.get(url, auth=(username, password))
         if response.status_code == 200:
             data = response.text
         return data
@@ -40,6 +57,9 @@ class LsfStatusServer:
             if local_past_jobs_index:
                 last_job = past_jobs[int(local_past_jobs_index)]
             job_id = last_job["job_id"]
+            jenkins_job_id = last_job["jenkins_build_number"]
+            result["job_id"] = job_id
+            result["jenkins_build_number"] = jenkins_job_id
             fun_test.add_checkpoint("Validating Job: {}".format(job_id))
             fun_test.log("Job Info: {}".format(fun_test.dict_to_json_string(last_job)))
             if validate:
@@ -54,7 +74,7 @@ class LsfStatusServer:
                     response_dict = response_dict["job_dict"]
                     print(json.dumps(response_dict, indent=4))
                     return_code = int(response_dict["return_code"])
-                    fun_test.test_assert(not return_code, "Valid return code")
+                    # fun_test.test_assert(not return_code, "Valid return code")
                     result = last_job
                 except Exception as ex:
                     fun_test.log("Actual response:" + response)
@@ -62,7 +82,7 @@ class LsfStatusServer:
 
                 # last_job = response
 
-                fun_test.test_assert("output_text" in last_job, "output_text found in job info: {}".format(job_id))
+                # fun_test.test_assert("output_text" in last_job, "output_text found in job info: {}".format(job_id))
 
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -131,12 +151,18 @@ class LsfStatusServer:
         result = {}
         if "completion_date" in job_info:
             completion_date = "20" + job_info["completion_date"]
+            jenkins_url = job_info["jenkins_url"]
+            build_properties_url = "{}artifact/bld_props.json".format(jenkins_url)
+            build_properties = self._get(url=build_properties_url)
+            if build_properties == None:
+                build_properties = ""
             add_jenkins_job_id_map(jenkins_job_id=job_info["jenkins_build_number"],
                                                  fun_sdk_branch=job_info["branch_funsdk"],
                                                  git_commit=job_info["git_commit"],
                                                  software_date=job_info["software_date"],
                                                  hardware_version=job_info["hardware_version"],
-                                                 completion_date=completion_date)
+                                                 completion_date=completion_date,
+                                                 build_properties=build_properties)
             dt = get_localized_time(datetime.strptime(completion_date, "%Y-%m-%d %H:%M"))
             response = self.get_job_by_id(job_id=job_info["job_id"])
             response = self.get_job_by_id(job_id=job_info["job_id"])

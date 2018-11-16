@@ -354,3 +354,27 @@ input:checked + .slider:before {
     content: "\e080";
     color: #337ab7;
 }
+.panel-with-table {
+    width: 1250px;
+}
+.no-wrap {
+  white-space: nowrap;
+}
+.word-break {
+  word-break: break-all;
+}
+.x-style {
+  color: red;
+  font-weight: 500;
+  vertical-align: middle;
+}
+.no-padding {
+  padding: 0;
+}
+.no-margin {
+  margin: 0;
+}
+
+.component {
+  padding-top: 70px;
+}

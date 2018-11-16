@@ -7,11 +7,12 @@ import os
 from fun_settings import COMMON_WEB_LOGGER_NAME
 from django.db import models
 from fun_global import RESULTS
-from fun_global import is_performance_server
+from fun_global import is_performance_server, get_current_time
 from web.fun_test.jira_models import *
+from web.fun_test.demo1_models import *
 from rest_framework.serializers import ModelSerializer
-from datetime import datetime
-import logging
+from datetime import datetime, timedelta
+from scheduler.scheduler_states import SchedulerStates
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -164,6 +165,7 @@ class JenkinsJobIdMap(models.Model):
     software_date = models.IntegerField(default=0)
     hardware_version = models.TextField(default="")
     completion_date = models.TextField(default="")
+    build_properties = models.TextField(default="")
 
     def __str__(self):
         return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
@@ -177,8 +179,28 @@ class JiraCache(models.Model):
     jira_id = models.IntegerField()
     module = models.CharField(max_length=100, default="networking")
 
+
+class RegresssionScripts(models.Model):
+    """
+    This is probably a temporary model. We can store the path to several scripts that can be considered as regression
+    scripts
+    """
+    script_path = models.TextField(unique=True)
+    module = models.TextField(default="['storage']")  # Refers to class Module
+
+
+class SchedulerInfo(models.Model):
+    """
+    A place to store scheduler state such as time started, time restarted, current state
+    """
+    state = models.CharField(max_length=30, default=SchedulerStates.SCHEDULER_STATE_UNKNOWN)
+    last_start_time = models.DateTimeField(default=datetime.now)
+    last_restart_request_time = models.DateTimeField(default=datetime.now)
+
+
 if is_performance_server():
     from web.fun_test.metrics_models import *
+
 
 if __name__ == "__main__":
     #import django

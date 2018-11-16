@@ -27,26 +27,27 @@ from django.views.generic import RedirectView
 
 
 regression_urls = [
-    url(r'^$', regression_views.index),
-    url(r'^completed_jobs$', regression_views.completed_jobs),
-    url(r'^pending_jobs$', regression_views.pending_jobs),
-    url(r'^jenkins_jobs', regression_views.jenkins_jobs),
+    url(r'^$', views.angular_home),
+    url(r'^completed_jobs$', views.angular_home),
+    url(r'^pending_jobs$', views.angular_home),
+    url(r'^jenkins_jobs', views.angular_home),
     url(r'^jobs_by_tag/(.*)$', regression_views.jobs_by_tag),
     url(r'^suite_executions/(\d+)/(\d+)/(.*)$', regression_views.suite_executions),
     url(r'^suite_detail/(\d+)$', regression_views.suite_detail),
     url(r'^suite_execution/(\d+)$', regression_views.suite_execution),
+    url(r'^suite_execution_attributes/(\d+)$', regression_views.suite_execution_attributes),
     url(r'^last_jenkins_hourly_execution_status', regression_views.last_jenkins_hourly_execution_status),
     url(r'^suite_executions_count/(.*)$', regression_views.suite_executions_count),
     url(r'^test_case_execution/(\d+)/(\d+)$', regression_views.test_case_execution),
     url(r'^suite_re_run/(\d+)$', regression_views.suite_re_run),
     url(r'^test_case_re_run$', regression_views.test_case_re_run),
     url(r'^log_path$', regression_views.log_path),
-    url(r'^submit_job_page', regression_views.submit_job_page),
+    url(r'^submit_job_page', views.angular_home),
     url(r'^submit_job$', regression_views.submit_job),
     url(r'^suites$', regression_views.suites),
     url(r'^static_serve_log_directory/(\d+)$', regression_views.static_serve_log_directory),
     url(r'^kill_job/(\d+)$', regression_views.kill_job),
-    url(r'^tags', regression_views.tags),
+    url(r'^tags$', regression_views.tags),
     url(r'^engineers', regression_views.engineers),
     url(r'^update_test_case_execution$', regression_views.update_test_case_execution),
     url(r'^catalog_test_case_execution_summary_result/(.*)/(.*)$',
@@ -57,7 +58,9 @@ regression_urls = [
     url(r'^jenkins_job_id_maps$', regression_views.jenkins_job_id_map),
     url(r'^build_to_date_map$', regression_views.build_to_date_map),
     url(r'^sampler$', regression_views.sampler),
-    url(r'^sampler2$', regression_views.sampler2)
+    url(r'^sampler2$', regression_views.sampler2),
+    url(r'^scripts_by_module/(.*)$', regression_views.scripts_by_module),
+    url(r'^\w+$', views.angular_home)
 
 ]
 
@@ -106,6 +109,8 @@ metric_urls = [
     url(r'^charts_info$', metrics_views.charts_info),
     url(r'^chart_info$', metrics_views.chart_info),
     url(r'^data$', metrics_views.data),
+    url(r'^past_status$', metrics_views.get_past_build_status),
+    url(r'^data_by_model$', metrics_views.get_data_by_model),
     url(r'^metric_by_id$', metrics_views.metric_by_id),
     url(r'^status$', metrics_views.status),
     url(r'^charts_by_module$', metrics_views.charts_by_module),
@@ -137,12 +142,18 @@ upgrade_urls = [
 ]
 
 demo_urls = [
-    url(r'^.*$', demo_views.home)
+    url(r'^demo1/.*$', demo_views.home),
+    url(r'^schedule_fio_job$', demo_views.schedule_fio_job),
+    url(r'^bg_job_status$', demo_views.job_status),
+    url(r'^add_controller$', demo_views.add_controller),
+    url(r'^set_controller_status$', demo_views.set_controller_status),
+    url(r'^get_controllers$', demo_views.get_controllers),
+    url(r'^get_container_logs', demo_views.get_container_logs)
 ]
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^performance/', metrics_views.summary_page),
+    url(r'^performance/', views.angular_home),
     url(r'^publish', views.publish, name='publish'),
     url(r'^get_script_content', views.get_script_content, name='get_script_content'),
     # url(r'^tools/', include('tools.urls')),
