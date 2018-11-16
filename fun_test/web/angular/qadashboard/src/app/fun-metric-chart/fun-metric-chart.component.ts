@@ -67,7 +67,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingOwner = false;
     this.inner = {};
     this.inner.currentDescription = "TBD";
-    this.inner.currentOwner = "Bertrand Serlet(bertrand.serlet@fungible.com)";
+    this.inner.currentOwner = "Bertrand Serlet (bertrand.serlet@fungible.com)";
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
