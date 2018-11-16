@@ -1,6 +1,6 @@
 <fun-spinner [status]="status"></fun-spinner>
-<div *ngIf="status === null">
-  <div style="max-width: 1000px; margin: auto;">
+<div *ngIf="status === null" class="chart-div">
+  <div style="max-width: 1000px; height: 100%; margin: auto;">
     <br>
     <!-- showing week month and all time mode for leafs -->
     <div *ngIf="!minimal" [ngSwitch]="timeMode">
@@ -67,7 +67,7 @@
   </div>
   <div class="closed-section"></div>
   <!-- Show tables below the leaf chart -->
-  <div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+  <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
     <div *ngIf="!minimal">
     <span class="a-text">
       <a *ngIf="!showingTable" [routerLink]="" (click)="showTables()">Show Table </a>
@@ -83,7 +83,7 @@
     </div>
   </div>
   <!-- configure button below the leaf chart -->
-  <div *ngIf="modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+  <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
     <div *ngIf="!minimal">
     <span class="a-text">
       <a [routerLink]="" (click)="showConfigure()">Configure </a>
