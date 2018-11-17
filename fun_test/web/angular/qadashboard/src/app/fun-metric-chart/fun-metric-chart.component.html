@@ -53,8 +53,8 @@
       <div *ngIf="modelName != 'MetricContainer'" style="float: right">
         <i *ngIf="!editingOwner" class="grey-text">Owner: <span (click)="editingOwner = true">{{ inner.currentOwner }}</span></i>
         <i *ngIf="editingOwner" style="font-size: 95%;">Owner: <input type="text" class="owner-text" [(ngModel)]="inner.currentOwner">
-          <span><i class="fa fa-check fa-fw" (click)="submit()"></i></span>
-          <span><i class="fa fa-times fa-fw" (click)="editingOwner = false"></i></span></i>
+          <span><i class="fa fa-check fa-fw green-tick" (click)="submit()"></i></span>
+          <span><i class="fa fa-times fa-fw red-close" (click)="editingOwner = false"></i></span></i>
         <br>
     </div>
       <br>
