@@ -92,7 +92,7 @@ class AssetManager:
         return asset
 
     @fun_test.safe
-    def get_orchestrator(self, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER, index=0):
+    def get_orchestrator(self, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER, index=0, dut_obj=None):
         fun_test.debug("Getting orchestrator")
         orchestrator = None
         try:
@@ -108,12 +108,19 @@ class AssetManager:
                 fun_test.log("Setting up the integration container for index: {}".format(index))
                 container_name = "{}_{}_{}".format("integration_basic", fun_test.get_suite_execution_id(), index)
 
+                vm_host_os = None   # TODO: Hack needed until asset_manager is implemented
+                if dut_obj.interfaces:
+                    peer_info = dut_obj.interfaces[0].peer_info
+                    if hasattr(peer_info, "vm_host_os"):
+                        vm_host_os = peer_info.vm_host_os
+
                 container_asset = self.docker_host.setup_storage_container(container_name=container_name,
                                                                            ssh_internal_ports=[22],
                                                                            qemu_internal_ports=[50001, 50002,
                                                                                                 50003, 50004],
                                                                            dpcsh_internal_ports=[
-                                                                               F1.INTERNAL_DPCSH_PORT])
+                                                                               F1.INTERNAL_DPCSH_PORT],
+                                                                           vm_host_os=vm_host_os)
                 container_asset["host_type"] = self.docker_host.type # DESKTOP, BARE_METAL
 
                 fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(container_name))
