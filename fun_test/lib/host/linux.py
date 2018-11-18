@@ -1072,9 +1072,9 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, timeout=60):
+    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60):
         transfer_complete = False
-        scp_command = "scp %s %s@%s:%s" % (source_file_path, target_username, target_ip, target_file_path)
+        scp_command = "scp -P %d %s %s@%s:%s" % (target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 
