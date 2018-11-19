@@ -824,12 +824,13 @@ class CmdController(Cmd):
         pps_en = args.pps_en
         pps_interval = args.pps_interval
         pps_burst = args.pps_burst
+        pps_tick = args.pps_tick
         sampler_en = args.sampler_en
         sampler_rate = args.sampler_rate
         sampler_run_sz = args.sampler_run_sz
         first_cell_only = args.first_cell_only
         self._sample_cmd_obj.set_sample(id=id, fpg=fpg, dest=dest, acl=acl, flag_mask=flag_mask, hu=hu, psw_drop=psw_drop,
-                                        pps_en=pps_en, pps_interval=pps_interval, pps_burst=pps_burst,
+                                        pps_en=pps_en, pps_interval=pps_interval, pps_burst=pps_burst, pps_tick=pps_tick,
                                         sampler_en=sampler_en, sampler_rate=sampler_rate, sampler_run_sz=sampler_run_sz,
                                         first_cell_only=first_cell_only, mode=mode)
 
