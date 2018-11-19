@@ -54,6 +54,7 @@ WRO_IN_NFCP_PKTS = "wroin_nfcp_pkts"
 WRO_IN_PKTS = "wroin_pkts"
 WRO_OUT_WUS = "wroout_wus"
 WRO_WU_COUNT_VPP = "wrowu_cnt_vpp"
+PSW_SAMPLED_PACKET_COUNT = 'sampled_pkt'
 
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1
@@ -321,7 +322,7 @@ def get_diff_stats(old_stats, new_stats, stats_list=[]):
         if stats_list:
             for stat in stats_list:
                 fun_test.simple_assert(stat in new_stats, "Stat %s not present in new stats" % stat)
-                if stat in old_stats:
+                if (stat in old_stats) and (old_stats[stat] is not None):
                     result[stat] = int(new_stats[stat]) - int(old_stats[stat])
                 else:
                     result[stat] = int(new_stats[stat])
