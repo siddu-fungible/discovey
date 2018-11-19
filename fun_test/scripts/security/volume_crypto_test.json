@@ -16,14 +16,17 @@
     "warm_up_fio_cmd_args": {
       "bs": "4k",
       "iodepth": 1,
-      "size": "4m",
+      "size": "1m",
       "rw": "write",
       "io_queues": 2,
       "timeout": 120
     },
     "fio_cmd_args": {
       "io_queues": 2,
-      "size": "1m",
+      "size": "4m",
+      "verify":"sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
       "timeout": 120
     },
     "fio_modes": [
@@ -66,6 +69,9 @@
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
+      "verify":"sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
       "timeout": 120
     },
     "fio_modes": [
