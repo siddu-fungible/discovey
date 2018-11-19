@@ -88,6 +88,43 @@
       "(16, 1)",
       "(32, 1)"
     ]
+  },
+  "WrongKeySize": {
+    "volume_details": {
+      "ns_id": 1,
+      "type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "capacity": 1073741824,
+      "block_size": 4096,
+      "name": "thin-block1",
+      "encrypt": true
+    },
+    "key_size": 40,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {
+      "bs": "4k",
+      "iodepth": 1,
+      "size": "1m",
+      "rw": "write",
+      "io_queues": 2,
+      "timeout": 120
+    },
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify":"sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ]
   }
 }
 

@@ -369,8 +369,31 @@ class BLTFioTestKey512(BLTCryptoVolumeTestCase):
         super(BLTFioTestKey512, self).cleanup()
 
 
+class WrongKeySize(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Create volume with unsupported size key.",
+                              steps='''
+        1. Create a local thin block volume with encryption using 512 bit key in dut instances 0.
+        2. Export (Attach) this local thin volume to the external Linux instance/container. 
+        3. Run the FIO with verify for various block size and IO depth from the 
+        external Linux server. 
+        ''')
+
+    def setup(self):
+        super(WrongKeySize, self).setup()
+
+    def run(self):
+        super(WrongKeySize, self).run()
+
+    def cleanup(self):
+        super(WrongKeySize, self).cleanup()
+
+
 if __name__ == "__main__":
     bltscript = BLTCryptoVolumeScript()
-    bltscript.add_test_case(BLTFioTestKey256())
-    bltscript.add_test_case(BLTFioTestKey512())
+#    bltscript.add_test_case(BLTFioTestKey256())
+#    bltscript.add_test_case(BLTFioTestKey512())
+    bltscript.add_test_case(WrongKeySize())
     bltscript.run()
