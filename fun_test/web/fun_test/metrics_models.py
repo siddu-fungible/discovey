@@ -90,6 +90,7 @@ class MetricChart(models.Model):
     last_jenkins_job_id = models.IntegerField(default=-1)
     last_test_case_id = models.IntegerField(default=-1)
     last_lsf_job_id = models.IntegerField(default=-1)
+    owner_info = models.TextField(default="UNKNOWN")
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)

@@ -48,8 +48,15 @@
         <cancel-btn-link [text]="'close'" (onClick)="closePointInfo()"></cancel-btn-link>
       </div>
     </div>
-    <!-- showing description only when leaf charts are clicked -->
+    <!-- showing owner info and description only when leaf charts are clicked -->
     <div *ngIf="!minimal">
+      <div *ngIf="modelName != 'MetricContainer'" style="float: right">
+        <i *ngIf="!editingOwner" class="grey-text">Owner: <span (click)="editingOwner = true">{{ inner.currentOwner }}</span></i>
+        <i *ngIf="editingOwner" style="font-size: 95%;">Owner: <input type="text" class="owner-text" [(ngModel)]="inner.currentOwner">
+          <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
+          <span><i class="fa fa-times fa-fw close-color" (click)="editingOwner = false"></i></span></i>
+        <br>
+    </div>
       <br>
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
@@ -62,7 +69,6 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
-    </div>
     <br>
   </div>
   <div class="closed-section"></div>
