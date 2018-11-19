@@ -244,13 +244,13 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     fio_output[combo][mode] = {}
                     fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip, rw=mode,
                                                                          bs=fio_block_size, iodepth=fio_iodepth,
-                                                                         verify="sha1", rwmixread=25,
+                                                                         rwmixread=25,
                                                                          **self.fio_cmd_args)
                 else:
                     fio_output[combo][mode] = {}
                     fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip, rw=mode,
                                                                          bs=fio_block_size, iodepth=fio_iodepth,
-                                                                         verify="sha1", **self.fio_cmd_args)
+                                                                         **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
