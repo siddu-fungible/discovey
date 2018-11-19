@@ -2230,8 +2230,8 @@ class SampleCommands(object):
             self.dpc_client.disconnect()
 
     def set_sample(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
-                           pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None, sampler_run_sz=None,
-                           first_cell_only=None, mode=0):
+                   pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None, sampler_run_sz=None,
+                   first_cell_only=None, mode=0, pps_tick=None):
         try:
             cmd_arg_dict = {"id": id, "fpg": fpg, "mode": mode, "dest": dest}
             if acl:
@@ -2243,9 +2243,13 @@ class SampleCommands(object):
             if psw_drop:
                 cmd_arg_dict['psw_drop'] = psw_drop
             if pps_en:
+                cmd_arg_dict['pps_en'] = pps_en
+            if pps_interval:
                 cmd_arg_dict['pps_interval'] = pps_interval
             if pps_burst:
                 cmd_arg_dict['pps_burst'] = pps_burst
+            if pps_tick:
+                cmd_arg_dict['pps_tick'] = pps_tick
             if sampler_en:
                 cmd_arg_dict['sampler_en'] = sampler_en
             if sampler_rate:
