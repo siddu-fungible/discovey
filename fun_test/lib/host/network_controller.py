@@ -1129,7 +1129,7 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def disable_syslog(self, level=3):
+    def set_syslog_level(self, level=3):
         result = False
         try:
             cmd = ["params/syslog/level", level]
@@ -1225,4 +1225,116 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return lso_set
 
+    def _enable_sample_rule(self, *args):
+        result = None
+        try:
+            result = self.json_execute(verb='sample', data=args[0])
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
+    def add_ingress_sample_rule(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
+                                pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None, sampler_run_sz=None,
+                                first_cell_only=None):
+        result = None
+        try:
+            cmd_arg_dict = {"id": id, "fpg": fpg, "mode": 0, "dest": dest}
+            if acl:
+                cmd_arg_dict['acl'] = acl
+            if flag_mask:
+                cmd_arg_dict['flag_mask'] = flag_mask
+            if hu:
+                cmd_arg_dict['hu'] = hu
+            if psw_drop:
+                cmd_arg_dict['psw_drop'] = psw_drop
+            if pps_en:
+                cmd_arg_dict['pps_interval'] = pps_interval
+            if pps_burst:
+                cmd_arg_dict['pps_burst'] = pps_burst
+            if sampler_en:
+                cmd_arg_dict['sampler_en'] = sampler_en
+            if sampler_rate:
+                cmd_arg_dict['sampler_rate'] = sampler_rate
+            if sampler_run_sz:
+                cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
+            if first_cell_only:
+                cmd_arg_dict['first_cell_only'] = first_cell_only
+
+            result = self._enable_sample_rule(cmd_arg_dict)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def add_egress_sample_rule(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
+                               pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None,
+                               sampler_run_sz=None, first_cell_only=None):
+        result = None
+        try:
+            cmd_arg_dict = {"id": id, "fpg": fpg, "mode": 1, "dest": dest}
+            if acl:
+                cmd_arg_dict['acl'] = acl
+            if flag_mask:
+                cmd_arg_dict['flag_mask'] = flag_mask
+            if hu:
+                cmd_arg_dict['hu'] = hu
+            if psw_drop:
+                cmd_arg_dict['psw_drop'] = psw_drop
+            if pps_en:
+                cmd_arg_dict['pps_interval'] = pps_interval
+            if pps_burst:
+                cmd_arg_dict['pps_burst'] = pps_burst
+            if sampler_en:
+                cmd_arg_dict['sampler_en'] = sampler_en
+            if sampler_rate:
+                cmd_arg_dict['sampler_rate'] = sampler_rate
+            if sampler_run_sz:
+                cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
+            if first_cell_only:
+                cmd_arg_dict['first_cell_only'] = first_cell_only
+
+            result = self._enable_sample_rule(cmd_arg_dict)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def disable_sample_rule(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
+                            pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None,
+                            sampler_run_sz=None, first_cell_only=None):
+        result = None
+        try:
+            cmd_arg_dict = {"id": id, "fpg": fpg, "mode": 2, "dest": dest}
+            if acl:
+                cmd_arg_dict['acl'] = acl
+            if flag_mask:
+                cmd_arg_dict['flag_mask'] = flag_mask
+            if hu:
+                cmd_arg_dict['hu'] = hu
+            if psw_drop:
+                cmd_arg_dict['psw_drop'] = psw_drop
+            if pps_en:
+                cmd_arg_dict['pps_interval'] = pps_interval
+            if pps_burst:
+                cmd_arg_dict['pps_burst'] = pps_burst
+            if sampler_en:
+                cmd_arg_dict['sampler_en'] = sampler_en
+            if sampler_rate:
+                cmd_arg_dict['sampler_rate'] = sampler_rate
+            if sampler_run_sz:
+                cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
+            if first_cell_only:
+                cmd_arg_dict['first_cell_only'] = first_cell_only
+
+            result = self._enable_sample_rule(cmd_arg_dict)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def show_sample_stats(self):
+        stats = None
+        try:
+            result = self.json_execute(verb='sample', data=['show'], command_duration=5)
+            fun_test.simple_assert(result['status'], "Stats fetched")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
