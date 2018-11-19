@@ -1129,7 +1129,7 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def disable_syslog(self, level=3):
+    def set_syslog_level(self, level=3):
         result = False
         try:
             cmd = ["params/syslog/level", level]
