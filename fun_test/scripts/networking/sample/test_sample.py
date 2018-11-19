@@ -3,6 +3,10 @@ Author: Rushikesh Pendse
 
 Includes Following Sampling Cases
 1. SampleIngressFPGtoFPG
+2. SampleIngressFPGtoFPGWithRate
+3. SampleFCOIngressFPGtoFPG
+4. SamplePPStoFPG
+5. SampleEgressFPGtoFPG
 """
 
 from lib.system.fun_test import *
@@ -128,7 +132,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
     header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
 
     def describe(self):
-        self.set_test_details(id=1, summary="Test Ingress Traffic Sampling",
+        self.set_test_details(id=1, summary="Test Ingress Traffic Sampling FPG to FPG",
                               steps="""
                               1. Create TCP frame stream on Tx Port with following settings
                                  a. Frame Size Mode: Random Min: 78 B and Max: 1500 B
@@ -187,9 +191,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
         self.header_objs['ip_obj'] = ip_header_obj
         self.header_objs['tcp_obj'] = tcp_header_obj
 
-    def run(self):
         dut_rx_port = dut_config['ports'][0]
-        dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
 
         checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
@@ -197,6 +199,11 @@ class SampleIngressFPGtoFPG(FunTestCase):
         result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
                                                                 fpg=dut_rx_port, dest=dut_sample_port)
         fun_test.test_assert(result['status'], checkpoint)
+
+    def run(self):
+        dut_rx_port = dut_config['ports'][0]
+        dut_tx_port = dut_config['ports'][1]
+        dut_sample_port = dut_config['ports'][2]
 
         checkpoint = "Clear FPG port stats on DUT"
         for port_num in dut_config['ports']:
@@ -335,8 +342,335 @@ class SampleIngressFPGtoFPG(FunTestCase):
         network_controller_obj.disable_sample_rule(id=self.sample_id, fpg=dut_rx_port, dest=dut_sample_port)
         fun_test.add_checkpoint(checkpoint)
 
+        checkpoint = "Delete the stream"
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+
+class SampleIngressFPGtoFPGWithRate(SampleIngressFPGtoFPG):
+    l2_config = None
+    l3_config = None
+    load = 1
+    load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+    stream_obj = None
+    sample_id = 51
+    header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
+
+    def describe(self):
+        self.set_test_details(id=2, summary="Test Ingress Traffic Sampling FPG to FPG with Rate",
+                              steps="""
+                              1. Create TCP frame stream on Tx Port with following settings
+                                 a. Frame Size Mode: Random Min: 78 B and Max: 1500 B
+                                 b. Payload Type: PRBS
+                                 c. Insert Signature
+                                 d. Load: 1 Mbps
+                              2. Configure ingress sampling rule on FPG5 and dest with different sampler rate 
+                              3. Start Traffic for %d secs
+                              4. Start packet capture sampling port 
+                              5. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count
+                              6. Ensure Tx frame count must be equal to sample frame count
+                              7. Ensure PSW sample_pkt counter must be equal to no of frames transmitted
+                              8. Ensure sample counter for a rule must be equal to Tx frames  
+                              9. Ensure on spirent Tx port frames must be equal to Rx port frames and sample port 
+                                  frames
+                              10. Ensure no errors are seen on spirent ports
+                              11. Ensure sample packets are exactly same as ingress packets 
+                              """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv4']
+
+        checkpoint = "Create stream on %s port" % tx_port
+        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
+                                      insert_signature=True,
+                                      load=self.load,
+                                      load_unit=self.load_type,
+                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
+                                      min_frame_length=78, max_frame_length=1500)
+        stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
+                                                             port_handle=tx_port)
+        fun_test.test_assert(stream_created, checkpoint)
+
+        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+                                       ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+
+        checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ethernet_obj, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+                                   protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ip_header_obj, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        checkpoint = "Add TCP header"
+        tcp_header_obj = TCP()
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=tcp_header_obj, update=False)
+        fun_test.simple_assert(result, checkpoint)
+
+        self.header_objs['eth_obj'] = ethernet_obj
+        self.header_objs['ip_obj'] = ip_header_obj
+        self.header_objs['tcp_obj'] = tcp_header_obj
+
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
+                                                                                             dut_sample_port)
+        result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
+                                                                fpg=dut_rx_port, dest=dut_sample_port,
+                                                                sampler_rate="100", sampler_en=1)
+        fun_test.test_assert(result['status'], checkpoint)
+
+
+class SampleFCOIngressFPGtoFPG(SampleIngressFPGtoFPG):
+    l2_config = None
+    l3_config = None
+    load = 1
+    load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+    stream_obj = None
+    sample_id = 52
+    header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
+
+    def describe(self):
+        self.set_test_details(id=3, summary="Test Ingress Traffic Sampling with first cell only FPG to FPG with Rate",
+                              steps="""
+                                  1. Create TCP frame stream on Tx Port with following settings
+                                     a. Frame Size Mode: Random Min: 78 B and Max: 1500 B
+                                     b. Payload Type: PRBS
+                                     c. Insert Signature
+                                     d. Load: 1 Mbps
+                                  2. Configure ingress sampling rule on FPG5 and dest with first cell only enabled 
+                                  3. Start Traffic for %d secs
+                                  4. Start packet capture sampling port 
+                                  5. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count
+                                  6. Ensure Tx frame count must be equal to sample frame count
+                                  7. Ensure PSW sample_pkt counter must be equal to no of frames transmitted
+                                  8. Ensure sample counter for a rule must be equal to Tx frames  
+                                  9. Ensure on spirent Tx port frames must be equal to Rx port frames and sample port 
+                                      frames
+                                  10. Ensure no errors are seen on spirent ports
+                                  11. Ensure sample packets are exactly same as ingress packets 
+                                  """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv4']
+
+        checkpoint = "Create stream on %s port" % tx_port
+        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
+                                      insert_signature=True,
+                                      load=self.load,
+                                      load_unit=self.load_type,
+                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
+                                      min_frame_length=78, max_frame_length=1500)
+        stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
+                                                             port_handle=tx_port)
+        fun_test.test_assert(stream_created, checkpoint)
+
+        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+                                       ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+
+        checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ethernet_obj, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+                                   protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ip_header_obj, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        checkpoint = "Add TCP header"
+        tcp_header_obj = TCP()
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=tcp_header_obj, update=False)
+        fun_test.simple_assert(result, checkpoint)
+
+        self.header_objs['eth_obj'] = ethernet_obj
+        self.header_objs['ip_obj'] = ip_header_obj
+        self.header_objs['tcp_obj'] = tcp_header_obj
+
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d with first cell only" % (
+            dut_rx_port, dut_sample_port)
+        result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
+                                                                fpg=dut_rx_port, dest=dut_sample_port,
+                                                                first_cell_only=1)
+        fun_test.test_assert(result['status'], checkpoint)
+
+
+class SamplePPStoFPG(SampleIngressFPGtoFPG):
+    l2_config = None
+    l3_config = None
+    load = 1
+    load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+    stream_obj = None
+    sample_id = 53
+    header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
+
+    def describe(self):
+        self.set_test_details(id=4, summary="Test Ingress Traffic Sampling with pps",
+                              steps="""
+                                      1. Create TCP frame stream on Tx Port with following settings
+                                         a. Frame Size Mode: Random Min: 78 B and Max: 1500 B
+                                         b. Payload Type: PRBS
+                                         c. Insert Signature
+                                         d. Load: 1 Mbps
+                                      2. Configure ingress sampling rule on FPG5 and dest with pps burst and pps interval  
+                                      3. Start Traffic for %d secs
+                                      4. Start packet capture sampling port 
+                                      5. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count
+                                      6. Ensure Tx frame count must be equal to sample frame count
+                                      7. Ensure PSW sample_pkt counter must be equal to no of frames transmitted
+                                      8. Ensure sample counter for a rule must be equal to Tx frames  
+                                      9. Ensure on spirent Tx port frames must be equal to Rx port frames and sample port 
+                                          frames
+                                      10. Ensure no errors are seen on spirent ports
+                                      11. Ensure sample packets are exactly same as ingress packets 
+                                      """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv4']
+
+        checkpoint = "Create stream on %s port" % tx_port
+        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
+                                      insert_signature=True,
+                                      load=self.load,
+                                      load_unit=self.load_type,
+                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
+                                      min_frame_length=78, max_frame_length=1500)
+        stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
+                                                             port_handle=tx_port)
+        fun_test.test_assert(stream_created, checkpoint)
+
+        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+                                       ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+
+        checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ethernet_obj, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+                                   protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ip_header_obj, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        checkpoint = "Add TCP header"
+        tcp_header_obj = TCP()
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=tcp_header_obj, update=False)
+        fun_test.simple_assert(result, checkpoint)
+
+        self.header_objs['eth_obj'] = ethernet_obj
+        self.header_objs['ip_obj'] = ip_header_obj
+        self.header_objs['tcp_obj'] = tcp_header_obj
+
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d with pps burst: 10 " \
+                     "pps_interval: 1000000 " % (dut_rx_port, dut_sample_port)
+        result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
+                                                                fpg=dut_rx_port, dest=dut_sample_port,
+                                                                pps_burst=10, pps_interval=1000000, pps_en=1)
+        fun_test.test_assert(result['status'], checkpoint)
+
+
+class SampleEgressFPGtoFPG(SampleIngressFPGtoFPG):
+    l2_config = None
+    l3_config = None
+    load = 1
+    load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
+    stream_obj = None
+    sample_id = 54
+    header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
+
+    def describe(self):
+        self.set_test_details(id=5, summary="Test Egress Traffic Sampling FPG to FPG",
+                              steps="""
+                                      1. Create TCP frame stream on Tx Port with following settings
+                                         a. Frame Size Mode: Random Min: 78 B and Max: 1500 B
+                                         b. Payload Type: PRBS
+                                         c. Insert Signature
+                                         d. Load: 1 Mbps
+                                      2. Configure egress sampling rule on FPG5 and dest FPG15 
+                                      3. Start Traffic for %d secs
+                                      4. Start packet capture sampling port 
+                                      5. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count
+                                      6. Ensure Tx frame count must be equal to sample frame count
+                                      7. Ensure PSW sample_pkt counter must be equal to no of frames transmitted
+                                      8. Ensure sample counter for a rule must be equal to Tx frames  
+                                      9. Ensure on spirent Tx port frames must be equal to Rx port frames and sample port 
+                                          frames
+                                      10. Ensure no errors are seen on spirent ports
+                                      11. Ensure sample packets are exactly same as ingress packets 
+                                      """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv4']
+
+        checkpoint = "Create stream on %s port" % tx_port
+        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
+                                      insert_signature=True,
+                                      load=self.load,
+                                      load_unit=self.load_type,
+                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
+                                      min_frame_length=78, max_frame_length=1500)
+        stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
+                                                             port_handle=tx_port)
+        fun_test.test_assert(stream_created, checkpoint)
+
+        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+                                       ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+
+        checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ethernet_obj, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+                                   protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ip_header_obj, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        checkpoint = "Add TCP header"
+        tcp_header_obj = TCP()
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=tcp_header_obj, update=False)
+        fun_test.simple_assert(result, checkpoint)
+
+        self.header_objs['eth_obj'] = ethernet_obj
+        self.header_objs['ip_obj'] = ip_header_obj
+        self.header_objs['tcp_obj'] = tcp_header_obj
+
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Add Ingress Sampling rule Egress Port: FPG%d and dest port: FPG%d with first cell only" % (
+            dut_rx_port, dut_sample_port)
+        result = network_controller_obj.add_egress_sample_rule(id=self.sample_id,
+                                                               fpg=dut_rx_port, dest=dut_sample_port)
+        fun_test.test_assert(result['status'], checkpoint)
+
 
 if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(SampleIngressFPGtoFPG())
+    ts.add_test_case(SampleIngressFPGtoFPGWithRate())
+    ts.add_test_case(SampleFCOIngressFPGtoFPG())
+    ts.add_test_case(SamplePPStoFPG())
+    ts.add_test_case(SampleEgressFPGtoFPG())
     ts.run()
