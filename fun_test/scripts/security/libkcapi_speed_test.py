@@ -10,7 +10,7 @@ class LibkcapiSpeedScript(FunTestScript):
                               """)
 
     def setup(self):
-        host = Linux(host_ip="192.168.56.30", ssh_username="root", ssh_port="22")
+        host = Linux(host_ip="10.1.20.67", ssh_username="root", ssh_port="22")
         libkcapi_speed_template = LibkcapiSpeedTemplate(host)
         fun_test.shared_variables["host"] = host
         fun_test.shared_variables["libkcapi_speed_template"] = libkcapi_speed_template
@@ -171,7 +171,7 @@ class SpeedSha1(FunTestCase):
     def run(self):
         libkcapi_speed_template = fun_test.shared_variables["libkcapi_speed_template"]
         libkcapi_speed_template.kcapi_cmnd(LibkcapiSpeedTemplate.SHA1, driver="generic", test_time=None,
-                                           block_size=None,
+                                           block_size="256",
                                            aux_param=None)
 
 
@@ -376,21 +376,21 @@ class SpeedHmacSha512(FunTestCase):
 if __name__ == "__main__":
     libkcapi_script = LibkcapiSpeedScript()
 
-#    libkcapi_script.add_test_case(SpeedCbc())
-#    libkcapi_script.add_test_case(SpeedEcb())
-#    libkcapi_script.add_test_case(SpeedCtr())
-#    libkcapi_script.add_test_case(SpeedXts())
-#    libkcapi_script.add_test_case(SpeedGcm())
-#    libkcapi_script.add_test_case(SpeedCcm())
+    libkcapi_script.add_test_case(SpeedCbc())
+    libkcapi_script.add_test_case(SpeedEcb())
+    libkcapi_script.add_test_case(SpeedCtr())
+    libkcapi_script.add_test_case(SpeedXts())
+    libkcapi_script.add_test_case(SpeedGcm())
+    libkcapi_script.add_test_case(SpeedCcm())
     libkcapi_script.add_test_case(SpeedSha1())
-#    libkcapi_script.add_test_case(SpeedSha224())
-#    libkcapi_script.add_test_case(SpeedSha256())
-#    libkcapi_script.add_test_case(SpeedSha384())
-#    libkcapi_script.add_test_case(SpeedSha512())
-#    libkcapi_script.add_test_case(SpeedHmacSha1())
-#    libkcapi_script.add_test_case(SpeedHmacSha224())
-#    libkcapi_script.add_test_case(SpeedHmacSha256())
-#    libkcapi_script.add_test_case(SpeedHmacSha384())
-#    libkcapi_script.add_test_case(SpeedHmacSha512())
+    libkcapi_script.add_test_case(SpeedSha224())
+    libkcapi_script.add_test_case(SpeedSha256())
+    libkcapi_script.add_test_case(SpeedSha384())
+    libkcapi_script.add_test_case(SpeedSha512())
+    libkcapi_script.add_test_case(SpeedHmacSha1())
+    libkcapi_script.add_test_case(SpeedHmacSha224())
+    libkcapi_script.add_test_case(SpeedHmacSha256())
+    libkcapi_script.add_test_case(SpeedHmacSha384())
+    libkcapi_script.add_test_case(SpeedHmacSha512())
 
     libkcapi_script.run()
