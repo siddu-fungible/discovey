@@ -15,6 +15,12 @@ class LibkcapiTemplate(CryptoTemplate):
     SHA256 = "sha256"
     SHA384 = "sha384"
     SHA512 = "sha512"
+    SHA512_224 = "sha512-224"
+    SHA512_256 = "sha512-256"
+    SHA3_224 = "sha3-224"
+    SHA3_256 = "sha3-256"
+    SHA3_384 = "sha3-384"
+    SHA3_512 = "sha3-512"
     RFC3686 = "rfc3686(ctr(aes))"
     RFC4106 = "rfc4106(gcm(aes))"
     RFC4309 = "rfc4309(ccm(aes))"
@@ -31,6 +37,7 @@ class LibkcapiTemplate(CryptoTemplate):
     def setup(self):
         self.load_funcrypto()
         self.verify_funcrypto()
+        self.host.command("cat /proc/crypto | grep -i funcrypto")
         return True
 
     def parse_input_libkcapi(self, file_path):

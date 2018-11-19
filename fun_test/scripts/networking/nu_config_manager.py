@@ -17,6 +17,7 @@ class NuConfigManager(object):
     TRANSIT_FLOW_TYPE = "transit_flow"
     CC_FLOW_TYPE = "cc_flow"
     VP_FLOW_TYPE = "vp_flow"
+    SAMPLE_FLOW_TYPE = "sample_flow"
     FLOW_DIRECTION_NU_NU = "NU_NU"
     FLOW_DIRECTION_FPG_CC = "FPG_CC"
     FLOW_DIRECTION_CC_FPG = "CC_FPG"
@@ -93,6 +94,11 @@ class NuConfigManager(object):
                 else:
                     vp_flow_direction = self.FLOW_DIRECTION_FPG_HNU
                 for key, value in (dut_spirent_map[flow_type][vp_flow_direction].iteritems()):
+                    m = re.search(r'(\d+)', key)
+                    if m:
+                        result['ports'].append(int(m.group(1)))
+            elif flow_type == self.SAMPLE_FLOW_TYPE:
+                for key, value in (dut_spirent_map[flow_type][flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
                         result['ports'].append(int(m.group(1)))
@@ -294,6 +300,20 @@ class NuConfigManager(object):
                     if chassis_ip not in spirent_assets['chassis_ips']:
                         raise Exception(
                             "Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
+            elif flow_type == self.SAMPLE_FLOW_TYPE:
+                fun_test.log("Fetching NU VP path map. Traffic Direction: %s" % flow_direction)
+                fun_test.simple_assert(len(dut_spirent_map[flow_type][flow_direction]) >= no_of_ports_needed,
+                                       "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
+                                       (no_of_ports_needed, len(dut_spirent_map[flow_type][flow_direction])))
+                count = 0
+                for key, value in dut_spirent_map[flow_type][flow_direction].iteritems():
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
                     result[key] = value
                     count += 1
         except Exception as ex:

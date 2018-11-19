@@ -16,7 +16,7 @@ class MyScript(FunTestScript):
 
     def setup(self):
         # topology_obj_helper = TopologyHelper(spec=topology_dict) use locally defined dictionary variable
-        topology_obj_helper = TopologyHelper(spec_file="./single_f1_with_qemu_yocto.json")
+        topology_obj_helper = TopologyHelper(spec_file="./single_f1_with_qemu_ubuntu.json")
         topology = topology_obj_helper.deploy()
         fun_test.test_assert(topology, "Ensure deploy is successful")
         fun_test.shared_variables["topology"] = topology
@@ -33,6 +33,7 @@ class FunTestCase1(FunTestCase):
                               steps="""
     1. Connect to QEMU
     2. Execute the date command
+    3. Install fio
                               """)
 
     def setup(self):
@@ -48,6 +49,8 @@ class FunTestCase1(FunTestCase):
 
         qemu_host = self.topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
         qemu_host.command("date")
+        qemu_host.sudo_command("apt install fio")
+        qemu_host.command("fio")
 
 if __name__ == "__main__":
     myscript = MyScript()
