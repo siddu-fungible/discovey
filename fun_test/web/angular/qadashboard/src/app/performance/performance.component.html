@@ -45,7 +45,7 @@
           </td>
           <ng-template #FailedInfo>
             <div *ngIf="passedDateTime" style="color: black;">
-              <b>Last Passed:</b><br> {{ passedDateTime }}
+              <b>Last Passed:</b><br> {{ passedDateTime }}<br>
             <a *ngIf="passedLsfUrl" [routerLink]="" (click)='openUrl(passedLsfUrl)'>Lsf log<br></a>
          <a *ngIf="passedJenkinsUrl" [routerLink]="" (click)='openUrl(passedJenkinsUrl)'>Jenkins log<br></a>
          <a *ngIf="passedRegressionUrl" [routerLink]="" (click)='openUrl(passedRegressionUrl)'>Regression log<br></a>
@@ -59,7 +59,7 @@
             </div>
       <hr>
          <div *ngIf="failedDateTime" style="color: black;">
-              <b>First Failure:</b><br> {{ failedDateTime }}
+              <b>First Failure:</b><br> {{ failedDateTime }}<br>
             <a *ngIf="failedLsfUrl" [routerLink]="" (click)='openUrl(failedLsfUrl)'>Lsf log<br></a>
          <a *ngIf="failedJenkinsUrl" [routerLink]="" (click)='openUrl(failedJenkinsUrl)'>Jenkins log<br></a>
          <a *ngIf="failedRegressionUrl" [routerLink]="" (click)='openUrl(failedRegressionUrl)'>Regression log<br></a>

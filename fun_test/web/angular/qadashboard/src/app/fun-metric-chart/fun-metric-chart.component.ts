@@ -21,8 +21,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   data: any = {}; //used for fun table
   metricId: number;
   editingDescription: boolean = false;
+  editingOwner: boolean = false;
   inner: any = {};
   currentDescription: string;
+  currentOwner: string;
   waitTime: number = 0;
   values: any;
   charting: any;
@@ -62,8 +64,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.headers = null;
     this.metricId = -1;
     this.editingDescription = false;
+    this.editingOwner = false;
     this.inner = {};
     this.inner.currentDescription = "TBD";
+    this.inner.currentOwner = "Unknown";
+    this.currentOwner = "Unknown";
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
@@ -244,6 +249,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
+        this.currentOwner = this.chartInfo.owner_info;
+        this.inner.currentOwner = this.currentOwner;
         this.negativeGradient = !this.chartInfo.positive;
         this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
@@ -265,6 +272,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.showingConfigure = false;
     this.pointClicked = false;
     this.showBuildProps = false;
+    this.editingOwner = false;
+    this.editingDescription = false;
   }
 
   closePointInfo(): void {
@@ -310,6 +319,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["chart_name"] = this.chartName;
     payload["data_sets"] = this.previewDataSets;
     payload["description"] = this.inner.currentDescription;
+    payload["owner_info"] = this.inner.currentOwner;
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
@@ -322,6 +332,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.loggerService.error("EditChart: Submit");
     });
     this.editingDescription = false;
+    this.editingOwner = false;
   }
 
   //populates buildInfo
