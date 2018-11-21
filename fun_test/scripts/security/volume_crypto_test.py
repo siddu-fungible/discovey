@@ -137,30 +137,37 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                    key=self.xts_key,
                                                                    xtweak=self.xts_tweak,
                                                                    command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
-            command_result = {}
-            command_result = self.storage_controller.volume_attach_remote(ns_id=self.volume_details["ns_id"],
-                                                                          uuid=self.thin_uuid,
-                                                                          remote_ip=self.linux_host.internal_ip,
-                                                                          command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
+            if self.key_size == 32 or self.key_size == 64:
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
-            fun_test.shared_variables["blt"]["setup_created"] = True
-            # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
-            fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
-            # Executing the FIO command to warm up the system
-            # FIO use verify option : md5, sha1, sha256, sha384 etc. Check man page.
-            if self.warm_up_traffic:
-                fun_test.log("Executing the FIO command to warm up the system")
-                fio_output = self.linux_host.remote_fio(destination_ip=destination_ip,
-                                                        **self.warm_up_fio_cmd_args)
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fio_output)
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
+                command_result = {}
+                command_result = self.storage_controller.volume_attach_remote(ns_id=self.volume_details["ns_id"],
+                                                                              uuid=self.thin_uuid,
+                                                                              remote_ip=self.linux_host.internal_ip,
+                                                                              command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
+
+                fun_test.shared_variables["blt"]["setup_created"] = True
+                # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
+                fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
+                # Executing the FIO command to warm up the system
+                # FIO use verify option : md5, sha1, sha256, sha384 etc. Check man page.
+                if self.warm_up_traffic:
+                    fun_test.log("Executing the FIO command to warm up the system")
+                    fio_output = self.linux_host.remote_fio(destination_ip=destination_ip,
+                                                            **self.warm_up_fio_cmd_args)
+                    fun_test.log("FIO Command Output:")
+                    fun_test.log(fio_output)
+                    fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                                   self.iter_interval)
+
+            else:
+                if not command_result["status"]:
+                    fun_test.test_assert_expected(expected=False, actual=command_result["status"],
+                                                  message="Volume creation failed as expected.")
 
     def run(self):
 
@@ -244,13 +251,13 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     fio_output[combo][mode] = {}
                     fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip, rw=mode,
                                                                          bs=fio_block_size, iodepth=fio_iodepth,
-                                                                         verify="sha1", rwmixread=25,
+                                                                         rwmixread=25,
                                                                          **self.fio_cmd_args)
                 else:
                     fio_output[combo][mode] = {}
                     fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip, rw=mode,
                                                                          bs=fio_block_size, iodepth=fio_iodepth,
-                                                                         verify="sha1", **self.fio_cmd_args)
+                                                                         **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
@@ -369,8 +376,28 @@ class BLTFioTestKey512(BLTCryptoVolumeTestCase):
         super(BLTFioTestKey512, self).cleanup()
 
 
+class WrongKeySize(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Create volume with unsupported size key.",
+                              steps='''
+        1. Create a local thin block volume with encryption using wrong key in dut instances 0.
+        ''')
+
+    def setup(self):
+        super(WrongKeySize, self).setup()
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        super(WrongKeySize, self).cleanup()
+
+
 if __name__ == "__main__":
     bltscript = BLTCryptoVolumeScript()
     bltscript.add_test_case(BLTFioTestKey256())
     bltscript.add_test_case(BLTFioTestKey512())
+    bltscript.add_test_case(WrongKeySize())
     bltscript.run()

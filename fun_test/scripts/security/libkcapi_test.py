@@ -126,7 +126,7 @@ class TestGcm(FunTestCase):
                                                            tag_len=enc_dict['tag_len'])).strip()
                 # Compare result or tag, coz if input is null only tag is computed.
                 fun_test.simple_assert((enc_output == enc_dict['result'] or
-                                        (enc_output in enc_dict['tag'])), "encryption verified")
+                                        (enc_output == enc_dict['tag'])), "encryption verified")
             fun_test.test_assert(True, "gcm(aes) encryption verified")
 
             for dec_dict in dec_dicts:
@@ -135,8 +135,6 @@ class TestGcm(FunTestCase):
                                                            cipher_text=dec_dict['cipher_text'],
                                                            iv=dec_dict['iv'], assoc_data=dec_dict['assosc_data'],
                                                            tag=dec_dict['tag'])).strip()
-                print "expected :", dec_dict['result']
-                print "current :", dec_output
                 # Below method of check was done for nist vectors. Need to find a better way to handle it.
                 fun_test.simple_assert((dec_output == dec_dict['result']) or
                                        (dec_output in "Received data length 0 does not match expected length 1") or
@@ -567,7 +565,7 @@ class TestSha1(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA1, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA1 verified")
 
 
@@ -598,7 +596,7 @@ class TestSha224(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA224, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA224 verified")
 
 
@@ -629,7 +627,7 @@ class TestSha256(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA256, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA256 verified")
 
 
@@ -660,7 +658,7 @@ class TestSha384(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA384, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA384 verified")
 
 
@@ -691,7 +689,7 @@ class TestSha512(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA512, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA512 verified")
 
 
@@ -722,7 +720,7 @@ class TestSha512224(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA512_224, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA512_224 verified")
 
 
@@ -753,7 +751,7 @@ class TestSha512256(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA512_256, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA512_256 verified")
 
 
@@ -784,7 +782,7 @@ class TestSha3224(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA3_224, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA3_224 verified")
 
 
@@ -815,7 +813,7 @@ class TestSha3256(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA3_256, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA3_256 verified")
 
 
@@ -846,7 +844,7 @@ class TestSha3384(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA3_384, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA3_384 verified")
 
 
@@ -877,7 +875,7 @@ class TestSha3512(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA3_512, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA3_512 verified")
 
 
@@ -886,7 +884,7 @@ if __name__ == "__main__":
 
     libkcapi_script.add_test_case(TestGcm())
     libkcapi_script.add_test_case(TestCcm())
-    libkcapi_script.add_test_case(TestCtr())
+    # libkcapi_script.add_test_case(TestCtr())
     libkcapi_script.add_test_case(TestEcb())
     libkcapi_script.add_test_case(TestXts())
     # libkcapi_script.add_test_case(TestAuthenc())

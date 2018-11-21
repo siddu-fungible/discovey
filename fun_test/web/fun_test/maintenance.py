@@ -9,6 +9,7 @@ from web.web_global import PRIMARY_SETTINGS_FILE
 from fun_global import get_localized_time
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 import logging
+
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 
@@ -26,6 +27,7 @@ from web.fun_test.metrics_models import VoltestPerformance
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus
 
+
 class MetricHelper(object):
     def __init__(self, model):
         self.model = model
@@ -42,6 +44,7 @@ class MetricHelper(object):
     def clear(self):
         self.model.objects.all().delete()
 
+
 """
 if __name__ == "__main__":
     h = MetricHelper(AllocSpeedPerformance)
@@ -51,10 +54,12 @@ if __name__ == "__main__":
 
 """
 
+
 def get_rounded_time(dt):
     rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=23, minute=59, second=59)
     rounded_d = get_localized_time(rounded_d)
     return rounded_d
+
 
 def software_date_to_datetime(software_date):
     m = re.search(r'(\d{4})(\d{2})(\d{2})', str(software_date))
@@ -64,6 +69,7 @@ def software_date_to_datetime(software_date):
         day = int(m.group(3))
         s = "{}-{}-{} {}:{}".format(year, month, day, "00", "01")
         return datetime.strptime(s, "%Y-%m-%d %H:%M")
+
 
 if __name__ == "__main33__":
     for model in [WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance]:
@@ -88,7 +94,8 @@ if __name__ == "__main33__":
             jm_entry.save()
 
 if __name__ == "__main2__":
-    for model in ["WuLatencyUngated", "WuLatencyAllocStack", "AllocSpeedPerformance", "BcopyFloodDmaPerformance", "BcopyPerformance",
+    for model in ["WuLatencyUngated", "WuLatencyAllocStack", "AllocSpeedPerformance", "BcopyFloodDmaPerformance",
+                  "BcopyPerformance",
                   "EcVolPerformance", "EcPerformance"]:
         charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model)
         for chart in charts:
@@ -101,7 +108,6 @@ if __name__ == "__main2__":
         entry.interpolation_allowed = True
         entry.save()
 
-
 if __name__ == "__main4__":
     entries = ShaxPerformance.objects.all()
     for entry in entries:
@@ -112,7 +118,7 @@ if __name__ == "__main2__":
     entries = HuRawVolumePerformance.objects.all()
     for entry in entries:
         dt = entry.input_date_time
-        dt = dt.replace(day = dt.day - 1)
+        dt = dt.replace(day=dt.day - 1)
         entry.input_date_time = dt
         entry.save()
 
@@ -135,8 +141,6 @@ if __name__ == "__main55__":
     for entry in entries:
         print entry
 
-
-
 if __name__ == "__main2__":
     # clone charts
     chart_name = "Best time for 1 malloc/free (WU)"
@@ -152,7 +156,6 @@ if __name__ == "__main2__":
         except:
             pass
 
-
 if __name__ == "__main66__":
     chart_name = "Nucleus"
     entry = MetricChart.objects.get(chart_name=chart_name)
@@ -162,9 +165,9 @@ if __name__ == "__main66__":
         test_chart = MetricChart.objects.get(chart_name=test_chart_name)
         entry.add_child(test_chart.metric_id)
 
-
 if __name__ == "__main5__":
     from django.apps import apps
+
     for entry in site_state.metric_models.keys():
         print entry
 '''
@@ -196,6 +199,8 @@ if __name__ == "__main1__":
 
     for mcs_entry in mcs_entries:
         print mcs_entry.score, mcs_entry.date_time
+
+
 def get_day_bounds(dt):
     d = get_rounded_time(dt)
     start = d.replace(hour=0, minute=0, second=0)
@@ -214,6 +219,7 @@ def get_entries_for_day(model, day, data_set):
         d[input_name] = input_value
     result = model.objects.filter(**d)
     return result
+
 
 if __name__ == "__main2__":
     today = datetime.now()
@@ -257,7 +263,7 @@ if __name__ == "__main250__":
             entry.completion_date = key
             entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main24335__":
     # import pytz
     # chart_name = "WU Latency: Alloc Stack"
     # model_name = "WuLatencyAllocStack"
@@ -289,13 +295,13 @@ if __name__ == "__main__":
                         model = apps.get_model(app_label='fun_test', model_name=entry.metric_model_name)
                         mcs_entries = model.objects.filter(**d).order_by('input_date_time')
                         for m in mcs_entries:
-                            print getattr(m, outputName) 
+                            print getattr(m, outputName)
                         i = len(mcs_entries) - 2
                         while i >= 0:
                             lastData = mcs_entries[i]
                             newExpectedOutput = getattr(lastData, outputName)
                             if newExpectedOutput < 0:
-                                i = i-1
+                                i = i - 1
                                 print "Decrementing: {}".format(outputName)
                             else:
                                 break
@@ -303,4 +309,33 @@ if __name__ == "__main__":
                         data["output"]["expected"] = newExpectedOutput
                         print(data["output"]["expected"])
             entry.data_sets = json.dumps(jsonData)
+            entry.save()
+
+if __name__ == "__main__":
+    models = {
+        "AllocSpeedPerformance": "Bertrand Serlet (bertrand.serlet@fungible.com)",
+        "WuLatencyUngated": "Bertrand Serlet (bertrand.serlet@fungible.com)",
+        "WuLatencyAllocStack": "Bertrand Serlet (bertrand.serlet@fungible.com)",
+        "BcopyPerformance": "Bertrand Serlet (bertrand.serlet@fungible.com)",
+        "BcopyFloodDmaPerformance": "Bertrand Serlet (bertrand.serlet@fungible.com)",
+        "EcPerformance": "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)",
+        "EcVolPerformance": "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)",
+        "VoltestPerformance": "Jaspal Kohli (jaspal.kohli@fungible.com)",
+        "WuDispatchTestPerformance": "Tahsin Erdogan (tahsin.erdogan@fungible.com)",
+        "WuSendSpeedTestPerformance": "Tahsin Erdogan (tahsin.erdogan@fungible.com)",
+        "FunMagentPerformanceTest": "Bertrand Serlet (bertrand.serlet@fungible.com)",
+        "WuStackSpeedTestPerformance": "Tahsin Erdogan (tahsin.erdogan@fungible.com)",
+        "SoakFunMallocPerformance": "Bertrand Serlet (bertrand.serlet@fungible.com)",
+        "SoakClassicMallocPerformance": "Bertrand Serlet (bertrand.serlet@fungible.com)",
+        "BootTimePerformance": "Michael Boksanyi (michael.boksanyi@fungible.com)",
+        "TeraMarkPkeRsaPerformance": "Michael Boksanyi (michael.boksanyi@fungible.com)",
+        "TeraMarkPkeRsa4kPerformance": "Michael Boksanyi (michael.boksanyi@fungible.com)",
+        "TeraMarkPkeEcdh256Performance": "Michael Boksanyi (michael.boksanyi@fungible.com)",
+        "TeraMarkPkeEcdh25519Performance": "Michael Boksanyi (michael.boksanyi@fungible.com)",
+        "TeraMarkCryptoPerformance": "Suren Madineni (suren.madineni@fungible.com)"
+    }
+    for model_name, owner in models.iteritems():
+        entries = MetricChart.objects.filter(metric_model_name=model_name)
+        for entry in entries:
+            entry.owner_info = owner
             entry.save()
