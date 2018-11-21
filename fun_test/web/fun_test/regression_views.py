@@ -10,18 +10,21 @@ from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
+from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import CatalogSuiteExecution, Module
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
-from web.web_global import initialize_result, api_safe_json_response
+from web.web_global import initialize_result, api_safe_json_response, string_to_json
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from fun_global import get_localized_time
 from datetime import datetime, timedelta
-from web.fun_test.models import RegresssionScripts
+from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer
 import logging
 import dateutil.parser
 import re
+from rest_framework.renderers import JSONRenderer
+
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -312,14 +315,22 @@ def jenkins_job_id_map(request):
 
 @csrf_exempt
 @api_safe_json_response
+def script_history(request):
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+
+@csrf_exempt
+@api_safe_json_response
 def scripts_by_module(request, module):
     result = {}
     matched_scripts = []
     regression_scripts = RegresssionScripts.objects.all()
     for regression_script in regression_scripts:
-        modules = regression_script.module
+        modules = regression_script.modules
+        modules = json.loads(modules)
         if module in modules:
-            matched_scripts.append(regression_script)
+            serializer = RegresssionScriptsSerializer(regression_script)
+            matched_scripts.append(serializer.data)
     return matched_scripts
 
 @csrf_exempt
@@ -406,6 +417,34 @@ def update_test_case_execution(request):
 
     return HttpResponse(json.dumps(result))
 
+def suite_execution_properties(suite_execution_id, properties):
+    result = {}
+    try:
+        suite_execution = SuiteExecution.objects.get(execution_id=suite_execution_id)
+        for property in properties:
+            result[property] = getattr(suite_execution, property)
+    except ObjectDoesNotExist:
+        pass
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def get_suite_execution_properties(request):
+    request_json = string_to_json(request.body)
+    suite_execution_id = request_json["suite_execution_id"]
+    properties = request_json["properties"]
+    return suite_execution_properties(suite_execution_id=suite_execution_id, properties=properties)
+
+def get_script_history(request):
+    history = []
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+    tes = TestCaseExecution.objects.filter(script_path=script_path)
+    for te in tes:
+        version = suite_execution_properties(te.suite_execution_id, "version")
+        if version:
+            print te.result, te.started_time, te.execution_id, te.suite_execution_id
+    return history
 
 def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
