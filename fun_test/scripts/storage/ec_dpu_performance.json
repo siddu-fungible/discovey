@@ -45,14 +45,14 @@
                   "read": {"read": {"bw": 284, "iops": 9, "latency": 112380}}}
     },
     "expected_volume_stats": {
-      "write": {"ndata": {"0": {"fault_injection": 0, "num_reads": 39, "num_writes": 528},
-                          "1": {"fault_injection": 0, "num_reads": 39, "num_writes": 528}},
-                "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 528}},
-                "ec": {"0": {"fault_injection": 0, "num_reads": 34, "num_writes": 528}}},
-      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 486, "num_writes": 0},
-                         "1": {"fault_injection": 0, "num_reads": 486, "num_writes": 0}},
-               "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}},
-               "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}
+      "write": {"ndata": {"0": {"fault_injection": 0, "num_reads": 42, "num_writes": 544},
+                          "1": {"fault_injection": 0, "num_reads": 42, "num_writes": 544}},
+                "nparity": {"0": {"fault_injection": 0, "num_reads": 42, "num_writes": 544}},
+                "ec": {"0": {"fault_injection": 0, "num_reads": 64, "num_writes": 544}}},
+      "read": {"ndata": {"0": {"fault_injection": 0, "num_reads": 330, "num_writes": 0},
+                         "1": {"fault_injection": 0, "num_reads": 330, "num_writes": 0}},
+               "nparity": {"0": {"fault_injection": 0, "num_reads": 330, "num_writes": 0}},
+               "ec": {"0": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     // The first element is the expected value and the second element is the maximum threshold in absolute value
@@ -145,14 +145,14 @@
                   "randread": {"read": {"bw": 283, "iops": 9, "latency": 112678}}}
     },
     "expected_volume_stats": {
-      "randwrite": {"ndata": {"0": {"fault_injection": 0, "num_reads": 39, "num_writes": 528},
-                              "1": {"fault_injection": 0, "num_reads": 39, "num_writes": 528}},
-                    "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 528}},
-                    "ec": {"0": {"fault_injection": 0, "num_reads": 34, "num_writes": 528}}},
-      "randread": {"ndata": {"0": {"fault_injection": 0, "num_reads": 486, "num_writes": 0},
-                             "1": {"fault_injection": 0, "num_reads": 486, "num_writes": 0}},
-                   "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}},
-                   "ec": {"0": {"fault_injection": 0, "num_reads": 960, "num_writes": 0}}}
+      "randwrite": {"ndata": {"0": {"fault_injection": 0, "num_reads": 44, "num_writes": 544},
+                              "1": {"fault_injection": 0, "num_reads": 44, "num_writes": 544}},
+                    "nparity": {"0": {"fault_injection": 0, "num_reads": 44, "num_writes": 544}},
+                    "ec": {"0": {"fault_injection": 0, "num_reads": 64, "num_writes": 544}}},
+      "randread": {"ndata": {"0": {"fault_injection": 0, "num_reads": 330, "num_writes": 0},
+                             "1": {"fault_injection": 0, "num_reads": 330, "num_writes": 0}},
+                   "nparity": {"0": {"fault_injection": 0, "num_reads": 330, "num_writes": 0}},
+                   "ec": {"0": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
@@ -345,22 +345,22 @@
                          "read": {"bw": 24, "iops": 1, "latency": 110347}}}
     },
     "expected_volume_stats": {
-      "(4, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 156, "num_writes": 396},
-                                  "1": {"fault_injection": 0, "num_reads": 157, "num_writes": 396}},
-                        "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
-                        "ec": {"0": {"fault_injection": 0, "num_reads": 251, "num_writes": 396}}}},
-      "(8, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 139, "num_writes": 396},
-                                  "1": {"fault_injection": 0, "num_reads": 139, "num_writes": 396}},
-                        "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
-                        "ec": {"0": {"fault_injection": 0, "num_reads": 259, "num_writes": 396}}}},
-      "(16, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 156, "num_writes": 363},
-                                   "1": {"fault_injection": 0, "num_reads": 156, "num_writes": 363}},
-                         "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 363}},
-                         "ec": {"0": {"fault_injection": 0, "num_reads": 285, "num_writes": 363}}}},
-      "(32, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 169, "num_writes": 396},
-                                   "1": {"fault_injection": 0, "num_reads": 169, "num_writes": 396}},
-                         "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
-                         "ec": {"0": {"fault_injection": 0, "num_reads": 310, "num_writes": 396}}}}
+      "(4, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 106, "num_writes": 425},
+                                  "1": {"fault_injection": 0, "num_reads": 110, "num_writes": 425}},
+                        "nparity": {"0": {"fault_injection": 0, "num_reads": 120, "num_writes": 425}},
+                        "ec": {"0": {"fault_injection": 0, "num_reads": 286, "num_writes": 425}}}},
+      "(8, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 106, "num_writes": 408},
+                                  "1": {"fault_injection": 0, "num_reads": 114, "num_writes": 408}},
+                        "nparity": {"0": {"fault_injection": 0, "num_reads": 122, "num_writes": 408}},
+                        "ec": {"0": {"fault_injection": 0, "num_reads": 292, "num_writes": 408}}}},
+      "(16, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 112, "num_writes": 391},
+                                   "1": {"fault_injection": 0, "num_reads": 128, "num_writes": 391}},
+                         "nparity": {"0": {"fault_injection": 0, "num_reads": 126, "num_writes": 391}},
+                         "ec": {"0": {"fault_injection": 0, "num_reads": 318, "num_writes": 391}}}},
+      "(32, 1)": {"rw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 122, "num_writes": 391},
+                                   "1": {"fault_injection": 0, "num_reads": 132, "num_writes": 391}},
+                         "nparity": {"0": {"fault_injection": 0, "num_reads": 134, "num_writes": 391}},
+                         "ec": {"0": {"fault_injection": 0, "num_reads": 340, "num_writes": 391}}}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
@@ -424,22 +424,22 @@
                              "read": {"bw": 24, "iops": 1, "latency": 118179}}}
     },
     "expected_volume_stats": {
-      "(4, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 146, "num_writes": 396},
-                                      "1": {"fault_injection": 0, "num_reads": 186, "num_writes": 396}},
-                            "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
-                            "ec": {"0": {"fault_injection": 0, "num_reads": 270, "num_writes": 396}}}},
-      "(8, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 166, "num_writes": 396},
-                                      "1": {"fault_injection": 0, "num_reads": 174, "num_writes": 396}},
-                            "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
-                            "ec": {"0": {"fault_injection": 0, "num_reads": 280, "num_writes": 396}}}},
-      "(16, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 169, "num_writes": 363},
-                                       "1": {"fault_injection": 0, "num_reads": 183, "num_writes": 363}},
-                             "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 363}},
-                             "ec": {"0": {"fault_injection": 0, "num_reads": 302, "num_writes": 363}}}},
-      "(32, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 188, "num_writes": 396},
-                                       "1": {"fault_injection": 0, "num_reads": 182, "num_writes": 396}},
-                             "nparity": {"0": {"fault_injection": 0, "num_reads": 0, "num_writes": 396}},
-                             "ec": {"0": {"fault_injection": 0, "num_reads": 328, "num_writes": 396}}}}
+      "(4, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 118, "num_writes": 408},
+                                      "1": {"fault_injection": 0, "num_reads": 116, "num_writes": 408}},
+                            "nparity": {"0": {"fault_injection": 0, "num_reads": 110, "num_writes": 408}},
+                            "ec": {"0": {"fault_injection": 0, "num_reads": 294, "num_writes": 408}}}},
+      "(8, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 112, "num_writes": 396},
+                                      "1": {"fault_injection": 0, "num_reads": 116, "num_writes": 396}},
+                            "nparity": {"0": {"fault_injection": 0, "num_reads": 124, "num_writes": 396}},
+                            "ec": {"0": {"fault_injection": 0, "num_reads": 304, "num_writes": 396}}}},
+      "(16, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 130, "num_writes": 391},
+                                       "1": {"fault_injection": 0, "num_reads": 122, "num_writes": 391}},
+                             "nparity": {"0": {"fault_injection": 0, "num_reads": 120, "num_writes": 391}},
+                             "ec": {"0": {"fault_injection": 0, "num_reads": 326, "num_writes": 391}}}},
+      "(32, 1)": {"randrw": {"ndata": {"0": {"fault_injection": 0, "num_reads": 140, "num_writes": 391},
+                                       "1": {"fault_injection": 0, "num_reads": 134, "num_writes": 391}},
+                             "nparity": {"0": {"fault_injection": 0, "num_reads": 124, "num_writes": 391}},
+                             "ec": {"0": {"fault_injection": 0, "num_reads": 350, "num_writes": 391}}}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {

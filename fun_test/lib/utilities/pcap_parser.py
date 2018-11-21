@@ -179,3 +179,79 @@ class PcapParser(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def _validate_sample_packet(self, packet, expected_eth_obj=None, expected_ip_obj=None, expected_tcp_obj=None):
+        result = False
+        try:
+            fields = self.get_all_packet_fields(packet=packet)
+            if expected_eth_obj:
+                fun_test.log("Verifying Ethernet Layer Fields")
+                eth_fields = fields['layer_eth']
+                fun_test.test_assert_expected(expected=expected_eth_obj.dstMac.lower(),
+                                              actual=eth_fields['eth_dst'],
+                                              message="Validate destination mac address", ignore_on_success=True)
+                fun_test.test_assert_expected(expected=expected_eth_obj.srcMac.lower(),
+                                              actual=eth_fields['eth_src'],
+                                              message="Validate source mac address", ignore_on_success=True)
+                # TODO: remove 0x0000 from eth_type
+                # fun_test.test_assert_expected(expected=expected_eth_obj.etherType,
+                #                               actual=eth_fields['eth_type'],
+                #                               message="Validate destination mac address")
+                fun_test.simple_assert(expected_eth_obj.etherType in eth_fields['eth_type'], "Validate Ether Type")
+
+            if expected_ip_obj:
+                fun_test.log("Verifying IP Layer Fields")
+                ip_fields = fields['layer_ip']
+
+                fun_test.test_assert_expected(expected=expected_ip_obj.sourceAddr,
+                                              actual=ip_fields['ip_src'],
+                                              message="Validate source ip address", ignore_on_success=True)
+
+                fun_test.test_assert_expected(expected=expected_ip_obj.destAddr,
+                                              actual=ip_fields['ip_dst'],
+                                              message="Validate destination ip address", ignore_on_success=True)
+
+                fun_test.test_assert_expected(expected=expected_ip_obj.ttl,
+                                              actual=ip_fields['ip_ttl'],
+                                              message="Validate TTL", ignore_on_success=True)
+
+                fun_test.test_assert_expected(expected=expected_ip_obj.version,
+                                              actual=ip_fields['ip_version'],
+                                              message="Validate IP version", ignore_on_success=True)
+
+                fun_test.test_assert_expected(expected=expected_ip_obj.protocol,
+                                              actual=ip_fields['ip_proto'],
+                                              message="Validate IP Protocol", ignore_on_success=True)
+            if expected_tcp_obj:
+                fun_test.log("Verifying TCP Layer Fields")
+                tcp_fields = fields['layer_tcp']
+
+                fun_test.test_assert_expected(expected=expected_tcp_obj.sourcePort,
+                                              actual=tcp_fields['tcp_srcport'],
+                                              message="Validate TCP source port", ignore_on_success=True)
+
+                fun_test.test_assert_expected(expected=expected_tcp_obj.destPort,
+                                              actual=tcp_fields['tcp_dstport'],
+                                              message="Validate TCP destination port", ignore_on_success=True)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_sample_packets_in_file(self, packets, header_objs={}, packet_count=5):
+        result = False
+        try:
+            count = 1
+            for packet in packets:
+                if count == packet_count:
+                    break
+                fun_test.log("################### Validating Packet Count: %d ################### " % count)
+                result = self._validate_sample_packet(packet=packet, expected_eth_obj=header_objs['eth_obj'],
+                                                      expected_ip_obj=header_objs['ip_obj'],
+                                                      expected_tcp_obj=header_objs['tcp_obj'])
+                fun_test.simple_assert(result, "validate sample packet failed")
+                count += 1
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result

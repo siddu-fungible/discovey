@@ -14,6 +14,14 @@
         "name": "storage_x86_64:v2"
       },
       {
+        "category":  "f1_colocated_qemu_fungible_yocto",
+        "name": "storage_x86_64:v2"
+      },
+      {
+        "category":  "f1_colocated_qemu_fungible_ubuntu",
+        "name": "f1_colocated_qemu:latest"
+      },
+      {
         "category": "fio_traffic_generator",
         "name": "tgen:v4"
       },

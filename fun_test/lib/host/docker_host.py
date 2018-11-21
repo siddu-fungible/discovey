@@ -232,8 +232,14 @@ class DockerHost(Linux, ToDictMixin):
                                 ssh_internal_ports,
                                 qemu_internal_ports,
                                 dpcsh_internal_ports,
-                                mounts=None):
+                                mounts=None,
+                                vm_host_os=None):
+
         storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  # TODO
+        if not vm_host_os:
+            storage_image_name = self._get_image_name_by_category(category_name="f1_colocated_qemu_fungible_yocto")
+        elif vm_host_os == "fungible_ubuntu":
+            storage_image_name = self._get_image_name_by_category(category_name="f1_colocated_qemu_fungible_ubuntu")
         sdk_url = DEFAULT_BUILD_URL + "/Linux" if not fun_test.build_url else fun_test.build_url + "/Linux"
         local_sdk_url = fun_test.get_local_setting("SDK_URL")
         local_dpcsh_url = fun_test.get_local_setting("DPCSH_TGZ_URL")

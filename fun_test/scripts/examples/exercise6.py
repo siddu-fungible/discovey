@@ -16,7 +16,7 @@ class MyScript(FunTestScript):
 
     def setup(self):
         # topology_obj_helper = TopologyHelper(spec=topology_dict) use locally defined dictionary variable
-        topology_obj_helper = TopologyHelper(spec_file="./single_f1_custom_app_with_qemu.json")
+        topology_obj_helper = TopologyHelper(spec_file="./single_f1_with_qemu_yocto.json")
         topology = topology_obj_helper.deploy()
         fun_test.test_assert(topology, "Ensure deploy is successful")
         fun_test.shared_variables["topology"] = topology

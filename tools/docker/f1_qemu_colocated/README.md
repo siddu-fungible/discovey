@@ -1,5 +1,4 @@
-# storage_x86_64
-# Base: integration_base_x86_64
+# f1_qemu_colocated
 
 Purpose:
 ```
@@ -10,25 +9,22 @@ Image to create a container with
 4. functrl plane files
 5. kernel modules
 
-QEMU FS, Kernel, Kernel modules are documented in the base image
 ```
 
 Build:
 ```
 Typically:
-docker build . -t storage_x86_64 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99
+docker build . -t f1_colocated_qemu --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99 --build-arg HOST_OS_TGZ=ubuntu_18.04_qcow2_v2.tgz
 
-Special cases:
-docker build . -t storage_x86_64 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99 --build-arg X86_64_FS_URL=http://10.1.20.99/doc/jenkins/cc-linux-yocto/latest/x86_64/fun-image-x86-64-qemux86-64.ext4
 ```
 
 Run:
 ```
 Typically:
-docker run -d -p3220:22 -p2220:2220 --privileged --name="$container_name" storage_x86_64 -s <sdk-url>
+docker run -d -p3220:22 -p2220:2220 --privileged --name="$container_name" f1_colocated_qemu -s <sdk-url>
 
 Special cases:
-docker run -d -p3220:22 -p2220:2220 --privileged --name="$container_name" storage_x86_64 -s <sdk-url> <-d dpcsh tgz url> <-f funos tgz url> <-q qemu tgz url> -m <modules tgz url> -c <functrlp tgz url> -h dochub ip
+docker run -d -p3220:22 -p2220:2220 --privileged --name="$container_name" f1_colocated_qemu -s <sdk-url> <-d dpcsh tgz url> <-f funos tgz url> <-q qemu tgz url> -m <modules tgz url> -c <functrlp tgz url> -h dochub ip
 
 
 

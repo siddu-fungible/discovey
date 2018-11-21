@@ -563,15 +563,16 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def get_process_id_by_pattern(self, process_pat):
         pid = None
-        command = "ps -ef | grep '" + process_pat + "'"
+        command = "ps -ef | grep '" + process_pat + "'| grep -v grep"
         try:
             output = self.command(command)
-            # Converting the multi line output into list of lines
-            output = output.split('\n')
-            # If the output contains 2 lines, then the process matching the given pattern exists
-            if len(output) == 2:
-                # Extracting the pid of the process matched the given pattern
-                pid = output[0].split()[1]
+            if output:
+                # Converting the multi line output into list of lines
+                output = output.split('\n')
+                # If the output contains 2 lines, then the process matching the given pattern exists
+                if len(output) >= 1:
+                    # Extracting the pid of the process matched the given pattern
+                    pid = output[0].split()[1]
         except Exception as ex:
             critical_str = str(ex)
             fun_test.critical(critical_str)
@@ -1072,9 +1073,9 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, timeout=60):
+    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60):
         transfer_complete = False
-        scp_command = "scp %s %s@%s:%s" % (source_file_path, target_username, target_ip, target_file_path)
+        scp_command = "scp -P %d %s %s@%s:%s" % (target_port, source_file_path, target_username, target_ip, target_file_path)
         if not self.handle:
             self._connect()
 

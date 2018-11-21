@@ -9,6 +9,7 @@ from topology import ExpandedTopology
 from end_points import EndPoint, FioEndPoint, LinuxHostEndPoint
 from lib.system.utils import parse_file_to_json
 
+
 class TopologyHelper:
     def __init__(self, spec=None, spec_file=None):
         self.spec = spec
@@ -59,14 +60,15 @@ class TopologyHelper:
                     if "hosts" in interface_info:
                         dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"])
                     elif 'vms' in interface_info:
-                        if not 'type' in interface_info:
+                        if 'type' not in interface_info:
                             raise FunTestLibException("We must define an interface type")
                         if dut_interface_obj.type == DutInterface.INTERFACE_TYPE_PCIE:
                             vm_start_mode = None
                             if "vm_start_mode" in interface_info:
                                 vm_start_mode = interface_info["vm_start_mode"]
                             dut_interface_obj.add_qemu_colocated_hypervisor(num_vms=interface_info["vms"],
-                                                                            vm_start_mode=vm_start_mode)
+                                                                            vm_start_mode=vm_start_mode,
+                                                                            vm_host_os=interface_info.get("vm_host_os", None))
                         elif dut_interface_obj.type == DutInterface.INTERFACE_TYPE_ETHERNET:
                             dut_interface_obj.add_hypervisor(num_vms=interface_info["vms"])
                     elif 'ssds' in interface_info:
@@ -86,7 +88,6 @@ class TopologyHelper:
         fun_test.debug("got expanded topology")
         return self.expanded_topology
 
-
     @fun_test.safe
     def deploy(self):
         expanded_topology = self.get_expanded_topology()
@@ -96,7 +97,7 @@ class TopologyHelper:
     @fun_test.safe
     def allocate_topology(self, topology):
 
-        if True: # Storage style where each container has F1 and Host in it
+        if True:  # Storage style where each container has F1 and Host in it
 
             duts = topology.duts
 
@@ -109,7 +110,7 @@ class TopologyHelper:
                 dut_type = dut_obj.type
                 fun_test.debug("Setting up DUT {}".format(dut_index))
 
-                storage_container_orchestrator = asset_manager.get_orchestrator(index=dut_index)
+                storage_container_orchestrator = asset_manager.get_orchestrator(index=dut_index, dut_obj=dut_obj)
                 fun_test.simple_assert(storage_container_orchestrator, "Topology retrieved container orchestrator")
 
                 fun_test.debug("Allocating the DUT")
@@ -144,14 +145,13 @@ class TopologyHelper:
 
         fun_test.log("Completed allocating topology")
         ##### Let us print out the topology
-        asset_manager.describe()  #TODO Just for debugging
+        asset_manager.describe()  # TODO Just for debugging
 
         d = topology.to_dict()
         topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
                                                                          contents=json.dumps(d, indent=4))
         fun_test.set_topology_json_filename(filename=topology_json_artifact)
         return True  # TODO
-
 
     @fun_test.safe
     def allocate_bare_metal(self, bare_metal_end_point, orchestrator_obj=None):
@@ -181,15 +181,20 @@ class TopologyHelper:
                     internal_ssh_port = qemu_ssh_ports[i]["internal"]
                     external_ssh_port = qemu_ssh_ports[i]["external"]
                     vm_start_mode = None
+                    vm_host_os = getattr(hypervisor_end_point, "vm_host_os", None)
+
 
                     if hasattr(hypervisor_end_point, "vm_start_mode"):
                         if hypervisor_end_point.vm_start_mode == "VM_START_MODE_NORMAL":
                             vm_start_mode = "VM_START_MODE_NORMAL"
 
-                    instance = orchestrator_obj.launch_host_instance(instance_type=SimulationOrchestrator.INSTANCE_TYPE_QEMU,
-                                                                external_ssh_port=external_ssh_port,
-                                                                internal_ssh_port=internal_ssh_port,
-                                                                     vm_start_mode=vm_start_mode)
+                    instance = orchestrator_obj.launch_host_instance(
+                        instance_type=SimulationOrchestrator.INSTANCE_TYPE_QEMU,
+                        external_ssh_port=external_ssh_port,
+                        internal_ssh_port=internal_ssh_port,
+                        vm_start_mode=vm_start_mode,
+                        vm_host_os=vm_host_os,
+                    )
                     fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(i))
                     hypervisor_end_point.add_instance(instance=instance)
                     fun_test.counter += 1
@@ -209,7 +214,6 @@ class TopologyHelper:
     @fun_test.safe
     def cleanup(self):
         asset_manager.cleanup()
-
 
     def quick_docker_deploy(self,
                             num_f1=0,
@@ -236,14 +240,14 @@ class TopologyHelper:
                 dpcsh_internal_ports = [5000]
 
                 container_asset = docker_host.setup_storage_container(container_name,
-                                                                       build_url,
-                                                                       ssh_internal_ports,
-                                                                       qemu_internal_ports,
-                                                                       dpcsh_internal_ports,
-                                                                       funos_command=funos_command,
-                                                                       dpc_server=True, pre_dpcsh_sleep=pre_dpcsh_sleep,
-                                                                       dpcsh_directory=dpcsh_directory,
-                                                                       mounts=[mount])
+                                                                      build_url,
+                                                                      ssh_internal_ports,
+                                                                      qemu_internal_ports,
+                                                                      dpcsh_internal_ports,
+                                                                      funos_command=funos_command,
+                                                                      dpc_server=True, pre_dpcsh_sleep=pre_dpcsh_sleep,
+                                                                      dpcsh_directory=dpcsh_directory,
+                                                                      mounts=[mount])
                 docker_host.describe_storage_container(container_asset)
                 container_asset["container_name"] = container_asset["name"]
                 container_asset["qemu_ports"] = container_asset["pool1_ports"]

@@ -8,7 +8,8 @@
                 "0": {
                     "vms": 1,
                     "type": "INTERFACE_TYPE_PCIE",
-                    "vm_start_mode": "VM_START_MODE_NORMAL"
+                    "vm_start_mode": "VM_START_MODE_NORMAL",
+                    "vm_host_os": "fungible_ubuntu"
                 }
             },
             "start_mode": "START_MODE_NORMAL"
