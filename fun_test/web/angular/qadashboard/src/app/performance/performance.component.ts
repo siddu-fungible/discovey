@@ -39,6 +39,7 @@ class FlatNode {
   collapsed: boolean;
   hide: boolean;
   indent: number;
+  showJiraInfo: boolean = false;
   children: FlatNode[] = [];
 
   addChild(flatNode: FlatNode) {
@@ -78,6 +79,8 @@ export class PerformanceComponent implements OnInit {
   miniGridMaxWidth: string;
   miniGridMaxHeight: string;
   status: string = null;
+  jiraInfo: string;
+  editingJira: boolean = false;
 
   currentRegressionUrl: string = null;
   currentJenkinsUrl: string = null;
@@ -288,6 +291,7 @@ export class PerformanceComponent implements OnInit {
     newFlatNode.hide = true;
     newFlatNode.collapsed = true;
     newFlatNode.indent = indent;
+    newFlatNode.showJiraInfo = false;
     return newFlatNode;
   }
 
