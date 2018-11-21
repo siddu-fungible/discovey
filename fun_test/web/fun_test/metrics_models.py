@@ -1104,6 +1104,24 @@ class TeraMarkCryptoPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class TeraMarkLookupEnginePerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_test = models.CharField(max_length=30, default="le_test_perf", choices=[(0, "le_test_perf")])
+    input_memory = models.CharField(max_length=100, default="", choices=[(0, "HT HBM non-coherent - FP HBM non-coherent"), (1, "HT HBM coherent     - FP HBM coherent"), (2, "HT DDR non-coherent - FP DDR non-coherent"), (3, "HT DDR coherent     - FP DDR coherent"), (4, "TCAM")])
+    output_lookup_per_sec_min = models.IntegerField(verbose_name="lookups per sec", default=-1)
+    output_lookup_per_sec_avg = models.IntegerField(verbose_name="lookups per sec", default=-1)
+    output_lookup_per_sec_max = models.IntegerField(verbose_name="lookups per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class BootTimePerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
