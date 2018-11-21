@@ -250,9 +250,7 @@ def prepare_status(chart, purge_old_status=False):
                                 this_days_record = entries.last()
                             else:
                                 this_days_record = entries[0]
-                            # not using min and max values anymore
-                            # max_value = data_set["output"]["max"]
-                            # min_value = data_set["output"]["min"]
+
                             output_name = data_set["output"]["name"]  # TODO
                             if "expected" in data_set["output"]:
                                 expected_value = data_set["output"]["expected"]
@@ -262,8 +260,6 @@ def prepare_status(chart, purge_old_status=False):
                                 data_set_mofified = data_set_mofified or chart.fixup_expected_values(
                                     data_set=data_set)
                                 expected_value = data_set["output"]["expected"] # expected is set in fixup_expected_values
-                                # if not chart.positive:
-                                #     expected_value = min_value
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
 
