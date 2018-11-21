@@ -566,12 +566,13 @@ class Linux(object, ToDictMixin):
         command = "ps -ef | grep '" + process_pat + "'| grep -v grep"
         try:
             output = self.command(command)
-            # Converting the multi line output into list of lines
-            output = output.split('\n')
-            # If the output contains 2 lines, then the process matching the given pattern exists
-            if len(output) >= 1:
-                # Extracting the pid of the process matched the given pattern
-                pid = output[0].split()[1]
+            if output:
+                # Converting the multi line output into list of lines
+                output = output.split('\n')
+                # If the output contains 2 lines, then the process matching the given pattern exists
+                if len(output) >= 1:
+                    # Extracting the pid of the process matched the given pattern
+                    pid = output[0].split()[1]
         except Exception as ex:
             critical_str = str(ex)
             fun_test.critical(critical_str)
