@@ -189,15 +189,15 @@ class PcapParser(object):
                 eth_fields = fields['layer_eth']
                 fun_test.test_assert_expected(expected=expected_eth_obj.dstMac.lower(),
                                               actual=eth_fields['eth_dst'],
-                                              message="Validate destination mac address")
-                fun_test.test_assert_expected(expected=expected_eth_obj.srcMac,
+                                              message="Validate destination mac address", ignore_on_success=True)
+                fun_test.test_assert_expected(expected=expected_eth_obj.srcMac.lower(),
                                               actual=eth_fields['eth_src'],
-                                              message="Validate source mac address")
+                                              message="Validate source mac address", ignore_on_success=True)
                 # TODO: remove 0x0000 from eth_type
                 # fun_test.test_assert_expected(expected=expected_eth_obj.etherType,
                 #                               actual=eth_fields['eth_type'],
                 #                               message="Validate destination mac address")
-                fun_test.test_assert(expected_eth_obj.etherType in eth_fields['eth_type'], "Validate Ether Type")
+                fun_test.simple_assert(expected_eth_obj.etherType in eth_fields['eth_type'], "Validate Ether Type")
 
             if expected_ip_obj:
                 fun_test.log("Verifying IP Layer Fields")
@@ -205,34 +205,34 @@ class PcapParser(object):
 
                 fun_test.test_assert_expected(expected=expected_ip_obj.sourceAddr,
                                               actual=ip_fields['ip_src'],
-                                              message="Validate source ip address")
+                                              message="Validate source ip address", ignore_on_success=True)
 
                 fun_test.test_assert_expected(expected=expected_ip_obj.destAddr,
                                               actual=ip_fields['ip_dst'],
-                                              message="Validate destination ip address")
+                                              message="Validate destination ip address", ignore_on_success=True)
 
                 fun_test.test_assert_expected(expected=expected_ip_obj.ttl,
                                               actual=ip_fields['ip_ttl'],
-                                              message="Validate TTL")
+                                              message="Validate TTL", ignore_on_success=True)
 
                 fun_test.test_assert_expected(expected=expected_ip_obj.version,
                                               actual=ip_fields['ip_version'],
-                                              message="Validate IP version")
+                                              message="Validate IP version", ignore_on_success=True)
 
                 fun_test.test_assert_expected(expected=expected_ip_obj.protocol,
                                               actual=ip_fields['ip_proto'],
-                                              message="Validate IP Protocol")
+                                              message="Validate IP Protocol", ignore_on_success=True)
             if expected_tcp_obj:
                 fun_test.log("Verifying TCP Layer Fields")
                 tcp_fields = fields['layer_tcp']
 
                 fun_test.test_assert_expected(expected=expected_tcp_obj.sourcePort,
                                               actual=tcp_fields['tcp_srcport'],
-                                              message="Validate TCP source port")
+                                              message="Validate TCP source port", ignore_on_success=True)
 
                 fun_test.test_assert_expected(expected=expected_tcp_obj.destPort,
                                               actual=tcp_fields['tcp_dstport'],
-                                              message="Validate TCP destination port")
+                                              message="Validate TCP destination port", ignore_on_success=True)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

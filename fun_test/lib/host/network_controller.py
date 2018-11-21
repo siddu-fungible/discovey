@@ -1245,19 +1245,19 @@ class NetworkController(DpcshClient):
                 cmd_arg_dict['flag_mask'] = flag_mask
             if hu:
                 cmd_arg_dict['hu'] = hu
-            if psw_drop:
+            if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
-            if pps_en:
+            if pps_en is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
             if pps_burst:
                 cmd_arg_dict['pps_burst'] = pps_burst
-            if sampler_en:
+            if sampler_en is not None:
                 cmd_arg_dict['sampler_en'] = sampler_en
             if sampler_rate:
                 cmd_arg_dict['sampler_rate'] = sampler_rate
             if sampler_run_sz:
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
-            if first_cell_only:
+            if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only
 
             result = self._enable_sample_rule(cmd_arg_dict)
@@ -1277,19 +1277,19 @@ class NetworkController(DpcshClient):
                 cmd_arg_dict['flag_mask'] = flag_mask
             if hu:
                 cmd_arg_dict['hu'] = hu
-            if psw_drop:
+            if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
-            if pps_en:
+            if pps_en is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
             if pps_burst:
                 cmd_arg_dict['pps_burst'] = pps_burst
-            if sampler_en:
+            if sampler_en is not None:
                 cmd_arg_dict['sampler_en'] = sampler_en
             if sampler_rate:
                 cmd_arg_dict['sampler_rate'] = sampler_rate
             if sampler_run_sz:
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
-            if first_cell_only:
+            if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only
 
             result = self._enable_sample_rule(cmd_arg_dict)
@@ -1309,19 +1309,19 @@ class NetworkController(DpcshClient):
                 cmd_arg_dict['flag_mask'] = flag_mask
             if hu:
                 cmd_arg_dict['hu'] = hu
-            if psw_drop:
+            if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
-            if pps_en:
+            if pps_en is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
             if pps_burst:
                 cmd_arg_dict['pps_burst'] = pps_burst
-            if sampler_en:
+            if sampler_en is not None:
                 cmd_arg_dict['sampler_en'] = sampler_en
             if sampler_rate:
                 cmd_arg_dict['sampler_rate'] = sampler_rate
             if sampler_run_sz:
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
-            if first_cell_only:
+            if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only
 
             result = self._enable_sample_rule(cmd_arg_dict)
