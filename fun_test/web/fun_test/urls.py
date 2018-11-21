@@ -60,6 +60,7 @@ regression_urls = [
     url(r'^sampler$', regression_views.sampler),
     url(r'^sampler2$', regression_views.sampler2),
     url(r'^scripts_by_module/(.*)$', regression_views.scripts_by_module),
+    url(r'^get_suite_execution_properties', regression_views.get_suite_execution_properties),
     url(r'^\w+$', views.angular_home)
 
 ]
