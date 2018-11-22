@@ -1415,7 +1415,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=40)
 
         # Getting Spirent results
         checkpoint = "Fetch Tx Port Results for %s" % tx_port
