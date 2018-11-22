@@ -40,6 +40,7 @@ class FlatNode {
   hide: boolean;
   indent: number;
   showJiraInfo: boolean = false;
+  editingJira: boolean = false;
   children: FlatNode[] = [];
 
   addChild(flatNode: FlatNode) {
@@ -80,7 +81,6 @@ export class PerformanceComponent implements OnInit {
   miniGridMaxHeight: string;
   status: string = null;
   jiraInfo: string;
-  editingJira: boolean = false;
 
   currentRegressionUrl: string = null;
   currentJenkinsUrl: string = null;
@@ -292,6 +292,7 @@ export class PerformanceComponent implements OnInit {
     newFlatNode.collapsed = true;
     newFlatNode.indent = indent;
     newFlatNode.showJiraInfo = false;
+    newFlatNode.editingJira = false;
     return newFlatNode;
   }
 
@@ -625,5 +626,18 @@ export class PerformanceComponent implements OnInit {
     info.weightEditing = false;
   };
 
+  submit(node, jiraInfo): void {
+    let payload: { [i: string]: string } = {
+      metric_id: node.metricId,
+      jira_info: jiraInfo
+    };
+    this.apiService.post('/metrics/update_jira_info', payload).subscribe((response) => {
+      alert("Submitted Successfully");
+      node.editingJira = false;
+      node.showJiraInfo = false;
+    }, error => {
+      this.loggerService.error("updating JiraInfo failed");
+    });
+  }
 
 }

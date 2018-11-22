@@ -79,10 +79,10 @@
               <td colspan="4">
                 <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
-                <input *ngIf="!editingJira" type="text" class="owner-text" [(ngModel)]="jiraInfo" (click)="editingJira = true">
-                <i *ngIf="editingJira" style="font-size: 95%;"><input type="text" class="owner-text" [(ngModel)]="jiraInfo">
-                  <span><i class="fa fa-check fa-fw tick-color"></i></span>
-                  <span><i class="fa fa-times fa-fw close-color" (click)="editingJira = false"></i></span></i>
+                <input *ngIf="!flatNode.editingJira" type="text" class="jira-text" [(ngModel)]="jiraInfo" (click)="flatNode.editingJira = true">
+                <i *ngIf="flatNode.editingJira" style="font-size: 95%;"><input type="text" class="jira-text" [(ngModel)]="jiraInfo">
+                  <span><i class="fa fa-check fa-fw tick-color" (click)="submit(flatNode.node, jiraInfo)"></i></span>
+                  <span><i class="fa fa-times fa-fw close-color" (click)="flatNode.editingJira = false"></i></span></i>
               </td>
             </tr>
 

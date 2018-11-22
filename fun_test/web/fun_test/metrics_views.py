@@ -27,6 +27,7 @@ from django.forms.models import model_to_dict
 from analytics_models_helper import invalidate_goodness_cache
 from datetime import datetime
 from dateutil import parser
+from lib.utilities import jira_manager
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -253,6 +254,7 @@ def scores(request):
 
     return result
 
+
 @csrf_exempt
 @api_safe_json_response
 def get_past_build_status(request):
@@ -279,6 +281,7 @@ def get_past_build_status(request):
               "failed_lsf_job_id": previous_entry.lsf_job_id,
               "failed_date_time": previous_entry.date_time}
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -374,6 +377,27 @@ def update_chart(request):
         c.save()
         invalidate_goodness_cache()
     return "Ok"
+
+
+@csrf_exempt
+@api_safe_json_response
+def update_jira_info(request):
+    request_json = json.loads(request.body)
+    metric_id = request_json["metric_id"]
+
+    jira_info = ""
+    if "jira_info" in request_json:
+        jira_info = request_json["jira_info"]
+
+
+    c = MetricChart.objects.get(metric_id=metric_id)
+    if jira_info:
+        c.jira_info = jira_info
+        c.save()
+    return "Ok"
+
+def validate_jira_info(jira_info):
+
 
 
 @csrf_exempt
