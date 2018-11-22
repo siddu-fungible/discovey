@@ -76,7 +76,7 @@ class DpcshProxy(object):
 
     @fun_test.safe
     def stop_dpcsh_proxy(self, dpcsh_proxy_name="dpcsh", dpcsh_proxy_port=40221, dpcsh_proxy_tty="ttyUSB8"):
-        process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
+        process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty + '.*' + str(dpcsh_proxy_port)
         current_dpcsh_proxy_pid = self.linux.get_process_id_by_pattern(process_pat)
         if current_dpcsh_proxy_pid:
             self.linux.kill_process(process_id=current_dpcsh_proxy_pid, sudo=False)
@@ -85,6 +85,8 @@ class DpcshProxy(object):
             if current_dpcsh_proxy_pid:
                 fun_test.critical("Unable to kill the existing dpcsh proxy process")
                 return False
+        else:
+            fun_test.log("No dpcsh proxy listening in port {}".format(dpcsh_proxy_port))
         return True
 
     @fun_test.safe

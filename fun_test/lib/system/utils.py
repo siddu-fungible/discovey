@@ -100,13 +100,13 @@ def parse_file_to_json(file_name):
     return result
 
 
-def parse_str_to_json(jstr):
+def parse_string_to_json(input_string):
     result = None
-    if isinstance(jstr, str):
+    if isinstance(input_string, str):
         try:
-            result = commentjson.loads(jstr)
+            result = commentjson.loads(input_string)
         except Exception as ex:
-            fun_test.critical("{} has an invalid json format".format(jstr))
+            fun_test.critical("{} has an invalid json format".format(input_string))
     else:
         fun_test.critical("Argument received is not valid Python String")
     return result

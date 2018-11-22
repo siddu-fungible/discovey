@@ -30,6 +30,61 @@
             "label": "NU Transit: Throughput",
             "children": [],
             "weight": 1
+          },
+          {
+            "info": "Lookup-engine",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Lookup-engine",
+            "label": "Lookup-engine",
+            "weight": 1,
+            "children": [
+              {
+                "info": "HT HBM non-coherent - FP HBM non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM non-coherent - FP HBM non-coherent",
+                "label": "HT HBM non-coherent - FP HBM non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT HBM coherent - FP HBM coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM coherent - FP HBM coherent",
+                "label": "HT HBM coherent - FP HBM coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR non-coherent - FP DDR non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR non-coherent - FP DDR non-coherent",
+                "label": "HT DDR non-coherent - FP DDR non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR coherent - FP DDR coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR coherent - FP DDR coherent",
+                "label": "HT DDR coherent - FP DDR coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "TCAM",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "TCAM",
+                "label": "TCAM",
+                "children": [],
+                "weight": 1
+              }
+            ]
           }
         ],
         "weight": 1
@@ -834,6 +889,61 @@
                 "leaf": true,
                 "name": "EC 8:4 Throughput",
                 "label": "EC 8:4 Throughput",
+                "children": [],
+                "weight": 1
+              }
+            ]
+          },
+          {
+            "info": "Lookup-engine",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Lookup-engine",
+            "label": "Lookup-engine",
+            "weight": 1,
+            "children": [
+              {
+                "info": "HT HBM non-coherent - FP HBM non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM non-coherent - FP HBM non-coherent",
+                "label": "HT HBM non-coherent - FP HBM non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT HBM coherent - FP HBM coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM coherent - FP HBM coherent",
+                "label": "HT HBM coherent - FP HBM coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR non-coherent - FP DDR non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR non-coherent - FP DDR non-coherent",
+                "label": "HT DDR non-coherent - FP DDR non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR coherent - FP DDR coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR coherent - FP DDR coherent",
+                "label": "HT DDR coherent - FP DDR coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "TCAM",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "TCAM",
+                "label": "TCAM",
                 "children": [],
                 "weight": 1
               }
