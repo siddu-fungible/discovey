@@ -1332,7 +1332,7 @@ class NetworkController(DpcshClient):
     def show_sample_stats(self):
         stats = None
         try:
-            result = self.json_execute(verb='sample', data=['show'], command_duration=5)
+            result = self.json_execute(verb='sample', data=['show'], command_duration=20)
             fun_test.simple_assert(result['status'], "Stats fetched")
             stats = result['data']
         except Exception as ex:
