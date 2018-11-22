@@ -7,6 +7,7 @@ Includes Following Sampling Cases
 3. SampleFCOIngressFPGtoFPG
 4. SamplePPStoFPG
 5. SampleEgressFPGtoFPG
+6. SampleIngressEnableDisable
 """
 
 from lib.system.fun_test import *
