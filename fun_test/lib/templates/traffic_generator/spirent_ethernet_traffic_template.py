@@ -1145,23 +1145,49 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def configure_diffserv(self, ip_header_obj, streamblock_obj, dscp_high='0',
-                           dscp_low='0', name=None, reserved='00'):
+    def configure_diffserv(self, streamblock_obj, dscp_high='0',
+                           dscp_low='0', name=None, reserved='00', ip_header_obj=None, update=False):
         result = False
         try:
             fun_test.log("Creating tos_diffServ obj")
             # Get latest ip handle
-            child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
-            new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
-                                                                 child_type=child_type)[0]
+
+            new_ip_handle = None
+            if not ip_header_obj:
+                ip_header_obj = Ipv4Header()
+                child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
+                new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                     child_type=child_type)[0]
+            if (not new_ip_handle) and (not ip_header_obj):
+                ip_header_obj = Ipv6Header()
+                child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
+                new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                     child_type=child_type)[0]
+            else:
+                child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
+                new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                     child_type=child_type)[0]
+
             ip_header_obj._spirent_handle = new_ip_handle
             tos_diffserv_obj = TosDiffServ()
-            tosdiffserv_handle = self.stc_manager.stc.create(tos_diffserv_obj.HEADER_TYPE.lower(),
-                                                             under=new_ip_handle)
+            child_type = 'children-' + tos_diffserv_obj.HEADER_TYPE.lower()
+            tosdiffserv_handle = self.stc_manager.get_object_children(handle=ip_header_obj._spirent_handle,
+                                                                      child_type=child_type)[0]
+            if not update:
+                tosdiffserv_handle = self.stc_manager.stc.create(tos_diffserv_obj.HEADER_TYPE.lower(),
+                                                                 under=new_ip_handle)
 
-            fun_test.simple_assert(tosdiffserv_handle, "Created tosdiffServ under ip header")
+                fun_test.simple_assert(tosdiffserv_handle, "Created tosdiffServ under ip header")
             tos_diffserv_obj._spirent_handle = tosdiffserv_handle
             fun_test.log("Adding diff serv under tosdiffServ")
+
+            if update:
+                child_type = 'children-' + DiffServ.HEADER_TYPE.lower()
+                old_diffserv_handle = self.stc_manager.get_object_children(handle=tosdiffserv_handle,
+                                                                           child_type=child_type)[0]
+                del_diff_serv = self.stc_manager.delete_handle(old_diffserv_handle)
+                fun_test.simple_assert(del_diff_serv, "Delete old diff serv handle")
+
             diff_serv_obj = DiffServ(dscp_high=dscp_high, dscp_low=dscp_low, name=name, reserved=reserved)
             diff_serv_handle = self.stc_manager.stc.create(diff_serv_obj.HEADER_TYPE, under=tosdiffserv_handle,
                                                            dscpHigh=dscp_high, dscpLow=dscp_low, reserved=reserved,
