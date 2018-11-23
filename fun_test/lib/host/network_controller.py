@@ -973,6 +973,20 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
+    def peek_sfg_stats(self, hnu=False):
+        stats = None
+        try:
+            cmd = "stats/sfg/nu"
+            if hnu:
+                cmd = 'stats/sfg/hnu'
+            fun_test.debug("Getting SFG stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get SFG stats")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
     def peek_psw_port_stats(self, port_num, queue_num=None, hnu=False):
         stats = None
         try:
