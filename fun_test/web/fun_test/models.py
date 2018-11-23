@@ -90,6 +90,14 @@ class SuiteExecution(models.Model):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
         return s
 
+class SuiteExecutionSerializer(serializers.Serializer):
+    version = serializers.CharField(max_length=50)
+    execution_id = serializers.IntegerField()
+
+    class Meta:
+        model = SuiteExecution
+        fields = ('version', 'execution_id')
+
 
 class LastSuiteExecution(models.Model):
     last_suite_execution_id = models.IntegerField(unique=True, default=10)
@@ -118,6 +126,17 @@ class TestCaseExecution(models.Model):
                                                    self.script_path)
         return s
 
+class TestCaseExecutionSerializer(serializers.Serializer):
+    script_path = serializers.CharField(max_length=128)
+    execution_id = serializers.IntegerField()
+    test_case_id = serializers.IntegerField()
+    suite_execution_id = serializers.IntegerField()
+    started_time = serializers.DateTimeField()
+    result = serializers.CharField(max_length=20)
+
+    class Meta:
+        model = TestCaseExecution
+        fields = ('script_path', 'execution_id', 'test_case_id', 'suite_execution_id', 'started_time', 'result')
 
 class Tag(models.Model):
     tag = models.CharField(max_length=TAG_LENGTH)

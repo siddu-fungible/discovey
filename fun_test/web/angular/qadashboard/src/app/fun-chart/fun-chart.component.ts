@@ -8,6 +8,7 @@ import {EventEmitter} from "@angular/core";
   styleUrls: ['./fun-chart.component.css']
 })
 export class FunChartComponent implements OnInit, OnChanges {
+  @Input() chartType: string = "line";
   @Input() y1Values: any[];
   @Input() xValues: any[];
   @Input() title: string;
