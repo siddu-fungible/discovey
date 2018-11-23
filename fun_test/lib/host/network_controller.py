@@ -10,7 +10,7 @@ class NetworkController(DpcshClient):
     VERB_TYPE_POKE = 'poke'
     SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN = "dwrr"
     SCHEDULER_TYPE_SHAPER = "shaper"
-    SCHEDULER_TYPE_STRICT_PRIORITY = " strict_priority"
+    SCHEDULER_TYPE_STRICT_PRIORITY = "strict_priority"
 
     def __init__(self, dpc_server_ip, dpc_server_port=40221, verbose=True):
         super(NetworkController, self).__init__(mode="network", target_ip=dpc_server_ip, target_port=dpc_server_port,
@@ -913,8 +913,9 @@ class NetworkController(DpcshClient):
         return prob_value
 
     def set_qos_scheduler_config(self, port_num, queue_num, scheduler_type=SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN,
-                                 weight=None, shaper_enable=None,
-                                 min_rate=None, max_rate=None, strict_priority_enable=False, extra_bandwidth=None):
+                                 weight=None, shaper_enable=False,
+                                 min_rate=None, max_rate=None, shaper_threshold=None,
+                                 strict_priority_enable=False, extra_bandwidth=0):
         result = False
         strict_priority_enable_value = 0
         if strict_priority_enable:
@@ -926,14 +927,23 @@ class NetworkController(DpcshClient):
                     raise FunTestLibException("Please provide weight for weighted round robin scheduler")
                 input_dict["weight"] = weight
             elif scheduler_type == self.SCHEDULER_TYPE_SHAPER:
-                input_dict["shaper_enable"] = shaper_enable
-                input_dict["min_rate"] = min_rate
-                input_dict["max_rate"] = max_rate
+                shaper_enable_value = 0
+                if shaper_enable:
+                    shaper_enable_value = 1
+                if min_rate or min_rate == 0:
+                    type = 0
+                    input_dict["rate"] = min_rate
+                else:
+                    type = 1
+                    input_dict["rate"] = max_rate
+                input_dict["en"] = shaper_enable_value
+                input_dict["type"] = type
+                input_dict["thresh"] = shaper_threshold
             elif scheduler_type == self.SCHEDULER_TYPE_STRICT_PRIORITY:
                 input_dict["strict_priority_enable"] = strict_priority_enable_value
                 input_dict["extra_bandwidth"] = extra_bandwidth
 
-            scheduler_config_args = ['set', 'scheduler_config %s' % scheduler_type, input_dict]
+            scheduler_config_args = ['set', 'scheduler_config', '%s' % scheduler_type, input_dict]
             fun_test.debug("Setting QOS Scheduler Config")
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=scheduler_config_args,
                                                 command_duration=self.COMMAND_DURATION)
