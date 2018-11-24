@@ -15,14 +15,16 @@ export class RegressionAdminComponent implements OnInit {
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
   xValues: any [] = [];
   y1Values = [];
+  /*
   tempPassedValues = [];
   tempFailedValues = [];
   tempNotRunValues = [];
-  tempSoftwareVersions = [];
+  tempSoftwareVersions = [];*/
 
 
   ngOnInit() {
     this.fetchAllVersions();
+    /*
     this.y1Values = [{
         name: 'Passed',
         data: []
@@ -32,7 +34,7 @@ export class RegressionAdminComponent implements OnInit {
     }, {
         name: 'Not-run',
         data: []
-    }]
+    }]*/
   }
 
   fetchAllVersions() {
@@ -77,7 +79,17 @@ export class RegressionAdminComponent implements OnInit {
   prepareVersionPlaceHolders (moduleInfo) {
     // create a bySoftwareVersion key under each module
     // byVersion is an array of software versions
-    moduleInfo["num"]
+    moduleInfo["y1Values"] = [{
+        name: 'Passed',
+        data: []
+    }, {
+        name: 'Failed',
+        data: []
+    }, {
+        name: 'Not-run',
+        data: []
+    }];
+    moduleInfo["xValues"] = [];
     moduleInfo["bySoftwareVersion"] = {};
     this.versionList.forEach((softwareVersion) => {
       moduleInfo.bySoftwareVersion[softwareVersion] = {scriptDetailedInfo: {},
@@ -168,7 +180,7 @@ export class RegressionAdminComponent implements OnInit {
   prepareValuesForChart(moduleInfo) {
     console.log("Prepare values for chart");
     let i = 0;
-    console.log(this.xValues);
+    //console.log(this.xValues);
     Object.keys(moduleInfo.bySoftwareVersion).forEach((softwareVersion) => {
       let intSoftwareVersion = parseInt(softwareVersion);
       let numPassed = moduleInfo.bySoftwareVersion[intSoftwareVersion].numPassed;
@@ -176,17 +188,17 @@ export class RegressionAdminComponent implements OnInit {
       let numNotRun = moduleInfo.bySoftwareVersion[intSoftwareVersion].numNotRun;
       let total = numPassed + numFailed + numNotRun;
       if (total) {
-        this.xValues.push(intSoftwareVersion);
-        this.y1Values[0].data.push(numPassed);
-        this.y1Values[1].data.push(numFailed);
-        this.y1Values[2].data.push(numNotRun);
-        this.xValues = [...this.xValues];
-        this.y1Values = [...this.y1Values];
+        moduleInfo.xValues.push(intSoftwareVersion);
+        moduleInfo.y1Values[0].data.push(numPassed);
+        moduleInfo.y1Values[1].data.push(numFailed);
+        moduleInfo.y1Values[2].data.push(numNotRun);
+        moduleInfo.xValues = [...moduleInfo.xValues];
+        moduleInfo.y1Values = [...moduleInfo.y1Values];
       }
 
 
-    })
-        console.log(this.xValues);
+    });
+    //console.log(this.xValues);
 
   }
 
