@@ -23,7 +23,9 @@ topology_dict = {
             "interface_info": {
                 0: {
                     "vms": 1,
-                    "type": DutInterface.INTERFACE_TYPE_PCIE
+                    "type": DutInterface.INTERFACE_TYPE_PCIE,
+                    "vm_start_mode": "VM_START_MODE_NORMAL",
+                    "vm_host_os": "fungible_yocto"
                 }
             },
             "start_mode": F1.START_MODE_NORMAL
@@ -60,8 +62,8 @@ class ECinQemuScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        # pass
+        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        pass
 
 
 class ECinQemuTestcase(FunTestCase):
