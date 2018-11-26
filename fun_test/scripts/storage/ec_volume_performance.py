@@ -189,7 +189,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 self.volume_capacity[type] = int(tmp + (eight_mb - (tmp % eight_mb)))
 
             # Setting the EC volume capacity also to same as the one of ndata volume capacity
-            self.volume_capacity["ec"] = self.volume_capacity["ndata"]
+            self.volume_capacity["ec"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]
 
         if self.ec_ratio not in fun_test.shared_variables or \
                 not fun_test.shared_variables[self.ec_ratio]["setup_created"]:

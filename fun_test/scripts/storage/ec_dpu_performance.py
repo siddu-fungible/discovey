@@ -237,7 +237,7 @@ class ECDPULevelTestcase(FunTestCase):
 
             # Setting the RDS & EC volume capacity also to same as the one of ndata volume capacity
             self.volume_capacity["rds"] = self.volume_capacity["ndata"]
-            self.volume_capacity["ec"] = self.volume_capacity["ndata"]
+            self.volume_capacity["ec"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]
 
         # Initializing the storage controller handle
         self.storage_controller = {}
