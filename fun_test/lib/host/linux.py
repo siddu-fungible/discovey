@@ -9,7 +9,7 @@ import time
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 import json
-import commentjson
+import copy
 
 class NoLogger:
     def __init__(self):
@@ -1747,6 +1747,15 @@ class Linux(object, ToDictMixin):
             result = False
 
         return result
+
+    def clone(self):
+        # Do a shallow copy
+        c = copy.copy(self)
+        try:
+            c.handle = None
+        except:
+            pass
+        return c
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
