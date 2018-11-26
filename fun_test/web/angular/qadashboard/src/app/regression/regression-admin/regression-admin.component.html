@@ -1,11 +1,14 @@
 <p class="component">
-  regression-admin works!
+  <button (click)="test()">Test</button>
 </p>
 
 <div class="card" *ngFor="let moduleInfo of info| keyvalue">
   <div class="card card-primary">
     <div class="card-header"><b>{{ moduleInfo.value.verboseName }}</b></div>
     <div class="card-body">
+      <fun-chart [title]="moduleInfo.value.verboseName" [y1AxisLabel]="'Results'" [y1Values]="moduleInfo.value.y1Values" [xValues]="moduleInfo.value.xValues" [chartType]="'vertical_colored_bar_chart'"> </fun-chart>
     </div>
   </div>
 </div>
+
+
