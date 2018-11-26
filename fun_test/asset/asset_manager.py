@@ -52,6 +52,13 @@ class AssetManager:
                 fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
                 self.docker_host.remove_container(orchestrator.container_name)
 
+            elif orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST:
+                container_assets = orchestrator.container_assets
+                for container_name in container_assets:
+                    fun_test.log("Destroying container: {}".format(container_name))
+                    self.docker_host.destroy_container(container_name=container_name)
+
+
     def describe(self):
         fun_test.log_section("Printing assets")
         # for orchestrator in self.orchestrators:
