@@ -19,7 +19,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from fun_global import get_localized_time
 from datetime import datetime, timedelta
-from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer
+from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
+from web.fun_test.models import TestCaseExecutionSerializer
 import logging
 import dateutil.parser
 import re
@@ -322,7 +323,6 @@ def script_history(request):
 @csrf_exempt
 @api_safe_json_response
 def scripts_by_module(request, module):
-    result = {}
     matched_scripts = []
     regression_scripts = RegresssionScripts.objects.all()
     for regression_script in regression_scripts:
@@ -435,15 +435,24 @@ def get_suite_execution_properties(request):
     properties = request_json["properties"]
     return suite_execution_properties(suite_execution_id=suite_execution_id, properties=properties)
 
+@csrf_exempt
+@api_safe_json_response
+def get_all_versions(request):
+    versions = SuiteExecution.objects.values('version', 'execution_id')
+    serializer = SuiteExecutionSerializer(versions, many=True)
+    return serializer.data
+
+@csrf_exempt
+@api_safe_json_response
 def get_script_history(request):
     history = []
     request_json = json.loads(request.body)
     script_path = request_json["script_path"]
     tes = TestCaseExecution.objects.filter(script_path=script_path)
     for te in tes:
-        version = suite_execution_properties(te.suite_execution_id, "version")
-        if version:
-            print te.result, te.started_time, te.execution_id, te.suite_execution_id
+        # version = suite_execution_properties(te.suite_execution_id, "version")
+        serializer = TestCaseExecutionSerializer(te)
+        history.append(serializer.data)
     return history
 
 def test(request):

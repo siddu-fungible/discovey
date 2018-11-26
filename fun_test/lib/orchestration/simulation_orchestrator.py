@@ -128,33 +128,37 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                          custom_prompts={"(yes/no)\?*": "yes"})
             '''
 
-            self.scp(source_file_path="/" + self.QEMU_MODULES_TGZ,
-                     target_ip="127.0.0.1",
-                     target_username=host_username,
-                     target_password=host_password,
-                     target_file_path="",
-                     target_port=internal_ssh_port)
+            if vm_host_os == self.HOST_OS_FUNGIBLE_YOCTO["name"]:
+                self.scp(source_file_path="/" + self.QEMU_MODULES_TGZ,
+                         target_ip="127.0.0.1",
+                         target_username=host_username,
+                         target_password=host_password,
+                         target_file_path="",
+                         target_port=internal_ssh_port)
 
-            self.scp(source_file_path="/" + self.QEMU_FUNCP_TGZ,
-                     target_ip="127.0.0.1",
-                     target_username=host_username,
-                     target_password=host_username,
-                     target_file_path="",
-                     target_port=internal_ssh_port)
+                self.scp(source_file_path="/" + self.QEMU_FUNCP_TGZ,
+                         target_ip="127.0.0.1",
+                         target_username=host_username,
+                         target_password=host_username,
+                         target_file_path="",
+                         target_port=internal_ssh_port)
 
 
             # Untaring the functrlp.tgz and copying the libs & bins needed to start the dpc-server inside the qemu host
             i.enter_sudo()
-            for file in self.FUNCP_EXTRACT_LIST:
-                i.command("tar -xzf {} {}".format(self.QEMU_FUNCP_TGZ, file))
-            i.command("mkdir -p /usr/local/lib /usr/local/bin")
-            i.command("cp build/posix/lib/libfunq.so /usr/local/lib/")
-            i.command("cp build/posix/bin/funq-setup build/posix/bin/dpc /usr/local/bin/")
+            if vm_host_os == self.HOST_OS_FUNGIBLE_YOCTO["name"]:
+                for file in self.FUNCP_EXTRACT_LIST:
+                    i.command("tar -xzf {} {}".format(self.QEMU_FUNCP_TGZ, file))
+                i.command("mkdir -p /usr/local/lib /usr/local/bin")
+                i.command("cp build/posix/lib/libfunq.so /usr/local/lib/")
+                i.command("cp build/posix/bin/funq-setup build/posix/bin/dpc /usr/local/bin/")
 
-            # Deploying the moudles.tgz into qemu host
-            i.command("rm -rf /lib/modules")
-            i.command("tar -xf {} -C /".format(self.QEMU_MODULES_TGZ))
-            i.command("depmod -a")
+                # Deploying the moudles.tgz into qemu host
+                # if the host is going to be Ubuntu for now don't need to replace the existing /lib/modules with our
+                # Fungible library
+                i.command("rm -rf /lib/modules")
+                i.command("tar -xf {} -C /".format(self.QEMU_MODULES_TGZ))
+                i.command("depmod -a")
             i.command("modprobe -r nvme")
             fun_test.sleep("modprobe -r nvme")
             i.command("modprobe nvme")

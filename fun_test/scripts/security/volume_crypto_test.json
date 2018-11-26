@@ -1,26 +1,16 @@
 {
-  "BLTFioTestKey256": {
+  "VolumeKey256": {
+    "volume_count": 1,
     "volume_details": {
-      "ns_id": 1,
-      "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1073741824,
       "block_size": 4096,
-      "name": "thin-block1",
       "encrypt": true
     },
     "key_size": 32,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {
-      "bs": "4k",
-      "iodepth": 1,
-      "size": "1m",
-      "rw": "write",
-      "io_queues": 2,
-      "timeout": 120
-    },
+    "traffic_parallel": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
@@ -44,28 +34,18 @@
       "(32, 1)"
     ]
   },
-  "BLTFioTestKey512": {
+  "VolumeKey512": {
+    "volume_count": 1,
     "volume_details": {
-      "ns_id": 1,
-      "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1073741824,
       "block_size": 4096,
-      "name": "thin-block1",
       "encrypt": true
     },
     "key_size": 64,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {
-      "bs": "4k",
-      "iodepth": 1,
-      "size": "1m",
-      "rw": "write",
-      "io_queues": 2,
-      "timeout": 120
-    },
+    "traffic_parallel": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
@@ -89,28 +69,169 @@
       "(32, 1)"
     ]
   },
-  "WrongKeySize": {
+  "WrongKey": {
+    "volume_count": 1,
     "volume_details": {
-      "ns_id": 1,
-      "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1073741824,
       "block_size": 4096,
-      "name": "thin-block1",
       "encrypt": true
     },
-    "key_size": 40,
+    "key_size": 38,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {
-      "bs": "4k",
-      "iodepth": 1,
-      "size": "1m",
-      "rw": "write",
+    "traffic_parallel": false,
+    "fio_cmd_args": {
       "io_queues": 2,
+      "size": "4m",
+      "verify":"sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
       "timeout": 120
     },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ]
+  },
+  "WrongTweak": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 1073741824,
+      "block_size": 4096,
+      "encrypt": true
+    },
+    "key_size": 32,
+    "xtweak_size": 16,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify":"sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ]
+  },
+  "MultipleBltKey256": {
+    "volume_count": 5,
+    "volume_details": {
+      "capacity": 1073741824,
+      "block_size": 4096,
+      "encrypt": true
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify":"sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "rw",
+      "randwrite",
+      "randread",
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ]
+  },
+  "MultipleBltKey512": {
+    "volume_count": 5,
+    "volume_details": {
+      "capacity": 1073741824,
+      "block_size": 4096,
+      "encrypt": true
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify":"sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "rw",
+      "randwrite",
+      "randread",
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ]
+  },
+  "CreateDelete256": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": 1073741824,
+      "block_size": 4096,
+      "encrypt": true
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify":"sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ]
+  },
+  "CreateDelete512": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": 1073741824,
+      "block_size": 4096,
+      "encrypt": true
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
@@ -127,4 +248,3 @@
     ]
   }
 }
-

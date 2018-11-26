@@ -55,6 +55,9 @@ WRO_IN_PKTS = "wroin_pkts"
 WRO_OUT_WUS = "wroout_wus"
 WRO_WU_COUNT_VPP = "wrowu_cnt_vpp"
 PSW_SAMPLED_PACKET_COUNT = 'sampled_pkt'
+SFG_IN_FFE_DESC = "IN_FFE_DESC"
+SFG_OUT_FFE_DESC = "OUT_FFE_DESC"
+SFG_SAMPLER_COPY = "SAMPLER_COPY"
 
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1
@@ -521,11 +524,13 @@ def set_strict_priority_on_queue(network_controller_obj, dut_port, set_queue_lis
         for queue in full_list:
             if queue in set_queue_list:
                 output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
-                                                                         strict_priority_enable=True)
+                                                                         strict_priority_enable=True,
+                                                                         scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY)
                 fun_test.simple_assert(output, "Set strict priority on queue %s on port %s" % (queue, dut_port))
             else:
                 output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
-                                                                         strict_priority_enable=False)
+                                                                         strict_priority_enable=False,
+                                                                         scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY)
                 fun_test.simple_assert(output, "Remove strict priority on queue %s on port %s" % (queue, dut_port))
         result = True
     except Exception as ex:
@@ -539,9 +544,15 @@ def remove_strict_priority_from_queue(network_controller_obj, dut_port):
         full_list = [x for x in range(16)]
         for queue in full_list:
             output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
-                                                                     strict_priority_enable=False)
+                                                                     strict_priority_enable=False,
+                                                                     scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY)
             fun_test.simple_assert(output, "Remove strict priority on queue %s on port %s" % (queue, dut_port))
         result = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def convert_bps_to_mbps(count_in_bps):
+    count_in_mbps = count_in_bps / float(1000000)
+    return count_in_mbps
