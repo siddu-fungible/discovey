@@ -266,6 +266,7 @@ class DockerContainerOrchestrator(SimulationOrchestrator):
 class DockerHostOrchestrator(Orchestrator, DockerHost):
     # A Docker Linux Host capable of launching docker container instances
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST
+    container_assets = {}
 
     def launch_fio_instance(self, index):
         container_name = "{}_{}_{}".format("integration_fio", fun_test.get_suite_execution_id(), index)
@@ -275,6 +276,7 @@ class DockerHostOrchestrator(Orchestrator, DockerHost):
     def launch_linux_instance(self, index):
         container_name = "{}_{}_{}".format("integration_linux", fun_test.get_suite_execution_id(), index)
         container_asset = self.setup_linux_container(container_name=container_name, ssh_internal_ports=[22])
+        self.container_assets[container_asset["name"]] = container_asset
         linux = Linux.get(asset_properties=container_asset)
         linux.internal_ip = container_asset["internal_ip"]
         return linux
