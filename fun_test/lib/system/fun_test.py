@@ -268,26 +268,30 @@ class FunTest:
             func(**kwargs)
 
     def join_thread(self, fun_test_thread_id, sleep_time=5):
-        thread_info = self.fun_test_threads[fun_test_thread_id]
-        thread = thread_info["thread"]
-        if thread:
-            success = False
-            while not success:
-                try:
-                    thread.join()
-                    success = True
-                except RuntimeError as r:
-                    r_string = str(r)
-                    if "cannot join thread before it is started" not in r_string:
-                        fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
-                    else:
-                        fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id),
-                                       seconds=sleep_time)
-        else:
-            fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
-            timer = thread_info["timer"]
-            while timer.isAlive():
-                fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+        thread_complete = False
+        while not thread_complete:
+            thread_info = self.fun_test_threads[fun_test_thread_id]
+            thread = thread_info["thread"]
+            if thread:
+                if not thread_complete:
+                    try:
+                        thread.join()
+
+                    except RuntimeError as r:
+                        r_string = str(r)
+                        if "cannot join thread before it is started" not in r_string:
+                            fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
+                        else:
+                            fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id),
+                                           seconds=sleep_time)
+                    thread_complete = True
+            else:
+                fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
+                timer = thread_info["timer"]
+                while timer.isAlive():
+                    fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+                if not thread_info["as_thread"]:
+                    thread_complete = True
 
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
