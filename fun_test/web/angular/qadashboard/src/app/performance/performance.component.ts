@@ -80,7 +80,6 @@ export class PerformanceComponent implements OnInit {
   miniGridMaxWidth: string;
   miniGridMaxHeight: string;
   status: string = null;
-  jiraInfo: string;
 
   currentRegressionUrl: string = null;
   currentJenkinsUrl: string = null;
@@ -625,19 +624,5 @@ export class PerformanceComponent implements OnInit {
   closeEditingWeightClick = (info) => {
     info.weightEditing = false;
   };
-
-  submit(node, jiraInfo): void {
-    let payload: { [i: string]: string } = {
-      metric_id: node.metricId,
-      jira_info: jiraInfo
-    };
-    this.apiService.post('/metrics/update_jira_info', payload).subscribe((response) => {
-      alert("Submitted Successfully");
-      node.editingJira = false;
-      node.showJiraInfo = false;
-    }, error => {
-      this.loggerService.error("updating JiraInfo failed");
-    });
-  }
 
 }

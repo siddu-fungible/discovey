@@ -1,0 +1,13 @@
+.jira-text {
+  width: 300px;
+}
+a {
+  color: #337ab7;
+}
+td {
+  padding: 0;
+  vertical-align: middle;
+}
+th {
+  padding: 0;
+}

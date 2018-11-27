@@ -47,8 +47,9 @@
               </label>
               </td>
               <td *ngIf="flatNode.node.leaf">
-                <span *ngIf="!flatNode.showJiraInfo" (click)="flatNode.showJiraInfo=true"><i class="fa fa-plus-circle"></i></span>
-                <span *ngIf="flatNode.showJiraInfo" (click)="flatNode.showJiraInfo=false"><i class="fa fa-minus-circle"></i></span>
+                <span><a [routerLink]="" class="bugs-link" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">Bugs</a>
+                <span *ngIf="!flatNode.showJiraInfo"><i class="fa fa-plus-circle"></i></span>
+                  <span *ngIf="flatNode.showJiraInfo"><i class="fa fa-minus-circle"></i></span></span>
               </td>
               <ng-template #FailedInfo>
                 <div *ngIf="passedDateTime" style="color: black;">
@@ -76,13 +77,8 @@
               </ng-template>
             </tr>
             <tr *ngIf="flatNode.showJiraInfo">
-              <td colspan="4">
-                <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
-                        </span>
-                <input *ngIf="!flatNode.editingJira" type="text" class="jira-text" [(ngModel)]="jiraInfo" (click)="flatNode.editingJira = true">
-                <i *ngIf="flatNode.editingJira" style="font-size: 95%;"><input type="text" class="jira-text" [(ngModel)]="jiraInfo">
-                  <span><i class="fa fa-check fa-fw tick-color" (click)="submit(flatNode.node, jiraInfo)"></i></span>
-                  <span><i class="fa fa-times fa-fw close-color" (click)="flatNode.editingJira = false"></i></span></i>
+              <td colspan="3">
+                <jira-info [url]="'/metrics/' + flatNode.node.metricId + '/jiras'"></jira-info>
               </td>
             </tr>
 

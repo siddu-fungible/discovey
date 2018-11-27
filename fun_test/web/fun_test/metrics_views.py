@@ -27,7 +27,7 @@ from django.forms.models import model_to_dict
 from analytics_models_helper import invalidate_goodness_cache
 from datetime import datetime
 from dateutil import parser
-from lib.utilities import jira_manager
+from lib.utilities.jira_manager import JiraManager
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -379,26 +379,6 @@ def update_chart(request):
     return "Ok"
 
 
-@csrf_exempt
-@api_safe_json_response
-def update_jira_info(request):
-    request_json = json.loads(request.body)
-    metric_id = request_json["metric_id"]
-
-    jira_info = ""
-    if "jira_info" in request_json:
-        jira_info = request_json["jira_info"]
-
-
-    c = MetricChart.objects.get(metric_id=metric_id)
-    if jira_info:
-        c.jira_info = jira_info
-        c.save()
-    return "Ok"
-
-def validate_jira_info(jira_info):
-
-
 
 @csrf_exempt
 @api_safe_json_response
@@ -591,3 +571,57 @@ def dag(request):
 
     result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id)
     return result
+
+@csrf_exempt
+@api_safe_json_response
+def update_jira_info(request, metric_id, jira_id):
+    try:
+        c = MetricChart.objects.get(metric_id=metric_id)
+        if jira_id:
+            if validate_jira(jira_id):
+                jira_ids = json.loads(c.jira_ids)
+                if jira_id not in jira_ids:
+                    jira_ids.append(jira_id)
+                    c.jira_ids = json.dumps(jira_ids)
+                    c.save()
+    except ObjectDoesNotExist:
+        logger.critical("No data found - updating jira ids for metric id {}".format(metric_id))
+    return "Ok"
+
+def validate_jira(jira_id):
+    project_name,id = jira_id.split('-')
+    jira_obj = JiraManager(project_name=str(project_name))
+    query = 'project="' + str(project_name) +'" and id="' + str(jira_id) + '"'
+    jira_valid = jira_obj.get_issues_by_jql(jql=query)
+    if jira_valid:
+        return True
+    return False
+
+
+@csrf_exempt
+@api_safe_json_response
+def delete_jira_info(request, metric_id, jira_id):
+    try:
+        c = MetricChart.objects.get(metric_id=metric_id)
+        if jira_id:
+            jira_ids = json.loads(c.jira_ids)
+            if jira_id in jira_ids:
+                jira_ids.remove(jira_id)
+                c.jira_ids = json.dumps(jira_ids)
+                c.save()
+    except ObjectDoesNotExist:
+        logger.critical("No data found - Deleting jira ids for metric id {}".format(metric_id))
+    return "Ok"
+
+@csrf_exempt
+@api_safe_json_response
+def fetch_jira_info(request, metric_id):
+    jira_ids = []
+    try:
+        c = MetricChart.objects.get(metric_id=metric_id)
+        if c.jira_ids:
+            jira_ids = json.loads(c.jira_ids)
+    except ObjectDoesNotExist:
+        logger.critical("No data found - fetching jira ids for metric id {}".format(metric_id))
+    return jira_ids
+

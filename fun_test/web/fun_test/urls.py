@@ -132,7 +132,10 @@ metric_urls = [
     url(r'^table_view/(.*)$', metrics_views.table_view),
     url(r'^test$', metrics_views.test),
     url(r'^scores', metrics_views.scores),
-    url(r'^dag$', metrics_views.dag)
+    url(r'^dag$', metrics_views.dag),
+    url(r'^(.*)/jiras$', metrics_views.fetch_jira_info),
+    url(r'^(.*)/jiras/delete/(.*)$', metrics_views.delete_jira_info),
+    url(r'^(.*)/jiras/(.*)$', metrics_views.update_jira_info)
 ]
 
 test_urls = [
