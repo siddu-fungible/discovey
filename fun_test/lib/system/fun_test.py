@@ -105,7 +105,7 @@ class FunTest:
     def __init__(self):
         if "DISABLE_FUN_TEST" in os.environ:
 
-            def black_hole(*args):
+            def black_hole(*args, **kwargs):
                 pass
             self.log = black_hole
             return
@@ -138,7 +138,10 @@ class FunTest:
                             default=None)
         args = parser.parse_args()
         if args.disable_fun_test:
+            self.fun_test_disabled = True
             return
+        else:
+            self.fun_test_disabled = False
         self.logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
@@ -574,7 +577,7 @@ class FunTest:
 
     def safe(self, the_function):
         def inner(*args, **kwargs):
-            if self.debug_enabled and self.function_tracing_enabled:
+            if self.debug_enabled and self.function_tracing_enabled and (not self.fun_test_disabled):
                 args_s = "args:" + ",".join([str(x) for x in args])
                 args_s += " kwargs:" + ",".join([(k + ":" + str(v)) + " " for k, v in kwargs.items()])
                 self.debug(args_s)
