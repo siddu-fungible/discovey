@@ -74,7 +74,8 @@ export class RegressionAdminComponent implements OnInit {
     let softwareVersion = pointInfo.category;
     let moduleInfo = this.info[moduleName];
     moduleInfo.detailedInfo = moduleInfo.bySoftwareVersion[softwareVersion];
-    console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
+    moduleInfo.detailedInfo["softwareVersion"] = softwareVersion;
+    //console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
     moduleInfo.showDetailedInfo = true;
     let i = 0;
 
@@ -159,10 +160,14 @@ export class RegressionAdminComponent implements OnInit {
         scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
       }*/
       if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
-        scriptDetailedInfo[scriptPath] = [];
+        scriptDetailedInfo[scriptPath] = {history: [], historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
       }
-      scriptDetailedInfo[scriptPath].push(history);
+      scriptDetailedInfo[scriptPath].history.push(history);
       let historyResults = this.aggregateHistoryResults(history);
+      scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
+      scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
+      scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
+
       softwareVersionEntry.numPassed += historyResults.numPassed;
       softwareVersionEntry.numFailed += historyResults.numFailed;
       softwareVersionEntry.numNotRun += historyResults.numNotRun;
