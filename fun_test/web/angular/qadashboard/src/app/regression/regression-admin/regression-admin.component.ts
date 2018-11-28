@@ -15,6 +15,8 @@ export class RegressionAdminComponent implements OnInit {
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
   xValues: any [] = [];
   y1Values = [];
+  detailedInfo = null;
+  showDetailedInfo = false;
   public pointClickCallback: Function;
 
 
@@ -73,10 +75,10 @@ export class RegressionAdminComponent implements OnInit {
     let resultType = pointInfo.name;
     let softwareVersion = pointInfo.category;
     let moduleInfo = this.info[moduleName];
-    moduleInfo.detailedInfo = moduleInfo.bySoftwareVersion[softwareVersion];
-    moduleInfo.detailedInfo["softwareVersion"] = softwareVersion;
+    this.detailedInfo = moduleInfo.bySoftwareVersion[softwareVersion];
+    this.detailedInfo["softwareVersion"] = softwareVersion;
     //console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
-    moduleInfo.showDetailedInfo = true;
+    this.showDetailedInfo = true;
     let i = 0;
 
   }
