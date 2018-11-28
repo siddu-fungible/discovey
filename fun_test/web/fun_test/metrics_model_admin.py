@@ -143,10 +143,6 @@ class TeraMarkCryptoPerformanceAdmin(admin.ModelAdmin):
 class TeraMarkLookupEnginePerformanceAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
-@admin.register(FlowTestPerformance)
-class FlowTestPerformanceAdmin(admin.ModelAdmin):
-    ordering = ('-input_date_time',)
-
 @admin.register(ShaxPerformance)
 class ShaxPerformanceAdmin(admin.ModelAdmin):
     pass
