@@ -174,3 +174,12 @@ hr {
 .failed-label {
   cursor: pointer;
 }
+.bugs-link {
+  cursor: pointer;
+
+}
+.bug-badge {
+  cursor: pointer;
+  font-size: 90%;
+  font-weight: 500;
+}

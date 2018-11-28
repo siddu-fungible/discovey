@@ -378,3 +378,19 @@ input:checked + .slider:before {
 .component {
   padding-top: 70px;
 }
+.fa {
+  cursor: pointer;
+}
+.grey-text {
+  font-size: 95%;
+  color: grey;
+}
+.tick-color {
+  color: green;
+}
+.close-color {
+  color: red;
+}
+.owner-text {
+  width: 350px;
+}
