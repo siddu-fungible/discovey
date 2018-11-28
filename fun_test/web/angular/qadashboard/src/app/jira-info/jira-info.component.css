@@ -10,3 +10,9 @@ td {
 th {
   padding: 0;
 }
+.right-padding {
+  padding-right: 3px;
+}
+.min-padding {
+  padding: 3px;
+}

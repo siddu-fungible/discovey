@@ -9,6 +9,7 @@
           <th class="text-center">Score</th>
           <th class="text-center">#</th>
           <th class="text-center">Today</th>
+          <th class="text-center">     </th>
         </tr>
             <ng-container *ngFor="let flatNode of getVisibleNodes(flatNodes)">
             <tr class="fade-element-in">
@@ -52,6 +53,7 @@
                 <span *ngIf="!flatNode.showJiraInfo"><i class="fa fa-plus-circle"></i></span>
                   <span *ngIf="flatNode.showJiraInfo"><i class="fa fa-minus-circle"></i></span></span>
               </td>
+              <td *ngIf="!flatNode.node.leaf">    </td>
               <ng-template #FailedInfo>
                 <div *ngIf="passedDateTime" style="color: black;">
                   <b>Last Passed:</b><br> {{ passedDateTime }}<br>
@@ -78,8 +80,8 @@
               </ng-template>
             </tr>
             <tr *ngIf="flatNode.showJiraInfo">
-              <td colspan="4">
-                <span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>
+              <td colspan="6">
+                <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
                 <jira-info [url]="'/metrics/' + flatNode.node.metricId + '/jiras'" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
               </td>
             </tr>

@@ -10,26 +10,28 @@ import {LoggerService} from "../services/logger/logger.service";
 export class JiraInfoComponent implements OnInit {
 
   @Input() url: any = null;
-  jiraId: any;
+  jiraId: string = null;
   jiraInfo: any = [];
   editingJira: boolean = false;
   showJiraInfo: boolean = false;
   @Output() numBugs: EventEmitter<number> = new EventEmitter();
   status: string = null;
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService) { }
+  constructor(private apiService: ApiService, private loggerService: LoggerService) {
+  }
 
   ngOnInit() {
     this.fetchJiraIds();
   }
 
-  fetchJiraIds() :void {
+  fetchJiraIds(): void {
     this.jiraInfo = [];
     this.status = "Fetching";
-     if (this.url) {
+    if (this.url) {
       this.apiService.get(this.url).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
         this.numBugs.emit(this.jiraInfo.length);
+        this.jiraId = null;
         this.status = null;
       }, error => {
         this.loggerService.error("Fetching JiraIds failed");
@@ -38,25 +40,29 @@ export class JiraInfoComponent implements OnInit {
     }
   }
 
-  submit(jiraId): void {
-    this.apiService.get(this.url + '/' + jiraId).subscribe((response) => {
-      alert("Submitted Successfully");
-      this.editingJira = false;
-      this.showJiraInfo = false;
-      this.fetchJiraIds();
-    }, error => {
-      this.loggerService.error("Updating JiraIds failed");
-      alert("Validation Failed. Invalid Bug Id");
-    });
+  submit(): void {
+    if (this.jiraId === null) {
+      alert("Enter some ID");
+    } else {
+      this.apiService.get(this.url + '/' + this.jiraId).subscribe((response) => {
+        alert("Submitted Successfully");
+        this.editingJira = false;
+        this.showJiraInfo = false;
+        this.fetchJiraIds();
+      }, error => {
+        this.loggerService.error("Updating JiraIds failed");
+        alert("Validation Failed. Invalid Bug Id");
+      });
+    }
   }
 
   removeId(id): void {
     this.apiService.get(this.url + '/delete/' + id).subscribe((response) => {
       alert("Deleted Successfully");
       this.fetchJiraIds();
-      }, error => {
-        this.loggerService.error("Deleting JiraIds failed");
-      });
+    }, error => {
+      this.loggerService.error("Deleting JiraIds failed");
+    });
   }
 
   openUrl(url): void {
