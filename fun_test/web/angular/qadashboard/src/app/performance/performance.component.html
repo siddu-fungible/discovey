@@ -9,7 +9,7 @@
           <th class="text-center">Score</th>
           <th class="text-center">#</th>
           <th class="text-center">Today</th>
-          <th class="text-center">     </th>
+          <!--<th class="text-center">     </th>-->
         </tr>
             <ng-container *ngFor="let flatNode of getVisibleNodes(flatNodes)">
             <tr class="fade-element-in">
@@ -47,13 +47,13 @@
                            class="badge failed-label no-margin badge-danger">FAILED
               </label>
               </td>
-              <td *ngIf="flatNode.node.leaf">
-                <span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge badge-light bug-badge">Bugs-{{ flatNode.node.numBugs }}</span>
-                <span *ngIf="flatNode.node.numBugs==0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
-                <span *ngIf="!flatNode.showJiraInfo"><i class="fa fa-plus-circle"></i></span>
-                  <span *ngIf="flatNode.showJiraInfo"><i class="fa fa-minus-circle"></i></span></span>
-              </td>
-              <td *ngIf="!flatNode.node.leaf">    </td>
+              <!--<td *ngIf="flatNode.node.leaf">-->
+                <!--<span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge badge-light bug-badge">Bugs-{{ flatNode.node.numBugs }}</span>-->
+                <!--<span *ngIf="flatNode.node.numBugs==0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">-->
+                <!--<span *ngIf="!flatNode.showJiraInfo"><i class="fa fa-plus-circle"></i></span>-->
+                  <!--<span *ngIf="flatNode.showJiraInfo"><i class="fa fa-minus-circle"></i></span></span>-->
+              <!--</td>-->
+              <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
               <ng-template #FailedInfo>
                 <div *ngIf="passedDateTime" style="color: black;">
                   <b>Last Passed:</b><br> {{ passedDateTime }}<br>
