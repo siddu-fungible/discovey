@@ -16,33 +16,61 @@
       </fun-chart>
     </div>
     <div class="card-body" *ngIf="moduleInfo.value.showDetailedInfo">
-      <div style="display: inline-block">Software version: {{ moduleInfo.value.detailedInfo.softwareVersion }}</div>
-      <button type="button" class="btn btn-link"> Passed <span
-        class="badge badge-success">{{ moduleInfo.value.detailedInfo.numPassed }}</span></button>
-      <button type="button" class="btn btn-link"> Failed <span
-        class="badge badge-danger">{{ moduleInfo.value.detailedInfo.numFailed }}</span></button>
-      <button type="button" class="btn btn-link"> Not-run <span
-        class="badge badge-secondary">{{ moduleInfo.value.detailedInfo.numNotRun }}</span></button>
+
+      <div class="container">
+        <div class="row">
+          <div class="col-xxl-6 col-lg-6 col-md-6 col-xl-6">
+            <div>Software version: {{ moduleInfo.value.detailedInfo.softwareVersion }}</div>
+          </div>
+          <div class="col-xxl-6 col-lg-6 col-md-6 col-xl-6">
+            <button type="button" class="btn btn-link"> Passed <span
+              class="badge badge-success">{{ moduleInfo.value.detailedInfo.numPassed }}</span></button>
+            <button type="button" class="btn btn-link"> Failed <span
+              class="badge badge-danger">{{ moduleInfo.value.detailedInfo.numFailed }}</span></button>
+            <button type="button" class="btn btn-link"> Not-run <span
+              class="badge badge-secondary">{{ moduleInfo.value.detailedInfo.numNotRun }}</span></button>
+          </div>
+        </div>
+
+      </div>
+
       <div *ngFor="let scriptInfo of moduleInfo.value.detailedInfo.scriptDetailedInfo | keyvalue">
         <ngb-accordion #acc="ngbAccordion">
-          <ngb-panel title="{{ scriptInfo.key }}">
+          <ngb-panel>
+            <ng-template ngbPanelTitle>
+              <div class="container">
+                <div class="row">
+                  <div class="col-xxl-6 col-lg-6 col-md-6 col-xl-6">
+                    {{ scriptInfo.key }}
+                  </div>
+                  <div class="col-xxl-6 col-lg-6 col-md-6 col-xl-6">
+                    <span> Passed <span
+                      class="badge badge-success">{{ scriptInfo.value.historyResults.numPassed }}</span></span>
+                    <span> Failed <span
+                      class="badge badge-danger">{{ scriptInfo.value.historyResults.numFailed }}</span></span>
+                    <span> Not-run <span
+                      class="badge badge-secondary">{{ scriptInfo.value.historyResults.numNotRun }}</span></span>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
             <ng-template ngbPanelContent>
               <table class="table">
-            <tr>
-              <th>Result</th>
-              <th>Suite execution ID</th>
-              <th>TC-ID</th>
-              <th>Start-time</th>
-            </tr>
-            <tr *ngFor="let executionEntry of scriptInfo.value">
-              <td>{{ executionEntry.result }}</td>
-              <td><a target="_blank"
-                     href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
-              </td>
-              <td>{{ executionEntry.test_case_id }}</td>
-              <td>{{ executionEntry.started_time }}</td>
-            </tr>
-          </table>
+                <tr>
+                  <th>Result</th>
+                  <th>Suite execution ID</th>
+                  <th>TC-ID</th>
+                  <th>Start-time</th>
+                </tr>
+                <tr *ngFor="let executionEntry of scriptInfo.value.history">
+                  <td>{{ executionEntry.result }}</td>
+                  <td><a target="_blank"
+                         href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
+                  </td>
+                  <td>{{ executionEntry.test_case_id }}</td>
+                  <td>{{ executionEntry.started_time }}</td>
+                </tr>
+              </table>
             </ng-template>
           </ngb-panel>
         </ngb-accordion>
