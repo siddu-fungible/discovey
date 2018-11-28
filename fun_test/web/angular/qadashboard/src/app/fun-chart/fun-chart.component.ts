@@ -130,6 +130,28 @@ export class FunChartComponent implements OnInit, OnChanges {
             pointPadding: 0,
             borderWidth: 0,
             groupPadding: 0,
+            allowPointSelect: true,
+            cursor: 'pointer',
+            point: {
+              events: {
+                select: function () {
+                  if (self.pointClickCallback) {
+                    let metadata = null;
+                    let name = null;
+                    if (this.series.hasOwnProperty('userOptions')) {
+                      if (this.series.userOptions.hasOwnProperty('metadata')) {
+                        metadata = this.series.userOptions.metadata;
+                      }
+                      if (this.series.userOptions.hasOwnProperty('name')) {
+                        name = this.series.userOptions.name;
+                      }
+                    }
+                    //self.point = self.pointClickCallback(this.category, this.y, name);
+                    self.pointInfo.emit({category: this.category, y: this.y, name: name, metadata: metadata});
+                  }
+                }
+              }
+            }
 
           }
         },
