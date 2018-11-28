@@ -178,3 +178,8 @@ hr {
   cursor: pointer;
 
 }
+.bug-badge {
+  cursor: pointer;
+  font-size: 90%;
+  font-weight: 500;
+}

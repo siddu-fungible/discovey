@@ -31,6 +31,7 @@ class Node {
   grid: any[];
   copiedScore: boolean = false;
   copiedScoreDisposition: number = null;
+  numBugs: number = 0;
 }
 
 class FlatNode {
@@ -40,7 +41,6 @@ class FlatNode {
   hide: boolean;
   indent: number;
   showJiraInfo: boolean = false;
-  editingJira: boolean = false;
   children: FlatNode[] = [];
 
   addChild(flatNode: FlatNode) {
@@ -157,6 +157,7 @@ export class PerformanceComponent implements OnInit {
     node.last_two_scores = dagEntry.last_two_scores;
     node.copiedScore = dagEntry.copied_score;
     node.copiedScoreDisposition = dagEntry.copied_score_disposition;
+    node.numBugs = dagEntry.jira_ids.length;
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
@@ -291,7 +292,6 @@ export class PerformanceComponent implements OnInit {
     newFlatNode.collapsed = true;
     newFlatNode.indent = indent;
     newFlatNode.showJiraInfo = false;
-    newFlatNode.editingJira = false;
     return newFlatNode;
   }
 
@@ -624,5 +624,9 @@ export class PerformanceComponent implements OnInit {
   closeEditingWeightClick = (info) => {
     info.weightEditing = false;
   };
+
+  updateNumBug(numBugs, node): void{
+    node.numBugs = numBugs;
+  }
 
 }
