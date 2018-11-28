@@ -59,7 +59,7 @@
                     <th>Start-time</th>
                   </tr>
                   <tr *ngFor="let executionEntry of scriptInfo.value.history">
-                    <td>{{ executionEntry.result }}</td>
+                    <td><span [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span></td>
                     <td><a target="_blank"
                            href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
                     </td>
