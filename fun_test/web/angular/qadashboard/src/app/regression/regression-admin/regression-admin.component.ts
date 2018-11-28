@@ -74,7 +74,8 @@ export class RegressionAdminComponent implements OnInit {
     let softwareVersion = pointInfo.category;
     let moduleInfo = this.info[moduleName];
     moduleInfo.detailedInfo = moduleInfo.bySoftwareVersion[softwareVersion];
-    console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
+    moduleInfo.detailedInfo["softwareVersion"] = softwareVersion;
+    //console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
     moduleInfo.showDetailedInfo = true;
     let i = 0;
 

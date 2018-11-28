@@ -16,25 +16,36 @@
       </fun-chart>
     </div>
     <div class="card-body" *ngIf="moduleInfo.value.showDetailedInfo">
-      <button type="button" class="btn btn-success btn-sm"> Passed <span class="badge badge-light">{{ moduleInfo.value.detailedInfo.numPassed }}</span></button>
-      <button type="button" class="btn btn-danger btn-sm"> Failed <span class="badge badge-light">{{ moduleInfo.value.detailedInfo.numFailed }}</span></button>
-      <button type="button" class="btn btn-secondary btn-sm"> Not-run <span class="badge badge-light">{{ moduleInfo.value.detailedInfo.numNotRun }}</span></button>
+      <div style="display: inline-block">Software version: {{ moduleInfo.value.detailedInfo.softwareVersion }}</div>
+      <button type="button" class="btn btn-link"> Passed <span
+        class="badge badge-success">{{ moduleInfo.value.detailedInfo.numPassed }}</span></button>
+      <button type="button" class="btn btn-link"> Failed <span
+        class="badge badge-danger">{{ moduleInfo.value.detailedInfo.numFailed }}</span></button>
+      <button type="button" class="btn btn-link"> Not-run <span
+        class="badge badge-secondary">{{ moduleInfo.value.detailedInfo.numNotRun }}</span></button>
       <div *ngFor="let scriptInfo of moduleInfo.value.detailedInfo.scriptDetailedInfo | keyvalue">
-        <div>{{ scriptInfo.key }}</div>
-        <table class="table">
-          <tr>
-            <th>Result</th>
-            <th>Suite ID</th>
-            <th>TC-ID</th>
-            <th>Start-time</th>
-          </tr>
-          <tr *ngFor="let executionEntry of scriptInfo.value">
-            <td>{{ executionEntry.result }}</td>
-            <td><a target="_blank" href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a></td>
-            <td>{{ executionEntry.test_case_id }}</td>
-            <td>{{ executionEntry.started_time }}</td>
-          </tr>
-        </table>
+        <ngb-accordion #acc="ngbAccordion">
+          <ngb-panel title="{{ scriptInfo.key }}">
+            <ng-template ngbPanelContent>
+              <table class="table">
+            <tr>
+              <th>Result</th>
+              <th>Suite execution ID</th>
+              <th>TC-ID</th>
+              <th>Start-time</th>
+            </tr>
+            <tr *ngFor="let executionEntry of scriptInfo.value">
+              <td>{{ executionEntry.result }}</td>
+              <td><a target="_blank"
+                     href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
+              </td>
+              <td>{{ executionEntry.test_case_id }}</td>
+              <td>{{ executionEntry.started_time }}</td>
+            </tr>
+          </table>
+            </ng-template>
+          </ngb-panel>
+        </ngb-accordion>
       </div>
     </div>
   </div>

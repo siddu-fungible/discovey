@@ -1,0 +1,4 @@
+::ng-deep .accordion > .card > .card-header {
+  padding: unset;
+  background-color: white;
+}
