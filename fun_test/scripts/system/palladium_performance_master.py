@@ -1136,6 +1136,8 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
                         d = self.metrics_to_dict(metrics, fun_test.PASSED)
                         MetricHelper(model=FlowTestPerformance).add_entry(**d)
 
+            fun_test.test_assert(flow_test_passed, "Checking if flow test passed")
+
         except Exception as ex:
             fun_test.critical(str(ex))
 
