@@ -15,6 +15,9 @@ export class RegressionAdminComponent implements OnInit {
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
   xValues: any [] = [];
   y1Values = [];
+  public pointClickCallback: Function;
+
+
   /*
   tempPassedValues = [];
   tempFailedValues = [];
@@ -35,6 +38,8 @@ export class RegressionAdminComponent implements OnInit {
         name: 'Not-run',
         data: []
     }]*/
+    this.pointClickCallback = this.pointDetail.bind(this);
+
   }
 
   fetchAllVersions() {
@@ -62,13 +67,33 @@ export class RegressionAdminComponent implements OnInit {
 
   }
 
+  showPointDetails(pointInfo): void {
+    //let moduleInfo = this.infobySoftwareVersion[pointInfo.category];
+    let moduleName = pointInfo.metadata.module;
+    let resultType = pointInfo.name;
+    let softwareVersion = pointInfo.category;
+    let moduleInfo = this.info[moduleName];
+    moduleInfo.detailedInfo = moduleInfo.bySoftwareVersion[softwareVersion];
+    console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
+    moduleInfo.showDetailedInfo = true;
+    let i = 0;
+
+  }
+
+  pointDetail(x, y, name): any {
+    let moduleInfo = this.info[x];
+    return "xx";
+  }
+
+
+
   fetchModules () {
     this.apiService.get("/regression/modules").subscribe((response) => {
       console.log(response);
       let modules = response.data;
       modules.forEach((module) => {
         this.info[module.name] = {name: module.name, verboseName: module.verbose_name};
-        this.prepareVersionPlaceHolders(this.info[module.name]);
+        this.preparePlaceHolders(module.name, this.info[module.name]);
         this.fetchScriptInfo(module.name, this.info[module.name]);
       })
     }, error => {
@@ -76,21 +101,31 @@ export class RegressionAdminComponent implements OnInit {
     })
   }
 
-  prepareVersionPlaceHolders (moduleInfo) {
+  preparePlaceHolders (moduleName, moduleInfo) {
     // create a bySoftwareVersion key under each module
     // byVersion is an array of software versions
     moduleInfo["y1Values"] = [{
         name: 'Passed',
-        data: []
+        data: [],
+        color: 'green',
+        metadata: {module: moduleName}
     }, {
         name: 'Failed',
-        data: []
+        data: [],
+        color: 'red',
+        metadata: {module: moduleName}
+
     }, {
         name: 'Not-run',
-        data: []
+        data: [],
+        color: 'grey',
+        metadata: {module: moduleName}
+
     }];
     moduleInfo["xValues"] = [];
     moduleInfo["bySoftwareVersion"] = {};
+    moduleInfo["showDetailedInfo"] = false;
+    moduleInfo["detailedInfo"] = {};
     this.versionList.forEach((softwareVersion) => {
       moduleInfo.bySoftwareVersion[softwareVersion] = {scriptDetailedInfo: {},
         numPassed: 0,
@@ -119,6 +154,10 @@ export class RegressionAdminComponent implements OnInit {
     if (bySoftwareVersion.hasOwnProperty(softwareVersion)) {
       let softwareVersionEntry = bySoftwareVersion[softwareVersion];
       let scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
+      /*if (!scriptDetailedInfo) {
+        softwareVersionEntry.scriptDetailedInfo = {};
+        scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
+      }*/
       if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
         scriptDetailedInfo[scriptPath] = [];
       }
@@ -202,8 +241,19 @@ export class RegressionAdminComponent implements OnInit {
 
   }
 
+  p(s) {
+    let i = 0;
+  }
+
   test() {
     console.log(this.info);
+    console.log(this.info["storage"].detailedInfo.scriptDetailedInfo);
+  }
+
+  public functionCalledOnEachIteration(index, item) {
+    debugger;
+    console.log('trackByFn', index, item);
+    return item;
   }
 
 }
