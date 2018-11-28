@@ -32,6 +32,7 @@ class Node {
   copiedScore: boolean = false;
   copiedScoreDisposition: number = null;
   numBugs: number = 0;
+  showAddJira: boolean = false;
 }
 
 class FlatNode {
@@ -158,6 +159,7 @@ export class PerformanceComponent implements OnInit {
     node.copiedScore = dagEntry.copied_score;
     node.copiedScoreDisposition = dagEntry.copied_score_disposition;
     node.numBugs = dagEntry.jira_ids.length;
+    node.showAddJira = false;
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();

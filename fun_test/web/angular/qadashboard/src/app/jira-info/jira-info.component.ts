@@ -9,7 +9,7 @@ import {LoggerService} from "../services/logger/logger.service";
 })
 export class JiraInfoComponent implements OnInit {
 
-  @Input() url: any = null;
+  @Input() apiUrl: any = null;
   jiraId: string = null;
   jiraInfo: any = [];
   editingJira: boolean = false;
@@ -27,8 +27,8 @@ export class JiraInfoComponent implements OnInit {
   fetchJiraIds(): void {
     this.jiraInfo = [];
     this.status = "Fetching";
-    if (this.url) {
-      this.apiService.get(this.url).subscribe((response) => {
+    if (this.apiUrl) {
+      this.apiService.get(this.apiUrl).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
         this.numBugs.emit(this.jiraInfo.length);
         this.jiraId = null;
@@ -44,7 +44,7 @@ export class JiraInfoComponent implements OnInit {
     if (this.jiraId === null) {
       alert("Enter some ID");
     } else {
-      this.apiService.get(this.url + '/' + this.jiraId).subscribe((response) => {
+      this.apiService.get(this.apiUrl + '/' + this.jiraId).subscribe((response) => {
         alert("Submitted Successfully");
         this.editingJira = false;
         this.showJiraInfo = false;
@@ -57,7 +57,7 @@ export class JiraInfoComponent implements OnInit {
   }
 
   removeId(id): void {
-    this.apiService.get(this.url + '/delete/' + id).subscribe((response) => {
+    this.apiService.get(this.apiUrl + '/delete/' + id).subscribe((response) => {
       alert("Deleted Successfully");
       this.fetchJiraIds();
     }, error => {
