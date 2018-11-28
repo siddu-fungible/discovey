@@ -4,7 +4,7 @@
   <span><i class="fa fa-times fa-fw close-color" (click)="editingJira = false"></i></span></i><br>
 <fun-spinner [status]="status"></fun-spinner>
 <div style="margin-top: 2px" *ngIf="jiraInfo.length>0">
-  <table class="table no-padding no-margin table-borderless">
+  <table class="table no-padding no-margin">
     <tr>
       <th>
       </th>
@@ -26,7 +26,7 @@
       <td>
         <a href="http://jira.fungible.local/browse/{{ info['id'] }}" target="_blank" >{{ info['id'] }}</a>
       </td>
-      <td style="max-width: 150px">
+      <td style="max-width: 175px">
         {{ info["summary"] }}
       </td>
       <td>
