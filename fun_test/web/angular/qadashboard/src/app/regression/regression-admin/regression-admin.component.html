@@ -26,9 +26,9 @@
       <table class="table">
         <tr>
           <th>Software version: {{ detailedInfo.softwareVersion }}</th>
-          <th>Passed</th>
-          <th>Failed</th>
-          <th>Not-run</th>
+          <th><label class="badge badge-success">Passed</label></th>
+          <th><label class="badge badge-danger">Failed</label></th>
+          <th><label class="badge badge-secondary">Not-run</label></th>
         </tr>
         <tr>
           <td>Total</td>
@@ -38,6 +38,7 @@
 
         </tr>
         <tr *ngFor="let scriptInfo of detailedInfo.scriptDetailedInfo | keyvalue">
+          <td>
           <ngb-accordion #acc="ngbAccordion">
             <ngb-panel>
               <ng-template ngbPanelTitle>
@@ -45,14 +46,6 @@
                   <div class="row">
                     <div class="col-xxl-6 col-lg-6 col-md-6 col-xl-6">
                       {{ scriptInfo.key }}
-                    </div>
-                    <div class="col-xxl-6 col-lg-6 col-md-6 col-xl-6">
-                    <span> Passed <span
-                      class="badge badge-success">{{ scriptInfo.value.historyResults.numPassed }}</span></span>
-                      <span> Failed <span
-                        class="badge badge-danger">{{ scriptInfo.value.historyResults.numFailed }}</span></span>
-                      <span> Not-run <span
-                        class="badge badge-secondary">{{ scriptInfo.value.historyResults.numNotRun }}</span></span>
                     </div>
                   </div>
                 </div>
@@ -77,6 +70,11 @@
               </ng-template>
             </ngb-panel>
           </ngb-accordion>
+          </td>
+          <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
+          <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
+          <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
+
         </tr>
 
       </table>
