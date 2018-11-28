@@ -57,6 +57,7 @@ WRO_WU_COUNT_VPP = "wrowu_cnt_vpp"
 PSW_SAMPLED_PACKET_COUNT = 'sampled_pkt'
 SFG_IN_FFE_DESC = "IN_FFE_DESC"
 SFG_OUT_FFE_DESC = "OUT_FFE_DESC"
+SFG_OUT_PSW_DESC = "OUT_PSW_DESC"
 SFG_SAMPLER_COPY = "SAMPLER_COPY"
 
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
