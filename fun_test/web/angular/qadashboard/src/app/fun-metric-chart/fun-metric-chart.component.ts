@@ -77,13 +77,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
-    this.status = null;
   }
 
   ngOnChanges() {
     this.status = "Updating";
     this.fetchNames();
-    this.status = null;
   }
 
   showPointDetails(pointInfo): void {
@@ -591,6 +589,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }, error => {
       this.loggerService.error("fetchMetricsData");
     });
+    this.status = null;
   }
 
   //fetching container data
@@ -647,6 +646,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.series = dateSeries;
       }
     });
+    this.status = null;
   }
 
   //called from fetchInfo and setTimeMode
