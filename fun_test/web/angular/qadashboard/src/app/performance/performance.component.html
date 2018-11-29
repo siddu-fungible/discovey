@@ -47,12 +47,13 @@
                            class="badge failed-label no-margin badge-danger">FAILED
               </label>
               </td>
-              <!--<td *ngIf="flatNode.node.leaf">-->
-                <!--<span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge badge-light bug-badge">Bugs-{{ flatNode.node.numBugs }}</span>-->
-                <!--<span *ngIf="flatNode.node.numBugs==0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">-->
-                <!--<span *ngIf="!flatNode.showJiraInfo"><i class="fa fa-plus-circle"></i></span>-->
-                  <!--<span *ngIf="flatNode.showJiraInfo"><i class="fa fa-minus-circle"></i></span></span>-->
-              <!--</td>-->
+              <td *ngIf="flatNode.node.leaf">
+                <span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
+                </sup></span>
+                <span *ngIf="flatNode.node.numBugs==0 && flatNode.node.showAddJira" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
+                <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
+                  <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
+              </td>
               <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
               <ng-template #FailedInfo>
                 <div *ngIf="passedDateTime" style="color: black;">
@@ -82,7 +83,7 @@
             <tr *ngIf="flatNode.showJiraInfo">
               <td colspan="6">
                 <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
-                <jira-info [url]="'/metrics/' + flatNode.node.metricId + '/jiras'" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
+                <jira-info [apiUrl]="'/metrics/' + flatNode.node.metricId + '/jiras'" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
               </td>
             </tr>
 
