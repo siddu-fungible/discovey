@@ -64,6 +64,7 @@ regression_urls = [
     url(r'^get_all_versions', regression_views.get_all_versions),
     url(r'^get_script_history', regression_views.get_script_history),
     url(r'^scripts$', regression_views.scripts),
+    url(r'^script$', regression_views.script),
     url(r'^\w+$', views.angular_home)
 
 ]
