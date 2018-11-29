@@ -448,7 +448,7 @@ def get_script_history(request):
     history = []
     request_json = json.loads(request.body)
     script_path = request_json["script_path"]
-    tes = TestCaseExecution.objects.filter(script_path=script_path)
+    tes = TestCaseExecution.objects.filter(script_path=script_path).order_by("-suite_execution_id")[:100]
     for te in tes:
         # version = suite_execution_properties(te.suite_execution_id, "version")
         serializer = TestCaseExecutionSerializer(te)
