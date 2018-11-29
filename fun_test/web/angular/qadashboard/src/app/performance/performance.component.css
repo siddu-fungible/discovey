@@ -182,4 +182,15 @@ hr {
   cursor: pointer;
   font-size: 90%;
   font-weight: 500;
+  vertical-align: middle;
+}
+sup {
+    vertical-align: middle;
+    font-size: 12px;
+    font-weight: bold;
+}
+.plus-minus {
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
 }
