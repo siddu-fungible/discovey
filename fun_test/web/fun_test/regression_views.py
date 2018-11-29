@@ -465,5 +465,23 @@ def scripts(request):
     regression_scripts = regression_serializer.data
     return regression_scripts
 
+@csrf_exempt
+@api_safe_json_response
+def script(request):
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+    modules = request_json["modules"]
+    module_names = [x["name"] for x in modules]
+    try:
+        r = RegresssionScripts.objects.get(script_path=script_path)
+        r.modules = json.dumps(module_names)
+        r.save()
+    except ObjectDoesNotExist:
+        r = RegresssionScripts(script_path=script_path, modules=json.dumps(module_names))
+        r.save()
+
+    return True
+
+
 def test(request):
     return render(request, 'qa_dashboard/test.html', locals())

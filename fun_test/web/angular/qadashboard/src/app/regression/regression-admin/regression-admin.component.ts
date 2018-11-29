@@ -230,12 +230,12 @@ export class RegressionAdminComponent implements OnInit {
       // Set selected modules for each script
       this.allRegressionScripts.forEach((regressionScript) => {
         regressionScript["selectedModules"] = [];
-        regressionScript["originalSelectedModules"] = [];
+        regressionScript["savedSelectedModules"] = [];
         regressionScript["dirty"] = false;
         regressionScript.modules.forEach((module) => {
           regressionScript.selectedModules.push(this.getMatchingModule(module));
         });
-        regressionScript.originalSelectedModules = [...regressionScript.selectedModules];
+        regressionScript.savedSelectedModules = [...regressionScript.selectedModules];
       });
     }, error => {
       this.loggerService.error("/regression/scripts");
@@ -252,6 +252,24 @@ export class RegressionAdminComponent implements OnInit {
     }
     return matchedModule;
   }
+
+  submitSelectModuleClick(regressionScript) {
+    console.log(regressionScript.selectedModules);
+    let payload = {script_path: regressionScript.script_path, modules: regressionScript.selectedModules};
+    this.apiService.post("/regression/script", payload).subscribe((response) => {
+      regressionScript.dirty = false;
+      regressionScript.savedSelectedModules = [...regressionScript.selectedModules];
+    }, error => {
+      this.loggerService.error("/regression/script");
+      this.dismissSelectModuleClick(regressionScript);
+    })
+  }
+
+  dismissSelectModuleClick(regressionScript) {
+    regressionScript.selectedModules = [...regressionScript.savedSelectedModules];
+    regressionScript.dirty = false;
+  }
+
 
   getKeys(map) {
     //console.log(map.keys());

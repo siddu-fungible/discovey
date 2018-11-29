@@ -207,7 +207,7 @@ class RegresssionScripts(models.Model):
     scripts
     """
     script_path = models.TextField(unique=True)
-    modules = models.TextField(default="['storage']")  # Refers to class Module
+    modules = models.TextField(default='["storage"]')  # Refers to class Module
     components = models.TextField(default=json.dumps(['component1']))
     tags = models.TextField(default=json.dumps(['tag1']))
 
