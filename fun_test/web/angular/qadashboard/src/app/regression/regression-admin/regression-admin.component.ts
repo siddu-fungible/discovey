@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
+import {CommonService} from "../../services/common/common.service";
 
 @Component({
   selector: 'app-regression-admin',
@@ -12,19 +13,12 @@ export class RegressionAdminComponent implements OnInit {
   versionSet = new Set(); // The set of all software versions
   versionList = [];
   suiteExectionVersionMap = {};
-  constructor(private apiService: ApiService, private loggerService: LoggerService) { }
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
   xValues: any [] = [];
   y1Values = [];
   detailedInfo = null;
   showDetailedInfo = false;
   public pointClickCallback: Function;
-
-
-  /*
-  tempPassedValues = [];
-  tempFailedValues = [];
-  tempNotRunValues = [];
-  tempSoftwareVersions = [];*/
 
 
   ngOnInit() {
@@ -79,6 +73,7 @@ export class RegressionAdminComponent implements OnInit {
     this.detailedInfo["softwareVersion"] = softwareVersion;
     //console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
     this.showDetailedInfo = true;
+    this.commonService.scrollTo('detailed-info');
     let i = 0;
 
   }
@@ -125,6 +120,7 @@ export class RegressionAdminComponent implements OnInit {
         metadata: {module: moduleName}
 
     }];
+    moduleInfo["modifyingScriptAllocation"] = false;
     moduleInfo["xValues"] = [];
     moduleInfo["bySoftwareVersion"] = {};
     moduleInfo["showDetailedInfo"] = false;
@@ -136,6 +132,10 @@ export class RegressionAdminComponent implements OnInit {
         numNotRun: 0};
 
     })
+  }
+
+  modifyScriptAllocationClick (moduleInfo) {
+    moduleInfo.modifyingScriptAllocation = !moduleInfo.modifyingScriptAllocation;
   }
 
   aggregateHistoryResults (historyElement) {
