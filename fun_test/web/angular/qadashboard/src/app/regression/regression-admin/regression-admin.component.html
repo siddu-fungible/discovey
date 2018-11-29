@@ -18,12 +18,33 @@
           </fun-chart>
         </div>
       </div>
-      <button class="btn btn-link" (click)="modifyScriptAllocationClick(moduleInfo)">
-        Script allocation
-      </button>
+      <div>
+        <button style="float: right" class="btn btn-link" (click)="modifyScriptAllocationClick(moduleInfo)">Script allocation</button>
+      </div>
+
       <div *ngIf="moduleInfo.modifyingScriptAllocation" class="card card-primary">
         <div class="card-header"><b>Adding scripts ...</b></div>
         <div class="card-body">
+          <table class="table">
+            <tr>
+              <th>
+                Script
+              </th>
+              <th>
+                Modules
+              </th>
+            </tr>
+            <tr *ngFor="let regressionScript of allRegressionScripts">
+              <td>
+                {{ regressionScript.script_path }}
+              </td>
+              <td>
+                <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableModules" [(ngModel)]="regressionScript.selectedModules"
+                                           [settings]="dropdownSettings">
+                </ng-multiselect-dropdown>
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
     </div>

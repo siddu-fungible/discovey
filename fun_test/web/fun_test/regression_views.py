@@ -455,5 +455,15 @@ def get_script_history(request):
         history.append(serializer.data)
     return history
 
+@csrf_exempt
+@api_safe_json_response
+def scripts(request):
+    all_regression_scripts = RegresssionScripts.objects.all()
+    for r in all_regression_scripts:
+        i = 0
+    regression_serializer = RegresssionScriptsSerializer(all_regression_scripts, many=True)
+    regression_scripts = regression_serializer.data
+    return regression_scripts
+
 def test(request):
     return render(request, 'qa_dashboard/test.html', locals())

@@ -19,9 +19,23 @@ export class RegressionAdminComponent implements OnInit {
   detailedInfo = null;
   showDetailedInfo = false;
   public pointClickCallback: Function;
+  allRegressionScripts = [];
+  dropdownSettings = {};
+  selectedModules: any[] = [];
+  availableModules = [];
+
 
 
   ngOnInit() {
+    this.dropdownSettings = {
+      singleSelection: false,
+      idField: 'name',
+      textField: 'verbose_name',
+      selectAllText: 'Select All',
+      unSelectAllText: 'UnSelect All',
+      itemsShowLimit: 3,
+      allowSearchFilter: true
+    };
     this.fetchAllVersions();
     /*
     this.y1Values = [{
@@ -83,17 +97,15 @@ export class RegressionAdminComponent implements OnInit {
     return "xx";
   }
 
-
-
   fetchModules () {
     this.apiService.get("/regression/modules").subscribe((response) => {
       console.log(response);
-      let modules = response.data;
-      modules.forEach((module) => {
+      this.availableModules = response.data;
+      this.availableModules.forEach((module) => {
         this.info[module.name] = {name: module.name, verboseName: module.verbose_name};
         this.preparePlaceHolders(module.name, this.info[module.name]);
         this.fetchScriptInfo(module.name, this.info[module.name]);
-      })
+      });
     }, error => {
       this.loggerService.error("Error fetching modules");
     })
@@ -136,6 +148,7 @@ export class RegressionAdminComponent implements OnInit {
 
   modifyScriptAllocationClick (moduleInfo) {
     moduleInfo.modifyingScriptAllocation = !moduleInfo.modifyingScriptAllocation;
+    this.fetchRegressionScripts();
   }
 
   aggregateHistoryResults (historyElement) {
@@ -209,6 +222,32 @@ export class RegressionAdminComponent implements OnInit {
     }, error => {
       this.loggerService.error("Fetching scripts by module");
     })
+  }
+
+  fetchRegressionScripts() {
+    this.apiService.get("/regression/scripts").subscribe((response) => {
+      this.allRegressionScripts = response.data;
+      // Set selected modules for each script
+      this.allRegressionScripts.forEach((regressionScript) => {
+        regressionScript["selectedModules"] = [];
+        regressionScript.modules.forEach((module) => {
+          regressionScript.selectedModules.push(this.getMatchingModule(module));
+        })
+      });
+    }, error => {
+      this.loggerService.error("/regression/scripts");
+    })
+  }
+
+  getMatchingModule(moduleName) {
+    let matchedModule = null;
+    for (let i = 0; i < this.availableModules.length; i++) {
+      let availableModule = this.availableModules[i];
+      if (availableModule.name === moduleName) {
+       matchedModule = availableModule;
+      }
+    }
+    return matchedModule;
   }
 
   getKeys(map) {
