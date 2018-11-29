@@ -1123,6 +1123,50 @@ class TeraMarkLookupEnginePerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class TeraMarkZipDeflatePerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_type = models.CharField(max_length=30, default="", choices=[(0, "Deflate")])
+    input_operation = models.CharField(max_length=30, default="", choices=[(0, "Compress"), (1, "Decompress")])
+    input_effort = models.CharField(max_length=30, default="", choices=[(0, "0"), (1, "3"), (2, "4"), (3, "5"), (4, "8"), (5, "9"), (6, "10"), (7, "11")])
+    output_bandwidth_avg = models.IntegerField(verbose_name="Kbps", default=-1)
+    output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
+    output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
+    output_iops = models.IntegerField(verbose_name="ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkZipLzmaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_type = models.CharField(max_length=30, default="", choices=[(0, "LZMA")])
+    input_operation = models.CharField(max_length=30, default="", choices=[(0, "Compress"), (1, "Decompress")])
+    input_effort = models.CharField(max_length=30, default="", choices=[(0, "8"), (1, "9"), (2, "10"), (3, "11")])
+    output_bandwidth_avg = models.IntegerField(verbose_name="Kbps", default=-1)
+    output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
+    output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
+    output_iops = models.IntegerField(verbose_name="ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class FlowTestPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
