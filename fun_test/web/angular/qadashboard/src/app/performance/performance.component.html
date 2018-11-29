@@ -48,7 +48,7 @@
               </label>
               </td>
               <td *ngIf="flatNode.node.leaf">
-                <span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge no-padding badge-light bug-badge">Bugs<sup><span class="close-color">{{ flatNode.node.numBugs }}</span>
+                <span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
                 <span *ngIf="flatNode.node.numBugs==0 && flatNode.node.showAddJira" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
                 <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>

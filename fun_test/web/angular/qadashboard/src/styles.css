@@ -394,3 +394,6 @@ input:checked + .slider:before {
 .owner-text {
   width: 350px;
 }
+.text-color-red {
+  color: red;
+}
