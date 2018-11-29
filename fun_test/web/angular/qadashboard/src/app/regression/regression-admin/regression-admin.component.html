@@ -39,8 +39,13 @@
                 {{ regressionScript.script_path }}
               </td>
               <td>
-                <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableModules" [(ngModel)]="regressionScript.selectedModules"
-                                           [settings]="dropdownSettings">
+                <ng-multiselect-dropdown
+                  [placeholder]="'Select'"
+                  [data]="availableModules"
+                  [(ngModel)]="regressionScript.selectedModules"
+                  [settings]="dropdownSettings"
+                  (onSelect)="regressionScript.dirty = true"
+                  (onSelectAll)="regressionScript.dirty = true">
                 </ng-multiselect-dropdown>
               </td>
             </tr>

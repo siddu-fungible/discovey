@@ -230,9 +230,12 @@ export class RegressionAdminComponent implements OnInit {
       // Set selected modules for each script
       this.allRegressionScripts.forEach((regressionScript) => {
         regressionScript["selectedModules"] = [];
+        regressionScript["originalSelectedModules"] = [];
+        regressionScript["dirty"] = false;
         regressionScript.modules.forEach((module) => {
           regressionScript.selectedModules.push(this.getMatchingModule(module));
-        })
+        });
+        regressionScript.originalSelectedModules = [...regressionScript.selectedModules];
       });
     }, error => {
       this.loggerService.error("/regression/scripts");
