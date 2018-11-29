@@ -585,7 +585,14 @@ export class PerformanceComponent implements OnInit {
   };
 
   showNonAtomicMetric = (flatNode) => {
+    if (this.currentNode && this.currentNode.showAddJira) {
+      this.currentNode.showAddJira = false;
+    }
+    if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
+      this.currentFlatNode.showJiraInfo = false;
+    }
     this.currentNode = flatNode.node;
+    this.currentFlatNode = flatNode;
     this.mode = Mode.ShowingNonAtomicMetric;
     this.expandNode(flatNode);
     this.prepareGridNodes(flatNode.node);
