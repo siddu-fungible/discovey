@@ -492,11 +492,19 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let keyList = [];
       let keyValue = [];
       let dataSetIndex = 0;
+      let trimEmptyStartValues = false;
       for (let oneDataSet of allDataSets) {
         keyValue[dataSetIndex] = [];
         for (let oneRecord of oneDataSet) {
-          keyList.push(oneRecord.input_date_time.toString());
-          keyValue[dataSetIndex][oneRecord.input_date_time.toString()] = oneRecord;
+          let outputName = this.filterDataSets[dataSetIndex].output.name;
+          if (oneRecord[outputName] > 0) {
+            trimEmptyStartValues = true;
+          }
+          if (trimEmptyStartValues) {
+            keyList.push(oneRecord.input_date_time.toString());
+            keyValue[dataSetIndex][oneRecord.input_date_time.toString()] = oneRecord;
+          }
+
         }
         dataSetIndex++;
       }
@@ -535,7 +543,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               if (this.y1AxisTitle) {
                 this.chart1YaxisTitle = this.y1AxisTitle;
               }
-              this.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
             }
             startIndex--;
           }
@@ -641,7 +648,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
         }
         this.chart1YaxisTitle = "Scores";
-        this.chart1XaxisTitle = "Date";
         this.values = [{data: values}];
         this.series = dateSeries;
       }
