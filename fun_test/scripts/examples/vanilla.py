@@ -34,7 +34,7 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        fun_test.log("Some log")
+        fun_test.log("Some log: vanilla 2")
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
 
 
