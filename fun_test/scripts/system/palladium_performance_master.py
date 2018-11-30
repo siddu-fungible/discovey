@@ -11,7 +11,7 @@ from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkP
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
     TeraMarkCryptoPerformance
 from web.fun_test.metrics_models import TeraMarkLookupEnginePerformance, FlowTestPerformance, \
-    TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance
+    TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 from web.fun_test.analytics_models_helper import prepare_status_db
 from web.fun_test.models import TimeKeeper
@@ -26,6 +26,7 @@ TERAMARK_CRYPTO = "crypto_teramark"
 TERAMARK_LOOKUP = "le_teramark"
 FLOW_TEST_TAG = "qa_storage2_endpoint"
 TERAMARK_ZIP = "zip_teramark"
+TERAMARK_DFA = "dfa_teramark"
 
 
 def get_rounded_time():
@@ -63,7 +64,7 @@ class MyScript(FunTestScript):
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
-                FLOW_TEST_TAG, TERAMARK_ZIP]
+                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -82,13 +83,14 @@ class PalladiumPerformanceTc(FunTestCase):
     def cleanup(self):
         pass
 
-    def validate_job(self):
+    def validate_job(self, validation_required=True):
         job_info = self.lsf_status_server.get_last_job(tag=self.tag)
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
-        fun_test.test_assert(not job_info["return_code"], "Valid return code")
-        fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(self.job_id))
+        if validation_required:
+            fun_test.test_assert(not job_info["return_code"], "Valid return code")
+            fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(self.job_id))
         lines = job_info["output_text"].split("\n")
         dt = job_info["date_time"]
 
@@ -1192,8 +1194,9 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
     def run(self):
         metrics = collections.OrderedDict()
         try:
-            fun_test.test_assert(self.validate_job(), "validating job")
+            fun_test.test_assert(self.validate_job(validation_required=False), "validating job")
             flow_test_passed = False
+            match = None
             for line in self.lines:
                 if "PASS libfunq testflow_test" in line:
                     flow_test_passed = True
@@ -1201,6 +1204,7 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
                     r'Testflow:\s+(?P<iterations>\d+)\s+iterations\s+took\s+(?P<seconds>\d+)\s+seconds',
                     line)
                 if m:
+                    match = m
                     input_iterations = int(m.group("iterations"))
                     input_app = "hw_hsu_test"
                     output_time = int(m.group("seconds"))
@@ -1208,7 +1212,7 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
 
                 if flow_test_passed:
                     self.result = fun_test.PASSED
-                    if m:
+                    if match:
                         metrics["input_iterations"] = input_iterations
                         metrics["output_time"] = output_time
                         metrics["input_app"] = input_app
@@ -1291,6 +1295,55 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
                                      model_name="TeraMarkZipLzmaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_DFA
+
+    def describe(self):
+        self.set_test_details(id=22,
+                              summary="TeraMark DFA Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(validation_required=False), "validating job")
+            teramark_begin = False
+            for line in self.lines:
+                if "TeraMark Begin" in line:
+                    teramark_begin = True
+                if "TeraMark End" in line:
+                    teramark_begin = False
+                if teramark_begin:
+                    m = re.search(
+                          r'{"Graph\s+Index":\s+(?P<index>\S+),\s+"Processed\s+\(Bytes\)":\s+(?P<processed>\S+),\s+"Matches\s+\(Bytes\)":\s+(?P<matches>\S+),\s+"Duration\s+\(ns\)":\s+(?P<latency>\S+),\s+"Throughput\s+\(Gbps\)":\s+(?P<bandwidth>\S+)}',
+                         line)
+                    if m:
+                        input_graph_index = int(m.group("index"))
+                        output_processed = int(m.group("processed"))
+                        output_matches = int(m.group("matches"))
+                        output_latency = int(m.group("latency"))
+                        output_bandwidth = int(m.group("bandwidth"))
+
+                        fun_test.log(
+                            "graph index: {}, latency: {}, bandwidth: {}".format(input_graph_index, output_latency,
+                                                                                 output_bandwidth))
+                        metrics["input_graph_index"] = input_graph_index
+                        metrics["output_processed"] = output_processed
+                        metrics["output_matches"] = output_matches
+                        metrics["output_latency"] = output_latency
+                        metrics["output_bandwidth"] = output_bandwidth
+                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                        MetricHelper(model=TeraMarkDfaPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     model_name="TeraMarkDfaPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1311,27 +1364,28 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
     # myscript.add_test_case(FlowTestPerformanceTC())
     myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
