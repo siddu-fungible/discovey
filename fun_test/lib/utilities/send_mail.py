@@ -14,7 +14,7 @@ def send_mail(from_address=REGRESSION_EMAIL, to_addresses=None, subject="", cont
     try:
         msg = MIMEText(content, "html")
         msg['Subject'] = subject
-        msg['From'] = from_address
+        # msg['From'] = from_address
         to_address_str = ", ".join(to_addresses)
         msg['To'] = to_address_str
         s = smtplib.SMTP("localhost", timeout=5)
