@@ -4,11 +4,11 @@ import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
 
 @Component({
-  selector: 'app-regression-admin',
-  templateUrl: './regression-admin.component.html',
-  styleUrls: ['./regression-admin.component.css']
+  selector: 'app-regression-summary',
+  templateUrl: './regression-summary.component.html',
+  styleUrls: ['./regression-summary.component.css']
 })
-export class RegressionAdminComponent implements OnInit {
+export class RegressionSummaryComponent implements OnInit {
   info = {};
   versionSet = new Set(); // The set of all software versions
   versionList = [];
@@ -23,7 +23,7 @@ export class RegressionAdminComponent implements OnInit {
   dropdownSettings = {};
   selectedModules: any[] = [];
   availableModules = [];
-  modifyingScriptAllocation = null;
+
 
 
   ngOnInit() {
@@ -49,7 +49,6 @@ export class RegressionAdminComponent implements OnInit {
         data: []
     }]*/
     this.pointClickCallback = this.pointDetail.bind(this);
-    this.fetchRegressionScripts();
 
   }
 
@@ -147,8 +146,8 @@ export class RegressionAdminComponent implements OnInit {
     })
   }
 
-  modifyScriptAllocationClick () {
-    this.modifyingScriptAllocation = !this.modifyingScriptAllocation;
+  modifyScriptAllocationClick (moduleInfo) {
+    moduleInfo.modifyingScriptAllocation = !moduleInfo.modifyingScriptAllocation;
     this.fetchRegressionScripts();
   }
 

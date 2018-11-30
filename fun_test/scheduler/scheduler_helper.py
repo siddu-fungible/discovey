@@ -267,11 +267,13 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
                                                         suite_execution["num_passed"],
                                                         suite_execution["num_failed"])
 
-        if is_regression_server() or is_performance_server():
+        try:
             result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
             scheduler_logger.info("Sent mail")
             if not result["status"]:
                 scheduler_logger.error("Send Mail: {}".format(result["error_message"]))
+        except Exception as ex:
+            scheduler_logger.error("Send Mail Failure: {}".format(str(ex)))
 
 
 if __name__ == "__main__":
