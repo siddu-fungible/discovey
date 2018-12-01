@@ -340,10 +340,25 @@ if __name__ == "__main_owner__":
             entry.owner_info = owner
             entry.save()
 
-if __name__ == "__main__":
+if __name__ == "__main_delete__":
     chart_names = ['Lookup-engine', 'HT HBM non-coherent - FP HBM non-coherent', 'HT HBM coherent - FP HBM coherent', 'HT DDR non-coherent - FP DDR non-coherent', 'HT DDR coherent - FP DDR coherent', 'TCAM', 'Total', 'All metrics', 'TeraMarks', 'Networking']
     for chart_name in chart_names:
-        entries = MetricChartStatus.objects.filter(chart_name=chart_name).order_by('-date_time')[:2]
+        entries = MetricChartStatus.objects.filter(model=chart_name).order_by('-date_time')[:2]
         for entry in entries:
             entry.delete()
+
+if __name__ == "__main__":
+    model = apps.get_model(app_label='fun_test', model_name='BootTimePerformance')
+    mcs_entries = model.objects.all()
+    for entry in mcs_entries:
+        entry.output_firmware_boot_time = entry.output_firmware_boot_time / 1000.0
+        entry.output_flash_type_boot_time = entry.output_flash_type_boot_time / 1000.0
+        entry.output_eeprom_boot_time = entry.output_eeprom_boot_time / 1000.0
+        entry.output_sbus_boot_time = entry.output_sbus_boot_time / 1000.0
+        entry.output_host_boot_time = entry.output_host_boot_time / 1000.0
+        entry.output_main_loop_boot_time = entry.output_main_loop_boot_time / 1000.0
+        entry.output_boot_success_boot_time = entry.output_boot_success_boot_time / 1000.0
+        entry.save()
+        print entry
+
 
