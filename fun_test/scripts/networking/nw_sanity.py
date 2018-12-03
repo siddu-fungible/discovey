@@ -102,6 +102,9 @@ class NwSanitySimpleL3Integration(FunTestCase):
                           ssh_port=container_asset["mgmt_ssh_port"])
 
         output = linux_obj.command("bash")
+        output = linux_obj.command("cd {}/fungible-host-drivers/linux/libfunq".format(target_workspace))
+        output = linux_obj.command("make clean", timeout=60)
+        output = linux_obj.command("make", timeout=60)
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
         output = linux_obj.command("make -j8", timeout=600)
         output = linux_obj.command("cd {}/FunOS".format(target_workspace))
