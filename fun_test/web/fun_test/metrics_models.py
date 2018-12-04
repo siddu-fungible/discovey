@@ -651,6 +651,38 @@ class VolumePerformance(models.Model):
                                                 self.output_read_latency)
 
 
+class VolumePerformanceEmulation(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_volume = models.TextField(verbose_name="Volume type", choices=[(0, "BLT"), (1, "EC21")])
+    input_test = models.TextField(verbose_name="Test type", choices=[(0, "FioSeqWriteSeqReadOnly")])
+    input_block_size = models.TextField(verbose_name="Block size", choices=[(0, "4k"), (1, "8k")])
+    input_io_depth = models.IntegerField(verbose_name="IO depth", choices=[(0, 1)])
+    input_size = models.TextField(verbose_name="Data size", choices=[(0, "4m")])
+    input_operation = models.TextField(verbose_name="Operation type", choices=[(0, "read"), (1, "write"), (2, "randread"), (3, "randwrite"), (4, "randrw")])
+    output_write_iops = models.IntegerField(verbose_name="Write IOPS")
+    output_read_iops = models.IntegerField(verbose_name="Read IOPS")
+    output_write_bw = models.IntegerField(verbose_name="Write bandwidth KiB/s")
+    output_read_bw = models.IntegerField(verbose_name="Read bandwidth KiB/s")
+    output_write_latency = models.IntegerField(verbose_name="Write latency uSecs")
+    output_read_latency = models.IntegerField(verbose_name="Read latency uSecs")
+    tag = "analytics"
+
+    def __str__(self):
+        return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
+                                                self.input_volume,
+                                                self.input_test,
+                                                self.input_block_size,
+                                                self.input_size,
+                                                self.input_operation,
+                                                self.output_write_iops,
+                                                self.output_read_iops,
+                                                self.output_write_bw,
+                                                self.output_write_latency,
+                                                self.output_read_latency)
+
+
 class AllocSpeedPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
