@@ -343,7 +343,7 @@ if __name__ == "__main_owner__":
 if __name__ == "__main_delete__":
     chart_names = ['Lookup-engine', 'HT HBM non-coherent - FP HBM non-coherent', 'HT HBM coherent - FP HBM coherent', 'HT DDR non-coherent - FP DDR non-coherent', 'HT DDR coherent - FP DDR coherent', 'TCAM', 'Total', 'All metrics', 'TeraMarks', 'Networking']
     for chart_name in chart_names:
-        entries = MetricChartStatus.objects.filter(model=chart_name).order_by('-date_time')[:2]
+        entries = MetricChartStatus.objects.filter(chart_name=chart_name).order_by('-date_time')[:2]
         for entry in entries:
             entry.delete()
 
