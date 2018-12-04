@@ -132,6 +132,9 @@ export class FunChartComponent implements OnInit, OnChanges {
             groupPadding: 0,
             allowPointSelect: true,
             cursor: 'pointer',
+            column: {
+              grouping: false
+            },
             point: {
               events: {
                 select: function () {
