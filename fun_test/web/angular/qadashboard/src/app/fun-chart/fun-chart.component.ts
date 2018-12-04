@@ -126,7 +126,7 @@ export class FunChartComponent implements OnInit, OnChanges {
         plotOptions: {
           series: {
             stacking: 'normal',
-            pointWidth: 20,
+            pointWidth: 10,
             pointPadding: 0,
             borderWidth: 0,
             groupPadding: 0,
