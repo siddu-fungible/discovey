@@ -1,0 +1,42 @@
+.button-color-delete {
+  background-color: red;
+}
+
+.button-color-post {
+  background-color: orange;
+}
+
+.button-color-get {
+  background-color: darkblue;
+}
+
+.button-color-put {
+  background-color: lightsteelblue;
+}
+
+.method-button-text-color {
+  color: white;
+}
+.url-font {
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+  font-size: 14px;
+}
+/*  font-weight: 100;
+*/
+.response-div {
+  background-color: #eee;
+  border: 1px solid #999;
+  display: block;
+  padding: 20px;
+}
+
+
+.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th
+{
+  padding:1px;
+  line-height: unset;
+}
+
+table {
+  width: 100%;
+}

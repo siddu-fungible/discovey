@@ -16,7 +16,7 @@ class PcapParser(object):
         self.filename = filename
         fun_test.simple_assert(os.path.exists(self.filename), "File %s does not exists locally" % self.filename)
 
-    def __get_captures_from_file(self, display_filter=None):
+    def get_captures_from_file(self, display_filter=None):
         return pyshark.FileCapture(self.filename, use_json=True, display_filter=display_filter)
 
     def _get_key_val(self, key):
@@ -50,13 +50,13 @@ class PcapParser(object):
         return current_dict
 
     def get_filter_captures(self, display_filter):
-        return self.__get_captures_from_file(display_filter)
+        return self.get_captures_from_file(display_filter)
 
     def get_first_packet(self, display_filter=None):
-        return self.__get_captures_from_file(display_filter)[0]
+        return self.get_captures_from_file(display_filter)[0]
 
     def get_last_packet(self, display_filter=None):
-        out = self.__get_captures_from_file(display_filter)
+        out = self.get_captures_from_file(display_filter)
         total_packets = len([packet for packet in out])
         return out[total_packets - 1]
 
@@ -151,6 +151,131 @@ class PcapParser(object):
                 fun_test.test_assert_expected(expected=str(op_code),
                                               actual=str(layer['macc_opcode']),
                                               message="Check opcode value in packet")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def verify_pause_header_fields(self, first_packet=False, last_packet=False, packet=None, op_code=None, time=None):
+        result = False
+        try:
+            current_packet = self._get_packet_specified(first_packet=first_packet, last_packet=last_packet,
+                                                        packet=packet)
+            output_dict = self.get_all_packet_fields(current_packet)
+            layer = output_dict[self.LAYER_MACC]
+            fun_test.simple_assert(layer, "Check %s header fields are present in packet" %
+                                   self.PAUSE)
+
+            if op_code is not None:
+                fun_test.test_assert_expected(expected=str(op_code),
+                                              actual=str(layer['macc_opcode']),
+                                              message="Check opcode value in packet")
+            if time is not None:
+                fun_test.test_assert_expected(expected=str(time),
+                                              actual=str(layer['macc_pause_time']),
+                                              message="Check time value in packet")
+
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _validate_sample_packet(self, packet, expected_l2_obj=None, expected_l3_obj=None, expected_l4_obj=None,
+                                ip_version=4):
+        result = False
+        try:
+            fields = self.get_all_packet_fields(packet=packet)
+            if expected_l2_obj:
+                fun_test.log("Verifying Ethernet Layer Fields")
+                eth_fields = fields['layer_eth']
+                fun_test.test_assert_expected(expected=expected_l2_obj.dstMac.lower(),
+                                              actual=eth_fields['eth_dst'],
+                                              message="Validate destination mac address", ignore_on_success=True)
+                fun_test.test_assert_expected(expected=expected_l2_obj.srcMac.lower(),
+                                              actual=eth_fields['eth_src'],
+                                              message="Validate source mac address", ignore_on_success=True)
+                # TODO: remove 0x0000 from eth_type
+                # fun_test.test_assert_expected(expected=expected_eth_obj.etherType,
+                #                               actual=eth_fields['eth_type'],
+                #                               message="Validate destination mac address")
+                fun_test.simple_assert(expected_l2_obj.etherType.lower() in eth_fields['eth_type'], "Validate Ether Type")
+
+            if expected_l3_obj:
+                fun_test.log("Verifying IP Layer Fields")
+                if ip_version == 4:
+                    ip_fields = fields['layer_ip']
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.sourceAddr,
+                                                  actual=ip_fields['ip_src'],
+                                                  message="Validate source ip address", ignore_on_success=True)
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.destAddr,
+                                                  actual=ip_fields['ip_dst'],
+                                                  message="Validate destination ip address", ignore_on_success=True)
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.ttl,
+                                                  actual=ip_fields['ip_ttl'],
+                                                  message="Validate TTL", ignore_on_success=True)
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.version,
+                                                  actual=ip_fields['ip_version'],
+                                                  message="Validate IP version", ignore_on_success=True)
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.protocol,
+                                                  actual=ip_fields['ip_proto'],
+                                                  message="Validate IP Protocol", ignore_on_success=True)
+                else:
+                    ip_fields = fields['layer_ipv6']
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.sourceAddr,
+                                                  actual=ip_fields['ipv6_src'],
+                                                  message="Validate source ip address", ignore_on_success=True)
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.destAddr,
+                                                  actual=ip_fields['ipv6_dst'],
+                                                  message="Validate destination ip address", ignore_on_success=True)
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.hopLimit,
+                                                  actual=ip_fields['ipv6_hlim'],
+                                                  message="Validate TTL", ignore_on_success=True)
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.version,
+                                                  actual=ip_fields['ip_version'],
+                                                  message="Validate IP version", ignore_on_success=True)
+
+                    fun_test.test_assert_expected(expected=expected_l3_obj.nextHeader,
+                                                  actual=ip_fields['ipv6_nxt'],
+                                                  message="Validate IP Protocol", ignore_on_success=True)
+
+            if expected_l4_obj:
+                fun_test.log("Verifying TCP Layer Fields")
+                tcp_fields = fields['layer_tcp']
+
+                fun_test.test_assert_expected(expected=expected_l4_obj.sourcePort,
+                                              actual=tcp_fields['tcp_srcport'],
+                                              message="Validate TCP source port", ignore_on_success=True)
+
+                fun_test.test_assert_expected(expected=expected_l4_obj.destPort,
+                                              actual=tcp_fields['tcp_dstport'],
+                                              message="Validate TCP destination port", ignore_on_success=True)
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def validate_sample_packets_in_file(self, packets, header_objs={}, packet_count=5, ip_version=4):
+        result = False
+        try:
+            count = 1
+            for packet in packets:
+                if count == packet_count:
+                    break
+                fun_test.log("################### Validating Packet Count: %d ################### " % count)
+                result = self._validate_sample_packet(packet=packet, expected_l2_obj=header_objs['eth_obj'],
+                                                      expected_l3_obj=header_objs['ip_obj'],
+                                                      expected_l4_obj=header_objs['tcp_obj'], ip_version=ip_version)
+                fun_test.simple_assert(result, "validate sample packet failed")
+                count += 1
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

@@ -25,12 +25,17 @@ IF_OUT_UCAST_PKTS = "ifOutUcastPkts"
 IF_IN_BROADCAST_PKTS = "ifInBroadcastPkts"
 CBFC_PAUSE_FRAMES_RECEIVED = "CBFCPAUSEFramesReceived"
 CBFC_PAUSE_FRAMES_TRANSMITTED = "CBFCPAUSEFramesTransmitted"
+PAUSE_MAC_CONTROL_FRAMES_TRANSMITTED = "aPAUSEMACCtrlFramesTransmitted"
+PAUSE_MAC_CONTROL_FRAMES_RECEIVED = "aPAUSEMACCtrlFramesReceived"
 FRAME_CHECK_SEQUENCE_ERROR = "aFrameCheckSequenceErrors"
 CLASS_0 = "0"
+CLASS_1 = "1"
+CLASS_2 = "2"
 VP_PACKETS_TOTAL_IN = "vp_packets_total_in"
 VP_PACKETS_TOTAL_OUT = "vp_packets_total_out"
 VP_PACKETS_OUT_HU = "vp_packets_out_hu"
 VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
+VP_PACKETS_FORWARDING_NU_DIRECT = "vp_packets_forwarding_nu_direct"
 VP_PACKETS_OUT_ETP = "vp_packets_out_etp"
 VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
 VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
@@ -49,37 +54,44 @@ WRO_IN_NFCP_PKTS = "wroin_nfcp_pkts"
 WRO_IN_PKTS = "wroin_pkts"
 WRO_OUT_WUS = "wroout_wus"
 WRO_WU_COUNT_VPP = "wrowu_cnt_vpp"
+PSW_SAMPLED_PACKET_COUNT = 'sampled_pkt'
+SFG_IN_FFE_DESC = "IN_FFE_DESC"
+SFG_OUT_FFE_DESC = "OUT_FFE_DESC"
+SFG_OUT_PSW_DESC = "OUT_PSW_DESC"
+SFG_SAMPLER_COPY = "SAMPLER_COPY"
+
+# Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1
-ETH_COPP_ARP_RESP_METER_ID = 2
-ETH_COPP_RARP_METER_ID = 3
-ETH_COPP_ISIS_1_METER_ID = 4
-ETH_COPP_ISIS_2_METER_ID = 5
-ETH_COPP_LLDP_METER_ID = 6
-ETH_COPP_PTP_METER_ID = 7
-IPV4_COPP_ICMP_METER_ID = 8
-IPV4_COPP_OSPF_1_METER_ID = 9
-IPV4_COPP_OSPF_2_METER_ID = 10
-IPV4_COPP_DHCP_METER_ID = 11
-IPV4_COPP_PIM_METER_ID = 12
-IPV4_COPP_BGP_METER_ID = 13
-IPV4_COPP_IGMP_METER_ID = 14
-IPV4_COPP_PTP_1_METER_ID = 15
-IPV4_COPP_PTP_2_METER_ID = 16
-IPV4_COPP_PTP_3_METER_ID = 17
-IPV4_COPP_PTP_4_METER_ID = 18
-IPV4_COPP_TTL_ERR_METER_ID = 19
-IPV4_COPP_OPTS_METER_ID = 20
+ETH_COPP_ARP_RESP_METER_ID = 24
+ETH_COPP_RARP_METER_ID = 25
+ETH_COPP_ISIS_1_METER_ID = 26
+ETH_COPP_ISIS_2_METER_ID = 27
+ETH_COPP_LLDP_METER_ID = 28
+ETH_COPP_PTP_METER_ID = 29
+IPV4_COPP_ICMP_METER_ID = 30
+IPV4_COPP_OSPF_1_METER_ID = 31
+IPV4_COPP_OSPF_2_METER_ID = 32
+IPV4_COPP_DHCP_METER_ID = 33
+IPV4_COPP_PIM_METER_ID = 34
+IPV4_COPP_BGP_METER_ID = 35
+IPV4_COPP_IGMP_METER_ID = 36
+IPV4_COPP_PTP_1_METER_ID = 37
+IPV4_COPP_PTP_2_METER_ID = 38
+IPV4_COPP_PTP_3_METER_ID = 39
+IPV4_COPP_PTP_4_METER_ID = 40
+IPV4_COPP_TTL_ERR_METER_ID = 41
+IPV4_COPP_OPTS_METER_ID = 42
 IPV4_COPP_FOR_US_METER_ID = 21
-ERR_TRAP_COPP_FSF_METER_ID = 25
-ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 26
-ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 27
-ERR_TRAP_COPP_PRSR_V4_VER_METER_ID = 50
-ERR_TRAP_COPP_PRSR_V6_VER_METER_ID = 51
-ERR_TRAP_COPP_PRSR_IHL_METER_ID = 52
-ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 53
-ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 54
-ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 55
-ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 56
+ERR_TRAP_COPP_FSF_METER_ID = 3
+ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 4
+ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 5
+ERR_TRAP_COPP_PRSR_V4_VER_METER_ID = 14
+ERR_TRAP_COPP_PRSR_V6_VER_METER_ID = 15
+ERR_TRAP_COPP_PRSR_IHL_METER_ID = 16
+ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 17
+ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 18
+ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 19
+ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 20
 
 
 psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx_drop',
@@ -112,7 +124,9 @@ def __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_val
     for key in output.iterkeys():
         if len(key.split('_')) > 5:
             if stat_type == key.split('_')[4] and str(class_value) == key.split('_')[5]:
-                if tx and 'TX' == key.split('_')[3]:
+                if tx:
+                    if not 'TX' == key.split('_')[3]:
+                        continue
                     result = output[key]
                     break
                 elif 'RX' == key.split('_')[3]:
@@ -124,14 +138,16 @@ def __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_val
 def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=None):
     result = None
     try:
-        if stat_type == CBFC_PAUSE_FRAMES_RECEIVED:
+        if stat_type == CBFC_PAUSE_FRAMES_RECEIVED or stat_type == CBFC_PAUSE_FRAMES_TRANSMITTED:
             result = __get_class_based_counter_stats_value(result_stats, stat_type, tx, class_value)
             return result
         output = result_stats[0]
         for key in output.iterkeys():
             if len(key.split('_')) > 4:
                 if stat_type == key.split('_')[4]:
-                    if tx and 'TX' == key.split('_')[3]:
+                    if tx:
+                        if not 'TX' == key.split('_')[3]:
+                            continue
                         result = output[key]
                         break
                     elif 'RX' == key.split('_')[3]:
@@ -142,11 +158,11 @@ def get_dut_output_stats_value(result_stats, stat_type, tx=True, class_value=Non
     return result
 
 
-def get_dut_fpg_port_stats(network_controller_obj, dut_port_list=[]):
+def get_dut_fpg_port_stats(network_controller_obj, dut_port_list=[], hnu=False):
     result_dict = {}
     try:
         for port in dut_port_list:
-            result_dict[port] = network_controller_obj.peek_fpg_port_stats(port)
+            result_dict[port] = network_controller_obj.peek_fpg_port_stats(port, hnu=hnu)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result_dict
@@ -310,7 +326,7 @@ def get_diff_stats(old_stats, new_stats, stats_list=[]):
         if stats_list:
             for stat in stats_list:
                 fun_test.simple_assert(stat in new_stats, "Stat %s not present in new stats" % stat)
-                if stat in old_stats:
+                if (stat in old_stats) and (old_stats[stat] is not None):
                     result[stat] = int(new_stats[stat]) - int(old_stats[stat])
                 else:
                     result[stat] = int(new_stats[stat])
@@ -319,9 +335,225 @@ def get_diff_stats(old_stats, new_stats, stats_list=[]):
                 if isinstance(val, dict):
                     result[key] = get_diff_stats(old_stats=old_stats[key], new_stats=new_stats[key])
                 elif key in old_stats:
-                    result[key] = int(new_stats[key]) - int(old_stats[key])
+                    try:
+                        result[key] = int(new_stats[key]) - int(old_stats[key])
+                    except TypeError:
+                        result[key] = None
                 else:
-                    result[key] = int(new_stats[key])
+                    try:
+                        result[key] = int(new_stats[key])
+                    except TypeError:
+                        result[key] = None
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def verify_spirent_stats(result_dict):
+    for stream_key in result_dict.iterkeys():
+        fun_test.test_assert_expected(expected=result_dict[stream_key]['tx_result']['FrameCount'],
+                                      actual=result_dict[stream_key]['rx_result']['FrameCount'],
+                                      message="Check results for %s" % stream_key)
+    result = True
+    return result
+
+
+def get_key_to_change(class_dict, priority_val):
+    result = None
+    for key in class_dict.iterkeys():
+        if 'time' in key:
+            out = int(filter(str.isdigit, key))
+            if out == priority_val:
+                result = key
+                break
+    return result
+
+
+def find_spirent_rx_counters_stopped(template_obj, subscribe_result, streamblock_handle_list=None, pfc_stream=False,
+                                     port_handle=None):
+    result_dict = {}
+    value_dict = {}
+    for i in range(2):        # Get value of rx counter of stream in 2 runs to check if it has stopped or not
+        if not pfc_stream:
+            value_dict[i] = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_result,
+                                                                               streamblock_handle_list=streamblock_handle_list,
+                                                                               rx_result=True)
+        else:
+            value_dict[i] = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_result,
+                                                                               port_handle_list=[port_handle],
+                                                                               analyzer_result=True)
+        fun_test.sleep("Sleeping 5 seconds", seconds=5)
+    if not pfc_stream:
+        for stream in streamblock_handle_list:
+            result_dict[stream] = None
+            old_rx_counter = int(value_dict[0][stream]['rx_result']['FrameCount'])
+            new_rx_counter = int(value_dict[1][stream]['rx_result']['FrameCount'])
+            fun_test.log("Values of rx counter for stream %s are:- Old: %s ; New: %s" % (stream, old_rx_counter,
+                                                                                         new_rx_counter))
+
+            if old_rx_counter < new_rx_counter:
+                result_dict[stream] = False
+            elif old_rx_counter == new_rx_counter:
+                result_dict[stream] = True
+
+    if pfc_stream:
+        old_rx_counter = int(value_dict[0][port_handle]['analyzer_result']['TotalFrameCount'])
+        new_rx_counter = int(value_dict[1][port_handle]['analyzer_result']['TotalFrameCount'])
+        fun_test.log("Values of rx counter for stream %s are:- Old: %s ; New: %s" % (port_handle, old_rx_counter,
+                                                                                     new_rx_counter))
+
+        if old_rx_counter < new_rx_counter:
+            result_dict[port_handle] = False
+        elif old_rx_counter == new_rx_counter:
+            result_dict[port_handle] = True
+
+    return result_dict
+
+
+def get_fpg_port_cbfcpause_counters(network_controller_obj, dut_port, shape, tx=False, hnu=False, priority_list=None):
+    output_dict = {}
+    if not priority_list:
+        priority_list = [x for x in range(16)]
+    try:
+        stat_type = CBFC_PAUSE_FRAMES_RECEIVED
+        if tx:
+            stat_type = CBFC_PAUSE_FRAMES_TRANSMITTED
+        out = network_controller_obj.clear_port_stats(dut_port, shape=shape)
+        fun_test.simple_assert(out, "Clear port stats on dut port %s" % dut_port)
+        fun_test.sleep('Stats clear', seconds=2)
+        stats = network_controller_obj.peek_fpg_port_stats(dut_port, hnu=hnu)
+        fun_test.simple_assert(stats, "Fpg stats on port %s" % dut_port)
+
+        for priority in priority_list:
+            output_dict[priority] = False
+            value = get_dut_output_stats_value(stats, stat_type=stat_type,
+                                               tx=tx, class_value=priority)
+            if value:
+                fun_test.log("Value seen for priority %s is %s" % (priority, value))
+                output_dict[priority] = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output_dict
+
+
+def get_fpg_port_pause_mac_ctrl_counters(network_controller_obj, dut_port, shape, tx=False, hnu=False):
+    output = False
+    try:
+        stat_type = PAUSE_MAC_CONTROL_FRAMES_RECEIVED
+        if tx:
+            stat_type = PAUSE_MAC_CONTROL_FRAMES_TRANSMITTED
+        output = False
+        out = network_controller_obj.clear_port_stats(dut_port, shape=shape)
+        fun_test.simple_assert(out, "Clear port stats on dut port %s" % dut_port)
+        fun_test.sleep('Stats clear', seconds=2)
+        stats = network_controller_obj.peek_fpg_port_stats(dut_port, hnu=hnu)
+        fun_test.simple_assert(stats, "Fpg stats on port %s" % dut_port)
+
+        value = get_dut_output_stats_value(stats, stat_type=stat_type, tx=tx)
+        if value:
+            fun_test.log("Value seen for type %s is %s" % (stat_type, value))
+            output = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output
+
+
+def get_psw_port_enqueue_dequeue_counters(network_controller_obj, dut_port, hnu, pg=False, priority_list=None):
+    output_dict = {}
+    if not priority_list:
+        priority_list = [x for x in range(16)]
+    dequeue = 'dequeue'
+    enqueue = 'enqueue'
+    if pg:
+        q_type = "pg"
+        dequeue_type = 'pg_deq'
+        enqueue_type = 'pg_enq'
+    else:
+        q_type = "q"
+        dequeue_type = 'q_deq'
+        enqueue_type = 'q_enq'
+    try:
+        stats_1 = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu)
+        fun_test.simple_assert(stats_1, "Ensure psw command is executed for 1st time on port %s" % dut_port)
+
+        fun_test.sleep("Letting queries to be executed", seconds=5)
+
+        stats_2 = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu)
+        fun_test.simple_assert(stats_2, "Ensure psw command is executed for 2nd time on port %s" % dut_port)
+
+        for queue_num in priority_list:
+            output_dict[queue_num] = {}
+            output_dict[queue_num][dequeue] = True
+            output_dict[queue_num][enqueue] = False
+            if len(str(queue_num)) == 1:
+                updated_queue = '0' + str(queue_num)
+            else:
+                updated_queue = str(queue_num)
+            q_no = 'q_' + updated_queue
+
+            old_dequeue_val = int(stats_1[q_no]['count'][dequeue_type]['pkts'])
+            new_dequeue_val = int(stats_2[q_no]['count'][dequeue_type]['pkts'])
+            old_enqueue_val = int(stats_1[q_no]['count'][enqueue_type]['pkts'])
+            new_enqueue_val = int(stats_2[q_no]['count'][enqueue_type]['pkts'])
+
+            fun_test.log("Values of %s dequeue seen on %s for queue %s are:- Old: %s ; New: %s" % (q_type, dut_port, q_no,
+                                                                                           old_dequeue_val,
+                                                                                           new_dequeue_val))
+            fun_test.log("Values of %s enqueue seen on %s for queue %s are:- Old: %s ; New: %s" % (q_type, dut_port, q_no,
+                                                                                          old_enqueue_val,
+                                                                                          new_enqueue_val))
+
+            if old_dequeue_val < new_dequeue_val:
+                output_dict[queue_num][dequeue] = True
+            elif old_dequeue_val == new_dequeue_val:
+                output_dict[queue_num][dequeue] = False
+
+            if old_enqueue_val < new_enqueue_val:
+                output_dict[queue_num][enqueue] = True
+            elif old_enqueue_val == new_enqueue_val:
+                output_dict[queue_num][enqueue] = False
+
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return output_dict
+
+
+def set_strict_priority_on_queue(network_controller_obj, dut_port, set_queue_list):
+    result = False
+    try:
+        full_list = [x for x in range(16)]
+        for queue in full_list:
+            if queue in set_queue_list:
+                output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
+                                                                         strict_priority_enable=True,
+                                                                         scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY)
+                fun_test.simple_assert(output, "Set strict priority on queue %s on port %s" % (queue, dut_port))
+            else:
+                output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
+                                                                         strict_priority_enable=False,
+                                                                         scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY)
+                fun_test.simple_assert(output, "Remove strict priority on queue %s on port %s" % (queue, dut_port))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def remove_strict_priority_from_queue(network_controller_obj, dut_port):
+    result = False
+    try:
+        full_list = [x for x in range(16)]
+        for queue in full_list:
+            output = network_controller_obj.set_qos_scheduler_config(port_num=dut_port, queue_num=queue,
+                                                                     strict_priority_enable=False,
+                                                                     scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY)
+            fun_test.simple_assert(output, "Remove strict priority on queue %s on port %s" % (queue, dut_port))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def convert_bps_to_mbps(count_in_bps):
+    count_in_mbps = count_in_bps / float(1000000)
+    return count_in_mbps

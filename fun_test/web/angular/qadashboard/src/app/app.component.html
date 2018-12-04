@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>QA Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="static/js/qa_dashboard/qa_dashboard.js"></script>
+</head>
+<body>
+
+
+<nav class="navbar navbar-expand-lg fixed-top" style="background-color: #337ab7;">
+  <a class="navbar-brand" href="/" style="color: white">Integration</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+
+  <div class="collapse navbar-collapse" id="qa-dashboard-navbar">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/performance" style="color: white;background-color: #337ab7" role="button">Performance</a>
+      </li>
+
+      <li ngbDropdown class="nav-item dropdown">
+        <a [routerLink]="" id="navbarDropdown" style="color: white;background-color: #337ab7"
+           class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+           aria-expanded="false" ngbDropdownToggle>Regression</a>
+        <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="/regression/summary">Summary</a>
+          <a class="dropdown-item" href="/regression">All Jobs</a>
+          <a class="dropdown-item" href="/regression/completed_jobs">Completed Jobs</a>
+          <a class="dropdown-item" href="/regression/pending_jobs">Pending Jobs</a>
+          <a class="dropdown-item" href="/regression/submit_job_page">Submit Job</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/regression/jenkins_jobs">Jenkins Jobs</a>
+          <a class="dropdown-item" href="/regression/jobs_by_tag/network-sanity">Networking Sanity</a>
+          <a class="dropdown-item" href="/metrics/atomic/Unit-Tests/UnitTestPerformance">FunOS Unit-Tests</a>
+        </div>
+      </li>
+      <li ngbDropdown class="nav-item dropdown">
+        <a [routerLink]="" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+           aria-expanded="false" style="color: white;background-color: #337ab7" ngbDropdownToggle>Test-cases</a>
+        <div ngbDropdownMenu class="dropdown-menu">
+          <a class="dropdown-item" href="/tcm/releases_page">Releases</a>
+          <a class="dropdown-item" href="/tcm/view_catalogs">View Catalogs</a>
+          <a class="dropdown-item" href="/tcm/create_catalog_page">Create Catalog</a>
+        </div>
+      </li>
+      <li ngbDropdown class="nav-item dropdown">
+        <a [routerLink]="" style="color: white;background-color: #337ab7" class="nav-link dropdown-toggle"
+           data-toggle="dropdown" role="button" aria-haspopup="true"
+           aria-expanded="false" ngbDropdownToggle>Administration</a>
+        <div ngbDropdownMenu class="dropdown-menu">
+          <a class="dropdown-item" href="/metrics">All</a>
+          <!--<a class="dropdown-item" href="/metrics/summary">Summary</a>-->
+          <a class="dropdown-item" href="/initialize">Initialize</a>
+        </div>
+      </li>
+    </ul>
+        <ul class="navbar-nav">
+      <li><a href="/common/alerts_page" role="button" style="color: white;background-color: #337ab7">Alerts</a></li>
+    </ul>
+
+  </div>
+</nav>
+
+<!--div class="content" ng-controller="QaDashBoardController" ng-if="showCommonError">
+    <div class="alert alert-danger alert-dismissible show" role="alert">
+        <strong>{{ commonErrorMessage }} </strong>&nbsp <a href="{{ commonAlertLink }}">Details</a> {{ detailError }}
+        <button type="button" class="close" aria-label="Close">
+            <span aria-hidden="true" ng-click="closeCommonError()">&times;</span>
+        </button>
+    </div>
+</div>
+<div class="content" ng-controller="QaDashBoardController" ng-if="showCommonSuccess">
+    <div class="alert alert-success alert-dismissible show" role="alert">
+        <strong>{{ commonSuccessMessage }}</strong>
+        <button type="button" class="close" aria-label="Close">
+            <span aria-hidden="true" ng-click="closeCommonSuccess()">&times;</span>
+        </button>
+    </div>
+</div-->
+<!--<div class="content" ng-controller="QaDashBoardController" ng-if="showCommonError">-->
+<!--<div class="alert alert-danger alert-dismissible show" role="alert">-->
+<!--<strong>{{ commonErrorMessage }} </strong>&nbsp <a href="{{ commonAlertLink }}">Details</a> {{ detailError }}-->
+<!--<button type="button" class="close" aria-label="Close">-->
+<!--<span aria-hidden="true" ng-click="closeCommonError()">&times;</span>-->
+<!--</button>-->
+<!--</div>-->
+<!--</div>-->
+<!--<div class="content" ng-controller="QaDashBoardController" ng-if="showCommonSuccess">-->
+<!--<div class="alert alert-success alert-dismissible show" role="alert">-->
+<!--<strong>{{ commonSuccessMessage }}</strong>-->
+<!--<button type="button" class="close" aria-label="Close">-->
+<!--<span aria-hidden="true" ng-click="closeCommonSuccess()">&times;</span>-->
+<!--</button>-->
+<!--</div>-->
+<!--</div>-->
+
+<div>
+  <router-outlet></router-outlet>
+</div>
+
+</body>
+</html>
+
+

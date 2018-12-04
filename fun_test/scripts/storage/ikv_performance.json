@@ -1,7 +1,7 @@
 {
   "likv_volume_info": {
     "volume_type": "VOL_TYPE_BLK_LOCAL_THIN",
-    "likv_volume_id": 10,
+    "likv_uuid": "00000040-0000001",
     "max_keys": 131072,
     "init_key": 4096,
     "init_lvs_bytes": 1048576,

@@ -7,17 +7,49 @@ function myController($scope) {
     let ctrl = this;
     this.myName = 'Alain';
 
+    $scope.getDateBound = (dt, lower) => {
+        let yesterday = new Date(dt);
+        if (lower) {
+            yesterday.setHours(0, 0, 1);
+        } else {
+            yesterday.setHours(23, 59, 59);
+        }
+
+        return yesterday;
+    };
+
+
     this.$onInit = function () {
         console.log("init");
         console.log(this.name);
         let s = "john, john2";
         console.log(s.split(","));
+
+        let today = new Date();
+        console.log(today);
+        startMonth = 4 - 1;
+        startDay = 1;
+        startMinute = 59;
+        startHour = 23;
+        startSecond = 1;
+        fromDate = new Date(today.getFullYear(), startMonth, startDay, startHour, startMinute, startSecond);
+        console.log(fromDate);
+        console.log($scope.getDateBound(fromDate, true));
+        console.log($scope.getDateBound(fromDate, false));
+
+        let yesterday = new Date(today);
+        yesterday = yesterday.setDate(yesterday.getDate() - 1);
+
+        console.log($scope.getDateBound(yesterday, false));
+
     };
 
     $scope.testClick = function () {
         console.log("testClick");
         console.log(ctrl.f);
     }
+
+
 
 }
 

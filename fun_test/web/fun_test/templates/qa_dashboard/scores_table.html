@@ -1,0 +1,34 @@
+<div>
+    <table class="table table-bordered">
+        <h4>Chartname: {{ chartName }}</h4>
+           <h4>Modelname: {{ modelName }}</h4>
+        <tr>
+            <th>
+                Date
+            </th>
+            <th>
+                Score
+            </th>
+            <th>
+                Copied Score
+            </th>
+            <th>
+                Copied Score Disposition
+            </th>
+        </tr>
+        <tr ng-repeat="(key, value) in rows">
+            <td>
+                {{ key }}
+            </td>
+            <td>
+                {{ value.score }}
+            </td>
+            <td>
+                {{ value.copiedScore }}
+            </td>
+            <td>
+                {{ value.copiedDisposition }}
+            </td>
+        </tr>
+    </table>
+</div>

@@ -33,9 +33,15 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1
+            dut_port_1, shape, hnu
         dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type)
+        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+
+        shape = 0
+        hnu = False
+        if flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_HNU:
+            shape = 1
+            hnu = True
 
         chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
@@ -52,7 +58,10 @@ class SpirentSetup(FunTestScript):
         dpcsh_server_port = int(dut_config['dpcsh_tcp_proxy_port'])
         network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
-        result = template_obj.setup(no_of_ports_needed=num_ports)
+        flow_dir = nu_config_obj.FLOW_DIRECTION_NU_NU
+        if hnu:
+            flow_dir = nu_config_obj.FLOW_DIRECTION_HNU_HNU
+        result = template_obj.setup(no_of_ports_needed=num_ports, flow_direction=flow_dir)
         fun_test.test_assert(result['result'], "Configure setup")
 
         port_obj_list = result['port_list']
@@ -62,6 +71,8 @@ class SpirentSetup(FunTestScript):
         source_mac1 = spirent_config['l2_config']['source_mac']
         destination_mac1 = spirent_config['l2_config']['destination_mac']
         destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        if hnu:
+            destination_ip1 = spirent_config['l3_config']['ipv4']['hnu_destination_ip1']
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
         source_ip1 = spirent_config['l3_config']['ipv4']['source_ip1']
@@ -132,9 +143,9 @@ class SpirentSetup(FunTestScript):
     def cleanup(self):
         # Cleanup spirent session
         fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
-        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1)
+        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
-        disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2)
+        disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2, shape=shape)
         fun_test.test_assert(disable_2, "Disable pfc on port %s" % dut_port_2)
 
 
@@ -157,16 +168,16 @@ class TestCase1(FunTestCase):
                         """)
 
     def setup(self):
-        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1)
+        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
-        disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2)
+        disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2, shape=shape)
         fun_test.test_assert(disable_2, "Disable pfc on port %s" % dut_port_2)
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -251,8 +262,8 @@ class TestCase1(FunTestCase):
                                  message="Ensure pfc frames are being sent via spirent")
 
             # Fetch results from dut
-            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
 
             dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
             dut_port_2_good_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -305,18 +316,18 @@ class TestCase2(FunTestCase):
 
     def setup(self):
 
-        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1)
+        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
 
         # enable pfc on dut egress
-        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_2)
+        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_2, shape=shape)
         fun_test.test_assert(enable_1, "Enable pfc on port %s" % dut_port_2)
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -403,8 +414,8 @@ class TestCase2(FunTestCase):
 
             # Fetch results from dut
 
-            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
 
             dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
             dut_port_2_good_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -458,18 +469,18 @@ class TestCase3(FunTestCase):
 
     def setup(self):
 
-        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1)
+        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
 
         # enable pfc on dut egress
-        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_2)
+        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_2, shape=shape)
         fun_test.test_assert(enable_1, "Enable pfc on port %s" % dut_port_2)
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -525,8 +536,8 @@ class TestCase3(FunTestCase):
             new_pfc_stream_spirent_tx_counter = result_dict[pfc_stream_handle]['tx_result']['FrameCount']
 
             # Fetch results from dut
-            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
 
             dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
             dut_port_2_good_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -600,6 +611,7 @@ class TestCase3(FunTestCase):
 
 
 class TestCase4(FunTestCase):
+    queue_num = '00'
     pcap_file_path = None
     pcap_file_path_1 = None
     pg = 0
@@ -647,32 +659,33 @@ class TestCase4(FunTestCase):
                                                                                 shared_threshold=self.shr_thr,
                                                                                 headroom_threshold=self.hdr_thr,
                                                                                 xoff_enable=self.xoff_enable,
-                                                                                shared_xon_threshold=self.shared_xon_thr)
+                                                                                shared_xon_threshold=self.shared_xon_thr,
+                                                                                hnu=hnu)
         fun_test.test_assert(set_qos_ingress, "Setting qos ingress priority group")
 
-        pfc_enable = network_controller_obj.set_qos_pfc(enable=True)
+        pfc_enable = network_controller_obj.enable_qos_pfc(hnu=hnu)
         fun_test.test_assert(pfc_enable, "Ensure qos pfc is enabled")
 
-        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_1)
+        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(enable_1, "Disable pfc on port %s" % dut_port_1)
 
         port_quanta = network_controller_obj.set_priority_flow_control_quanta(port_num=dut_port_1, quanta=self.quanta,
-                                                                              class_num=self.class_val)
+                                                                              class_num=self.class_val, shape=shape)
         fun_test.test_assert(port_quanta, "Ensure quanta %s is set on port %s" % (self.quanta, dut_port_1))
 
         port_thr = network_controller_obj.set_priority_flow_control_threshold(port_num=dut_port_1, threshold=self.threshold,
-                                                                              class_num=self.class_val)
+                                                                              class_num=self.class_val, shape=shape)
         fun_test.test_assert(port_thr, "Ensure threshold %s is set on port %s" % (port_thr, dut_port_1))
 
         # enable pfc on dut egress
-        enable_2 = network_controller_obj.enable_priority_flow_control(dut_port_2)
+        enable_2 = network_controller_obj.enable_priority_flow_control(dut_port_2, shape=shape)
         fun_test.test_assert(enable_2, "Enable pfc on port %s" % dut_port_2)
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -720,7 +733,7 @@ class TestCase4(FunTestCase):
         start = template_obj.enable_generator_configs(generator_configs=generator_dict[port_2])
         fun_test.test_assert(start, "Starting generator config on port %s" % port_2)
 
-        fun_test.sleep("Letting pfc frames to be sent", seconds=sleep_time)
+        fun_test.sleep("Letting pfc frames to be sent", seconds=30)
 
         for i in range(check_intervals):
             fun_test.sleep("Letting traffic to be executed", seconds=sleep_time)
@@ -742,10 +755,10 @@ class TestCase4(FunTestCase):
 
             # Fetch results from dut
 
-            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
-            dut_port_1_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_1)
-            dut_port_2_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_2)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
+            dut_port_1_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_1, hnu=hnu, queue_num=self.queue_num)
+            dut_port_2_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_2, hnu=hnu, queue_num=self.queue_num)
 
             dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
             dut_port_2_good_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -754,10 +767,10 @@ class TestCase4(FunTestCase):
                                                                   tx=False, class_value=CLASS_0)
             dut_port_1_pause_transmit = get_dut_output_stats_value(dut_port_1_results, CBFC_PAUSE_FRAMES_TRANSMITTED,
                                                                   tx=True, class_value=CLASS_0)
-            dut_port_1_q00_pg_enqueue_pkts = dut_port_1_psw_results['q_00']['count']['pg_enq']['pkts']
-            dut_port_1_q00_pg_dequeue_pkts = dut_port_1_psw_results['q_00']['count']['pg_deq']['pkts']
-            dut_port_2_q00_q_enqueue_pkts = dut_port_2_psw_results['q_00']['count']['q_enq']['pkts']
-            dut_port_2_q00_q_dequeue_pkts = dut_port_2_psw_results['q_00']['count']['q_deq']['pkts']
+            dut_port_1_q00_pg_enqueue_pkts = dut_port_1_psw_results['count']['pg_enq']['pkts']
+            dut_port_1_q00_pg_dequeue_pkts = dut_port_1_psw_results['count']['pg_deq']['pkts']
+            dut_port_2_q00_q_enqueue_pkts = dut_port_2_psw_results['count']['q_enq']['pkts']
+            dut_port_2_q00_q_dequeue_pkts = dut_port_2_psw_results['count']['q_deq']['pkts']
 
             if i == 0:
                 # Fetch counter values
@@ -887,15 +900,15 @@ class TestCase4(FunTestCase):
         current_spirent_good_stream_rx_counter = result[good_stream_handle]['rx_result']['FrameCount']
 
         # DUT STATS
-        current_dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
-        current_dut_port_1_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_1)
-        current_dut_port_2_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_2)
+        current_dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
+        current_dut_port_1_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_1, hnu=hnu, queue_num=self.queue_num)
+        current_dut_port_2_psw_results = network_controller_obj.peek_psw_port_stats(dut_port_2, hnu=hnu, queue_num=self.queue_num)
 
         current_dut_port_2_good_transmit = get_dut_output_stats_value(current_dut_port_2_results, FRAMES_TRANSMITTED_OK)
-        current_dut_port_1_q00_pg_enqueue_pkts = current_dut_port_1_psw_results['q_00']['count']['pg_enq']['pkts']
-        current_dut_port_1_q00_pg_dequeue_pkts = current_dut_port_1_psw_results['q_00']['count']['pg_deq']['pkts']
-        current_dut_port_2_q00_q_enqueue_pkts = current_dut_port_2_psw_results['q_00']['count']['q_enq']['pkts']
-        current_dut_port_2_q00_q_dequeue_pkts = current_dut_port_2_psw_results['q_00']['count']['q_deq']['pkts']
+        current_dut_port_1_q00_pg_enqueue_pkts = current_dut_port_1_psw_results['count']['pg_enq']['pkts']
+        current_dut_port_1_q00_pg_dequeue_pkts = current_dut_port_1_psw_results['count']['pg_deq']['pkts']
+        current_dut_port_2_q00_q_enqueue_pkts = current_dut_port_2_psw_results['count']['q_enq']['pkts']
+        current_dut_port_2_q00_q_dequeue_pkts = current_dut_port_2_psw_results['count']['q_deq']['pkts']
 
         # Logging counter values
         fun_test.log("Values of spirent rx counter before and after stopping pfc are:- Before: %s ; After: %s"
@@ -973,18 +986,18 @@ class TestCase5(FunTestCase):
                         """)
 
     def setup(self):
-        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1)
+        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
 
         # enable pfc on dut egress
-        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_2)
+        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_2, shape=shape)
         fun_test.test_assert(enable_1, "Enable pfc on port %s" % dut_port_2)
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -1074,8 +1087,8 @@ class TestCase5(FunTestCase):
 
             # Fetch results from dut
 
-            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
 
             dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
             dut_port_2_good_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -1109,6 +1122,8 @@ class TestCase5(FunTestCase):
 
 
 if __name__ == "__main__":
+    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
+    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())

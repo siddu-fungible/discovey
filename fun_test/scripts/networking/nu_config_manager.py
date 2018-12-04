@@ -17,17 +17,21 @@ class NuConfigManager(object):
     TRANSIT_FLOW_TYPE = "transit_flow"
     CC_FLOW_TYPE = "cc_flow"
     VP_FLOW_TYPE = "vp_flow"
+    SAMPLE_FLOW_TYPE = "sample_flow"
+    FLOW_DIRECTION_NU_NU = "NU_NU"
     FLOW_DIRECTION_FPG_CC = "FPG_CC"
     FLOW_DIRECTION_CC_FPG = "CC_FPG"
     FLOW_DIRECTION_HU_CC = "HU_CC"
     FLOW_DIRECTION_HNU_CC = "HNU_CC"
     FLOW_DIRECTION_FPG_HNU = "FPG_HNU"
+    FLOW_DIRECTION_FCP_HNU_HNU = "FCP_HNU_HNU"
     FLOW_DIRECTION_HNU_FPG = "HNU_FPG"
     FLOW_DIRECTION_FPG_HU = "FPG_HU"
     FLOW_DIRECTION_HU_FPG = "HU_FPG"
     FLOW_DIRECTION_HNU_HNU = "HNU_HNU"
     FLOW_DIRECTION = "flow_direction"
     IP_VERSION = "ip_version"
+    SPRAY_ENABLE = "spray_enable"
     INTEGRATION_FLOW_TYPE = "integration_flow"
 
     def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
@@ -56,7 +60,7 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return all_configs
 
-    def read_dut_config(self, dut_type=None, flow_type=TRANSIT_FLOW_TYPE, flow_direction=None):
+    def read_dut_config(self, dut_type=None, flow_type=TRANSIT_FLOW_TYPE, flow_direction=FLOW_DIRECTION_NU_NU):
         result = {}
         try:
             if not dut_type:
@@ -70,7 +74,7 @@ class NuConfigManager(object):
             dut_spirent_map = self.read_dut_spirent_map()
             result['ports'] = []
             if flow_type == self.TRANSIT_FLOW_TYPE:
-                for key, value in sorted(dut_spirent_map[flow_type].items()):
+                for key, value in (dut_spirent_map[flow_type][flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
                         result['ports'].append(int(m.group(1)))
@@ -90,6 +94,11 @@ class NuConfigManager(object):
                 else:
                     vp_flow_direction = self.FLOW_DIRECTION_FPG_HNU
                 for key, value in (dut_spirent_map[flow_type][vp_flow_direction].iteritems()):
+                    m = re.search(r'(\d+)', key)
+                    if m:
+                        result['ports'].append(int(m.group(1)))
+            elif flow_type == self.SAMPLE_FLOW_TYPE:
+                for key, value in (dut_spirent_map[flow_type][flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
                         result['ports'].append(int(m.group(1)))
@@ -197,18 +206,18 @@ class NuConfigManager(object):
     '''
 
     def get_spirent_dut_port_mapper(self, flow_type=TRANSIT_FLOW_TYPE, no_of_ports_needed=2,
-                                    flow_direction=None):
+                                    flow_direction=FLOW_DIRECTION_NU_NU):
         result = OrderedDict()
         try:
             dut_spirent_map = self.read_dut_spirent_map()
             spirent_assets = self.read_traffic_generator_asset()
             if flow_type == self.TRANSIT_FLOW_TYPE:
                 fun_test.log("Fetching NU Transit Flow Map")
-                fun_test.simple_assert(len(dut_spirent_map[flow_type]) >= no_of_ports_needed,
+                fun_test.simple_assert(len(dut_spirent_map[flow_type][flow_direction]) >= no_of_ports_needed,
                                        "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
                                        (no_of_ports_needed, len(dut_spirent_map[flow_type])))
                 count = 0
-                for key, value in sorted(dut_spirent_map[flow_type].items()):
+                for key, value in (dut_spirent_map[flow_type][flow_direction].iteritems()):
                     if count == no_of_ports_needed:
                         break
                     fun_test.debug("FPG Port: %s connected to Spirent Port: %s" % (key, value))
@@ -293,14 +302,29 @@ class NuConfigManager(object):
                             "Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
                     result[key] = value
                     count += 1
+            elif flow_type == self.SAMPLE_FLOW_TYPE:
+                fun_test.log("Fetching NU VP path map. Traffic Direction: %s" % flow_direction)
+                fun_test.simple_assert(len(dut_spirent_map[flow_type][flow_direction]) >= no_of_ports_needed,
+                                       "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
+                                       (no_of_ports_needed, len(dut_spirent_map[flow_type][flow_direction])))
+                count = 0
+                for key, value in dut_spirent_map[flow_type][flow_direction].iteritems():
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def get_local_settings_parameters(self, flow_direction=False, ip_version=False):
+    def get_local_settings_parameters(self, flow_direction=False, ip_version=False, spray_enable=False):
         result = {}
         try:
-            fun_test.simple_assert(flow_direction or ip_version, "No parameter provided to be fetcehd from local settings")
+            fun_test.simple_assert(flow_direction or ip_version or spray_enable,
+                                   "No parameter provided to be fetcehd from local settings")
             configs = nu_config_obj._get_nu_configs()
             fun_test.simple_assert(configs, "Get NU Configs")
             for config in configs:
@@ -309,6 +333,8 @@ class NuConfigManager(object):
                         result[self.FLOW_DIRECTION] = config[self.FLOW_DIRECTION]
                     if ip_version:
                         result[self.IP_VERSION] = config[self.IP_VERSION]
+                    if spray_enable:
+                        result[self.SPRAY_ENABLE] = config[self.SPRAY_ENABLE]
                     break
         except Exception as ex:
             fun_test.critical(str(ex))

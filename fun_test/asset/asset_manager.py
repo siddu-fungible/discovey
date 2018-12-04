@@ -13,6 +13,7 @@ from fun_global import *
 class AssetManager:
     SIMPLE_HOSTS_ASSET_SPEC = ASSET_DIR + "/simple_hosts.json"
     DOCKER_HOSTS_ASSET_SPEC = ASSET_DIR + "/docker_hosts.json"
+    DOCKER_HOSTS_DEVELOPMENT_ASSET_SPEC = ASSET_DIR + "/docker_hosts_development.json"
 
 
     def __init__(self):
@@ -51,6 +52,13 @@ class AssetManager:
                 fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
                 self.docker_host.remove_container(orchestrator.container_name)
 
+            elif orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST:
+                container_assets = orchestrator.container_assets
+                for container_name in container_assets:
+                    fun_test.log("Destroying container: {}".format(container_name))
+                    self.docker_host.destroy_container(container_name=container_name)
+
+
     def describe(self):
         fun_test.log_section("Printing assets")
         # for orchestrator in self.orchestrators:
@@ -78,7 +86,9 @@ class AssetManager:
         if (not is_regression_server()) and (not is_performance_server()):
             docker_hosts_spec_file = fun_test.get_environment_variable("DOCKER_HOSTS_SPEC_FILE")
             if not docker_hosts_spec_file:
-                raise FunTestSystemException("Please set the environment variable:\nDOCKER_HOSTS_SPEC_FILE=<my-docker.hosts.json>")
+                # This is probably for script development
+                docker_hosts_spec_file = self.DOCKER_HOSTS_DEVELOPMENT_ASSET_SPEC
+                # raise FunTestSystemException("Please set the environment variable:\nDOCKER_HOSTS_SPEC_FILE=<my-docker.hosts.json>")
         local_setting_docker_host_spec_file = fun_test.get_local_setting(setting="DOCKER_HOSTS_SPEC_FILE")
         if local_setting_docker_host_spec_file:
             docker_hosts_spec_file = local_setting_docker_host_spec_file
@@ -92,7 +102,7 @@ class AssetManager:
         return asset
 
     @fun_test.safe
-    def get_orchestrator(self, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER, index=0):
+    def get_orchestrator(self, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER, index=0, dut_obj=None):
         fun_test.debug("Getting orchestrator")
         orchestrator = None
         try:
@@ -108,12 +118,19 @@ class AssetManager:
                 fun_test.log("Setting up the integration container for index: {}".format(index))
                 container_name = "{}_{}_{}".format("integration_basic", fun_test.get_suite_execution_id(), index)
 
+                vm_host_os = None   # TODO: Hack needed until asset_manager is implemented
+                if dut_obj.interfaces:
+                    peer_info = dut_obj.interfaces[0].peer_info
+                    if hasattr(peer_info, "vm_host_os"):
+                        vm_host_os = peer_info.vm_host_os
+
                 container_asset = self.docker_host.setup_storage_container(container_name=container_name,
                                                                            ssh_internal_ports=[22],
                                                                            qemu_internal_ports=[50001, 50002,
                                                                                                 50003, 50004],
                                                                            dpcsh_internal_ports=[
-                                                                               F1.INTERNAL_DPCSH_PORT])
+                                                                               F1.INTERNAL_DPCSH_PORT],
+                                                                           vm_host_os=vm_host_os)
                 container_asset["host_type"] = self.docker_host.type # DESKTOP, BARE_METAL
 
                 fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(container_name))

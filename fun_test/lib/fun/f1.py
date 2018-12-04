@@ -22,6 +22,8 @@ class F1(Linux, ToDictMixin):
     START_MODE_DPCSH_ONLY = "START_MODE_DPCSH_ONLY"   # Start with dpcsh only
     START_MODE_CUSTOM_APP = "START_MODE_CUSTOM_APP" # the user will start it from the script by specifying the app
 
+    CONNECT_RETRY_TIMEOUT_DEFAULT = 90
+
     def __init__(self, host_ip,
                           ssh_username,
                           ssh_password,
@@ -37,6 +39,7 @@ class F1(Linux, ToDictMixin):
         self.dpcsh_tcp_proxy_process_id = None
         self.fun_os_process_id = None
         self.last_start_parameters = {}
+        self.connect_retry_timeout_max = self.CONNECT_RETRY_TIMEOUT_DEFAULT
 
     @staticmethod
     def get(asset_properties):
@@ -108,11 +111,11 @@ class F1(Linux, ToDictMixin):
                     self.command("./{} app=mdt_test nvfile=nvfile &> {}".format(self.FUN_OS_SIMULATION_PROCESS_NAME,
                                                                                 self.F1_LOG))
                     new_process_id = self.start_bg_process(
-                        command="./{} app=prem_test sim_id=nvme_test nvfile=nvfile".format(
+                        command="./{} app=prem_test nvfile=nvfile".format(
                             self.FUN_OS_SIMULATION_PROCESS_NAME), output_file=self.F1_LOG)
                     fun_test.sleep("Ensure FunOS is started", seconds=10)
                     fun_test.test_assert(new_process_id, "Started FunOs")
-
+                    result = True
                 except:
                     pass  #TODO
             elif start_mode == self.START_MODE_DPCSH_ONLY:
@@ -147,6 +150,7 @@ class F1(Linux, ToDictMixin):
 
                         fun_test.test_assert(new_process_id, "Started FunOs")
                         self.fun_os_process_id = new_process_id
+                    result = True
                 except:
                     pass  #TODO
             elif start_mode == self.START_MODE_CUSTOM_APP:
@@ -169,8 +173,8 @@ class F1(Linux, ToDictMixin):
                     self.fun_os_process_id = new_process_id
                 else:
                     result = self.command(command=command, timeout=timeout, run_to_completion=run_to_completion)
-            if not get_output:
-                result = True
+            # if not get_output:
+            #    result = True
         return result
 
     def dpcsh_command(self, line):

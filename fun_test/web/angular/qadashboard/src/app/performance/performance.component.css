@@ -1,0 +1,196 @@
+.info-box {
+  border: 1px;
+  border-color: #4CAF50;
+  border-style: solid;
+  border-radius: 5px;
+  width: inherit;
+  margin-top: 5px;
+}
+
+.info-box-header {
+  background-color: #dff0d8;
+  border-radius: 5px;
+
+}
+
+.info-box-text {
+  padding: 5px;
+}
+
+.aspect-label {
+  padding: 5px;
+}
+
+.aspect-label-text {
+  padding: 5px;
+}
+
+.fa-icon-green {
+  color: green;
+}
+
+.fa-icon-red {
+  color: red;
+}
+
+#score-table-parent {
+  display: table;
+  width: 60px;
+  height: 60px;
+  border: 3px solid lightsteelblue;
+  border-radius: 5px;
+}
+
+#score-table-child {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 25px;
+  color: white;
+
+}
+
+#score-table-info-icon {
+  display: table-cell;
+  vertical-align: top;
+}
+
+.score-card {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+  width: 40%;
+  background-color: #006699;
+}
+
+.fade-element-in.ng-enter {
+  opacity: 0;
+}
+
+.fade-element-in-init .fade-element-in.ng-enter {
+  opacity: 1;
+}
+
+.fade-element-in.ng-enter.ng-enter-active {
+  opacity: 1;
+}
+
+.fade-element-in.ng-leave {
+  transition: 0.3s linear all;
+  opacity: 1;
+}
+
+.fade-element-in.ng-leave.ng-leave-active {
+  opacity: 0;
+}
+
+arrow-icon {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+
+}
+
+.arrow-right {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+
+}
+
+.arrow-down {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+.trend-button-green {
+  background-color: white;
+  border: 1px solid #4CAF50;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 1.5px;
+
+}
+
+.score-label {
+  text-decoration: solid;
+}
+
+.trend-button-red {
+  background-color: white;
+  border: 1px solid red;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 1.5px;
+
+}
+
+.table td {
+  padding: 5px;
+}
+
+.container a {
+  color: #337ab7;
+}
+.container {
+  margin: 0;
+  max-width: 3000px;
+  padding-top: 70px;
+}
+
+::ng-deep .tooltip-inner {
+  background-color: whitesmoke !important;
+  /*width: 200px !important;*/
+  /*height: 200px !important;*/
+  border: solid 1px black !important;
+  text-align: left;
+  max-width: 1000px !important;
+  min-width: 200px !important;
+  /*display: table !important;*/
+}
+::ng-deep .arrow::before {
+  /*border-top-color: black !important;*/
+  border-right-color: black !important;
+}
+::ng-deep .tooltip-inner a {
+  /*display: table-cell !important;*/
+  vertical-align: middle !important;
+}
+.bold {
+  color: black;
+}
+hr {
+  margin: 0;
+}
+.failed-label {
+  cursor: pointer;
+}
+.bugs-link {
+  cursor: pointer;
+
+}
+.bug-badge {
+  cursor: pointer;
+  font-size: 90%;
+  font-weight: 500;
+  vertical-align: middle;
+}
+sup {
+    vertical-align: middle;
+    font-size: 12px;
+    font-weight: bold;
+}
+.plus-minus {
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}

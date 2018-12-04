@@ -1,0 +1,52 @@
+<div class="card card-primary top-card">
+    <div class="card-body">
+      <table>
+        <tr *ngFor="let attribute of attributes">
+          <td class="cell">
+            <b>{{ attribute.name }}</b>
+          </td>
+          <td class="cell">
+            {{ attribute.value }}
+          </td>
+        </tr>
+      </table>
+    </div>
+</div>
+<div class="card">
+  <div class="card card-primary">
+    <div class="card-header"><b>Suite {{ executionId }} Detail</b></div>
+    <div class="card-body">
+            <table *ngIf="testCaseExecutions.length > 0" class="table table-hover table-responsive table-bordered">
+                <thead>
+                <tr>
+                    <th>E Id</th>
+                    <th>T Id</th>
+                    <th>Summary</th>
+                    <th>Result</th>
+                    <th>Scheduled At</th>
+                    <th>Path</th>
+                    <th>HTML</th>
+                    <th>Flat</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tr *ngFor="let testCaseExecution of testCaseExecutions">
+                    <td>{{ testCaseExecution.fields.execution_id }}</td>
+                    <td>{{ testCaseExecution.fields.test_case_id }}</td>
+                    <td>Test-case summary</td>
+                    <td [ngClass]="{'table-danger': testCaseExecution.fields.result === 'FAILED'}">
+                        <a [ngClass]="'text-'+ resultToClass(testCaseExecution.fields.result)">{{ testCaseExecution.fields.result }}</a>
+                    </td>
+                    <td>{{ trimTime(testCaseExecution.fields.started_time) }}</td>
+                    <td>{{ testCaseExecution.fields.script_path }}</td>
+                    <td><a [routerLink]="" (click)="getHtmlLogPath(testCaseExecution.fields.script_path)">html</a></td>
+                    <td><a [routerLink]="" (click)="getConsoleLogPath(testCaseExecution.fields.script_path)">flat</a></td>
+                    <td>
+                      <button data-placement="top" data-toggle="tooltip" title="Re-run"
+                    (click)="rerunClick(executionId, testCaseExecution.fields.test_case_id, testCaseExecution.fields.script_path)" class="btn btn-outline-warning btn-sm">
+                        <i class="fa fa-refresh"></i></button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

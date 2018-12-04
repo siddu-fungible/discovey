@@ -9,22 +9,35 @@ import os
 
 
 class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
-    diff_serv_dscp_values = {'best_effort': {'dscp_value': '000000', 'decimal_value': '0', 'dscp_high': '0', 'dscp_low': '0'},
-                             'AF11': {'dscp_value': '001010', 'decimal_value': '10', 'dscp_high': '1', 'dscp_low': '2'},
-                             'AF12': {'dscp_value': '001100', 'decimal_value': '12', 'dscp_high': '1', 'dscp_low': '4'},
-                             'AF13': {'dscp_value': '001110', 'decimal_value': '14', 'dscp_high': '1', 'dscp_low': '6'},
-                             'AF21': {'dscp_value': '010010', 'decimal_value': '18', 'dscp_high': '2', 'dscp_low': '2'},
-                             'AF22': {'dscp_value': '010100', 'decimal_value': '20', 'dscp_high': '2', 'dscp_low': '4'},
-                             'AF23': {'dscp_value': '010110', 'decimal_value': '22', 'dscp_high': '2', 'dscp_low': '6'},
-                             'AF31': {'dscp_value': '011010', 'decimal_value': '26', 'dscp_high': '3', 'dscp_low': '2'},
-                             'AF32': {'dscp_value': '011100', 'decimal_value': '28', 'dscp_high': '3', 'dscp_low': '4'},
-                             'AF33': {'dscp_value': '011110', 'decimal_value': '30', 'dscp_high': '3', 'dscp_low': '6'},
-                             'AF41': {'dscp_value': '100010', 'decimal_value': '34', 'dscp_high': '4', 'dscp_low': '2'},
-                             'AF42': {'dscp_value': '100100', 'decimal_value': '36', 'dscp_high': '4', 'dscp_low': '4'},
-                             'AF43': {'dscp_value': '100110', 'decimal_value': '38', 'dscp_high': '4', 'dscp_low': '6'},
-                             'EF': {'dscp_value': '101110', 'decimal_value': '46', 'dscp_high': '5', 'dscp_low': '6'},
-                             'CS6': {'dscp_value': '110000', 'decimal_value': '48', 'dscp_high': '6', 'dscp_low': '0'},
-                             'CS7': {'dscp_value': '111000', 'decimal_value': '56', 'dscp_high': '7', 'dscp_low': '0'}}
+    diff_serv_dscp_values = {
+        'best_effort': {'dscp_value': '000000', 'decimal_value': '0', 'dscp_high': '0', 'dscp_low': '0'},
+        '1': {'dscp_value': '000000', 'decimal_value': '1', 'dscp_high': '0', 'dscp_low': '1'},
+        '2': {'dscp_value': '000000', 'decimal_value': '2', 'dscp_high': '0', 'dscp_low': '2'},
+        '3': {'dscp_value': '000000', 'decimal_value': '3', 'dscp_high': '0', 'dscp_low': '3'},
+        '4': {'dscp_value': '000000', 'decimal_value': '4', 'dscp_high': '0', 'dscp_low': '4'},
+        '5': {'dscp_value': '000000', 'decimal_value': '5', 'dscp_high': '0', 'dscp_low': '5'},
+        '6': {'dscp_value': '000000', 'decimal_value': '6', 'dscp_high': '0', 'dscp_low': '6'},
+        '7': {'dscp_value': '000000', 'decimal_value': '7', 'dscp_high': '0', 'dscp_low': '7'},
+        '8': {'dscp_value': '000000', 'decimal_value': '8', 'dscp_high': '1', 'dscp_low': '0'},
+        '9': {'dscp_value': '000000', 'decimal_value': '9', 'dscp_high': '1', 'dscp_low': '1'},
+        'AF11': {'dscp_value': '001010', 'decimal_value': '10', 'dscp_high': '1', 'dscp_low': '2'},
+        '11': {'dscp_value': '000000', 'decimal_value': '11', 'dscp_high': '1', 'dscp_low': '3'},
+        'AF12': {'dscp_value': '001100', 'decimal_value': '12', 'dscp_high': '1', 'dscp_low': '4'},
+        '13': {'dscp_value': '000000', 'decimal_value': '13', 'dscp_high': '1', 'dscp_low': '5'},
+        'AF13': {'dscp_value': '001110', 'decimal_value': '14', 'dscp_high': '1', 'dscp_low': '6'},
+        '15': {'dscp_value': '000000', 'decimal_value': '15', 'dscp_high': '1', 'dscp_low': '7'},
+        'AF21': {'dscp_value': '010010', 'decimal_value': '18', 'dscp_high': '2', 'dscp_low': '2'},
+        'AF22': {'dscp_value': '010100', 'decimal_value': '20', 'dscp_high': '2', 'dscp_low': '4'},
+        'AF23': {'dscp_value': '010110', 'decimal_value': '22', 'dscp_high': '2', 'dscp_low': '6'},
+        'AF31': {'dscp_value': '011010', 'decimal_value': '26', 'dscp_high': '3', 'dscp_low': '2'},
+        'AF32': {'dscp_value': '011100', 'decimal_value': '28', 'dscp_high': '3', 'dscp_low': '4'},
+        'AF33': {'dscp_value': '011110', 'decimal_value': '30', 'dscp_high': '3', 'dscp_low': '6'},
+        'AF41': {'dscp_value': '100010', 'decimal_value': '34', 'dscp_high': '4', 'dscp_low': '2'},
+        'AF42': {'dscp_value': '100100', 'decimal_value': '36', 'dscp_high': '4', 'dscp_low': '4'},
+        'AF43': {'dscp_value': '100110', 'decimal_value': '38', 'dscp_high': '4', 'dscp_low': '6'},
+        'EF': {'dscp_value': '101110', 'decimal_value': '46', 'dscp_high': '5', 'dscp_low': '6'},
+        'CS6': {'dscp_value': '110000', 'decimal_value': '48', 'dscp_high': '6', 'dscp_low': '0'},
+        'CS7': {'dscp_value': '111000', 'decimal_value': '56', 'dscp_high': '7', 'dscp_low': '0'}}
 
     def __init__(self, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         TrafficGeneratorTemplate.__init__(self)
@@ -138,12 +151,10 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         return result
 
     def populate_performance_counters_json(self, mode, file_name, latency_results=None, jitter_results=None,
-                                           flow_type=None):
+                                           flow_type=None, spray_enable=False):
         file_created = False
         records = []
         try:
-            if len(latency_results) == 0 or len(jitter_results) == 0:
-                return True
             timestamp = get_current_time()
             for key in latency_results:
                 record = OrderedDict()
@@ -155,6 +166,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                 record['frame_size'] = frame_size
                 if flow_type:
                     record['flow_type'] = flow_type
+                record['spray'] = spray_enable
                 if jitter_results:
                     if len(latency_results[key]['latency_count']) > 1:
                         record['throughput'] = float(latency_results[key]['throughput_count'])

@@ -13,23 +13,23 @@ HOME_DIR = "/home/{}".format(REGRESSION_USER)
 
 class DpcshProxy(object):
 
-    def __init__(self, ip='server120', port=40221, usb='ttyUSB6', dpc_bin_path='image',
+    def __init__(self, ip='server120', dpcsh_port=40221, usb='ttyUSB6', dpc_bin_path='image',
                  user=REGRESSION_USER, password=REGRESSION_USER_PASSWORD):
 
         self.ip = ip
-        self.port = port
+        self.dpcsh_port = dpcsh_port
         self.usb = usb
         self.dpc_bin_path = dpc_bin_path
         self.pid = None
         self.linux = Linux(host_ip=ip,
                            ssh_username=user,
                            ssh_password=password)
-        self.network_controller_obj = NetworkController(dpc_server_ip=self.ip, dpc_server_port=self.port)
+        self.network_controller_obj = NetworkController(dpc_server_ip=self.ip, dpc_server_port=self.dpcsh_port)
 
     def start(self):
         result = False
         env_cmd = 'setenv LD_LIBRARY_PATH "/project/tools/glibc-2.14/lib"'
-        run_cmd = 'nohup ./dpcsh  -D /dev/{} --tcp_proxy {} > /tmp/start_dpc.out & '.format(self.usb, self.port)
+        run_cmd = 'nohup ./dpcsh  -D /dev/{} --tcp_proxy={} > /tmp/start_dpc.out & '.format(self.usb, self.dpcsh_port)
         try:
             self.linux.command(env_cmd)
             self.pid = self.linux.command(run_cmd).strip().split(' ')[-1]
@@ -51,12 +51,12 @@ class DpcshProxy(object):
             fun_test.critical(str(ex))
         return result
 
-    def ensure_started(self):
+    def ensure_started(self, max_time=900, interval=30):
         result = False
         try:
-            timer = FunTimer(max_time=900)
+            timer = FunTimer(max_time=max_time)
             while not timer.is_expired():
-                fun_test.sleep("DPCsh to come up", seconds=60)
+                fun_test.sleep("DPCsh to come up", seconds=interval)
                 output = self.network_controller_obj.echo_hello()
                 if output:
                     fun_test.log("Successfully started dpcsh echoed hello output: %s" % output)
@@ -73,6 +73,58 @@ class DpcshProxy(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    @fun_test.safe
+    def stop_dpcsh_proxy(self, dpcsh_proxy_name="dpcsh", dpcsh_proxy_port=40221, dpcsh_proxy_tty="ttyUSB8"):
+        process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty + '.*' + str(dpcsh_proxy_port)
+        current_dpcsh_proxy_pid = self.linux.get_process_id_by_pattern(process_pat)
+        if current_dpcsh_proxy_pid:
+            self.linux.kill_process(process_id=current_dpcsh_proxy_pid, sudo=False)
+            self.linux.command("\n")
+            current_dpcsh_proxy_pid = self.linux.get_process_id_by_pattern(process_pat)
+            if current_dpcsh_proxy_pid:
+                fun_test.critical("Unable to kill the existing dpcsh proxy process")
+                return False
+        else:
+            fun_test.log("No dpcsh proxy listening in port {}".format(dpcsh_proxy_port))
+        return True
+
+    @fun_test.safe
+    def start_dpcsh_proxy(self, dpcsh_env="/project/tools/glibc-2.14/lib",
+                          dpcsh_proxy_path="/home/gliang/ws/FunSDK/bin", dpcsh_proxy_name="dpcsh",
+                          dpcsh_proxy_port=40221, dpcsh_proxy_tty="/dev/ttyUSB8",
+                          dpcsh_proxy_log="/tmp/dpcsh_proxy_log"):
+        # Killling any existing dpcsh TCP proxy server running outside the qemu host
+        status = self.stop_dpcsh_proxy(dpcsh_proxy_name, dpcsh_proxy_port, dpcsh_proxy_tty)
+        if not status:
+            return False
+
+        dpcsh_proxy_cmd = "env LD_LIBRARY_PATH={} {}/{} -D {} --tcp_proxy={}".format(dpcsh_env, dpcsh_proxy_path,
+                                                                                     dpcsh_proxy_name, dpcsh_proxy_tty,
+                                                                                     dpcsh_proxy_port)
+        dpcsh_proxy_process_id = self.linux.start_bg_process(command=dpcsh_proxy_cmd, output_file=dpcsh_proxy_log)
+        # Checking whether the dpcsh proxy is started properly
+        if dpcsh_proxy_process_id:
+            self.linux.command("\n")
+            process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
+            current_dpcsh_proxy_process_id = self.linux.get_process_id_by_pattern(process_pat)
+            if not current_dpcsh_proxy_process_id:
+                return False
+        else:
+            return False
+        return True
+
+    @fun_test.safe
+    def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+        return self.linux.ipmi_power_off(host=host, interface=interface, user=user, passwd=passwd)
+
+    @fun_test.safe
+    def ipmi_power_on(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+        return self.linux.ipmi_power_on(host=host, interface=interface, user=user, passwd=passwd)
+
+    @fun_test.safe
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30):
+        return self.linux.ipmi_power_cycle(host=host, interface=interface, user=user, passwd=passwd, interval=interval)
 
 
 class Palladium(object):
@@ -292,7 +344,7 @@ def main():
         if not palladium_obj.boot():
             palladium_obj.cleanup_job()
         else:
-            dpcsh_obj = DpcshProxy(ip=config['dpcsh_tcp_proxy_ip'], port=config['dpcsh_tcp_proxy_port'],
+            dpcsh_obj = DpcshProxy(ip=config['dpcsh_tcp_proxy_ip'], dpcsh_port=config['dpcsh_tcp_proxy_port'],
                                    usb=config['dpcsh_usb'])
             if dpcsh_obj.start():
                 print dpcsh_obj.ensure_started()

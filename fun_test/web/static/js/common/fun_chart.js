@@ -222,7 +222,10 @@
                                 },
                                 plotOptions: {
                                     line: {
-                                        animation: false
+                                        animation: false,
+                                        marker: {
+                                            enabled: true
+                                        }
                                     },
                                     series: {
                                         animation: false,
@@ -287,6 +290,7 @@
                                     }
                                 }
                             } catch (e) {
+                                console.log(e);
 
                             }
 

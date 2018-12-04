@@ -29,7 +29,7 @@ topology_dict = {
 class IkvPerformance(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy the topology. i.e Start POSIM
+        1. Deploy the topology. i.e Start POSIX
                               """)
 
     def setup(self):

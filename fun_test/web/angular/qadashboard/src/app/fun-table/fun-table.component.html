@@ -1,0 +1,57 @@
+<div>
+  <div class="show-table-text">
+    <!-- pager -->
+    <div id="pageDiv" *ngIf="pager.pages && pager.pages.length">
+        <span *ngIf="pager.currentPage > 1" [ngClass]="{disabled:pager.currentPage === 1}">
+          <a [routerLink]="" (click)="setPage(1)">First </a>
+        </span>
+      <span *ngIf="pager.currentPage > 1" [ngClass]="{disabled:pager.currentPage === 1}">
+          <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
+        </span>
+      <span *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
+          <a [routerLink]="" (click)="setPage(page)">{{page}} </a>
+        </span>
+      <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+          <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
+        </span>
+      <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{disabled:pager.currentPage === pager.totalPages}">
+          <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
+        </span>
+    </div>
+    <!-- items being paged -->
+    <table class="table" matSort (matSortChange)="sortData($event)"> <!-- matsort for sorting the table -->
+      <tr>
+        <!-- filtering the header and rows based on the sorted and hidden columns -->
+        <th *ngFor="let header of filtered(headers)" mat-sort-header="{{headers.indexOf(header)}}">{{ header }}</th>
+      </tr>
+      <tr *ngFor="let item of pagedItems">
+        <td *ngFor="let rowItems of filtered(item)">{{rowItems}}</td>
+      </tr>
+    </table>
+    <a [routerLink]="" id="advancedLink" (click)="editColumns()">Advanced</a> <!-- hiding and showing columns-->
+  </div>
+  <!-- interface for hiding and showing columns -->
+  <div *ngIf="hideShowColumns">
+    <div>
+      <div style="vertical-align: center;">
+        <table>
+          <tr *ngFor="let header of headers">
+            <td>
+              <label>
+                {{header}}
+              </label>
+            </td>
+            <td style="padding: 10px; margin: 5px;">
+              <label class="switch">
+                <input type="checkbox" [checked]="headerIndexMap.get(headers.indexOf(header))"
+                       (change)="setHeaders(header)" class="switch" data-toggle="toggle">
+                <span class="slider round"></span>
+              </label>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <a class="close-tables" [routerLink]="" (click)="editColumns()">Close</a>
+  </div>
+</div>

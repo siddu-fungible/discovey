@@ -378,7 +378,9 @@ class TestCcEthernetArpRequest(FunTestCase):
                                               message=checkpoint)
                 checkpoint = "Ensure red pkts are equal to DroppedFrameCount on Spirent Rx results"
                 dropped_frame_count = int(rx_results['DroppedFrameCount'])
-                fun_test.test_assert_expected(expected=dropped_frame_count, actual=red_pkts,
+                fun_test.log("Dropped Frame Count on Spirent: %d" % dropped_frame_count)
+                fun_test.test_assert_expected(expected=tx_port_results['TotalFrameCount'],
+                                              actual=(red_pkts + green_pkts + yellow_pkts),
                                               message=checkpoint)
 
     def cleanup(self):

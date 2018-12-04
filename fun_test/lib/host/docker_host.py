@@ -6,6 +6,7 @@ from docker import DockerClient
 from docker.types.services import Mount
 import re, collections
 from fun_settings import DEFAULT_BUILD_URL
+from urllib3.connection import ConnectionError
 # fun_test.enable_debug()
 
 
@@ -231,8 +232,14 @@ class DockerHost(Linux, ToDictMixin):
                                 ssh_internal_ports,
                                 qemu_internal_ports,
                                 dpcsh_internal_ports,
-                                mounts=None):
+                                mounts=None,
+                                vm_host_os=None):
+
         storage_image_name = self._get_image_name_by_category(category_name="storage_basic")  # TODO
+        if not vm_host_os:
+            storage_image_name = self._get_image_name_by_category(category_name="f1_colocated_qemu_fungible_yocto")
+        elif vm_host_os == "fungible_ubuntu":
+            storage_image_name = self._get_image_name_by_category(category_name="f1_colocated_qemu_fungible_ubuntu")
         sdk_url = DEFAULT_BUILD_URL + "/Linux" if not fun_test.build_url else fun_test.build_url + "/Linux"
         local_sdk_url = fun_test.get_local_setting("SDK_URL")
         local_dpcsh_url = fun_test.get_local_setting("DPCSH_TGZ_URL")
@@ -323,7 +330,7 @@ class DockerHost(Linux, ToDictMixin):
                     fun_test.critical(str(ex))
 
             try:
-                container.remove()
+                container.remove(force=True)
                 fun_test.debug("Removed Container: {}".format(container.name))
             except Exception as ex:
                 if not ignore_error:
@@ -371,6 +378,7 @@ class DockerHost(Linux, ToDictMixin):
                                         allocated_ports=self.pool2_allocated_ports)
 
         while port_retries < max_port_retries:
+            fun_test.log("Current Try: {}, Max Tries: {}".format(port_retries, max_port_retries))
             self.pool0_allocated_ports = port_allocator0.allocated_ports
             self.pool1_allocated_ports = port_allocator1.allocated_ports
             self.pool2_allocated_ports = port_allocator2.allocated_ports
@@ -435,7 +443,8 @@ class DockerHost(Linux, ToDictMixin):
                     fun_test.sleep("Additional sleep for {}".format(self.type), seconds=fun_test.local_settings["CONTAINER_START_TIME"])
                 elif self.type == self.TYPE_DESKTOP:
                     fun_test.sleep("Additional sleep for {}".format(self.type), seconds=15)
-                self.sudo_command("docker logs {}".format(container_name))
+                if not self.localhost:
+                    self.sudo_command("docker logs {}".format(container_name))
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
@@ -445,7 +454,8 @@ class DockerHost(Linux, ToDictMixin):
 
 
                 fun_test.log("Launched container: {}".format(container_name))
-                self.sudo_command("docker logs {}".format(container_name))
+                if not self.localhost:
+                    self.sudo_command("docker logs {}".format(container_name))
 
                 port_retries += 1
                 container_asset = {"host_ip": self.host_ip}
@@ -482,19 +492,23 @@ class DockerHost(Linux, ToDictMixin):
                 if port_retries >= max_port_retries:
                     raise FunTestLibException("Unable to bind to any port, max_retries: {} reached".format(max_port_retries))
                 else:
-                    fun_test.log("Retrying...")
+                    fun_test.log("Retrying with different ports...")
             except Exception as ex:
+                if (hasattr(ex, "message") and "Max retries" in str(ex.message)):
+                    fun_test.log("Unable to reach the Docker remote API")
+                    port_retries = max_port_retries
+                port_retries += 1
                 fun_test.critical(ex)
                 self.destroy_container(container_name=container_name)
                 if allocated_container:
-                    self.sudo_command("docker logs {}".format(container_name))
+                    if not self.localhost:
+                        self.sudo_command("docker logs {}".format(container_name))
                     logs = allocated_container.logs(stdout=True, stderr=True)
                     fun_test.log("Docker logs:\n {}".format(logs))
                     break
                 else:
-                    self.sudo_command("docker logs {}".format(container_name))
-
-
+                    if not self.localhost:
+                        self.sudo_command("docker logs {}".format(container_name))
 
         return container_asset
 
@@ -511,6 +525,19 @@ class DockerHost(Linux, ToDictMixin):
             fun_test.critical("Timer expired waiting for container to run")
         return result
 
+    def ensure_container_idling(self, container_name, max_wait_time=180, idle_marker="Idling"):
+        timer = FunTimer(max_time=180)
+        container_up = False
+        try:
+            while not timer.is_expired():
+                output = self.command(command="docker logs {}".format(container_name), include_last_line=True)
+                if re.search(idle_marker, output):
+                    container_up = True
+                    break
+                fun_test.sleep("Waiting for container to come up", seconds=10)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return container_up
 
     @staticmethod
     def get(asset_properties):

@@ -1,0 +1,16 @@
+a {
+  cursor: pointer;
+}
+#pageDiv {
+  float: right;
+  padding: 10px;
+}
+#advancedLink {
+  margin: 5px;
+}
+.show-table-text a {
+  color: #337ab7;
+}
+.close-tables {
+  color: #337ab7;
+}

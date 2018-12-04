@@ -95,16 +95,17 @@ class FunTest:
         LOG_LEVEL_DEBUG: '\033[94m',
         LOG_LEVEL_CRITICAL: '\033[91m',
         LOG_LEVEL_NORMAL: '',
-        "RESET": '\033[30m',
+        "RESET": '\033[0m',
         "GREEN": '\033[92m'
     }
+
 
     fun_test_thread_id = 0
 
     def __init__(self):
         if "DISABLE_FUN_TEST" in os.environ:
 
-            def black_hole(*args):
+            def black_hole(*args, **kwargs):
                 pass
             self.log = black_hole
             return
@@ -137,7 +138,10 @@ class FunTest:
                             default=None)
         args = parser.parse_args()
         if args.disable_fun_test:
+            self.fun_test_disabled = True
             return
+        else:
+            self.fun_test_disabled = False
         self.logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
@@ -159,7 +163,9 @@ class FunTest:
         (frame, file_name, line_number, function_name, lines, index) = \
             inspect.getouterframes(inspect.currentframe())[2]
 
+        self.original_sig_int_handler = None
         if threading.current_thread().__class__.__name__ == '_MainThread':
+            self.original_sig_int_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, self.exit_gracefully)
 
         self.initialized = False
@@ -192,12 +198,16 @@ class FunTest:
         self.shared_variables = {}
         if self.local_settings_file:
             self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
+        self.start_time = get_current_time()
         self.wall_clock_timer = FunTimer()
         self.wall_clock_timer.start()
         self.fun_test_threads = {}
         self.fun_test_timers = []
         self.version = "1"
         self.determine_version()
+
+    def get_start_time(self):
+        return self.start_time
 
     def get_local_setting(self, setting):
         result = None
@@ -265,26 +275,30 @@ class FunTest:
             func(**kwargs)
 
     def join_thread(self, fun_test_thread_id, sleep_time=5):
-        thread_info = self.fun_test_threads[fun_test_thread_id]
-        thread = thread_info["thread"]
-        if thread:
-            success = False
-            while not success:
-                try:
-                    thread.join()
-                    success = True
-                except RuntimeError as r:
-                    r_string = str(r)
-                    if "cannot join thread before it is started" not in r_string:
-                        fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
-                    else:
-                        fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id),
-                                       seconds=sleep_time)
-        else:
-            fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
-            timer = thread_info["timer"]
-            while timer.isAlive():
-                fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+        thread_complete = False
+        while not thread_complete:
+            thread_info = self.fun_test_threads[fun_test_thread_id]
+            thread = thread_info["thread"]
+            if thread:
+                if not thread_complete:
+                    try:
+                        thread.join()
+
+                    except RuntimeError as r:
+                        r_string = str(r)
+                        if "cannot join thread before it is started" not in r_string:
+                            fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
+                        else:
+                            fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id),
+                                           seconds=sleep_time)
+                    thread_complete = True
+            else:
+                fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
+                timer = thread_info["timer"]
+                while timer.isAlive():
+                    fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+                if not thread_info["as_thread"]:
+                    thread_complete = True
 
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
@@ -567,7 +581,7 @@ class FunTest:
 
     def safe(self, the_function):
         def inner(*args, **kwargs):
-            if self.debug_enabled and self.function_tracing_enabled:
+            if self.debug_enabled and self.function_tracing_enabled and (not self.fun_test_disabled):
                 args_s = "args:" + ",".join([str(x) for x in args])
                 args_s += " kwargs:" + ",".join([(k + ":" + str(v)) + " " for k, v in kwargs.items()])
                 self.debug(args_s)
@@ -723,10 +737,13 @@ class FunTest:
 
     def exit_gracefully(self, sig, _):
         fun_test.critical("Unexpected Exit")
+
         if fun_test.suite_execution_id:
             models_helper.update_test_case_execution(test_case_execution_id=fun_test.current_test_case_execution_id,
                                                      suite_execution_id=fun_test.suite_execution_id,
                                                      result=fun_test.FAILED)
+            signal.signal(signal.SIGINT, self.original_sig_int_handler)
+        sys.exit(-1)
 
     def _get_flat_file_name(self, path):
         parts = path.split("/")
@@ -885,6 +902,9 @@ class FunTest:
     def remove_file(self, file_path):
         os.remove(file_path)
         return True
+
+    def get_helper_dir_path(self):
+        return self.get_script_parent_directory() + "/helper"
 
 
 fun_test = FunTest()

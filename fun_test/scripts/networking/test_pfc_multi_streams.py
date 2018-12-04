@@ -18,7 +18,9 @@ generator_config_objs = {}
 generator_dict = {}
 multiplyer = 52
 default_quanta = 65535
-capture_priority_limit = 7
+pause_dut_port_quanta = 60000
+pause_dut_port_threshold = 600
+capture_priority_limit = 8
 priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_octet': '00000000',
                                 'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '0'},
                  'priority_1': {'priority_val': 1, 'ls_octet': '00000010', 'ms_octet': '00000000',
@@ -52,156 +54,18 @@ priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_o
                  'priority_15': {'priority_val': 15, 'ls_octet': '00000000', 'ms_octet': '10000000',
                                  'quanta_val': {'0': '0' * multiplyer, 'F': 'F' * multiplyer}, 'dscp_high': '1', 'dscp_low': '7'}}
 
-priority_dict = {'priority_0': {'priority_val': 0, 'ls_octet': '00000001', 'ms_octet': '00000000',
-                                'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '0'},
-                 'priority_1': {'priority_val': 1, 'ls_octet': '00000010', 'ms_octet': '00000000',
-                                'quanta_val': {'0': '0', 'F': 'FFFF'}, 'dscp_high': '0', 'dscp_low': '1'}}
-
-
 priority_list = [val['priority_val'] for val in priority_dict.itervalues()]
-
-
-def verify_spirent_stats(result_dict):
-    for stream_key in result_dict.iterkeys():
-        fun_test.test_assert_expected(expected=result_dict[stream_key]['tx_result']['FrameCount'],
-                                      actual=result_dict[stream_key]['rx_result']['FrameCount'],
-                                      message="Check results for %s" % stream_key)
-    result = True
-    return result
-
-
-def get_key_to_change(class_dict, priority_val):
-    result = None
-    for key in class_dict.iterkeys():
-        if 'time' in key:
-            out = int(filter(str.isdigit, key))
-            if out == priority_val:
-                result = key
-                break
-    return result
-
-
-def find_spirent_rx_counters_stopped(template_obj, subscribe_result, streamblock_handle_list=None, pfc_stream=False,
-                                     port_handle=None):
-    result_dict = {}
-    value_dict = {}
-    for i in range(2):
-        if not pfc_stream:
-            value_dict[i] = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_result,
-                                                                               streamblock_handle_list=streamblock_handle_list,
-                                                                               rx_result=True)
-        else:
-            value_dict[i] = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_result,
-                                                                               port_handle_list=[port_handle],
-                                                                               analyzer_result=True)
-    for stream in streamblock_handle_list:
-        result_dict[stream] = None
-        if not pfc_stream:
-            old_rx_counter = int(value_dict[0][stream]['rx_result']['FrameCount'])
-            new_rx_counter = int(value_dict[1][stream]['rx_result']['FrameCount'])
-        else:
-            old_rx_counter = int(value_dict[0][port_handle]['analyzer_result']['TotalFrameCount'])
-            new_rx_counter = int(value_dict[1][port_handle]['analyzer_result']['TotalFrameCount'])
-
-        fun_test.log("Values of rx counter for stream %s are:- Old: %s ; New: %s" % (stream, old_rx_counter,
-                                                                                     new_rx_counter))
-
-        if old_rx_counter < new_rx_counter:
-            result_dict[stream] = False
-        elif old_rx_counter == new_rx_counter:
-            result_dict[stream] = True
-    return result_dict
-
-
-def get_fpg_port_cbfcpause_counters(network_controller_obj, dut_port, tx=False):
-    output_dict = {}
-    try:
-        stat_type = CBFC_PAUSE_FRAMES_RECEIVED
-        if tx:
-            stat_type = CBFC_PAUSE_FRAMES_TRANSMITTED
-        out = network_controller_obj.clear_port_stats(dut_port)
-        fun_test.simple_assert(out, "Clear port stats on dut port %s" % dut_port)
-        fun_test.sleep('Stats clear', seconds=2)
-        stats = network_controller_obj.peek_fpg_port_stats(dut_port)
-        fun_test.simple_assert(stats, "Fpg stats on port %s" % dut_port)
-
-        for priority in priority_list:
-            output_dict[priority] = False
-            value = get_dut_output_stats_value(stats, stat_type=stat_type,
-                                               tx=tx, class_value=priority)
-            if value:
-                fun_test.log("Value seen for priority %s is %s" % (priority, value))
-                output_dict[priority] = True
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return output_dict
-
-
-def get_psw_port_enqueue_dequeue_counters(network_controller_obj, dut_port, pg=False):
-    output_dict = {}
-    dequeue = 'dequeue'
-    enqueue = 'enqueue'
-    if pg:
-        dequeue_type = 'pg_deq'
-        enqueue_type = 'pg_enq'
-    else:
-        dequeue_type = 'q_deq'
-        enqueue_type = 'q_enq'
-    try:
-        stats_1 = network_controller_obj.peek_psw_port_stats(port_num=dut_port)
-        fun_test.simple_assert(stats_1, "Ensure psw command is executed on port %s" % dut_port)
-
-        fun_test.sleep("Letting queries to be executed", seconds=5)
-
-        stats_2 = network_controller_obj.peek_psw_port_stats(port_num=dut_port)
-        fun_test.simple_assert(stats_2, "Ensure psw command is executed on port %s" % dut_port)
-
-        for queue_num in priority_list:
-            output_dict[queue_num] = {}
-            output_dict[queue_num][dequeue] = True
-            output_dict[queue_num][enqueue] = False
-            if len(str(queue_num)) == 1:
-                updated_queue = '0' + str(queue_num)
-            else:
-                updated_queue = str(queue_num)
-            q_no = 'q_' + updated_queue
-
-            old_dequeue_val = int(stats_1[q_no]['count'][dequeue_type]['pkts'])
-            new_dequeue_val = int(stats_2[q_no]['count'][dequeue_type]['pkts'])
-            old_enqueue_val = int(stats_1[q_no]['count'][enqueue_type]['pkts'])
-            new_enqueue_val = int(stats_2[q_no]['count'][enqueue_type]['pkts'])
-
-            fun_test.log("Values of dequeue seen for queue %s are:- Old: %s ; New: %s" % (q_no,
-                                                                                           old_dequeue_val,
-                                                                                           new_dequeue_val))
-            fun_test.log("Values of enqueue seen for queue %s are:- Old: %s ; New: %s" % (q_no,
-                                                                                          old_enqueue_val,
-                                                                                          new_enqueue_val))
-
-            if old_dequeue_val < new_dequeue_val:
-                output_dict[queue_num][dequeue] = True
-            elif old_dequeue_val == new_dequeue_val:
-                output_dict[queue_num][dequeue] = False
-
-            if old_enqueue_val < new_enqueue_val:
-                output_dict[queue_num][enqueue] = True
-            elif old_enqueue_val == new_enqueue_val:
-                output_dict[queue_num][enqueue] = False
-
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return output_dict
+k_list = [x for x in range(0, 16)]
+k_list.reverse()
 
 
 class SpirentSetup(FunTestScript):
-    pg = 0
-    min_thr = 100
-    shr_thr = 100
+    min_thr = 512
+    shr_thr = 2000
     hdr_thr = 20
     xoff_enable = 1
-    shared_xon_thr = 10
-    quanta = 50000
-    class_val = 0
+    shared_xon_thr = 5
+    quanta = 5000
     threshold = 500
 
     def describe(self):
@@ -215,16 +79,23 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1
+            dut_port_1, hnu, shape, pause_obj, dut_port_list, pause_streamblock, interface_obj_list
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type)
+        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+
+        shape = 0
+        hnu = False
+        if flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_HNU:
+            shape = 1
+            hnu = True
 
         chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         good_load = 100
         pfc_load = 10
+        pause_load = 60
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_multi_stream", spirent_config=spirent_config,
                                                       chassis_type=chassis_type)
@@ -232,48 +103,78 @@ class SpirentSetup(FunTestScript):
 
         destination_mac1 = spirent_config['l2_config']['destination_mac']
         destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        dut_port_list = []
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
+        dut_port_list.append(dut_port_1)
+        dut_port_list.append(dut_port_2)
 
         # Create network controller object
         dpcsh_server_ip = dut_config['dpcsh_tcp_proxy_ip']
         dpcsh_server_port = int(dut_config['dpcsh_tcp_proxy_port'])
         network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
-        set_qos_ingress = network_controller_obj.set_qos_ingress_priority_group(port_num=dut_port_1,
-                                                                                priority_group_num=self.pg,
-                                                                                min_threshold=self.min_thr,
-                                                                                shared_threshold=self.shr_thr,
-                                                                                headroom_threshold=self.hdr_thr,
-                                                                                xoff_enable=self.xoff_enable,
-                                                                                shared_xon_threshold=self.shared_xon_thr)
-        fun_test.test_assert(set_qos_ingress, "Setting qos ingress priority group")
+        for key in priority_dict.keys():
+            priority_value = priority_dict[key]['priority_val']
+            set_qos_ingress = network_controller_obj.set_qos_ingress_priority_group(port_num=dut_port_1,
+                                                                                    priority_group_num=priority_value,
+                                                                                    min_threshold=self.min_thr,
+                                                                                    shared_threshold=self.shr_thr,
+                                                                                    headroom_threshold=self.hdr_thr,
+                                                                                    xoff_enable=self.xoff_enable,
+                                                                                    shared_xon_threshold=self.shared_xon_thr)
+            fun_test.test_assert(set_qos_ingress, "Setting qos ingress priority group")
 
-        pfc_enable = network_controller_obj.set_qos_pfc(enable=True)
+            port_quanta = network_controller_obj.set_priority_flow_control_quanta(port_num=dut_port_1,
+                                                                                  quanta=self.quanta,
+                                                                                  class_num=priority_value,
+                                                                                  shape=shape)
+            fun_test.test_assert(port_quanta, "Ensure quanta %s is set on port %s" % (self.quanta, dut_port_1))
+
+            port_thr = network_controller_obj.set_priority_flow_control_threshold(port_num=dut_port_1,
+                                                                                  threshold=self.threshold,
+                                                                                  class_num=priority_value,
+                                                                                  shape=shape)
+            fun_test.test_assert(port_thr, "Ensure threshold %s is set on port %s" % (port_thr, dut_port_1))
+
+        pfc_enable = network_controller_obj.enable_qos_pfc(hnu=hnu)
         fun_test.test_assert(pfc_enable, "Ensure qos pfc is enabled")
 
-        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_1)
-        fun_test.test_assert(enable_1, "Disable pfc on port %s" % dut_port_1)
-
-        port_quanta = network_controller_obj.set_priority_flow_control_quanta(port_num=dut_port_1, quanta=self.quanta,
-                                                                              class_num=self.class_val)
-        fun_test.test_assert(port_quanta, "Ensure quanta %s is set on port %s" % (self.quanta, dut_port_1))
-
-        port_thr = network_controller_obj.set_priority_flow_control_threshold(port_num=dut_port_1,
-                                                                              threshold=self.threshold,
-                                                                              class_num=self.class_val)
-        fun_test.test_assert(port_thr, "Ensure threshold %s is set on port %s" % (port_thr, dut_port_1))
+        enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_1, shape=shape)
+        fun_test.test_assert(enable_1, "Enable pfc on port %s" % dut_port_1)
 
         # enable pfc on dut egress
-        enable_2 = network_controller_obj.enable_priority_flow_control(dut_port_2)
+        enable_2 = network_controller_obj.enable_priority_flow_control(dut_port_2, shape=shape)
         fun_test.test_assert(enable_2, "Enable pfc on port %s" % dut_port_2)
 
-        result = template_obj.setup(no_of_ports_needed=num_ports)
+        # set ingress priority to pg map list
+        set_ingress_priority_map = network_controller_obj.set_qos_priority_to_pg_map(port_num=dut_port_1,
+                                                                                     map_list=k_list)
+        fun_test.test_assert(set_ingress_priority_map, message="Set priority to pg map")
+
+        # set egress priority to pg map list
+        set_egress_priority_map = network_controller_obj.set_qos_queue_to_priority_map(port_num=dut_port_2,
+                                                                                       map_list=k_list)
+        fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
+
+        flow_dir = nu_config_obj.FLOW_DIRECTION_NU_NU
+        if hnu:
+            flow_dir = nu_config_obj.FLOW_DIRECTION_HNU_HNU
+        result = template_obj.setup(no_of_ports_needed=num_ports, flow_direction=flow_dir)
         fun_test.test_assert(result['result'], "Configure setup")
 
         port_obj_list = result['port_list']
         port_1 = port_obj_list[0]
         port_2 = port_obj_list[1]
+        interface_obj_list = result['interface_obj_list']
+
+        # Enable flow control on both spirent ports
+        for current_interface_obj in interface_obj_list:
+            current_interface_obj.FlowControl = True
+
+            update_result = template_obj.configure_physical_interface(interface_obj=current_interface_obj)
+            fun_test.simple_assert(update_result, "Enable flow control on interface %s" %
+                                   current_interface_obj._spirent_handle)
 
         # Configure Generator
         for port in port_obj_list:
@@ -306,7 +207,8 @@ class SpirentSetup(FunTestScript):
                     # Configure mac and ip on the stream
                     ethernet = Ethernet2Header(destination_mac=destination_mac1)
                     frame_stack = template_obj.stc_manager.configure_frame_stack(
-                        stream_block_handle=create_streamblock_1._spirent_handle, header_obj=ethernet)
+                        stream_block_handle=create_streamblock_1._spirent_handle, header_obj=ethernet,
+                        delete_header=[Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE])
                     fun_test.test_assert(frame_stack,
                                          "Added ethernet header to stream %s" % create_streamblock_1._spirent_handle)
 
@@ -357,6 +259,19 @@ class SpirentSetup(FunTestScript):
                     pfc_streamblock_objs[key]['pfc_header_obj'] = out['pfc_header_obj']
                     pfc_stream_obj_list.append(create_streamblock_2)
                     pfc_stream_list.append(create_streamblock_2._spirent_handle)
+
+                # Create stream on port 2
+                pause_streamblock = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND,
+                                                load=pause_load,
+                                                fixed_frame_length=64, insert_signature=False)
+                streamblock_2 = template_obj.configure_stream_block(pause_streamblock, port_handle=port_2)
+                fun_test.test_assert(streamblock_2, message="Creating streamblock on port %s" % port_2)
+
+                # Configure pause frame on stream 2
+                out = template_obj.configure_pause_mac_control_header(pause_streamblock)
+                fun_test.test_assert(out['result'], message="Added frame stack")
+                pause_obj = out['pause_mac_control_header_obj']
+                pause_ethernet_obj = out['ethernet8023_mac_control_header_obj']
         # Applying configuration
         apply = template_obj.stc_manager.apply_configuration()
         fun_test.test_assert(apply, "Applying Generator config")
@@ -375,24 +290,36 @@ class SpirentSetup(FunTestScript):
         # Cleanup spirent session
         fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
 
-        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1)
+        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
-        disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2)
+        disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2, shape=shape)
         fun_test.test_assert(disable_2, "Disable pfc on port %s" % dut_port_2)
 
 
 class TestCase1(FunTestCase):
     final_quanta_value = 0
+    quanta = 5000
     current_priority_value = 1
     priority_key = 'priority_%s' % current_priority_value
+    zero_quanta_value = 0
+    capture_quanta_checker = {'time1': quanta, 'time2': zero_quanta_value, 'time3': zero_quanta_value, 'time4': zero_quanta_value,
+                              'time5': zero_quanta_value, 'time6': zero_quanta_value, 'time7': zero_quanta_value}
 
     def pcap_output(self):
-        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
-        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time1=str(self.final_quanta_value))
-        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
+        if not self.current_priority_value > 7:
+            pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+            output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time1=str(self.final_quanta_value))
+            fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
 
-        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time1=default_quanta)
-        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+            first = pcap_parser_1.verify_pfc_header_fields(first_packet=True,
+                                                           time1=self.capture_quanta_checker['time1'],
+                                                           time2=self.capture_quanta_checker['time2'],
+                                                           time3=self.capture_quanta_checker['time3'],
+                                                           time4=self.capture_quanta_checker['time4'],
+                                                           time5=self.capture_quanta_checker['time5'],
+                                                           time6=self.capture_quanta_checker['time6'],
+                                                           time7=self.capture_quanta_checker['time7'])
+            fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % self.quanta)
 
     def describe(self):
         self.set_test_details(id=1,
@@ -419,10 +346,10 @@ class TestCase1(FunTestCase):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -442,8 +369,9 @@ class TestCase1(FunTestCase):
         for key in subscribe_results.iterkeys():
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
-        if self.pcap_file_path_1:
-            fun_test.remove_file(file_path=self.pcap_file_path_1)
+        if self.current_priority_value <= 7:
+            if self.pcap_file_path_1:
+                fun_test.remove_file(file_path=self.pcap_file_path_1)
 
     def run(self):
         sleep_time = 5
@@ -477,7 +405,7 @@ class TestCase1(FunTestCase):
             stream_blocks_list=[current_pfc_stream_handle])
         fun_test.test_assert(start_pfc, " PFC started for priority %s" % current_pfc_stream_handle)
 
-        fun_test.sleep("Letting pfc stream get started", seconds=sleep_time)
+        fun_test.sleep("Letting pfc stream get started", seconds=30)
 
         fun_test.log("Fetch spirent rx counter results for all good streams")
         result_dict[self.current_priority_value][spirent_rx_counters] = \
@@ -487,25 +415,26 @@ class TestCase1(FunTestCase):
         result_dict[self.current_priority_value][spirent_pfc_rx_counter] = \
             find_spirent_rx_counters_stopped(port_handle=port_1,
                                              template_obj=template_obj,
-                                             subscribe_result=subscribe_results)
+                                             subscribe_result=subscribe_results, pfc_stream=True)
 
         fun_test.log("Fetch fpg stats on dut port %s" % dut_port_2)
         result_dict[self.current_priority_value][fpg_cbfcpause_counters_tx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2, shape=shape)
 
         fun_test.log("Fetch fpg stats on dut port %s" % dut_port_1)
         result_dict[self.current_priority_value][fpg_cbfcpause_counters_rx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True)
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1,
+                                            shape=shape, tx=True)
 
         fun_test.log("Get psw port group enqueue dequeue counters")
         result_dict[self.current_priority_value][psw_port_pg_counters] = \
             get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
-                                                  dut_port=dut_port_1, pg=True)
+                                                  dut_port=dut_port_1, pg=True, hnu=hnu)
 
         fun_test.log("Get psw port queue enqueue dequeue counters")
         result_dict[self.current_priority_value][psw_port_q_counters] = \
             get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
-                                                  dut_port=dut_port_2)
+                                                  dut_port=dut_port_2, hnu=hnu)
 
         # ASSERTS
         spirent_counters_dict = result_dict[self.current_priority_value][spirent_rx_counters]
@@ -529,9 +458,9 @@ class TestCase1(FunTestCase):
                                              (stream, self.current_priority_value))
 
         # Check spirent pfc rx is not stopped
-        fun_test.test_assert(not result_dict[self.current_priority_value][spirent_pfc_rx_counter],
+        fun_test.test_assert(not result_dict[self.current_priority_value][spirent_pfc_rx_counter][str(port_1)],
                              message="Ensure spirent port %s is getting pfc frames from dut port %s" % (port_1,
-                                                                                                        dut_port_1))
+                                                                                                       dut_port_1))
 
         for priority in priority_list:
             if self.current_priority_value == priority:
@@ -548,19 +477,19 @@ class TestCase1(FunTestCase):
                                                                                dut_port_1))
 
                 fun_test.test_assert(not pg_queue_counters_dict[priority][dequeue],
-                                     message="Ensure dequeue is not happening for queue q_%s when pfc with "
+                                     message="Ensure pg dequeue is not happening for queue q_%s when pfc with "
                                              "priority %s was sent" % (priority, self.current_priority_value))
 
                 fun_test.test_assert(pg_queue_counters_dict[priority][enqueue],
-                                     message="Ensure enqueue is happening for queue q_%s when pfc with "
+                                     message="Ensure pg enqueue is happening for queue q_%s when pfc with "
                                              "priority %s was sent" % (priority, self.current_priority_value))
 
                 fun_test.test_assert(not q_queue_counters_dict[priority][dequeue],
-                                     message="Ensure dequeue is not not happening for queue q_%s when pfc with "
+                                     message="Ensure q dequeue is not happening for queue q_%s when pfc with "
                                              "priority %s was sent" % (priority, self.current_priority_value))
 
                 fun_test.test_assert(q_queue_counters_dict[priority][enqueue],
-                                     message="Ensure enqueue is happening for queue q_%s when pfc with "
+                                     message="Ensure q enqueue is not happening for queue q_%s when pfc with "
                                              "priority %s was sent" % (priority, self.current_priority_value))
 
             else:
@@ -596,7 +525,9 @@ class TestCase1(FunTestCase):
         if self.current_priority_value < capture_priority_limit:
             capture_obj = Capture()
             start_capture = template_obj.stc_manager.start_capture_command(capture_obj=capture_obj, port_handle=port_1)
-            fun_test.test_assert(start_capture, "Started capture for quanta 0 on port %s" % port_1)
+            fun_test.test_assert(start_capture, "Started capture on port %s" % port_1)
+
+            fun_test.sleep("Letting capture to start", seconds=5)
 
         # Stop traffic from port 1
         stop = template_obj.disable_generator_configs(generator_configs=generator_dict[port_2])
@@ -615,44 +546,47 @@ class TestCase1(FunTestCase):
         output_dict[self.current_priority_value][spirent_pfc_rx_counter] = \
             find_spirent_rx_counters_stopped(port_handle=port_1,
                                              template_obj=template_obj,
-                                             subscribe_result=subscribe_results)
+                                             subscribe_result=subscribe_results, pfc_stream=True)
 
         fun_test.log("Fetch fpg stats on dut port %s" % dut_port_2)
         output_dict[self.current_priority_value][fpg_cbfcpause_counters_tx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2, shape=shape)
 
         fun_test.log("Fetch fpg stats on dut port %s" % dut_port_1)
         output_dict[self.current_priority_value][fpg_cbfcpause_counters_rx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True)
-
-        fun_test.log("Fetch fpg stats")
-        output_dict[self.current_priority_value][fpg_cbfcpause_counters_tx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True, shape=shape)
 
         fun_test.log("Get psw port group enqueue dequeue counters")
         output_dict[self.current_priority_value][psw_port_pg_counters] = \
             get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
-                                                  dut_port=dut_port_1, pg=True)
+                                                  dut_port=dut_port_1, pg=True, hnu=hnu)
 
         fun_test.log("Get psw port queue enqueue dequeue counters")
         output_dict[self.current_priority_value][psw_port_q_counters] = \
             get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
-                                                  dut_port=dut_port_2)
+                                                  dut_port=dut_port_2, hnu=hnu)
 
         spirent_counters_dict = output_dict[self.current_priority_value][spirent_rx_counters]
-        fpg_counters_dict_2 = result_dict[self.current_priority_value][fpg_cbfcpause_counters_tx]
-        fpg_counters_dict_1 = result_dict[self.current_priority_value][fpg_cbfcpause_counters_rx]
+        fpg_counters_dict_2 = output_dict[self.current_priority_value][fpg_cbfcpause_counters_tx]
+        fpg_counters_dict_1 = output_dict[self.current_priority_value][fpg_cbfcpause_counters_rx]
         pg_queue_counters_dict = output_dict[self.current_priority_value][psw_port_pg_counters]
         q_queue_counters_dict = output_dict[self.current_priority_value][psw_port_q_counters]
+
+        fun_test.log("Log all good stream counters %s" % spirent_counters_dict)
+        fun_test.log("Log all pfc stream counters %s" % spirent_pfc_rx_counter)
+        fun_test.log("Log cbfc pause counters on dut rx %s" % fpg_counters_dict_2)
+        fun_test.log("Log cbfc pause counters on dut tx %s" % fpg_counters_dict_1)
+        fun_test.log("Log pg queue counters on dut ingress port %s" % pg_queue_counters_dict)
+        fun_test.log("Log queue counters on dut egress port %s" % pg_queue_counters_dict)
 
         for key in spirent_counters_dict.iterkeys():
             fun_test.test_assert(not spirent_counters_dict[key], "Ensure rx on spirent is happening for stream %s "
                                                                  "when pfc is stopped"
                                                                  " for priority %s" % (key, self.current_priority_value))
 
-        # Check spirent pfc rx is  stopped
-        fun_test.test_assert(result_dict[self.current_priority_value][spirent_pfc_rx_counter],
-                             message="Esnure spirent port %s is not getting pfc frames from dut port %s" % (port_1,
+        # Check spirent pfc rx is stopped
+        fun_test.test_assert(output_dict[self.current_priority_value][spirent_pfc_rx_counter][str(port_1)],
+                             message="Ensure spirent port %s is not getting pfc frames from dut port %s" % (port_1,
                                                                                                         dut_port_1))
 
         for priority in priority_list:
@@ -668,7 +602,7 @@ class TestCase1(FunTestCase):
                                                                         % (priority, self.current_priority_value,
                                                                            dut_port_1))
 
-            fun_test.test_assert(not pg_queue_counters_dict[priority][dequeue],
+            fun_test.test_assert(pg_queue_counters_dict[priority][dequeue],
                                  message="Ensure dequeue is happening for queue q_%s when pfc with "
                                          "priority %s was stopped" % (priority, self.current_priority_value))
 
@@ -676,7 +610,7 @@ class TestCase1(FunTestCase):
                                  message="Ensure enqueue is happening for queue q_%s when pfc with "
                                          "priority %s was stopped" % (priority, self.current_priority_value))
 
-            fun_test.test_assert(not q_queue_counters_dict[priority][dequeue],
+            fun_test.test_assert(q_queue_counters_dict[priority][dequeue],
                                  message="Ensure dequeue is happening for queue q_%s when pfc with "
                                          "priority %s was stopped" % (priority, self.current_priority_value))
 
@@ -706,14 +640,10 @@ class TestCase1(FunTestCase):
 class TestCase2(TestCase1):
     current_priority_value = 2
     priority_key = 'priority_%s' % current_priority_value
-
-    def pcap_output(self):
-        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
-        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time2=str(self.final_quanta_value))
-        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
-
-        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time2=default_quanta)
-        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.quanta,
+                              'time3': TestCase1.zero_quanta_value,'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=2,
@@ -751,14 +681,10 @@ class TestCase2(TestCase1):
 class TestCase3(TestCase1):
     current_priority_value = 3
     priority_key = 'priority_%s' % current_priority_value
-
-    def pcap_output(self):
-        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
-        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time3=str(self.final_quanta_value))
-        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
-
-        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time3=default_quanta)
-        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.quanta, 'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=3,
@@ -796,14 +722,10 @@ class TestCase3(TestCase1):
 class TestCase4(TestCase1):
     current_priority_value = 4
     priority_key = 'priority_%s' % current_priority_value
-
-    def pcap_output(self):
-        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
-        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time4=str(self.final_quanta_value))
-        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
-
-        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time4=default_quanta)
-        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.zero_quanta_value, 'time4': TestCase1.quanta,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=4,
@@ -841,14 +763,10 @@ class TestCase4(TestCase1):
 class TestCase5(TestCase1):
     current_priority_value = 5
     priority_key = 'priority_%s' % current_priority_value
-
-    def pcap_output(self):
-        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
-        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time5=str(self.final_quanta_value))
-        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
-
-        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time5=default_quanta)
-        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.zero_quanta_value, 'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.quanta, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=5,
@@ -886,14 +804,10 @@ class TestCase5(TestCase1):
 class TestCase6(TestCase1):
     current_priority_value = 6
     priority_key = 'priority_%s' % current_priority_value
-
-    def pcap_output(self):
-        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
-        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time6=str(self.final_quanta_value))
-        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
-
-        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time6=default_quanta)
-        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.zero_quanta_value, 'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.quanta,
+                              'time7': TestCase1.zero_quanta_value}
 
     def describe(self):
         self.set_test_details(id=6,
@@ -931,14 +845,10 @@ class TestCase6(TestCase1):
 class TestCase7(TestCase1):
     current_priority_value = 7
     priority_key = 'priority_%s' % current_priority_value
-
-    def pcap_output(self):
-        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
-        output = pcap_parser_1.verify_pfc_header_fields(last_packet=True, time7=str(self.final_quanta_value))
-        fun_test.test_assert(output, "Ensure value of quanta is 0 in the last pfc packet")
-
-        first = pcap_parser_1.verify_pfc_header_fields(first_packet=True, time7=default_quanta)
-        fun_test.test_assert(first, "Value of quanta %s seen in pfc first packet" % default_quanta)
+    capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
+                              'time3': TestCase1.zero_quanta_value, 'time4': TestCase1.zero_quanta_value,
+                              'time5': TestCase1.zero_quanta_value, 'time6': TestCase1.zero_quanta_value,
+                              'time7': TestCase1.quanta}
 
     def describe(self):
         self.set_test_details(id=7,
@@ -1318,11 +1228,11 @@ class TestCase16(FunTestCase):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut") % dut_port_1
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
+        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut") % dut_port_2
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
+        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
         # Stop traffic from port 1
@@ -1339,7 +1249,7 @@ class TestCase16(FunTestCase):
 
         # Disable pfc enabled streams
         pfc_enabled_stream_objs = []
-        for key, val in priority_dict.itervalues():
+        for key, val in priority_dict.iteritems():
             if val['priority_val'] in self.priority_enabled_list:
                 pfc_enabled_stream_objs.append(pfc_streamblock_objs[key]['streamblock_obj'])
         disable = template_obj.deactivate_stream_blocks(stream_obj_list=pfc_enabled_stream_objs)
@@ -1359,7 +1269,7 @@ class TestCase16(FunTestCase):
 
         pfc_enabled_stream_handle_list = []
         pfc_enabled_stream_objs = []
-        for key, val in priority_dict.itervalues():
+        for key, val in priority_dict.iteritems():
             if val['priority_val'] in self.priority_enabled_list:
                 pfc_enabled_stream_objs.append(pfc_streamblock_objs[key]['streamblock_obj'])
                 pfc_enabled_stream_handle_list.append(pfc_streamblock_objs[key]['streamblock_obj']._spirent_handle)
@@ -1379,7 +1289,7 @@ class TestCase16(FunTestCase):
             stream_blocks_list=pfc_enabled_stream_handle_list)
         fun_test.test_assert(start_pfc, " PFC started for priority %s" % self.priority_enabled_list)
 
-        fun_test.sleep("Letting pfc stream get started", seconds=sleep_time)
+        fun_test.sleep("Letting pfc stream get started", seconds=30)
 
         # Start capturing stats
         fun_test.log("Fetch spirent rx counter results")
@@ -1390,27 +1300,27 @@ class TestCase16(FunTestCase):
         result_dict[spirent_pfc_rx_counter] = \
             find_spirent_rx_counters_stopped(port_handle=port_1,
                                              template_obj=template_obj,
-                                             subscribe_result=subscribe_results)
+                                             subscribe_result=subscribe_results, pfc_stream=True)
 
         fun_test.log("Fetch fpg stats on dut port %s" % dut_port_2)
         result_dict[fpg_cbfcpause_counters_tx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2, shape=shape)
 
         fun_test.log("Fetch fpg stats on dut port %s" % dut_port_1)
         result_dict[fpg_cbfcpause_counters_rx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True)
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True, shape=shape)
 
-        fun_test.log("Get psw port group enqueue dequeue counters")
+        fun_test.log("Get psw port pg group enqueue dequeue counters")
         result_dict[psw_port_pg_counters] = \
             get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
-                                                  dut_port=dut_port_1, pg=True)
+                                                  dut_port=dut_port_1, pg=True, hnu=hnu)
 
-        fun_test.log("Get psw port queue enqueue dequeue counters")
+        fun_test.log("Get psw port q enqueue dequeue counters")
         result_dict[psw_port_q_counters] = \
             get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
-                                                  dut_port=dut_port_2)
+                                                  dut_port=dut_port_2, hnu=hnu)
 
-        #ASSERTS
+        # ASSERTS
         spirent_counters_dict = result_dict[spirent_rx_counters]
         fpg_counters_dict_2 = result_dict[fpg_cbfcpause_counters_tx]
         fpg_counters_dict_1 = result_dict[fpg_cbfcpause_counters_rx]
@@ -1426,10 +1336,6 @@ class TestCase16(FunTestCase):
                 fun_test.test_assert(spirent_counters_dict[current_good_stream_handle],
                                      message="Ensure rx counters are stopped for stream %s as pfc with priority "
                                              "%s is enabled" % (current_good_stream_handle, current_priority_value))
-
-                fun_test.test_assert(result_dict[spirent_pfc_rx_counter],
-                                     message="Ensure spirent port %s is getting pfc frames from dut port %s"
-                                             % (port_1, dut_port_1))
 
                 fun_test.test_assert(fpg_counters_dict_2[current_priority_value],
                                      message="Ensure fpg mac stats seen for queue with priority %s when pfc "
@@ -1491,6 +1397,10 @@ class TestCase16(FunTestCase):
                                      message="Ensure q_enqueue is happening for queue q_%s when pfc with "
                                              "priority %s was sent" % (current_priority_value, current_priority_value))
 
+            fun_test.test_assert(not result_dict[spirent_pfc_rx_counter][str(port_1)],
+                                 message="Ensure spirent port %s is getting pfc frames from dut port %s"
+                                         % (port_1, dut_port_1))
+
         # Stop traffic from port 1
         stop = template_obj.disable_generator_configs(generator_configs=generator_dict[port_2])
         fun_test.test_assert(stop, "Stopping pfc on port %s" % port_2)
@@ -1507,29 +1417,29 @@ class TestCase16(FunTestCase):
         output_dict[spirent_pfc_rx_counter] = \
             find_spirent_rx_counters_stopped(port_handle=port_1,
                                              template_obj=template_obj,
-                                             subscribe_result=subscribe_results)
+                                             subscribe_result=subscribe_results, pfc_stream=True)
 
         fun_test.log("Fetch fpg stats on dut port %s" % dut_port_2)
         output_dict[fpg_cbfcpause_counters_tx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2, shape=shape)
 
         fun_test.log("Fetch fpg stats on dut port %s" % dut_port_1)
         output_dict[fpg_cbfcpause_counters_rx] = \
-            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True)
+            get_fpg_port_cbfcpause_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1, tx=True, shape=shape)
 
         fun_test.log("Get psw port group enqueue dequeue counters")
         output_dict[psw_port_pg_counters] = \
             get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
-                                                  dut_port=dut_port_1, pg=True)
+                                                  dut_port=dut_port_1, pg=True, hnu=hnu)
 
         fun_test.log("Get psw port queue enqueue dequeue counters")
         output_dict[psw_port_q_counters] = \
             get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
-                                                  dut_port=dut_port_2)
+                                                  dut_port=dut_port_2, hnu=hnu)
 
         spirent_counters_dict = output_dict[spirent_rx_counters]
-        fpg_counters_dict_2 = result_dict[fpg_cbfcpause_counters_tx]
-        fpg_counters_dict_1 = result_dict[fpg_cbfcpause_counters_rx]
+        fpg_counters_dict_2 = output_dict[fpg_cbfcpause_counters_tx]
+        fpg_counters_dict_1 = output_dict[fpg_cbfcpause_counters_rx]
         pg_queue_counters_dict = output_dict[psw_port_pg_counters]
         q_queue_counters_dict = output_dict[psw_port_q_counters]
 
@@ -1537,7 +1447,7 @@ class TestCase16(FunTestCase):
             fun_test.test_assert(not spirent_counters_dict[key], "Ensure rx on spirent is happening for stream %s "
                                                                  "when pfc is stopped" % key)
 
-        fun_test.test_assert(result_dict[spirent_pfc_rx_counter],
+        fun_test.test_assert(output_dict[spirent_pfc_rx_counter][str(port_1)],
                              message="Ensure spirent port %s is not getting pfc frames from dut port %s" % (port_1,
                                                                                                             dut_port_1))
 
@@ -1599,7 +1509,276 @@ class TestCase17(TestCase16):
         super(TestCase17, self).run()
 
 
+class TestCase18(FunTestCase):
+    current_pause_quanta = 0
+    dut_pause_enable = True
+    will_streams_stop = False
+
+    def describe(self):
+        self.set_test_details(id=18,
+                              summary="Test link pause when quanta value is 0",
+                              steps="""
+                              1. Enable link pause on both ports
+                              2. Set quanta to 0 in link pause frame on spirent
+                              3. Start traffic from port 1
+                              4. Start link pause frame from port 2
+                              5. Ensure tx of stream is not stopped
+                              6. Ensure no pause frames seen on port_1
+                              """)
+
+    def setup(self):
+        for dut_port in dut_port_list:
+            disable_pfc = network_controller_obj.disable_priority_flow_control(port_num=dut_port, shape=shape)
+            fun_test.test_assert(disable_pfc, "Ensure pfc is disabled on %s" % dut_port)
+
+            if self.dut_pause_enable:
+                enable_tx_pause = network_controller_obj.enable_link_pause(port_num=dut_port, shape=shape)
+                fun_test.test_assert(enable_tx_pause, "Enable link pause in %s" % dut_port)
+            else:
+                disable_tx_pause = network_controller_obj.disable_link_pause(port_num=dut_port, shape=shape)
+                fun_test.test_assert(disable_tx_pause, "Disable link pause in %s" % dut_port)
+
+            # Clear port results on DUT
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port, shape=shape)
+            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port)
+
+            quanta = network_controller_obj.set_link_pause_quanta(port_num=dut_port, quanta=pause_dut_port_quanta)
+            fun_test.test_assert(quanta, "Assign quanta value %s on port %s" % (pause_dut_port_quanta, dut_port))
+
+            threshold = network_controller_obj.set_link_pause_threshold(port_num=dut_port, threshold=pause_dut_port_threshold)
+            fun_test.test_assert(threshold, "Assign threshold value %s on port %s" % (pause_dut_port_threshold, dut_port))
+
+        # Activate pfc streams
+        enable_pfc_stream = template_obj.activate_stream_blocks(stream_obj_list=[pause_streamblock])
+        fun_test.simple_assert(enable_pfc_stream, "Enable stream %s" % pause_streamblock._spirent_handle)
+
+        pause_obj.pauseTime = self.current_pause_quanta
+        modify_pause = template_obj.stc_manager.configure_frame_stack(stream_block_handle=pause_streamblock.spirent_handle,
+                                                                      header_obj=pause_obj, update=True)
+        fun_test.test_assert(modify_pause, "Change quanta value to %s" % self.current_pause_quanta)
+
+    def cleanup(self):
+        for dut_port in dut_port_list:
+            disable_tx_pause = network_controller_obj.disable_link_pause(port_num=dut_port, shape=shape)
+            fun_test.test_assert(disable_tx_pause, "Disable link pause in %s" % dut_port)
+
+        all_stream_handles = good_stream_list + [pause_streamblock.spirent_handle]
+
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=all_stream_handles)
+        fun_test.test_assert(stop_streams, "Ensure all streams are stopped")
+
+        disable_pfc_stream = template_obj.deactivate_stream_blocks(stream_obj_list=[pause_streamblock])
+        fun_test.simple_assert(disable_pfc_stream, "Disable stream %s" % pause_streamblock._spirent_handle)
+
+    def run(self):
+        result_dict = {}
+        spirent_rx_counters = 'spirent_rx_counters'
+        psw_port_pg_counters = 'psw_port_pg_counters'
+        psw_port_q_counters = 'psw_port_q_counters'
+        dequeue = 'dequeue'
+        enqueue = 'enqueue'
+        pause_mac_ctrl_rx = "pause_mac_ctrl_rx"
+        pause_mac_ctrl_tx = "pause_mac_ctrl_tx"
+        # Start regular stream
+        start_streams = template_obj.stc_manager.start_traffic_stream(
+            stream_blocks_list=good_stream_list)
+        fun_test.test_assert(start_streams, "Ensure good stream is started")
+
+        fun_test.sleep("Letting traffic to be run")
+
+        # Start pause stream
+        start_streams = template_obj.stc_manager.start_traffic_stream(
+            stream_blocks_list=pause_streamblock._spirent_handle)
+        fun_test.test_assert(start_streams, "Ensure link pause stream is started")
+
+        fun_test.sleep("Letting traffic to be run", seconds=10)
+
+        fun_test.log("Fetch spirent rx counter results for all good streams")
+        result_dict[spirent_rx_counters] = find_spirent_rx_counters_stopped(template_obj=template_obj,
+                                                                            subscribe_result=subscribe_results,
+                                                                            streamblock_handle_list=good_stream_list)
+
+        fun_test.log("Get psw port group enqueue dequeue counters")
+        result_dict[psw_port_pg_counters] = \
+            get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
+                                                  dut_port=dut_port_1, pg=True, hnu=hnu)
+
+        fun_test.log("Get psw port queue enqueue dequeue counters")
+        result_dict[psw_port_q_counters] = \
+            get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
+                                                  dut_port=dut_port_2, hnu=hnu)
+
+        fun_test.log("Check pause mac control stat")
+        result_dict[pause_mac_ctrl_rx] = \
+            get_fpg_port_pause_mac_ctrl_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_2,
+                                                 tx=False, shape=shape)
+
+        fun_test.log("Check pause mac control stat")
+        result_dict[pause_mac_ctrl_tx] = \
+            get_fpg_port_pause_mac_ctrl_counters(network_controller_obj=network_controller_obj, dut_port=dut_port_1,
+                                                 tx=True, shape=shape)
+
+        dut_2_stats_2 = network_controller_obj.peek_fpg_port_stats(port_num=dut_port_2, hnu=hnu)
+        dut_2_tx_frames_1 = get_dut_output_stats_value(dut_2_stats_2, FRAMES_TRANSMITTED_OK, tx=True)
+
+        dut_2_stats_2 = network_controller_obj.peek_fpg_port_stats(port_num=dut_port_2, hnu=hnu)
+        dut_2_tx_frames_2 = get_dut_output_stats_value(dut_2_stats_2, FRAMES_TRANSMITTED_OK, tx=True)
+
+        # Check pause streams on both ports. They must not be seen
+        spirent_counters_dict = result_dict[spirent_rx_counters]
+        pg_queue_counters_dict = result_dict[psw_port_pg_counters]
+        q_queue_counters_dict = result_dict[psw_port_q_counters]
+
+        if not self.dut_pause_enable:
+            if int(dut_2_tx_frames_2) > int(dut_2_tx_frames_1):
+                for key in spirent_counters_dict.keys():
+                    spirent_counters_dict[key] = False
+
+        for key, val in spirent_counters_dict.iteritems():
+            if self.will_streams_stop:
+                fun_test.test_assert(spirent_counters_dict[key], "Ensure rx on spirent is not happening for stream %s "
+                                                                     "when pause with quanta %s is sent" % (key, self.current_pause_quanta))
+            else:
+                fun_test.test_assert(not spirent_counters_dict[key], "Ensure rx on spirent is happening for stream %s "
+                                                                     "when pause with quanta %s is sent" % (key, self.current_pause_quanta))
+
+        for key, val in priority_dict.iteritems():
+            if self.will_streams_stop:
+                fun_test.test_assert(not pg_queue_counters_dict[val['priority_val']][dequeue],
+                                     message="Ensure pg_dequeue is not happening for queue q_%s when pause with quanta %s "
+                                             "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+                fun_test.test_assert(not q_queue_counters_dict[val['priority_val']][dequeue],
+                                     message="Ensure q_dequeue is not happening for queue q_%s when pause with quanta %s "
+                                             "is sent" % (val['priority_val'], self.current_pause_quanta))
+            else:
+
+                fun_test.test_assert(pg_queue_counters_dict[val['priority_val']][dequeue],
+                                     message="Ensure pg_dequeue is happening for queue q_%s when pause  with quanta %s "
+                                             "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+                fun_test.test_assert(q_queue_counters_dict[val['priority_val']][dequeue],
+                                     message="Ensure q_dequeue is happening for queue q_%s when pause  with quanta %s "
+                                             "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+            fun_test.test_assert(pg_queue_counters_dict[val['priority_val']][enqueue],
+                                 message="Ensure pg_enqueue is happening for queue q_%s when pause with quanta %s "
+                                         "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+            fun_test.test_assert(q_queue_counters_dict[val['priority_val']][enqueue],
+                                 message="Ensure q_enqueue is happening for queue q_%s when pause with quanta %s "
+                                         "is sent" % (val['priority_val'], self.current_pause_quanta))
+
+        if self.will_streams_stop:
+            fun_test.test_assert(result_dict[pause_mac_ctrl_tx], "Check pause mac cntrl tx seen on %s" % dut_port_1)
+        else:
+            fun_test.test_assert(not result_dict[pause_mac_ctrl_tx], "Check pause mac cntrl tx not seen on %s" % dut_port_1)
+        fun_test.test_assert(result_dict[pause_mac_ctrl_rx], "Check pause mac cntrl rx seen on %s" % dut_port_2)
+
+
+class TestCase19(TestCase18):
+    current_pause_quanta = 65535
+    dut_pause_enable = False
+
+    def describe(self):
+        self.set_test_details(id=19,
+                              summary="Test link pause when quanta value is 60000 and link pause is disabled on DUT port",
+                              steps="""
+                              1. Enable link pause on both ports
+                              2. Set quanta to 0 in link pause frame on spirent
+                              3. Start traffic from port 1
+                              4. Start link pause frame from port 2
+                              5. Ensure tx of stream is not stopped as link pause is disabled on DUT
+                              6. Ensure no pause frames seen on port_1
+                              """)
+
+    def setup(self):
+        super(TestCase19, self).setup()
+
+        # Disable flow control on both spirent ports
+        for current_interface_obj in interface_obj_list:
+            current_interface_obj.FlowControl = False
+
+            update_result = template_obj.configure_physical_interface(interface_obj=current_interface_obj)
+            fun_test.simple_assert(update_result, "Disable flow control on interface %s" %
+                                   current_interface_obj._spirent_handle)
+
+    def cleanup(self):
+        super(TestCase19, self).cleanup()
+
+        # Enable flow control on both spirent ports
+        for current_interface_obj in interface_obj_list:
+            current_interface_obj.FlowControl = True
+
+            update_result = template_obj.configure_physical_interface(interface_obj=current_interface_obj)
+            fun_test.simple_assert(update_result, "Enable flow control on interface %s" %
+                                   current_interface_obj._spirent_handle)
+
+
+class TestCase20(TestCase18):
+    current_pause_quanta = 65535
+    dut_pause_enable = True
+    will_streams_stop = True
+
+    def describe(self):
+        self.set_test_details(id=20,
+                              summary="Test link pause when quanta value is 60000 and link pause is enabled on DUT port",
+                              steps="""
+                              1. Enable link pause on both ports
+                              2. Set quanta to 65535 in link pause frame on spirent
+                              3. Start traffic from port 1
+                              4. Start link pause frame from port 2
+                              5. Ensure tx of stream is stopped as link pause is enabled on DUT
+                              6. Ensure pause frames seen on port_1 and port 2
+                              7. start capture on port 1 and then Stop pause frames from spirent
+                              8. Ensure tx is started from dut port 2
+                              9. Stop capture and check quanta value in captured packet. First packet to have quanta %s
+                                 and last packet to have quanta 0 
+                              """)
+
+    def run(self):
+        super(TestCase20, self).run()
+        '''
+        # start capture
+        capture_obj = Capture()
+        start_capture = template_obj.stc_manager.start_capture_command(capture_obj=capture_obj, port_handle=port_1)
+        fun_test.test_assert(start_capture, "Starting capture on %s" % port_1)
+
+        fun_test.sleep("Letting capture to start on %s" % port_1)
+
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=[pause_streamblock._spirent_handle])
+        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+
+        fun_test.sleep("Letting pause to stop")
+
+        stop_capture = template_obj.stc_manager.stop_capture_command(capture_obj._spirent_handle)
+        fun_test.test_assert(stop_capture, "Stopped capture on port %s" % port_1)
+
+        file = fun_test.get_temp_file_name()
+        file_name_1 = file + '.pcap'
+        file_path = SYSTEM_TMP_DIR
+        self.pcap_file_path_1 = file_path + "/" + file_name_1
+
+        saved = template_obj.stc_manager.save_capture_data_command(capture_handle=capture_obj._spirent_handle,
+                                                                   file_name=file_name_1,
+                                                                   file_name_path=file_path)
+        fun_test.test_assert(saved, "Saved pcap %s to local machine" % self.pcap_file_path_1)
+
+        fun_test.test_assert(os.path.exists(self.pcap_file_path_1), message="Check pcap file exists locally")
+
+        pcap_parser_1 = PcapParser(self.pcap_file_path_1)
+        out = pcap_parser_1.verify_pause_header_fields(first_packet=True, time=self.current_pause_quanta)
+        fun_test.test_assert(out, "Ensure first packet capture shows quanta value %s" % self.current_pause_quanta)
+
+        out = pcap_parser_1.verify_pause_header_fields(last_packet=True, time=0)
+        fun_test.test_assert(out, "Ensure last packet capture shows quanta value 0")
+        '''
+
 if __name__ == "__main__":
+    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
+    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())
@@ -1615,7 +1794,12 @@ if __name__ == "__main__":
     ts.add_test_case(TestCase12())
     ts.add_test_case(TestCase13())
     ts.add_test_case(TestCase14())
+    '''
     ts.add_test_case(TestCase15())
     ts.add_test_case(TestCase16())
     ts.add_test_case(TestCase17())
+    '''
+    ts.add_test_case(TestCase18())
+    ts.add_test_case(TestCase19())
+    ts.add_test_case(TestCase20())
     ts.run()
