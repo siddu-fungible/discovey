@@ -482,6 +482,29 @@ def script(request):
 
     return True
 
+@csrf_exempt
+@api_safe_json_response
+def unallocated_script(request):
+    unallocated_scripts = []
+    suites_info = collections.OrderedDict()
+    suite_files = glob.glob(SUITES_DIR + "/*.json")
+    for suite_file in suite_files:
+        try:
+            with open(suite_file, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents)
+                for entry in result:
+                    path = entry["path"]
+                    path = "/" + path
+                    try:
+                        RegresssionScripts.objects.get(script_path=path)
+                    except ObjectDoesNotExist:
+                        unallocated_scripts.append(path)
+        except Exception as ex:
+            pass
+    return unallocated_scripts
+
+
 
 def test(request):
     return render(request, 'qa_dashboard/test.html', locals())

@@ -20,6 +20,7 @@ export class RegressionAdminComponent implements OnInit {
   showDetailedInfo = false;
   public pointClickCallback: Function;
   allRegressionScripts = [];
+  unallocatedRegressionScripts = [];
   dropdownSettings = {};
   selectedModules: any[] = [];
   availableModules = [];
@@ -49,7 +50,7 @@ export class RegressionAdminComponent implements OnInit {
         data: []
     }]*/
     this.pointClickCallback = this.pointDetail.bind(this);
-    this.fetchRegressionScripts();
+    //this.fetchRegressionScripts();
 
   }
 
@@ -104,6 +105,7 @@ export class RegressionAdminComponent implements OnInit {
       this.availableModules = response.data;
       this.availableModules.forEach((module) => {
         this.info[module.name] = {name: module.name, verboseName: module.verbose_name};
+        this.fetchRegressionScripts();
         this.preparePlaceHolders(module.name, this.info[module.name]);
         this.fetchScriptInfo(module.name, this.info[module.name]);
       });
@@ -230,16 +232,40 @@ export class RegressionAdminComponent implements OnInit {
       this.allRegressionScripts = response.data;
       // Set selected modules for each script
       this.allRegressionScripts.forEach((regressionScript) => {
+        //console.log("ForEaches");
         regressionScript["selectedModules"] = [];
         regressionScript["savedSelectedModules"] = [];
         regressionScript["dirty"] = false;
         regressionScript.modules.forEach((module) => {
+          //console.log("ForEaches2");
           regressionScript.selectedModules.push(this.getMatchingModule(module));
         });
+        //regressionScript.selectedModules = [...regressionScript.selectedModules];
         regressionScript.savedSelectedModules = [...regressionScript.selectedModules];
       });
+      //console.log(this.allRegressionScripts);
+      this.allRegressionScripts = [...this.allRegressionScripts];
+      this.fetchUnallocatedRegressionScripts();
+
     }, error => {
       this.loggerService.error("/regression/scripts");
+    })
+  }
+
+  fetchUnallocatedRegressionScripts() {
+    this.apiService.get("/regression/unallocated_script").subscribe((response) => {
+      let unallocatedScripts = response.data;
+      unallocatedScripts.forEach((unallocatedScript) => {
+        let newEntry = {};
+        newEntry["script_path"] = unallocatedScript;
+        newEntry["selectedModules"] = [];
+        newEntry["savedSelectedModules"] = [];
+        newEntry["dirty"] = false;
+        this.unallocatedRegressionScripts.push(newEntry);
+      });
+      console.log(response);
+    }, error => {
+
     })
   }
 

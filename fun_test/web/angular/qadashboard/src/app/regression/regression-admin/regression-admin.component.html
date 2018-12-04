@@ -128,3 +128,43 @@
   </div>
 </div>
 
+
+<div class="card card-primary">
+  <div class="card-header"><b>Unallocated scripts ...</b></div>
+  <div class="card-body">
+    <table class="table">
+      <tr>
+        <th>
+          Script
+        </th>
+        <th>
+          Modules
+        </th>
+      </tr>
+      <tr *ngFor="let regressionScript of unallocatedRegressionScripts">
+        <td>
+          {{ regressionScript.script_path }}
+        </td>
+        <td>
+          <ng-multiselect-dropdown
+            [placeholder]="'Select'"
+            [data]="availableModules"
+            [(ngModel)]="regressionScript.selectedModules"
+            [settings]="dropdownSettings"
+            (onSelect)="regressionScript.dirty = true"
+            (onDeSelect)="regressionScript.dirty = true"
+            (onSelectAll)="regressionScript.dirty = true"
+            (onDeSelectAll)="regressionScript.dirty = true">
+          </ng-multiselect-dropdown>
+        </td>
+        <td *ngIf="regressionScript.dirty">
+          <span><i class="fa fa-check fa-fw tick-color" (click)="submitSelectModuleClick(regressionScript)"></i></span>
+          <span><i class="fa fa-times fa-fw close-color"
+                   (click)="dismissSelectModuleClick(regressionScript)"></i></span>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+
