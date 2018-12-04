@@ -72,19 +72,19 @@
                        checked="true"> Schedule in minutes:
               </label>
               <div *ngIf="scheduleInMinutesRadio">
-                <input id="schedule-in-minutes" type="number" min="1" max="1439"
+                <input id="schedule-in-minutes" type="number" min="1" max="14390"
                        [(ngModel)]="scheduleInMinutes">
                 <label for="repeat-in-minutes"> Repeat in minutes
                 </label>
-                <input id="repeat-in-minutes" type="number" min="1" max="1439"
+                <input id="repeat-in-minutes" type="number" min="1" max="14390"
                        [(ngModel)]="scheduleInMinutesRepeat"/>
               </div>
               <br>
-              <label for="schedule-at">
+              <!--label for="schedule-at">
                 <input type="radio" name="schedule-radio" [(ngModel)]="scheduleInMinutesRadio" [value]="false"> Schedule
                 At:
-              </label>
-              <div *ngIf="!scheduleInMinutesRadio">
+              </label-->
+              <!--div *ngIf="!scheduleInMinutesRadio">
                 <label class="form-check-label">
                   <input id="schedule-at" type="time" min="5"
                          [(ngModel)]="scheduleAt"/>
@@ -92,7 +92,7 @@
                   <input type="checkbox" [value]="" [(ngModel)]="scheduleAtRepeat">
                   Repeat
                 </label>
-              </div>
+              </div-->
             </div>
           </div>
         </div>
