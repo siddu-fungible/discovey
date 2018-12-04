@@ -492,7 +492,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let keyList = [];
       let keyValue = [];
       let dataSetIndex = 0;
-      let trimEmptyStartValues = false;
+      let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
       for (let oneDataSet of allDataSets) {
         keyValue[dataSetIndex] = [];
         for (let oneRecord of oneDataSet) {
@@ -612,10 +612,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let keyValue = {};
       let keyList = Object.keys(response.data.scores);
       keyList.sort();
+      let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
       for (let dateTime of keyList) {
         let d = new Date(1000 * Number(dateTime)).toISOString();
-        series.push(d);
-        keyValue[d] = response.data.scores[dateTime].score;
+        if(response.data.scores[dateTime].score > 0) {
+          trimEmptyStartValues = true;
+        }
+        if (trimEmptyStartValues) {
+          series.push(d);
+          keyValue[d] = response.data.scores[dateTime].score;
+        }
       }
       if (series.length === 0) {
         this.series = null;
