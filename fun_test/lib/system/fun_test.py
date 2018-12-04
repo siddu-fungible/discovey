@@ -198,12 +198,16 @@ class FunTest:
         self.shared_variables = {}
         if self.local_settings_file:
             self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
+        self.start_time = get_current_time()
         self.wall_clock_timer = FunTimer()
         self.wall_clock_timer.start()
         self.fun_test_threads = {}
         self.fun_test_timers = []
         self.version = "1"
         self.determine_version()
+
+    def get_start_time(self):
+        return self.start_time
 
     def get_local_setting(self, setting):
         result = None
