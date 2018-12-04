@@ -7,6 +7,7 @@ from web.web_global import PRIMARY_SETTINGS_FILE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
+from web.fun_test.metrics_models import VolumePerformanceEmulation
 from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
@@ -18,6 +19,7 @@ def invalidate_goodness_cache():
     for chart in charts:
         chart.goodness_cache_valid = False
         chart.save()
+
 
 class MetricHelper(object):
     def __init__(self, model):
@@ -70,6 +72,7 @@ class MetricHelper(object):
     def get_recent_entry(self):
         return self.model.objects.order_by("-input_date_time")[0]
 
+
 class MetricChartHelper(object):
     def __init__(self, chart_name, metric_model_name):
         self.chart_name = chart_name
@@ -102,6 +105,7 @@ class MetricChartHelper(object):
         charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
         return charts
 
+
 class Performance1Helper(MetricHelper):
     model = Performance1
 
@@ -124,7 +128,8 @@ class VolumePerformanceHelper(MetricHelper):
     def __init__(self):
         super(VolumePerformanceHelper, self).__init__(model=self.model)
 
-    def add_entry(self, key, volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw, write_latency, read_latency):
+    def add_entry(self, key, volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw,
+                  read_bw, write_latency, read_latency):
         try:
             entry = VolumePerformance.objects.get(key=key,
                                                   input_volume=volume,
@@ -158,13 +163,55 @@ class VolumePerformanceHelper(MetricHelper):
             one_entry.save()
 
 
+class VolumePerformanceEmulationHelper(MetricHelper):
+    model = VolumePerformanceEmulation
+
+    def __init__(self):
+        super(VolumePerformanceEmulationHelper, self).__init__(model=self.model)
+
+    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw,
+                  read_bw, write_latency, read_latency):
+        try:
+            entry = VolumePerformanceEmulation.objects.get(input_date_time=date_time,
+                                                           input_volume=volume,
+                                                           input_test=test,
+                                                           input_block_size=block_size,
+                                                           input_io_depth=io_depth,
+                                                           input_size=size,
+                                                           input_operation=operation)
+            entry.output_write_iops = write_iops
+            entry.output_read_iops = read_iops
+            entry.output_write_bw = write_bw
+            entry.output_read_bw = read_bw
+            entry.output_write_latency = write_latency
+            entry.output_read_latency = read_latency
+            entry.save()
+        except ObjectDoesNotExist:
+            pass
+            one_entry = VolumePerformanceEmulation(input_date_time=date_time,
+                                                   input_volume=volume,
+                                                   input_test=test,
+                                                   input_block_size=block_size,
+                                                   input_io_depth=io_depth,
+                                                   input_size=size,
+                                                   input_operation=operation,
+                                                   output_write_iops=write_iops,
+                                                   output_read_iops=read_iops,
+                                                   output_write_bw=write_bw,
+                                                   output_read_bw=read_bw,
+                                                   output_write_latency=write_latency,
+                                                   output_read_latency=read_latency)
+            one_entry.save()
+
+
 class AllocSpeedPerformanceHelper(MetricHelper):
     model = AllocSpeedPerformance
 
     def __init__(self):
         super(AllocSpeedPerformanceHelper, self).__init__(model=self.model)
 
-    def add_entry(self, key, input_date_time, input_app, output_one_malloc_free_wu, output_one_malloc_free_threaded, output_one_malloc_free_classic_avg,
+    def add_entry(self, key, input_date_time, input_app, output_one_malloc_free_wu, output_one_malloc_free_threaded,
+                  output_one_malloc_free_classic_avg,
                   output_one_malloc_free_classic_min, output_one_malloc_free_classic_max):
         try:
             entry = AllocSpeedPerformance.objects.get(key=key, input_app=input_app, input_date_time=input_date_time)
@@ -185,6 +232,7 @@ class AllocSpeedPerformanceHelper(MetricHelper):
                                               output_one_malloc_free_classic_avg=output_one_malloc_free_classic_avg,
                                               output_one_malloc_free_classic_max=output_one_malloc_free_classic_max)
             one_entry.save()
+
 
 class WuLatencyAllocStackHelper(MetricHelper):
     model = WuLatencyAllocStack
@@ -274,7 +322,8 @@ if __name__ == "__main2__":
                 iops = r.randint(0, 100)
                 bw = r.randint(0, 200)
                 latency = r.randint(0, 300)
-                p = PerformanceBlt(key=build, input1_block_size=block_size, input2_mode=mode, output1_iops=iops, output2_bw=bw, output3_latency=latency)
+                p = PerformanceBlt(key=build, input1_block_size=block_size, input2_mode=mode, output1_iops=iops,
+                                   output2_bw=bw, output3_latency=latency)
                 p.save()
 
     # Prepare charts
@@ -347,7 +396,8 @@ if __name__ == "__main2__":
         put_value_sizes = [4096, 8192]
         for put_value_size in put_value_sizes:
             output1_put_per_seccond = r.randint(0, 300)
-            p = PerformanceIkv(key=build, input1_put_value_size=put_value_size, output1_put_per_seccond=output1_put_per_seccond)
+            p = PerformanceIkv(key=build, input1_put_value_size=put_value_size,
+                               output1_put_per_seccond=output1_put_per_seccond)
             p.save()
 
     # Prepare charts
