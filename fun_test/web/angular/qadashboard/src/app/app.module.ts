@@ -36,6 +36,8 @@ import { CancelBtnLinkComponent } from "./cancel-btn-link/cancel-btn-link.compon
 import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { SiteConstructionComponent } from './site-construction/site-construction.component'
 import { RegressionAdminComponent } from './regression/regression-admin/regression-admin.component';
+import { JiraInfoComponent } from './jira-info/jira-info.component';
+import { RegressionSummaryComponent } from './regression/regression-summary/regression-summary.component';
 
 @NgModule({
   declarations: [
@@ -58,7 +60,9 @@ import { RegressionAdminComponent } from './regression/regression-admin/regressi
     SuiteDetailComponent,
     CancelBtnLinkComponent,
     SiteConstructionComponent,
-    RegressionAdminComponent
+    RegressionAdminComponent,
+    JiraInfoComponent,
+    RegressionSummaryComponent
   ],
   imports: [
     BsDropdownModule,

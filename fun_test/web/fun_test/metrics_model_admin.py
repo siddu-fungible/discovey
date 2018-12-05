@@ -13,8 +13,8 @@ from web.fun_test.metrics_models import HuRawVolumePerformance, FunMagentPerform
 from web.fun_test.metrics_models import SoakClassicMallocPerformance, SoakFunMallocPerformance
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance
 from web.fun_test.metrics_models import MetricChartStatus
-from web.fun_test.metrics_models import WuSendSpeedTestPerformance, BootTimePerformance
-from web.fun_test.metrics_models import TeraMarkPkeEcdh25519Performance, TeraMarkPkeEcdh256Performance
+from web.fun_test.metrics_models import WuSendSpeedTestPerformance, BootTimePerformance, FlowTestPerformance
+from web.fun_test.metrics_models import TeraMarkPkeEcdh25519Performance, TeraMarkPkeEcdh256Performance, TeraMarkLookupEnginePerformance
 from web.fun_test.metrics_models import TeraMarkPkeRsaPerformance, TeraMarkPkeRsa4kPerformance, TeraMarkCryptoPerformance
 
 @admin.register(Performance1)
@@ -137,6 +137,10 @@ class TeraMarkPkeEcdh25519PerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(TeraMarkCryptoPerformance)
 class TeraMarkCryptoPerformanceAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(TeraMarkLookupEnginePerformance)
+class TeraMarkLookupEnginePerformanceAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
 @admin.register(ShaxPerformance)

@@ -105,7 +105,7 @@ class FunTest:
     def __init__(self):
         if "DISABLE_FUN_TEST" in os.environ:
 
-            def black_hole(*args):
+            def black_hole(*args, **kwargs):
                 pass
             self.log = black_hole
             return
@@ -138,7 +138,10 @@ class FunTest:
                             default=None)
         args = parser.parse_args()
         if args.disable_fun_test:
+            self.fun_test_disabled = True
             return
+        else:
+            self.fun_test_disabled = False
         self.logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
@@ -195,12 +198,16 @@ class FunTest:
         self.shared_variables = {}
         if self.local_settings_file:
             self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
+        self.start_time = get_current_time()
         self.wall_clock_timer = FunTimer()
         self.wall_clock_timer.start()
         self.fun_test_threads = {}
         self.fun_test_timers = []
         self.version = "1"
         self.determine_version()
+
+    def get_start_time(self):
+        return self.start_time
 
     def get_local_setting(self, setting):
         result = None
@@ -268,26 +275,30 @@ class FunTest:
             func(**kwargs)
 
     def join_thread(self, fun_test_thread_id, sleep_time=5):
-        thread_info = self.fun_test_threads[fun_test_thread_id]
-        thread = thread_info["thread"]
-        if thread:
-            success = False
-            while not success:
-                try:
-                    thread.join()
-                    success = True
-                except RuntimeError as r:
-                    r_string = str(r)
-                    if "cannot join thread before it is started" not in r_string:
-                        fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
-                    else:
-                        fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id),
-                                       seconds=sleep_time)
-        else:
-            fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
-            timer = thread_info["timer"]
-            while timer.isAlive():
-                fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+        thread_complete = False
+        while not thread_complete:
+            thread_info = self.fun_test_threads[fun_test_thread_id]
+            thread = thread_info["thread"]
+            if thread:
+                if not thread_complete:
+                    try:
+                        thread.join()
+
+                    except RuntimeError as r:
+                        r_string = str(r)
+                        if "cannot join thread before it is started" not in r_string:
+                            fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
+                        else:
+                            fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id),
+                                           seconds=sleep_time)
+                    thread_complete = True
+            else:
+                fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
+                timer = thread_info["timer"]
+                while timer.isAlive():
+                    fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+                if not thread_info["as_thread"]:
+                    thread_complete = True
 
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
@@ -570,7 +581,7 @@ class FunTest:
 
     def safe(self, the_function):
         def inner(*args, **kwargs):
-            if self.debug_enabled and self.function_tracing_enabled:
+            if self.debug_enabled and self.function_tracing_enabled and (not self.fun_test_disabled):
                 args_s = "args:" + ",".join([str(x) for x in args])
                 args_s += " kwargs:" + ",".join([(k + ":" + str(v)) + " " for k, v in kwargs.items()])
                 self.debug(args_s)

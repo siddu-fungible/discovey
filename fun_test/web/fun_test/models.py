@@ -11,8 +11,10 @@ from fun_global import is_performance_server, get_current_time
 from web.fun_test.jira_models import *
 from web.fun_test.demo1_models import *
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from datetime import datetime, timedelta
 from scheduler.scheduler_states import SchedulerStates
+import json
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -83,9 +85,18 @@ class SuiteExecution(models.Model):
     version = models.CharField(max_length=50, default="UNKNOWN")
     catalog_reference = models.TextField(null=True, blank=True, default=None)
     finalized = models.BooleanField(default=False)
+
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
         return s
+
+class SuiteExecutionSerializer(serializers.Serializer):
+    version = serializers.CharField(max_length=50)
+    execution_id = serializers.IntegerField()
+
+    class Meta:
+        model = SuiteExecution
+        fields = ('version', 'execution_id')
 
 
 class LastSuiteExecution(models.Model):
@@ -115,6 +126,17 @@ class TestCaseExecution(models.Model):
                                                    self.script_path)
         return s
 
+class TestCaseExecutionSerializer(serializers.Serializer):
+    script_path = serializers.CharField(max_length=128)
+    execution_id = serializers.IntegerField()
+    test_case_id = serializers.IntegerField()
+    suite_execution_id = serializers.IntegerField()
+    started_time = serializers.DateTimeField()
+    result = serializers.CharField(max_length=20)
+
+    class Meta:
+        model = TestCaseExecution
+        fields = ('script_path', 'execution_id', 'test_case_id', 'suite_execution_id', 'started_time', 'result')
 
 class Tag(models.Model):
     tag = models.CharField(max_length=TAG_LENGTH)
@@ -179,15 +201,34 @@ class JiraCache(models.Model):
     jira_id = models.IntegerField()
     module = models.CharField(max_length=100, default="networking")
 
-
 class RegresssionScripts(models.Model):
     """
     This is probably a temporary model. We can store the path to several scripts that can be considered as regression
     scripts
     """
     script_path = models.TextField(unique=True)
-    module = models.TextField(default="['storage']")  # Refers to class Module
+    modules = models.TextField(default='["storage"]')  # Refers to class Module
+    components = models.TextField(default=json.dumps(['component1']))
+    tags = models.TextField(default=json.dumps(['tag1']))
 
+class RegresssionScriptsSerializer(serializers.Serializer):
+    script_path = serializers.CharField(max_length=200)
+    modules = serializers.SerializerMethodField()
+    components = serializers.SerializerMethodField()
+    tags = serializers.SerializerMethodField()
+
+    def get_modules(self, obj):
+        return json.loads(obj.modules)
+
+    def get_components(self, obj):
+        return json.loads(obj.components)
+
+    def get_tags(self, obj):
+        return json.loads(obj.tags)
+
+    class Meta:
+        model = RegresssionScripts
+        fields = ('script_path', 'modules', 'components', 'tags')
 
 class SchedulerInfo(models.Model):
     """

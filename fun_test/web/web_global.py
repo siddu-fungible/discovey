@@ -40,3 +40,12 @@ def get_default_db_engine():
     if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql_psycopg2':
         result = DB_ENGINE_TYPE_POSTGRES
     return result
+
+
+def string_to_json(input_string):
+    try:
+        result = json.loads(input_string)
+    except ValueError as ex:
+        print "Tried to JSON parse: {}".format(input_string)
+        raise ex
+    return result

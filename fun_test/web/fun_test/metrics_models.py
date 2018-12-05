@@ -90,6 +90,8 @@ class MetricChart(models.Model):
     last_jenkins_job_id = models.IntegerField(default=-1)
     last_test_case_id = models.IntegerField(default=-1)
     last_lsf_job_id = models.IntegerField(default=-1)
+    owner_info = models.TextField(default="UNKNOWN")
+    jira_ids = models.TextField(default="[]")
 
     def __str__(self):
         return "{} : {} : {}".format(self.chart_name, self.metric_model_name, self.metric_id)
@@ -649,6 +651,38 @@ class VolumePerformance(models.Model):
                                                 self.output_read_latency)
 
 
+class VolumePerformanceEmulation(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_volume = models.TextField(verbose_name="Volume type", choices=[(0, "BLT"), (1, "EC21")])
+    input_test = models.TextField(verbose_name="Test type", choices=[(0, "FioSeqWriteSeqReadOnly")])
+    input_block_size = models.TextField(verbose_name="Block size", choices=[(0, "4k"), (1, "8k")])
+    input_io_depth = models.IntegerField(verbose_name="IO depth", choices=[(0, 1)])
+    input_size = models.TextField(verbose_name="Data size", choices=[(0, "4m")])
+    input_operation = models.TextField(verbose_name="Operation type", choices=[(0, "read"), (1, "write"), (2, "randread"), (3, "randwrite"), (4, "randrw")])
+    output_write_iops = models.IntegerField(verbose_name="Write IOPS")
+    output_read_iops = models.IntegerField(verbose_name="Read IOPS")
+    output_write_bw = models.IntegerField(verbose_name="Write bandwidth KiB/s")
+    output_read_bw = models.IntegerField(verbose_name="Read bandwidth KiB/s")
+    output_write_latency = models.IntegerField(verbose_name="Write latency uSecs")
+    output_read_latency = models.IntegerField(verbose_name="Read latency uSecs")
+    tag = "analytics"
+
+    def __str__(self):
+        return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
+                                                self.input_volume,
+                                                self.input_test,
+                                                self.input_block_size,
+                                                self.input_size,
+                                                self.input_operation,
+                                                self.output_write_iops,
+                                                self.output_read_iops,
+                                                self.output_write_bw,
+                                                self.output_write_latency,
+                                                self.output_read_latency)
+
+
 class AllocSpeedPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
@@ -1103,18 +1137,118 @@ class TeraMarkCryptoPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class TeraMarkLookupEnginePerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_test = models.CharField(max_length=30, default="le_test_perf", choices=[(0, "le_test_perf")])
+    input_memory = models.CharField(max_length=100, default="", choices=[(0, "HT HBM non-coherent - FP HBM non-coherent"), (1, "HT HBM coherent     - FP HBM coherent"), (2, "HT DDR non-coherent - FP DDR non-coherent"), (3, "HT DDR coherent     - FP DDR coherent"), (4, "TCAM")])
+    output_lookup_per_sec_min = models.IntegerField(verbose_name="lookups per sec", default=-1)
+    output_lookup_per_sec_avg = models.IntegerField(verbose_name="lookups per sec", default=-1)
+    output_lookup_per_sec_max = models.IntegerField(verbose_name="lookups per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkZipDeflatePerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_type = models.CharField(max_length=30, default="", choices=[(0, "Deflate")])
+    input_operation = models.CharField(max_length=30, default="", choices=[(0, "Compress"), (1, "Decompress")])
+    input_effort = models.CharField(max_length=30, default="", choices=[(0, "0"), (1, "3"), (2, "4"), (3, "5"), (4, "8"), (5, "9"), (6, "10"), (7, "11")])
+    output_bandwidth_avg = models.IntegerField(verbose_name="Kbps", default=-1)
+    output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
+    output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
+    output_iops = models.IntegerField(verbose_name="ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkZipLzmaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_type = models.CharField(max_length=30, default="", choices=[(0, "LZMA")])
+    input_operation = models.CharField(max_length=30, default="", choices=[(0, "Compress"), (1, "Decompress")])
+    input_effort = models.CharField(max_length=30, default="", choices=[(0, "8"), (1, "9"), (2, "10"), (3, "11")])
+    output_bandwidth_avg = models.IntegerField(verbose_name="Kbps", default=-1)
+    output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
+    output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
+    output_iops = models.IntegerField(verbose_name="ops per sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkDfaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_graph_index = models.IntegerField(default=-1, choices=[(0, "0")])
+    output_processed = models.IntegerField(verbose_name="Bytes", default=-1)
+    output_matches = models.IntegerField(verbose_name="Bytes", default=-1)
+    output_latency = models.IntegerField(verbose_name="ns", default=-1)
+    output_bandwidth = models.IntegerField(verbose_name="Gbps", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class FlowTestPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="hw_hsu_test", choices=[(0, "hw_hsu_test")])
+    input_iterations = models.IntegerField(default=-1)
+    output_time = models.IntegerField(verbose_name="seconds", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class BootTimePerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    output_firmware_boot_time = models.IntegerField(verbose_name="Firmware" ,default=-1)
-    output_flash_type_boot_time = models.IntegerField(verbose_name="Flash type detection" ,default=-1)
-    output_eeprom_boot_time = models.IntegerField(verbose_name="EEPROM Loading", default=-1)
-    output_sbus_boot_time = models.IntegerField(verbose_name="SBUS Loading", default=-1)
-    output_host_boot_time = models.IntegerField(verbose_name="Host BOOT", default=-1)
-    output_main_loop_boot_time = models.IntegerField(verbose_name="Main Loop", default=-1)
-    output_boot_success_boot_time = models.IntegerField(verbose_name="Boot success", default=-1)
+    output_firmware_boot_time = models.FloatField(verbose_name="Firmware" ,default=-1)
+    output_flash_type_boot_time = models.FloatField(verbose_name="Flash type detection" ,default=-1)
+    output_eeprom_boot_time = models.FloatField(verbose_name="EEPROM Loading", default=-1)
+    output_sbus_boot_time = models.FloatField(verbose_name="SBUS Loading", default=-1)
+    output_host_boot_time = models.FloatField(verbose_name="Host BOOT", default=-1)
+    output_main_loop_boot_time = models.FloatField(verbose_name="Main Loop", default=-1)
+    output_boot_success_boot_time = models.FloatField(verbose_name="Boot success", default=-1)
+    output_init_mmc_time = models.FloatField(verbose_name="ms" ,default=-1)
+    output_boot_read_mmc_time = models.FloatField(verbose_name="ms" ,default=-1)
+    output_funos_read_mmc_time = models.FloatField(verbose_name="ms", default=-1)
+    output_funos_load_elf_time = models.FloatField(verbose_name="ms", default=-1)
     tag = "analytics"
 
     def __str__(self):

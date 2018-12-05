@@ -60,6 +60,12 @@ regression_urls = [
     url(r'^sampler$', regression_views.sampler),
     url(r'^sampler2$', regression_views.sampler2),
     url(r'^scripts_by_module/(.*)$', regression_views.scripts_by_module),
+    url(r'^get_suite_execution_properties', regression_views.get_suite_execution_properties),
+    url(r'^get_all_versions', regression_views.get_all_versions),
+    url(r'^get_script_history', regression_views.get_script_history),
+    url(r'^scripts$', regression_views.scripts),
+    url(r'^unallocated_script$', regression_views.unallocated_script),
+    url(r'^script$', regression_views.script),
     url(r'^\w+$', views.angular_home)
 
 ]
@@ -129,7 +135,10 @@ metric_urls = [
     url(r'^table_view/(.*)$', metrics_views.table_view),
     url(r'^test$', metrics_views.test),
     url(r'^scores', metrics_views.scores),
-    url(r'^dag$', metrics_views.dag)
+    url(r'^dag$', metrics_views.dag),
+    url(r'^(.*)/jiras$', metrics_views.fetch_jira_info),
+    url(r'^(.*)/jiras/delete/(.*)$', metrics_views.delete_jira_info),
+    url(r'^(.*)/jiras/(.*)$', metrics_views.update_jira_info)
 ]
 
 test_urls = [

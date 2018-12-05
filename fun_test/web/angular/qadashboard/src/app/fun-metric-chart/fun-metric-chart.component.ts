@@ -21,8 +21,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   data: any = {}; //used for fun table
   metricId: number;
   editingDescription: boolean = false;
+  editingOwner: boolean = false;
   inner: any = {};
   currentDescription: string;
+  currentOwner: string;
   waitTime: number = 0;
   values: any;
   charting: any;
@@ -62,8 +64,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.headers = null;
     this.metricId = -1;
     this.editingDescription = false;
+    this.editingOwner = false;
     this.inner = {};
     this.inner.currentDescription = "TBD";
+    this.inner.currentOwner = "Unknown";
+    this.currentOwner = "Unknown";
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
@@ -72,13 +77,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.formatter = this.xAxisFormatter.bind(this);
     this.tooltip = this.tooltipFormatter.bind(this);
     this.pointClickCallback = this.pointDetail.bind(this);
-    this.status = null;
   }
 
   ngOnChanges() {
     this.status = "Updating";
     this.fetchNames();
-    this.status = null;
   }
 
   showPointDetails(pointInfo): void {
@@ -244,6 +247,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
+        this.currentOwner = this.chartInfo.owner_info;
+        this.inner.currentOwner = this.currentOwner;
         this.negativeGradient = !this.chartInfo.positive;
         this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
@@ -265,6 +270,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.showingConfigure = false;
     this.pointClicked = false;
     this.showBuildProps = false;
+    this.editingOwner = false;
+    this.editingDescription = false;
   }
 
   closePointInfo(): void {
@@ -310,6 +317,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["chart_name"] = this.chartName;
     payload["data_sets"] = this.previewDataSets;
     payload["description"] = this.inner.currentDescription;
+    payload["owner_info"] = this.inner.currentOwner;
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
@@ -322,6 +330,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.loggerService.error("EditChart: Submit");
     });
     this.editingDescription = false;
+    this.editingOwner = false;
   }
 
   //populates buildInfo
@@ -485,9 +494,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let dataSetIndex = 0;
       for (let oneDataSet of allDataSets) {
         keyValue[dataSetIndex] = [];
+        let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
         for (let oneRecord of oneDataSet) {
-          keyList.push(oneRecord.input_date_time.toString());
-          keyValue[dataSetIndex][oneRecord.input_date_time.toString()] = oneRecord;
+          let outputName = this.filterDataSets[dataSetIndex].output.name;
+          if (oneRecord[outputName] > 0) {
+            trimEmptyStartValues = true;
+          }
+          if (trimEmptyStartValues) {
+            keyList.push(oneRecord.input_date_time.toString());
+            keyValue[dataSetIndex][oneRecord.input_date_time.toString()] = oneRecord;
+          }
+
         }
         dataSetIndex++;
       }
@@ -526,7 +543,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               if (this.y1AxisTitle) {
                 this.chart1YaxisTitle = this.y1AxisTitle;
               }
-              this.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
             }
             startIndex--;
           }
@@ -580,6 +596,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }, error => {
       this.loggerService.error("fetchMetricsData");
     });
+    this.status = null;
   }
 
   //fetching container data
@@ -595,10 +612,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let keyValue = {};
       let keyList = Object.keys(response.data.scores);
       keyList.sort();
+      let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
       for (let dateTime of keyList) {
         let d = new Date(1000 * Number(dateTime)).toISOString();
-        series.push(d);
-        keyValue[d] = response.data.scores[dateTime].score;
+        if (response.data.scores[dateTime].score > 0) {
+          trimEmptyStartValues = true;
+        }
+        if (trimEmptyStartValues) {
+          series.push(d);
+          keyValue[d] = response.data.scores[dateTime].score;
+        }
       }
       if (series.length === 0) {
         this.series = null;
@@ -631,11 +654,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
         }
         this.chart1YaxisTitle = "Scores";
-        this.chart1XaxisTitle = "Date";
         this.values = [{data: values}];
         this.series = dateSeries;
       }
     });
+    this.status = null;
   }
 
   //called from fetchInfo and setTimeMode

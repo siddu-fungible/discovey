@@ -25,9 +25,11 @@ class DutInterface(ToDictMixin):
             fun_test.debug("User intended baremetal for Interface: {}".format(self.index))
             self.peer_info = BareMetalEndPoint()
 
-    def add_qemu_colocated_hypervisor(self, num_vms=0, vm_start_mode=None):
+    def add_qemu_colocated_hypervisor(self, num_vms=0, vm_start_mode=None, vm_host_os=None):
         if num_vms:
-            self.peer_info = QemuColocatedHypervisorEndPoint(num_vms=num_vms, vm_start_mode=vm_start_mode)
+            self.peer_info = QemuColocatedHypervisorEndPoint(num_vms=num_vms,
+                                                             vm_start_mode=vm_start_mode,
+                                                             vm_host_os=vm_host_os)
             fun_test.debug("User intended hypervisor for Interface: {}".format(self.index))
 
     def add_hypervisor(self, num_vms=0):

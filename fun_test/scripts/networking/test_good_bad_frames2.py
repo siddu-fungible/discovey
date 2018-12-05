@@ -54,7 +54,7 @@ class SpirentSetup(FunTestScript):
         dpcsh_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
         network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
-        poke = network_controller_obj.disable_syslog(3)
+        poke = network_controller_obj.set_syslog_level(3)
         fun_test.simple_assert(poke, "Ensure syslogs are disabled")
 
         result = template_obj.setup(no_of_ports_needed=num_ports)

@@ -31,6 +31,8 @@ class Node {
   grid: any[];
   copiedScore: boolean = false;
   copiedScoreDisposition: number = null;
+  numBugs: number = 0;
+  showAddJira: boolean = false;
 }
 
 class FlatNode {
@@ -39,6 +41,7 @@ class FlatNode {
   collapsed: boolean;
   hide: boolean;
   indent: number;
+  showJiraInfo: boolean = false;
   children: FlatNode[] = [];
 
   addChild(flatNode: FlatNode) {
@@ -71,6 +74,7 @@ export class PerformanceComponent implements OnInit {
   nodeMap: Map<number, Node> = new Map<number, Node>();
   lastGuid: number = 0;
   flatNodes: FlatNode[] = [];
+  currentFlatNode: FlatNode = null;
   currentNode: Node = null;
   modeType = Mode;
   currentNodeInfo: string;
@@ -155,6 +159,8 @@ export class PerformanceComponent implements OnInit {
     node.last_two_scores = dagEntry.last_two_scores;
     node.copiedScore = dagEntry.copied_score;
     node.copiedScoreDisposition = dagEntry.copied_score_disposition;
+    node.numBugs = dagEntry.jira_ids.length;
+    node.showAddJira = false;
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
@@ -288,6 +294,7 @@ export class PerformanceComponent implements OnInit {
     newFlatNode.hide = true;
     newFlatNode.collapsed = true;
     newFlatNode.indent = indent;
+    newFlatNode.showJiraInfo = false;
     return newFlatNode;
   }
 
@@ -522,35 +529,6 @@ export class PerformanceComponent implements OnInit {
     window.open(url, '_blank');
   }
 
-  getNodeFromData = (data): any => {
-    let newNode = {
-      info: data.description,
-      label: data.chart_name,
-      collapsed: true,
-      metricId: data.metric_id,
-      hide: true,
-      leaf: data.leaf,
-      chartName: data.chart_name,
-      metricModelName: data.metric_model_name,
-      childrenWeights: JSON.parse(data.children_weights),
-      children: {},
-      lineage: [],
-      numChildDegrades: data.last_num_degrades,
-      positive: data.positive,
-      numChildren: 0,
-      numChildrenPassed: data.num_children_passed,
-      numChildrenFailed: data.last_num_build_failed,
-      lastBuildStatus: data.last_build_status,
-      status: true
-
-    };
-    this.metricMap[newNode.metricId] = {chartName: newNode.chartName};
-    if (newNode.info === "") {
-      newNode.info = "<p>Please update the description</p>";
-    }
-    return newNode;
-  };
-
   getTrendHtml = (node) => {
     let s = "";
     if (node.hasOwnProperty("trend")) {
@@ -593,13 +571,28 @@ export class PerformanceComponent implements OnInit {
   };
 
   showAtomicMetric = (flatNode) => {
+    if (this.currentNode && this.currentNode.showAddJira) {
+      this.currentNode.showAddJira = false;
+    }
+    if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
+      this.currentFlatNode.showJiraInfo = false;
+    }
     this.currentNode = flatNode.node;
+    this.currentFlatNode = flatNode;
+    this.currentNode.showAddJira = true;
     this.mode = Mode.ShowingAtomicMetric;
     this.expandNode(flatNode);
   };
 
   showNonAtomicMetric = (flatNode) => {
+    if (this.currentNode && this.currentNode.showAddJira) {
+      this.currentNode.showAddJira = false;
+    }
+    if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
+      this.currentFlatNode.showJiraInfo = false;
+    }
     this.currentNode = flatNode.node;
+    this.currentFlatNode = flatNode;
     this.mode = Mode.ShowingNonAtomicMetric;
     this.expandNode(flatNode);
     this.prepareGridNodes(flatNode.node);
@@ -621,5 +614,8 @@ export class PerformanceComponent implements OnInit {
     info.weightEditing = false;
   };
 
+  updateNumBug(numBugs, node): void{
+    node.numBugs = numBugs;
+  }
 
 }

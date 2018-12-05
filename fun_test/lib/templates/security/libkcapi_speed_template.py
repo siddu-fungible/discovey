@@ -29,8 +29,7 @@ class LibkcapiSpeedTemplate(CryptoTemplate):
     def setup(self):
         pass
 
-
-# Block size is multiplied by default size of 16.
+    # Block size is multiplied by default size of 16.
     def kcapi_cmnd(self, algorithm, driver, speed=True, test_time=None, block_size=None, aux_param=None):
         if driver == "generic":
             self.unload_funcrypto()

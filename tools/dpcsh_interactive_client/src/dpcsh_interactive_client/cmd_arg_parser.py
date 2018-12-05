@@ -341,10 +341,12 @@ set_nu_sample_ingress_parser.add_argument("-flag_mask", type=int, help="Flag mas
 set_nu_sample_ingress_parser.add_argument("-hu", type=int, help="HU [0-7]", default=None)
 set_nu_sample_ingress_parser.add_argument("-psw_drop", type=int, help="PSW drop", default=None)
 set_nu_sample_ingress_parser.add_argument("-pps_en", type=int, help="PPS en [0-1]", default=None)
-set_nu_sample_ingress_parser.add_argument("-pps_interval", type=str, help="pps interval [1-0xffffff]", default=None)
+set_nu_sample_ingress_parser.add_argument("-pps_interval", type=int, help="pps interval [1-0xffffff]", default=None)
 set_nu_sample_ingress_parser.add_argument("-pps_burst", type=int, help="pps burst [0-127]", default=None)
+set_nu_sample_ingress_parser.add_argument("-pps_tick", type=int, help="pps tick set clock frequency for e.g "
+                                                                      "1000 KHz[1000]", default=None)
 set_nu_sample_ingress_parser.add_argument("-sampler_en", type=int, help="sampler_en [0-1]", default=None)
-set_nu_sample_ingress_parser.add_argument("-sampler_rate", type=str, help="sampler_rate [1-0x3fff]", default=None)
+set_nu_sample_ingress_parser.add_argument("-sampler_rate", type=int, help="sampler_rate [1-0x3fff]", default=None)
 set_nu_sample_ingress_parser.add_argument("-sampler_run_sz", type=int, help="sampler run sz [1-15]", default=None)
 set_nu_sample_ingress_parser.add_argument("-first_cell_only", type=int, help="first cell only [0-1]", default=None)
 
@@ -357,10 +359,12 @@ set_nu_sample_egress_parser.add_argument("-flag_mask", type=int, help="Flag mask
 set_nu_sample_egress_parser.add_argument("-hu", type=int, help="HU [0-7]", default=None)
 set_nu_sample_egress_parser.add_argument("-psw_drop", type=int, help="PSW drop", default=None)
 set_nu_sample_egress_parser.add_argument("-pps_en", type=int, help="PPS en [0-1]", default=None)
-set_nu_sample_egress_parser.add_argument("-pps_interval", type=str, help="pps interval [1-0xffffff]", default=None)
+set_nu_sample_egress_parser.add_argument("-pps_interval", type=int, help="pps interval [1-0xffffff]", default=None)
 set_nu_sample_egress_parser.add_argument("-pps_burst", type=int, help="pps burst [0-127]", default=None)
+set_nu_sample_egress_parser.add_argument("-pps_tick", type=int, help="pps tick set clock frequency for e.g "
+                                                                      "1000 KHz[1000]", default=None)
 set_nu_sample_egress_parser.add_argument("-sampler_en", type=int, help="sampler_en [0-1]", default=None)
-set_nu_sample_egress_parser.add_argument("-sampler_rate", type=str, help="sampler_rate [1-0x3fff]", default=None)
+set_nu_sample_egress_parser.add_argument("-sampler_rate", type=int, help="sampler_rate [1-0x3fff]", default=None)
 set_nu_sample_egress_parser.add_argument("-sampler_run_sz", type=int, help="sampler run sz [1-15]", default=None)
 set_nu_sample_egress_parser.add_argument("-first_cell_only", type=int, help="first cell only [0-1]", default=None)
 
@@ -373,10 +377,12 @@ set_nu_sample_disable_parser.add_argument("-flag_mask", type=int, help="Flag mas
 set_nu_sample_disable_parser.add_argument("-hu", type=int, help="HU [0-7]", default=None)
 set_nu_sample_disable_parser.add_argument("-psw_drop", type=int, help="PSW drop", default=None)
 set_nu_sample_disable_parser.add_argument("-pps_en", type=int, help="PPS en [0-1]", default=None)
-set_nu_sample_disable_parser.add_argument("-pps_interval", type=str, help="pps interval [1-0xffffff]", default=None)
+set_nu_sample_disable_parser.add_argument("-pps_interval", type=int, help="pps interval [1-0xffffff]", default=None)
 set_nu_sample_disable_parser.add_argument("-pps_burst", type=int, help="pps burst [0-127]", default=None)
+set_nu_sample_disable_parser.add_argument("-pps_tick", type=int, help="pps tick set clock frequency for e.g "
+                                                                      "1000 KHz[1000]", default=None)
 set_nu_sample_disable_parser.add_argument("-sampler_en", type=int, help="sampler_en [0-1]", default=None)
-set_nu_sample_disable_parser.add_argument("-sampler_rate", type=str, help="sampler_rate [1-0x3fff]", default=None)
+set_nu_sample_disable_parser.add_argument("-sampler_rate", type=int, help="sampler_rate [1-0x3fff]", default=None)
 set_nu_sample_disable_parser.add_argument("-sampler_run_sz", type=int, help="sampler run sz [1-15]", default=None)
 set_nu_sample_disable_parser.add_argument("-first_cell_only", type=int, help="first cell only [0-1]", default=None)
 

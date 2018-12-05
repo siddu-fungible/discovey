@@ -1,0 +1,13 @@
+::ng-deep .accordion > .card > .card-header {
+  padding: unset;
+  background-color: white;
+}
+
+.failed {
+  color: red;
+  font-weight: bold;
+}
+
+.passed {
+  color: green;
+}

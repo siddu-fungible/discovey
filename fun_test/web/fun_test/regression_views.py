@@ -10,18 +10,22 @@ from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
+from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import CatalogSuiteExecution, Module
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
-from web.web_global import initialize_result, api_safe_json_response
+from web.web_global import initialize_result, api_safe_json_response, string_to_json
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from fun_global import get_localized_time
 from datetime import datetime, timedelta
-from web.fun_test.models import RegresssionScripts
+from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
+from web.fun_test.models import TestCaseExecutionSerializer
 import logging
 import dateutil.parser
 import re
+from rest_framework.renderers import JSONRenderer
+
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -53,7 +57,7 @@ def jobs_by_tag(request, tag):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     tags = json.dumps([tag])
     # tags = json.dumps(["none"])
-    return render(request, 'qa_dashboard/upgrade.html', locals())
+    return render(request, 'qa_dashboard/angular_home.html', locals())
 
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
@@ -223,7 +227,7 @@ def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
-    return render(request, 'qa_dashboard/upgrade.html', locals())
+    return render(request, 'qa_dashboard/angular_home.html', locals())
 
 @csrf_exempt
 @api_safe_json_response
@@ -312,14 +316,21 @@ def jenkins_job_id_map(request):
 
 @csrf_exempt
 @api_safe_json_response
+def script_history(request):
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+
+@csrf_exempt
+@api_safe_json_response
 def scripts_by_module(request, module):
-    result = {}
     matched_scripts = []
     regression_scripts = RegresssionScripts.objects.all()
     for regression_script in regression_scripts:
-        modules = regression_script.module
+        modules = regression_script.modules
+        modules = json.loads(modules)
         if module in modules:
-            matched_scripts.append(regression_script)
+            serializer = RegresssionScriptsSerializer(regression_script)
+            matched_scripts.append(serializer.data)
     return matched_scripts
 
 @csrf_exempt
@@ -405,6 +416,94 @@ def update_test_case_execution(request):
         logger.critical(str(ex))
 
     return HttpResponse(json.dumps(result))
+
+def suite_execution_properties(suite_execution_id, properties):
+    result = {}
+    try:
+        suite_execution = SuiteExecution.objects.get(execution_id=suite_execution_id)
+        for property in properties:
+            result[property] = getattr(suite_execution, property)
+    except ObjectDoesNotExist:
+        pass
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def get_suite_execution_properties(request):
+    request_json = string_to_json(request.body)
+    suite_execution_id = request_json["suite_execution_id"]
+    properties = request_json["properties"]
+    return suite_execution_properties(suite_execution_id=suite_execution_id, properties=properties)
+
+@csrf_exempt
+@api_safe_json_response
+def get_all_versions(request):
+    versions = SuiteExecution.objects.values('version', 'execution_id')
+    serializer = SuiteExecutionSerializer(versions, many=True)
+    return serializer.data
+
+@csrf_exempt
+@api_safe_json_response
+def get_script_history(request):
+    history = []
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+    tes = TestCaseExecution.objects.filter(script_path=script_path).order_by("-suite_execution_id")[:100]
+    for te in tes:
+        # version = suite_execution_properties(te.suite_execution_id, "version")
+        serializer = TestCaseExecutionSerializer(te)
+        history.append(serializer.data)
+    return history
+
+@csrf_exempt
+@api_safe_json_response
+def scripts(request):
+    all_regression_scripts = RegresssionScripts.objects.all()
+    for r in all_regression_scripts:
+        i = 0
+    regression_serializer = RegresssionScriptsSerializer(all_regression_scripts, many=True)
+    regression_scripts = regression_serializer.data
+    return regression_scripts
+
+@csrf_exempt
+@api_safe_json_response
+def script(request):
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+    modules = request_json["modules"]
+    module_names = [x["name"] for x in modules]
+    try:
+        r = RegresssionScripts.objects.get(script_path=script_path)
+        r.modules = json.dumps(module_names)
+        r.save()
+    except ObjectDoesNotExist:
+        r = RegresssionScripts(script_path=script_path, modules=json.dumps(module_names))
+        r.save()
+
+    return True
+
+@csrf_exempt
+@api_safe_json_response
+def unallocated_script(request):
+    unallocated_scripts = []
+    suites_info = collections.OrderedDict()
+    suite_files = glob.glob(SUITES_DIR + "/*.json")
+    for suite_file in suite_files:
+        try:
+            with open(suite_file, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents)
+                for entry in result:
+                    path = entry["path"]
+                    path = "/" + path
+                    try:
+                        RegresssionScripts.objects.get(script_path=path)
+                    except ObjectDoesNotExist:
+                        unallocated_scripts.append(path)
+        except Exception as ex:
+            pass
+    return unallocated_scripts
+
 
 
 def test(request):

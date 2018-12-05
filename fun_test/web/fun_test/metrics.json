@@ -30,6 +30,61 @@
             "label": "NU Transit: Throughput",
             "children": [],
             "weight": 1
+          },
+          {
+            "info": "Lookup-engine",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Lookup-engine",
+            "label": "Lookup-engine",
+            "weight": 1,
+            "children": [
+              {
+                "info": "HT HBM non-coherent - FP HBM non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM non-coherent - FP HBM non-coherent",
+                "label": "HT HBM non-coherent - FP HBM non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT HBM coherent - FP HBM coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM coherent - FP HBM coherent",
+                "label": "HT HBM coherent - FP HBM coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR non-coherent - FP DDR non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR non-coherent - FP DDR non-coherent",
+                "label": "HT DDR non-coherent - FP DDR non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR coherent - FP DDR coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR coherent - FP DDR coherent",
+                "label": "HT DDR coherent - FP DDR coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "TCAM",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "TCAM",
+                "label": "TCAM",
+                "children": [],
+                "weight": 1
+              }
+            ]
           }
         ],
         "weight": 1
@@ -331,8 +386,62 @@
                 "metric_model_name": "ShaxPerformance",
                 "leaf": true,
                 "weight": 1
+              },
+              {
+                "info": "AES_ECB Encryption Throughput",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "AES_ECB Encryption Throughput",
+                "label": "AES_ECB Encryption Throughput",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "AES_CBC Encryption Throughput",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "AES_CBC Encryption Throughput",
+                "label": "AES_CBC Encryption Throughput",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "AES_GCM Encryption Throughput",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "AES_GCM Encryption Throughput",
+                "label": "AES_GCM Encryption Throughput",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "AES_XTS Encryption Throughput",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "AES_XTS Encryption Throughput",
+                "label": "AES_XTS Encryption Throughput",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "SHA_256 Throughput",
+                "metric_model_name": "TeraMarkCryptoPerformance",
+                "leaf": true,
+                "name": "SHA_256 Throughput",
+                "label": "SHA_256 Throughput",
+                "children": [],
+                "weight": 1
               }
             ]
+          },
+          {
+            "info": "Zip",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Zip",
+            "label": "Zip",
+            "weight": 1,
+            "reference": true
           }
         ],
         "weight": 1
@@ -699,6 +808,24 @@
             "label": "PSBP Boot Timing (Pre-host-boot)",
             "children": [],
             "weight": 1
+          },
+          {
+            "info": "MMC timings",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "MMC timings",
+            "label": "MMC timings",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "ELF load timings",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "ELF load timings",
+            "label": "ELF load timings",
+            "children": [],
+            "weight": 1
           }
         ]
       },
@@ -836,6 +963,163 @@
                 "label": "EC 8:4 Throughput",
                 "children": [],
                 "weight": 1
+              }
+            ]
+          },
+          {
+            "info": "Lookup-engine",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Lookup-engine",
+            "label": "Lookup-engine",
+            "weight": 1,
+            "children": [
+              {
+                "info": "HT HBM non-coherent - FP HBM non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM non-coherent - FP HBM non-coherent",
+                "label": "HT HBM non-coherent - FP HBM non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT HBM coherent - FP HBM coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM coherent - FP HBM coherent",
+                "label": "HT HBM coherent - FP HBM coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR non-coherent - FP DDR non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR non-coherent - FP DDR non-coherent",
+                "label": "HT DDR non-coherent - FP DDR non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR coherent - FP DDR coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR coherent - FP DDR coherent",
+                "label": "HT DDR coherent - FP DDR coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "TCAM",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "TCAM",
+                "label": "TCAM",
+                "children": [],
+                "weight": 1
+              }
+            ]
+          },
+          {
+            "info": "Zip",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Zip",
+            "label": "Zip",
+            "weight": 1,
+            "children": [
+              {
+                "info": "Deflate",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Deflate",
+                "label": "Deflate",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "Deflate Compression Throughput",
+                    "metric_model_name": "TeraMarkZipDeflatePerformance",
+                    "leaf": true,
+                    "name": "Deflate Compression Throughput",
+                    "label": "Deflate Compression Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "Deflate Decompression Throughput",
+                    "metric_model_name": "TeraMarkZipDeflatePerformance",
+                    "leaf": true,
+                    "name": "Deflate Decompression Throughput",
+                    "label": "Deflate Decompression Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "Deflate Compression Latency",
+                    "metric_model_name": "TeraMarkZipDeflatePerformance",
+                    "leaf": true,
+                    "name": "Deflate Compression Latency",
+                    "label": "Deflate Compression Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "Deflate Decompression Latency",
+                    "metric_model_name": "TeraMarkZipDeflatePerformance",
+                    "leaf": true,
+                    "name": "Deflate Decompression Latency",
+                    "label": "Deflate Decompression Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "info": "Lzma",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Lzma",
+                "label": "Lzma",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "Lzma Compression Throughput",
+                    "metric_model_name": "TeraMarkZipLzmaPerformance",
+                    "leaf": true,
+                    "name": "Lzma Compression Throughput",
+                    "label": "Lzma Compression Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "Lzma Decompression Throughput",
+                    "metric_model_name": "TeraMarkZipLzmaPerformance",
+                    "leaf": true,
+                    "name": "Lzma Decompression Throughput",
+                    "label": "Lzma Decompression Throughput",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "Lzma Compression Latency",
+                    "metric_model_name": "TeraMarkZipLzmaPerformance",
+                    "leaf": true,
+                    "name": "Lzma Compression Latency",
+                    "label": "Lzma Compression Latency",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "Lzma Decompression Latency",
+                    "metric_model_name": "TeraMarkZipLzmaPerformance",
+                    "leaf": true,
+                    "name": "Lzma Decompression Latency",
+                    "label": "Lzma Decompression Latency",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
               }
             ]
           }

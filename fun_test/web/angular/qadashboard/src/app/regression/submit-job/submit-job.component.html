@@ -1,125 +1,129 @@
 <div style="padding-top: 70px;">
-<div class="row">
-<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
-  <div class="card" style="margin: 4px;">
-    <div class="card-header">Submit Job</div>
-    <div class="card-body">
-      <table class="table table-nonfluid">
-        <tr>
-          <td>
-            <label for="build-url">Build URL</label>
-          </td>
-          <td>
-            <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <label for="suite-select">Select a suite</label>
-          </td>
-          <td>
-            <select class="field-width" id="suite-select" [(ngModel)]="selectedSuite" (change)="changedValue(selectedSuite)">
-              <option></option>
-              <option *ngFor="let suiteName of suitesInfoKeys">
-                {{ suiteName }}
-              </option>
+  <div class="row">
+    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
+      <div class="card" style="margin: 4px;">
+        <div class="card-header">Submit Job</div>
+        <div class="card-body">
+          <table class="table table-nonfluid">
+            <tr>
+              <td class="no-wrap">
+                <label for="build-url">Build URL</label>
+              </td>
+              <td>
+                <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
+              </td>
+            </tr>
+            <tr>
+              <td class="no-wrap">
+                <label for="suite-select">Select a suite</label>
+              </td>
+              <td>
+                <select class="field-width" id="suite-select" [(ngModel)]="selectedSuite"
+                        (change)="changedValue(selectedSuite)">
+                  <option></option>
+                  <option *ngFor="let suiteName of suitesInfoKeys">
+                    {{ suiteName }}
+                  </option>
 
-            </select>
-          </td>
+                </select>
+              </td>
 
-        </tr>
-        <tr>
-          <td>
-            <label>Select a tag: </label>
-          </td>
-            <td>
-              <div class="field-width">
-                <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags" [settings]="dropdownSettings">
-        </ng-multiselect-dropdown>
+            </tr>
+            <tr>
+              <td class="no-wrap">
+                <label>Select a tag: </label>
+              </td>
+              <td>
+                <div class="field-width">
+                  <ng-multiselect-dropdown [placeholder]="'Select'" [data]="selectTags" [(ngModel)]="selectedTags"
+                                           [settings]="dropdownSettings">
+                  </ng-multiselect-dropdown>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="no-wrap">
+                <label for="emails">E-mails: </label>
+              </td>
+              <td>
+                <fieldset id="email-set">
+                  <input id="emails" name="emails" [(ngModel)]="emails" type="text" required/>
+                  <label id="emails-label" for="emails"><i>separated by comma</i></label>
+                  <input id="email-on-fail-only" type="checkbox" [(ngModel)]="emailOnFailOnly">
+                  <label id="email-only" for="email-on-fail-only">&nbsp;Email on failures only</label>
+                </fieldset>
+              </td>
+            </tr>
+          </table>
+          <a *ngIf="!schedulingOptions" [routerLink]="" (click)="schedulingOptions = !schedulingOptions">Show Scheduling
+            Options</a>
+          <a *ngIf="schedulingOptions" [routerLink]="" (click)="schedulingOptions = !schedulingOptions">Hide Scheduling
+            Options</a>
+        </div>
+      </div>
+      <div *ngIf="schedulingOptions" style="padding: 4px;">
+        <div class="card">
+          <div class="card-header">Scheduling options</div>
+          <div class="card-body">
+
+            <div class="radio">
+              <label for="schedule-in-minutes">
+                <input type="radio" name="schedule-radio" [(ngModel)]="scheduleInMinutesRadio" [value]="true"
+                       checked="true"> Schedule in minutes:
+              </label>
+              <div *ngIf="scheduleInMinutesRadio">
+                <input id="schedule-in-minutes" type="number" min="1" max="14390"
+                       [(ngModel)]="scheduleInMinutes">
+                <label for="repeat-in-minutes"> Repeat in minutes
+                </label>
+                <input id="repeat-in-minutes" type="number" min="1" max="14390"
+                       [(ngModel)]="scheduleInMinutesRepeat"/>
               </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <label for="emails">E-mails: </label>
-          </td>
-          <td>
-            <fieldset id="email-set">
-              <input id="emails" name="emails" [(ngModel)]="emails" type="text" required/>
-              <label id="emails-label" for="emails"><i>separated by comma</i></label>
-              <input id="email-on-fail-only" type="checkbox" [(ngModel)]="emailOnFailOnly">
-              <label id="email-only" for="email-on-fail-only">&nbsp;Email on failures only</label>
-            </fieldset>
-          </td>
-        </tr>
-      </table>
-      <a *ngIf="!schedulingOptions" [routerLink]="" (click)="schedulingOptions = !schedulingOptions">Show Scheduling Options</a>
-      <a *ngIf="schedulingOptions" [routerLink]="" (click)="schedulingOptions = !schedulingOptions">Hide Scheduling Options</a>
-    </div>
-  </div>
-    <div *ngIf="schedulingOptions" style="padding: 4px;">
-    <div class="card">
-      <div class="card-header">Scheduling options</div>
-      <div class="card-body">
-
-        <div class="radio">
-          <label for="schedule-in-minutes">
-            <input type="radio" name="schedule-radio" [(ngModel)]="scheduleInMinutesRadio" [value]="true"
-                   checked="true"> Schedule in minutes:
-          </label>
-          <div *ngIf="scheduleInMinutesRadio">
-            <input id="schedule-in-minutes" type="number" min="1" max="1439"
-                   [(ngModel)]="scheduleInMinutes">
-            <label for="repeat-in-minutes"> Repeat in minutes
-            </label>
-            <input id="repeat-in-minutes" type="number" min="1" max="1439"
-                   [(ngModel)]="scheduleInMinutesRepeat"/>
-          </div>
-          <br>
-          <label for="schedule-at">
-            <input type="radio" name="schedule-radio" [(ngModel)]="scheduleInMinutesRadio" [value]="false"> Schedule
-            At:
-          </label>
-          <div *ngIf="!scheduleInMinutesRadio">
-            <label class="form-check-label">
-            <input id="schedule-at" type="time" min="5"
-                   [(ngModel)]="scheduleAt"/>
-          <br>
-              <input type="checkbox" [value]="" [(ngModel)]="scheduleAtRepeat">
-              Repeat
-            </label>
+              <br>
+              <!--label for="schedule-at">
+                <input type="radio" name="schedule-radio" [(ngModel)]="scheduleInMinutesRadio" [value]="false"> Schedule
+                At:
+              </label-->
+              <!--div *ngIf="!scheduleInMinutesRadio">
+                <label class="form-check-label">
+                  <input id="schedule-at" type="time" min="5"
+                         [(ngModel)]="scheduleAt"/>
+                  <br>
+                  <input type="checkbox" [value]="" [(ngModel)]="scheduleAtRepeat">
+                  Repeat
+                </label>
+              </div-->
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-  <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
-    <div class="card" *ngIf="selectedInfo" class="title">
-    <!--<legend>{{ selectedSuite }}</legend>-->
-    <div class="side-table">
-      <table class="table table-bordered">
-        <tr>
-          <th colspan="2" class="header">
-            Scripts for Suite: {{ selectedSuite }}
-          </th>
-        </tr>
-        <tr *ngFor="let scriptInfo of selectedInfo; index as i">
-          <td>{{ i }}</td>
-          <td>{{ scriptInfo.path }}</td>
-        </tr>
-      </table>
+    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
+      <div class="card" *ngIf="selectedInfo" class="title">
+        <!--<legend>{{ selectedSuite }}</legend>-->
+        <div class="side-table">
+          <table class="table table-bordered">
+            <tr>
+              <th colspan="2" class="header">
+                Scripts for Suite: {{ selectedSuite }}
+              </th>
+            </tr>
+            <tr *ngFor="let scriptInfo of selectedInfo; index as i">
+              <td>{{ i }}</td>
+              <td>{{ scriptInfo.path }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
-  </div>
-</div>
 
-<div style="padding: 5px;">
+  <div style="padding: 5px;">
     <button *ngIf="selectedInfo" (click)="submitClick()"
-                    class="btn btn-primary">Submit
-            </button>
-  <button *ngIf="selectedInfo" (click)="ngOnInit()"
-                    class="btn">Clear
-            </button>
-</div>
+            class="btn btn-primary">Submit
+    </button>
+    <button *ngIf="selectedInfo" (click)="ngOnInit()"
+            class="btn">Clear
+    </button>
+  </div>
 </div>
