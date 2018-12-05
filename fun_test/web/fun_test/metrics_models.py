@@ -1245,10 +1245,10 @@ class BootTimePerformance(models.Model):
     output_host_boot_time = models.FloatField(verbose_name="Host BOOT", default=-1)
     output_main_loop_boot_time = models.FloatField(verbose_name="Main Loop", default=-1)
     output_boot_success_boot_time = models.FloatField(verbose_name="Boot success", default=-1)
-    output_init_mmc_time = models.FloatField(verbose_name="ms" ,default=-1)
-    output_boot_read_mmc_time = models.FloatField(verbose_name="ms" ,default=-1)
-    output_funos_read_mmc_time = models.FloatField(verbose_name="ms", default=-1)
-    output_funos_load_elf_time = models.FloatField(verbose_name="ms", default=-1)
+    output_init_mmc_time = models.FloatField(verbose_name="MMC INIT" ,default=-1)
+    output_boot_read_mmc_time = models.FloatField(verbose_name="Boot Load" ,default=-1)
+    output_funos_read_mmc_time = models.FloatField(verbose_name="FunOS Load", default=-1)
+    output_funos_load_elf_time = models.FloatField(verbose_name="FunOS ELF Load", default=-1)
     tag = "analytics"
 
     def __str__(self):
