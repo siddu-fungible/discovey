@@ -615,7 +615,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
       for (let dateTime of keyList) {
         let d = new Date(1000 * Number(dateTime)).toISOString();
-        if(response.data.scores[dateTime].score > 0) {
+        if (response.data.scores[dateTime].score > 0) {
           trimEmptyStartValues = true;
         }
         if (trimEmptyStartValues) {
