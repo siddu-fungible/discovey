@@ -823,7 +823,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
-            fun_test.test_assert(log, "fetched uart log")
+            fun_test.test_assert(log, "fetched boot time uart log")
             log = log.split("\n")
             for line in log:
                 if "Reset CUT done!" in line:
@@ -906,6 +906,57 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                                 output_boot_success_boot_time,
                                 output_boot_success_boot_cycles))
                         metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
+
+            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
+            fun_test.test_assert(log, "fetched mmc time uart log")
+            log = log.split("\n")
+            for line in log:
+                if "Welcome to FunOS" in line:
+                    break
+                else:
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
+                        line)
+                    if m:
+                        output_init_mmc_time = int(m.group("time"))
+                        output_init_mmc_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
+                                                                   output_init_mmc_cycles))
+                        metrics["output_init_mmc_time"] = output_init_mmc_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
+                        line)
+                    if m:
+                        output_boot_read_mmc_time = int(m.group("time"))
+                        output_boot_read_mmc_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
+                                                                        output_boot_read_mmc_cycles))
+                        metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
+                        line)
+                    if m:
+                        output_funos_read_mmc_time = int(m.group("time"))
+                        output_funos_read_mmc_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
+                                                                         output_funos_read_mmc_cycles))
+                        metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
+                        line)
+                    if m:
+                        output_funos_load_elf_time = int(m.group("time"))
+                        output_funos_load_elf_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
+                                                                         output_funos_load_elf_cycles))
+                        metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
 
             d = self.metrics_to_dict(metrics, fun_test.PASSED)
             MetricHelper(model=BootTimePerformance).add_entry(**d)
@@ -1387,15 +1438,26 @@ class MmcTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
 
                     m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
                         line)
                     if m:
-                        output_init_mmc_time = int(m.group("time"))
-                        output_init_mmc_cycles = int(m.group("cycle"))
+                        output_funos_read_mmc_time = int(m.group("time"))
+                        output_funos_read_mmc_cycles = int(m.group("cycle"))
                         fun_test.log(
-                            "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
-                                                                   output_init_mmc_cycles))
-                        metrics["output_init_mmc_time"] = output_init_mmc_time
+                            "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
+                                                                   output_funos_read_mmc_cycles))
+                        metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
+                        line)
+                    if m:
+                        output_funos_load_elf_time = int(m.group("time"))
+                        output_funos_load_elf_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
+                                                                   output_funos_load_elf_cycles))
+                        metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
 
             d = self.metrics_to_dict(metrics, fun_test.PASSED)
             MetricHelper(model=BootTimePerformance).add_entry(**d)
