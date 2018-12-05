@@ -833,7 +833,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware',
                         line)
                     if m:
-                        output_firmware_boot_time = int(m.group("time"))
+                        output_firmware_boot_time = int(m.group("time")) / 1000.0
                         output_firmware_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: Firmware, boot time: {}, boot cycles: {}".format(output_firmware_boot_time,
@@ -844,7 +844,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection',
                         line)
                     if m:
-                        output_flash_type_boot_time = int(m.group("time"))
+                        output_flash_type_boot_time = int(m.group("time")) / 1000.0
                         output_flash_type_boot_cycles = int(m.group("cycle"))
                         fun_test.log("boot type: Flash type detection, boot time: {}, boot cycles: {}".format(
                             output_flash_type_boot_time,
@@ -855,7 +855,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading',
                         line)
                     if m:
-                        output_eeprom_boot_time = int(m.group("time"))
+                        output_eeprom_boot_time = int(m.group("time")) / 1000.0
                         output_eeprom_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: EEPROM Loading, boot time: {}, boot cycles: {}".format(output_eeprom_boot_time,
@@ -866,7 +866,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading',
                         line)
                     if m:
-                        output_sbus_boot_time = int(m.group("time"))
+                        output_sbus_boot_time = int(m.group("time")) / 1000.0
                         output_sbus_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: SBUS Loading, boot time: {}, boot cycles: {}".format(output_sbus_boot_time,
@@ -877,7 +877,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT',
                         line)
                     if m:
-                        output_host_boot_time = int(m.group("time"))
+                        output_host_boot_time = int(m.group("time")) / 1000.0
                         output_host_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: Host BOOT, boot time: {}, boot cycles: {}".format(output_host_boot_time,
@@ -888,7 +888,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop',
                         line)
                     if m:
-                        output_main_loop_boot_time = int(m.group("time"))
+                        output_main_loop_boot_time = int(m.group("time")) / 1000.0
                         output_main_loop_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: Main Loop, boot time: {}, boot cycles: {}".format(output_main_loop_boot_time,
@@ -899,7 +899,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success',
                         line)
                     if m:
-                        output_boot_success_boot_time = int(m.group("time"))
+                        output_boot_success_boot_time = int(m.group("time")) / 1000.0
                         output_boot_success_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: Boot success, boot time: {}, boot cycles: {}".format(
