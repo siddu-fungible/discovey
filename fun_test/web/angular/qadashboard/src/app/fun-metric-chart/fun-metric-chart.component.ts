@@ -492,9 +492,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let keyList = [];
       let keyValue = [];
       let dataSetIndex = 0;
-      let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
       for (let oneDataSet of allDataSets) {
         keyValue[dataSetIndex] = [];
+        let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
         for (let oneRecord of oneDataSet) {
           let outputName = this.filterDataSets[dataSetIndex].output.name;
           if (oneRecord[outputName] > 0) {

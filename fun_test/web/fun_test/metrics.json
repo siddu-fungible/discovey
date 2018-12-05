@@ -808,6 +808,24 @@
             "label": "PSBP Boot Timing (Pre-host-boot)",
             "children": [],
             "weight": 1
+          },
+          {
+            "info": "MMC timings",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "MMC timings",
+            "label": "MMC timings",
+            "children": [],
+            "weight": 1
+          },
+          {
+            "info": "ELF load timings",
+            "metric_model_name": "BootTimePerformance",
+            "leaf": true,
+            "name": "ELF load timings",
+            "label": "ELF load timings",
+            "children": [],
+            "weight": 1
           }
         ]
       },

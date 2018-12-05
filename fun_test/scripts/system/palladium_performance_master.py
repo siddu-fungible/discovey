@@ -918,7 +918,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
                         line)
                     if m:
-                        output_init_mmc_time = int(m.group("time"))
+                        output_init_mmc_time = int(m.group("time")) / 1000.0
                         output_init_mmc_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
@@ -929,7 +929,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
                         line)
                     if m:
-                        output_boot_read_mmc_time = int(m.group("time"))
+                        output_boot_read_mmc_time = int(m.group("time")) / 1000.0
                         output_boot_read_mmc_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
@@ -940,7 +940,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
                         line)
                     if m:
-                        output_funos_read_mmc_time = int(m.group("time"))
+                        output_funos_read_mmc_time = int(m.group("time")) / 1000.0
                         output_funos_read_mmc_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
@@ -951,7 +951,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
                         line)
                     if m:
-                        output_funos_load_elf_time = int(m.group("time"))
+                        output_funos_load_elf_time = int(m.group("time")) / 1000.0
                         output_funos_load_elf_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
@@ -1396,81 +1396,6 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
                                      model_name="TeraMarkDfaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-class MmcTimingPerformanceTc(PalladiumPerformanceTc):
-    tag = BOOT_TIMING_TEST_TAG
-
-    def describe(self):
-        self.set_test_details(id=23,
-                              summary="MMC Timing Performance Test",
-                              steps="Steps 1")
-
-    def run(self):
-        metrics = collections.OrderedDict()
-        try:
-            fun_test.test_assert(self.validate_job(), "validating job")
-            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
-            fun_test.test_assert(log, "fetched uart log")
-            log = log.split("\n")
-            for line in log:
-                if "Welcome to FunOS" in line:
-                    break
-                else:
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
-                        line)
-                    if m:
-                        output_init_mmc_time = int(m.group("time"))
-                        output_init_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
-                                                                   output_init_mmc_cycles))
-                        metrics["output_init_mmc_time"] = output_init_mmc_time
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
-                        line)
-                    if m:
-                        output_boot_read_mmc_time = int(m.group("time"))
-                        output_boot_read_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
-                                                                   output_boot_read_mmc_cycles))
-                        metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
-                        line)
-                    if m:
-                        output_funos_read_mmc_time = int(m.group("time"))
-                        output_funos_read_mmc_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
-                                                                   output_funos_read_mmc_cycles))
-                        metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
-
-                    m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
-                        line)
-                    if m:
-                        output_funos_load_elf_time = int(m.group("time"))
-                        output_funos_load_elf_cycles = int(m.group("cycle"))
-                        fun_test.log(
-                            "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
-                                                                   output_funos_load_elf_cycles))
-                        metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
-
-            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-            MetricHelper(model=BootTimePerformance).add_entry(**d)
-            self.result = fun_test.PASSED
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="BootTimePerformance")
-        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
-
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1491,29 +1416,29 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # # myscript.add_test_case(FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    myscript.add_test_case(MmcTimingPerformanceTc())
-    # myscript.add_test_case(PrepareDbTc())
+    
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    # myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkZipPerformanceTC())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
