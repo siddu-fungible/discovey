@@ -1376,15 +1376,15 @@ class MmcTimingPerformanceTc(PalladiumPerformanceTc):
                         metrics["output_init_mmc_time"] = output_init_mmc_time
 
                     m = re.search(
-                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
                         line)
                     if m:
-                        output_init_mmc_time = int(m.group("time"))
-                        output_init_mmc_cycles = int(m.group("cycle"))
+                        output_boot_read_mmc_time = int(m.group("time"))
+                        output_boot_read_mmc_cycles = int(m.group("cycle"))
                         fun_test.log(
-                            "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
-                                                                   output_init_mmc_cycles))
-                        metrics["output_init_mmc_time"] = output_init_mmc_time
+                            "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
+                                                                   output_boot_read_mmc_cycles))
+                        metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
