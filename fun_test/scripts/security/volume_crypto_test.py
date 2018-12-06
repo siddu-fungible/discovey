@@ -185,6 +185,16 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                        xtweak=self.xts_tweak,
                                                                        command_duration=self.command_timeout)
 
+                if bs_auto:
+                    self.volume_details["block_size"] = "Auto"
+                if capacity_auto:
+                    self.volume_details["capacity"] = "Auto"
+                if encrypt_consec == 1:
+                    encrypt_consec = 0
+                    self.volume_details["encrypt"] = False
+                else:
+                    self.volume_details["encrypt"] = "consecutive"
+
                 if (self.key_size == 32 or self.key_size == 64 or self.key_size == "Auto") and self.xtweak_size == 8:
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
@@ -390,6 +400,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                          iodepth=fio_iodepth,
                                                                          nsid=x,
                                                                          **self.fio_cmd_args)
+                            # Put sleep
 
                         for x in range(1, fun_test.shared_variables["volume_count"], 1):
                             fun_test.log("")
