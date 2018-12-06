@@ -1,5 +1,5 @@
 from lib.host.network_controller import *
-from argparse import ArgumentParser
+
 
 dpc_proxy_ip = "10.1.21.120"
 dpc_proxy_port = 40221
