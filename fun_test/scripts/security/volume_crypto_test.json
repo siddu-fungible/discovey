@@ -4,17 +4,19 @@
     "volume_details": {
       "capacity": 1073741824,
       "block_size": 4096,
-      "encrypt": true
+      "encrypt": "enable"
     },
     "key_size": 32,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
     "traffic_parallel": false,
+    "fio_loop": 1,
+    "detach_vol": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
-      "verify":"sha1",
+      "verify": "sha1",
       "do_verify": 0,
       "verify_fatal": 1,
       "timeout": 120
@@ -22,34 +24,41 @@
     "fio_modes": [
       "write",
       "read",
-      "rw",
       "randwrite",
-      "randread",
-      "randrw"
+      "randread"
     ],
     "fio_bs_iodepth": [
       "(4, 1)",
       "(8, 1)",
       "(16, 1)",
       "(32, 1)"
-    ]
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
   },
   "VolumeKey512": {
     "volume_count": 1,
     "volume_details": {
       "capacity": 1073741824,
       "block_size": 4096,
-      "encrypt": true
+      "encrypt": "enable"
     },
     "key_size": 64,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
     "traffic_parallel": false,
+    "fio_rwmixread": 30,
+    "fio_loop": 1,
+    "detach_vol": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
-      "verify":"sha1",
+      "verify": "sha1",
       "do_verify": 0,
       "verify_fatal": 1,
       "timeout": 120
@@ -57,24 +66,28 @@
     "fio_modes": [
       "write",
       "read",
-      "rw",
       "randwrite",
-      "randread",
-      "randrw"
+      "randread"
     ],
     "fio_bs_iodepth": [
       "(4, 1)",
       "(8, 1)",
       "(16, 1)",
       "(32, 1)"
-    ]
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
   },
   "WrongKey": {
     "volume_count": 1,
     "volume_details": {
       "capacity": 1073741824,
       "block_size": 4096,
-      "encrypt": true
+      "encrypt": "enable"
     },
     "key_size": 38,
     "xtweak_size": 8,
@@ -101,7 +114,7 @@
     "volume_details": {
       "capacity": 1073741824,
       "block_size": 4096,
-      "encrypt": true
+      "encrypt": "enable"
     },
     "key_size": 32,
     "xtweak_size": 16,
@@ -128,13 +141,14 @@
     "volume_details": {
       "capacity": 1073741824,
       "block_size": 4096,
-      "encrypt": true
+      "encrypt": "enable"
     },
     "key_size": 32,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
     "traffic_parallel": false,
+    "fio_loop": 1,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
@@ -146,30 +160,35 @@
     "fio_modes": [
       "write",
       "read",
-      "rw",
       "randwrite",
-      "randread",
-      "randrw"
+      "randread"
     ],
     "fio_bs_iodepth": [
       "(4, 1)",
       "(8, 1)",
       "(16, 1)",
       "(32, 1)"
-    ]
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
   },
   "MultipleBltKey512": {
     "volume_count": 5,
     "volume_details": {
       "capacity": 1073741824,
       "block_size": 4096,
-      "encrypt": true
+      "encrypt": "enable"
     },
     "key_size": 64,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
     "traffic_parallel": false,
+    "fio_loop": 1,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
@@ -181,24 +200,28 @@
     "fio_modes": [
       "write",
       "read",
-      "rw",
       "randwrite",
-      "randread",
-      "randrw"
+      "randread"
     ],
     "fio_bs_iodepth": [
       "(4, 1)",
       "(8, 1)",
       "(16, 1)",
       "(32, 1)"
-    ]
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
   },
   "CreateDelete256": {
     "volume_count": 10,
     "volume_details": {
       "capacity": 1073741824,
       "block_size": 4096,
-      "encrypt": true
+      "encrypt": "enable"
     },
     "key_size": 32,
     "xtweak_size": 8,
@@ -225,7 +248,7 @@
     "volume_details": {
       "capacity": 1073741824,
       "block_size": 4096,
-      "encrypt": true
+      "encrypt": "enable"
     },
     "key_size": 64,
     "xtweak_size": 8,

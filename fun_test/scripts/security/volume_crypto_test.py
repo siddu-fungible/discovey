@@ -5,7 +5,7 @@ from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
 from lib.fun.f1 import F1
-import uuid
+import random
 
 
 # As of now the dictionary variable containing the setup/testbed info used in this script
@@ -32,14 +32,8 @@ topology_dict = {
 }
 
 
-def generate_uuid(length=16):
-    this_uuid = str(uuid.uuid4()).replace("-", "")[length:]
-    return this_uuid
-
-
-def generate_key(length=32):
-    vol_key = os.urandom(length).encode('hex')
-    return vol_key
+def fio_parser(arg1, **kwargs):
+    arg1.remote_fio(**kwargs)
 
 
 class BLTCryptoVolumeScript(FunTestScript):
@@ -59,6 +53,9 @@ class BLTCryptoVolumeScript(FunTestScript):
         # We have declared this here since when we remove volume, the counters are from zero but crypto
         # counters are not from zero.
         fun_test.shared_variables["total_volume_ops"] = 0
+        fun_test.shared_variables["vol_encrypt_filter"] = 0
+        fun_test.shared_variables["vol_decrypt_filter"] = 0
+        fun_test.shared_variables["total_vol_crypto_ops"] = 0
 
     def cleanup(self):
         TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
@@ -108,6 +105,9 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         self.storage_controller = StorageController(target_ip=self.dut_instance.host_ip,
                                                     target_port=self.dut_instance.external_dpcsh_port)
 
+        key256_count = 0
+        key512_count = 0
+
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
@@ -126,37 +126,72 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
             command_result = {}
             fun_test.shared_variables["volume_count"] = self.volume_count + 1
-            fun_test.shared_variables["vol_data"] = {}
+            self.thin_uuid = {}
+            self.block_size = {}
+            self.vol_capacity = {}
+            self.encrypted_vol = {}
+            bs_auto = None
+            capacity_auto = None
+            encrypt_consec = 0
 
             for x in range(1, fun_test.shared_variables["volume_count"], 1):
-                self.thin_uuid = generate_uuid()
-                self.xts_key = generate_key(self.key_size)
-                self.xts_tweak = generate_key(self.xtweak_size)
-                self.vol_name = "thin-block"
-                self.vol_name += str(x)
+                self.thin_uuid[x] = utils.generate_uuid()
+                if self.key_size == "Auto":
+                    key_range = [32, 64]
+                    rand_key = random.choice(key_range)
+                    self.xts_key = utils.generate_key(rand_key)
+                    if rand_key == 32:
+                        key256_count += 1
+                    else:
+                        key512_count += 1
+                else:
+                    self.xts_key = utils.generate_key(self.key_size)
 
-                fun_test.shared_variables["vol_data"][x] = {"name": self.vol_name, "uuid": self.thin_uuid}
+                self.xts_tweak = utils.generate_key(self.xtweak_size)
+
+                if self.volume_details["block_size"] == "Auto":
+                    bs_auto = True
+                    vol_bs_range = self.volume_details["block_size_range"]
+                    self.block_size[x] = random.choice(vol_bs_range)
+                    self.volume_details["block_size"] = self.block_size[x]
+
+                if self.volume_details["capacity"] == "Auto":
+                    capacity_auto = True
+                    vol_cap_range = self.volume_details["capacity_range"]
+                    self.vol_capacity[x] = random.choice(vol_cap_range)
+                    self.volume_details["capacity"] = self.vol_capacity[x]
+                    check_cap = self.volume_details["capacity"] % self.volume_details["block_size"]
+                    fun_test.test_assert(expression=check_cap == 0,
+                                         message="Capacity is a multiple of block size.")
+
+                if self.volume_details["encrypt"] == "enable":
+                    self.volume_details["encrypt"] = True
+                    self.encrypted_vol[x] = self.thin_uuid[x]
+                elif self.volume_details["encrypt"] == "disable":
+                    encrypt_consec = 1
+                    self.volume_details["encrypt"] = False
+                elif self.volume_details["encrypt"] == "consecutive" and encrypt_consec == 0:
+                    encrypt_consec = 1
+                    self.volume_details["encrypt"] = True
+                    self.encrypted_vol[x] = self.thin_uuid[x]
 
                 command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                        capacity=self.volume_details["capacity"],
                                                                        block_size=self.volume_details["block_size"],
-                                                                       name=fun_test.shared_variables["vol_data"]
-                                                                       [x]["name"],
-                                                                       uuid=fun_test.shared_variables["vol_data"]
-                                                                       [x]["uuid"],
+                                                                       name="think-block" + str(x),
+                                                                       uuid=self.thin_uuid[x],
                                                                        encrypt=self.volume_details["encrypt"],
                                                                        key=self.xts_key,
                                                                        xtweak=self.xts_tweak,
                                                                        command_duration=self.command_timeout)
 
-                if (self.key_size == 32 or self.key_size == 64) and self.xtweak_size == 8:
+                if (self.key_size == 32 or self.key_size == 64 or self.key_size == "Auto") and self.xtweak_size == 8:
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
                     command_result = {}
                     command_result = self.storage_controller.volume_attach_remote(ns_id=x,
-                                                                                  uuid=fun_test.shared_variables
-                                                                                  ["vol_data"][x]["uuid"],
+                                                                                  uuid=self.thin_uuid[x],
                                                                                   remote_ip=self.linux_host.internal_ip,
                                                                                   command_duration=self.command_timeout)
                     fun_test.log(command_result)
@@ -166,12 +201,15 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
 
                 else:
-                    if not command_result["status"]:
-                        fun_test.test_assert_expected(expected=False, actual=command_result["status"],
-                                                      message="Volume creation failed as expected.")
+                    if command_result["status"]:
+                        fun_test.test_assert(command_result["status"],
+                                             message="Volume creation should have failed.")
                     else:
-                        fun_test.test_assert_expected(expected=False, actual=command_result["status"],
-                                                      message="Volume creation should have failed.")
+                        fun_test.test_assert(not command_result["status"],
+                                             message="Volume creation failed as expected.")
+            if self.key_size == "Auto":
+                fun_test.log("Total volumes with 256 bit key: {}".format(key256_count))
+                fun_test.log("Total volumes with 512 bit key: {}".format(key512_count))
 
     def run(self):
 
@@ -182,17 +220,26 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
         total_vol_reads = 0
         total_vol_writes = 0
+        total_crypto_writes = 0
+        total_crypto_reads = 0
+        crypto_vol_ops = 0
 
-        crypto_props_tree = "{}/{}/{}".format("stats", "wus", "counts")
+        crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", "cryptofilter_aes_xts")
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
         fio_result = {}
         fio_output = {}
         internal_result = {}
-        final_volume_stats = {}
         initial_crypto_stats = {}
-        final_crypto_stats = {}
+        diff_volume_stats = {}
+        initial_volume_stats = {}
+        final_volume_stats = {}
+
+        command_result = {}
+        command_result = self.storage_controller.peek(crypto_props_tree)
+        fun_test.log("Crypto Stats at the beginning of the test:")
+        fun_test.log(command_result["data"])
 
         for combo in self.fio_bs_iodepth:
             fio_result[combo] = {}
@@ -200,7 +247,14 @@ class BLTCryptoVolumeTestCase(FunTestCase):
             internal_result[combo] = {}
             final_volume_stats[combo] = {}
             initial_crypto_stats[combo] = {}
-            final_crypto_stats[combo] = {}
+            diff_volume_stats[combo] = {}
+            initial_volume_stats[combo] = {}
+            final_volume_stats[combo] = {}
+
+            if combo in self.expected_volume_stats:
+                expected_volume_stats = self.expected_volume_stats[combo]
+            else:
+                expected_volume_stats = self.expected_volume_stats
 
             if not self.traffic_parallel:
 
@@ -215,34 +269,200 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
                                  format(mode, fio_block_size, fio_iodepth))
 
+                    command_result = {}
+                    initial_volume_stats[combo][mode] = {}
+                    for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                        initial_volume_stats[combo][mode][x] = {}
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes",
+                                                                     "VOL_TYPE_BLK_LOCAL_THIN",
+                                                                     self.thin_uuid[x],
+                                                                     "stats")
+                        command_result = self.storage_controller.peek(storage_props_tree)
+                        fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance 0")
+                        initial_volume_stats[combo][mode][x] = command_result["data"]
+                        fun_test.log("Volume Stats at the beginning of the test:")
+                        fun_test.log(initial_volume_stats[combo][mode][x])
+
+                    # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
+                    for loop in range(0, self.fio_loop, 1):
+                        fun_test.log("Fio loop count: {}".format(loop))
+                        if mode == "rw" or mode == "randrw":
+                            for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                                fio_output[combo][mode] = {}
+                                fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip,
+                                                                                     rw=mode,
+                                                                                     bs=fio_block_size,
+                                                                                     iodepth=fio_iodepth,
+                                                                                     rwmixread=self.fio_rwmixread,
+                                                                                     nsid=x,
+                                                                                     **self.fio_cmd_args)
+                                fun_test.log("FIO Command Output:")
+                                fun_test.log(fio_output[combo][mode])
+                        else:
+                            for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                                fio_output[combo][mode] = {}
+                                fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip,
+                                                                                     rw=mode,
+                                                                                     bs=fio_block_size,
+                                                                                     iodepth=fio_iodepth,
+                                                                                     nsid=x,
+                                                                                     **self.fio_cmd_args)
+                                fun_test.log("FIO Command Output:")
+                                fun_test.log(fio_output[combo][mode])
+
+                        if self.detach_vol:
+                            for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                                command_result = {}
+                                command_result = self.storage_controller.volume_detach_remote(ns_id=x,
+                                                                                              uuid=self.thin_uuid[x],
+                                                                                              remote_ip=self.linux_host.internal_ip)
+                                fun_test.log(command_result)
+
+                                command_result = {}
+                                command_result = self.storage_controller.volume_attach_remote(ns_id=x,
+                                                                                              uuid=self.thin_uuid[x],
+                                                                                              remote_ip=self.linux_host.internal_ip,
+                                                                                              command_duration=self.command_timeout)
+
+                                fun_test.log(command_result)
+                        fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
+                                       self.iter_interval)
+
+            else:
+                fun_test.log("Running Fio tests is parallel.")
+                for mode in self.fio_modes:
+                    tmp = combo.split(',')
+                    fio_block_size = tmp[0].strip('() ') + 'k'
+                    fio_iodepth = tmp[1].strip('() ')
+                    fio_result[combo][mode] = True
+                    internal_result[combo][mode] = True
+                    fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
+                                 format(mode, fio_block_size, fio_iodepth))
+
+                    command_result = {}
+                    initial_volume_stats[combo][mode] = {}
+                    for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                        initial_volume_stats[combo][mode][x] = {}
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                                     self.thin_uuid[x],
+                                                                     "stats")
+                        command_result = self.storage_controller.peek(storage_props_tree)
+                        fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance 0")
+                        initial_volume_stats[combo][mode][x] = command_result["data"]
+                        fun_test.log("Volume Stats at the beginning of the test:")
+                        fun_test.log(initial_volume_stats[combo][mode][x])
+
                     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                     if mode == "rw" or mode == "randrw":
+                        thread_id = {}
+                        wait_time = 0
                         for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                            wait_time = fun_test.shared_variables["volume_count"] - x
                             fio_output[combo][mode] = {}
-                            fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip,
-                                                                                 rw=mode,
-                                                                                 bs=fio_block_size,
-                                                                                 iodepth=fio_iodepth,
-                                                                                 rwmixread=25,
-                                                                                 nsid=x,
-                                                                                 **self.fio_cmd_args)
-                            fun_test.log("FIO Command Output:")
-                            fun_test.log(fio_output[combo][mode])
-                    else:
+                            self.linux_host_inst[x] = self.linux_host.clone()
+                            thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                         func=fio_parser,
+                                                                         arg1=self.linux_host_inst[x],
+                                                                         destination_ip=destination_ip,
+                                                                         rw=mode,
+                                                                         rwmixread=30,
+                                                                         bs=fio_block_size,
+                                                                         iodepth=fio_iodepth,
+                                                                         nsid=x,
+                                                                         **self.fio_cmd_args)
                         for x in range(1, fun_test.shared_variables["volume_count"], 1):
-                            fio_output[combo][mode] = {}
-                            fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip,
-                                                                                 rw=mode,
-                                                                                 bs=fio_block_size,
-                                                                                 iodepth=fio_iodepth,
-                                                                                 nsid=x,
-                                                                                 **self.fio_cmd_args)
-                            fun_test.log("FIO Command Output:")
-                            fun_test.log(fio_output[combo][mode])
+                            fun_test.join_thread(fun_test_thread_id=thread_id[x])
 
+                    else:
+                        thread_id = {}
+                        wait_time = 0
+                        for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                            wait_time = fun_test.shared_variables["volume_count"] - x
+                            print "Running thread after wait_time " + str(wait_time)
+                            fio_output[combo][mode] = {}
+                            self.linux_host_inst[x] = self.linux_host.clone()
+                            thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                         func=fio_parser,
+                                                                         arg1=self.linux_host_inst[x],
+                                                                         destination_ip=destination_ip,
+                                                                         rw=mode,
+                                                                         bs=fio_block_size,
+                                                                         iodepth=fio_iodepth,
+                                                                         nsid=x,
+                                                                         **self.fio_cmd_args)
+
+                        for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                            fun_test.log("")
+                            fun_test.join_thread(fun_test_thread_id=thread_id[x])
                     # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
-                    fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                                   self.iter_interval)
+
+            final_volume_stats[combo][mode] = {}
+            for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes",
+                                                             "VOL_TYPE_BLK_LOCAL_THIN",
+                                                             self.thin_uuid[x],
+                                                             "stats")
+                command_result = {}
+                final_volume_stats[combo][mode][x] = {}
+                command_result = self.storage_controller.peek(storage_props_tree)
+                fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance 0")
+                final_volume_stats[combo][mode][x] = command_result["data"]
+                fun_test.log("Volume Stats at the end of the test:")
+                fun_test.log(final_volume_stats[combo][mode][x])
+
+            diff_volume_stats[combo][mode] = {}
+            for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                diff_volume_stats[combo][mode][x] = {}
+                for fkey, fvalue in final_volume_stats[combo][mode][x].items():
+                    # Not going to calculate the difference for the value stats which are not in the expected volume
+                    # dictionary and also for the fault_injection attribute
+                    if fkey not in expected_volume_stats[mode] or fkey == "fault_injection":
+                        diff_volume_stats[combo][mode][x][fkey] = fvalue
+                        continue
+                    if fkey in initial_volume_stats[combo][mode][x]:
+                        ivalue = initial_volume_stats[combo][mode][x][fkey]
+                        diff_volume_stats[combo][mode][x][fkey] = fvalue - ivalue
+                fun_test.log("Difference of volume stats before and after the test:")
+                fun_test.log(diff_volume_stats[combo][mode][x])
+
+            for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                for ekey, evalue in expected_volume_stats[mode].items():
+                    if ekey in diff_volume_stats[combo][mode][x]:
+                        actual = diff_volume_stats[combo][mode][x][ekey]
+                        if actual != evalue:
+                            internal_result[combo][mode] = False
+                            fun_test.add_checkpoint(
+                                "{} check for the {} test for the block size & IO depth combo "
+                                "{}".format(ekey, mode, combo), "FAILED", evalue, actual)
+                            fun_test.critical("Final {} value {} is not equal to the expected value {}".
+                                              format(ekey, actual, evalue))
+                        else:
+                            fun_test.add_checkpoint("{} check for the {} test for the block size & IO depth combo "
+                                                    "{}".format(ekey, mode, combo), "PASSED", evalue, actual)
+                            fun_test.log("Final {} value {} is equal to the expected value {}".
+                                         format(ekey, actual, evalue))
+                    else:
+                        internal_result[combo][mode] = False
+                        fun_test.critical("{} is not found in volume stats".format(ekey))
+
+        command_result = {}
+        final_volume_stats[combo][mode] = {}
+        for key, value in self.encrypted_vol.items():
+            final_volume_stats[combo][mode][key] = {}
+            storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                         value,
+                                                         "stats")
+            command_result = self.storage_controller.peek(storage_props_tree)
+            final_volume_stats[combo][mode][key] = command_result["data"]
+            for fkey, fvalue in final_volume_stats[combo][mode][key].items():
+                if fkey == "num_writes":
+                    total_crypto_writes = fvalue
+                elif fkey == "num_reads":
+                    total_crypto_reads = fvalue
+                crypto_vol_ops = total_crypto_reads + total_crypto_writes
+            fun_test.shared_variables["total_vol_crypto_ops"] += crypto_vol_ops
+
+        print "The total crypto vol ops is " + str(fun_test.shared_variables["total_vol_crypto_ops"])
 
         # Getting the volume stats after the FIO test
         command_result = {}
@@ -250,38 +470,41 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         for x in range(1, fun_test.shared_variables["volume_count"], 1):
             final_volume_stats[combo][mode][x] = {}
             storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
-                                                         fun_test.shared_variables["vol_data"][x]["uuid"],
+                                                         self.thin_uuid[x],
                                                          "stats")
             command_result = self.storage_controller.peek(storage_props_tree)
             fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
             final_volume_stats[combo][mode][x] = command_result["data"]
-            fun_test.log("Volume Status at the end of the test:")
+            fun_test.log("Volume Stats at the end of the test:")
             fun_test.log(final_volume_stats[combo][mode][x])
 
+        for x in range(1, fun_test.shared_variables["volume_count"], 1):
+            for key, value in final_volume_stats[combo][mode][x].items():
+                if key == "num_reads":
+                    total_vol_reads = value
+                elif key == "num_writes":
+                    total_vol_writes = value
+            volume_ops = total_vol_reads + total_vol_writes
+            fun_test.shared_variables["total_volume_ops"] += volume_ops
+
+        print "The total volume ops of all volumes is " + str(fun_test.shared_variables["total_volume_ops"])
+
         command_result = {}
-        final_crypto_stats[combo][mode] = {}
         command_result = self.storage_controller.peek(crypto_props_tree)
-        fun_test.simple_assert(command_result["status"], "Final crypto stats of DUT Instance 0")
-        final_crypto_stats[combo][mode] = command_result["data"]
+        fun_test.shared_variables["total_crypto_ops"] = command_result["data"]
 
-        encrypt_status = self.volume_details["encrypt"]
-        if encrypt_status:
-            for x in range(1, fun_test.shared_variables["volume_count"], 1):
-                for key, value in final_volume_stats[combo][mode][x].items():
-                    if key == "num_reads":
-                        total_vol_reads = value
-                    elif key == "num_writes":
-                        total_vol_writes = value
-                volume_ops = total_vol_reads + total_vol_writes
-                fun_test.shared_variables["total_volume_ops"] += volume_ops
+        print "The total crypto ops is " + str(fun_test.shared_variables["total_crypto_ops"])
 
-            for key, value in final_crypto_stats[combo][mode].items():
-                if key == "cryptofilter_aes_xts":
-                    total_crypto_ops = value
-                    print "Total Crypto ops is " + str(total_crypto_ops)
-
-        fun_test.test_assert(expression=fun_test.shared_variables["total_volume_ops"] == total_crypto_ops,
-                             message="No errors in crypto operations")
+        if fun_test.shared_variables["total_crypto_ops"] == fun_test.shared_variables["total_vol_crypto_ops"]:
+            fun_test.add_checkpoint("The total crypto operations and encrypted volume operations match".
+                                    format(self),
+                                    "PASSED", fun_test.shared_variables["total_crypto_ops"],
+                                    fun_test.shared_variables["total_vol_crypto_ops"])
+        else:
+            fun_test.add_checkpoint("The total crypto operations and encrypted volume operations doesn't match".
+                                    format(self),
+                                    "FAILED", fun_test.shared_variables["total_crypto_ops"],
+                                    fun_test.shared_variables["total_vol_crypto_ops"])
 
         test_result = True
         fun_test.log(fio_result)
@@ -294,25 +517,38 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
+        bs_auto = None
+        capacity_auto = None
+
         for x in range(1, fun_test.shared_variables["volume_count"], 1):
             command_result = {}
             command_result = self.storage_controller.volume_detach_remote(ns_id=x,
-                                                                          uuid=fun_test.shared_variables["vol_data"]
-                                                                          [x]["uuid"],
+                                                                          uuid=self.thin_uuid[x],
                                                                           remote_ip=self.linux_host.internal_ip)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Detaching Volume from DUT Instance 0")
+            if self.volume_details["block_size"] == "Auto":
+                bs_auto = True
+                self.volume_details["block_size"] = self.block_size[x]
+
+            if self.volume_details["capacity"] == "Auto":
+                capacity_auto = True
+                self.volume_details["capacity"] = self.vol_capacity[x]
 
             command_result = {}
             command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
                                                                    block_size=self.volume_details["block_size"],
-                                                                   name=fun_test.shared_variables["vol_data"]
-                                                                   [x]["name"],
-                                                                   uuid=fun_test.shared_variables["vol_data"]
-                                                                   [x]["uuid"],
+                                                                   name="thin-block" + str(x),
+                                                                   uuid=self.thin_uuid[x],
                                                                    type="VOL_TYPE_BLK_LOCAL_THIN")
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Deleting Volume")
+
+            if bs_auto:
+                self.volume_details["block_size"] = "Auto"
+            if capacity_auto:
+                self.volume_details["capacity"] = "Auto"
+
         self.storage_controller.disconnect()
         fun_test.shared_variables["blt"]["setup_created"] = False
         # pass
@@ -489,11 +725,11 @@ class CreateDelete512(BLTCryptoVolumeTestCase):
 if __name__ == "__main__":
     bltscript = BLTCryptoVolumeScript()
     bltscript.add_test_case(VolumeKey256())
-    bltscript.add_test_case(VolumeKey512())
-    bltscript.add_test_case(WrongKey())
-    bltscript.add_test_case(WrongTweak())
-    bltscript.add_test_case(MultipleBltKey256())
-    bltscript.add_test_case(MultipleBltKey512())
-    bltscript.add_test_case(CreateDelete256())
-    bltscript.add_test_case(CreateDelete512())
+#    bltscript.add_test_case(VolumeKey512())
+#    bltscript.add_test_case(WrongKey())
+#    bltscript.add_test_case(WrongTweak())
+#    bltscript.add_test_case(MultipleBltKey256())
+#    bltscript.add_test_case(MultipleBltKey512())
+#    bltscript.add_test_case(CreateDelete256())
+#    bltscript.add_test_case(CreateDelete512())
     bltscript.run()
