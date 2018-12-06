@@ -194,3 +194,6 @@ sup {
   font-weight: 900;
   cursor: pointer;
 }
+.highlight {
+  background-color: yellow;
+}
