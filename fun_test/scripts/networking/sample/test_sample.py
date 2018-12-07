@@ -177,7 +177,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
                                                                 header_obj=ethernet_obj, update=True)
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip1'],
                                    protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ip_header_obj, update=True)
@@ -411,7 +411,7 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
                                                                 header_obj=ethernet_obj, update=True)
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip1'],
                                    protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ip_header_obj, update=True)
@@ -653,7 +653,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
                                                                 header_obj=ethernet_obj, update=True)
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip1'],
                                    protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ip_header_obj, update=True)
@@ -898,7 +898,7 @@ class SamplePPStoFPG(SampleIngressFPGtoFPG):
                                                                 header_obj=ethernet_obj, update=True)
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip1'],
                                    protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ip_header_obj, update=True)
@@ -979,7 +979,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
                                                                 header_obj=ethernet_obj, update=True)
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip1'],
                                    protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ip_header_obj, update=True)
@@ -1228,7 +1228,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
                                                                 header_obj=ethernet_obj, update=True)
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip2'],
+        ip_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip1'],
                                    protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ip_header_obj, update=True)
