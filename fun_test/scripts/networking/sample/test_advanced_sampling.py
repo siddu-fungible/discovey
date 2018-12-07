@@ -7,7 +7,15 @@ Includes Following Sampling Cases
 3. SampleSinglePacketMultiDestination (Multiple Destination Single Source)
 4. SampleFlagMaskTTL0Packets (Flag Mask 45)
 5. SampleMultiSourceSameDestination (Multiple Sources Single Destination)
-6. SampleIngressEnableDisable
+6. SampleIngressEgressMTUCase
+7. SampleSamePortIngressEgress
+8. SampleIngressEgressSamePacket
+9. SampleACLtoFPG
+10. SampleIngressARPRequest
+11. SampleIngressLLDP
+12. SampleIngressDropFSFHwError
+13. SampleIngressDropIPv4VerError
+14. SampleIngressDropFwdErrorWrongDIP
 """
 
 from lib.system.fun_test import *
@@ -3686,7 +3694,7 @@ if __name__ == '__main__':
     ts.add_test_case(SampleSamePortIngressEgress())
     ts.add_test_case(SampleIngressEgressSamePacket())
     
-    ts.add_test_case(SampleACLtoFPG())
+    ts.add_test_case(SampleACLtoFPG())  # Failing due to SWOS-3682
 
     ts.add_test_case(SampleIngressARPRequest())
     ts.add_test_case(SampleIngressLLDP())
