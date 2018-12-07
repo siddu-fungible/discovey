@@ -353,6 +353,7 @@ def prepare_status(chart, purge_old_status=False):
         chart_status_entries[0].test_case_id = chart.last_test_case_id
         chart_status_entries[0].lsf_job_id = chart.last_lsf_job_id
         chart_status_entries[0].build_status = chart.last_build_status
+        chart_status_entries[0].git_commit = chart.last_git_commit
         chart_status_entries[0].save()
         result["last_good_score"] = chart_status_entries[0].score
         result["penultimate_good_score"] = chart_status_entries[1].score
