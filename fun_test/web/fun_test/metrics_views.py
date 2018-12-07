@@ -28,6 +28,7 @@ from analytics_models_helper import invalidate_goodness_cache
 from datetime import datetime
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
+from lib.utilities.git_manager import GitManager
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)

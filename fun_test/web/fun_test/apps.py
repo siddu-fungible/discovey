@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 from django.contrib import admin
 from lib.utilities.jira_manager import JiraManager
+from lib.utilities.git_manager import GitManager
 from apscheduler.schedulers.background import BackgroundScheduler
 
 #from scheduler.scheduler import scheduler
@@ -58,6 +59,11 @@ class FunTestConfig(AppConfig):
         if not hasattr(self, "jira_manager"):
             self.jira_manager = JiraManager()
         return self.jira_manager
+
+    def get_git_manager(self):
+        if not hasattr(self, "git_manager"):
+            self.git_manager = GitManager()
+        return self.git_manager
 
     def get_background_scheduler(self):
         if not hasattr(self, "background_scheduler"):
