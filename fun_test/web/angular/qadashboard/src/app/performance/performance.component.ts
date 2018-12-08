@@ -86,15 +86,19 @@ export class PerformanceComponent implements OnInit {
   currentRegressionUrl: string = null;
   currentJenkinsUrl: string = null;
   currentLsfUrl: string = null;
+  currentGitCommit: string = null;
   passedRegressionUrl: string = null;
   passedJenkinsUrl: string = null;
   passedLsfUrl: string = null;
+  passedGitCommit: string = null;
   failedRegressionUrl: string = null;
   failedJenkinsUrl: string = null;
   failedLsfUrl: string = null;
+  failedGitCommit: string = null;
 
   failedDateTime: string = null;
   passedDateTime: string = null;
+  gitDiagnose: boolean = false;
 
   lsfUrl: string = "http://palladium-jobs.fungible.local:8080/job/";
   jenkinsUrl: string = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
@@ -129,6 +133,10 @@ export class PerformanceComponent implements OnInit {
   getGuid(): number {
     this.lastGuid++;
     return this.lastGuid;
+  }
+
+  gitIdentify(): void {
+    this.gitDiagnose = !this.gitDiagnose
   }
 
   fetchDag(): void {
@@ -464,12 +472,15 @@ export class PerformanceComponent implements OnInit {
     this.currentRegressionUrl = null;
     this.currentJenkinsUrl = null;
     this.currentLsfUrl = null;
+    this.currentGitCommit = null;
     this.passedRegressionUrl = null;
     this.passedJenkinsUrl = null;
     this.passedLsfUrl = null;
+    this.passedGitCommit = null;
     this.failedRegressionUrl = null;
     this.failedJenkinsUrl = null;
     this.failedLsfUrl = null;
+    this.failedGitCommit = null;
     this.failedDateTime = null;
     this.passedDateTime = null;
   }
@@ -487,6 +498,9 @@ export class PerformanceComponent implements OnInit {
       }
       if (result.last_lsf_job_id && result.last_lsf_job_id !== -1) {
         this.currentLsfUrl = this.lsfUrl + result.last_lsf_job_id;
+      }
+      if (result.last_git_commit && result.last_git_commit !== "") {
+        this.currentGitCommit = result.last_git_commit;
       }
     }, error => {
       this.loggerService.error("Current Failed Urls");
@@ -507,6 +521,9 @@ export class PerformanceComponent implements OnInit {
       if (result.failed_lsf_job_id && result.failed_lsf_job_id !== -1) {
         this.failedLsfUrl = this.lsfUrl + result.failed_lsf_job_id;
       }
+      if (result.failed_git_commit && result.failed_git_commit !== "") {
+        this.failedGitCommit = result.failed_git_commit;
+      }
       if (result.passed_date_time) {
         this.passedDateTime = result.passed_date_time;
       }
@@ -518,6 +535,9 @@ export class PerformanceComponent implements OnInit {
       }
       if (result.passed_lsf_job_id && result.passed_lsf_job_id !== -1) {
         this.passedLsfUrl = this.lsfUrl + result.passed_lsf_job_id;
+      }
+      if (result.passed_git_commit && result.passed_git_commit !== "") {
+        this.passedGitCommit = result.passed_git_commit;
       }
     }, error => {
       this.loggerService.error("Past Status Urls");

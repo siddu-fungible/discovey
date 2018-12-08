@@ -194,6 +194,10 @@ sup {
   font-weight: 900;
   cursor: pointer;
 }
+.git-commit {
+  color: black;
+  border: solid 1px black;
+}
 .highlight {
   text-decoration: underline;
   color: black !important;

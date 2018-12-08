@@ -6,6 +6,7 @@ FUN_TEST_DIR = dirname(abspath(__file__))
 INTEGRATION_DIR = dirname(abspath(FUN_TEST_DIR))
 SCHEDULER_DIR = FUN_TEST_DIR + "/scheduler"
 WEB_DIR = FUN_TEST_DIR + "/web"
+STASH_DIR = FUN_TEST_DIR + "/stash"
 WEB_ROOT_DIR = WEB_DIR + "/fun_test"
 STATIC_RELATIVE_DIR = "/static"
 UPLOADS_RELATIVE_DIR = STATIC_RELATIVE_DIR + "/uploads"
