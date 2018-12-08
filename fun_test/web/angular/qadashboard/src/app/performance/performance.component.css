@@ -194,3 +194,8 @@ sup {
   font-weight: 900;
   cursor: pointer;
 }
+.highlight {
+  text-decoration: underline;
+  color: black !important;
+  font-weight: 600;
+}

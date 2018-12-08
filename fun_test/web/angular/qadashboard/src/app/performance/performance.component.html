@@ -16,9 +16,9 @@
               <td id="{{ flatNode.gUid }}" class="child-transition">
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
-                <a *ngIf="flatNode.node.leaf" [routerLink]=""
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="flatNode.node.leaf" [routerLink]=""
                    (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
-                <a *ngIf="!flatNode.node.leaf" [routerLink]=""
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="!flatNode.node.leaf" [routerLink]=""
                    (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
                 <span *ngIf="!flatNode.node.leaf">
               <span [innerHTML]="'&nbsp'"></span>
