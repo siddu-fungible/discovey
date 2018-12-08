@@ -198,3 +198,8 @@ sup {
   color: black;
   border: solid 1px black;
 }
+.highlight {
+  text-decoration: underline;
+  color: black !important;
+  font-weight: 600;
+}
