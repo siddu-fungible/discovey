@@ -98,6 +98,7 @@ def chart_info(request):
                   "last_jenkins_job_id": chart.last_jenkins_job_id,
                   "last_suite_execution_id": chart.last_suite_execution_id,
                   "last_lsf_job_id": chart.last_lsf_job_id,
+                  "last_git_commit": chart.last_git_commit,
                   "owner_info": chart.owner_info}
     return result
 
@@ -270,17 +271,20 @@ def get_past_build_status(request):
                       "passed_suite_execution_id": entry.suite_execution_id,
                       "passed_lsf_job_id": entry.lsf_job_id,
                       "passed_date_time": entry.date_time,
+                      "passed_git_commit": entry.git_commit,
                       "failed_jenkins_job_id": previous_entry.jenkins_job_id,
                       "failed_suite_execution_id": previous_entry.suite_execution_id,
                       "failed_lsf_job_id": previous_entry.lsf_job_id,
-                      "failed_date_time": previous_entry.date_time}
+                      "failed_date_time": previous_entry.date_time,
+                      "failed_git_commit": previous_entry.git_commit}
             return result
         else:
             previous_entry = entry
     result = {"failed_jenkins_job_id": previous_entry.jenkins_job_id,
               "failed_suite_execution_id": previous_entry.suite_execution_id,
               "failed_lsf_job_id": previous_entry.lsf_job_id,
-              "failed_date_time": previous_entry.date_time}
+              "failed_date_time": previous_entry.date_time,
+              "failed_git_commit": previous_entry.git_commit}
     return result
 
 
@@ -643,3 +647,15 @@ def fetch_jira_info(request, metric_id):
         logger.critical("No data found - fetching jira ids for metric id {}".format(metric_id))
     return jira_info
 
+@csrf_exempt
+@api_safe_json_response
+def get_git_commits(request):
+    result = {}
+    request_json = json.loads(request.body)
+    faulty_commit = request_json["faulty_commit"]
+    success_commit = request_json["success_commit"]
+    m = GitManager()
+    commits = m.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
+    result["commits"] = commits["commits"]
+    result["changed_files"] = commits["changed_files"]
+    return result

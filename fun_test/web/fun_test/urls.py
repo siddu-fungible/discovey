@@ -118,6 +118,7 @@ metric_urls = [
     url(r'^past_status$', metrics_views.get_past_build_status),
     url(r'^data_by_model$', metrics_views.get_data_by_model),
     url(r'^metric_by_id$', metrics_views.metric_by_id),
+    url(r'^git_commits$', metrics_views.get_git_commits),
     url(r'^status$', metrics_views.status),
     url(r'^charts_by_module$', metrics_views.charts_by_module),
     url(r'^models_by_module$', metrics_views.models_by_module),

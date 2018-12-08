@@ -18,19 +18,26 @@ class GitManager:
             repo.remotes.origin.pull()
 
     def get_commits_between(self, faulty_commit, success_commit):
-        result = []
+        result = {}
+        result["commits"] = []
+        result["changed_files"] = []
         try:
             self.clone_funos()
             repo = self.initialize_repository(STASH_DIR + "/FunOS")
             commits_list = self.get_commits_list(repo, faulty_commit, success_commit)
             start = False
             for commit in commits_list:
-                if faulty_commit in commit.hexsha:
-                    start = True
-                if start:
-                    result.append(commit)
                 if success_commit in commit.hexsha:
+                    success = commit
                     break
+                if start:
+                    result["commits"].append(commit)
+                if faulty_commit in commit.hexsha:
+                    faulty = commit
+                    start = True
+            diff = faulty.diff(success)
+            for file in diff:
+                result["changed_files"].append(file.a_rawpath)
         except Exception as ex:
             logger.exception("Exception: {}".format(str(ex)))
         return result

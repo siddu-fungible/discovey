@@ -55,9 +55,13 @@
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
               </td>
               <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
+              <ng-template #GitCommitInfo>
+                  <git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>
+              </ng-template>
               <ng-template #FailedInfo>
-                <div *ngIf="passedDateTime" style="color: black;">
+                  <div *ngIf="passedDateTime" style="color: black;">
                   <b>Last Passed:</b><br> {{ passedDateTime }}<br>
+                  Git Commit: {{ passedGitCommit }}<br>
                   <a *ngIf="passedLsfUrl" [routerLink]="" (click)='openUrl(passedLsfUrl)'>Lsf log<br></a>
                   <a *ngIf="passedJenkinsUrl" [routerLink]="" (click)='openUrl(passedJenkinsUrl)'>Jenkins log<br></a>
                   <a *ngIf="passedRegressionUrl" [routerLink]="" (click)='openUrl(passedRegressionUrl)'>Regression
@@ -65,7 +69,11 @@
                 </div>
                 <hr>
                 <div *ngIf="currentJenkinsUrl || currentLsfUrl || currentRegressionUrl" style="color: black;">
-                  <b>Current Failure:</b><br>
+                  <b>Current Failure:</b><label data-placement="right" (click)="gitIdentify()" triggers="click"
+                           [ngbTooltip]="GitCommitInfo" [autoClose]="'outside'"
+                           class="badge failed-label no-margin git-commit">Git Commit History
+              </label><br>
+                  Git Commit: {{ currentGitCommit }}<br>
                   <a *ngIf="currentLsfUrl" [routerLink]="" (click)='openUrl(currentLsfUrl)'>Lsf log<br></a>
                   <a *ngIf="currentJenkinsUrl" [routerLink]="" (click)='openUrl(currentJenkinsUrl)'>Jenkins log<br></a>
                   <a *ngIf="currentRegressionUrl" [routerLink]="" (click)='openUrl(currentRegressionUrl)'>Regression log<br></a>
@@ -73,6 +81,7 @@
                 <hr>
                 <div *ngIf="failedDateTime" style="color: black;">
                   <b>First Failure:</b><br> {{ failedDateTime }}<br>
+                  Git Commit: {{ failedGitCommit }}<br>
                   <a *ngIf="failedLsfUrl" [routerLink]="" (click)='openUrl(failedLsfUrl)'>Lsf log<br></a>
                   <a *ngIf="failedJenkinsUrl" [routerLink]="" (click)='openUrl(failedJenkinsUrl)'>Jenkins log<br></a>
                   <a *ngIf="failedRegressionUrl" [routerLink]="" (click)='openUrl(failedRegressionUrl)'>Regression
