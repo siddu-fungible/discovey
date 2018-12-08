@@ -29,12 +29,6 @@ cd user
 docker build . -t reg-nw-user --build-arg ARG_USER=$USER --build-arg ARG_UID=$UID --build-arg ARG_GID=`id -g`
 ```
 
-6. To run a FunCP container that pulls FunCP, FunOS and FunSDK source: 
-=======
-docker build . -t nw-reg-user:v1 --build-arg ARG_USER=$USER --build-arg ARG_UID=$UID --build-arg ARG_GID=`id -g`
-```
-
-
 5. To run FunCP container:
 ```
 docker run --privileged=true --rm -d -v /tmp:/tmp  -v /home/$USER:/home/$USER -v $WORKSPACE:/workspace -e WORKSPACE=/workspace -e DOCKER=TRUE -w /workspace --name funcp --hostname funcp -p 40221:40221 -p 8022:22 -u $USER nw-reg-user:v1 /workspace/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh
