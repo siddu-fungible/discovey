@@ -195,5 +195,7 @@ sup {
   cursor: pointer;
 }
 .highlight {
-  background-color: yellow;
+  text-decoration: underline;
+  color: black !important;
+  font-weight: 600;
 }
