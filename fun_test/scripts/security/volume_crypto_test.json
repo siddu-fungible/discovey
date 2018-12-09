@@ -1,8 +1,8 @@
 {
-  "VolumeKey256": {
+  "BLTKey256": {
     "volume_count": 1,
     "volume_details": {
-      "capacity": 1073741824,
+      "capacity": 20971520,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -40,10 +40,88 @@
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
     }
   },
-  "VolumeKey512": {
+  "BLTKey256RW": {
     "volume_count": 1,
     "volume_details": {
-      "capacity": 1073741824,
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 290, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 298, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 332, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 352, "num_writes": 672}}
+    }
+  },
+  "BLTKey256RandRW": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 290, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 298, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 332, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 352, "num_writes": 672}}
+    }
+  },
+  "BLTKey512": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -52,7 +130,6 @@
     "command_timeout": 5,
     "iter_interval": 2,
     "traffic_parallel": false,
-    "fio_rwmixread": 30,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
@@ -80,119 +157,406 @@
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
       "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+  "BLTKey512RW": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 290, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 298, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 332, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 352, "num_writes": 672}}
+    }
+  },
+  "BLTKey512RandRW": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_rwmixread": 30,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 290, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 298, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 332, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 352, "num_writes": 672}}
+    }
+  },
+  "MultipleBLT256": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+  "MultipleBLT256RW": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 290, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 298, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 332, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 352, "num_writes": 672}}
+    }
+  },
+  "MultipleBLT256RandRW": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 290, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 298, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 332, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 352, "num_writes": 672}}
+    }
+  },
+  "MultipleBLT512": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+  "MultipleBLT512RW": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 290, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 298, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 332, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 352, "num_writes": 672}}
+    }
+  },
+  "MultipleBLT512RandRW": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_rwmixread": 30,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 290, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 298, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 332, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 352, "num_writes": 672}}
     }
   },
   "WrongKey": {
-    "volume_count": 1,
+    "volume_count": 4,
     "volume_details": {
-      "capacity": 1073741824,
+      "capacity": 20971520,
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "key_size": 38,
+    "key_size": 60,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": false,
-    "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
-      "verify":"sha1",
-      "do_verify": 0,
-      "verify_fatal": 1,
-      "timeout": 120
-    },
-    "fio_modes": [
-      "write"
-    ],
-    "fio_bs_iodepth": [
-      "(4, 1)"
-    ]
-  },
-  "WrongTweak": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 1073741824,
-      "block_size": 4096,
-      "encrypt": "enable"
-    },
-    "key_size": 32,
-    "xtweak_size": 16,
-    "command_timeout": 5,
-    "iter_interval": 2,
-    "traffic_parallel": false,
-    "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
-      "verify":"sha1",
-      "do_verify": 0,
-      "verify_fatal": 1,
-      "timeout": 120
-    },
-    "fio_modes": [
-      "write"
-    ],
-    "fio_bs_iodepth": [
-      "(4, 1)"
-    ]
-  },
-  "MultipleBltKey256": {
-    "volume_count": 5,
-    "volume_details": {
-      "capacity": 1073741824,
-      "block_size": 4096,
-      "encrypt": "enable"
-    },
-    "key_size": 32,
-    "xtweak_size": 8,
-    "command_timeout": 5,
-    "iter_interval": 2,
-    "traffic_parallel": false,
+    "traffic_parallel": true,
     "fio_loop": 1,
+    "detach_vol": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
-      "verify":"sha1",
+      "verify": "sha1",
       "do_verify": 0,
       "verify_fatal": 1,
       "timeout": 120
     },
     "fio_modes": [
-      "write",
-      "read",
-      "randwrite",
-      "randread"
+      "write"
     ],
     "fio_bs_iodepth": [
-      "(4, 1)",
-      "(8, 1)",
-      "(16, 1)",
-      "(32, 1)"
+      "(4, 1)"
     ],
     "expected_volume_stats": {
-      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
-      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
-      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
-      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
     }
   },
-  "MultipleBltKey512": {
-    "volume_count": 5,
+  "WrongTweak": {
+    "volume_count": 25,
     "volume_details": {
-      "capacity": 1073741824,
+      "capacity": 20971520,
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "key_size": 64,
-    "xtweak_size": 8,
+    "key_size": 32,
+    "xtweak_size": 6,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": false,
+    "traffic_parallel": true,
     "fio_loop": 1,
+    "detach_vol": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
-      "verify":"sha1",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    }
+  },
+  "BLTRandomKey": {
+    "volume_count": 8,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
       "do_verify": 0,
       "verify_fatal": 1,
       "timeout": 120
@@ -217,9 +581,9 @@
     }
   },
   "CreateDelete256": {
-    "volume_count": 10,
+    "volume_count": 25,
     "volume_details": {
-      "capacity": 1073741824,
+      "capacity": 20971520,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -227,11 +591,13 @@
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
     "traffic_parallel": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
-      "verify":"sha1",
+      "verify": "sha1",
       "do_verify": 0,
       "verify_fatal": 1,
       "timeout": 120
@@ -241,24 +607,29 @@
     ],
     "fio_bs_iodepth": [
       "(4, 1)"
-    ]
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    }
   },
   "CreateDelete512": {
-    "volume_count": 10,
+    "volume_count": 25,
     "volume_details": {
-      "capacity": 1073741824,
+      "capacity": 20971520,
       "block_size": 4096,
-      "encrypt": "enable"
+      "encrypt": "alternate"
     },
     "key_size": 64,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
     "traffic_parallel": false,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
-      "verify":"sha1",
+      "verify": "sha1",
       "do_verify": 0,
       "verify_fatal": 1,
       "timeout": 120
@@ -268,6 +639,138 @@
     ],
     "fio_bs_iodepth": [
       "(4, 1)"
-    ]
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    }
+  },
+  "MultiVolRandKeyRandCap": {
+    "volume_count": 8,
+    "volume_details": {
+      "capacity": "Auto",
+      "capacity_range": [20971520, 67108864, 83886080, 134217728],
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 4)",
+      "(8, 4)",
+      "(16, 4)",
+      "(32, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+  "BLTFioDetach": {
+    "volume_count": 8,
+    "volume_details": {
+      "capacity": "Auto",
+      "capacity_range": [20971520, 67108864, 83886080, 134217728],
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 2,
+    "detach_vol": true,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 4)",
+      "(8, 4)",
+      "(16, 4)",
+      "(32, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+  "BLTFioEncCompress": {
+    "volume_count": 10,
+    "volume_details": {
+      "capacity": "Auto",
+      "capacity_range": [20971520, 67108864, 83886080, 134217728],
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "compress": false,
+    "zip_filter": "FILTER_TYPE_DEFLATE",
+    "zip_effort": "ZIP_EFFORT_15Gbps",
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": true,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 4)",
+      "(8, 4)",
+      "(16, 4)",
+      "(32, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
   }
 }
