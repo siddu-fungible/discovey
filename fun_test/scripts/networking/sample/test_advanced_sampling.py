@@ -16,6 +16,8 @@ Includes Following Sampling Cases
 12. SampleIngressDropFSFHwError
 13. SampleIngressDropIPv4VerError
 14. SampleIngressDropFwdErrorWrongDIP
+15. SampleEgressMTUCase
+16. SampleEgressDropACL
 """
 
 from lib.system.fun_test import *
