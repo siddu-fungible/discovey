@@ -3572,7 +3572,7 @@ class SampleIngressDropFwdErrorWrongDIP(FunTestCase):
 
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
         rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
-            port_handle=cc_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+            port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
         fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
 
         checkpoint = "Fetch Sample Port Results for %s" % sample_port
@@ -3680,6 +3680,631 @@ class SampleIngressDropFwdErrorWrongDIP(FunTestCase):
         fun_test.add_checkpoint(checkpoint)
 
 
+class SampleEgressMTUCase(FunTestCase):
+    l2_config = None
+    l3_config = None
+    load = 10
+    load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
+    stream_obj = None
+    sample_id = 49
+    header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
+    capture_results = None
+
+    def describe(self):
+        self.set_test_details(id=15, summary="Test Egress Sample MTU case (egress/sample interface MTU < frame size)",
+                              steps="""
+                              1. Create TCP frame stream on Tx Port with following settings
+                                 a. Frame Size Mode: Fixed 1000 B
+                                 b. Payload Type: PRBS
+                                 c. Insert Signature
+                                 d. Load: 10 fps
+                              2. Configure MTU on egress interface to 300B and ingress interface to 1500B
+                              3. Configure egress sampling rule on FPG5 and dest: FPG15
+                              4. Start Traffic for %d secs
+                              5. Capture packets on sample port
+                              6. Validate that packets are getting dropped at egress interface
+                              7. Ensure packets are getting sampled in PSW block and being transmitted by sample port
+                              8. Ensure that sampled packet is exactly same as ingress packet
+                              9. Validate that packets are getting dropped on spirent at Rx port
+                              10. Ensure packets are getting received on sample spirent port
+                              11. Ensure no errors are seen on spirent ports
+                              12. Configure MTU on egress interface to 1500 and sample interface to 300
+                              13. Start Traffic for %d secs
+                              14. Validate that ingress packets count must be equal to egress packets count
+                              15. Ensure packets are getting sampled in PSW block and not being transmitted by sample 
+                                  port. Sampling is done by PSW block so that is working but for packet to go out 
+                                  its size has to be less than interface MTU which is not the case here and so 
+                                  its dropped
+                              16. Validate that packets are received Rx spirent port    
+                              17. Ensure that no packets are received on sample spirent port
+                              18. Ensure no errors are seen on spirent ports  
+                              """ % (TRAFFIC_DURATION, TRAFFIC_DURATION))
+
+    def setup(self):
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv4']
+
+        checkpoint = "Create stream on %s port" % tx_port
+        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
+                                      insert_signature=True,
+                                      load=self.load,
+                                      load_unit=self.load_type,
+                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_FIXED,
+                                      fixed_frame_length=1000)
+        stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
+                                                             port_handle=tx_port)
+        fun_test.test_assert(stream_created, checkpoint)
+
+        ether_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+                                    ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ether_obj, update=True)
+        fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
+
+        ipv4_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip1'],
+                                     protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ipv4_header_obj, update=True)
+        fun_test.test_assert(result, checkpoint)
+
+        checkpoint = "Add TCP Header"
+        tcp_obj = TCP()
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=tcp_obj, update=True)
+        fun_test.test_assert(result, checkpoint)
+
+        self.header_objs['ether_obj'] = ether_obj
+        self.header_objs['ip_obj'] = ipv4_header_obj
+        self.header_objs['tcp_obj'] = tcp_obj
+
+        dut_rx_port = dut_config['ports'][0]
+        dut_tx_port = dut_config['ports'][1]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Configure MTU on egress interface FPG%d to 300 and ingress interface FPG%d to 1500 and " \
+                     "sample interface FPG%d to 1500" % (dut_tx_port, dut_rx_port, dut_sample_port)
+        mtu_changed = network_controller_obj.set_port_mtu(port_num=dut_tx_port, mtu_value=300, shape=0)
+        fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to 300" % dut_tx_port)
+        mtu_changed = network_controller_obj.set_port_mtu(port_num=dut_rx_port, mtu_value=1500, shape=0)
+        fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to 1500" % dut_rx_port)
+        mtu_changed = network_controller_obj.set_port_mtu(port_num=dut_sample_port, mtu_value=1500, shape=0)
+        fun_test.test_assert(mtu_changed, checkpoint)
+
+        checkpoint = "Add egress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
+                                                                                            dut_sample_port)
+        result = network_controller_obj.add_egress_sample_rule(id=self.sample_id,
+                                                               fpg=dut_rx_port, dest=dut_sample_port)
+        fun_test.test_assert(result['status'], checkpoint)
+
+    def run(self):
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+        dut_tx_port = dut_config['ports'][1]
+
+        checkpoint = "Clear FPG port stats on DUT"
+        for port_num in dut_config['ports']:
+            shape = 0
+            if port_num == 1 or port_num == 2:
+                shape = 1
+            result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+            fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
+
+        checkpoint = "Get PSW stats before traffic"
+        psw_stats_before = network_controller_obj.peek_psw_global_stats()
+        fun_test.test_assert(psw_stats_before, checkpoint)
+
+        checkpoint = "Get Sample stats before traffic"
+        sample_stats_before = network_controller_obj.show_sample_stats()
+        fun_test.test_assert(sample_stats_before, checkpoint)
+
+        checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        checkpoint = "Packet captured on %s sample port" % sample_port
+        self.capture_results = template_obj.start_default_capture_save_locally(port_handle=sample_port,
+                                                                               sleep_time=10)
+        fun_test.test_assert(self.capture_results['result'], checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=40)
+
+        # Getting Spirent results
+        checkpoint = "Fetch Tx Port Results for %s" % tx_port
+        tx_port_result = template_obj.stc_manager.get_generator_port_results(
+            port_handle=tx_port, subscribe_handle=subscribed_results['generator_subscribe'])
+        fun_test.simple_assert(expression=tx_port_result, message=checkpoint)
+
+        checkpoint = "Fetch Rx Port Results for %s" % rx_port
+        rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
+
+        checkpoint = "Fetch Sample Port Results for %s" % sample_port
+        sample_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=sample_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=sample_port_result, message=checkpoint)
+
+        fun_test.log("Spirent Tx Port: %s" % tx_port_result)
+        fun_test.log("Spirent Rx Port: %s" % rx_port_result)
+        fun_test.log("Spirent Sample Port: %s" % sample_port_result)
+
+        # Validate DUT stats
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+        fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+        fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+        dut_sample_port_results = network_controller_obj.peek_fpg_port_stats(dut_sample_port)
+        fun_test.simple_assert(dut_sample_port_results, "Fetch DUT sample port results. FPG%d" % dut_sample_port)
+
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+        fun_test.simple_assert(psw_stats, "Fetch PSW global stats")
+
+        sample_stats = network_controller_obj.show_sample_stats()
+        fun_test.simple_assert(sample_stats, "Fetch Sample stats")
+
+        fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+        fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+        fun_test.log("DUT Sample Port %d Results: %s" % (dut_sample_port, dut_sample_port_results))
+        fun_test.log("PSW stats: %s" % psw_stats)
+        fun_test.log("Sample stats: %s" % sample_stats)
+
+        checkpoint = "Validate that packets are getting dropped at egress interface FPG%d" % dut_tx_port
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                     tx=False)
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on Rx FPG%d: %s" % (
+            dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+        fun_test.test_assert_expected(expected=None, actual=frames_transmitted, message=checkpoint)
+
+        checkpoint = "Ensure packets are getting sampled in PSW block"
+        parsed_input_stats_1 = get_psw_global_stats_values(input=True, psw_stats_output=psw_stats_before,
+                                                           input_key_list=[PSW_SAMPLED_PACKET_COUNT])
+
+        parsed_input_stats_2 = get_psw_global_stats_values(input=True, psw_stats_output=psw_stats,
+                                                           input_key_list=[PSW_SAMPLED_PACKET_COUNT])
+
+        psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
+                                        new_stats=parsed_input_stats_2['input'],
+                                        stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
+                                      message=checkpoint)
+
+        checkpoint = "Ensure sample frames are being transmitted by sample port FPG%d" % dut_sample_port
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_sample_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on Sample port FPG%d: %s" % (
+            dut_rx_port, frames_received, dut_sample_port, frames_transmitted))
+        fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
+
+        checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
+        sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
+                                           new_stats=sample_stats[str(self.sample_id)])
+        fun_test.test_assert_expected(expected=frames_received,
+                                      actual=int(sample_diff_stats['count']),
+                                      message=checkpoint)
+        # Validate Spirent stats
+        checkpoint = "Ensure Packets are getting dropped on spirent Rx port %s" % rx_port
+        fun_test.test_assert_expected(expected=0,
+                                      actual=rx_port_result['TotalFrameCount'], message=checkpoint)
+
+        checkpoint = "Ensure packets are getting received on sample spirent port %s" % sample_port
+        fun_test.test_assert_expected(expected=tx_port_result['GeneratorFrameCount'],
+                                      actual=sample_port_result['TotalFrameCount'], message=checkpoint)
+
+        checkpoint = "Ensure no errors are seen on Rx spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+        checkpoint = "Ensure no errors are seen on Sample spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+        checkpoint = "Ensure all the fields in a packet is correct"
+        parser_obj = PcapParser(filename=self.capture_results['pcap_file_path'])
+        packets = parser_obj.get_captures_from_file()
+        result = parser_obj.validate_sample_packets_in_file(packets=packets, header_objs=self.header_objs,
+                                                            expected_packet_length=1000)
+        fun_test.test_assert(result, checkpoint)
+
+        checkpoint = "Clear FPG port stats on DUT"
+        for port_num in dut_config['ports']:
+            shape = 0
+            if port_num == 1 or port_num == 2:
+                shape = 1
+            result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+            fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
+
+        checkpoint = "Clear subscribed results"
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Configure MTU on egress interface FPG%d to 1500 and sample interface FPG%d to 300" % (
+            dut_tx_port, dut_sample_port)
+        mtu_changed = network_controller_obj.set_port_mtu(port_num=dut_tx_port, mtu_value=1500, shape=0)
+        fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to 1500" % dut_tx_port)
+        mtu_changed = network_controller_obj.set_port_mtu(port_num=dut_sample_port, mtu_value=300, shape=0)
+        fun_test.test_assert(mtu_changed, checkpoint)
+
+        checkpoint = "Get PSW stats before traffic"
+        psw_stats_before = network_controller_obj.peek_psw_global_stats()
+        fun_test.test_assert(psw_stats_before, checkpoint)
+
+        checkpoint = "Get Sample stats before traffic"
+        sample_stats_before = network_controller_obj.show_sample_stats()
+        fun_test.test_assert(sample_stats_before, checkpoint)
+
+        checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=40)
+
+        # Getting Spirent results
+        checkpoint = "Fetch Tx Port Results for %s" % tx_port
+        tx_port_result = template_obj.stc_manager.get_generator_port_results(
+            port_handle=tx_port, subscribe_handle=subscribed_results['generator_subscribe'])
+        fun_test.simple_assert(expression=tx_port_result, message=checkpoint)
+
+        checkpoint = "Fetch Rx Port Results for %s" % rx_port
+        rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
+
+        checkpoint = "Fetch Sample Port Results for %s" % sample_port
+        sample_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=sample_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=sample_port_result, message=checkpoint)
+
+        fun_test.log("Spirent Tx Port: %s" % tx_port_result)
+        fun_test.log("Spirent Rx Port: %s" % rx_port_result)
+        fun_test.log("Spirent Sample Port: %s" % sample_port_result)
+
+        # Validate DUT stats
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+        fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+        fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+        dut_sample_port_results = network_controller_obj.peek_fpg_port_stats(dut_sample_port)
+        fun_test.simple_assert(dut_sample_port_results, "Fetch DUT sample port results. FPG%d" % dut_sample_port)
+
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+        fun_test.simple_assert(psw_stats, "Fetch PSW global stats")
+
+        sample_stats = network_controller_obj.show_sample_stats()
+        fun_test.simple_assert(sample_stats, "Fetch Sample stats")
+
+        fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+        fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+        fun_test.log("DUT Sample Port %d Results: %s" % (dut_sample_port, dut_sample_port_results))
+        fun_test.log("PSW stats: %s" % psw_stats)
+        fun_test.log("Sample stats: %s" % sample_stats)
+
+        checkpoint = "Validate that ingress packets count must be equal to egress packets count (FPG%d --> FPG%d)" % (
+            dut_rx_port, dut_tx_port)
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                     tx=False)
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on Rx FPG%d: %s" % (
+            dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+        fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
+
+        checkpoint = "Ensure packets are getting sampled in PSW block"
+        parsed_input_stats_1 = get_psw_global_stats_values(input=True, psw_stats_output=psw_stats_before,
+                                                           input_key_list=[PSW_SAMPLED_PACKET_COUNT])
+
+        parsed_input_stats_2 = get_psw_global_stats_values(input=True, psw_stats_output=psw_stats,
+                                                           input_key_list=[PSW_SAMPLED_PACKET_COUNT])
+
+        psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
+                                        new_stats=parsed_input_stats_2['input'],
+                                        stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
+                                      message=checkpoint)
+
+        checkpoint = "Sampling is done by PSW block so that is working but for packet to go out its size has to be " \
+                     "less than interface MTU which is not the case here and so its dropped. sample port FPG%d" % \
+                     dut_sample_port
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_sample_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on Sample port FPG%d: %s" % (
+            dut_rx_port, frames_received, dut_sample_port, frames_transmitted))
+        fun_test.test_assert_expected(expected=None, actual=frames_transmitted, message=checkpoint)
+
+        checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
+        sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
+                                           new_stats=sample_stats[str(self.sample_id)])
+        fun_test.test_assert_expected(expected=frames_received,
+                                      actual=int(sample_diff_stats['count']),
+                                      message=checkpoint)
+        # Validate Spirent stats
+        checkpoint = "Validate that packets are received Rx spirent port %s" % rx_port
+        fun_test.test_assert_expected(expected=tx_port_result['GeneratorFrameCount'],
+                                      actual=rx_port_result['TotalFrameCount'], message=checkpoint)
+
+        checkpoint = "Ensure packets are getting received on sample spirent port %s" % sample_port
+        fun_test.test_assert_expected(expected=0,
+                                      actual=sample_port_result['TotalFrameCount'], message=checkpoint)
+
+        checkpoint = "Ensure no errors are seen on Rx spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+        checkpoint = "Ensure no errors are seen on Sample spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+    def cleanup(self):
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Delete sample rule for id: %d" % self.sample_id
+        network_controller_obj.disable_sample_rule(id=self.sample_id, fpg=dut_rx_port, dest=dut_sample_port)
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Change DUT ports MTU to 1500"
+        for port_num in dut_config['ports']:
+            if port_num == 1 or port_num == 2:
+                shape = 1
+            else:
+                shape = 0
+            network_controller_obj.set_port_mtu(port_num=port_num, mtu_value=1500, shape=shape)
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Delete the stream"
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Delete tmp pcap file %s" % self.capture_results['pcap_file_path']
+        fun_test.remove_file(self.capture_results['pcap_file_path'])
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Clear subscribed results"
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+        fun_test.add_checkpoint(checkpoint)
+
+
+class SampleEgressDropACL(FunTestCase):
+    l2_config = None
+    l3_config = None
+    load = 10
+    load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
+    stream_obj = None
+    sample_id = 62
+    header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
+    captured_results = None
+
+    def describe(self):
+        self.set_test_details(id=16, summary="Test Egress Sample Drop using ACL",
+                              steps="""
+                              1. Create TCP frame stream on Tx Port with following settings
+                                 a. Frame Size Mode: Fixed 128 B
+                                 b. Payload Type: PRBS
+                                 c. Insert Signature
+                                 d. Load: 10 fps
+                                 e. TCP dest port 960
+                              2. Configure egress sampling rule on FPG5 and dest: FPG15
+                              3. Start Traffic for %d secs
+                              4. Capture packets on sample port
+                              5. Validate that packets are getting dropped at egress interface due to ACL configured
+                              6. Ensure packets are getting sampled in PSW block and being transmitted by sample port
+                              7. Ensure that sampled packet is exactly same as ingress packet
+                              8. Validate that packets are getting dropped on spirent at Rx port due to ACL configured
+                              9. Ensure packets are getting received on sample spirent port
+                              10. Ensure no errors are seen on spirent ports
+                              """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv4']
+
+        checkpoint = "Create stream on %s port" % tx_port
+        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
+                                      insert_signature=True,
+                                      load=self.load,
+                                      load_unit=self.load_type,
+                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_FIXED,
+                                      fixed_frame_length=128)
+        stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
+                                                             port_handle=tx_port)
+        fun_test.test_assert(stream_created, checkpoint)
+
+        ether_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+                                    ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ether_obj, update=True)
+        fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
+
+        ipv4_header_obj = Ipv4Header(destination_address=self.l3_config['destination_ip1'],
+                                     protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=ipv4_header_obj, update=True)
+        fun_test.test_assert(result, checkpoint)
+
+        checkpoint = "Add TCP Header"
+        tcp_obj = TCP(destination_port=960)
+        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
+                                                                header_obj=tcp_obj, update=True)
+        fun_test.test_assert(result, checkpoint)
+
+        self.header_objs['ether_obj'] = ether_obj
+        self.header_objs['ip_obj'] = ipv4_header_obj
+        self.header_objs['tcp_obj'] = tcp_obj
+
+        dut_rx_port = dut_config['ports'][0]
+        dut_tx_port = dut_config['ports'][1]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Add egress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
+                                                                                            dut_sample_port)
+        result = network_controller_obj.add_egress_sample_rule(id=self.sample_id,
+                                                               fpg=dut_rx_port, dest=dut_sample_port)
+        fun_test.test_assert(result['status'], checkpoint)
+
+    def run(self):
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+        dut_tx_port = dut_config['ports'][1]
+
+        checkpoint = "Clear FPG port stats on DUT"
+        for port_num in dut_config['ports']:
+            shape = 0
+            if port_num == 1 or port_num == 2:
+                shape = 1
+            result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+            fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
+
+        checkpoint = "Get PSW stats before traffic"
+        psw_stats_before = network_controller_obj.peek_psw_global_stats()
+        fun_test.test_assert(psw_stats_before, checkpoint)
+
+        checkpoint = "Get Sample stats before traffic"
+        sample_stats_before = network_controller_obj.show_sample_stats()
+        fun_test.test_assert(sample_stats_before, checkpoint)
+
+        checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        checkpoint = "Packet captured on %s sample port" % sample_port
+        self.capture_results = template_obj.start_default_capture_save_locally(port_handle=sample_port,
+                                                                               sleep_time=10)
+        fun_test.test_assert(self.capture_results['result'], checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=40)
+
+        # Getting Spirent results
+        checkpoint = "Fetch Tx Port Results for %s" % tx_port
+        tx_port_result = template_obj.stc_manager.get_generator_port_results(
+            port_handle=tx_port, subscribe_handle=subscribed_results['generator_subscribe'])
+        fun_test.simple_assert(expression=tx_port_result, message=checkpoint)
+
+        checkpoint = "Fetch Rx Port Results for %s" % rx_port
+        rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
+
+        checkpoint = "Fetch Sample Port Results for %s" % sample_port
+        sample_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=sample_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=sample_port_result, message=checkpoint)
+
+        fun_test.log("Spirent Tx Port: %s" % tx_port_result)
+        fun_test.log("Spirent Rx Port: %s" % rx_port_result)
+        fun_test.log("Spirent Sample Port: %s" % sample_port_result)
+
+        # Validate DUT stats
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+        fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+        fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+        dut_sample_port_results = network_controller_obj.peek_fpg_port_stats(dut_sample_port)
+        fun_test.simple_assert(dut_sample_port_results, "Fetch DUT sample port results. FPG%d" % dut_sample_port)
+
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+        fun_test.simple_assert(psw_stats, "Fetch PSW global stats")
+
+        sample_stats = network_controller_obj.show_sample_stats()
+        fun_test.simple_assert(sample_stats, "Fetch Sample stats")
+
+        fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+        fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+        fun_test.log("DUT Sample Port %d Results: %s" % (dut_sample_port, dut_sample_port_results))
+        fun_test.log("PSW stats: %s" % psw_stats)
+        fun_test.log("Sample stats: %s" % sample_stats)
+
+        checkpoint = "Validate that packets are getting dropped at egress interface FPG%d due to ACL configured" % \
+                     dut_tx_port
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                     tx=False)
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on Rx FPG%d: %s" % (
+            dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+        fun_test.test_assert_expected(expected=None, actual=frames_transmitted, message=checkpoint)
+
+        checkpoint = "Ensure packets are getting sampled in PSW block"
+        parsed_input_stats_1 = get_psw_global_stats_values(input=True, psw_stats_output=psw_stats_before,
+                                                           input_key_list=[PSW_SAMPLED_PACKET_COUNT])
+
+        parsed_input_stats_2 = get_psw_global_stats_values(input=True, psw_stats_output=psw_stats,
+                                                           input_key_list=[PSW_SAMPLED_PACKET_COUNT])
+
+        psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
+                                        new_stats=parsed_input_stats_2['input'],
+                                        stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
+                                      message=checkpoint)
+
+        checkpoint = "Ensure sample frames are being transmitted by sample port FPG%d" % dut_sample_port
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_sample_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on Sample port FPG%d: %s" % (
+            dut_rx_port, frames_received, dut_sample_port, frames_transmitted))
+        fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
+
+        checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
+        sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
+                                           new_stats=sample_stats[str(self.sample_id)])
+        fun_test.test_assert_expected(expected=frames_received,
+                                      actual=int(sample_diff_stats['count']),
+                                      message=checkpoint)
+        # Validate Spirent stats
+        checkpoint = "Ensure Packets are getting dropped on spirent Rx port %s due to ACL configured" % rx_port
+        fun_test.test_assert_expected(expected=0,
+                                      actual=rx_port_result['TotalFrameCount'], message=checkpoint)
+
+        checkpoint = "Ensure packets are getting received on sample spirent port %s" % sample_port
+        fun_test.test_assert_expected(expected=tx_port_result['GeneratorFrameCount'],
+                                      actual=sample_port_result['TotalFrameCount'], message=checkpoint)
+
+        checkpoint = "Ensure no errors are seen on Rx spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+        checkpoint = "Ensure no errors are seen on Sample spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+        checkpoint = "Ensure all the fields in a packet is correct"
+        parser_obj = PcapParser(filename=self.capture_results['pcap_file_path'])
+        packets = parser_obj.get_captures_from_file()
+        result = parser_obj.validate_sample_packets_in_file(packets=packets, header_objs=self.header_objs)
+        fun_test.test_assert(result, checkpoint)
+
+    def cleanup(self):
+        dut_rx_port = dut_config['ports'][0]
+        dut_sample_port = dut_config['ports'][2]
+
+        checkpoint = "Delete sample rule for id: %d" % self.sample_id
+        network_controller_obj.disable_sample_rule(id=self.sample_id, fpg=dut_rx_port, dest=dut_sample_port)
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Delete the stream"
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Delete tmp pcap file %s" % self.capture_results['pcap_file_path']
+        fun_test.remove_file(self.capture_results['pcap_file_path'])
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Clear subscribed results"
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+        fun_test.add_checkpoint(checkpoint)
+
+
 if __name__ == '__main__':
     ts = SpirentSetup()
 
@@ -3701,5 +4326,8 @@ if __name__ == '__main__':
     ts.add_test_case(SampleIngressDropFSFHwError())
     ts.add_test_case(SampleIngressDropIPv4VerError())
     ts.add_test_case(SampleIngressDropFwdErrorWrongDIP())
+
+    ts.add_test_case(SampleEgressMTUCase())
+    ts.add_test_case(SampleEgressDropACL())
 
     ts.run()
