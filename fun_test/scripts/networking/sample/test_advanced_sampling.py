@@ -3685,7 +3685,7 @@ class SampleIngressDropFwdErrorWrongDIP(FunTestCase):
 class SampleEgressMTUCase(FunTestCase):
     l2_config = None
     l3_config = None
-    load = 10
+    load = 5
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
     stream_obj = None
     sample_id = 49
@@ -3748,13 +3748,15 @@ class SampleEgressMTUCase(FunTestCase):
                                      protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
-        fun_test.test_assert(result, checkpoint)
+        fun_test.simple_assert(result, checkpoint)
 
         checkpoint = "Add TCP Header"
         tcp_obj = TCP()
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
-                                                                header_obj=tcp_obj, update=True)
-        fun_test.test_assert(result, checkpoint)
+                                                                header_obj=tcp_obj, update=False)
+        fun_test.simple_assert(result, checkpoint)
+
+        ipv4_header_obj.ttl = 254
 
         self.header_objs['ether_obj'] = ether_obj
         self.header_objs['ip_obj'] = ipv4_header_obj
@@ -4130,14 +4132,15 @@ class SampleEgressDropACL(FunTestCase):
                                      protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
-        fun_test.test_assert(result, checkpoint)
+        fun_test.simple_assert(result, checkpoint)
 
         checkpoint = "Add TCP Header"
         tcp_obj = TCP(destination_port=960)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
-                                                                header_obj=tcp_obj, update=True)
-        fun_test.test_assert(result, checkpoint)
+                                                                header_obj=tcp_obj, update=False)
+        fun_test.simple_assert(result, checkpoint)
 
+        ipv4_header_obj.ttl = 254
         self.header_objs['ether_obj'] = ether_obj
         self.header_objs['ip_obj'] = ipv4_header_obj
         self.header_objs['tcp_obj'] = tcp_obj
@@ -4328,8 +4331,9 @@ if __name__ == '__main__':
     ts.add_test_case(SampleIngressDropFSFHwError())
     ts.add_test_case(SampleIngressDropIPv4VerError())
     ts.add_test_case(SampleIngressDropFwdErrorWrongDIP())
-
+    
     ts.add_test_case(SampleEgressMTUCase())
+
     ts.add_test_case(SampleEgressDropACL())
 
     ts.run()
