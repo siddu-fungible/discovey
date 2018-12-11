@@ -55,6 +55,7 @@ WRO_IN_PKTS = "wroin_pkts"
 WRO_OUT_WUS = "wroout_wus"
 WRO_WU_COUNT_VPP = "wrowu_cnt_vpp"
 PSW_SAMPLED_PACKET_COUNT = 'sampled_pkt'
+PSW_FRV_ERROR_COUNT = "frv_error"
 SFG_IN_FFE_DESC = "IN_FFE_DESC"
 SFG_OUT_FFE_DESC = "OUT_FFE_DESC"
 SFG_OUT_PSW_DESC = "OUT_PSW_DESC"

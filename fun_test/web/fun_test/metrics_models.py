@@ -33,6 +33,7 @@ class MetricChartStatus(models.Model):
     build_status = models.CharField(max_length=15, default=RESULTS["UNKNOWN"])
     test_case_id = models.IntegerField(default=-1)
     valid = models.BooleanField(default=False)
+    git_commit = models.TextField(default="")
     copied_score = models.BooleanField(default=False)  # If the score was copied from the last good score
     copied_score_disposition = models.IntegerField(default=0)  # 0 indicates current and last score is identical,
                                                                # 1 indicates last copied score was in upward trend
@@ -90,6 +91,7 @@ class MetricChart(models.Model):
     last_jenkins_job_id = models.IntegerField(default=-1)
     last_test_case_id = models.IntegerField(default=-1)
     last_lsf_job_id = models.IntegerField(default=-1)
+    last_git_commit = models.TextField(default="")
     owner_info = models.TextField(default="UNKNOWN")
     jira_ids = models.TextField(default="[]")
 

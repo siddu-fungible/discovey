@@ -35,6 +35,7 @@ class SuiteWorker(Thread):
         self.job_id = job_spec["job_id"]
         self.job_dir = None
         self.job_test_case_ids = None
+        self.job_environment = {}
         self.job_build_url = "http://dochub.fungible.local/doc/jenkins/funos/940"
         if 'script_path' in job_spec:
             self.job_script_path = job_spec["script_path"]
@@ -42,6 +43,8 @@ class SuiteWorker(Thread):
             self.job_test_case_ids = job_spec["test_case_ids"]
         if "build_url" in job_spec:
             self.job_build_url = job_spec["build_url"]
+        if "environment" in job_spec:
+            self.job_environment = job_spec["environment"] 
         self.current_script_process = None
 
         self.suite_shutdown = False
@@ -77,6 +80,7 @@ class SuiteWorker(Thread):
             set_jenkins_hourly_execution_status(status=RESULTS["IN_PROGRESS"])
 
         suite_execution_id = self.job_id
+        job_environment = self.job_environment
         self.prepare_job_directory()
         build_url = self.job_build_url
 
@@ -148,6 +152,8 @@ class SuiteWorker(Thread):
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
+                if self.job_environment:
+                    popens.append("--environment={}".format(json.dumps(self.job_environment)))
                 self.current_script_process = subprocess.Popen(popens,
                                                                close_fds=True,
                                                                stdout=console_log,

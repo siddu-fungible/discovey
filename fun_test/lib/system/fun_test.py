@@ -136,6 +136,7 @@ class FunTest:
         parser.add_argument('--local_settings_file',
                             dest="local_settings_file",
                             default=None)
+        parser.add_argument('--environment', dest="environment", default=None)
         args = parser.parse_args()
         if args.disable_fun_test:
             self.fun_test_disabled = True
@@ -149,6 +150,7 @@ class FunTest:
         self.current_test_case_execution_id = None
         self.build_url = args.build_url
         self.local_settings_file = args.local_settings_file
+        self.environment = args.environment
         self.local_settings = {}
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
@@ -208,6 +210,15 @@ class FunTest:
 
     def get_start_time(self):
         return self.start_time
+
+    def get_job_environment(self):
+        result = {}
+        try:
+            # fun_test.log("The env: {}".format(self.environment))
+            result = json.loads(self.environment)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def get_local_setting(self, setting):
         result = None
@@ -532,9 +543,9 @@ class FunTest:
                 this_format = "{:<" + str(max_chars_per_column) + "} {}"
                 this_k = k[start: end]
                 if not start:
-                    print this_format.format(this_k, v)
+                    fun_test.log(this_format.format(this_k, v))
                 else:
-                    print this_format.format(this_k, "")
+                    fun_test.log(this_format.format(this_k, ""))
                 if len_k > max_chars_per_column:
                     start += min(len_k - start, max_chars_per_column)
                     end += min(len_k - end, max_chars_per_column)

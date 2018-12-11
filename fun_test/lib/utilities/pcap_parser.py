@@ -181,10 +181,14 @@ class PcapParser(object):
         return result
 
     def _validate_sample_packet(self, packet, expected_l2_obj=None, expected_l3_obj=None, expected_l4_obj=None,
-                                ip_version=4):
+                                ip_version=4, expected_packet_length=None):
         result = False
         try:
             fields = self.get_all_packet_fields(packet=packet)
+
+            if expected_packet_length:
+                pass
+            # TODO: Validate packet length
             if expected_l2_obj:
                 fun_test.log("Verifying Ethernet Layer Fields")
                 eth_fields = fields['layer_eth']
@@ -198,7 +202,8 @@ class PcapParser(object):
                 # fun_test.test_assert_expected(expected=expected_eth_obj.etherType,
                 #                               actual=eth_fields['eth_type'],
                 #                               message="Validate destination mac address")
-                fun_test.simple_assert(expected_l2_obj.etherType.lower() in eth_fields['eth_type'], "Validate Ether Type")
+                fun_test.simple_assert(expected_l2_obj.etherType.lower() in eth_fields['eth_type'],
+                                       "Validate Ether Type")
 
             if expected_l3_obj:
                 fun_test.log("Verifying IP Layer Fields")
@@ -263,7 +268,8 @@ class PcapParser(object):
             fun_test.critical(str(ex))
         return result
 
-    def validate_sample_packets_in_file(self, packets, header_objs={}, packet_count=5, ip_version=4):
+    def validate_sample_packets_in_file(self, packets, header_objs={}, packet_count=5, ip_version=4,
+                                        expected_packet_length=None):
         result = False
         try:
             count = 1
@@ -271,9 +277,17 @@ class PcapParser(object):
                 if count == packet_count:
                     break
                 fun_test.log("################### Validating Packet Count: %d ################### " % count)
-                result = self._validate_sample_packet(packet=packet, expected_l2_obj=header_objs['eth_obj'],
-                                                      expected_l3_obj=header_objs['ip_obj'],
-                                                      expected_l4_obj=header_objs['tcp_obj'], ip_version=ip_version)
+                if 'tcp_obj' in header_objs:
+                    result = self._validate_sample_packet(packet=packet, expected_l2_obj=header_objs['eth_obj'],
+                                                          expected_l3_obj=header_objs['ip_obj'],
+                                                          expected_l4_obj=header_objs['tcp_obj'],
+                                                          ip_version=ip_version,
+                                                          expected_packet_length=expected_packet_length)
+                else:
+                    result = self._validate_sample_packet(packet=packet, expected_l2_obj=header_objs['eth_obj'],
+                                                          expected_l3_obj=header_objs['ip_obj'],
+                                                          ip_version=ip_version,
+                                                          expected_packet_length=expected_packet_length)
                 fun_test.simple_assert(result, "validate sample packet failed")
                 count += 1
             result = True

@@ -37,8 +37,8 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-#sudo rm -rf FunSDK-cache funnel-as sonic-swss-common qemu_image FunOS FunControlPlane FunSDK psim* nv* tra*
-sudo rm -rf psim* nv* tra*
+sudo rm -rf FunSDK-cache funnel-as sonic-swss-common qemu_image FunOS FunControlPlane FunSDK psim* nv* tra*
+#sudo rm -rf psim* nv* tra*
 
 if [ $FUNCPBR ]; then
     echo ">>>> Cloning FunCP branch: $FUNCPBR"

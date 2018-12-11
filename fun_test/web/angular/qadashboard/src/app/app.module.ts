@@ -38,6 +38,7 @@ import { SiteConstructionComponent } from './site-construction/site-construction
 import { RegressionAdminComponent } from './regression/regression-admin/regression-admin.component';
 import { JiraInfoComponent } from './jira-info/jira-info.component';
 import { RegressionSummaryComponent } from './regression/regression-summary/regression-summary.component';
+import { GitHistoryComponent } from './git-history/git-history.component';
 
 @NgModule({
   declarations: [
@@ -62,7 +63,8 @@ import { RegressionSummaryComponent } from './regression/regression-summary/regr
     SiteConstructionComponent,
     RegressionAdminComponent,
     JiraInfoComponent,
-    RegressionSummaryComponent
+    RegressionSummaryComponent,
+    GitHistoryComponent
   ],
   imports: [
     BsDropdownModule,

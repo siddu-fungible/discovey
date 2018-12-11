@@ -70,9 +70,14 @@ class LikvTemplate(object):
             elif vols['likv_type'] == self.LVS_ALLOCATOR:
                 lvs_allocator_uuid = vols['uuid']
 
-        likv_data = {"max_keys": max_keys, "init_keys": init_key, "volume_id": self.volume_id,
-                     "init_lvs_bytes": init_lvs_bytes, "lvs_allocator_uuid": lvs_allocator_uuid,
-                     "max_lvs_bytes": max_lvs_bytes, "lvs_vol_uuid": lvs_vol_uuid, "dir_uuid": lvs_dir_uuid,
+        likv_data = {"max_keys": max_keys,
+                     "init_keys": init_key,
+                     "likv_uuid": self.volume_id,
+                     "init_lvs_bytes": init_lvs_bytes,
+                     "lvs_allocator_uuid": lvs_allocator_uuid,
+                     "max_lvs_bytes": max_lvs_bytes,
+                     "lvs_vol_uuid": lvs_vol_uuid,
+                     "dir_uuid": lvs_dir_uuid,
                      'options': self.LIKV_COMPRESSION_ON if self.compression_enabled else self.LIKV_COMPRESSION_OFF,
                      "lba_bytes_log2": 12,
                      'zip_algorithm': 0,
