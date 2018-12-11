@@ -624,9 +624,9 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                         self.volume_count,
                                         self.blt_delete_count)
 
-            # self.storage_controller.disconnect()
-            fun_test.shared_variables["blt"]["setup_created"] = False
-            # pass
+        self.storage_controller.disconnect()
+        fun_test.shared_variables["blt"]["setup_created"] = False
+        # pass
 
 
 class BLTKey256(BLTCryptoVolumeTestCase):
@@ -1003,7 +1003,7 @@ class MultiVolRandKeyRandCap(BLTCryptoVolumeTestCase):
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
-                              3. Run Fio with different block size & IO depth of 4 in parallel.
+                              3. Run Fio with different block size & IO depth of 8 in parallel.
         ''')
 
     def setup(self):
@@ -1024,7 +1024,7 @@ class BLTFioDetach(BLTCryptoVolumeTestCase):
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
-                              3. Run Fio with different block size & IO depth of 4 in parallel.
+                              3. Run Fio with different block size & IO depth of 8 in parallel.
                               4. After test is done remove and attach the BLT.
                               5. Start the fio test again.
         ''')
