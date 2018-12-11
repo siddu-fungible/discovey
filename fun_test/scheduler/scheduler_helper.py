@@ -87,8 +87,10 @@ def queue_job(suite_path="unknown",
               repeat_in_minutes=None,
               email_list=None,
               tags=None,
-              email_on_fail_only=None):
+              email_on_fail_only=None,
+              environment=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
+    print "Environment: {}".format(environment)
 
     if suite_path == "unknown":
         if job_spec:
@@ -113,6 +115,7 @@ def queue_job(suite_path="unknown",
         job_spec["tags"] = tags
         job_spec["email_list"] = email_list
         job_spec["email_on_fail_only"] = email_on_fail_only
+        job_spec["environment"] = environment
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
     try:
@@ -122,7 +125,7 @@ def queue_job(suite_path="unknown",
             qf.close()
     except Exception as ex:
         print str(ex)
-    print("Job Id: {} suite: {} Queued".format(job_id, suite_path))
+    print("Job Id: {} suite: {} Queued. Spec: {}".format(job_id, suite_path, job_spec))
     return job_id
 
 

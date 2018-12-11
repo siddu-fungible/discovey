@@ -93,6 +93,9 @@ def submit_job(request):
             tags = request_json["tags"]
         email_list = None
         email_on_fail_only = None
+        environment = None
+        if "environment" in request_json:
+            environment = request_json["environment"]
         if "email_list" in request_json:
             email_list = request_json["email_list"]
         if "email_on_fail_only" in request_json:
@@ -109,7 +112,8 @@ def submit_job(request):
                                schedule_at=schedule_at_value,
                                repeat=schedule_at_repeat,
                                email_list=email_list,
-                               email_on_fail_only=email_on_fail_only)
+                               email_on_fail_only=email_on_fail_only,
+                               environment=environment)
 
         elif "schedule_in_minutes" in request_json and request_json["schedule_in_minutes"]:
             schedule_in_minutes_value = request_json["schedule_in_minutes"]
@@ -122,13 +126,14 @@ def submit_job(request):
                                repeat_in_minutes=schedule_in_minutes_repeat,
                                tags=tags,
                                email_list=email_list,
-                               email_on_fail_only=email_on_fail_only)
+                               email_on_fail_only=email_on_fail_only,
+                               environment=environment)
         else:
             job_id = queue_job(suite_path=suite_path,
                                build_url=build_url,
                                tags=tags,
                                email_list=email_list,
-                               email_on_fail_only=email_on_fail_only)
+                               email_on_fail_only=email_on_fail_only, environment=environment)
     return job_id
 
 def static_serve_log_directory(request, suite_execution_id):
