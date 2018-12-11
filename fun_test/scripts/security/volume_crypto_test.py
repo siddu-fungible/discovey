@@ -4,7 +4,6 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
-from lib.host.linux import Linux
 from lib.fun.f1 import F1
 import random
 
@@ -106,6 +105,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
                      format(testcase, self.expected_volume_stats))
 
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
         self.topology = fun_test.shared_variables["topology"]
         self.dut_instance = self.topology.get_dut_instance(index=0)
         fun_test.test_assert(self.dut_instance, "Retrieved dut instance 0")
@@ -198,29 +199,15 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     else:
                         self.vol_encrypt = False
 
-                if self.compress:
-                    command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                           capacity=self.volume_details["capacity"],
-                                                                           block_size=self.volume_details["block_size"],
-                                                                           name="think-block" + str(x),
-                                                                           uuid=self.thin_uuid[x],
-                                                                           encrypt=self.vol_encrypt,
-                                                                           key=self.xts_key,
-                                                                           xtweak=self.xts_tweak,
-                                                                           compress=self.compress,
-                                                                           zip_filter=self.zip_filter,
-                                                                           zip_effort=self.zip_effort,
-                                                                           command_duration=self.command_timeout)
-                else:
-                    command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                           capacity=self.volume_details["capacity"],
-                                                                           block_size=self.volume_details["block_size"],
-                                                                           name="think-block" + str(x),
-                                                                           uuid=self.thin_uuid[x],
-                                                                           encrypt=self.vol_encrypt,
-                                                                           key=self.xts_key,
-                                                                           xtweak=self.xts_tweak,
-                                                                           command_duration=self.command_timeout)
+                command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                       capacity=self.volume_details["capacity"],
+                                                                       block_size=self.volume_details["block_size"],
+                                                                       name="think-block" + str(x),
+                                                                       uuid=self.thin_uuid[x],
+                                                                       encrypt=self.vol_encrypt,
+                                                                       key=self.xts_key,
+                                                                       xtweak=self.xts_tweak,
+                                                                       command_duration=self.command_timeout)
 
                 if bs_auto:
                     self.volume_details["block_size"] = "Auto"
@@ -432,11 +419,18 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                              **self.fio_cmd_args)
                                 fun_test.sleep("Fio Threadzz", seconds=1)
 
-                        fun_test.sleep("Sleeping between thread join...", seconds=5)
+                        fun_test.sleep("Sleeping between thread join...", seconds=10)
                         for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                            fun_test.log("Joining thread {}".format(x))
                             fun_test.join_thread(fun_test_thread_id=thread_id[x])
 
+                        if self.linux_host.command("pgrep fio"):
+                            while True:
+                                if not self.linux_host.command("pgrep fio"):
+                                    break
+
                     if self.detach_vol:
+
                         for x in range(1, fun_test.shared_variables["volume_count"], 1):
                             command_result = {}
                             command_result = self.storage_controller.volume_detach_remote(ns_id=x,
@@ -1041,13 +1035,13 @@ class BLTFioDetach(BLTCryptoVolumeTestCase):
         super(BLTFioDetach, self).cleanup()
 
 
-class BLTFioEncCompress(BLTCryptoVolumeTestCase):
+class BLTFioEncZeroPattern(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=20,
-                              summary="Compress & Encrypt BLT",
+                              summary="Encrypt BLT and run fio with pattern 0x000000000",
                               steps='''
-                              1. Create 8 BLT with rand capacity, compression & rand encryption key.
+                              1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
                               3. Run Fio with different block size & IO depth of 8 in parallel.
                               4. After test is done remove and attach the BLT.
@@ -1055,13 +1049,36 @@ class BLTFioEncCompress(BLTCryptoVolumeTestCase):
         ''')
 
     def setup(self):
-        super(BLTFioEncCompress, self).setup()
+        super(BLTFioEncZeroPattern, self).setup()
 
     def run(self):
-        super(BLTFioEncCompress, self).run()
+        super(BLTFioEncZeroPattern, self).run()
 
     def cleanup(self):
-        super(BLTFioEncCompress, self).cleanup()
+        super(BLTFioEncZeroPattern, self).cleanup()
+
+
+class BLTFioEncDeadBeefPattern(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=21,
+                              summary="Encrypt BLT and run fio with deadbeef pattern",
+                              steps='''
+                              1. Create 8 BLT with rand capacity & rand encryption key.
+                              2. Attach it to external linux/container.
+                              3. Run Fio with different block size & IO depth of 8 in parallel.
+                              4. After test is done remove and attach the BLT.
+                              5. Start the fio test again.
+        ''')
+
+    def setup(self):
+        super(BLTFioEncDeadBeefPattern, self).setup()
+
+    def run(self):
+        super(BLTFioEncDeadBeefPattern, self).run()
+
+    def cleanup(self):
+        super(BLTFioEncDeadBeefPattern, self).cleanup()
 
 
 if __name__ == "__main__":
@@ -1085,6 +1102,7 @@ if __name__ == "__main__":
     bltscript.add_test_case(CreateDelete512())
     bltscript.add_test_case(MultiVolRandKeyRandCap())
     bltscript.add_test_case(BLTFioDetach())
-    bltscript.add_test_case(BLTFioEncCompress())
+    bltscript.add_test_case(BLTFioEncZeroPattern())
+    bltscript.add_test_case(BLTFioEncDeadBeefPattern())
 
     bltscript.run()

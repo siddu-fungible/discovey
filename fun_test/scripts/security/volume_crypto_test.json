@@ -728,30 +728,64 @@
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
     }
   },
-  "BLTFioEncCompress": {
-    "volume_count": 10,
+  "BLTFioEncZeroPattern": {
+    "volume_count": 1,
     "volume_details": {
       "capacity": "Auto",
       "capacity_range": [20971520, 67108864, 83886080, 134217728],
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "compress": false,
-    "zip_filter": "FILTER_TYPE_DEFLATE",
-    "zip_effort": "ZIP_EFFORT_15Gbps",
     "key_size": "random",
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
     "fio_loop": 1,
-    "detach_vol": true,
+    "detach_vol": false,
     "traffic_parallel": true,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
-      "verify": "sha1",
-      "do_verify": 0,
+      "verify": "pattern",
+      "do_verify": 1,
       "verify_fatal": 1,
+      "verify_pattern": "0x000000000",
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+  "BLTFioEncDeadBeefPattern": {
+    "volume_count": 8,
+    "volume_details": {
+      "capacity": 134217728,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
       "timeout": 120
     },
     "fio_modes": [
@@ -761,16 +795,14 @@
       "randread"
     ],
     "fio_bs_iodepth": [
-      "(4, 4)",
-      "(8, 4)",
-      "(16, 4)",
-      "(32, 4)"
+      "(4, 1)"
     ],
     "expected_volume_stats": {
-      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
-      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+
     }
   }
 }
