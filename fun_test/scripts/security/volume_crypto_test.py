@@ -44,9 +44,9 @@ class BLTCryptoVolumeScript(FunTestScript):
 
     def setup(self):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
-        # topology = topology_obj_helper.deploy()
+        topology = topology_obj_helper.deploy()
         # topology_obj_helper.save(file_name="/tmp/pickle.pkl")
-        topology = topology_obj_helper.load(file_name="/tmp/pickle.pkl")
+        # topology = topology_obj_helper.load(file_name="/tmp/pickle.pkl")
         fun_test.test_assert(topology, "Ensure deploy is successful")
         fun_test.shared_variables["topology"] = topology
         # We have declared this here since when we remove volume, the counters are from zero but crypto
@@ -57,8 +57,8 @@ class BLTCryptoVolumeScript(FunTestScript):
         fun_test.shared_variables["total_vol_crypto_ops"] = 0
 
     def cleanup(self):
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        pass
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        # pass
 
 
 class BLTCryptoVolumeTestCase(FunTestCase):
@@ -252,27 +252,27 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 fun_test.log("Total BLT with 512 bit key: {}".format(key512_count))
 
             if self.blt_create_count == self.volume_count:
-                fun_test.add_checkpoint("Creation of {} BLT succeeded.".format(self.volume_count),
+                fun_test.add_checkpoint("Creation of {} BLT succeeded".format(self.volume_count),
                                         "PASSED",
                                         self.volume_count,
                                         self.blt_create_count)
                 fun_test.test_assert(True,
-                                     "Creation of {} BLT from DUT instance 0 succeeded.".format(self.blt_create_count))
+                                     "Creation of {} BLT from DUT instance 0 succeeded".format(self.blt_create_count))
             else:
-                fun_test.add_checkpoint("Creation of BLT failed.".format(self.volume_count),
+                fun_test.add_checkpoint("Creation of BLT".format(self.volume_count),
                                         "FAILED",
                                         self.volume_count,
                                         self.blt_create_count)
 
             if self.blt_attach_count == self.volume_count:
-                fun_test.add_checkpoint("Attaching of {} BLT succeeded.".format(self.volume_count),
+                fun_test.add_checkpoint("Attaching of {} BLT succeeded".format(self.volume_count),
                                         "PASSED",
                                         self.volume_count,
                                         self.blt_attach_count)
                 fun_test.test_assert(True,
-                                     "Attaching of {} BLT from DUT instance 0 succeeded.".format(self.blt_attach_count))
+                                     "Attaching of {} BLT from DUT instance 0 succeeded".format(self.blt_attach_count))
             else:
-                fun_test.add_checkpoint("Attach of BLT failed.".format(self),
+                fun_test.add_checkpoint("Attach of BLT".format(self),
                                         "FAILED",
                                         self.volume_count,
                                         self.blt_attach_count)
