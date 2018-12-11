@@ -494,9 +494,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let dataSetIndex = 0;
       for (let oneDataSet of allDataSets) {
         keyValue[dataSetIndex] = [];
+        let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
         for (let oneRecord of oneDataSet) {
-          keyList.push(oneRecord.input_date_time.toString());
-          keyValue[dataSetIndex][oneRecord.input_date_time.toString()] = oneRecord;
+          let outputName = this.filterDataSets[dataSetIndex].output.name;
+          if (oneRecord[outputName] > 0) {
+            trimEmptyStartValues = true;
+          }
+          if (trimEmptyStartValues) {
+            keyList.push(oneRecord.input_date_time.toString());
+            keyValue[dataSetIndex][oneRecord.input_date_time.toString()] = oneRecord;
+          }
+
         }
         dataSetIndex++;
       }
@@ -535,7 +543,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               if (this.y1AxisTitle) {
                 this.chart1YaxisTitle = this.y1AxisTitle;
               }
-              this.chart1XaxisTitle = tableInfo["input_date_time"].verbose_name;
             }
             startIndex--;
           }
@@ -605,10 +612,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let keyValue = {};
       let keyList = Object.keys(response.data.scores);
       keyList.sort();
+      let trimEmptyStartValues = false; //used for trimming the start of the charts from a non zero value
       for (let dateTime of keyList) {
         let d = new Date(1000 * Number(dateTime)).toISOString();
-        series.push(d);
-        keyValue[d] = response.data.scores[dateTime].score;
+        if (response.data.scores[dateTime].score > 0) {
+          trimEmptyStartValues = true;
+        }
+        if (trimEmptyStartValues) {
+          series.push(d);
+          keyValue[d] = response.data.scores[dateTime].score;
+        }
       }
       if (series.length === 0) {
         this.series = null;
@@ -641,7 +654,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
         }
         this.chart1YaxisTitle = "Scores";
-        this.chart1XaxisTitle = "Date";
         this.values = [{data: values}];
         this.series = dateSeries;
       }

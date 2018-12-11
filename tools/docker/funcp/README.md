@@ -19,19 +19,17 @@ fungible@ubuntu-1:~/ws$ git clone git@github.com:fungible-inc/Integration.git
 
 ```
 cd base
-docker build . -t nw-reg-base:v1
+docker build . -t nw-reg-base
 ```
 
 4. Build user docker image. This is needed to download/build FunCP/FRR inside the docker container as a non-root user.
 
 ```
 cd user
-docker build . -t nw-reg-user:v1 --build-arg ARG_USER=$USER --build-arg ARG_UID=$UID --build-arg ARG_GID=`id -g`
+docker build . -t reg-nw-user --build-arg ARG_USER=$USER --build-arg ARG_UID=$UID --build-arg ARG_GID=`id -g`
 ```
 
-
 5. To run FunCP container:
-
 ```
 docker run --privileged=true --rm -d -v /tmp:/tmp  -v /home/$USER:/home/$USER -v $WORKSPACE:/workspace -e WORKSPACE=/workspace -e DOCKER=TRUE -w /workspace --name funcp --hostname funcp -p 40221:40221 -p 8022:22 -u $USER nw-reg-user:v1 /workspace/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh
 ```

@@ -33,6 +33,7 @@ class MetricChartStatus(models.Model):
     build_status = models.CharField(max_length=15, default=RESULTS["UNKNOWN"])
     test_case_id = models.IntegerField(default=-1)
     valid = models.BooleanField(default=False)
+    git_commit = models.TextField(default="")
     copied_score = models.BooleanField(default=False)  # If the score was copied from the last good score
     copied_score_disposition = models.IntegerField(default=0)  # 0 indicates current and last score is identical,
                                                                # 1 indicates last copied score was in upward trend
@@ -90,6 +91,7 @@ class MetricChart(models.Model):
     last_jenkins_job_id = models.IntegerField(default=-1)
     last_test_case_id = models.IntegerField(default=-1)
     last_lsf_job_id = models.IntegerField(default=-1)
+    last_git_commit = models.TextField(default="")
     owner_info = models.TextField(default="UNKNOWN")
     jira_ids = models.TextField(default="[]")
 
@@ -1238,13 +1240,17 @@ class BootTimePerformance(models.Model):
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    output_firmware_boot_time = models.IntegerField(verbose_name="Firmware" ,default=-1)
-    output_flash_type_boot_time = models.IntegerField(verbose_name="Flash type detection" ,default=-1)
-    output_eeprom_boot_time = models.IntegerField(verbose_name="EEPROM Loading", default=-1)
-    output_sbus_boot_time = models.IntegerField(verbose_name="SBUS Loading", default=-1)
-    output_host_boot_time = models.IntegerField(verbose_name="Host BOOT", default=-1)
-    output_main_loop_boot_time = models.IntegerField(verbose_name="Main Loop", default=-1)
-    output_boot_success_boot_time = models.IntegerField(verbose_name="Boot success", default=-1)
+    output_firmware_boot_time = models.FloatField(verbose_name="Firmware" ,default=-1)
+    output_flash_type_boot_time = models.FloatField(verbose_name="Flash type detection" ,default=-1)
+    output_eeprom_boot_time = models.FloatField(verbose_name="EEPROM Loading", default=-1)
+    output_sbus_boot_time = models.FloatField(verbose_name="SBUS Loading", default=-1)
+    output_host_boot_time = models.FloatField(verbose_name="Host BOOT", default=-1)
+    output_main_loop_boot_time = models.FloatField(verbose_name="Main Loop", default=-1)
+    output_boot_success_boot_time = models.FloatField(verbose_name="Boot success", default=-1)
+    output_init_mmc_time = models.FloatField(verbose_name="MMC INIT" ,default=-1)
+    output_boot_read_mmc_time = models.FloatField(verbose_name="Boot Load" ,default=-1)
+    output_funos_read_mmc_time = models.FloatField(verbose_name="FunOS Load", default=-1)
+    output_funos_load_elf_time = models.FloatField(verbose_name="FunOS ELF Load", default=-1)
     tag = "analytics"
 
     def __str__(self):

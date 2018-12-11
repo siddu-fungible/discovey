@@ -42,7 +42,7 @@ def is_job_from_today(job_dt):
     return (job_dt.year == today.year) and (job_dt.month == today.month) and (job_dt.day == today.day)
 
 
-def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, model_name):
+def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, git_commit, model_name):
     charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
     for chart in charts:
         chart.last_build_status = result
@@ -51,6 +51,7 @@ def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenki
         chart.last_test_case_id = test_case_id
         chart.last_lsf_job_id = job_id
         chart.last_jenkins_job_id = jenkins_job_id
+        chart.last_git_commit = git_commit
         chart.save()
 
 
@@ -88,6 +89,8 @@ class PalladiumPerformanceTc(FunTestCase):
         fun_test.test_assert(job_info, "Ensure Job Info exists")
         self.jenkins_job_id = job_info["jenkins_build_number"]
         self.job_id = job_info["job_id"]
+        self.git_commit = job_info["git_commit"]
+        self.git_commit = self.git_commit.replace("https://github.com/fungible-inc/FunOS/commit/", "")
         if validation_required:
             fun_test.test_assert(not job_info["return_code"], "Valid return code")
             fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(self.job_id))
@@ -208,13 +211,13 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="AllocSpeedPerformance")
+                                     git_commit=self.git_commit, model_name="AllocSpeedPerformance")
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="WuLatencyUngated")
+                                     git_commit=self.git_commit, model_name="WuLatencyUngated")
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="WuLatencyAllocStack")
+                                     git_commit=self.git_commit, model_name="WuLatencyAllocStack")
 
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
@@ -298,9 +301,9 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="BcopyPerformance")
+            set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                         test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                         git_commit=self.git_commit, model_name="BcopyPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -364,7 +367,7 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="BcopyFloodDmaPerformance")
+                                     git_commit=self.git_commit, model_name="BcopyFloodDmaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -448,7 +451,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                                                         )
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="EcPerformance")
+                                     git_commit=self.git_commit, model_name="EcPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -497,7 +500,7 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="EcVolPerformance")
+                                     git_commit=self.git_commit, model_name="EcVolPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -563,7 +566,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="VoltestPerformance")
+                                     git_commit=self.git_commit, model_name="VoltestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -604,7 +607,7 @@ class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="WuDispatchTestPerformance")
+                                     git_commit=self.git_commit, model_name="WuDispatchTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -645,7 +648,7 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="WuSendSpeedTestPerformance")
+                                     git_commit=self.git_commit, model_name="WuSendSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -688,7 +691,7 @@ class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="FunMagentPerformanceTest")
+                                     git_commit=self.git_commit, model_name="FunMagentPerformanceTest")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -727,7 +730,7 @@ class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="WuStackSpeedTestPerformance")
+                                     git_commit=self.git_commit, model_name="WuStackSpeedTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -766,7 +769,7 @@ class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="SoakFunMallocPerformance")
+                                     git_commit=self.git_commit, model_name="SoakFunMallocPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -805,7 +808,7 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="SoakClassicMallocPerformance")
+                                     git_commit=self.git_commit, model_name="SoakClassicMallocPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -823,7 +826,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
             log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout1.txt")
-            fun_test.test_assert(log, "fetched uart log")
+            fun_test.test_assert(log, "fetched boot time uart log")
             log = log.split("\n")
             for line in log:
                 if "Reset CUT done!" in line:
@@ -833,7 +836,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Firmware',
                         line)
                     if m:
-                        output_firmware_boot_time = int(m.group("time"))
+                        output_firmware_boot_time = int(m.group("time")) / 1000.0
                         output_firmware_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: Firmware, boot time: {}, boot cycles: {}".format(output_firmware_boot_time,
@@ -844,7 +847,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection',
                         line)
                     if m:
-                        output_flash_type_boot_time = int(m.group("time"))
+                        output_flash_type_boot_time = int(m.group("time")) / 1000.0
                         output_flash_type_boot_cycles = int(m.group("cycle"))
                         fun_test.log("boot type: Flash type detection, boot time: {}, boot cycles: {}".format(
                             output_flash_type_boot_time,
@@ -855,7 +858,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading',
                         line)
                     if m:
-                        output_eeprom_boot_time = int(m.group("time"))
+                        output_eeprom_boot_time = int(m.group("time")) / 1000.0
                         output_eeprom_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: EEPROM Loading, boot time: {}, boot cycles: {}".format(output_eeprom_boot_time,
@@ -866,7 +869,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading',
                         line)
                     if m:
-                        output_sbus_boot_time = int(m.group("time"))
+                        output_sbus_boot_time = int(m.group("time")) / 1000.0
                         output_sbus_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: SBUS Loading, boot time: {}, boot cycles: {}".format(output_sbus_boot_time,
@@ -877,7 +880,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT',
                         line)
                     if m:
-                        output_host_boot_time = int(m.group("time"))
+                        output_host_boot_time = int(m.group("time")) / 1000.0
                         output_host_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: Host BOOT, boot time: {}, boot cycles: {}".format(output_host_boot_time,
@@ -888,7 +891,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop',
                         line)
                     if m:
-                        output_main_loop_boot_time = int(m.group("time"))
+                        output_main_loop_boot_time = int(m.group("time")) / 1000.0
                         output_main_loop_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: Main Loop, boot time: {}, boot cycles: {}".format(output_main_loop_boot_time,
@@ -899,13 +902,64 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success',
                         line)
                     if m:
-                        output_boot_success_boot_time = int(m.group("time"))
+                        output_boot_success_boot_time = int(m.group("time")) / 1000.0
                         output_boot_success_boot_cycles = int(m.group("cycle"))
                         fun_test.log(
                             "boot type: Boot success, boot time: {}, boot cycles: {}".format(
                                 output_boot_success_boot_time,
                                 output_boot_success_boot_cycles))
                         metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
+
+            log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
+            fun_test.test_assert(log, "fetched mmc time uart log")
+            log = log.split("\n")
+            for line in log:
+                if "Welcome to FunOS" in line:
+                    break
+                else:
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+INIT',
+                        line)
+                    if m:
+                        output_init_mmc_time = int(m.group("time")) / 1000.0
+                        output_init_mmc_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
+                                                                   output_init_mmc_cycles))
+                        metrics["output_init_mmc_time"] = output_init_mmc_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
+                        line)
+                    if m:
+                        output_boot_read_mmc_time = int(m.group("time")) / 1000.0
+                        output_boot_read_mmc_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
+                                                                        output_boot_read_mmc_cycles))
+                        metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
+                        line)
+                    if m:
+                        output_funos_read_mmc_time = int(m.group("time")) / 1000.0
+                        output_funos_read_mmc_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
+                                                                         output_funos_read_mmc_cycles))
+                        metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
+
+                    m = re.search(
+                        r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
+                        line)
+                    if m:
+                        output_funos_load_elf_time = int(m.group("time")) / 1000.0
+                        output_funos_load_elf_cycles = int(m.group("cycle"))
+                        fun_test.log(
+                            "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
+                                                                         output_funos_load_elf_cycles))
+                        metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
 
             d = self.metrics_to_dict(metrics, fun_test.PASSED)
             MetricHelper(model=BootTimePerformance).add_entry(**d)
@@ -916,7 +970,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="BootTimePerformance")
+                                     git_commit=self.git_commit, model_name="BootTimePerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -955,7 +1009,7 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkPkeRsaPerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkPkeRsaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -994,7 +1048,7 @@ class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkPkeRsa4kPerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkPkeRsa4kPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1033,7 +1087,7 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkPkeEcdh256Performance")
+                                     git_commit=self.git_commit, model_name="TeraMarkPkeEcdh256Performance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1072,7 +1126,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkPkeEcdh25519Performance")
+                                     git_commit=self.git_commit, model_name="TeraMarkPkeEcdh25519Performance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1130,7 +1184,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkCryptoPerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkCryptoPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1179,7 +1233,7 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkLookupEnginePerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkLookupEnginePerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1226,7 +1280,7 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="FlowTestPerformance")
+                                     git_commit=self.git_commit, model_name="FlowTestPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1289,10 +1343,10 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkZipDeflatePerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkZipDeflatePerformance")
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkZipLzmaPerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkZipLzmaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
@@ -1342,8 +1396,9 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     model_name="TeraMarkDfaPerformance")
+                                     git_commit=self.git_commit, model_name="TeraMarkDfaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1364,6 +1419,7 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
+    
     myscript.add_test_case(AllocSpeedPerformanceTc())
     myscript.add_test_case(BcopyPerformanceTc())
     myscript.add_test_case(BcopyFloodPerformanceTc())

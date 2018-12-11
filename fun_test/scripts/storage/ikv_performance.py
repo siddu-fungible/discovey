@@ -205,7 +205,7 @@ class FunTestCase1(FunTestCase):
 
         ikv_obj = LikvTemplate(volume_info=volume_info,
                                storage_controller_obj=storage_controller,
-                               likv_volume_id=volume_info["likv_volume_id"])
+                               likv_volume_id=volume_info["likv_uuid"])
         # Attach 3 volumes
         fun_test.test_assert(ikv_obj.create_volumes()['status'], message="Attach BLT Volumes")
         # Enable likv

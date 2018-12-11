@@ -1257,9 +1257,9 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def add_ingress_sample_rule(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
-                                pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None, sampler_run_sz=None,
-                                first_cell_only=None):
+    def add_ingress_sample_rule(self, id, dest, fpg=None, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
+                                pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None,
+                                sampler_run_sz=None, first_cell_only=None):
         result = None
         try:
             cmd_arg_dict = {"id": id, "fpg": fpg, "mode": 0, "dest": dest}
@@ -1321,7 +1321,7 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def disable_sample_rule(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
+    def disable_sample_rule(self, id, dest, fpg=None, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
                             pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None,
                             sampler_run_sz=None, first_cell_only=None):
         result = None
