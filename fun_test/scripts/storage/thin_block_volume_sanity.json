@@ -1,0 +1,44 @@
+{
+  "BLTFioSequentialWrite": {
+    "volume_params": {
+      "ns_id": 1,
+      "type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "capacity": 1048576,
+      "block_size": 4096,
+      "name": "thin-block1",
+      "command_timeout": 60
+    },
+    "fio_params": {
+      "rw": "write",
+      "bs": "4k",
+      "iodepth": 8,
+      "size": "128k",
+      "io_queues": 1,
+      "do_verify": 1,
+      "verify": "md5",
+      "verify_fatal": 1,
+      "timeout": 60
+    }
+  },
+  "BLTFioRandomWrite": {
+    "volume_params": {
+      "ns_id": 1,
+      "type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "capacity": 1048576,
+      "block_size": 4096,
+      "name": "thin-block1",
+      "command_timeout": 60
+    },
+    "fio_params": {
+      "rw": "randwrite",
+      "bs": "4k",
+      "iodepth": 8,
+      "size": "128k",
+      "io_queues": 1,
+      "do_verify": 1,
+      "verify": "md5",
+      "verify_fatal": 1,
+      "timeout": 60
+    }
+  }
+}
