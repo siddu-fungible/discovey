@@ -44,9 +44,9 @@ class BLTCryptoVolumeScript(FunTestScript):
 
     def setup(self):
         topology_obj_helper = TopologyHelper(spec=topology_dict)
-        topology = topology_obj_helper.deploy()
+        # topology = topology_obj_helper.deploy()
         # topology_obj_helper.save(file_name="/tmp/pickle.pkl")
-        # topology = topology_obj_helper.load(file_name="/tmp/pickle.pkl")
+        topology = topology_obj_helper.load(file_name="/tmp/pickle.pkl")
         fun_test.test_assert(topology, "Ensure deploy is successful")
         fun_test.shared_variables["topology"] = topology
         # We have declared this here since when we remove volume, the counters are from zero but crypto
@@ -57,8 +57,8 @@ class BLTCryptoVolumeScript(FunTestScript):
         fun_test.shared_variables["total_vol_crypto_ops"] = 0
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        # pass
+        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        pass
 
 
 class BLTCryptoVolumeTestCase(FunTestCase):
@@ -122,6 +122,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         self.blt_attach_count = 0
         self.blt_detach_count = 0
         self.blt_delete_count = 0
+        self.correct_key_tweak = None
+        self.blt_creation_fail = None
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
@@ -172,14 +174,12 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
                 if self.volume_details["block_size"] == "Auto":
                     bs_auto = True
-                    vol_bs_range = self.volume_details["block_size_range"]
-                    self.block_size[x] = random.choice(vol_bs_range)
+                    self.block_size[x] = random.choice(self.volume_details["block_size_range"])
                     self.volume_details["block_size"] = self.block_size[x]
 
                 if self.volume_details["capacity"] == "Auto":
                     capacity_auto = True
-                    vol_cap_range = self.volume_details["capacity_range"]
-                    self.vol_capacity[x] = random.choice(vol_cap_range)
+                    self.vol_capacity[x] = random.choice(self.volume_details["capacity_range"])
                     self.volume_details["capacity"] = self.vol_capacity[x]
                     check_cap = self.volume_details["capacity"] % self.volume_details["block_size"]
                     fun_test.test_assert(expression=check_cap == 0,
@@ -215,13 +215,15 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     self.volume_details["capacity"] = "Auto"
 
                 if (self.key_size == 32 or self.key_size == 64 or self.key_size == "random" or
-                    self.key_size == "alternate") and self.xtweak_size == 8:
+                    self.key_size == "alternate" or not self.vol_encrypt) and self.xtweak_size == 8:
+
+                    self.correct_key_tweak = True
 
                     fun_test.log(command_result)
-                    if not command_result["status"]:
-                        fun_test.test_assert(command_result["status"], "Creation of BLT on Dut Instance 0 failed.")
-                    else:
+                    if command_result["status"]:
                         self.blt_create_count += 1
+                    else:
+                        fun_test.test_assert(command_result["status"], "Creation of BLT {} on DUT".format(x))
 
                     command_result = {}
                     command_result = self.storage_controller.volume_attach_remote(ns_id=x,
@@ -229,40 +231,32 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                                   remote_ip=self.linux_host.internal_ip,
                                                                                   command_duration=self.command_timeout)
                     fun_test.log(command_result)
-                    if not command_result["status"]:
-                        fun_test.test_assert(command_result["status"],
-                                             "Attaching of BLT on Dut Instance 0 failed.")
-                    else:
+                    if command_result["status"]:
                         self.blt_attach_count += 1
+                    else:
+                        fun_test.test_assert(command_result["status"],
+                                             "Attaching of BLT {} on DUT".format(x))
 
                     fun_test.shared_variables["blt"]["setup_created"] = True
                     # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
 
-                elif self.volume_details["encrypt"]:
-                    if command_result["status"]:
-                        fun_test.test_assert(not command_result["status"],
-                                             message="Volume creation should have failed.")
-                    else:
-                        fun_test.test_assert(not command_result["status"],
-                                             message="Volume creation failed as expected.")
+                elif self.vol_encrypt:
+                    fun_test.test_assert(not command_result["status"],
+                                         message="BLT creation should fail")
+                    self.blt_creation_fail = True
                 else:
-                    if not command_result["status"]:
-                        fun_test.test_assert(command_result["status"],
-                                             message="BLT creation should work as encryption is disabled.")
-                    else:
-                        fun_test.test_assert(command_result["status"],
-                                             message="BLT creation worked.")
+                    fun_test.test_assert(command_result["status"], "BLT creation with encryption disabled")
 
             if self.key_size == "random" or self.key_size == "alternate":
-                fun_test.log("Total volumes with 256 bit key: {}".format(key256_count))
-                fun_test.log("Total volumes with 512 bit key: {}".format(key512_count))
+                fun_test.log("Total BLT with 256 bit key: {}".format(key256_count))
+                fun_test.log("Total BLT with 512 bit key: {}".format(key512_count))
 
             if self.blt_create_count == self.volume_count:
                 fun_test.add_checkpoint("Creation of {} BLT succeeded.".format(self.volume_count),
                                         "PASSED",
                                         self.volume_count,
                                         self.blt_create_count)
-                fun_test.test_assert(self,
+                fun_test.test_assert(True,
                                      "Creation of {} BLT from DUT instance 0 succeeded.".format(self.blt_create_count))
             else:
                 fun_test.add_checkpoint("Creation of BLT failed.".format(self.volume_count),
@@ -275,7 +269,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                         "PASSED",
                                         self.volume_count,
                                         self.blt_attach_count)
-                fun_test.test_assert(self,
+                fun_test.test_assert(True,
                                      "Attaching of {} BLT from DUT instance 0 succeeded.".format(self.blt_attach_count))
             else:
                 fun_test.add_checkpoint("Attach of BLT failed.".format(self),
@@ -425,9 +419,15 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                             fun_test.join_thread(fun_test_thread_id=thread_id[x])
 
                         if self.linux_host.command("pgrep fio"):
-                            while True:
+                            timer_kill = FunTimer(max_time=self.fio_cmd_args["timeout"] * 2)
+                            while not timer_kill.is_expired():
                                 if not self.linux_host.command("pgrep fio"):
                                     break
+                                else:
+                                    fun_test.sleep("Waiting for fio to exit...sleeping 20 secs", seconds=20)
+
+                            fun_test.log("Timer expired, killing fio...")
+                            self.linux_host.command("for i in `pgrep fio`;do kill -9 $i;done")
 
                     if self.detach_vol:
 
@@ -561,16 +561,20 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         bs_auto = None
         capacity_auto = None
 
-        for x in range(1, fun_test.shared_variables["volume_count"], 1):
-            command_result = {}
-            command_result = self.storage_controller.volume_detach_remote(ns_id=x,
-                                                                          uuid=self.thin_uuid[x],
-                                                                          remote_ip=self.linux_host.internal_ip)
-            fun_test.log(command_result)
-            if not command_result["status"]:
-                fun_test.test_assert(command_result["status"], "Detaching of BLT failed.")
-            else:
-                self.blt_detach_count += 1
+        if not self.blt_creation_fail:
+
+            for x in range(1, fun_test.shared_variables["volume_count"], 1):
+                if self.correct_key_tweak:
+                    command_result = {}
+                    command_result = self.storage_controller.volume_detach_remote(ns_id=x,
+                                                                                  uuid=self.thin_uuid[x],
+                                                                                  remote_ip=self.linux_host.internal_ip)
+                    fun_test.log(command_result)
+                    if command_result["status"]:
+                        self.blt_detach_count += 1
+                    else:
+                        fun_test.test_assert(command_result["status"], "Detaching of BLT {}".format(x))
+
             if self.volume_details["block_size"] == "Auto":
                 bs_auto = True
                 self.volume_details["block_size"] = self.block_size[x]
@@ -586,43 +590,43 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                    uuid=self.thin_uuid[x],
                                                                    type="VOL_TYPE_BLK_LOCAL_THIN")
             fun_test.log(command_result)
-            if not command_result["status"]:
-                fun_test.test_assert(not command_result["status"], "Deleting BLT Failed.")
-            else:
+            if command_result["status"]:
                 self.blt_delete_count += 1
+            else:
+                fun_test.test_assert(not command_result["status"], "Deleting BLT {} on DUT".format(x))
 
             if bs_auto:
                 self.volume_details["block_size"] = "Auto"
             if capacity_auto:
-                self.volume_details["capacity"] = "Auto"
+                    self.volume_details["capacity"] = "Auto"
 
-        if self.blt_detach_count == self.volume_count:
-            fun_test.add_checkpoint("Detach of {} BLT succeeded.".format(self.volume_count),
-                                    "PASSED",
-                                    self.volume_count,
-                                    self.blt_detach_count)
-            fun_test.test_assert(self, "Detach of {} BLT succeeded.".format(self.blt_detach_count))
-        else:
-            fun_test.add_checkpoint("Detach of BLT failed.".format(self),
-                                    "FAILED",
-                                    self.volume_count,
-                                    self.blt_detach_count)
+            if self.blt_detach_count == self.volume_count:
+                fun_test.add_checkpoint("Detach of {} BLT on DUT".format(self.volume_count),
+                                        "PASSED",
+                                        self.volume_count,
+                                        self.blt_detach_count)
+                fun_test.test_assert(True, "Detach of {} BLT succeeded".format(self.blt_detach_count))
+            else:
+                fun_test.add_checkpoint("Detach of BLT",
+                                        "FAILED",
+                                        self.volume_count,
+                                        self.blt_detach_count)
 
-        if self.blt_delete_count == self.volume_count:
-            fun_test.add_checkpoint("Delete of {} BLT succeeded.".format(self.volume_count),
-                                    "PASSED",
-                                    self.volume_count,
-                                    self.blt_delete_count)
-            fun_test.test_assert(self, "Delete of {} BLT from DUT instance 0 succeeded.".format(self.blt_delete_count))
-        else:
-            fun_test.add_checkpoint("Delete of BLT failed.".format(self),
-                                    "FAILED",
-                                    self.volume_count,
-                                    self.blt_delete_count)
+            if self.blt_delete_count == self.volume_count:
+                fun_test.add_checkpoint("Delete of {} BLT on DUT".format(self.volume_count),
+                                        "PASSED",
+                                        self.volume_count,
+                                        self.blt_delete_count)
+                fun_test.test_assert(True, "Delete of {} BLT succeeded.".format(self.blt_delete_count))
+            else:
+                fun_test.add_checkpoint("Delete of BLT",
+                                        "FAILED",
+                                        self.volume_count,
+                                        self.blt_delete_count)
 
-        self.storage_controller.disconnect()
-        fun_test.shared_variables["blt"]["setup_created"] = False
-        # pass
+            # self.storage_controller.disconnect()
+            fun_test.shared_variables["blt"]["setup_created"] = False
+            # pass
 
 
 class BLTKey256(BLTCryptoVolumeTestCase):

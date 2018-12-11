@@ -476,7 +476,7 @@
     }
   },
   "WrongKey": {
-    "volume_count": 4,
+    "volume_count": 25,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -729,7 +729,7 @@
     }
   },
   "BLTFioEncZeroPattern": {
-    "volume_count": 1,
+    "volume_count": 8,
     "volume_details": {
       "capacity": "Auto",
       "capacity_range": [20971520, 67108864, 83886080, 134217728],
@@ -753,10 +753,16 @@
       "timeout": 120
     },
     "fio_modes": [
-      "write"
+      "write",
+      "read",
+      "randwrite",
+      "randread"
     ],
     "fio_bs_iodepth": [
-      "(4, 4)"
+      "(4, 4)",
+      "(8, 4)",
+      "(16, 4)",
+      "(32, 4)"
     ],
     "expected_volume_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
@@ -795,7 +801,10 @@
       "randread"
     ],
     "fio_bs_iodepth": [
-      "(4, 1)"
+      "(4, 1)",
+      "(8, 2)",
+      "(16, 4)",
+      "(32, 4)"
     ],
     "expected_volume_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
