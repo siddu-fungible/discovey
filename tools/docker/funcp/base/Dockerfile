@@ -4,15 +4,29 @@ ARG     CMAKE_PKG=/fun_external/cmake-3.12.3-Linux-x86_64.sh
 ARG     CMAKE_URL=https://cmake.org/files/v3.12/cmake-3.12.3-Linux-x86_64.sh
 ARG     DEP_INSTALL_DIR=/fun_external/
 
-ARG             ARG_USER
-ARG             ASIO_VER=1.10.8
-ARG             ASIO_REL_TRAIN=Stable
-ARG             ASIO_DIR=/fun_external/asio-$ASIO_VER
-ARG             ASIO_PKG=/fun_external/asio-$ASIO_VER.tar.bz2
-ARG             ASIO_URL=https://sourceforge.net/projects/asio/files/asio/$ASIO_VER%20%28$ASIO_REL_TRAIN%29/asio-$ASIO_VER.tar.bz2
-ARG             DEP_INSTALL_DIR=/fun_external/
-ARG             REDIS_SO=http://dochub.fungible.local/doc/jenkins/sandbox/frr/libfunjson_redis.so
-ARG             REDIS_SO_LOCAL=/usr/local/lib/libfunjson_redis.so
+ARG     ARG_USER
+ARG     ASIO_VER=1.10.8
+ARG     ASIO_REL_TRAIN=Stable
+ARG     ASIO_DIR=/fun_external/asio-$ASIO_VER
+ARG     ASIO_PKG=/fun_external/asio-$ASIO_VER.tar.bz2
+ARG     ASIO_URL=https://sourceforge.net/projects/asio/files/asio/$ASIO_VER%20%28$ASIO_REL_TRAIN%29/asio-$ASIO_VER.tar.bz2
+ARG     DEP_INSTALL_DIR=/fun_external/
+ARG     REDIS_SO=http://dochub.fungible.local/doc/jenkins/sandbox/frr/libfunjson_redis.so
+ARG     REDIS_SO_LOCAL=/usr/local/lib/libfunjson_redis.so
+
+ARG     FRR_PREBUILT=http://dochub.fungible.local/doc/jenkins/sandbox/frr/frr_fungible.tar
+ARG     FRR_PREBUILT_LOCAL=/opt/frr_fungible.tar
+
+ARG    GO_VER=go1.10.3
+ARG    GO_DOWNLOAD_LOC=https://dl.google.com/go/$GO_VER.linux-amd64.tar.gz
+ARG    GO_LOCAL_DIR=/usr/lib/
+ARG    GO_LOCAL=/usr/lib/$GO_VER.linux-amd64.tar.gz
+
+ARG    JSONC_VER=0.13.1
+ARG    JSONC_DOWNLOAD_LOC=https://s3.amazonaws.com/json-c_releases/releases/json-c-$JSONC_VER.tar.gz
+ARG    JSONC_LOCAL_DIR=/usr/lib/
+ARG    JSONC_LOCAL=/usr/lib/json-c-$JSONC_VER.tar.gz
+
 
 RUN             apt -y update; apt-get -y upgrade; \
                 apt-get install --no-install-recommends --no-install-suggests -y \
@@ -101,6 +115,116 @@ RUN   pip install -I rstr==2.2.6
 RUN   apt install -y gdb tcpdump strace net-tools
 # HACK around https://github.com/dotcloud/docker/issues/5490
 RUN   mv /usr/sbin/tcpdump /usr/bin/tcpdump
+
+#
+# HACK 1: Ubuntu 18.04 doesn't support libmpfr.so.4, while it is required in hw image building.
+# The workaround is to create a symbolic link to ycoto tool chain copy.
+# This file is used by hw image building only.
+#
+RUN             cd /usr/lib/x86_64-linux-gnu/; ln -s /opt/poky/2.3.1/sysroots/x86_64-pokysdk-linux/usr/lib/libmpfr.so.4 libmpfr.so.4
+
+#
+# HACK 2
+# Install gcc 5 for FunHW build. Remove this part once FunHW removed gcc 5 dependencies
+#
+RUN		apt-get install -y build-essential software-properties-common && \
+		add-apt-repository ppa:ubuntu-toolchain-r/test && \
+		apt-get update && \
+		apt-get install --no-install-recommends --no-install-suggests -y \
+			gcc-5 g++-5 && \
+		update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 40 \
+			--slave /usr/bin/g++ g++ /usr/bin/g++-5
+
+#
+# Add a public space for Jenkins to use in future
+#
+RUN             mkdir -p /scratch && \
+                chmod 777 /scratch
+
+#
+# Prepare a compiling and running env for FRR
+#
+RUN	apt-get install --no-install-recommends --no-install-suggests -y \
+	    git autoconf automake libtool make gawk libreadline-dev \
+            texinfo pkg-config libpam0g-dev libjson-c-dev bison flex bridge-utils\
+        python-pytest libc-ares-dev python3-dev libsystemd-dev python-ipaddr
+
+RUN		pip install --upgrade requests urllib3 chardet idna
+RUN             pip install -U Sphinx
+
+RUN       groupadd -g 92 frr; \
+          groupadd -r -g 85 frrvty; \
+          adduser --system --ingroup frr --home /var/run/frr/ \
+                  --gecos "FRR suite" --shell /sbin/nologin frr; \
+          usermod -a -G frrvty frr
+
+RUN       wget -O $FRR_PREBUILT_LOCAL $FRR_PREBUILT  
+
+
+RUN  install -m 755 -o frr -g frr -d /var/log/frr; \
+     install -m 775 -o frr -g frrvty -d /etc/frr; \
+     install -m 640 -o frr -g frr /dev/null /etc/frr/zebra.conf; \
+     install -m 640 -o frr -g frr /dev/null /etc/frr/bgpd.conf; \
+     install -m 640 -o frr -g frr /dev/null /etc/frr/isisd.conf; \
+     install -m 640 -o frr -g frrvty /dev/null /etc/frr/vtysh.conf
+
+#
+# Install go lang package to docker
+#
+ADD $GO_DOWNLOAD_LOC $GO_LOCAL_DIR
+RUN cd $GO_LOCAL_DIR; tar xvf $GO_LOCAL; rm $GO_LOCAL
+ENV       PATH "${PATH}:${GO_LOCAL_DIR}/go/bin"
+
+#
+# Install JSONC libjson-c.4
+#
+ADD $JSONC_DOWNLOAD_LOC $JSONC_LOCAL_DIR
+RUN cd $JSONC_LOCAL_DIR; tar xvf $JSONC_LOCAL;
+RUN cd $JSONC_LOCAL_DIR/json-c-$JSONC_VER; ./configure --prefix=/usr/local/; make; make install;
+#
+# change libjson-c from ubuntu 18.04's libjson-c.3 to latest libjson-c.4
+#
+RUN rm /usr/lib/x86_64-linux-gnu/libjson-c.so; rm /usr/lib/x86_64-linux-gnu/libjson-c.a; cd /lib/x86_64-linux-gnu/; ln -s /usr/local/lib/libjson-c.so.4.0.0 libjson-c.so.4
+
+#
+# Install OVS
+#
+RUN	apt-get -y install openvswitch-switch
+
+#
+# Install OpenR needed packages
+#
+RUN     apt-get -y install \
+	 libdouble-conversion-dev \
+	 libssl-dev \
+	 make \
+	 zip \
+	 git \
+	 autoconf \
+	 autoconf-archive \
+	 automake \
+	 libtool \
+	 g++ \
+	 libboost-all-dev \
+	 libevent-dev \
+	 flex \
+	 bison \
+	 liblz4-dev \
+	 liblzma-dev \
+	 scons \
+	 libsnappy-dev \
+	 libsasl2-dev \
+	 libnuma-dev \
+	 pkg-config \
+	 zlib1g-dev \
+	 binutils-dev \
+	 libjemalloc-dev \
+	 libiberty-dev \
+	 python-setuptools \
+	 python3-setuptools \
+	 python-pip
+RUN pip install --upgrade pyyaml jinja2 gcovr pyzmq six bunch click hexdump networkx tabulate futures ipaddress typing future
+
 
 # Set up startup script
 COPY  funcp_start_redis.sh /fun_external
