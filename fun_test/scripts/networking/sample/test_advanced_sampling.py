@@ -2563,11 +2563,11 @@ class SampleACLtoFPG(FunTestCase):
             "ip_da" : "any",
             "tcp_flags" : "any",
             "src_port" : "any",
-            "dst_port" : "950",
+            "dst_port" : "961",
             "ip_id" : "any",
             "range" : "any",
             "action" : "sample",
-            "sample_id" : 61
+            "sample_id" : 62
         },
      Applied on FPG13 and FPG5
 
@@ -2577,7 +2577,7 @@ class SampleACLtoFPG(FunTestCase):
     load = 10
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
     stream_obj = None
-    sample_id = 61  # This sample ID needs to be mentioned in nutest.json in ACL
+    sample_id = 62  # This sample ID needs to be mentioned in nutest.json in ACL
     header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
     capture_results = None
 
@@ -2637,7 +2637,7 @@ class SampleACLtoFPG(FunTestCase):
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         checkpoint = "Add TCP header"
-        tcp_header_obj = TCP(destination_port=950)
+        tcp_header_obj = TCP(destination_port=961)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=tcp_header_obj, update=False)
         fun_test.simple_assert(result, checkpoint)
@@ -4145,14 +4145,10 @@ class SampleEgressDropACL(FunTestCase):
         self.header_objs['ip_obj'] = ipv4_header_obj
         self.header_objs['tcp_obj'] = tcp_obj
 
-        dut_rx_port = dut_config['ports'][0]
-        dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
 
-        checkpoint = "Add egress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
-                                                                                            dut_sample_port)
-        result = network_controller_obj.add_egress_sample_rule(id=self.sample_id,
-                                                               fpg=dut_rx_port, dest=dut_sample_port)
+        checkpoint = "Add egress Sampling rule dest port: FPG%d" % dut_sample_port
+        result = network_controller_obj.add_egress_sample_rule(id=self.sample_id, dest=dut_sample_port)
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
@@ -4290,11 +4286,10 @@ class SampleEgressDropACL(FunTestCase):
         fun_test.test_assert(result, checkpoint)
 
     def cleanup(self):
-        dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
 
         checkpoint = "Delete sample rule for id: %d" % self.sample_id
-        network_controller_obj.disable_sample_rule(id=self.sample_id, fpg=dut_rx_port, dest=dut_sample_port)
+        network_controller_obj.disable_sample_rule(id=self.sample_id, dest=dut_sample_port)
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Delete the stream"

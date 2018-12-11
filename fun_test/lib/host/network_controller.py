@@ -1259,10 +1259,12 @@ class NetworkController(DpcshClient):
 
     def add_ingress_sample_rule(self, id, dest, fpg=None, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
                                 pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None,
-                                sampler_run_sz=None, first_cell_only=None):
+                                sampler_run_sz=None, first_cell_only=None, pps_tick=None):
         result = None
         try:
-            cmd_arg_dict = {"id": id, "fpg": fpg, "mode": 0, "dest": dest}
+            cmd_arg_dict = {"id": id, "mode": 0, "dest": dest}
+            if fpg is not None:
+                cmd_arg_dict['fpg'] = fpg
             if acl:
                 cmd_arg_dict['acl'] = acl
             if flag_mask:
@@ -1272,6 +1274,8 @@ class NetworkController(DpcshClient):
             if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
             if pps_en is not None:
+                cmd_arg_dict['pps_en'] = pps_en
+            if pps_interval is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
             if pps_burst:
                 cmd_arg_dict['pps_burst'] = pps_burst
@@ -1283,18 +1287,22 @@ class NetworkController(DpcshClient):
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
             if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only
+            if pps_tick is not None:
+                cmd_arg_dict['pps_tick'] = pps_tick
 
             result = self._enable_sample_rule(cmd_arg_dict)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def add_egress_sample_rule(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
+    def add_egress_sample_rule(self, id, dest, fpg=None, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
                                pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None,
-                               sampler_run_sz=None, first_cell_only=None):
+                               sampler_run_sz=None, first_cell_only=None, pps_tick=None):
         result = None
         try:
-            cmd_arg_dict = {"id": id, "fpg": fpg, "mode": 1, "dest": dest}
+            cmd_arg_dict = {"id": id, "mode": 1, "dest": dest}
+            if fpg is not None:
+                cmd_arg_dict['fpg'] = fpg
             if acl:
                 cmd_arg_dict['acl'] = acl
             if flag_mask:
@@ -1304,6 +1312,8 @@ class NetworkController(DpcshClient):
             if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
             if pps_en is not None:
+                cmd_arg_dict['pps_en'] = pps_en
+            if pps_interval is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
             if pps_burst:
                 cmd_arg_dict['pps_burst'] = pps_burst
@@ -1315,6 +1325,8 @@ class NetworkController(DpcshClient):
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
             if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only
+            if pps_tick is not None:
+                cmd_arg_dict['pps_tick'] = pps_tick
 
             result = self._enable_sample_rule(cmd_arg_dict)
         except Exception as ex:
@@ -1323,10 +1335,12 @@ class NetworkController(DpcshClient):
 
     def disable_sample_rule(self, id, dest, fpg=None, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
                             pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None,
-                            sampler_run_sz=None, first_cell_only=None):
+                            sampler_run_sz=None, first_cell_only=None, pps_tick=None):
         result = None
         try:
-            cmd_arg_dict = {"id": id, "fpg": fpg, "mode": 2, "dest": dest}
+            cmd_arg_dict = {"id": id, "mode": 2, "dest": dest}
+            if fpg:
+                cmd_arg_dict['fpg'] = fpg
             if acl:
                 cmd_arg_dict['acl'] = acl
             if flag_mask:
@@ -1347,6 +1361,8 @@ class NetworkController(DpcshClient):
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
             if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only
+            if pps_tick is not None:
+                cmd_arg_dict['pps_tick'] = pps_tick
 
             result = self._enable_sample_rule(cmd_arg_dict)
         except Exception as ex:
