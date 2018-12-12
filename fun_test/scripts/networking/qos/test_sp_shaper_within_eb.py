@@ -5,6 +5,7 @@ from lib.host.network_controller import NetworkController
 from scripts.networking.nu_config_manager import nu_config_obj
 from scripts.networking.helper import *
 from qos_helper import *
+from itertools import chain
 
 num_ports = 3
 streamblock_objs = {}
@@ -340,8 +341,23 @@ class EB_SP_Shaper_DWRR_Non_SP(SP_Shaper_Q0_SP_EB):
                               3. Start traffic
                               4. After 10 seconds, get RxL1BitRate from spirent for each stream
                               5. Verify bandwidth is such that EB_SP gets its assigned bandwidth and 
-                                 rest queues are in served as per dwrr assigned
+                                 rest queues hogg bandwidth based on lower prirority queue
                               """)
+
+    def cleanup(self):
+        super(EB_SP_Shaper_DWRR_Non_SP, self).cleanup()
+
+        fun_test.log("Restting DWRR to 1 for all queues used")
+        for i in chain(self.port_1_dscp, self.port_3_dscp):
+            set_weight = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2,
+                                                                         queue_num=i,
+                                                                         scheduler_type=network_controller_obj.SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN,
+                                                                         weight=qos_json_output['dwrr']['default_weight'])
+            fun_test.test_assert(set_weight, "Ensure dwrr weight is %s set on port %s for queue %s" %
+                                 (qos_json_output['dwrr']['default_weight'], dut_port_2,
+                                  i), ignore_on_success=True)
+        fun_test.log("Resetted DWRR to default values")
+
 
 
 class SP_Shaper_All_SP_EB(SP_Shaper_Q0_SP_EB):

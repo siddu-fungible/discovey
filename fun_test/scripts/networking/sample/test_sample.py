@@ -37,7 +37,7 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global spirent_config, subscribed_results, dut_config, template_obj, network_controller_obj, tx_port, rx_port, \
-            sample_port, generator_port_obj_dict, analyzer_port_obj_dict
+            sample_port, generator_port_obj_dict, analyzer_port_obj_dict, generator_config, analyzer_config
 
         chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
@@ -931,24 +931,12 @@ class SamplePPStoFPG(FunTestCase):
                                                                 pps_burst=1, pps_interval=10000, pps_en=1, pps_tick=256)
         fun_test.test_assert(result['status'], checkpoint)
 
-        generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
-                                           duration=60,
-                                           duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                           time_stamp_latch_mode=GeneratorConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
+        generator_config.Duration = 60
 
-        analyzer_config = AnalyzerConfig(timestamp_latch_mode=AnalyzerConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
         checkpoint = "Create Generator Config for %s port" % tx_port
         result = template_obj.configure_generator_config(port_handle=tx_port,
-                                                         generator_config_obj=generator_config)
+                                                         generator_config_obj=generator_config, update=False)
         fun_test.simple_assert(expression=result, message=checkpoint)
-
-        checkpoint = "Create Analyzer Config for %s port" % tx_port
-        result = template_obj.configure_analyzer_config(port_handle=tx_port,
-                                                        analyzer_config_obj=analyzer_config)
-        fun_test.simple_assert(result, checkpoint)
-
-        self.generator_handle = template_obj.stc_manager.get_generator(port_handle=tx_port)
-        self.analyzer_handle = template_obj.stc_manager.get_analyzer(port_handle=tx_port)
 
     def run(self):
         dut_rx_port = dut_config['ports'][0]
@@ -974,7 +962,7 @@ class SamplePPStoFPG(FunTestCase):
         fun_test.test_assert(sample_stats_before, checkpoint)
 
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, 60)
-        result = template_obj.enable_generator_configs(generator_configs=[self.generator_handle])
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         checkpoint = "Packet captured on %s sample port" % sample_port
@@ -1033,7 +1021,7 @@ class SamplePPStoFPG(FunTestCase):
                                                         stat_type=FRAMES_TRANSMITTED_OK)
         fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on FPG%d: %d" % (
             dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
-        fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted + 1, message=checkpoint)
+        fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
 
         checkpoint = "Ensure sample frame count must be equal to 8 as per above PPS config"
         frames_transmitted = get_dut_output_stats_value(result_stats=dut_sample_port_results,
@@ -1064,7 +1052,7 @@ class SamplePPStoFPG(FunTestCase):
         # Validate Spirent stats
         checkpoint = "Ensure Tx spirent Port FrameCount must be equal to Rx spirent port FrameCount"
         fun_test.test_assert_expected(expected=int(tx_port_result['GeneratorFrameCount']),
-                                      actual=int(rx_port_result['TotalFrameCount']) + 1, message=checkpoint)
+                                      actual=rx_port_result['TotalFrameCount'], message=checkpoint)
 
         checkpoint = "Ensure Sample spirent Port FrameCount must be equal to 8"
         fun_test.test_assert_expected(expected=expected_sample_frames,
@@ -1090,7 +1078,14 @@ class SamplePPStoFPG(FunTestCase):
 
         checkpoint = "Delete sample rule for id: %d" % self.sample_id
         network_controller_obj.disable_sample_rule(id=self.sample_id, fpg=dut_rx_port, dest=dut_sample_port,
-                                                   pps_burst=0, pps_interval=10000, pps_en=1, pps_tick=256)
+                                                   pps_burst=0, pps_interval=10000, pps_en=0, pps_tick=256)
+        fun_test.add_checkpoint(checkpoint)
+
+        generator_config.Duration = TRAFFIC_DURATION
+
+        checkpoint = "Create Generator Config for %s port" % tx_port
+        template_obj.configure_generator_config(port_handle=tx_port,
+                                                generator_config_obj=generator_config, update=False)
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Delete the stream"

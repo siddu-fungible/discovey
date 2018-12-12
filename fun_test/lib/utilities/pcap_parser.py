@@ -10,6 +10,7 @@ class PcapParser(object):
     PFC = "PFC"
     LAYER_ETH = "layer_eth"
     LAYER_MACC = "layer_macc"
+    LAYER_IP = "layer_ip"
 
     def __init__(self,
                  filename):
@@ -49,7 +50,7 @@ class PcapParser(object):
                 current_dict[key1] = value
         return current_dict
 
-    def get_filter_captures(self, display_filter):
+    def get_filter_captures(self, display_filter=None):
         return self.get_captures_from_file(display_filter)
 
     def get_first_packet(self, display_filter=None):
@@ -70,6 +71,22 @@ class PcapParser(object):
                 if layer.__class__.__name__ == "JsonLayer":
                     out = self.parse_jsonlayer(layer)
                 output_dict[layer_name] = out
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return output_dict
+
+    def get_all_header_fields(self, packet, header_layer):
+        """
+        :param packet: packet in which header to be searched
+        :param header_layer: header type. Ex. For ethernet use class variable LAYER_ETH
+        :return: dict of fields present in header
+        """
+        output_dict = {}
+        try:
+            all_fields = self.get_all_packet_fields(packet)
+            fun_test.simple_assert(all_fields, "Get all layers")
+
+            output_dict = all_fields[header_layer]
         except Exception as ex:
             fun_test.critical(str(ex))
         return output_dict

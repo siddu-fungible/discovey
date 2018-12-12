@@ -432,7 +432,6 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         result_handle = None
         try:
             fun_test.log("Subscribing to port analyzer results on port %s" % parent)
-            pass
             op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
                                                            result_type=result_type,
                                                            view_attribute_list=view_attribute_list)
@@ -442,15 +441,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result_handle
 
-    def subscribe_diff_serv_results(self,  parent, config_type="Analyzer", result_type="DiffServResults",
+    def subscribe_diff_serv_results(self,  parent, result_parent, config_type="Analyzer", result_type="DiffServResults",
                                     view_attribute_list=None):
         result_handle = None
         try:
             fun_test.log("Subscribing to diff serv results on %s" % parent)
-            pass
             op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
                                                            result_type=result_type,
-                                                           view_attribute_list=view_attribute_list)
+                                                           view_attribute_list=view_attribute_list, result_parent=result_parent)
             fun_test.simple_assert(op_handle, "Getting diffServ subscribe handle")
             result_handle = op_handle
         except Exception as ex:
@@ -563,7 +561,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def subscribe_to_all_results(self, parent, diff_serv=False, pfc=False):
+    def subscribe_to_all_results(self, parent, diff_serv=False, pfc=False, port=None):
         result = {'result': False}
         try:
             fun_test.debug("Subscribing to tx results")
@@ -597,8 +595,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             result['analyzer_subscribe'] = analyzer_subscribe
 
             if diff_serv:
+                fun_test.simple_assert(port, "Port handle must be provided for diffserv results")
                 fun_test.debug("Subscribing to diff serv results")
-                diff_serv_subscribe = self.subscribe_diff_serv_results(parent=parent)
+                diff_serv_subscribe = self.subscribe_diff_serv_results(parent=parent, result_parent=port, view_attribute_list=["qos", "Ipv4FrameCount"])
                 fun_test.simple_assert(diff_serv_subscribe, "Check diff serv subscribe")
                 result['diff_serv_subscribe'] = diff_serv_subscribe
 
@@ -1095,7 +1094,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                preamble="55555555555555d5", op_code="0101", time0="", time1="",
                                                time2="", time3="", time4="", time5="", time6="", time7="",
                                                class_enable_vector=False, ls_octet="00000000", ms_octet="00000000",
-                                               reserved=''):
+                                               reserved='', update=False):
         result = {}
         result['result'] = False
         try:
@@ -1184,9 +1183,11 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             if update:
                 child_type = 'children-' + DiffServ.HEADER_TYPE.lower()
                 old_diffserv_handle = self.stc_manager.get_object_children(handle=tosdiffserv_handle,
-                                                                           child_type=child_type)[0]
-                del_diff_serv = self.stc_manager.delete_handle(old_diffserv_handle)
-                fun_test.simple_assert(del_diff_serv, "Delete old diff serv handle")
+                                                                           child_type=child_type)
+                if old_diffserv_handle:
+                    old_diffserv_handle = old_diffserv_handle[0]
+                    del_diff_serv = self.stc_manager.delete_handle(old_diffserv_handle)
+                    fun_test.simple_assert(del_diff_serv, "Delete old diff serv handle")
 
             diff_serv_obj = DiffServ(dscp_high=dscp_high, dscp_low=dscp_low, name=name, reserved=reserved)
             diff_serv_handle = self.stc_manager.stc.create(diff_serv_obj.HEADER_TYPE, under=tosdiffserv_handle,

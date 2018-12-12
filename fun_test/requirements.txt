@@ -21,3 +21,4 @@ psycopg2-binary==2.7.5
 apscheduler==3.5.3
 pyshark==0.3.8
 prettytable==0.7.2
+gitpython==2.1.11

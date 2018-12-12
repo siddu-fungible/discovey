@@ -150,6 +150,7 @@ class FunTest:
         self.current_test_case_execution_id = None
         self.build_url = args.build_url
         self.local_settings_file = args.local_settings_file
+        self.abort_requested = False
         self.environment = args.environment
         self.local_settings = {}
         if self.suite_execution_id:
@@ -207,6 +208,10 @@ class FunTest:
         self.fun_test_timers = []
         self.version = "1"
         self.determine_version()
+
+
+    def abort(self):
+        self.abort_requested = True
 
     def get_start_time(self):
         return self.start_time
@@ -1059,6 +1064,8 @@ class FunTestScript(object):
         try:
             if super(self.__class__, self).setup():
                 for test_case in self.test_cases:
+                    if fun_test.abort_requested:
+                        break
 
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
@@ -1082,6 +1089,9 @@ class FunTestScript(object):
                             test_case.cleanup()
                         except Exception as ex:
                             fun_test.critical(str(ex))
+                        if test_case.abort_on_failure:
+                            fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
+                            fun_test.abort()
                     except Exception as ex:
                         fun_test.critical(str(ex))
                         fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
@@ -1089,6 +1099,9 @@ class FunTestScript(object):
                             test_case.cleanup()
                         except Exception as ex:
                             fun_test.critical(str(ex))
+                        if test_case.abort_on_failure:
+                            fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
+                            fun_test.abort()
                     fun_test._add_xml_trace()
                     fun_test.print_test_case_summary(fun_test.current_test_case_id)
                     fun_test._end_test(result=test_result)
@@ -1113,11 +1126,12 @@ class FunTestScript(object):
 class FunTestCase:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
+    def __init__(self, abort_on_failure=False):
         self.id = None
         self.summary = None
         self.steps = None
         self._added_to_script = None
+        self.abort_on_failure = abort_on_failure
 
     def __str__(self):
         s = "{}: {}".format(self.id, self.summary)

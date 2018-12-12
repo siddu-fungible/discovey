@@ -96,7 +96,7 @@ class SpirentSetup(FunTestScript):
         # Create 2 streams on port_1
         for port_obj in port_obj_list[::2]:
             streamblock_objs[port_obj] = []
-            num_streams = 2
+            num_streams = 1
 
             generator_config_objs[port_obj] = None
             gen_config_obj = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
@@ -174,8 +174,8 @@ class SpirentSetup(FunTestScript):
 class Pir_Q0(FunTestCase):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 0
+    pir_stream_dscp = 0
+    other_stream_dscp = 1
 
     def describe(self):
         self.set_test_details(id=1,
@@ -193,27 +193,31 @@ class Pir_Q0(FunTestCase):
         for port, streams in test_streams.iteritems():
             self.testcase_streamblocks[str(port)] = {}
             spirent_port = port_1
+            current_dscp = self.pir_stream_dscp
+            if port == 'ingress_port2':
+                spirent_port = port_3
+                current_dscp = self.other_stream_dscp
 
             counter = 0
 
             for stream_details in streams:
-                self.testcase_streamblocks[str(port)][self.current_dscp] = {}
+                self.testcase_streamblocks[str(port)][current_dscp] = {}
                 current_streamblock_obj = streamblock_objs[spirent_port][counter]
                 load_value = get_load_value_from_load_percent(load_percent=stream_details['load_percent'],
                                                               max_egress_load=max_egress_load)
                 fun_test.simple_assert(load_value, "Ensure load value is calculated")
 
                 dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
-                    decimal_value_list=[self.current_dscp], dscp_high=True, dscp_low=True)
-                dscp_high = dscp_values[self.current_dscp]['dscp_high']
-                dscp_low = dscp_values[self.current_dscp]['dscp_low']
+                    decimal_value_list=[current_dscp], dscp_high=True, dscp_low=True)
+                dscp_high = dscp_values[current_dscp]['dscp_high']
+                dscp_low = dscp_values[current_dscp]['dscp_low']
 
                 # Update dscp value
                 dscp_set = template_obj.configure_diffserv(streamblock_obj=current_streamblock_obj,
                                                            dscp_high=dscp_high,
                                                            dscp_low=dscp_low, update=True)
                 fun_test.test_assert(dscp_set, "Ensure dscp value of %s is updated on ip header for stream %s"
-                                     % (self.current_dscp, current_streamblock_obj.spirent_handle))
+                                     % (current_dscp, current_streamblock_obj.spirent_handle))
 
                 # Update load value
                 current_streamblock_obj.Load = load_value
@@ -221,13 +225,13 @@ class Pir_Q0(FunTestCase):
                 fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
                                      (load_value, current_streamblock_obj.spirent_handle))
                 counter += 1
-                self.testcase_streamblocks[str(port)][self.current_dscp]['streamblock_obj'] = current_streamblock_obj
+                self.testcase_streamblocks[str(port)][current_dscp]['streamblock_obj'] = current_streamblock_obj
                 self.streamblock_handles_list.append(current_streamblock_obj.spirent_handle)
 
                 # set shaper rate and threshold
-                if self.pir:
+                if 'rate' in stream_details:
                     set_rate = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2,
-                                                                               queue_num=self.current_dscp,
+                                                                               queue_num=current_dscp,
                                                                                scheduler_type=network_controller_obj.SCHEDULER_TYPE_SHAPER,
                                                                                shaper_enable=True,
                                                                                max_rate=stream_details['rate'],
@@ -236,28 +240,18 @@ class Pir_Q0(FunTestCase):
                     fun_test.test_assert(set_rate,
                                          "Ensure shaper rate is %s, threshold is %s set on port %s for queue %s" %
                                          (stream_details['rate'], stream_details['threshold'], dut_port_2,
-                                          self.current_dscp))
-                else:
-                    set_rate = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2,
-                                                                               queue_num=self.current_dscp,
-                                                                               scheduler_type=network_controller_obj.SCHEDULER_TYPE_SHAPER,
-                                                                               shaper_enable=True,
-                                                                               min_rate=stream_details['rate'],
-                                                                               shaper_threshold=stream_details['threshold'])
-                    fun_test.test_assert(set_rate, "Ensure shaper rate is %s, threshold is %s set on port %s for queue %s" %
-                                         (stream_details['rate'], stream_details['threshold'], dut_port_2,
-                                          self.current_dscp))
+                                          current_dscp))
 
     def cleanup(self):
         set_rate = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2,
-                                                                   queue_num=self.current_dscp,
+                                                                   queue_num=self.pir_stream_dscp,
                                                                    scheduler_type=network_controller_obj.SCHEDULER_TYPE_SHAPER,
                                                                    shaper_enable=False,
                                                                    max_rate=0,
                                                                    shaper_threshold=0)
         fun_test.test_assert(set_rate,
                              "Reset shaper rate to 0, threshold is 0 set on port %s for queue %s" %
-                             (dut_port_2, self.current_dscp))
+                             (dut_port_2, self.pir_stream_dscp))
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=self.streamblock_handles_list)
@@ -286,18 +280,21 @@ class Pir_Q0(FunTestCase):
         output = self.start_and_fetch_streamblock_results()
 
         for port, streams in test_streams.iteritems():
+            current_dscp = self.pir_stream_dscp
+            if port == 'ingress_port2':
+                current_dscp = self.other_stream_dscp
             for stream_details in streams:
                 expected_load_value = get_load_value_from_load_percent(load_percent=stream_details['expected_load_percent'],
                                                                        max_egress_load=max_egress_load)
                 fun_test.simple_assert(expected_load_value, "Ensure expected load value is calculated")
 
                 current_streamblock_handle = \
-                    self.testcase_streamblocks[str(port)][self.current_dscp]['streamblock_obj'].spirent_handle
+                    self.testcase_streamblocks[str(port)][current_dscp]['streamblock_obj'].spirent_handle
                 rx_l1_bit_rate = convert_bps_to_mbps(int(output[current_streamblock_handle]['rx_summary_result']['L1BitRate']))
 
-                result_dict[self.current_dscp] = {}
-                result_dict[self.current_dscp]['actual'] = rx_l1_bit_rate
-                result_dict[self.current_dscp]['expected'] = expected_load_value
+                result_dict[current_dscp] = {}
+                result_dict[current_dscp]['actual'] = rx_l1_bit_rate
+                result_dict[current_dscp]['expected'] = expected_load_value
         self.validate_stats(result_dict)
 
     def validate_stats(self, result_dict):
@@ -311,8 +308,8 @@ class Pir_Q0(FunTestCase):
 class Pir_Q1(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 1
+    pir_stream_dscp = 1
+    other_stream_dscp = 2
 
     def describe(self):
         self.set_test_details(id=2,
@@ -329,8 +326,8 @@ class Pir_Q1(Pir_Q0):
 class Pir_Q2(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 2
+    pir_stream_dscp = 2
+    other_stream_dscp = 3
 
     def describe(self):
         self.set_test_details(id=3,
@@ -347,8 +344,8 @@ class Pir_Q2(Pir_Q0):
 class Pir_Q3(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 3
+    pir_stream_dscp = 3
+    other_stream_dscp = 4
 
     def describe(self):
         self.set_test_details(id=4,
@@ -365,8 +362,8 @@ class Pir_Q3(Pir_Q0):
 class Pir_Q4(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 4
+    pir_stream_dscp = 4
+    other_stream_dscp = 5
 
     def describe(self):
         self.set_test_details(id=5,
@@ -383,8 +380,8 @@ class Pir_Q4(Pir_Q0):
 class Pir_Q5(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 5
+    pir_stream_dscp = 5
+    other_stream_dscp = 6
 
     def describe(self):
         self.set_test_details(id=6,
@@ -401,8 +398,8 @@ class Pir_Q5(Pir_Q0):
 class Pir_Q6(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 6
+    pir_stream_dscp = 6
+    other_stream_dscp = 7
 
     def describe(self):
         self.set_test_details(id=7,
@@ -419,8 +416,8 @@ class Pir_Q6(Pir_Q0):
 class Pir_Q7(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 7
+    pir_stream_dscp = 7
+    other_stream_dscp = 8
 
     def describe(self):
         self.set_test_details(id=8,
@@ -437,8 +434,8 @@ class Pir_Q7(Pir_Q0):
 class Pir_Q8(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 8
+    pir_stream_dscp = 8
+    other_stream_dscp = 9
 
     def describe(self):
         self.set_test_details(id=9,
@@ -455,8 +452,8 @@ class Pir_Q8(Pir_Q0):
 class Pir_Q9(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 9
+    pir_stream_dscp = 9
+    other_stream_dscp = 10
 
     def describe(self):
         self.set_test_details(id=10,
@@ -473,8 +470,8 @@ class Pir_Q9(Pir_Q0):
 class Pir_Q10(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 10
+    pir_stream_dscp = 10
+    other_stream_dscp = 11
 
     def describe(self):
         self.set_test_details(id=11,
@@ -491,8 +488,8 @@ class Pir_Q10(Pir_Q0):
 class Pir_Q11(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 11
+    pir_stream_dscp = 11
+    other_stream_dscp = 12
 
     def describe(self):
         self.set_test_details(id=12,
@@ -509,8 +506,8 @@ class Pir_Q11(Pir_Q0):
 class Pir_Q12(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 12
+    pir_stream_dscp = 12
+    other_stream_dscp = 13
 
     def describe(self):
         self.set_test_details(id=13,
@@ -527,8 +524,8 @@ class Pir_Q12(Pir_Q0):
 class Pir_Q13(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 13
+    pir_stream_dscp = 13
+    other_stream_dscp = 14
 
     def describe(self):
         self.set_test_details(id=14,
@@ -545,8 +542,8 @@ class Pir_Q13(Pir_Q0):
 class Pir_Q14(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 14
+    pir_stream_dscp = 14
+    other_stream_dscp = 15
 
     def describe(self):
         self.set_test_details(id=15,
@@ -563,8 +560,8 @@ class Pir_Q14(Pir_Q0):
 class Pir_Q15(Pir_Q0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    pir = True
-    current_dscp = 15
+    pir_stream_dscp = 15
+    other_stream_dscp = 4
 
     def describe(self):
         self.set_test_details(id=16,
