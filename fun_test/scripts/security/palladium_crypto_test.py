@@ -60,7 +60,6 @@ class RetrieveLogLinesCase(FunTestCase):
                 break
         self.dt = dt
         fun_test.shared_variables["lines"] = lines
-
         return True
 
     def cleanup(self):
@@ -96,7 +95,7 @@ class GeneratedTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    myscript.add_test_case(RetrieveLogLinesCase())
+    myscript.add_test_case(RetrieveLogLinesCase(abort_on_failure=True))
     for i in xrange(2, 10 + 2):
         generated_test_case = GeneratedTc()
         generated_test_case.id = i
