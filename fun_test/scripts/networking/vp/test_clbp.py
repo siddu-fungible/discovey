@@ -2,8 +2,8 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, GeneratorConfig, Ethernet2Header, TCP, RangeModifier, Ipv4Header
 from lib.host.network_controller import NetworkController
-from helper import *
-from nu_config_manager import *
+from scripts.networking.helper import *
+from scripts.networking.nu_config_manager import *
 
 clbp_traffic_duration = 20
 cushion_sleep = 5
