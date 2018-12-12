@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.lsf_status_server import LsfStatusServer
+from web.fun_test.models_helper import update_suite_execution
 import re
 
 TERAMARK_CRYPTO = "crypto_teramark"
@@ -56,7 +57,9 @@ class RetrieveLogLinesCase(FunTestCase):
         for line in lines:
             m = re.search(r'Version=bld_(\d+)', line)
             if m:
-                fun_test.set_version(version=int(m.group(1)))
+                this_version = int(m.group(1))
+                fun_test.set_version(version=this_version)
+                update_suite_execution(suite_execution_id=fun_test.suite_execution_id, version=this_version)
                 break
         self.dt = dt
         fun_test.shared_variables["lines"] = lines
