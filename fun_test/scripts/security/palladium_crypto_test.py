@@ -54,13 +54,17 @@ class RetrieveLogLinesCase(FunTestCase):
         dt = job_info["date_time"]
         self.job_info = job_info
         self.lines = lines
-        for line in lines:
-            m = re.search(r'Version=bld_(\d+)', line)
-            if m:
-                this_version = int(m.group(1))
-                fun_test.set_version(version=this_version)
-                update_suite_execution(suite_execution_id=fun_test.suite_execution_id, version=this_version)
-                break
+        try:
+            for line in lines:
+                m = re.search(r'Version=bld_(\d+)', line)
+                if m:
+                    this_version = int(m.group(1))
+                    fun_test.set_version(version=this_version)
+                    update_suite_execution(suite_execution_id=fun_test.suite_execution_id, version=this_version)
+                    break
+        except:
+            # Not expected to work in a local setup
+            pass
         self.dt = dt
         fun_test.shared_variables["lines"] = lines
         return True
