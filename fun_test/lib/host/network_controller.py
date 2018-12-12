@@ -748,20 +748,58 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return status
 
+    def set_qos_wred_avg_queue_config(self, avg_en=None, avg_period=None, cap_avg_sz=None,
+                                      q_avg_en=None):
+        result = False
+        try:
+            input_dict = {}
+            if avg_en is not None:
+                input_dict["avg_en"] = avg_en
+            if avg_period is not None:
+                input_dict["avg_period"] = avg_period
+            if cap_avg_sz is not None:
+                input_dict["cap_avg_sz"] = cap_avg_sz
+            if q_avg_en is not None:
+                input_dict["q_avg_en"] = q_avg_en
+
+            wred_avg_q_config_args = ['set', 'wred_avg_q_config', input_dict]
+            fun_test.debug("Setting QOS WRED avg queue config")
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=wred_avg_q_config_args,
+                                                command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=json_cmd_result['status'], message="Set QOS WRED avg queue config")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_qos_wred_avg_q_config(self):
+        wred_avg_q_config_dict = None
+        try:
+            wred_avg_q_config_args = ['get', 'wred_avg_q_config']
+            fun_test.debug("Getting QOS WRED avg queue config")
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=wred_avg_q_config_args,
+                                                command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=json_cmd_result['status'], message="Get QOS WRED avg queue config")
+            fun_test.debug(json_cmd_result['data'])
+            wred_avg_q_config_dict = json_cmd_result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return wred_avg_q_config_dict
+
     def set_qos_wred_queue_config(self, port_num, queue_num, wred_enable=None, wred_weight=None, wred_prof_num=None,
                                   enable_ecn=None, ecn_profile_num=None):
         result = False
         try:
             input_dict = {"port": port_num, "queue": queue_num}
-            if wred_enable:
+            if wred_enable is not None:
                 input_dict["wred_en"] = wred_enable
-            if wred_weight:
+            if wred_weight is not None:
                 input_dict["wred_weight"] = wred_weight
-            if wred_prof_num:
+            if wred_prof_num is not None:
                 input_dict["wred_prof_num"] = wred_prof_num
-            if enable_ecn:
+            if enable_ecn is not None:
                 input_dict["ecn_en"] = enable_ecn
-            if ecn_profile_num:
+            if ecn_profile_num is not None:
                 input_dict["ecn_profile_num"] = ecn_profile_num
 
             wred_queue_config_args = ['set', 'wred_queue_config', input_dict]
@@ -796,7 +834,7 @@ class NetworkController(DpcshClient):
                 input_dict["min_thr"] = min_threshold
             if max_threshold:
                 input_dict["max_thr"] = max_threshold
-            if wred_prob_index:
+            if wred_prob_index is not None:
                 input_dict["wred_prob_index"] = wred_prob_index
 
             wred_profile_args = ['set', 'wred_profile', input_dict]
@@ -858,7 +896,7 @@ class NetworkController(DpcshClient):
                 input_dict["min_thr"] = min_threshold
             if max_threshold:
                 input_dict["max_thr"] = max_threshold
-            if ecn_prob_index:
+            if ecn_prob_index is not None:
                 input_dict["ecn_prob_index"] = ecn_prob_index
 
             ecn_profile_args = ['set', 'ecn_profile', input_dict]
@@ -966,6 +1004,20 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return scheduler_config
+
+    def get_qos_wred_ecn_stats(self, port_num, queue_num):
+        wred_ecn_stats = None
+        try:
+            wred_ecn_stats = ['get', 'wred_ecn_stats', {"port": port_num, "queue": queue_num}]
+            fun_test.debug("Getting QOS Wred Ecn stats Config")
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_QOS, data=wred_ecn_stats,
+                                                command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=json_cmd_result['status'], message="Get QOS Wred Ecn stats")
+            fun_test.debug(json_cmd_result['data'])
+            wred_ecn_stats = json_cmd_result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return wred_ecn_stats
 
     def peek_fpg_port_stats(self, port_num, hnu=False):
         stats = None
