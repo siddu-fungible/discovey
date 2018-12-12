@@ -57,6 +57,7 @@ class RetrieveLogLinesCase(FunTestCase):
             m = re.search(r'Version=bld_(\d+)', line)
             if m:
                 fun_test.set_version(version=int(m.group(1)))
+                break
         self.dt = dt
         fun_test.shared_variables["lines"] = lines
 
