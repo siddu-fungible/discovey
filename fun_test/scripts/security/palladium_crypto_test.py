@@ -62,7 +62,8 @@ class RetrieveLogLinesCase(FunTestCase):
                     fun_test.set_version(version=this_version)
                     update_suite_execution(suite_execution_id=fun_test.suite_execution_id, version=this_version)
                     break
-        except:
+        except Exception as ex:
+            fun_test.critical("Unable to update version: {}".format(str(ex)))
             # Not expected to work in a local setup
             pass
         self.dt = dt
