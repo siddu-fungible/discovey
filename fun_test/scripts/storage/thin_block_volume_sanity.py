@@ -29,6 +29,29 @@ topology_dict = {
 }
 
 
+def byte_converter(size):
+    if (size.isdigit()):
+        bytes = int(size)
+    else:
+        bytes = size[:-1]
+        unit = size[-1]
+        if bytes.isdigit():
+            bytes = int(bytes)
+            if unit == 'G' or unit == 'g':
+                bytes *= 1024 * 1024 * 1024
+            elif unit == 'M' or unit == 'm':
+                bytes *= 1024 * 1024
+            elif unit == 'K' or unit == 'k':
+                bytes *= 1024
+            elif unit == 'B':
+                pass
+            else:
+                bytes = -1
+        else:
+            bytes = -1
+    return bytes
+
+
 class BLTSanityScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -99,7 +122,7 @@ class BLTSanityTestCase(FunTestCase):
             # Creating Thin block volume
             result_create_volume = self.storage_controller.create_thin_block_volume(
                 capacity=self.volume_params["capacity"], block_size=self.volume_params["block_size"],
-                uuid=self.thin_uuid, name=self.volume_params["name"],
+                uuid=self.thin_uuid, name=self.volume_params["name"], use_ls=self.volume_params["use_ls"],
                 command_duration=self.volume_params["command_timeout"])
             fun_test.test_assert(result_create_volume["status"], "Thin Block volume is created")
 
@@ -151,41 +174,49 @@ class BLTSanityTestCase(FunTestCase):
         fun_test.log("Difference of volume status before and after the test:")
         fun_test.log(diff_volume_stats)
 
-        expected_counter_stat = int(filter(str.isdigit,
-                                           str(self.fio_params["size"]))) / int(filter(str.isdigit,
-                                                                                       str(self.fio_params["bs"])))
+        # expected_counter_stat = int(filter(str.isdigit,
+        #                                   str(self.fio_params["size"]))) / int(filter(str.isdigit,
+        #                                                                                   str(self.fio_params["bs"])))
+
+        size_in_bytes = byte_converter(str(self.fio_params["size"]))
+        bs_in_bytes = byte_converter(str(self.volume_params["block_size"]))
+
+        fun_test.test_assert(size_in_bytes != -1, "Invalid fio size ")
+        fun_test.test_assert(bs_in_bytes != -1, "Invalid volume block size")
+        expected_counter_stat = (size_in_bytes / bs_in_bytes)
+
         fun_test.log("Expected counters are: {}".format(expected_counter_stat))
         fun_test.test_assert_expected(expected=expected_counter_stat, actual=diff_volume_stats["num_writes"],
                                       message="Write counter is correct")
         fun_test.test_assert_expected(expected=expected_counter_stat, actual=diff_volume_stats["num_reads"],
                                       message="Read counter is correct")
 
+
     def cleanup(self):
-        # pass
-        fun_test.log("***** Entering into Clean up section *****")
-        self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-        self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_params["type"],
-                                                          self.thin_uuid, "stats")
-        result_detach_volume = self.storage_controller.volume_detach_remote(ns_id=self.volume_params["ns_id"],
-                                                                            uuid=self.thin_uuid,
-                                                                            remote_ip=self.linux_host.internal_ip)
-        fun_test.shared_variables["blt"]["setup_created"] = False
-        fun_test.test_assert(result_detach_volume["status"], "Thin Block volume is detached")
 
-        result_delete_volume = self.storage_controller.delete_thin_block_volume(capacity=self.volume_params["capacity"],
+        if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
+            self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
+            self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_params["type"],
+                                                              self.thin_uuid, "stats")
+            result_detach_volume = self.storage_controller.volume_detach_remote(ns_id=self.volume_params["ns_id"],
                                                                                 uuid=self.thin_uuid,
-                                                                                block_size=self.volume_params["block_size"],
-                                                                                name=self.volume_params["name"])
-        fun_test.shared_variables["blt"]["setup_created"] = False
-        fun_test.test_assert(result_delete_volume["status"], "Thin Block volume is deleted")
+                                                                                remote_ip=self.linux_host.internal_ip)
+            fun_test.shared_variables["blt"]["setup_created"] = False
+            fun_test.test_assert(result_detach_volume["status"], "Thin Block volume is detached")
 
-        command_result = self.storage_controller.peek(self.storage_props_tree)
-        fun_test.log(command_result)
-        self.storage_controller.disconnect()
+            result_delete_volume = self.storage_controller.delete_thin_block_volume(
+                capacity=self.volume_params["capacity"], uuid=self.thin_uuid,
+                block_size=self.volume_params["block_size"], name=self.volume_params["name"])
+            fun_test.shared_variables["blt"]["setup_created"] = False
+            fun_test.test_assert(result_delete_volume["status"], "Thin Block volume is deleted")
 
-        # Below assert will cause an error due to bug: SWOS-3597
-        fun_test.test_assert_expected(expected=False, actual=command_result["status"],
-                                      message="Stat and Counters are reset after deleting volume")
+            command_result = self.storage_controller.peek(self.storage_props_tree)
+            fun_test.log(command_result)
+            self.storage_controller.disconnect()
+
+            # Below assert will cause an error due to bug: SWOS-3597
+            fun_test.test_assert_expected(expected=False, actual=command_result["status"],
+                                          message="Stat and Counters are reset after deleting volume")
 
 
 class BLTFioSequentialWrite(BLTSanityTestCase):
@@ -205,7 +236,6 @@ class BLTFioSequentialWrite(BLTSanityTestCase):
 
     def setup(self):
         super(BLTFioSequentialWrite, self).setup()
-
 
     def run(self):
         super(BLTFioSequentialWrite, self).run()
@@ -238,9 +268,63 @@ class BLTFioRandomWrite(BLTSanityTestCase):
     def cleanup(self):
         super(BLTFioRandomWrite, self).cleanup()
 
+class BLTLSFioSequentialWrite(BLTSanityTestCase):
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Sanity case - Configure BLT volume with Log store enabled and Run Sequential "
+                                      "Traiffic using fio",
+                              steps="""
+        1. Use StorageController to connect to the dpcsh tcp proxy to F1
+        2. Configure ip_cfg
+        3. Create volume with log store enabled
+        4. Attach volume to remote server
+        5. Write data using fio from remote server
+        6. Read data with Read IO and validate with data write
+        7. Detach volume
+        8. Delete volume and verify stats are cleared for deleted volume
+                              """)
+
+    def setup(self):
+        super(BLTLSFioSequentialWrite, self).setup()
+
+
+    def run(self):
+        super(BLTLSFioSequentialWrite, self).run()
+
+    def cleanup(self):
+        super(BLTLSFioSequentialWrite, self).cleanup()
+
+
+class BLTLSFioRandomWrite(BLTSanityTestCase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Sanity case - Configure BLT volume with Log store enabled and Run Random "
+                                      "Traiffic using fio",
+                              steps="""
+        1. Use StorageController to connect to the dpcsh tcp proxy to F1
+        2. Configure ip_cfg
+        3. Create volume with log store enabled
+        4. Attach volume to remote server
+        5. Write data using fio from remote server
+        6. Read data with Read IO and validate with data write
+        7. Detach volume
+        8. Delete volume and verify stats are cleared for deleted volume
+                              """)
+
+    def setup(self):
+        super(BLTLSFioRandomWrite, self).setup()
+
+    def run(self):
+        super(BLTLSFioRandomWrite, self).run()
+
+    def cleanup(self):
+        super(BLTLSFioRandomWrite, self).cleanup()
+
 
 if __name__ == "__main__":
     thin_block_vol_sanity = BLTSanityScript()
     thin_block_vol_sanity.add_test_case(BLTFioSequentialWrite())
     thin_block_vol_sanity.add_test_case(BLTFioRandomWrite())
+    thin_block_vol_sanity.add_test_case(BLTLSFioSequentialWrite())
+    thin_block_vol_sanity.add_test_case(BLTLSFioRandomWrite())
     thin_block_vol_sanity.run()
