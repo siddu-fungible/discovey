@@ -35,7 +35,7 @@ class SpirentSetup(FunTestScript):
                 """)
 
     def setup(self):
-        global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
+        global template_obj, port_1, port_2, subscribe_results, network_controller_obj, dut_port_2, \
             dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list
 
         min_frame_length = 64
@@ -184,7 +184,7 @@ class SP_Shaper_Q0_SP(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test test scheduler when all queues are within cir and one queue is in SP",
+                              summary="Test scheduler when all queues are within cir and one queue is in SP",
                               steps="""
                               1. Create stream with dscp 0 and dscp 1 on port 1 and with dscp 2 and 3 on port 3
                               2. Ensure strict priority is applied to dscp 0 on egress port.
@@ -322,7 +322,7 @@ class SP_Shaper_Q0_SP(FunTestCase):
                                  (values['expected'], dscp, values['actual']))
 
 
-class SP_Shaper_Q0_Q2_SP(FunTestCase):
+class SP_Shaper_Q0_Q2_SP(SP_Shaper_Q0_SP):
     testcase_streamblocks = {}
     streamblock_handles_list = []
     cir = "within_cir_2"
@@ -333,7 +333,7 @@ class SP_Shaper_Q0_Q2_SP(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test test scheduler when all queues are within cir and two queues is in SP",
+                              summary="Test scheduler when all queues are within cir and two queues is in SP",
                               steps="""
                               1. Create stream with dscp 0 and dscp 1 on port 1 and with dscp 2 and 3 on port 3
                               2. Ensure strict priority is applied to dscp 0 and dscp 2 on egress port.
@@ -344,7 +344,7 @@ class SP_Shaper_Q0_Q2_SP(FunTestCase):
                               """)
 
 
-class SP_Shaper_All_SP(FunTestCase):
+class SP_Shaper_All_SP(SP_Shaper_Q0_SP):
     testcase_streamblocks = {}
     streamblock_handles_list = []
     cir = "within_cir_3"
@@ -355,7 +355,7 @@ class SP_Shaper_All_SP(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Test test scheduler when all queues are within cir and all are SP",
+                              summary="Test scheduler when all queues are within cir and all are SP",
                               steps="""
                               1. Create stream with dscp 0 and dscp 1 on port 1 and with dscp 2 and 3 on port 3
                               2. Ensure strict priority is applied to all queues on egress port.
