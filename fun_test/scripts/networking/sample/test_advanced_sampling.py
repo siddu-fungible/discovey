@@ -2126,7 +2126,7 @@ class SampleSamePortIngressEgress(FunTestCase):
                                                         stat_type=FRAMES_TRANSMITTED_OK)
         fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on Sample port FPG%d: %d" % (
             dut_rx_port, frames_received1, dut_sample_port1, frames_transmitted))
-        fun_test.test_assert_expected(expected=frames_received1, actual=frames_transmitted + frames_transmitted, message=checkpoint)
+        fun_test.test_assert_expected(expected=frames_received1, actual=frames_transmitted, message=checkpoint)
 
         checkpoint = "Ensure Tx frame count must be equal to sample frame count port: FPG%d" % dut_sample_port2
         frames_transmitted = get_dut_output_stats_value(result_stats=dut_sample_port2_results,
@@ -3166,69 +3166,6 @@ class SampleIngressLLDP(SampleIngressARPRequest):
         fun_test.test_assert(result['status'], checkpoint)
 
 
-class SampleIngressDropFSFHwError(SampleIngressARPRequest):
-
-    def describe(self):
-        self.set_test_details(id=12, summary="Test Ingress Sample Drop FSF HW Error",
-                              steps="""
-                              1. Create FSF frame stream on Tx Port with following settings
-                                 a. Frame Size Mode: Fixed 128 B
-                                 b. Payload Type: PRBS
-                                 c. Insert Signature
-                                 d. Load: 10 fps
-                              2. Configure ingress sampling rule on FPG5 and dest: FPG15
-                              3. Start Traffic for %d secs
-                              4. Validate that packets are getting punted to CC. Ensure packets received on ingress FPG 
-                                 port is equal to packets seen on CC FPG port
-                              5. Ensure Tx frame count must be equal to sample frame count
-                              6. Ensure PSW sample_pkt counter must be equal to no of frames transmitted
-                              7. Ensure sample counter for a rule must be equal to Tx frames
-                              8. Ensure IN_FFE_DESC equal to OUT_FFE_DESC in sfg nu stats
-                              9. Ensure CNTR_SAMPLERID and SAMPLER_COPY count is equal to no of frames transmitted on 
-                                  sample port   
-                              10. Ensure on spirent Tx port frames must be equal to Rx port frames and sample port 
-                                  frames
-                              11. Ensure no errors are seen on spirent ports
-                              """ % TRAFFIC_DURATION)
-
-    def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
-
-        checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
-                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_FIXED,
-                                      fixed_frame_length=128)
-        stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
-                                                             port_handle=tx_port)
-        fun_test.test_assert(stream_created, checkpoint)
-
-        ether_obj = Ethernet2Header(destination_mac=Ethernet2Header.ETHERNET_FLOW_CONTROL_MAC,
-                                    ether_type=Ethernet2Header.ETHERNET_FLOW_CONTROL_ETHERTYPE)
-
-        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
-                                                                header_obj=ether_obj, update=True)
-        fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
-
-        custom_header_obj = CustomBytePatternHeader(byte_pattern="11010000")
-        result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
-                                                                header_obj=custom_header_obj, update=False,
-                                                                delete_header=[Ipv4Header.HEADER_TYPE])
-        fun_test.test_assert(result, checkpoint)
-
-        dut_rx_port = dut_config['ports'][0]
-        dut_sample_port = dut_config['ports'][2]
-
-        checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
-                                                                                             dut_sample_port)
-        result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
-                                                                fpg=dut_rx_port, dest=dut_sample_port)
-        fun_test.test_assert(result['status'], checkpoint)
-
-
 class SampleIngressDropIPv4VerError(FunTestCase):
     l2_config = None
     l3_config = None
@@ -3240,7 +3177,7 @@ class SampleIngressDropIPv4VerError(FunTestCase):
     capture_results = None
 
     def describe(self):
-        self.set_test_details(id=13, summary="Test Ingress Sample Drop IPv4 Version SW Error",
+        self.set_test_details(id=12, summary="Test Ingress Sample Drop IPv4 Version SW Error",
                               steps="""
                               1. Create IPv4 frame stream on Tx Port with following settings
                                  a. Frame Size Mode: Fixed 128 B
@@ -3475,7 +3412,7 @@ class SampleIngressDropFwdErrorWrongDIP(FunTestCase):
     header_objs = {'eth_obj': None, 'ip_obj': None}
 
     def describe(self):
-        self.set_test_details(id=14, summary="Test Ingress Sample Drop FWD Error Wrong DIP",
+        self.set_test_details(id=13, summary="Test Ingress Sample Drop FWD Error Wrong DIP",
                               steps="""
                               1. Create IPv4 frame stream on Tx Port with following settings
                                  a. Frame Size Mode: Fixed 128 B
@@ -3693,7 +3630,7 @@ class SampleEgressMTUCase(FunTestCase):
     capture_results = None
 
     def describe(self):
-        self.set_test_details(id=15, summary="Test Egress Sample MTU case (egress/sample interface MTU < frame size)",
+        self.set_test_details(id=14, summary="Test Egress Sample MTU case (egress/sample interface MTU < frame size)",
                               steps="""
                               1. Create TCP frame stream on Tx Port with following settings
                                  a. Frame Size Mode: Fixed 1000 B
@@ -4087,7 +4024,7 @@ class SampleEgressDropACL(FunTestCase):
     captured_results = None
 
     def describe(self):
-        self.set_test_details(id=16, summary="Test Egress Sample Drop using ACL",
+        self.set_test_details(id=15, summary="Test Egress Sample Drop using ACL",
                               steps="""
                               1. Create TCP frame stream on Tx Port with following settings
                                  a. Frame Size Mode: Fixed 128 B
@@ -4313,17 +4250,18 @@ if __name__ == '__main__':
     ts.add_test_case(SampleSourceMultiDestination())
     ts.add_test_case(SampleFlagMaskTTL0Packets())
     ts.add_test_case(SampleMultiSourceSameDestination())
-    
     ts.add_test_case(SampleIngressEgressMTUCase())
     
     ts.add_test_case(SampleSamePortIngressEgress())
+    
     ts.add_test_case(SampleIngressEgressSamePacket())
     
     ts.add_test_case(SampleACLtoFPG())  # Failing due to SWOS-3682
 
     ts.add_test_case(SampleIngressARPRequest())
+    
     ts.add_test_case(SampleIngressLLDP())
-    ts.add_test_case(SampleIngressDropFSFHwError())
+
     ts.add_test_case(SampleIngressDropIPv4VerError())
     ts.add_test_case(SampleIngressDropFwdErrorWrongDIP())
     

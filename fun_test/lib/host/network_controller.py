@@ -1402,6 +1402,8 @@ class NetworkController(DpcshClient):
             if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
             if pps_en is not None:
+                cmd_arg_dict['pps_en'] = pps_en
+            if pps_interval is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
             if pps_burst:
                 cmd_arg_dict['pps_burst'] = pps_burst
