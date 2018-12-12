@@ -2,8 +2,8 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, GeneratorConfig, Ethernet2Header, TCP, UDP, RangeModifier, Ipv4Header, Ipv6Header
 from lib.host.network_controller import NetworkController
-from helper import *
-from nu_config_manager import *
+from scripts.networking.helper import *
+from scripts.networking.nu_config_manager import *
 
 loads_file = "interface_loads.json"
 min_frame_length_ipv4 = 78
@@ -163,7 +163,7 @@ class VPPathIPv4TCP(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
-        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
+        file_path = SCRIPTS_DIR + "/networking" + "/" + loads_file
         output = fun_test.parse_file_to_json(file_path)
         l2_config = spirent_config["l2_config"]
         l3_config = spirent_config["l3_config"]["ipv4"]
@@ -478,7 +478,7 @@ class VPPathIPv6TCP(VPPathIPv4TCP):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
-        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
+        file_path = SCRIPTS_DIR + "/networking" "/" + loads_file
         output = fun_test.parse_file_to_json(file_path)
         l2_config = spirent_config["l2_config"]
         l3_config = spirent_config["l3_config"]["ipv6"]
@@ -576,7 +576,7 @@ class VPPathIPv6UDP(VPPathIPv6TCP):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
-        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
+        file_path = SCRIPTS_DIR + "/networking" "/" + loads_file
         output = fun_test.parse_file_to_json(file_path)
         l2_config = spirent_config["l2_config"]
         l3_config = spirent_config["l3_config"]["ipv6"]

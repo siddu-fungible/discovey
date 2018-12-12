@@ -74,7 +74,7 @@ class SpirentSetup(FunTestScript):
         interface_mode = template_obj.stc_manager.interface_mode
 
         #  Read loads from file
-        file_path = fun_test.get_script_parent_directory() + "/" + loads_file
+        file_path = SCRIPTS_DIR + "/networking" + "/" + loads_file
         output = fun_test.parse_file_to_json(file_path)
         bad_frame_load = output[interface_mode]["bad_frame_load_mbps"]
         good_frame_load = output[interface_mode]["good_frame_load_mbps"]

@@ -2,8 +2,8 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, GeneratorConfig, Ethernet2Header, TCP, UDP, Ipv4Header, RangeModifier, CustomBytePatternHeader, VxLAN
 from lib.host.network_controller import NetworkController
-from helper import *
-from nu_config_manager import *
+from scripts.networking.helper import *
+from scripts.networking.nu_config_manager import *
 
 num_ports = 3
 total_packets = 10
