@@ -63,7 +63,7 @@ export class RegressionAdminComponent implements OnInit {
         this.suiteExectionVersionMap[entry.execution_id] = version;
 
       });
-      console.log(this.versionSet);
+      //console.log(this.versionSet);
       if (this.versionSet.size > 0) {
         this.versionSet.forEach((element) => {
           this.versionList.push(element);
@@ -101,7 +101,7 @@ export class RegressionAdminComponent implements OnInit {
 
   fetchModules () {
     this.apiService.get("/regression/modules").subscribe((response) => {
-      console.log(response);
+      // console.log(response);
       this.availableModules = response.data;
       this.availableModules.forEach((module) => {
         this.info[module.name] = {name: module.name, verboseName: module.verbose_name};
@@ -198,7 +198,7 @@ export class RegressionAdminComponent implements OnInit {
       let numScripts = scripts.length;
       let scriptsFetched = 0;
       scripts.forEach((script) => {
-        console.log(script);
+        //console.log(script);
         let scriptPath = script.script_path;
         let payload = {};
         payload["script_path"] = scriptPath;
@@ -206,7 +206,7 @@ export class RegressionAdminComponent implements OnInit {
           let history = response.data;
 
           history.forEach((historyElement) => {
-            console.log(historyElement);
+            //console.log(historyElement);
             let elementSuiteExecutionId = historyElement.suite_execution_id;
             let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
             this.parseHistory(moduleInfo, historyElement, scriptPath, matchingSoftwareVersion);
@@ -264,7 +264,7 @@ export class RegressionAdminComponent implements OnInit {
         newEntry["dirty"] = false;
         this.unallocatedRegressionScripts.push(newEntry);
       });
-      console.log(response);
+      // console.log(response);
     }, error => {
 
     })
@@ -282,7 +282,7 @@ export class RegressionAdminComponent implements OnInit {
   }
 
   submitSelectModuleClick(regressionScript) {
-    console.log(regressionScript.selectedModules);
+    //console.log(regressionScript.selectedModules);
     let payload = {script_path: regressionScript.script_path, modules: regressionScript.selectedModules};
     this.apiService.post("/regression/script", payload).subscribe((response) => {
       regressionScript.dirty = false;

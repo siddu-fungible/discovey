@@ -4,6 +4,56 @@
 
 <div class="row component">
   <div class="col">
+    <table class="table table-nonfluid">
+      <tr>
+        <th>
+          Accelerator Apps
+        </th>
+        <th>
+          # of TCs
+        </th>
+      </tr>
+      <tr>
+        <td>
+          Crypto
+        </td>
+        <td>
+          338
+        </td>
+      </tr>
+      <tr>
+        <td>
+          PKE
+        </td>
+        <td>
+          20
+        </td>
+      </tr>
+      <tr>
+        <td>
+          ZIP
+        </td>
+        <td>
+          26
+        </td>
+      </tr>
+      <tr>
+        <td>
+          EC
+        </td>
+        <td>
+          37
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Regex
+        </td>
+        <td>
+          581
+        </td>
+      </tr>
+  </table>
     <div class="card" *ngFor="let moduleInfo of info | keyvalue">
       <div class="card card-primary">
         <div class="card-header"><b>{{ moduleInfo.value.verboseName }}</b></div>
