@@ -1132,7 +1132,7 @@ class BLTFioEncDeadBeefPattern(BLTCryptoVolumeTestCase):
 class BLTAlternateEncrypt(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=22,
+        self.set_test_details(id=23,
                               summary="Encrypt alternate BLT with random key & run fio write,read,randwrite & randread"
                                       "with blocksize & depth set to (4,4),(8,4),(16,4),(32,4)with deadbeef pattern",
                               steps='''
