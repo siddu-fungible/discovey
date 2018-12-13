@@ -240,7 +240,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 dest_ip = l3_config['vp_destination_ip1']
             elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU or \
                     FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-                recycle_count = 13
+                recycle_count = 4
                 dest_ip = l3_config['hnu_destination_ip2']
             elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
                 recycle_count = 1
