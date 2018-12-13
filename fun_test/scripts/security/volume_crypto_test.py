@@ -55,6 +55,7 @@ class BLTCryptoVolumeScript(FunTestScript):
         fun_test.shared_variables["vol_encrypt_filter"] = 0
         fun_test.shared_variables["vol_decrypt_filter"] = 0
         fun_test.shared_variables["total_vol_crypto_ops"] = 0
+        fun_test.shared_variables["ctrl_created"] = False
 
     def cleanup(self):
         TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
@@ -81,7 +82,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
             benchmark_parsing = False
             fun_test.critical("Input is not available for the current testcase {} in {} file".
                               format(testcase, testcase_file))
-            fun_test.test_assert(benchmark_parsing, "Parsing json file for this {} testcase.".format(testcase))
+            fun_test.test_assert(benchmark_parsing, "Parsing json file for this {} testcase".format(testcase))
 
         for k, v in testcase_dict[testcase].iteritems():
             setattr(self, k, v)
@@ -91,8 +92,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
             benchmark_parsing = False
             fun_test.critical("Block size and IO depth combo to be used for this {} testcase is not available in "
                               "the {} file.".format(testcase, testcase_file))
-        fun_test.test_assert(benchmark_parsing, "Parsing testcase json file for this {} testcase.".format(testcase))
-        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}.".
+        fun_test.test_assert(benchmark_parsing, "Parsing testcase json file for this {} testcase".format(testcase))
+        fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
                      format(testcase, self.fio_bs_iodepth))
 
         # Setting the expected volume level internal stats at the end of every FIO run
@@ -100,7 +101,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 not testcase_dict[testcase]['expected_volume_stats']):
             benchmark_parsing = False
             fun_test.critical("Expected internal volume stats needed for this {} testcase is not available in "
-                              "the {} file.".format(testcase, testcase_dict))
+                              "the {} file".format(testcase, testcase_dict))
 
         fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
                      format(testcase, self.expected_volume_stats))
@@ -134,12 +135,15 @@ class BLTCryptoVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT Instance 0")
 
-            command_result = {}
-            command_result = self.storage_controller.ip_cfg(ip=self.dut_instance.data_plane_ip,
-                                                            command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg {} on Dut Instance 0".
-                                 format(self.dut_instance.data_plane_ip))
+            # Configuring controller
+            if not fun_test.shared_variables["ctrl_created"]:
+                command_result = {}
+                command_result = self.storage_controller.ip_cfg(ip=self.dut_instance.data_plane_ip,
+                                                                command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "ip_cfg {} on Dut Instance 0".
+                                     format(self.dut_instance.data_plane_ip))
+                fun_test.shared_variables["ctrl_created"] = True
 
             command_result = {}
             fun_test.shared_variables["volume_count"] = self.volume_count + 1
@@ -237,7 +241,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                         fun_test.test_assert(command_result["status"],
                                              "Attaching of BLT {} on DUT".format(x))
 
-                    fun_test.shared_variables["blt"]["setup_created"] = True
+                    # fun_test.shared_variables["blt"]["setup_created"][x] = True
                     # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
 
                 elif self.vol_encrypt:
@@ -245,37 +249,33 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                          message="BLT creation should fail")
                     self.blt_creation_fail = True
                 else:
-                    fun_test.test_assert(command_result["status"], "BLT creation with encryption disabled")
+                    self.blt_create_count += 1
+                    fun_test.test_assert(command_result["status"], "Creating BLT with encryption disabled")
 
             if self.key_size == "random" or self.key_size == "alternate":
                 fun_test.log("Total BLT with 256 bit key: {}".format(key256_count))
                 fun_test.log("Total BLT with 512 bit key: {}".format(key512_count))
 
-            if self.blt_create_count == self.volume_count:
-                fun_test.add_checkpoint("Creation of {} BLT succeeded".format(self.volume_count),
-                                        "PASSED",
-                                        self.volume_count,
-                                        self.blt_create_count)
-                fun_test.test_assert(True,
-                                     "Creation of {} BLT from DUT instance 0 succeeded".format(self.blt_create_count))
-            else:
-                fun_test.add_checkpoint("Creation of BLT".format(self.volume_count),
-                                        "FAILED",
-                                        self.volume_count,
-                                        self.blt_create_count)
+            if not self.blt_creation_fail:
+                if self.blt_create_count == self.volume_count:
+                    fun_test.add_checkpoint("Creation of BLT {}".format(self.volume_count),
+                                            "PASSED",
+                                            self.volume_count,
+                                            self.blt_create_count)
+                else:
+                    fun_test.simple_assert(False,
+                                           "Creation of BLT {} from DUT".format(self.blt_create_count))
 
-            if self.blt_attach_count == self.volume_count:
-                fun_test.add_checkpoint("Attaching of {} BLT succeeded".format(self.volume_count),
-                                        "PASSED",
-                                        self.volume_count,
-                                        self.blt_attach_count)
-                fun_test.test_assert(True,
-                                     "Attaching of {} BLT from DUT instance 0 succeeded".format(self.blt_attach_count))
-            else:
-                fun_test.add_checkpoint("Attach of BLT".format(self),
-                                        "FAILED",
-                                        self.volume_count,
-                                        self.blt_attach_count)
+            if self.correct_key_tweak:
+                if self.blt_attach_count == self.volume_count:
+                    fun_test.shared_variables["blt"]["setup_created"] = True
+                    fun_test.add_checkpoint("Attaching of BLT {}".format(self.volume_count),
+                                            "PASSED",
+                                            self.volume_count,
+                                            self.blt_attach_count)
+                else:
+                    fun_test.simple_assert(False,
+                                           "Attaching of BLT {} from DUT".format(self.blt_attach_count))
 
     def run(self):
 
@@ -286,11 +286,9 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
         total_vol_reads = 0
         total_vol_writes = 0
-        total_crypto_writes = 0
-        total_crypto_reads = 0
-        crypto_vol_ops = 0
 
         crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", "cryptofilter_aes_xts")
+        crypto_cluster_props_tree = "{}/{}/{}".format("stats", "crypto", "crypto_alg_stats")
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -329,7 +327,6 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 expected_volume_stats = self.expected_volume_stats
 
             for mode in self.fio_modes:
-
                 tmp = combo.split(',')
                 fio_block_size = tmp[0].strip('() ') + 'k'
                 fio_iodepth = tmp[1].strip('() ')
@@ -424,7 +421,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                 if not self.linux_host.command("pgrep fio"):
                                     break
                                 else:
-                                    fun_test.sleep("Waiting for fio to exit...sleeping 20 secs", seconds=20)
+                                    fun_test.sleep("Waiting for fio to exit...sleeping 10 secs", seconds=10)
 
                             fun_test.log("Timer expired, killing fio...")
                             self.linux_host.command("for i in `pgrep fio`;do kill -9 $i;done")
@@ -433,16 +430,18 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
                         for x in range(1, fun_test.shared_variables["volume_count"], 1):
                             command_result = {}
-                            command_result = self.storage_controller.volume_detach_remote(ns_id=x,
-                                                                                          uuid=self.thin_uuid[x],
-                                                                                          remote_ip=self.linux_host.internal_ip)
+                            command_result = self.storage_controller.volume_detach_remote(
+                                ns_id=x,
+                                uuid=self.thin_uuid[x],
+                                remote_ip=self.linux_host.internal_ip)
                             fun_test.log(command_result)
 
                             command_result = {}
-                            command_result = self.storage_controller.volume_attach_remote(ns_id=x,
-                                                                                          uuid=self.thin_uuid[x],
-                                                                                          remote_ip=self.linux_host.internal_ip,
-                                                                                          command_duration=self.command_timeout)
+                            command_result = self.storage_controller.volume_attach_remote(
+                                ns_id=x,
+                                uuid=self.thin_uuid[x],
+                                remote_ip=self.linux_host.internal_ip,
+                                command_duration=self.command_timeout)
 
                             fun_test.log(command_result)
                     fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
@@ -467,8 +466,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     for x in range(1, fun_test.shared_variables["volume_count"], 1):
                         diff_volume_stats[combo][mode][x] = {}
                         for fkey, fvalue in final_volume_stats[combo][mode][x].items():
-                            # Not going to calculate the difference for the value stats which are not in the expected volume
-                            # dictionary and also for the fault_injection attribute
+                            # Not going to calculate the difference for the value stats which are not in the expected
+                            # volume dictionary and also for the fault_injection attribute
                             if fkey not in expected_volume_stats[mode] or fkey == "fault_injection":
                                 diff_volume_stats[combo][mode][x][fkey] = fvalue
                                 continue
@@ -490,8 +489,9 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                     fun_test.critical("Final {} value {} is not equal to the expected value {}".
                                                       format(ekey, actual, evalue))
                                 else:
-                                    fun_test.add_checkpoint("{} check for the {} test for the block size & IO depth combo "
-                                                            "{}".format(ekey, mode, combo), "PASSED", evalue, actual)
+                                    fun_test.add_checkpoint("{} check for the {} test for the block size & IO depth"
+                                                            "combo {}".format(ekey, mode, combo), "PASSED", evalue,
+                                                            actual)
                                     fun_test.log("Final {} value {} is equal to the expected value {}".
                                                  format(ekey, actual, evalue))
                             else:
@@ -501,6 +501,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         command_result = {}
         final_encrypted_vol_stats[combo][mode] = {}
         for key, value in self.encrypted_vol.items():
+            crypto_vol_ops = 0
             final_encrypted_vol_stats[combo][mode][key] = {}
             storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
                                                          "volumes",
@@ -511,13 +512,12 @@ class BLTCryptoVolumeTestCase(FunTestCase):
             final_encrypted_vol_stats[combo][mode][key] = command_result["data"]
             for fkey, fvalue in final_encrypted_vol_stats[combo][mode][key].items():
                 if fkey == "num_writes":
-                    total_crypto_writes = fvalue
+                    crypto_vol_ops += fvalue
                 elif fkey == "num_reads":
-                    total_crypto_reads = fvalue
-                crypto_vol_ops = total_crypto_reads + total_crypto_writes
+                    crypto_vol_ops += fvalue
             fun_test.shared_variables["total_vol_crypto_ops"] += crypto_vol_ops
 
-        print "The total crypto vol ops is " + str(fun_test.shared_variables["total_vol_crypto_ops"])
+        fun_test.log("The total crypto vol ops is {}".format(fun_test.shared_variables["total_vol_crypto_ops"]))
 
         for x in range(1, fun_test.shared_variables["volume_count"], 1):
             for key, value in final_volume_stats[combo][mode][x].items():
@@ -528,13 +528,13 @@ class BLTCryptoVolumeTestCase(FunTestCase):
             volume_ops = total_vol_reads + total_vol_writes
             fun_test.shared_variables["total_volume_ops"] += volume_ops
 
-        print "Final volume ops(R+W) of all volumes is " + str(fun_test.shared_variables["total_volume_ops"])
+        fun_test.log("Final volume ops(R+W) of all volumes is {}".format(fun_test.shared_variables["total_volume_ops"]))
 
         command_result = {}
         command_result = self.storage_controller.peek(crypto_props_tree)
         fun_test.shared_variables["total_crypto_ops"] = command_result["data"]
 
-        print "The total crypto ops is " + str(fun_test.shared_variables["total_crypto_ops"])
+        fun_test.log("The total crypto ops is {}". format(fun_test.shared_variables["total_crypto_ops"]))
 
         if fun_test.shared_variables["total_crypto_ops"] == fun_test.shared_variables["total_vol_crypto_ops"]:
             fun_test.add_checkpoint("The total crypto operations and encrypted volume operations match".
@@ -546,6 +546,27 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                     format(self),
                                     "FAILED", fun_test.shared_variables["total_crypto_ops"],
                                     fun_test.shared_variables["total_vol_crypto_ops"])
+
+        command_result = {}
+        final_crypto_cluster_stats = {}
+        command_result = self.storage_controller.peek(crypto_cluster_props_tree)
+        final_crypto_cluster_stats = command_result["data"]
+
+        crypto_dict = {}
+        crypto_ops = 0
+        xts_ops = 0
+        for key, value in final_crypto_cluster_stats.items():
+            if value != {}:
+                crypto_dict = value
+                xts_dict = {}
+                for ckey, cvalue in crypto_dict.items():
+                    if ckey == "AES_XTS":
+                        xts_dict = cvalue
+                        for xkey, xvalue in xts_dict.items():
+                            if xkey == "num_ops":
+                                xts_ops = xvalue
+                                crypto_ops += xts_ops
+                                fun_test.log("Crypto operations on {} is {}".format(key, xts_ops))
 
         test_result = True
         fun_test.log(fio_result)
@@ -562,7 +583,6 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         capacity_auto = None
 
         if not self.blt_creation_fail:
-
             for x in range(1, fun_test.shared_variables["volume_count"], 1):
                 if self.correct_key_tweak:
                     command_result = {}
@@ -575,56 +595,50 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     else:
                         fun_test.test_assert(command_result["status"], "Detaching of BLT {}".format(x))
 
-            if self.volume_details["block_size"] == "Auto":
-                bs_auto = True
-                self.volume_details["block_size"] = self.block_size[x]
+                if self.volume_details["block_size"] == "Auto":
+                    bs_auto = True
+                    self.volume_details["block_size"] = self.block_size[x]
 
-            if self.volume_details["capacity"] == "Auto":
-                capacity_auto = True
-                self.volume_details["capacity"] = self.vol_capacity[x]
+                if self.volume_details["capacity"] == "Auto":
+                    capacity_auto = True
+                    self.volume_details["capacity"] = self.vol_capacity[x]
 
-            command_result = {}
-            command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
-                                                                   block_size=self.volume_details["block_size"],
-                                                                   name="thin-block" + str(x),
-                                                                   uuid=self.thin_uuid[x],
-                                                                   type="VOL_TYPE_BLK_LOCAL_THIN")
-            fun_test.log(command_result)
-            if command_result["status"]:
-                self.blt_delete_count += 1
-            else:
-                fun_test.test_assert(not command_result["status"], "Deleting BLT {} on DUT".format(x))
+                command_result = {}
+                command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
+                                                                       block_size=self.volume_details["block_size"],
+                                                                       name="thin-block" + str(x),
+                                                                       uuid=self.thin_uuid[x],
+                                                                       type="VOL_TYPE_BLK_LOCAL_THIN")
+                fun_test.log(command_result)
+                if command_result["status"]:
+                    self.blt_delete_count += 1
+                else:
+                    fun_test.test_assert(not command_result["status"], "Deleting BLT {} on DUT".format(x))
 
-            if bs_auto:
-                self.volume_details["block_size"] = "Auto"
-            if capacity_auto:
-                    self.volume_details["capacity"] = "Auto"
+                if bs_auto:
+                    self.volume_details["block_size"] = "Auto"
+                if capacity_auto:
+                        self.volume_details["capacity"] = "Auto"
 
-            if self.blt_detach_count == self.volume_count:
-                fun_test.add_checkpoint("Detach of {} BLT on DUT".format(self.volume_count),
-                                        "PASSED",
-                                        self.volume_count,
-                                        self.blt_detach_count)
-                fun_test.test_assert(True, "Detach of {} BLT succeeded".format(self.blt_detach_count))
-            else:
-                fun_test.add_checkpoint("Detach of BLT",
-                                        "FAILED",
-                                        self.volume_count,
-                                        self.blt_detach_count)
+            self.storage_controller.disconnect()
+
+            if self.correct_key_tweak:
+                if self.blt_detach_count == self.volume_count:
+                    fun_test.add_checkpoint("Detach of {} BLT on DUT".format(self.volume_count),
+                                            "PASSED",
+                                            self.volume_count,
+                                            self.blt_detach_count)
+                else:
+                    fun_test.simple_assert(False, "Detach of {} BLT".format(self.blt_detach_count))
 
             if self.blt_delete_count == self.volume_count:
                 fun_test.add_checkpoint("Delete of {} BLT on DUT".format(self.volume_count),
                                         "PASSED",
                                         self.volume_count,
                                         self.blt_delete_count)
-                fun_test.test_assert(True, "Delete of {} BLT succeeded.".format(self.blt_delete_count))
             else:
-                fun_test.add_checkpoint("Delete of BLT",
-                                        "FAILED",
-                                        self.volume_count,
-                                        self.blt_delete_count)
+                fun_test.simple_assert(False, "Delete of {} BLT".format(self.blt_delete_count))
 
-        self.storage_controller.disconnect()
         fun_test.shared_variables["blt"]["setup_created"] = False
         # pass
 
@@ -633,9 +647,10 @@ class BLTKey256(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Create a volume with 256 bit key.",
+                              summary="Create a volume with 256 bit key and run FIO write, read, randwrite & randread "
+                                      "tests on single volume using block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
-                              1. Create a local thin block volume with encryption using 256 bit in dut instances 0.
+                              1. Create a local thin block volume with encryption using 256 bit key on dut.
                               2. Attach it to external linux/container.
                               3. Run FIO write traffic.
         ''')
@@ -645,7 +660,6 @@ class BLTKey256(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(BLTKey256, self).run()
-        # pass
 
     def cleanup(self):
         super(BLTKey256, self).cleanup()
@@ -655,9 +669,10 @@ class BLTKey256RW(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Create BLT's with encryption using 256 bit key & run RW test.",
+                              summary="Create BLT's with encryption using 256 bit key & run RW test on single volume"
+                                      "using block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
-                              1. Create a BLT with encryption using 256 bit key in dut instances 0.
+                              1. Create a BLT with encryption using 256 bit key on DUT.
                               2. Attach it to external linux/container.
                               3. Run FIO write traffic.
         ''')
@@ -667,7 +682,6 @@ class BLTKey256RW(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(BLTKey256RW, self).run()
-        # pass
 
     def cleanup(self):
         super(BLTKey256RW, self).cleanup()
@@ -677,9 +691,10 @@ class BLTKey256RandRW(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Create BLT's with encryption using 256 bit key & run RandRW test.",
+                              summary="Create BLT's with encryption using 256 bit key & run RandRW test using "
+                                      "block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
-                              1. Create a BLT with encryption using 256 bit key in dut instances 0.
+                              1. Create a BLT with encryption using 256 bit key on DUT.
                               2. Attach it to external linux/container.
                               3. Run FIO write traffic.
         ''')
@@ -689,7 +704,6 @@ class BLTKey256RandRW(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(BLTKey256RandRW, self).run()
-        # pass
 
     def cleanup(self):
         super(BLTKey256RandRW, self).cleanup()
@@ -699,9 +713,10 @@ class BLTKey512(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Create a volume with 512 bit key.",
+                              summary="Create a volume with 512 bit key & run FIO write, read, randwrite & randread "
+                                      "tests on single volume using block size & depth (4,1),(8,1),(16,1) & (32,1).",
                               steps='''
-                              1. Create a local thin block volume with encryption using 512 bit in dut instances 0.
+                              1. Create a local thin block volume with encryption using 512 bit key on DUT.
                               2. Attach it to external linux/container.
                               3. Run FIO write traffic.
         ''')
@@ -711,7 +726,6 @@ class BLTKey512(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(BLTKey512, self).run()
-        # pass
 
     def cleanup(self):
         super(BLTKey512, self).cleanup()
@@ -721,7 +735,8 @@ class BLTKey512RW(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Create BLT's with encryption using 512 bit key & run RW test.",
+                              summary="Create BLT's with encryption using 512 bit key & run RW test on single volume"
+                                      "using block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -733,7 +748,6 @@ class BLTKey512RW(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(BLTKey512RW, self).run()
-        # pass
 
     def cleanup(self):
         super(BLTKey512RW, self).cleanup()
@@ -743,7 +757,8 @@ class BLTKey512RandRW(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Create BLT's with encryption using 512 bit key & run RandRW test.",
+                              summary="Create BLT's with encryption using 512 bit key & run RandRW test on single "
+                                      "volume using block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -755,7 +770,6 @@ class BLTKey512RandRW(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(BLTKey512RandRW, self).run()
-        # pass
 
     def cleanup(self):
         super(BLTKey512RandRW, self).cleanup()
@@ -765,7 +779,10 @@ class MultipleBLT256(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=7,
-                              summary="Create 10 BLT's with encryption using 256 bit key & run test.",
+                              summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel on"
+                                      "all BLT write, read, randwrite & randread tests using block size & "
+                                      "depth (4,1),(8,1),(16,1) & (32,1)."
+                                      ,
                               steps='''
                               1. Create a BLT with encryption using 256 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -777,7 +794,6 @@ class MultipleBLT256(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(MultipleBLT256, self).run()
-        # pass
 
     def cleanup(self):
         super(MultipleBLT256, self).cleanup()
@@ -787,7 +803,8 @@ class MultipleBLT256RW(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=8,
-                              summary="Create 10 BLT's with encryption using 256 bit key & run RW test.",
+                              summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel"
+                                      "on all BLT RW tests using block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
                               1. Create a BLT with encryption using 256 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -799,7 +816,6 @@ class MultipleBLT256RW(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(MultipleBLT256RW, self).run()
-        # pass
 
     def cleanup(self):
         super(MultipleBLT256RW, self).cleanup()
@@ -809,7 +825,8 @@ class MultipleBLT256RandRW(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=9,
-                              summary="Create 10 BLT's with encryption using 256 bit key & run RandRW test.",
+                              summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel "
+                                      "on all BLT RandRW tests using block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
                               1. Create a BLT with encryption using 256 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -821,7 +838,6 @@ class MultipleBLT256RandRW(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(MultipleBLT256RandRW, self).run()
-        # pass
 
     def cleanup(self):
         super(MultipleBLT256RandRW, self).cleanup()
@@ -831,7 +847,9 @@ class MultipleBLT512(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=10,
-                              summary="Create 10 BLT's with encryption using 512 bit key & run test.",
+                              summary="Create multiple BLT's with encryption using 512 bit key & run FIO in parallel "
+                                      "on all BLT write, read, randwrite & randread tests using block size & "
+                                      "depth (4,1),(8,1),(16,1) & (32,1).",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -843,7 +861,6 @@ class MultipleBLT512(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(MultipleBLT512, self).run()
-        # pass
 
     def cleanup(self):
         super(MultipleBLT512, self).cleanup()
@@ -853,7 +870,8 @@ class MultipleBLT512RW(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=11,
-                              summary="Create 10 BLT's with encryption using 512 bit key & run RW test.",
+                              summary="Create multiple BLT's with encryption using 512 bit key & run FIO in parallel "
+                                      "on all BLT RW tests using block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -865,7 +883,6 @@ class MultipleBLT512RW(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(MultipleBLT512RW, self).run()
-        # pass
 
     def cleanup(self):
         super(MultipleBLT512RW, self).cleanup()
@@ -875,7 +892,8 @@ class MultipleBLT512RandRW(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=12,
-                              summary="Create 10 BLT's with encryption using 512 bit key & run RandRW test.",
+                              summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel "
+                                      "on all BLT RandRW tests using block size & depth (4,1),(8,1),(16,1) & (32,1)",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -887,7 +905,6 @@ class MultipleBLT512RandRW(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(MultipleBLT512RandRW, self).run()
-        # pass
 
     def cleanup(self):
         super(MultipleBLT512RandRW, self).cleanup()
@@ -931,11 +948,33 @@ class WrongTweak(BLTCryptoVolumeTestCase):
         super(WrongTweak, self).cleanup()
 
 
-class BLTRandomKey(BLTCryptoVolumeTestCase):
+class EncryptDisable(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=15,
-                              summary="Create BLT's with encryption on BLT with random size key.",
+                              summary="Create BLT's with wrong size key/tweak with encryption disabled.",
+                              steps='''
+                              1. Create a BLT with encryption disabled using unsupported tweak in dut instances 0.
+                              2. Creation of BLT should pass as encryption is disabled.
+        ''')
+
+    def setup(self):
+        super(EncryptDisable, self).setup()
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        super(EncryptDisable, self).cleanup()
+
+
+class BLTRandomKey(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=16,
+                              summary="Create BLT's with encryption with random size key & run FIO in parallel "
+                                      "on all BLT write,read,randwrite & randread tests using block size & depth "
+                                      "(4,1),(8,1),(16,1) & (32,1)",
                               steps='''
                               1. Create a BLT with encryption using random key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -947,7 +986,6 @@ class BLTRandomKey(BLTCryptoVolumeTestCase):
 
     def run(self):
         super(BLTRandomKey, self).run()
-        # pass
 
     def cleanup(self):
         super(BLTRandomKey, self).cleanup()
@@ -956,10 +994,10 @@ class BLTRandomKey(BLTCryptoVolumeTestCase):
 class CreateDelete256(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=16,
-                              summary="Create & delete 25 BLT's with encryption with 256 size key.",
+        self.set_test_details(id=17,
+                              summary="Create, attach & delete 25 BLT's with encryption using 256 size key.",
                               steps='''
-                              1. Create BLT's with encryption with 512 size key.
+                              1. Create BLT's with encryption with 256 size key.
                               2. Attach it to external linux/container.
                               3. Detach and delete the BLT.
         ''')
@@ -977,8 +1015,8 @@ class CreateDelete256(BLTCryptoVolumeTestCase):
 class CreateDelete512(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=17,
-                              summary="Create & delete 25 BLT's with encryption with 512 size key.",
+        self.set_test_details(id=18,
+                              summary="Create, attach & delete 25 BLT's with encryption using 512 size key.",
                               steps='''
                               1. Create BLT's with encryption with 512 size key.
                               2. Attach it to external linux/container.
@@ -998,8 +1036,10 @@ class CreateDelete512(BLTCryptoVolumeTestCase):
 class MultiVolRandKeyRandCap(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=18,
-                              summary="Create 8 BLT with rand capacity & rand encryption key.",
+        self.set_test_details(id=19,
+                              summary="Create multiple BLT with rand capacity & rand encryption key and run FIO in "
+                                      "parallel on all BLT write,read,randwrite & randread tests using block size & "
+                                      "depth (4,4),(8,4),(16,4),(32,4)",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
@@ -1019,8 +1059,10 @@ class MultiVolRandKeyRandCap(BLTCryptoVolumeTestCase):
 class BLTFioDetach(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=19,
-                              summary="Detach volume after running fio test",
+        self.set_test_details(id=20,
+                              summary="Create multiple BLT with rand capacity & rand encryption key and run FIO in "
+                                      "parallel on all BLT write,read,randwrite & randread tests using block size & "
+                                      "depth (4,4),(8,4),(16,4),(32,4) with BLT detach after each iteration",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
@@ -1042,8 +1084,9 @@ class BLTFioDetach(BLTCryptoVolumeTestCase):
 class BLTFioEncZeroPattern(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=20,
-                              summary="Encrypt BLT and run fio with pattern 0x000000000",
+        self.set_test_details(id=21,
+                              summary="Encrypt multiple BLT with random key and run fio write,read,randwrite & randread"
+                                      "with blocksize & depth set to (4,4),(8,4),(16,4),(32,4)with 0x000000000 pattern",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
@@ -1065,8 +1108,9 @@ class BLTFioEncZeroPattern(BLTCryptoVolumeTestCase):
 class BLTFioEncDeadBeefPattern(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=21,
-                              summary="Encrypt BLT and run fio with deadbeef pattern",
+        self.set_test_details(id=22,
+                              summary="Encrypt multiple BLT with random key and run fio write,read,randwrite & randread"
+                                      "with blocksize & depth set to (4,4),(8,4),(16,4),(32,4)with deadbeef pattern",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
@@ -1085,6 +1129,30 @@ class BLTFioEncDeadBeefPattern(BLTCryptoVolumeTestCase):
         super(BLTFioEncDeadBeefPattern, self).cleanup()
 
 
+class BLTAlternateEncrypt(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=22,
+                              summary="Encrypt alternate BLT with random key & run fio write,read,randwrite & randread"
+                                      "with blocksize & depth set to (4,4),(8,4),(16,4),(32,4)with deadbeef pattern",
+                              steps='''
+                              1. Create 8 BLT with rand capacity & rand encryption key.
+                              2. Attach it to external linux/container.
+                              3. Run Fio with different block size & IO depth of 8 in parallel.
+                              4. After test is done remove and attach the BLT.
+                              5. Start the fio test again.
+        ''')
+
+    def setup(self):
+        super(BLTAlternateEncrypt, self).setup()
+
+    def run(self):
+        super(BLTAlternateEncrypt, self).run()
+
+    def cleanup(self):
+        super(BLTAlternateEncrypt, self).cleanup()
+
+
 if __name__ == "__main__":
     bltscript = BLTCryptoVolumeScript()
     bltscript.add_test_case(BLTKey256())
@@ -1101,6 +1169,7 @@ if __name__ == "__main__":
     bltscript.add_test_case(MultipleBLT512RandRW())
     bltscript.add_test_case(WrongKey())
     bltscript.add_test_case(WrongTweak())
+    bltscript.add_test_case(EncryptDisable())
     bltscript.add_test_case(BLTRandomKey())
     bltscript.add_test_case(CreateDelete256())
     bltscript.add_test_case(CreateDelete512())
@@ -1108,5 +1177,6 @@ if __name__ == "__main__":
     bltscript.add_test_case(BLTFioDetach())
     bltscript.add_test_case(BLTFioEncZeroPattern())
     bltscript.add_test_case(BLTFioEncDeadBeefPattern())
+    bltscript.add_test_case(BLTAlternateEncrypt())
 
     bltscript.run()

@@ -539,6 +539,38 @@
       "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
     }
   },
+  "EncryptDisable": {
+    "volume_count": 25,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "disable"
+    },
+    "key_size": 43,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "sha1",
+      "do_verify": 0,
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    }
+  },
   "BLTRandomKey": {
     "volume_count": 8,
     "volume_details": {
@@ -617,7 +649,7 @@
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
-      "encrypt": "alternate"
+      "encrypt": "enable"
     },
     "key_size": 64,
     "xtweak_size": 8,
@@ -805,6 +837,49 @@
       "(8, 2)",
       "(16, 4)",
       "(32, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+
+    }
+  },
+  "BLTAlternateEncrypt": {
+    "volume_count": 8,
+    "volume_details": {
+      "capacity": 134217728,
+      "block_size": 4096,
+      "encrypt": "alternate"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
     ],
     "expected_volume_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
