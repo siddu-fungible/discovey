@@ -218,11 +218,11 @@ class FunTest:
 
     def get_job_environment(self):
         result = {}
-        try:
-            # fun_test.log("The env: {}".format(self.environment))
-            result = json.loads(self.environment)
-        except Exception as ex:
-            fun_test.critical(str(ex))
+        if self.environment:
+            try:
+                result = json.loads(self.environment)
+            except Exception as ex:
+                self.critical("Invalid JSON format: %s " % str(ex))
         return result
 
     def get_local_setting(self, setting):
