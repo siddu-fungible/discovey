@@ -1,6 +1,6 @@
 {
   "load_unit": "Mbps",
-  "max_egress_load": 6.45,
+  "max_egress_load": 6.44,
   "strict_priority": {
     "sp_traffic_time": 15,
     "channel_0": {
@@ -76,6 +76,13 @@
           "ingress_port2": [
               {"load_percent": 83, "expected_load_percent": 50}]
       }
+    },
+    "all_queues": {
+      "all_queues_traffic_time": 15,
+      "ingress_port1": [
+              {"load_percent": 10, "expected_load_percent": 6.25}],
+          "ingress_port2": [
+              {"load_percent": 10, "expected_load_percent": 6.25}]
     }
   },
   "shaper": {
@@ -83,7 +90,7 @@
     "default_threshold": 1000,
     "shaper_traffic_time": 15,
     "cir_1": {
-      "ingress_port_1": [
+      "ingress_port1": [
         {
           "load_percent": 50,
           "cir_bw": 2,
@@ -113,7 +120,7 @@
       ]
     },
     "cir_2": {
-      "ingress_port_1": [
+      "ingress_port1": [
         {
           "load_percent": 50,
           "cir_bw": 0.5,
@@ -143,7 +150,7 @@
       ]
     },
     "cir_3": {
-      "ingress_port_1": [
+      "ingress_port1": [
         {
           "load_percent": 33,
           "cir_bw": 1,
@@ -173,12 +180,36 @@
       ]
     },
     "pir": {
-      "ingress_port_1": [
+      "ingress_port1": [
         {
-          "dscp": 12,
           "load_percent": 66,
           "expected_load_percent": 33,
           "rate": 8400,
+          "threshold": 282000
+        }
+      ],
+      "ingress_port2": [
+        {
+          "load_percent": 60,
+          "expected_load_percent": 60
+        }
+      ]
+    },
+    "all_queues_pir": {
+      "all_queues_traffic_time": 15,
+      "ingress_port1": [
+        {
+          "load_percent": 10,
+          "expected_load_percent": 3.8,
+          "rate": 1050,
+          "threshold": 282000
+        }
+      ],
+      "ingress_port2": [
+        {
+          "load_percent": 10,
+          "expected_load_percent": 3.8,
+          "rate": 1050,
           "threshold": 282000
         }
       ]
@@ -187,7 +218,7 @@
     "sp_shaper": {
       "sp_shaper_timer": 15,
       "within_cir_1": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
@@ -225,7 +256,7 @@
         ]
       },
       "within_cir_2": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
@@ -263,7 +294,7 @@
         ]
       },
       "within_cir_3": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
@@ -301,7 +332,7 @@
         ]
       },
       "within_eb_1": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
@@ -339,7 +370,7 @@
         ]
       },
       "within_eb_2": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
@@ -351,7 +382,7 @@
           },
           {
             "load_percent": 32,
-            "expected_load_percent": 7.8,
+            "expected_load_percent": 32,
             "rate": 0,
             "threshold": 282000,
             "sp": false,
@@ -362,7 +393,7 @@
         "ingress_port2": [
           {
             "load_percent": 32,
-            "expected_load_percent": 10.9,
+            "expected_load_percent": 5.5,
             "rate": 0,
             "threshold": 282000,
             "sp": false,
@@ -371,7 +402,7 @@
           },
           {
             "load_percent": 32,
-            "expected_load_percent": 18.75,
+            "expected_load_percent": 0,
             "rate": 0,
             "threshold": 282000,
             "sp": false,
@@ -381,7 +412,7 @@
         ]
       },
       "within_eb_3": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
@@ -419,7 +450,7 @@
         ]
       },
       "within_eb_4": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 25,
@@ -457,7 +488,7 @@
         ]
       },
       "within_eb_5": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
@@ -495,7 +526,7 @@
         ]
       },
       "within_eb_6": {
-        "ingress_port_1": [
+        "ingress_port1": [
           {
             "load_percent": 62.5,
             "expected_load_percent": 48.4,
@@ -534,13 +565,81 @@
       }
     },
     "dwrr": {
-          "drww_traffic_time": 15,
+          "dwrr_traffic_time": 15,
           "default_weight": 1,
-          "ingress_port_1": [
+          "ingress_port1": [
               {"dscp": 12, "load_percent": 50, "expected_load_percent": 10, "weight": 1, "rate": 1, "threshold": 282000},
               {"dscp": 13, "load_percent": 50, "expected_load_percent": 20, "weight": 2, "rate": 1, "threshold": 282000}],
           "ingress_port2": [
               {"dscp": 14, "load_percent": 50, "expected_load_percent": 30, "weight": 3, "rate": 1, "threshold": 282000},
               {"dscp": 15, "load_percent": 50, "expected_load_percent": 40, "weight": 4, "rate": 1, "threshold": 282000}]
-    }
+    },
+  "all_queues_dwrr": {
+    "all_queues_traffic_time": 15,
+    "default_weight": 1,
+    "ingress_port1": [
+              {"dscp": 0, "load_percent": 3.5, "expected_load_percent": 1.5, "weight": 3, "rate": 1, "threshold": 282000},
+              {"dscp": 1, "load_percent": 5, "expected_load_percent": 2.5, "weight": 5, "rate": 1, "threshold": 282000},
+              {"dscp": 2, "load_percent": 7, "expected_load_percent": 3.5, "weight": 7, "rate": 1, "threshold": 282000},
+              {"dscp": 3, "load_percent": 8, "expected_load_percent": 5, "weight": 10, "rate": 1, "threshold": 282000},
+              {"dscp": 4, "load_percent": 9.5, "expected_load_percent": 7.5, "weight": 15, "rate": 1, "threshold": 282000},
+              {"dscp": 5, "load_percent": 11, "expected_load_percent": 8.5, "weight": 17, "rate": 1, "threshold": 282000},
+              {"dscp": 6, "load_percent": 12.5, "expected_load_percent": 10, "weight": 20, "rate": 1, "threshold": 282000},
+              {"dscp": 7, "load_percent": 14, "expected_load_percent": 11.5, "weight": 23, "rate": 1, "threshold": 282000}],
+    "ingress_port2": [
+              {"dscp": 8, "load_percent": 3.5, "expected_load_percent": 1.5, "weight": 3, "rate": 1, "threshold": 282000},
+              {"dscp": 9, "load_percent": 5, "expected_load_percent": 2.5, "weight": 5, "rate": 1, "threshold": 282000},
+              {"dscp": 10, "load_percent": 7, "expected_load_percent": 3.5, "weight": 7, "rate": 1, "threshold": 282000},
+              {"dscp": 11, "load_percent": 8, "expected_load_percent": 5, "weight": 10, "rate": 1, "threshold": 282000},
+              {"dscp": 12, "load_percent": 9.5, "expected_load_percent": 7.5, "weight": 15, "rate": 1, "threshold": 282000},
+              {"dscp": 13, "load_percent": 11, "expected_load_percent": 8.5, "weight": 17, "rate": 1, "threshold": 282000},
+              {"dscp": 14, "load_percent": 12.5, "expected_load_percent": 10, "weight": 20, "rate": 1, "threshold": 282000},
+              {"dscp": 15, "load_percent": 14, "expected_load_percent": 11.5, "weight": 23, "rate": 1, "threshold": 282000}]
+  },
+  "wred": {
+    "wred_timer": 5,
+    "wred_prob_index": 0,
+    "wred_prof_num": 0,
+    "wred_enable": 1,
+    "wred_weight": 2,
+    "wred_min_thr": 10,
+    "wred_max_thr": 90,
+    "stream_pps": [40, 70, 100, 150, 250],
+    "pfc_pps": 323,
+    "pfc_quanta": 100,
+    "avg_period": 1024,
+    "cap_avg_sz": 1,
+    "cap_avg_enable": 1,
+    "non_wred_load_percent": 15
+  },
+  "ecn": {
+    "ecn_enable": 1,
+    "ecn_timer": 15,
+    "ecn_prob_index": 0,
+    "ecn_prof_num": 0,
+    "ecn_min_thr": 10,
+    "ecn_max_thr": 9000,
+    "stream_pps": 150,
+    "pfc_pps": 323,
+    "pfc_quanta": 100,
+    "avg_period": 1024,
+    "cap_avg_enable": 1,
+    "cap_avg_sz": 1
+  },
+  "all_queue_wred": {
+    "wred_timer": 5,
+    "wred_prob_index": 0,
+    "wred_prof_num": 0,
+    "wred_enable": 1,
+    "wred_weight": 2,
+    "wred_min_thr": 10,
+    "wred_max_thr": 90,
+    "stream_pps_percent": [90, 95],
+    "pfc_pps": 323,
+    "pfc_quanta": 100,
+    "avg_period": 1024,
+    "cap_avg_sz": 1,
+    "cap_avg_enable": 1,
+    "non_wred_load_percent": 15
+  }
 }

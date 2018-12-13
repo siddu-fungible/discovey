@@ -12,7 +12,7 @@ generator_config_objs = {}
 generator_dict = {}
 qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
 qos_json_output = fun_test.parse_file_to_json(qos_json_file)
-test_type = "shaper"
+test_type = "dwrr"
 qos_sp_json = qos_json_output[test_type]
 sleep_timer = qos_sp_json['dwrr_traffic_time']
 k_list = [x for x in range(0, 16)]
@@ -165,7 +165,6 @@ class SpirentSetup(FunTestScript):
 
 
 class DWRR(FunTestCase):
-    cir = "cir_1"
     max_egress_load = qos_json_output['max_egress_load']
     json_load_unit = qos_json_output['load_unit']
     testcase_streamblocks = {}
@@ -292,7 +291,7 @@ class DWRR(FunTestCase):
 
     def validate_stats(self, result_dict):
         cushion_range = 10
-        first_stream_dscp_value = self.test_streams['ingress_port_1'][0]['dscp']
+        first_stream_dscp_value = self.test_streams['ingress_port1'][0]['dscp']
         initial_frame_rate = result_dict[first_stream_dscp_value]['frame_rate']
         for dscp, values in result_dict.iteritems():
             if dscp == first_stream_dscp_value:

@@ -255,6 +255,7 @@ export class RegressionAdminComponent implements OnInit {
   fetchUnallocatedRegressionScripts() {
     this.apiService.get("/regression/unallocated_script").subscribe((response) => {
       let unallocatedScripts = response.data;
+      this.unallocatedRegressionScripts = [];
       unallocatedScripts.forEach((unallocatedScript) => {
         let newEntry = {};
         newEntry["script_path"] = unallocatedScript;

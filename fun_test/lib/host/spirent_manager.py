@@ -689,7 +689,7 @@ class SpirentManager(object):
     def subscribe_results(self, parent, config_type, result_type, change_mode=False,
                           result_view_mode=RESULT_VIEW_MODE_JITTER,
                           timed_refresh_result_view_mode=TIMED_REFRESH_RESULT_VIEW_MODE,
-                          view_attribute_list=None):
+                          view_attribute_list=None, result_parent=None):
         result_handle = None
         try:
             if change_mode:
@@ -698,8 +698,13 @@ class SpirentManager(object):
                                 TimedRefreshResultViewMode=timed_refresh_result_view_mode, TimedRefreshInterval="1")
             if view_attribute_list:
                 attributes = ' '.join(view_attribute_list)
-                result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type,
-                                                   viewAttributeList=attributes)
+                if result_parent:
+                    result_handle = self.stc.subscribe(Parent=parent, ResultParent=result_parent,
+                                                       ConfigType=config_type, resulttype=result_type,
+                                                       viewAttributeList=attributes)
+                else:
+                    result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type,
+                                                       viewAttributeList=attributes)
             else:
                 result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type)
         except Exception as ex:
@@ -799,6 +804,23 @@ class SpirentManager(object):
                     if parent == analyzer_handle:
                         result = self.stc.get(output)
                         break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_port_diffserv_results(self, port_handle, subscribe_handle):
+        result = {}
+        try:
+            analyzer_handle = self.stc.get(port_handle, "children-Analyzer")
+            res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
+            fun_test.simple_assert(res_handle_list is not None, "Result handle list is found ofr diff serv result on port %s" % port_handle)
+            for output in res_handle_list:
+                regex = re.compile("diffservresults.")
+                if re.match(regex, output):
+                    parent = self.stc.get(output, "parent")
+                    if parent == analyzer_handle:
+                        qos_val = self.stc.get(output)['QosBinary']
+                        result[qos_val] = self.stc.get(output)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

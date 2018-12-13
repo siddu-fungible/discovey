@@ -504,7 +504,8 @@ def unallocated_script(request):
                     try:
                         RegresssionScripts.objects.get(script_path=path)
                     except ObjectDoesNotExist:
-                        unallocated_scripts.append(path)
+                        if path not in unallocated_scripts:
+                            unallocated_scripts.append(path)
         except Exception as ex:
             pass
     return unallocated_scripts

@@ -3,6 +3,7 @@ import {Location} from '@angular/common';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
+import {CommonService} from "../services/common/common.service";
 
 class ChildInfo {
   lastScore: number;
@@ -108,7 +109,8 @@ export class PerformanceComponent implements OnInit {
     private location: Location,
     private apiService: ApiService,
     private loggerService: LoggerService,
-    private title: Title
+    private title: Title,
+    private commonService: CommonService
   ) {
   }
 
@@ -591,6 +593,7 @@ export class PerformanceComponent implements OnInit {
   };
 
   showAtomicMetric = (flatNode) => {
+    this.commonService.scrollTo("chart-info");
     if (this.currentNode && this.currentNode.showAddJira) {
       this.currentNode.showAddJira = false;
     }
@@ -605,6 +608,7 @@ export class PerformanceComponent implements OnInit {
   };
 
   showNonAtomicMetric = (flatNode) => {
+    this.commonService.scrollTo("chart-info");
     if (this.currentNode && this.currentNode.showAddJira) {
       this.currentNode.showAddJira = false;
     }
