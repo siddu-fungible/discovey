@@ -4,55 +4,71 @@
 
 <div class="row component">
   <div class="col">
-    <table class="table table-nonfluid">
-      <tr>
-        <th>
-          Accelerator Apps
+    <table class="table table-bordered fixed-layout">
+      <tr class="blue-header">
+        <th class="middle-align no-padding" style="width: 400px">
+          Component
         </th>
-        <th>
-          # of TCs
+        <th class="middle-align no-padding">
+          Total Cases
+        </th>
+        <th class="middle-align no-padding">
+          Pass
+        </th>
+        <th class="middle-align no-padding">
+          Fail
+        </th>
+        <th class="middle-align no-padding">
+          Not Run
+        </th>
+        <th class="middle-align no-padding">
+          Last Run Build
         </th>
       </tr>
-      <tr>
-        <td>
-          Crypto
+      <ng-container *ngFor="let info of tableInfo">
+        <tr style="text-align: center;">
+        <td class="middle-align">
+          <a [routerLink]="" (click)="info.showChildren=!info.showChildren">{{ info.name }}</a>
         </td>
-        <td>
-          338
+        <td class="middle-align">
+          {{ info.totalCases }}
         </td>
+        <td class="middle-align">
+          -
+        </td>
+        <td class="middle-align">
+          -
+        </td>
+        <td class="middle-align">
+          -
+        </td>
+          <td class="middle-align">
+            <a [routerLink]="" (click)="showInfo(info)">{{ info.softwareVersion }}</a>
+          </td>
       </tr>
-      <tr>
-        <td>
-          PKE
+        <ng-container *ngIf="info.showChildren">
+          <tr class="grey-row" *ngFor="let child of info.children">
+            <td class="no-padding">
+          {{ child.name }}
         </td>
-        <td>
-          20
+        <td class="no-padding">
+          {{ child.totalCases }}
         </td>
-      </tr>
-      <tr>
-        <td>
-          ZIP
+        <td class="no-padding">
+          -
         </td>
-        <td>
-          26
+        <td class="no-padding">
+          -
         </td>
-      </tr>
-      <tr>
-        <td>
-          EC
+        <td class="no-padding">
+          -
         </td>
-        <td>
-          37
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Regex
-        </td>
-        <td>
-          581
-        </td>
-      </tr>
+            <td class="no-padding">
+              <a [routerLink]="" (click)="showInfo(info)">{{ info.softwareVersion }}</a>
+            </td>
+          </tr>
+        </ng-container>
+      </ng-container>
   </table>
     <div class="card" *ngFor="let moduleInfo of info | keyvalue">
       <div class="card card-primary">
