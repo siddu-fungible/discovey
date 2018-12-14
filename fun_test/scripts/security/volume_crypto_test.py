@@ -43,14 +43,18 @@ class BLTCryptoVolumeScript(FunTestScript):
         """)
 
     def setup(self):
-        topology_obj_helper = TopologyHelper(spec=topology_dict)
-        topology = topology_obj_helper.deploy()
+        self.topology_obj_helper = TopologyHelper(spec=topology_dict)
+        self.topology = self.topology_obj_helper.deploy()
         # topology_obj_helper.save(file_name="/tmp/pickle.pkl")
         # topology = topology_obj_helper.load(file_name="/tmp/pickle.pkl")
-        fun_test.test_assert(topology, "Ensure deploy is successful")
-        fun_test.shared_variables["topology"] = topology
+        fun_test.test_assert(self.topology, "Ensure deploy is successful")
+        self.dut_instance = self.topology.get_dut_instance(index=0)
+        self.storage_controller = StorageController(target_ip=self.dut_instance.host_ip,
+                                                    target_port=self.dut_instance.external_dpcsh_port)
         # We have declared this here since when we remove volume, the counters are from zero but crypto
         # counters are not from zero.
+        fun_test.shared_variables["topology"] = self.topology
+        fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["total_volume_ops"] = 0
         fun_test.shared_variables["vol_encrypt_filter"] = 0
         fun_test.shared_variables["vol_decrypt_filter"] = 0
@@ -58,7 +62,8 @@ class BLTCryptoVolumeScript(FunTestScript):
         fun_test.shared_variables["ctrl_created"] = False
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        self.storage_controller.disconnect()
+        TopologyHelper(spec=self.topology).cleanup()
         # pass
 
 
@@ -110,13 +115,11 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         self.dut_instance = self.topology.get_dut_instance(index=0)
-        fun_test.test_assert(self.dut_instance, "Retrieved dut instance 0")
-
         self.linux_host = self.topology.get_tg_instance(tg_index=0)
 
         self.linux_host_inst = {}
-        self.storage_controller = StorageController(target_ip=self.dut_instance.host_ip,
-                                                    target_port=self.dut_instance.external_dpcsh_port)
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
+
         key256_count = 0
         key512_count = 0
         self.blt_create_count = 0
@@ -156,6 +159,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
             for x in range(1, fun_test.shared_variables["volume_count"], 1):
                 self.thin_uuid[x] = utils.generate_uuid()
+                # Key generation for encryption based on size or input is random or alternate
                 if self.key_size == "random":
                     key_range = [32, 64]
                     rand_key = random.choice(key_range)
@@ -176,11 +180,13 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
                 self.xts_tweak = utils.generate_key(self.xtweak_size)
 
+                # Select volume block size from a range
                 if self.volume_details["block_size"] == "Auto":
                     bs_auto = True
                     self.block_size[x] = random.choice(self.volume_details["block_size_range"])
                     self.volume_details["block_size"] = self.block_size[x]
 
+                # Select volume capacity from a range
                 if self.volume_details["capacity"] == "Auto":
                     capacity_auto = True
                     self.vol_capacity[x] = random.choice(self.volume_details["capacity_range"])
@@ -218,6 +224,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 if capacity_auto:
                     self.volume_details["capacity"] = "Auto"
 
+                # Attach volume only if encryption is disabled or key/tweak sizes are sane
                 if (self.key_size == 32 or self.key_size == 64 or self.key_size == "random" or
                     self.key_size == "alternate" or not self.vol_encrypt) and self.xtweak_size == 8:
 
@@ -620,8 +627,6 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 if capacity_auto:
                         self.volume_details["capacity"] = "Auto"
 
-            self.storage_controller.disconnect()
-
             if self.correct_key_tweak:
                 if self.blt_detach_count == self.volume_count:
                     fun_test.add_checkpoint("Detach of {} BLT on DUT".format(self.volume_count),
@@ -647,8 +652,8 @@ class BLTKey256(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Create a volume with 256 bit key and run FIO write, read, randwrite & randread "
-                                      "tests on single volume using block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                              summary="Create a volume with 256 bit key and run FIO on single BLT with different RW "
+                                      "pattern, block size & depth",
                               steps='''
                               1. Create a local thin block volume with encryption using 256 bit key on dut.
                               2. Attach it to external linux/container.
@@ -670,7 +675,7 @@ class BLTKey256RW(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Create BLT's with encryption using 256 bit key & run RW test on single volume"
-                                      "using block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                                      "using different block size & depth",
                               steps='''
                               1. Create a BLT with encryption using 256 bit key on DUT.
                               2. Attach it to external linux/container.
@@ -692,7 +697,7 @@ class BLTKey256RandRW(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=3,
                               summary="Create BLT's with encryption using 256 bit key & run RandRW test using "
-                                      "block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                                      "different block size & depth",
                               steps='''
                               1. Create a BLT with encryption using 256 bit key on DUT.
                               2. Attach it to external linux/container.
@@ -714,7 +719,7 @@ class BLTKey512(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=4,
                               summary="Create a volume with 512 bit key & run FIO write, read, randwrite & randread "
-                                      "tests on single volume using block size & depth (4,1),(8,1),(16,1) & (32,1).",
+                                      "tests on single volume using different block size & depth",
                               steps='''
                               1. Create a local thin block volume with encryption using 512 bit key on DUT.
                               2. Attach it to external linux/container.
@@ -736,7 +741,7 @@ class BLTKey512RW(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=5,
                               summary="Create BLT's with encryption using 512 bit key & run RW test on single volume"
-                                      "using block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                                      "using different block size & depth",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -758,7 +763,7 @@ class BLTKey512RandRW(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=6,
                               summary="Create BLT's with encryption using 512 bit key & run RandRW test on single "
-                                      "volume using block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                                      "volume using different block size & depth",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -780,8 +785,7 @@ class MultipleBLT256(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=7,
                               summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel on"
-                                      "all BLT write, read, randwrite & randread tests using block size & "
-                                      "depth (4,1),(8,1),(16,1) & (32,1)."
+                                      "all BLT using different rw pattern, block size & depth."
                                       ,
                               steps='''
                               1. Create a BLT with encryption using 256 bit key in dut instances 0.
@@ -804,7 +808,7 @@ class MultipleBLT256RW(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=8,
                               summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel"
-                                      "on all BLT RW tests using block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                                      "on all BLT RW tests using different block size & depth",
                               steps='''
                               1. Create a BLT with encryption using 256 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -826,7 +830,7 @@ class MultipleBLT256RandRW(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=9,
                               summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel "
-                                      "on all BLT RandRW tests using block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                                      "on all BLT RandRW tests using different block size & depth",
                               steps='''
                               1. Create a BLT with encryption using 256 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -848,8 +852,7 @@ class MultipleBLT512(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=10,
                               summary="Create multiple BLT's with encryption using 512 bit key & run FIO in parallel "
-                                      "on all BLT write, read, randwrite & randread tests using block size & "
-                                      "depth (4,1),(8,1),(16,1) & (32,1).",
+                                      "on all BLT using different RW pattern, block size & depth.",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -871,7 +874,7 @@ class MultipleBLT512RW(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=11,
                               summary="Create multiple BLT's with encryption using 512 bit key & run FIO in parallel "
-                                      "on all BLT RW tests using block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                                      "on all BLT RW tests using different block size & depth",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -893,7 +896,7 @@ class MultipleBLT512RandRW(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=12,
                               summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel "
-                                      "on all BLT RandRW tests using block size & depth (4,1),(8,1),(16,1) & (32,1)",
+                                      "on all BLT RandRW tests using different block size & depth",
                               steps='''
                               1. Create a BLT with encryption using 512 bit key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -973,8 +976,7 @@ class BLTRandomKey(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=16,
                               summary="Create BLT's with encryption with random size key & run FIO in parallel "
-                                      "on all BLT write,read,randwrite & randread tests using block size & depth "
-                                      "(4,1),(8,1),(16,1) & (32,1)",
+                                      "on all BLT using different RW patterns, block size & depth",
                               steps='''
                               1. Create a BLT with encryption using random key in dut instances 0.
                               2. Attach it to external linux/container.
@@ -1038,12 +1040,11 @@ class MultiVolRandKeyRandCap(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=19,
                               summary="Create multiple BLT with rand capacity & rand encryption key and run FIO in "
-                                      "parallel on all BLT write,read,randwrite & randread tests using block size & "
-                                      "depth (4,4),(8,4),(16,4),(32,4)",
+                                      "parallel on all BLT with different RW pattern, block size & depth",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
-                              3. Run Fio with different block size & IO depth of 8 in parallel.
+                              3. Run Fio with different block size & IO depth in parallel.
         ''')
 
     def setup(self):
@@ -1061,12 +1062,11 @@ class BLTFioDetach(BLTCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=20,
                               summary="Create multiple BLT with rand capacity & rand encryption key and run FIO in "
-                                      "parallel on all BLT write,read,randwrite & randread tests using block size & "
-                                      "depth (4,4),(8,4),(16,4),(32,4) with BLT detach after each iteration",
+                                      "parallel on all BLT with different RW pattern block size & depth",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
-                              3. Run Fio with different block size & IO depth of 8 in parallel.
+                              3. Run Fio with different block size & IO depth in parallel.
                               4. After test is done remove and attach the BLT.
                               5. Start the fio test again.
         ''')
@@ -1085,12 +1085,12 @@ class BLTFioEncZeroPattern(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=21,
-                              summary="Encrypt multiple BLT with random key and run fio write,read,randwrite & randread"
-                                      "with blocksize & depth set to (4,4),(8,4),(16,4),(32,4)with 0x000000000 pattern",
+                              summary="Encrypt multiple BLT with random key and run fio with different RW pattern,"
+                                      "block size & depth with 0x000000000 pattern",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
-                              3. Run Fio with different block size & IO depth of 8 in parallel.
+                              3. Run Fio with different block size & IO depth in parallel.
                               4. After test is done remove and attach the BLT.
                               5. Start the fio test again.
         ''')
@@ -1109,12 +1109,12 @@ class BLTFioEncDeadBeefPattern(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=22,
-                              summary="Encrypt multiple BLT with random key and run fio write,read,randwrite & randread"
-                                      "with blocksize & depth set to (4,4),(8,4),(16,4),(32,4)with deadbeef pattern",
+                              summary="Encrypt multiple BLT with random key and run fio with different RW pattern,"
+                                      "block size & depth with DEADBEEF pattern",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
-                              3. Run Fio with different block size & IO depth of 8 in parallel.
+                              3. Run Fio with different block size & IO depth in parallel.
                               4. After test is done remove and attach the BLT.
                               5. Start the fio test again.
         ''')
@@ -1133,12 +1133,12 @@ class BLTAlternateEncrypt(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=23,
-                              summary="Encrypt alternate BLT with random key & run fio write,read,randwrite & randread"
-                                      "with blocksize & depth set to (4,4),(8,4),(16,4),(32,4)with deadbeef pattern",
+                              summary="Encrypt alternate BLT with random key & run fio with different RW pattern,"
+                                      "block size & depth with DEADBEEF pattern",
                               steps='''
                               1. Create 8 BLT with rand capacity & rand encryption key.
                               2. Attach it to external linux/container.
-                              3. Run Fio with different block size & IO depth of 8 in parallel.
+                              3. Run Fio with different block size & IO depth in parallel.
                               4. After test is done remove and attach the BLT.
                               5. Start the fio test again.
         ''')
