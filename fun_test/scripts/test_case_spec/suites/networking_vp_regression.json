@@ -1,0 +1,7 @@
+[
+  {"path": "networking/vp/test_sanity_vp_path_sweep.py", "test_case_ids": [5, 7]},
+  {"path": "networking/vp/test_sanity_vp_path_random.py", "test_case_ids": [5, 6, 7, 8]},
+  {"path": "networking/vp/test_vp_path_good_bad_ipv4.py"},
+  {"path": "networking/vp/test_vp_path_good_bad_ipv6.py"},
+  {"path": "networking/vp/test_clbp.py"}
+]
