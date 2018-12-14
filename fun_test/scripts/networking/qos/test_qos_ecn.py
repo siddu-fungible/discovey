@@ -547,16 +547,16 @@ class ECN_10_00(FunTestCase):
         self.do_test_asserts(result)
 
     def do_test_asserts(self, result):
-        fun_test.test_assert(self.stream_dscps[0], "Ensure ECN bits is set to 11 for DSCP 0 as it had "
+        fun_test.test_assert(result[str(self.stream_dscps[0])], "Ensure ECN bits is set to 11 for DSCP 0 as it had "
                                                    "ecn bits 01")
 
-        fun_test.test_assert(not self.stream_dscps[1], "Ensure ECN bits is not set to 11 for DSCP 16 as it had "
+        fun_test.test_assert(not result[str(self.stream_dscps[1])], "Ensure ECN bits is not set to 11 for DSCP 16 as it had "
                                                    "ecn bits 00")
 
     def cleanup(self):
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=streamblock_handles_list + [pfc_stream.spirent_handle])
-        fun_test.test_assert(stop_streams, "Start running traffic")
+        fun_test.test_assert(stop_streams, "Stop running traffic")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():
@@ -567,9 +567,6 @@ class ECN_10_00(FunTestCase):
                                                                          enable_ecn=0,
                                                                          ecn_profile_num=self.prof_num)
         fun_test.simple_assert(set_queue_cfg, "Disable ecn on queue %s" % self.port_1_stream_dscp)
-
-        file_delete = fun_test.remove_file(self.pcap_file)
-        fun_test.simple_assert(file_delete, "Remove %s pcap file from system" % self.pcap_file)
 
 class ECN_10_10(ECN_10_00):
     stream_ecn_bits_list = [ECN_BITS_10, ECN_BITS_10]
@@ -588,11 +585,11 @@ class ECN_10_10(ECN_10_00):
                               """)
 
     def do_test_asserts(self, result):
-        fun_test.test_assert(self.stream_dscps[0], "Ensure ECN bits is set to 11 for DSCP 0 as it had "
+        fun_test.test_assert(result[str(self.stream_dscps[0])], "Ensure ECN bits is set to 11 for DSCP 0 as it had "
                                                    "ecn bits 01")
 
-        fun_test.test_assert(self.stream_dscps[1], "Ensure ECN bits is set to 11 for DSCP 16 as it had "
-                                                    "ecn bits 00")
+        fun_test.test_assert(result[str(self.stream_dscps[1])], "Ensure ECN bits is set to 11 for DSCP 16 as it had "
+                                                    "ecn bits 01")
 
 
 if __name__ == "__main__":
