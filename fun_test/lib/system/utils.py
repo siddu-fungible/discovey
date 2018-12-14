@@ -119,3 +119,12 @@ def generate_uuid(length=16):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def generate_key(length=32):
+    result = None
+    try:
+        result = os.urandom(length).encode('hex')
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return  result
