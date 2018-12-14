@@ -4,6 +4,72 @@
 
 <div class="row component">
   <div class="col">
+    <table class="table table-bordered fixed-layout">
+      <tr class="blue-header">
+        <th class="middle-align no-padding" style="width: 400px">
+          Component
+        </th>
+        <th class="middle-align no-padding">
+          Total Cases
+        </th>
+        <th class="middle-align no-padding">
+          Pass
+        </th>
+        <th class="middle-align no-padding">
+          Fail
+        </th>
+        <th class="middle-align no-padding">
+          Not Run
+        </th>
+        <th class="middle-align no-padding">
+          Last Run Build
+        </th>
+      </tr>
+      <ng-container *ngFor="let info of tableInfo">
+        <tr style="text-align: center;">
+        <td class="middle-align">
+          <a [routerLink]="" (click)="info.showChildren=!info.showChildren">{{ info.name }}</a>
+        </td>
+        <td class="middle-align">
+          {{ info.totalCases }}
+        </td>
+        <td class="middle-align">
+          -
+        </td>
+        <td class="middle-align">
+          -
+        </td>
+        <td class="middle-align">
+          -
+        </td>
+          <td class="middle-align">
+            <a [routerLink]="" (click)="showInfo(info)">{{ info.softwareVersion }}</a>
+          </td>
+      </tr>
+        <ng-container *ngIf="info.showChildren">
+          <tr class="grey-row" *ngFor="let child of info.children">
+            <td class="no-padding">
+          {{ child.name }}
+        </td>
+        <td class="no-padding">
+          {{ child.totalCases }}
+        </td>
+        <td class="no-padding">
+          -
+        </td>
+        <td class="no-padding">
+          -
+        </td>
+        <td class="no-padding">
+          -
+        </td>
+            <td class="no-padding">
+              <a [routerLink]="" (click)="showInfo(info)">{{ info.softwareVersion }}</a>
+            </td>
+          </tr>
+        </ng-container>
+      </ng-container>
+  </table>
     <div class="card" *ngFor="let moduleInfo of info | keyvalue">
       <div class="card card-primary">
         <div class="card-header"><b>{{ moduleInfo.value.verboseName }}</b></div>
