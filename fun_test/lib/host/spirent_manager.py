@@ -30,22 +30,24 @@ class SpirentManager(object):
     LINK_STATUS_UP = "LINK_STATUS_UP"
     RESULT_VIEW_MODE_JITTER = "JITTER"
     TIMED_REFRESH_RESULT_VIEW_MODE = "PERIODIC"
+    HOST_CONFIG = {}
 
     def __init__(self, spirent_config, chassis_type=VIRTUAL_CHASSIS_TYPE):
+        self._read_spirent_config()
         try:
             stc_private_install_dir = fun_test.get_environment_variable(variable="STC_PRIVATE_INSTALL_DIR")
             if not stc_private_install_dir:
-                raise FunTestLibException("STC install directory not found. Please export STC_PRIVATE_INSTALL_DIR.")
+                # raise FunTestLibException("STC install directory not found. Please export STC_PRIVATE_INSTALL_DIR.")
+                os.environ['STC_PRIVATE_INSTALL_DIR'] = self.HOST_CONFIG['hosts']['spirent_private_install_dir']
+                os.environ['SPIRENTD_LICENSE_FILE'] = self.HOST_CONFIG['hosts']['license_server_ip']
             self.stc = StcPython()
         except Exception as ex:
             raise FunTestLibException("Unable to initialized Spirent Manager: %s" % str(ex))
         self.project_handle = None
-        self.host_config = {}
         self.chassis_type = chassis_type
         self.spirent_config = spirent_config
         # self.chassis_ip = self._get_chassis_ip_by_chassis_type()
         self.chassis_ip = None  # After dut_spirent_map change we don't need to use this
-        self._read_spirent_config()
 
     def health(self, session_name="TestSession"):
         health_result = {"result": False, "error_message": None}
@@ -155,9 +157,9 @@ class SpirentManager(object):
         try:
             self._read_spirent_config()
             if self.chassis_type == self.PHYSICAL_CHASSIS_TYPE:
-                ip_address = self.host_config['hosts']['physical_chassis_ip']
+                ip_address = self.HOST_CONFIG['hosts']['physical_chassis_ip']
             else:
-                ip_address = self.host_config['hosts']['virtual_chassis_ip']
+                ip_address = self.HOST_CONFIG['hosts']['virtual_chassis_ip']
         except Exception as ex:
             fun_test.critical(str(ex))
         return ip_address
@@ -190,10 +192,10 @@ class SpirentManager(object):
                     spirent_config = config
                     break
             fun_test.debug("Found: %s" % spirent_config)
-            self.host_config['hosts'] = spirent_config
+            self.HOST_CONFIG['hosts'] = spirent_config
         except Exception as ex:
             fun_test.critical(str(ex))
-        return self.host_config
+        return self.HOST_CONFIG
 
     def get_chassis_manager(self):
         handle = None
@@ -216,11 +218,11 @@ class SpirentManager(object):
     def connect_lab_server(self, session_name):
         result = False
         try:
-            self.stc.perform("CSTestSessionConnect", host=self.host_config['hosts']['lab_server_ip'],
+            self.stc.perform("CSTestSessionConnect", host=self.HOST_CONFIG['hosts']['lab_server_ip'],
                              TestSessionName=session_name,
                              CreateNewTestSession=True)
             self.stc.perform("TerminateBll", TerminateType="ON_LAST_DISCONNECT")
-            fun_test.debug("Connected to Lab Server: %s" % self.host_config['hosts']['lab_server_ip'])
+            fun_test.debug("Connected to Lab Server: %s" % self.HOST_CONFIG['hosts']['lab_server_ip'])
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -230,9 +232,9 @@ class SpirentManager(object):
         result = False
         try:
             license_manager = self.stc.get(self.SYSTEM_OBJECT, "children-licenseservermanager")
-            output = self.stc.create("LicenseServer", under=license_manager, server=self.host_config['hosts']['license_server_ip'])
-            fun_test.simple_assert(output, "Connect to License Server: %s" % self.host_config['hosts']['license_server_ip'])
-            fun_test.debug("Connected to License Server: %s" % self.host_config['hosts']['license_server_ip'])
+            output = self.stc.create("LicenseServer", under=license_manager, server=self.HOST_CONFIG['hosts']['license_server_ip'])
+            fun_test.simple_assert(output, "Connect to License Server: %s" % self.HOST_CONFIG['hosts']['license_server_ip'])
+            fun_test.debug("Connected to License Server: %s" % self.HOST_CONFIG['hosts']['license_server_ip'])
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
