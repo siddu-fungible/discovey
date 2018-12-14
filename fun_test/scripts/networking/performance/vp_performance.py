@@ -62,71 +62,7 @@ class NuVpPerformance(FunTestScript):
         global performance_data, spirent_config, perf_loads, network_controller_obj
 
         spirent_config = nu_config_obj.read_traffic_generator_config()
-        '''
-        dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_type=NuConfigManager.VP_FLOW_TYPE,
-                                                   flow_direction=FLOW_DIRECTION)
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
 
-        template_obj = SpirentEthernetTrafficTemplate(session_name="performance_bidirectional",
-                                                      chassis_type=chassis_type, spirent_config=spirent_config)
-        result = template_obj.setup(no_of_ports_needed=self.NO_OF_PORTS, flow_type=NuConfigManager.VP_FLOW_TYPE,
-                                    flow_direction=FLOW_DIRECTION)
-        fun_test.test_assert(result['result'], "Ensure Setup is done")
-
-        dpc_server_ip = dut_config["dpcsh_tcp_proxy_ip"]
-        dpc_server_port = dut_config["dpcsh_tcp_proxy_port"]
-
-        self.port1 = result['port_list'][0]
-
-        checkpoint = "Change ports MTU to %d" % self.MTU
-        mtu_changed_on_spirent = template_obj.change_ports_mtu(interface_obj_list=result["interface_obj_list"],
-                                                               mtu_value=self.MTU)
-        fun_test.test_assert(mtu_changed_on_spirent, checkpoint)
-
-        if dut_config['enable_dpcsh']:
-            network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
-            checkpoint = "Change DUT ports MTU to %d" % self.MTU
-            for port_num in dut_config['ports']:
-                if port_num == 1 or port_num == 2:
-                    shape = 1
-                else:
-                    shape = 0
-                mtu_changed = network_controller_obj.set_port_mtu(port_num=port_num, mtu_value=self.MTU, shape=shape)
-                fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port_num, self.MTU))
-            fun_test.add_checkpoint(checkpoint)
-
-            checkpoint = "Configure QoS settings"
-            enable_pfc = network_controller_obj.enable_qos_pfc()
-            fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
-            buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=7000,
-                                                                                nonfcp_xoff_thr=7000,
-                                                                                df_thr=4000,
-                                                                                dx_thr=4000,
-                                                                                fcp_thr=8000,
-                                                                                nonfcp_thr=8000,
-                                                                                sample_copy_thr=255,
-                                                                                sf_thr=4000,
-                                                                                sf_xoff_thr=3500,
-                                                                                sx_thr=4000)
-            fun_test.test_assert(buffer_pool_set, checkpoint)
-
-            checkpoint = "Configure HNU QoS settings"
-            enable_pfc = network_controller_obj.enable_qos_pfc(hnu=True)
-            fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
-            buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(fcp_xoff_thr=900,
-                                                                                nonfcp_xoff_thr=3500,
-                                                                                df_thr=2000,
-                                                                                dx_thr=1000,
-                                                                                fcp_thr=1000,
-                                                                                nonfcp_thr=4000,
-                                                                                sample_copy_thr=255,
-                                                                                sf_thr=2000,
-                                                                                sf_xoff_thr=1900,
-                                                                                sx_thr=250,
-                                                                                mode="hnu")
-            fun_test.test_assert(buffer_pool_set, checkpoint)
-        '''
         checkpoint = "Read Performance expected data for fixed size scenario"
         file_path = LOGS_DIR + "/" + self.EXPECTED_PERFORMANCE_DATA_FILE_NAME
         performance_data = fun_test.parse_file_to_json(file_path=file_path)
@@ -135,35 +71,14 @@ class NuVpPerformance(FunTestScript):
         checkpoint = "Get load as per flow_type"
         perf_loads = fun_test.parse_file_to_json(file_path=INTERFACE_LOAD_SPEC)['vp_performance']
         fun_test.simple_assert(perf_loads, checkpoint)
-        '''
-        port1_generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
-                                                 duration=TRAFFIC_DURATION,
-                                                 duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
-                                                 time_stamp_latch_mode=GeneratorConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
 
-        port1_analyzer_config = AnalyzerConfig(timestamp_latch_mode=AnalyzerConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
-
-        for port in result['port_list']:
-            checkpoint = "Create Generator Config for %s port" % port
-            result = template_obj.configure_generator_config(port_handle=port,
-                                                             generator_config_obj=port1_generator_config)
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            checkpoint = "Create Analyzer Config for %s port" % port
-            result = template_obj.configure_analyzer_config(port_handle=port,
-                                                            analyzer_config_obj=port1_analyzer_config)
-            fun_test.simple_assert(result, checkpoint)
-
-            generator_port_obj_dict[port] = template_obj.stc_manager.get_generator(port_handle=port)
-            analyzer_port_obj_dict[port] = template_obj.stc_manager.get_analyzer(port_handle=port)
-        '''
     def cleanup(self):
-        template_obj.cleanup()
+        pass
 
 
 class VpLatencyNuHnuFlow(FunTestCase):
     subscribe_results = {}
-    expected_latency_data = {}
+    expected_perf_data = {}
     spirent_tx_port = None
     spirent_rx_port = None
     flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
@@ -175,6 +90,33 @@ class VpLatencyNuHnuFlow(FunTestCase):
     network_controller_obj = None
     streams = []
     dut_config = None
+    subscribe_jitter_results = {}
+    view_attribute_list = ["AvgJitter", "MinJitter", "MaxJitter", "L1BitRate", "FrameRate", "FrameCount"]
+
+    def subscribe_to_jitter_results(self):
+        checkpoint = "Subscribe to Tx Stream Block results"
+        tx_subscribe = self.template_obj.subscribe_tx_results(parent=self.template_obj.stc_manager.project_handle)
+        fun_test.test_assert(expression=tx_subscribe, message=checkpoint)
+
+        checkpoint = "Subscribe to Tx Stream results"
+        tx_stream_subscribe = self.template_obj.subscribe_tx_results(
+            parent=self.template_obj.stc_manager.project_handle, result_type="TxStreamResults")
+        fun_test.test_assert(tx_stream_subscribe, checkpoint)
+
+        checkpoint = "Subscribe to Rx Stream Summary Results"
+        rx_summary_subscribe = self.template_obj.subscribe_rx_results(
+            parent=self.template_obj.stc_manager.project_handle, result_type="RxStreamSummaryResults",
+            view_attribute_list=self.view_attribute_list, change_mode=True)
+        fun_test.test_assert(rx_summary_subscribe, checkpoint)
+
+        checkpoint = "Subscribe to Analyzer Results"
+        analyzer_subscribe = self.template_obj.subscribe_analyzer_results(
+            parent=self.template_obj.stc_manager.project_handle)
+        fun_test.test_assert(analyzer_subscribe, checkpoint)
+
+        self.subscribe_jitter_results = {"tx_subscribe": tx_subscribe, "tx_stream_subscribe": tx_stream_subscribe,
+                                         "rx_summary_subscribe": rx_summary_subscribe,
+                                         "analyzer_subscribe": analyzer_subscribe}
 
     def configure_qos_dut_configs(self):
         dpc_server_ip = self.dut_config["dpcsh_tcp_proxy_ip"]
@@ -371,7 +313,12 @@ class VpLatencyNuHnuFlow(FunTestCase):
                 parent=self.template_obj.stc_manager.project_handle)
             fun_test.test_assert(expression=self.subscribe_results['result'], message=checkpoint)
 
-        self.expected_latency_data = performance_data
+        checkpoint = "Subscribe to Jitter results"
+        if not self.subscribe_jitter_results:
+            self.subscribe_to_jitter_results()
+        fun_test.add_checkpoint(checkpoint)
+
+        self.expected_perf_data = performance_data
 
         if self.network_controller_obj:
             checkpoint = "Clear FPG port stats on DUT"
@@ -481,7 +428,7 @@ class VpLatencyNuHnuFlow(FunTestCase):
             latency_result = self.template_obj.validate_performance_result(
                 tx_subscribe_handle=tx_subscribe_handle,
                 rx_subscribe_handle=rx_subscribe_handle,
-                stream_objects=[stream_obj], expected_performance_data=self.expected_latency_data,
+                stream_objects=[stream_obj], expected_performance_data=self.expected_perf_data,
                 tx_port=self.spirent_tx_port, rx_port=self.spirent_rx_port, tolerance_percent=TOLERANCE_PERCENT,
                 flow_type=self.flow_direction, spray_enabled=self.spray_enable, dut_stats_success=dut_stats_success)
             fun_test.simple_assert(expression=latency_result['result'], message=checkpoint)
@@ -492,13 +439,45 @@ class VpLatencyNuHnuFlow(FunTestCase):
             result = self.template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
             fun_test.test_assert(expression=result['result'], message=checkpoint)
 
-            checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
-            result = self.template_obj.deactivate_stream_blocks(stream_obj_list=[stream_obj])
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
             latency_results[key] = {'pps_count': rate_result['pps_count'][key],
                                     'throughput_count': rate_result['throughput_count'][key],
                                     'latency_count': latency_result[key]}
+
+            checkpoint = "Clear spirent results"
+            result = self.template_obj.clear_subscribed_results(subscribe_handle_list=self.subscribe_results.values())
+            fun_test.test_assert(result, checkpoint)
+
+            checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % TRAFFIC_DURATION
+            result = self.template_obj.enable_generator_configs(generator_configs=[
+                generator_port_obj_dict[self.spirent_tx_port]])
+            fun_test.simple_assert(expression=result, message=checkpoint)
+
+            fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
+
+            checkpoint = "Validate Jitter Results"
+            jitter_result = self.template_obj.validate_performance_result(
+                tx_subscribe_handle=self.subscribe_jitter_results['tx_subscribe'],
+                rx_subscribe_handle=self.subscribe_jitter_results['rx_summary_subscribe'],
+                stream_objects=[stream_obj], expected_performance_data=self.expected_perf_data,
+                tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=self.flow_direction,
+                spray_enabled=self.spray_enable)
+            fun_test.simple_assert(expression=jitter_result, message=checkpoint)
+
+            checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[self.spirent_rx_port]
+            analyzer_rx_results = self.template_obj.stc_manager.get_rx_port_analyzer_results(
+                port_handle=self.spirent_rx_port, subscribe_handle=self.subscribe_jitter_results['analyzer_subscribe'])
+            result = self.template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
+            if (self.flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU or
+                self.flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG) \
+                    and self.spray_enable:
+                fun_test.log("Error Counters are seen Reordered Frame Count: %d \n PrbsErrorFrameCount: %d" % (
+                    result['ReorderedFrameCount'], result['PrbsErrorFrameCount']))
+            else:
+                fun_test.test_assert(expression=result['result'], message=checkpoint)
+
+            checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
+            result = self.template_obj.deactivate_stream_blocks(stream_obj_list=[stream_obj])
+            fun_test.simple_assert(expression=result, message=checkpoint)
 
             checkpoint = "Performance for %s frame size with %s load" % (frame_size, str(load))
             message = "---------------------------------> End %s  <---------------------------------" % checkpoint
@@ -507,6 +486,10 @@ class VpLatencyNuHnuFlow(FunTestCase):
 
         checkpoint = "Display Latency Performance Counters"
         self.template_obj.display_latency_counters(result=latency_results)
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Display Jitter Performance Counters"
+        self.template_obj.display_jitter_counters(result=jitter_results)
         fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):
@@ -519,6 +502,7 @@ class VpLatencyNuHnuFlow(FunTestCase):
                                                              jitter_results=jitter_results,
                                                              file_name=output_file_path,
                                                              spray_enable=self.spray_enable)
+        self.template_obj.cleanup()
 
 '''
 class NuVpJitterTest(FunTestCase):
@@ -742,10 +726,7 @@ class NuVpJitterTest(FunTestCase):
             fun_test.log(message)
             fun_test.add_checkpoint(message)
 
-        checkpoint = "Display Jitter Performance Counters"
-        template_obj.display_jitter_counters(result=jitter_results)
-        fun_test.add_checkpoint(checkpoint)
-
+        
     def cleanup(self):
         template_obj.delete_streamblocks(stream_obj_list=stream_port_obj_dict[self.port])
 
