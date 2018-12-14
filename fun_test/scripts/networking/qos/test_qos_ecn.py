@@ -384,6 +384,10 @@ class ECN_10(FunTestCase):
                                          "applied on %s" % (queue, self.non_ecn_applied_queue_num))
 
     def cleanup(self):
+        # Clear all subscribed results
+        for key in subscribe_results.iterkeys():
+            template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
+
         set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
                                                                          queue_num=self.ecn_applied_queue_num,
                                                                          enable_ecn=0,
@@ -412,7 +416,7 @@ class ECN_01(ECN_10):
 
 class ECN_10_00(FunTestCase):
     port_1_stream_dscp = 0
-    port_3_stream_dscp = 0
+    port_3_stream_dscp = 16
     stream_ecn_bits_list = [ECN_BITS_10, ECN_BITS_00]
     stream_dscps = [port_1_stream_dscp, port_3_stream_dscp]
     pcap_file = None
@@ -437,7 +441,7 @@ class ECN_10_00(FunTestCase):
                               summary="Test packets having ecn bits 00 sent on a queue for which "
                                       "ecn profile is applied does not change to 11",
                               steps="""
-                              1. Update stream from port 1 and port 3 with dscp 0 and 1 and src_ip 1.1.1.1 and 2.2.2.2 
+                              1. Update stream from port 1 and port 3 with dscp 0 and 16 and src_ip 1.1.1.1 and 2.2.2.2 
                                  having respectively and ecn bits set to 10.
                               2. Add ecn profile for queue 0 on egress dut port
                               3. Start traffic for both streams and pfc stream.
@@ -526,17 +530,38 @@ class ECN_10_00(FunTestCase):
         fun_test.sleep("Executing traffic", seconds=self.timer)
 
     def run(self):
+        result = {}
+        out = template_obj.stc_manager.get_port_diffserv_results(port_handle=port_2,
+                                                                 subscribe_handle=subscribe_results[
+                                                                     'diff_serv_subscribe'])
 
-        # Start capture packets
+        for queue in self.stream_dscps:
+            result[str(queue)] = False
+            ecn_qos_val = template_obj.get_diff_serv_dscp_value_from_decimal_value(decimal_value_list=[queue],
+                                                                                   dscp_value=True)
+            qos_binary_value = get_ecn_qos_binary(qos_binary=ecn_qos_val[queue]['dscp_value'])
+            for key in out.keys():
+                if key == str(qos_binary_value):
+                    if int(out[key]['Ipv4FrameCount']) > 0:
+                        result[str(queue)] = True
+        self.do_test_asserts(result)
 
-        take_capture = template_obj.start_default_capture_save_locally(port_2, sleep_time=self.capture_sleep)
-        fun_test.test_assert(take_capture['result']," Take capture and save locally")
+    def do_test_asserts(self, result):
+        fun_test.test_assert(self.stream_dscps[0], "Ensure ECN bits is set to 11 for DSCP 0 as it had "
+                                                   "ecn bits 01")
 
-        self.pcap_file = take_capture['pcap_file_path']
-
-        self.validate_packet_output()
+        fun_test.test_assert(not self.stream_dscps[1], "Ensure ECN bits is not set to 11 for DSCP 16 as it had "
+                                                   "ecn bits 00")
 
     def cleanup(self):
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=streamblock_handles_list + [pfc_stream.spirent_handle])
+        fun_test.test_assert(stop_streams, "Start running traffic")
+
+        # Clear all subscribed results
+        for key in subscribe_results.iterkeys():
+            template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
+
         set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
                                                                          queue_num=self.port_1_stream_dscp,
                                                                          enable_ecn=0,
@@ -545,17 +570,6 @@ class ECN_10_00(FunTestCase):
 
         file_delete = fun_test.remove_file(self.pcap_file)
         fun_test.simple_assert(file_delete, "Remove %s pcap file from system" % self.pcap_file)
-
-    def validate_packet_output(self):
-        result = get_ecn11_packet_src_ip(pcap_filename=self.pcap_file, source_ip_list=source_ip_list)
-        not_found_list = result['not_found_source_ip']
-        found_list = result['found_source_ip']
-
-        fun_test.test_assert(source_ip_list[0] in found_list, "Stream with ip %s has packets with ecn bit set to 11" % source_ip_list[0])
-
-        fun_test.test_assert(source_ip_list[1] in not_found_list,
-                             "Stream with ip %s with ecn bits 00 does not have packets with ecn bits set to 11" % source_ip_list[1])
-
 
 class ECN_10_10(ECN_10_00):
     stream_ecn_bits_list = [ECN_BITS_10, ECN_BITS_10]
@@ -566,23 +580,19 @@ class ECN_10_10(ECN_10_00):
                                       "on a queue for which ecn profile is applied has some packets from "
                                       "each port marked with ecn bits 11",
                               steps="""
-                              1. Update stream from port 1 and port 3 with dscp 0 and 1 and src_ip 1.1.1.1 and 2.2.2.2 
+                              1. Update stream from port 1 and port 3 with dscp 0 and 16 and src_ip 1.1.1.1 and 2.2.2.2 
                                  having respectively and ecn bits set to 10.
                               2. Add ecn profile for queue 0 on egress dut port
                               3. Start traffic for both streams and pfc stream.
                               4. Verify from capture that all packets whose ecn bits are 11 have source ip from both ports
                               """)
 
-    def validate_packet_output(self):
-        result = get_ecn11_packet_src_ip(pcap_filename=self.pcap_file, source_ip_list=source_ip_list)
-        found_list = result['found_source_ip']
+    def do_test_asserts(self, result):
+        fun_test.test_assert(self.stream_dscps[0], "Ensure ECN bits is set to 11 for DSCP 0 as it had "
+                                                   "ecn bits 01")
 
-        fun_test.test_assert(source_ip_list[0] in found_list,
-                             "Stream with ip %s has packets with ecn bit set to 11" % source_ip_list[0])
-
-        fun_test.test_assert(source_ip_list[1] in found_list,
-                             "Stream with ip %s have packets with ecn bits set to 11" %
-                             source_ip_list[1])
+        fun_test.test_assert(self.stream_dscps[1], "Ensure ECN bits is set to 11 for DSCP 16 as it had "
+                                                    "ecn bits 00")
 
 
 if __name__ == "__main__":
