@@ -174,6 +174,9 @@ class SpirentSetup(FunTestScript):
                                                                                                map_list=reversed_list)
                 fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
 
+        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+        fun_test.simple_assert(reset_config, "Ensure default scheduler config is set for all queues")
+
     def cleanup(self):
         reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
         fun_test.simple_assert(reset_config, "Ensure default scheduler config is set for all queues")
@@ -198,8 +201,6 @@ class All_Queues_Share_BW(FunTestCase):
                                 """)
 
     def setup(self):
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
-        fun_test.simple_assert(reset_config, "Ensure default scheduler config is set for all queues")
 
         for queue in [0, 8]:
             disable = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
@@ -366,6 +367,21 @@ class All_Queues_DWRR(All_Queues_Share_BW):
                                                                    shaper_threshold=282000)
             fun_test.test_assert(rate, "Set rate 1 on queue %s" % queue, ignore_on_success=True)
 
+    def cleanup(self):
+        for queue in queue_list:
+            weight = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
+                                                                     scheduler_type=network_controller_obj.SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN,
+                                                                     weight=1)
+            fun_test.simple_assert(weight, "Set weight %s on queue %s" % (1, queue), ignore_on_success=True)
+
+
+            rate = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
+                                                                   scheduler_type=network_controller_obj.SCHEDULER_TYPE_SHAPER,
+                                                                   shaper_enable=True, min_rate=2000,
+                                                                   shaper_threshold=1000)
+            fun_test.simple_assert(rate, "Set default rate 2000 on queue %s" % queue, ignore_on_success=True)
+        fun_test.log("Resetted dwrr and shaper values to default")
+
 class All_Queues_WRED(FunTestCase):
     """
     For WRED we are using the same key from qos.json that is used in other testcases
@@ -397,15 +413,11 @@ class All_Queues_WRED(FunTestCase):
                               summary="Test all queues follow the wred profile assigned to it",
                               steps="""
                                 1. Assign wred profile id to all queues
-                                2. Create pfc stream on port 2
-                                3. Start traffic for all queues together
-                                4. Verify that each queue has wred drops and compare them with all other queues
+                                2. Start traffic for all queues together
+                                3. Verify that each queue has wred drops and compare them with all other queues
                                 """)
 
     def setup(self):
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
-        fun_test.simple_assert(reset_config, "Ensure default scheduler config is set for all queues")
-
         for queue in [0, 8]:
             disable = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
                                                                       scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
@@ -419,63 +431,6 @@ class All_Queues_WRED(FunTestCase):
         fun_test.log("Enable pfc on dut port %s" % dut_port_2)
         dut_port_pfc = network_controller_obj.enable_priority_flow_control(port_num=dut_port_2, shape=shape)
         fun_test.simple_assert(dut_port_pfc, "Enable pfc on dut port %s" % dut_port_2)
-
-        # Update load on all streams
-        port_1_stream_obj = streamblock_objs[str(port_1)]
-        port_3_stream_obj = streamblock_objs[str(port_3)]
-        for queue in queue_list:
-            if str(queue) in port_1_stream_obj.keys():
-                current_streamblock = port_1_stream_obj[str(queue)]
-            else:
-                current_streamblock = port_3_stream_obj[str(queue)]
-
-            if self.test_type == QOS_PROFILE_ECN:
-                dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
-                    decimal_value_list=[queue], dscp_high=True, dscp_low=True)
-                dscp_high = dscp_values[queue]['dscp_high']
-                dscp_low = dscp_values[queue]['dscp_low']
-
-                # Update dscp value
-                dscp_set = template_obj.configure_diffserv(streamblock_obj=current_streamblock,
-                                                           dscp_high=dscp_high,
-                                                           dscp_low=dscp_low, reserved=self.current_ecn_bits,
-                                                           update=True)
-                fun_test.simple_assert(dscp_set, "Ensure dscp value of %s is updated on ip header for stream %s"
-                                     % (queue, current_streamblock.spirent_handle))
-
-            current_streamblock.FixedFrameLength = self.packet_size
-            current_streamblock.LoadUnit = current_streamblock.LOAD_UNIT_FRAMES_PER_SECOND
-
-            update = template_obj.configure_stream_block(current_streamblock, update=True)
-            fun_test.simple_assert(update, "Update stream load pps and unit to fps for stream %s" %
-                                   current_streamblock.spirent_handle)
-        '''
-        # Create pfc frame
-        fun_test.log("Create pfc stream for priority 0-15")
-
-        pfc_stream = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=self.pfc_pps,
-                                 fixed_frame_length=64, insert_signature=False)
-        streamblock_4 = template_obj.configure_stream_block(pfc_stream, port_handle=port_2)
-        fun_test.log("Created pfc stream on %s " % port_2)
-
-        out = template_obj.configure_priority_flow_control_header(pfc_stream,
-                                                                  class_enable_vector=True,
-                                                                  time0=self.pfc_quanta,
-                                                                  time1=self.pfc_quanta,
-                                                                  time2=self.pfc_quanta,
-                                                                  time3=self.pfc_quanta,
-                                                                  time4=self.pfc_quanta,
-                                                                  time5=self.pfc_quanta,
-                                                                  time6=self.pfc_quanta,
-                                                                  time7=self.pfc_quanta,
-                                                                  ls_octet='11111111',
-                                                                  ms_octet='11111111',
-                                                                  reserved=self.reserved_val)
-        fun_test.test_assert(out['result'], message="Added frame stack")
-
-        mac_header = out['ethernet8023_mac_control_header_obj']
-        pfc_frame = out['pfc_header_obj']
-        '''
 
         set_avg_q_cfg = network_controller_obj.set_qos_wred_avg_queue_config(avg_en=1, avg_period=self.avg_period,
                                                                              cap_avg_sz=self.cap_avg_sz, q_avg_en=1)
@@ -516,27 +471,6 @@ class All_Queues_WRED(FunTestCase):
                 fun_test.simple_assert(set_queue_cfg, "Ensure queue config is set for queue %s" % queue)
         fun_test.simple_assert(wred_profile, "Ensure profile is set")
 
-        start_streams = template_obj.stc_manager.start_traffic_stream(
-            stream_blocks_list=streamblock_handle_list)
-        fun_test.test_assert(start_streams, "Start running traffic")
-
-        fun_test.sleep("Executing traffic", seconds=self.sleep_timer)
-        '''
-        # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_2)
-
-        fun_test.log("Check if PFC frames are being rx at dut port %s" % dut_port_2)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
-        fun_test.simple_assert(dut_port_2_results, "Ensure dut stats are captured")
-
-        for queue in queue_list:
-            dut_port_2_pause_receive = get_dut_output_stats_value(dut_port_2_results, CBFC_PAUSE_FRAMES_RECEIVED,
-                                                                  tx=False, class_value=queue)
-            fun_test.simple_assert(dut_port_2_pause_receive, "PFC frames received on port %s for queue %s" %
-                                   (dut_port_2, queue))
-        fun_test.log("PFC frames are being rx on port %s for all queues" % dut_port_2)
-        '''
     def run(self):
         result_dict = {}
 
@@ -572,11 +506,22 @@ class All_Queues_WRED(FunTestCase):
                     fun_test.simple_assert(dscp_set, "Ensure dscp value of %s is updated on ip header for stream %s"
                                            % (queue, current_streamblock.spirent_handle))
 
-                current_streamblock.Load = pps
+                current_streamblock.FrameLengthMode = current_streamblock.FRAME_LENGTH_MODE_FIXED
+                current_streamblock.FixedFrameLength = self.packet_size
+                current_streamblock.LoadUnit = current_streamblock.LOAD_UNIT_FRAMES_PER_SECOND
+
                 update = template_obj.configure_stream_block(current_streamblock, update=True)
                 fun_test.simple_assert(update, "Update stream load pps and unit to fps for stream %s" %
                                        current_streamblock.spirent_handle)
 
+            start_streams = template_obj.stc_manager.start_traffic_stream(
+                stream_blocks_list=streamblock_handle_list)
+            fun_test.test_assert(start_streams, "Ensure all streams are started")
+
+            fun_test.sleep("Letting traffic run", seconds=self.sleep_timer)
+
+            for queue in queue_list:
+                fun_test.log("Fetching q depth and wred q drops for for %s" % queue)
                 result_dict[str(pps)][str(queue)] = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj,
                                                                          port_num=dut_port_2, queue_num=queue,
                                                                          iterations=self.queue_monitor_iteration,
@@ -587,6 +532,10 @@ class All_Queues_WRED(FunTestCase):
                     fun_test.log("Average value seen for stat %s for pps %s for queue %s is %s" % (stat, pps,
                                                                                       queue, avg_val))
                     result_dict[str(pps)][str(queue)][stat] = avg_val
+
+            stop_streams = template_obj.stc_manager.stop_traffic_stream(
+                stream_blocks_list=streamblock_handle_list)
+            fun_test.test_assert(stop_streams, "Ensure all streams are stopped")
 
         # Taking q0 values as reference and will compare with others
         queue_0 = queue_list[0]

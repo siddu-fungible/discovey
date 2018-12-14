@@ -210,7 +210,6 @@ class Q0_SP_Channel0(FunTestCase):
                     current_list = []
                     current_list.append(self.sp_dscp_list[1])
 
-
             counter = 0
             for stream_details, dscp_val in zip(streams, current_list):
                 self.testcase_streamblocks[str(port)][dscp_val] = {}
@@ -247,7 +246,7 @@ class Q0_SP_Channel0(FunTestCase):
             strict = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=dscp_val,
                                                                      scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
                                                                      strict_priority_enable=strict_priority,
-                                                                     extra_bandwidth=0)
+                                                                     extra_bandwidth=1)
             fun_test.add_checkpoint("Set strict priority of %s on queue %s" % (strict_priority, dscp_val))
 
             shaper = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=dscp_val,
