@@ -11,7 +11,10 @@ num_ports = 3
 source_ip_list = ['1.1.1.1', '2.2.2.2']
 streamblock_obj_list = []
 streamblock_handles_list = []
+config = nu_config_obj.read_dut_config()
 qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+if config['type'] == 'f1':
+    qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
 qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 queue_list = [x for x in range(16)]
 reversed_list = copy.deepcopy(queue_list)

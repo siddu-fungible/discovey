@@ -12,7 +12,7 @@ generator_config_objs = {}
 generator_dict = {}
 config = nu_config_obj.read_dut_config()
 qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
-if config[type] == 'f1':
+if config['type'] == 'f1':
     qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
 qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 test_type = "dwrr"

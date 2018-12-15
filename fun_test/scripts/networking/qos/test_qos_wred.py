@@ -11,7 +11,10 @@ import copy
 
 num_ports = 2
 total_normal_streams = 4
+config = nu_config_obj.read_dut_config()
 qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+if config['type'] == 'f1':
+    qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
 qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 streamblock_objs_list = []
 streamblock_handles_list = []
