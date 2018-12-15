@@ -297,6 +297,7 @@ class SpirentSetup(FunTestScript):
 
 
 class TestCase1(FunTestCase):
+    pcap_file_path_1 = None
     final_quanta_value = 0
     quanta = 5000
     current_priority_value = 1
@@ -638,6 +639,7 @@ class TestCase1(FunTestCase):
 
 
 class TestCase2(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 2
     priority_key = 'priority_%s' % current_priority_value
     capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.quanta,
@@ -679,6 +681,7 @@ class TestCase2(TestCase1):
 
 
 class TestCase3(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 3
     priority_key = 'priority_%s' % current_priority_value
     capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
@@ -720,6 +723,7 @@ class TestCase3(TestCase1):
 
 
 class TestCase4(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 4
     priority_key = 'priority_%s' % current_priority_value
     capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
@@ -761,6 +765,7 @@ class TestCase4(TestCase1):
 
 
 class TestCase5(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 5
     priority_key = 'priority_%s' % current_priority_value
     capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
@@ -802,6 +807,7 @@ class TestCase5(TestCase1):
 
 
 class TestCase6(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 6
     priority_key = 'priority_%s' % current_priority_value
     capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
@@ -843,6 +849,7 @@ class TestCase6(TestCase1):
 
 
 class TestCase7(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 7
     priority_key = 'priority_%s' % current_priority_value
     capture_quanta_checker = {'time1': TestCase1.zero_quanta_value, 'time2': TestCase1.zero_quanta_value,
@@ -884,6 +891,7 @@ class TestCase7(TestCase1):
 
 
 class TestCase8(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 8
     priority_key = 'priority_%s' % current_priority_value
 
@@ -924,6 +932,7 @@ class TestCase8(TestCase1):
 
 
 class TestCase9(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 9
     priority_key = 'priority_%s' % current_priority_value
 
@@ -964,6 +973,7 @@ class TestCase9(TestCase1):
 
 
 class TestCase10(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 10
     priority_key = 'priority_%s' % current_priority_value
 
@@ -1004,6 +1014,7 @@ class TestCase10(TestCase1):
 
 
 class TestCase11(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 11
     priority_key = 'priority_%s' % current_priority_value
 
@@ -1044,6 +1055,7 @@ class TestCase11(TestCase1):
 
 
 class TestCase12(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 12
     priority_key = 'priority_%s' % current_priority_value
 
@@ -1084,6 +1096,7 @@ class TestCase12(TestCase1):
 
 
 class TestCase13(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 13
     priority_key = 'priority_%s' % current_priority_value
 
@@ -1124,6 +1137,7 @@ class TestCase13(TestCase1):
 
 
 class TestCase14(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 14
     priority_key = 'priority_%s' % current_priority_value
 
@@ -1164,6 +1178,7 @@ class TestCase14(TestCase1):
 
 
 class TestCase15(TestCase1):
+    pcap_file_path_1 = None
     current_priority_value = 15
     priority_key = 'priority_%s' % current_priority_value
 
