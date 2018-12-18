@@ -1349,17 +1349,17 @@ class TestCase16(FunTestCase):
 
             if current_priority_value in self.priority_enabled_list:
                 fun_test.test_assert(spirent_counters_dict[current_good_stream_handle],
-                                     message="Ensure rx counters are stopped for stream %s as pfc with priority "
-                                             "%s is enabled" % (current_good_stream_handle, current_priority_value))
+                                     message="Ensure rx counters are stopped for stream %s having priority %s as pfc with priority "
+                                             "%s is enabled" % (current_good_stream_handle, current_priority_value, current_priority_value))
 
                 fun_test.test_assert(fpg_counters_dict_2[current_priority_value],
-                                     message="Ensure fpg mac stats seen for queue with priority %s when pfc "
+                                     message="Ensure fpg cbfc pause rx mac stats seen for queue with priority %s when pfc "
                                              "stream for %s was received by dut port %s"
                                              % (current_priority_value, current_priority_value,
                                                 dut_port_2))
 
                 fun_test.test_assert(fpg_counters_dict_1[current_priority_value],
-                                     message="Ensure fpg mac stats seen for queue with priority %s when pfc stream "
+                                     message="Ensure fpg cbfc pause tx mac stats seen for queue with priority %s when pfc stream "
                                              "for %s was sent from dut port %s" % (
                                      current_priority_value, current_priority_value, dut_port_1))
 
@@ -1381,17 +1381,17 @@ class TestCase16(FunTestCase):
             else:
                 fun_test.test_assert(not spirent_counters_dict[current_good_stream_handle],
                                      message="Ensure rx counter is not stopped "
-                                             "for stream %s when pfc is started for priority %s" %
-                                             (current_good_stream_handle, current_priority_value))
+                                             "for stream %s having priority %s when pfc is started for priority %s" %
+                                             (current_good_stream_handle, current_priority_value, current_priority_value))
 
                 fun_test.test_assert(not fpg_counters_dict_2[current_priority_value],
-                                     message="Ensure fpg mac stats not seen for "
+                                     message="Ensure fpg cbfc pause mac stats not seen for "
                                              "queue %s when priority on dut port %s"
                                              % (current_priority_value,
                                                 dut_port_2))
 
                 fun_test.test_assert(not fpg_counters_dict_1[current_priority_value],
-                                     message="Ensure fpg mac stats not seen for "
+                                     message="Ensure fpg cbfc pause mac stats not seen for "
                                              "queue %s with priority on dut port %s"
                                              % (current_priority_value,
                                                 dut_port_1))

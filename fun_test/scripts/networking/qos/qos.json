@@ -568,11 +568,11 @@
           "dwrr_traffic_time": 15,
           "default_weight": 1,
           "ingress_port1": [
-              {"dscp": 12, "load_percent": 50, "expected_load_percent": 10, "weight": 1, "rate": 1, "threshold": 282000},
-              {"dscp": 13, "load_percent": 50, "expected_load_percent": 20, "weight": 2, "rate": 1, "threshold": 282000}],
+              {"load_percent": 50, "expected_load_percent": 10, "weight": 1, "rate": 1, "threshold": 282000},
+              {"load_percent": 50, "expected_load_percent": 20, "weight": 2, "rate": 1, "threshold": 282000}],
           "ingress_port2": [
-              {"dscp": 14, "load_percent": 50, "expected_load_percent": 30, "weight": 3, "rate": 1, "threshold": 282000},
-              {"dscp": 15, "load_percent": 50, "expected_load_percent": 40, "weight": 4, "rate": 1, "threshold": 282000}]
+              {"load_percent": 50, "expected_load_percent": 30, "weight": 3, "rate": 1, "threshold": 282000},
+              {"load_percent": 50, "expected_load_percent": 40, "weight": 4, "rate": 1, "threshold": 282000}]
     },
   "all_queues_dwrr": {
     "all_queues_traffic_time": 15,

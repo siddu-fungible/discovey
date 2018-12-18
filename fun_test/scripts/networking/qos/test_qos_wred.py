@@ -6,7 +6,6 @@ from scripts.networking.nu_config_manager import nu_config_obj
 from scripts.networking.helper import *
 from qos_helper import *
 from collections import OrderedDict
-from lib.utilities.pcap_parser import PcapParser
 import copy
 
 num_ports = 2
@@ -22,6 +21,17 @@ q_depth = 'avg_q_integ'
 wred_q_drop = 'wred_q_drop'
 queue_list = [x for x in range(16)]
 reversed_list = copy.deepcopy(queue_list)
+percent_threshold = 5
+
+
+def get_percent_diff(rx_result, tx_result):
+    result = None
+    try:
+        temp = (rx_result - tx_result)/float(tx_result)
+        result = temp * 100
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
 
 
 class SpirentSetup(FunTestScript):
@@ -67,6 +77,8 @@ class SpirentSetup(FunTestScript):
         dut_port_list = []
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
+        dut_port_list.append(dut_port_1)
+        dut_port_list.append(dut_port_2)
         fun_test.log("Using dut ports %s, and %s" % (dut_port_1, dut_port_2))
 
         # Create network controller object
@@ -131,6 +143,7 @@ class SpirentSetup(FunTestScript):
                     streamblock_handles_list.append(normal_stream.spirent_handle)
 
             else:
+                reserved = '0064' * 13
                 # Create pfc stream
                 fun_test.log("Create pfc stream for priority %s" % 0)
 
@@ -142,7 +155,7 @@ class SpirentSetup(FunTestScript):
                 out = template_obj.configure_priority_flow_control_header(pfc_stream,
                                                                           class_enable_vector=True,
                                                                           time0=100,
-                                                                          ls_octet='00000001')
+                                                                          ls_octet='00000001', reserved=reserved)
                 fun_test.test_assert(out['result'], message="Added frame stack")
 
                 mac_header = out['ethernet8023_mac_control_header_obj']
@@ -171,7 +184,7 @@ class SpirentSetup(FunTestScript):
         fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
 
 
-class Wred(FunTestCase):
+class Wred_Q0(FunTestCase):
     max_egress_load = qos_json_output['max_egress_load']
     qos_profile_dict = qos_json_output[QOS_PROFILE_WRED]
     normal_stream_pps_list = qos_profile_dict['stream_pps']
@@ -195,7 +208,7 @@ class Wred(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test wred drop profiles on DUT",
+                              summary="Test wred drop profiles on DUT for Q0 and Q1, Q2 and Q3 traffic must not be affected",
                               steps="""
                               1. Update stream on port 1 to start with pps
                               2. Modify pfc stream from port 2 for appropriate priority
@@ -358,14 +371,129 @@ class Wred(FunTestCase):
         for stream, queue in zip(streamblock_objs_list[1:], self.non_wred_queue_list):
             tx_result = convert_bps_to_mbps(int(output[stream.spirent_handle]['tx_stream_result']['L1BitRate']))
             rx_result = convert_bps_to_mbps(int(output[stream.spirent_handle]['rx_summary_result']['L1BitRate']))
-            fun_test.test_assert(rx_result - tx_result <= 0.2,
+            # TODO: get % loss
+            percent_accept = get_percent_diff(rx_result, tx_result)
+            fun_test.test_assert(percent_accept <= percent_threshold,
                                           message="Ensure no packet drop seen for queue %s when wred profile is "
                                                   "applied on %s" % (queue, self.wred_queue_list[0]))
+
+
+class Wred_Q4(Wred_Q0):
+    wred_queue_list = [4]
+    non_wred_queue_list = [5, 6, 7]
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Test wred drop profiles on DUT for Q4 and Q5, Q6 and Q7 traffic must not be affected",
+                              steps="""
+                              1. Update stream on port 1 to start with pps
+                              2. Modify pfc stream from port 2 for appropriate priority
+                              3. setup wred config
+                              4. Start normal stream from port 1 and pfc from port 2
+                              5. Note down 5 iterations of wred_ecn stats for q depth and wred drops and take average of it
+                              6. Now iterate step 5 for different pps for normal stream.
+                              7. Verify that as q depth increases, wred drop increases
+                              """)
+
+    def modify_pfc_stream(self):
+        pfc_frame.time4 = self.pfc_quanta
+
+        fun_test.log("Modify pfc stream to correct pps")
+
+        ls_octet = '00010000'
+        output = template_obj.stc_manager.configure_pfc_header(class_enable_vector=True, update=True,
+                                                               stream_block_handle=pfc_stream.spirent_handle,
+                                                               header_obj=pfc_frame, ls_octet=ls_octet)
+        fun_test.test_assert(output, message="Updated %s and %s for pfc stream %s" % (pfc_frame.time4,
+                                                                                      ls_octet,
+                                                                                      pfc_stream.spirent_handle))
+
+        # Update load value
+        pfc_stream.Load = self.pfc_pps
+        update_stream = template_obj.configure_stream_block(stream_block_obj=pfc_stream, update=True)
+        fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
+                            (self.pfc_pps, pfc_stream.spirent_handle))
+
+
+class Wred_Q8(Wred_Q0):
+    wred_queue_list = [8]
+    non_wred_queue_list = [9, 10, 11]
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Test wred drop profiles on DUT for Q8 and Q9, Q10 and Q11 traffic must not be affected",
+                              steps="""
+                              1. Update stream on port 1 to start with pps
+                              2. Modify pfc stream from port 2 for appropriate priority
+                              3. setup wred config
+                              4. Start normal stream from port 1 and pfc from port 2
+                              5. Note down 5 iterations of wred_ecn stats for q depth and wred drops and take average of it
+                              6. Now iterate step 5 for different pps for normal stream.
+                              7. Verify that as q depth increases, wred drop increases
+                              """)
+
+    def modify_pfc_stream(self):
+
+        fun_test.log("Modify pfc stream to correct pps")
+
+        ms_octet = '00000001'
+        ls_octet = '00000000'
+        output = template_obj.stc_manager.configure_pfc_header(class_enable_vector=True, update=True,
+                                                               stream_block_handle=pfc_stream.spirent_handle,
+                                                               header_obj=pfc_frame, ls_octet=ls_octet, ms_octet=ms_octet)
+        fun_test.test_assert(output, message="Updated %s and %s for pfc stream %s" % (self.pfc_quanta,
+                                                                                      ls_octet,
+                                                                                      pfc_stream.spirent_handle))
+
+        # Update load value
+        pfc_stream.Load = self.pfc_pps
+        update_stream = template_obj.configure_stream_block(stream_block_obj=pfc_stream, update=True)
+        fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
+                            (self.pfc_pps, pfc_stream.spirent_handle))
+
+
+class Wred_Q12(Wred_Q8):
+    wred_queue_list = [12]
+    non_wred_queue_list = [13, 14, 15]
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Test wred drop profiles on DUT for Q12 and Q13, Q14 and Q15 traffic must not be affected",
+                              steps="""
+                              1. Update stream on port 1 to start with pps
+                              2. Modify pfc stream from port 2 for appropriate priority
+                              3. setup wred config
+                              4. Start normal stream from port 1 and pfc from port 2
+                              5. Note down 5 iterations of wred_ecn stats for q depth and wred drops and take average of it
+                              6. Now iterate step 5 for different pps for normal stream.
+                              7. Verify that as q depth increases, wred drop increases
+                              """)
+
+    def modify_pfc_stream(self):
+        fun_test.log("Modify pfc stream to correct pps")
+
+        ms_octet = '00010000'
+        ls_octet = '00000000'
+        output = template_obj.stc_manager.configure_pfc_header(class_enable_vector=True, update=True,
+                                                               stream_block_handle=pfc_stream.spirent_handle,
+                                                               header_obj=pfc_frame, ls_octet=ls_octet, ms_octet=ms_octet)
+        fun_test.test_assert(output, message="Updated %s and %s for pfc stream %s" % (self.pfc_quanta,
+                                                                                      ls_octet,
+                                                                                      pfc_stream.spirent_handle))
+
+        # Update load value
+        pfc_stream.Load = self.pfc_pps
+        update_stream = template_obj.configure_stream_block(stream_block_obj=pfc_stream, update=True)
+        fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
+                            (self.pfc_pps, pfc_stream.spirent_handle))
 
 
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
-    ts.add_test_case(Wred())
+    ts.add_test_case(Wred_Q0())
+    ts.add_test_case(Wred_Q4())
+    ts.add_test_case(Wred_Q8())
+    ts.add_test_case(Wred_Q12())
     ts.run()
