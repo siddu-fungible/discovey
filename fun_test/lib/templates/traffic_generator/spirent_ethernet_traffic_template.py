@@ -1411,6 +1411,15 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                   flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
         try:
+            if not self.stc_manager.project_handle:
+                project_handle = self.stc_manager.create_project(project_name=self.session_name)
+                fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
+
+            if not self.stc_connected:
+                fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
+                                     message="Health of Spirent Test Center")
+                self.stc_connected = True
+
             offline_ports = {}
             ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
                                                                   flow_type=flow_type,

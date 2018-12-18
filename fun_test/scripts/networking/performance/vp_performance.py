@@ -175,17 +175,12 @@ class TestLatencyNuHnuFlow(FunTestCase):
     def setup(self):
         self.dut_config = nu_config_obj.read_dut_config(dut_type=self.dut_type, flow_type=self.flow_type,
                                                         flow_direction=self.flow_direction)
-        if not self.template_obj:
-            self.template_obj = SpirentEthernetTrafficTemplate(session_name="performance",
-                                                               spirent_config=spirent_config)
-            result = self.template_obj.setup(no_of_ports_needed=self.no_of_ports,
-                                             flow_type=NuConfigManager.VP_FLOW_TYPE,
-                                             flow_direction=self.flow_direction)
-            fun_test.test_assert(result['result'], "Ensure Setup is done")
-        else:
-            result = self.template_obj.setup_ports_using_command(no_of_ports_needed=self.no_of_ports,
-                                                                 flow_type=self.flow_type,
-                                                                 flow_direction=self.flow_direction)
+
+        self.template_obj = SpirentEthernetTrafficTemplate(session_name="performance",
+                                                           spirent_config=spirent_config)
+        result = self.template_obj.setup_ports_using_command(no_of_ports_needed=self.no_of_ports,
+                                                             flow_type=self.flow_type,
+                                                             flow_direction=self.flow_direction)
 
         self.spirent_tx_port = result['port_list'][0]
         self.spirent_rx_port = result['port_list'][1]
@@ -526,9 +521,8 @@ class TestLatencyNuHnuFlow(FunTestCase):
         fun_test.add_checkpoint("Delete Streams")
         self.template_obj.delete_streamblocks(stream_obj_list=self.streams)
 
-        fun_test.add_checkpoint("Unsubscribe to all results")
-        self.template_obj.unsubscribe_to_all_results(subscribe_dict=self.subscribe_results)
-        self.template_obj.unsubscribe_to_all_results(subscribe_dict=self.subscribe_jitter_results)
+        fun_test.add_checkpoint("Disconnect DPC Shell")
+        self.network_controller_obj.disconnect()
 
         fun_test.add_checkpoint("Detach Spirent Ports")
         self.template_obj.stc_manager.detach_ports_by_command(port_handles=[self.spirent_tx_port,
@@ -543,242 +537,6 @@ class TestLatencyNuHnuFlow(FunTestCase):
                                                                      results=self.perf_results,
                                                                      flow_type=self.flow_direction,
                                                                      timestamp=TIMESTAMP)
-        self.template_obj.cleanup()
-
-'''
-class NuVpJitterTest(FunTestCase):
-    port = None
-    view_attribute_list = ["AvgJitter", "MinJitter", "MaxJitter", "L1BitRate", "FrameRate", "FrameCount"]
-    expected_jitter_data = {}
-    subscribe_results = {}
-
-    def describe(self):
-        self.set_test_details(id=2,
-                              summary="NU VP Performance Unidirectional Jitter Test (IPv4)",
-                              steps="""
-                              1. Get port handles
-                              2. Create Generator Config for each port and set below parameters
-                                 a. Set Duration 60 secs (configurable)
-                                 b. Scheduling mode to Rate based
-                                 c. Timestamp reference location to END_OF_FRAME
-                              3. Create Analyzer config for each port and set below parameter
-                                 a. Timestamp reference location to END_OF_FRAME
-                              4. Activate stream on all ports and generator traffic
-                              5. Validate Tx and Rx rate for active streams under each port
-                              6. Wait for traffic to complete
-                              7. Validate Tx FrameCount and Rx FrameCount for active streams under each port
-                              8. Ensure no errors are seen 
-                              9. Validate jitter numbers for each streams under each port
-                              10. Deactivate current stream  
-                              """)
-
-    def setup(self):
-        global LOAD
-        ports = template_obj.stc_manager.get_port_list()
-        self.port = ports[0]
-        fun_test.test_assert(self.port, "Get Port handle")
-        self.expected_jitter_data = performance_data
-
-        # Re-initialize streamblock global dict
-        global stream_port_obj_dict
-        stream_port_obj_dict = OrderedDict()
-
-        l3_config = spirent_config["l3_config"]["ipv4"]
-        l2_config = spirent_config["l2_config"]
-        ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
-
-        # Create stream block objects for each port
-        stream_objs = []
-        spray = "spray_disable"
-        if SPRAY_ENABLE:
-            spray = "spray_enable"
-
-        for frame_size in IPV4_FRAMES:
-            LOAD = perf_loads[FLOW_DIRECTION][spray][str(frame_size)]
-            stream_objs.append(StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                           insert_signature=True,
-                                           fixed_frame_length=frame_size,
-                                           load=LOAD,
-                                           load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND))
-        stream_port_obj_dict[self.port] = stream_objs
-
-        stream_objects = stream_port_obj_dict[self.port]
-
-        for stream_obj in stream_objects:
-            checkpoint = "Create a raw stream with %d frame size under %s" % (stream_obj.FixedFrameLength,
-                                                                              self.port)
-            result = template_obj.configure_stream_block(stream_block_obj=stream_obj,
-                                                         port_handle=self.port)
-            fun_test.test_assert(expression=result, message=checkpoint)
-
-            ethernet_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'], ether_type=ether_type)
-
-            checkpoint = "Configure Mac address for %s " % stream_obj.spirent_handle
-            result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
-                                                                    header_obj=ethernet_obj, update=True)
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            if FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HU:
-                recycle_count = 200
-                dest_ip = l3_config['vp_destination_ip1']
-            elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-                recycle_count = 13
-                dest_ip = l3_config['hnu_destination_ip2']
-            else:
-                recycle_count = 200
-                dest_ip = l3_config['destination_ip2']
-            if stream_obj.FixedFrameLength == 64:
-                ip_header_obj = Ipv4Header(destination_address=dest_ip,
-                                           protocol=Ipv4Header.PROTOCOL_TYPE_EXPERIMENTAL)
-            else:
-                ip_header_obj = Ipv4Header(destination_address=dest_ip,
-                                           protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
-            result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
-                                                                    header_obj=ip_header_obj, update=True)
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            if FLOW_DIRECTION != NuConfigManager.FLOW_DIRECTION_HU_FPG and FLOW_DIRECTION != \
-                    NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-                if SPRAY_ENABLE:
-                    checkpoint = "Configure IP range modifier"
-                    modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=recycle_count,
-                                                 step_value="0.0.0.1", mask="255.255.255.255",
-                                                 data=dest_ip)
-                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,
-                                                                               header_obj=ip_header_obj,
-                                                                               streamblock_obj=stream_obj,
-                                                                               header_attribute="destAddr")
-                    fun_test.simple_assert(result, checkpoint)
-
-            if stream_obj.FixedFrameLength != 64:
-                checkpoint = "Add TCP header"
-                tcp_header_obj = TCP()
-                result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
-                                                                        header_obj=tcp_header_obj, update=False)
-                fun_test.simple_assert(result, checkpoint)
-
-                if SPRAY_ENABLE:
-                    checkpoint = "Configure Port Modifier"
-                    port_modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, step_value=1, recycle_count=200,
-                                                      data=1024)
-                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
-                                                                               header_obj=tcp_header_obj,
-                                                                               streamblock_obj=stream_obj,
-                                                                               header_attribute="destPort")
-                    fun_test.simple_assert(result, checkpoint)
-                    result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=port_modifier_obj,
-                                                                               header_obj=tcp_header_obj,
-                                                                               streamblock_obj=stream_obj,
-                                                                               header_attribute="sourcePort")
-                    fun_test.simple_assert(result, checkpoint)
-
-        checkpoint = "Deactivate All Streams under %s" % self.port
-        result = template_obj.deactivate_stream_blocks(stream_obj_list=stream_objects)
-        fun_test.test_assert(result, checkpoint)
-
-        checkpoint = "Subscribe to Tx Stream Block results"
-        tx_subscribe = template_obj.subscribe_tx_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(expression=tx_subscribe, message=checkpoint)
-
-        checkpoint = "Subscribe to Tx Stream results"
-        tx_stream_subscribe = template_obj.subscribe_tx_results(parent=template_obj.stc_manager.project_handle,
-                                                                result_type="TxStreamResults")
-        fun_test.test_assert(tx_stream_subscribe, checkpoint)
-
-        checkpoint = "Subscribe to Rx Stream Summary Results"
-        rx_summary_subscribe = template_obj.subscribe_rx_results(parent=template_obj.stc_manager.project_handle,
-                                                                 result_type="RxStreamSummaryResults",
-                                                                 view_attribute_list=self.view_attribute_list,
-                                                                 change_mode=True)
-        fun_test.test_assert(rx_summary_subscribe, checkpoint)
-
-        checkpoint = "Subscribe to Analyzer Results"
-        analyzer_subscribe = template_obj.subscribe_analyzer_results(parent=template_obj.stc_manager.project_handle)
-        fun_test.test_assert(analyzer_subscribe, checkpoint)
-
-        self.subscribe_results = {"tx_subscribe": tx_subscribe, "tx_stream_subscribe": tx_stream_subscribe,
-                                  "rx_summary_subscribe": rx_summary_subscribe,
-                                  "analyzer_subscribe": analyzer_subscribe}
-
-    def run(self):
-        ports = template_obj.stc_manager.get_port_list()
-        rx_port = ports[1]
-        stream_objs = stream_port_obj_dict[self.port]
-        global jitter_results
-        jitter_results = OrderedDict()
-        template_obj.clear_subscribed_results(subscribe_handle_list=self.subscribe_results.values())
-
-        for stream_obj in stream_objs:
-            frame_size = str(stream_obj.FixedFrameLength)
-            load = stream_obj.Load
-            key = "frame_%s" % frame_size
-
-            checkpoint = "Performance for %s frame size with %s load" % (frame_size, str(load))
-            message = "---------------------------------> Start %s  <---------------------------------" % checkpoint
-            fun_test.log(message)
-            fun_test.add_checkpoint(message)
-
-            checkpoint = "Activate %s frame size streams for all ports" % frame_size
-            result = template_obj.activate_stream_blocks(stream_obj_list=[stream_obj])
-            fun_test.simple_assert(result, checkpoint)
-
-            checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % TRAFFIC_DURATION
-            result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[self.port]])
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            fun_test.sleep("Waiting for traffic to reach full throughput", seconds=10)
-            checkpoint = "Validate Tx and Rx Rate"
-            rate_result = template_obj.validate_traffic_rate_results(
-                rx_summary_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
-                tx_summary_subscribe_handle=self.subscribe_results['tx_stream_subscribe'],
-                stream_objects=[stream_obj], wait_before_fetching_results=False, validate_throughput=False)
-            fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
-
-            fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
-
-            checkpoint = "Validate Jitter Results"
-            jitter_result = template_obj.validate_performance_result(
-                tx_subscribe_handle=self.subscribe_results['tx_subscribe'],
-                rx_subscribe_handle=self.subscribe_results['rx_summary_subscribe'],
-                stream_objects=[stream_obj], expected_performance_data=self.expected_jitter_data,
-                tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=FLOW_DIRECTION, spray_enabled=SPRAY_ENABLE)
-            fun_test.simple_assert(expression=jitter_result, message=checkpoint)
-
-            checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[rx_port]
-            analyzer_rx_results = template_obj.stc_manager.get_rx_port_analyzer_results(
-                port_handle=rx_port, subscribe_handle=self.subscribe_results['analyzer_subscribe'])
-            result = template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            if (FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU or FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_FPG) \
-                    and SPRAY_ENABLE:
-                fun_test.log("Error Counters are seen Reordered Frame Count: %d \n PrbsErrorFrameCount: %d" % (
-                    result['ReorderedFrameCount'], result['PrbsErrorFrameCount']))
-            else:
-                fun_test.test_assert(expression=result['result'], message=checkpoint)
-
-            checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
-            result = template_obj.deactivate_stream_blocks(stream_obj_list=[stream_obj])
-            fun_test.simple_assert(expression=result, message=checkpoint)
-
-            jitter_results[key] = {'pps_count': rate_result['pps_count'][key],
-                                   'jitter_count': jitter_result[key]}
-
-            checkpoint = "Performance for %s frame size with %s load" % (frame_size, str(load))
-            message = "---------------------------------> End %s  <---------------------------------" % checkpoint
-            fun_test.log(message)
-            fun_test.add_checkpoint(message)
-
-        
-    def cleanup(self):
-        template_obj.delete_streamblocks(stream_obj_list=stream_port_obj_dict[self.port])
-
-        mode = dut_config['interface_mode']
-        output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, flow_type=FLOW_DIRECTION,
-                                                        latency_results=latency_results,
-                                                        jitter_results=jitter_results,
-                                                        file_name=output_file_path, spray_enable=SPRAY_ENABLE)
-                                                        
-'''
 
 
 class TestLatencyHnuNuFlow(TestLatencyNuHnuFlow):
@@ -786,6 +544,7 @@ class TestLatencyHnuNuFlow(TestLatencyNuHnuFlow):
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = False
+    streams = []
 
 
 class TestLatencyHnuHnuFCPFlow(TestLatencyNuHnuFlow):
@@ -793,6 +552,7 @@ class TestLatencyHnuHnuFCPFlow(TestLatencyNuHnuFlow):
     flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = False
+    streams = []
 
 
 class TestLatencyHnuHnuFlow(TestLatencyNuHnuFlow):
@@ -800,6 +560,7 @@ class TestLatencyHnuHnuFlow(TestLatencyNuHnuFlow):
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = False
+    streams = []
 
 
 class TestLatencyTransit(TestLatencyNuHnuFlow):
@@ -807,6 +568,7 @@ class TestLatencyTransit(TestLatencyNuHnuFlow):
     flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
     flow_type = NuConfigManager.TRANSIT_FLOW_TYPE
     spray_enable = False
+    streams = []
 
 
 class TestLatencyNuHnuFlowWithSpray(TestLatencyNuHnuFlow):
@@ -814,6 +576,7 @@ class TestLatencyNuHnuFlowWithSpray(TestLatencyNuHnuFlow):
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
+    streams = []
 
 
 class TestLatencyHnuNuFlowWithSpray(TestLatencyNuHnuFlow):
@@ -821,6 +584,7 @@ class TestLatencyHnuNuFlowWithSpray(TestLatencyNuHnuFlow):
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
+    streams = []
 
 
 class TestLatencyHnuHnuFCPFlowWithSpray(TestLatencyNuHnuFlow):
@@ -828,6 +592,7 @@ class TestLatencyHnuHnuFCPFlowWithSpray(TestLatencyNuHnuFlow):
     flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
+    streams = []
 
 
 class TestLatencyHnuHnuFlowWithSpray(TestLatencyNuHnuFlow):
@@ -835,6 +600,7 @@ class TestLatencyHnuHnuFlowWithSpray(TestLatencyNuHnuFlow):
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
+    streams = []
 
 
 if __name__ == "__main__":
@@ -843,15 +609,15 @@ if __name__ == "__main__":
     # All Flows Without Spray
     ts.add_test_case(TestLatencyNuHnuFlow())
     ts.add_test_case(TestLatencyHnuNuFlow())
-    # ts.add_test_case(TestLatencyHnuHnuFCPFlow())
+    ts.add_test_case(TestLatencyHnuHnuFCPFlow())
     ts.add_test_case(TestLatencyHnuHnuFlow())
     ts.add_test_case(TestLatencyTransit())
 
     # All FLows With Spray
     ts.add_test_case(TestLatencyNuHnuFlowWithSpray())
     ts.add_test_case(TestLatencyHnuNuFlowWithSpray())
-    # ts.add_test_case(TestLatencyHnuHnuFCPFlowWithSpray())
-    # ts.add_test_case(TestLatencyHnuHnuFlowWithSpray())
+    ts.add_test_case(TestLatencyHnuHnuFCPFlowWithSpray())
+    ts.add_test_case(TestLatencyHnuHnuFlowWithSpray())
 
     ts.run()
 
