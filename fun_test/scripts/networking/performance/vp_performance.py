@@ -22,44 +22,29 @@ from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
 from scripts.networking.nu_config_manager import *
 
-stream_port_obj_dict = OrderedDict()
 performance_data = OrderedDict()
 generator_port_obj_dict = {}
 analyzer_port_obj_dict = {}
 spirent_config = None
-dut_config = None
-latency_results = None
-jitter_results = None
 INTERFACE_LOAD_SPEC = SCRIPTS_DIR + "/networking" + "/interface_loads.json"
 TOLERANCE_PERCENT = 10
 TRAFFIC_DURATION = 60
+TIMESTAMP = None
 IPV4_FRAMES = [64, 1500]
-LOAD = 1200
-chassis_type = None
-FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_HU
-SPRAY_ENABLE = False
-network_controller_obj = None
 
 
 class NuVpPerformance(FunTestScript):
-    MTU = 9000
-    NO_OF_PORTS = 2
     EXPECTED_PERFORMANCE_DATA_FILE_NAME = "nu_vp_performance_data.json"
-    port1 = None
 
     def describe(self):
         self.set_test_details(steps="""
-        1. Check the health of Spirent Test Center 
-        2. Create %d port and ensure ports are online
-        3. Change interface MTU to %d on all ports and also change on DUT if applicable
-        4. Configure Generator and Analyzer configs for each port as follows
-            a. Set Duration %d secs 
-            b. Scheduling mode to Rate based
-            c. Timestamp reference location to END_OF_FRAME
-        """ % (self.NO_OF_PORTS, self.MTU, TRAFFIC_DURATION))
+        1. Get spirent config
+        2. Read performance expected data from %s
+        3. Read load from interface_loads.json as per frame size
+        """ % self.EXPECTED_PERFORMANCE_DATA_FILE_NAME)
 
     def setup(self):
-        global performance_data, spirent_config, perf_loads, network_controller_obj
+        global performance_data, spirent_config, perf_loads, TRAFFIC_DURATION, TIMESTAMP
 
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
@@ -71,6 +56,9 @@ class NuVpPerformance(FunTestScript):
         checkpoint = "Get load as per flow_type"
         perf_loads = fun_test.parse_file_to_json(file_name=INTERFACE_LOAD_SPEC)['vp_performance']
         fun_test.simple_assert(perf_loads, checkpoint)
+
+        TRAFFIC_DURATION = perf_loads['duration']
+        TIMESTAMP = get_current_time()
 
     def cleanup(self):
         pass
@@ -534,20 +522,26 @@ class TestLatencyNuHnuFlow(FunTestCase):
         fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):
+        fun_test.add_checkpoint("Delete Streams")
         self.template_obj.delete_streamblocks(stream_obj_list=self.streams)
 
+        fun_test.add_checkpoint("Unsubscribe to all results")
         self.template_obj.unsubscribe_to_all_results(subscribe_dict=self.subscribe_results)
         self.template_obj.unsubscribe_to_all_results(subscribe_dict=self.subscribe_jitter_results)
 
-        self.template_obj.stc_manager.detach_ports_by_command(port_handles=[self.spirent_tx_port, self.spirent_rx_port])
+        fun_test.add_checkpoint("Detach Spirent Ports")
+        self.template_obj.stc_manager.detach_ports_by_command(port_handles=[self.spirent_tx_port,
+                                                                            self.spirent_rx_port])
 
-        mode = self.dut_config['interface_mode']
-        output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        self.template_obj.populate_performance_counters_json(mode=mode, flow_type=self.flow_direction,
-                                                             latency_results=latency_results,
-                                                             jitter_results=jitter_results,
-                                                             file_name=output_file_path,
-                                                             spray_enable=self.spray_enable)
+        fun_test.add_checkpoint("Populate performance stats in JSON")
+        if self.spray_enable:
+            if self.perf_results:
+                mode = self.dut_config['interface_mode']
+                output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
+                self.template_obj.populate_performance_counters_json(mode=mode, file_name=output_file_path,
+                                                                     results=self.perf_results,
+                                                                     flow_type=self.flow_direction,
+                                                                     timestamp=TIMESTAMP)
         self.template_obj.cleanup()
 
 '''
@@ -794,69 +788,69 @@ class TestLatencyHnuNuFlow(TestLatencyNuHnuFlow):
 
 
 class TestLatencyHnuHnuFCPFlow(TestLatencyNuHnuFlow):
+    tc_id = 3
     flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = False
 
 
 class TestLatencyHnuHnuFlow(TestLatencyNuHnuFlow):
+    tc_id = 4
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = False
 
 
 class TestLatencyTransit(TestLatencyNuHnuFlow):
+    tc_id = 5
     flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
     flow_type = NuConfigManager.TRANSIT_FLOW_TYPE
     spray_enable = False
 
 
 class TestLatencyNuHnuFlowWithSpray(TestLatencyNuHnuFlow):
+    tc_id = 6
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
 
 
 class TestLatencyHnuNuFlowWithSpray(TestLatencyNuHnuFlow):
+    tc_id = 7
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
 
 
 class TestLatencyHnuHnuFCPFlowWithSpray(TestLatencyNuHnuFlow):
+    tc_id = 8
     flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
 
 
 class TestLatencyHnuHnuFlowWithSpray(TestLatencyNuHnuFlow):
+    tc_id = 9
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
 
 
-# TODO: Add FPG --> HU and vice versa flow. I think it will only run on SN2 for now
-
-
 if __name__ == "__main__":
     ts = NuVpPerformance()
-    ts.add_test_case(TestLatencyNuHnuFlow())
-    ts.add_test_case(TestLatencyHnuNuFlow())
-    # ts.add_test_case(NuVpJitterTest())
-    '''
+
     # All Flows Without Spray
     ts.add_test_case(TestLatencyNuHnuFlow())
     ts.add_test_case(TestLatencyHnuNuFlow())
-    ts.add_test_case(TestLatencyHnuHnuFCPFlow())
+    # ts.add_test_case(TestLatencyHnuHnuFCPFlow())
     ts.add_test_case(TestLatencyHnuHnuFlow())
     ts.add_test_case(TestLatencyTransit())
-    
+
     # All FLows With Spray
     ts.add_test_case(TestLatencyNuHnuFlowWithSpray())
     ts.add_test_case(TestLatencyHnuNuFlowWithSpray())
-    ts.add_test_case(TestLatencyHnuHnuFCPFlowWithSpray())
-    ts.add_test_case(TestLatencyHnuHnuFlowWithSpray())
-    '''
+    # ts.add_test_case(TestLatencyHnuHnuFCPFlowWithSpray())
+    # ts.add_test_case(TestLatencyHnuHnuFlowWithSpray())
 
     ts.run()
 

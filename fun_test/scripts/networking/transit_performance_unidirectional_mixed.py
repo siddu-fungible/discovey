@@ -612,10 +612,7 @@ class NuTransitJitterTest(FunTestCase):
 
         mode = template_obj.stc_manager.dut_config['mode']
         output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, ip_version="Ipv4",
-                                                        latency_results=latency_results,
-                                                        jitter_results=jitter_results,
-                                                        file_name=output_file_path)
+        template_obj.populate_performance_counters_json(mode=mode, file_name=output_file_path, results=latency_results)
 
 
 class NuTransitJitterIPv6Test(NuTransitJitterTest):
@@ -724,10 +721,7 @@ class NuTransitJitterIPv6Test(NuTransitJitterTest):
 
         mode = template_obj.stc_manager.dut_config['mode']
         output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, ip_version="Ipv6",
-                                                        latency_results=latency_results,
-                                                        jitter_results=jitter_results,
-                                                        file_name=output_file_path)
+        template_obj.populate_performance_counters_json(mode=mode, file_name=output_file_path, results=latency_results)
 
 
 if __name__ == "__main__":
