@@ -1605,15 +1605,14 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 if __name__ == "__main__":
     ts = SpirentSetup()
     # Transit NU --> NU Flow
-    # ts.add_test_case(TransitSweep())
-    # TODO: Add IPv6 route for FPG18 75.0.0.5
-    # ts.add_test_case(TransitV6Sweep())
+    ts.add_test_case(TransitSweep())
+    ts.add_test_case(TransitV6Sweep())
 
     # CC NU --> CC Flow
-    # ts.add_test_case(TestArpRequestFlow1())
+    ts.add_test_case(TestArpRequestFlow1())
 
     # CC HNU --> CC Flow
-    # ts.add_test_case(TestArpRequestFlow2())
+    ts.add_test_case(TestArpRequestFlow2())
 
     # VP NU --> HNU Flow
     ts.add_test_case(VPPathIPv4TCP())
@@ -1622,6 +1621,7 @@ if __name__ == "__main__":
     ts.add_test_case(VPPathIPv4TCPNFCP())
 
     # VP HNU --> HNU (FCP) Flow
+    # TODO: Enable FCP test after we did some changes in master nutest for FCP to work
     # ts.add_test_case(VPPathIPv4TCPFCP())
 
     ts.run()
