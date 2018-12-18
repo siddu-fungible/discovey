@@ -176,7 +176,8 @@ class TestLatencyNuHnuFlow(FunTestCase):
         self.dut_config = nu_config_obj.read_dut_config(dut_type=self.dut_type, flow_type=self.flow_type,
                                                         flow_direction=self.flow_direction)
         if not self.template_obj:
-            self.template_obj = SpirentEthernetTrafficTemplate(session_name="performance", spirent_config=spirent_config)
+            self.template_obj = SpirentEthernetTrafficTemplate(session_name="performance",
+                                                               spirent_config=spirent_config)
             result = self.template_obj.setup(no_of_ports_needed=self.no_of_ports,
                                              flow_type=NuConfigManager.VP_FLOW_TYPE,
                                              flow_direction=self.flow_direction)
