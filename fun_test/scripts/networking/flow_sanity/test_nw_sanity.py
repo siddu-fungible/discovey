@@ -217,7 +217,7 @@ class TransitSweep(FunTestCase):
 
         # Adding Ip address and gateway
         ip_header_obj = Ipv4Header(source_address=l3_config['source_ip1'],
-                                   destination_address=l3_config['destination_ip4'],
+                                   destination_address=l3_config['destination_ip2'],
                                    gateway=l3_config['gateway'])
         ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.streamblock_obj_2.spirent_handle,
                                                             header_obj=ip_header_obj, update=True)
@@ -643,7 +643,7 @@ class TransitV6Sweep(TransitSweep):
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
                                                            source=l3_config['source_ip2'],
-                                                           destination=l3_config['destination_ip4'])
+                                                           destination=l3_config['destination_ip2'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
 
@@ -702,7 +702,6 @@ class TestCcFlows(FunTestCase):
         wro_stats_before = None
         meter_stats_before = None
         if self.dut_config['enable_dpcsh']:
-            # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in self.dut_config['ports']:
                 shape = 0
@@ -1084,7 +1083,7 @@ class TestVpFlows(FunTestCase):
     sleep_duration_seconds = None
     generator_handle = None
     detach_ports = True
-    fps = 100
+    fps = 10
     mtu = max_frame_size
     hnu = False
 
@@ -1501,7 +1500,7 @@ class VPPathIPv4TCPNFCP(TestVpFlows):
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
-        self.fps = 50
+        self.fps = 10
         self.hnu = True
         self.max_frame_size = 9000
         self.mtu = 9000
@@ -1567,7 +1566,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
-        self.fps = 50
+        self.fps = 10
 
         self.configure_cadence_pcs_for_fcp()
         self.configure_ports()
