@@ -1106,7 +1106,7 @@ class FunTestScript(object):
                             fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
                             fun_test.abort()
                     # If the test case setup & run completes properly run the test case's cleanup
-                    finally:
+                    else:
                         try:
                             test_case.cleanup()
                             test_result = FunTest.PASSED
