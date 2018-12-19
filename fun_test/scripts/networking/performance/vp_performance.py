@@ -459,7 +459,7 @@ class TestLatencyNuHnuFlow(FunTestCase):
                 generator_port_obj_dict[self.spirent_tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
+            fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION + 10)
 
             checkpoint = "Validate Jitter Results"
             rx_subscribe_handle = self.subscribe_jitter_results['rx_summary_subscribe']
@@ -480,13 +480,7 @@ class TestLatencyNuHnuFlow(FunTestCase):
             analyzer_rx_results = self.template_obj.stc_manager.get_rx_port_analyzer_results(
                 port_handle=self.spirent_rx_port, subscribe_handle=self.subscribe_jitter_results['analyzer_subscribe'])
             result = self.template_obj.check_non_zero_error_count(rx_results=analyzer_rx_results)
-            if (self.flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU or
-                self.flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG) \
-                    and self.spray_enable:
-                fun_test.log("Error Counters are seen Reordered Frame Count: %d \n PrbsErrorFrameCount: %d" % (
-                    result['ReorderedFrameCount'], result['PrbsErrorFrameCount']))
-            else:
-                fun_test.test_assert(expression=result['result'], message=checkpoint)
+            fun_test.test_assert(expression=result['result'], message=checkpoint)
 
             checkpoint = "Deactivate %s frame size streams for all ports" % frame_size
             result = self.template_obj.deactivate_stream_blocks(stream_obj_list=[stream_obj])
@@ -513,7 +507,7 @@ class TestLatencyNuHnuFlow(FunTestCase):
             fun_test.log(message)
             fun_test.add_checkpoint(message)
 
-        checkpoint = "Display Latency Performance Counters"
+        checkpoint = "Display Performance Counters"
         self.template_obj.display_latency_counters(result=self.perf_results)
         fun_test.add_checkpoint(checkpoint)
 
@@ -609,14 +603,14 @@ if __name__ == "__main__":
     # All Flows Without Spray
     ts.add_test_case(TestLatencyNuHnuFlow())
     ts.add_test_case(TestLatencyHnuNuFlow())
-    ts.add_test_case(TestLatencyHnuHnuFCPFlow())
+    # ts.add_test_case(TestLatencyHnuHnuFCPFlow())
     ts.add_test_case(TestLatencyHnuHnuFlow())
     ts.add_test_case(TestLatencyTransit())
 
     # All FLows With Spray
     ts.add_test_case(TestLatencyNuHnuFlowWithSpray())
     ts.add_test_case(TestLatencyHnuNuFlowWithSpray())
-    ts.add_test_case(TestLatencyHnuHnuFCPFlowWithSpray())
+    # ts.add_test_case(TestLatencyHnuHnuFCPFlowWithSpray())
     ts.add_test_case(TestLatencyHnuHnuFlowWithSpray())
 
     ts.run()

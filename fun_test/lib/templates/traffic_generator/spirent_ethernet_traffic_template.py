@@ -980,32 +980,6 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
     def display_latency_counters(self, result):
         try:
-            '''
-            fun_test.log_disable_timestamps()
-            fun_test.log_section("NU Performance Latency Counters")
-            table_obj = PrettyTable(['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
-                                     'Max Latency (us)'])
-            for key in result:
-                pps_count = result[key]['pps_count']
-                throughput_count = result[key]['throughput_count']
-                if len(result[key]['latency_count']) > 1:
-                    avg_latency1 = result[key]['latency_count'][0]['avg']
-                    avg_latency2 = result[key]['latency_count'][1]['avg']
-                    min_latency1 = result[key]['latency_count'][0]['min']
-                    min_latency2 = result[key]['latency_count'][1]['min']
-                    max_latency1 = result[key]['latency_count'][0]['max']
-                    max_latency2 = result[key]['latency_count'][1]['max']
-                    table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
-                    table_obj.add_row([key, pps_count, throughput_count, avg_latency2, min_latency2, max_latency2])
-                else:
-                    avg_latency1 = result[key]['latency_count'][0]['avg']
-                    min_latency1 = result[key]['latency_count'][0]['min']
-                    max_latency1 = result[key]['latency_count'][0]['max']
-
-                    table_obj.add_row([key, pps_count, throughput_count, avg_latency1, min_latency1, max_latency1])
-            fun_test.log(str(table_obj))
-            fun_test.log_enable_timestamps()
-            '''
             table_data_headers = ['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
                                   'Max Latency (us)', 'Avg. Jitter (us)', 'Min Jitter (us)', 'Max Jitter (us)']
             table_data_rows = []
