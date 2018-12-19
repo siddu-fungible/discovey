@@ -288,12 +288,12 @@ class SpirentSetup(FunTestScript):
 
     def cleanup(self):
         # Cleanup spirent session
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
         disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
-        fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
+        fun_test.add_checkpoint("Disable pfc on port %s" % dut_port_1)
         disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2, shape=shape)
-        fun_test.test_assert(disable_2, "Disable pfc on port %s" % dut_port_2)
+        fun_test.add_checkpoint("Disable pfc on port %s" % dut_port_2)
 
 
 class TestCase1(FunTestCase):
@@ -356,15 +356,15 @@ class TestCase1(FunTestCase):
     def cleanup(self):
         # Stop traffic from port 1
         stop = template_obj.disable_generator_configs(generator_configs=generator_dict[port_1])
-        fun_test.test_assert(stop, "Stopping generator config on port %s" % port_1)
+        fun_test.add_checkpoint("Stopping generator config on port %s" % port_1)
 
         # Stop traffic from port 2
         stop = template_obj.disable_generator_configs(generator_configs=generator_dict[port_2])
-        fun_test.test_assert(stop, "Stopping generator config on port %s" % port_2)
+        fun_test.add_checkpoint("Stopping generator config on port %s" % port_2)
 
         current_pfc_stream_obj = pfc_streamblock_objs[self.priority_key]['streamblock_obj']
         disable_pfc_stream = template_obj.deactivate_stream_blocks(stream_obj_list=[current_pfc_stream_obj])
-        fun_test.simple_assert(disable_pfc_stream, "Disable stream %s" % current_pfc_stream_obj)
+        fun_test.add_checkpoint("Disable stream %s" % current_pfc_stream_obj)
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():
@@ -1252,11 +1252,11 @@ class TestCase16(FunTestCase):
     def cleanup(self):
         # Stop traffic from port 1
         stop = template_obj.disable_generator_configs(generator_configs=generator_dict[port_1])
-        fun_test.test_assert(stop, "Stopping generator config on port %s" % port_1)
+        fun_test.add_checkpoint("Stopping generator config on port %s" % port_1)
 
         # Stop traffic from port 2
         stop = template_obj.disable_generator_configs(generator_configs=generator_dict[port_2])
-        fun_test.test_assert(stop, "Stopping generator config on port %s" % port_2)
+        fun_test.add_checkpoint("Stopping generator config on port %s" % port_2)
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():
@@ -1575,16 +1575,16 @@ class TestCase18(FunTestCase):
     def cleanup(self):
         for dut_port in dut_port_list:
             disable_tx_pause = network_controller_obj.disable_link_pause(port_num=dut_port, shape=shape)
-            fun_test.test_assert(disable_tx_pause, "Disable link pause in %s" % dut_port)
+            fun_test.add_checkpoint("Disable link pause in %s" % dut_port)
 
         all_stream_handles = good_stream_list + [pause_streamblock.spirent_handle]
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=all_stream_handles)
-        fun_test.test_assert(stop_streams, "Ensure all streams are stopped")
+        fun_test.add_checkpoint("Ensure all streams are stopped")
 
         disable_pfc_stream = template_obj.deactivate_stream_blocks(stream_obj_list=[pause_streamblock])
-        fun_test.simple_assert(disable_pfc_stream, "Disable stream %s" % pause_streamblock._spirent_handle)
+        fun_test.add_checkpoint("Disable stream %s" % pause_streamblock._spirent_handle)
 
     def run(self):
         result_dict = {}

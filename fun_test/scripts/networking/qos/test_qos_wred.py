@@ -181,7 +181,7 @@ class SpirentSetup(FunTestScript):
                 fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
 
     def cleanup(self):
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class Wred_Q0(FunTestCase):
@@ -320,7 +320,7 @@ class Wred_Q0(FunTestCase):
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=streamblock_handles_list)
-        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+        fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
     def run(self):
         output_avg_dict = OrderedDict()
