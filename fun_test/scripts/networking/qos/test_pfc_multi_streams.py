@@ -60,9 +60,9 @@ k_list.reverse()
 
 
 class SpirentSetup(FunTestScript):
-    min_thr = 512
-    shr_thr = 2000
-    hdr_thr = 20
+    min_thr = 10
+    shr_thr = 20
+    hdr_thr = 5
     xoff_enable = 1
     shared_xon_thr = 5
     quanta = 5000

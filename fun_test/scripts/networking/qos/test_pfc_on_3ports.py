@@ -213,7 +213,7 @@ class TestCase1(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test PFC using 3 ports where 2 ports send frames with same dscp value on 3rd "
+                              summary="Test PFC using 3 ports where 2 ports send frames with same dscp value towards 3rd "
                                       "port",
                               steps="""
                         1. Start dscp streams from port_1 and port_3
