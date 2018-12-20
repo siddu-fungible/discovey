@@ -31,7 +31,7 @@ TIMESTAMP = None
 IPV4_FRAMES = [64, 1500]
 
 
-class NuVpPerformance(FunTestScript):
+class NuPerformance(FunTestScript):
     EXPECTED_PERFORMANCE_DATA_FILE_NAME = "nu_vp_performance_data.json"
 
     def describe(self):
@@ -62,7 +62,7 @@ class NuVpPerformance(FunTestScript):
         pass
 
 
-class TestLatencyNuHnuFlow(FunTestCase):
+class TestNuHnuFlowPerf(FunTestCase):
     tc_id = 1
     subscribe_results = {}
     expected_perf_data = {}
@@ -519,7 +519,7 @@ class TestLatencyNuHnuFlow(FunTestCase):
                                     self.perf_results[key]['jitter_count'][0]['min'],
                                     self.perf_results[key]['jitter_count'][0]['max']])
         table_data = {'headers': table_data_headers, 'rows': table_data_rows}
-        fun_test.add_table(panel_header="NU Performance Latency Counters", table_name="NU --> HNU",
+        fun_test.add_table(panel_header="NU Performance Latency Counters", table_name=self.flow_direction,
                            table_data=table_data)
         fun_test.add_checkpoint(checkpoint)
 
@@ -545,7 +545,7 @@ class TestLatencyNuHnuFlow(FunTestCase):
                                                                      timestamp=TIMESTAMP)
 
 
-class TestLatencyHnuNuFlow(TestLatencyNuHnuFlow):
+class TestHnuNuFlowPerf(TestNuHnuFlowPerf):
     tc_id = 2
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
     flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -553,7 +553,7 @@ class TestLatencyHnuNuFlow(TestLatencyNuHnuFlow):
     streams = []
 
 
-class TestLatencyHnuHnuFCPFlow(TestLatencyNuHnuFlow):
+class TestHnuHnuFCPFlowPerf(TestNuHnuFlowPerf):
     tc_id = 3
     flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -561,7 +561,7 @@ class TestLatencyHnuHnuFCPFlow(TestLatencyNuHnuFlow):
     streams = []
 
 
-class TestLatencyHnuHnuFlow(TestLatencyNuHnuFlow):
+class TestHnuHnuFlowPerf(TestNuHnuFlowPerf):
     tc_id = 4
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -569,7 +569,7 @@ class TestLatencyHnuHnuFlow(TestLatencyNuHnuFlow):
     streams = []
 
 
-class TestLatencyTransit(TestLatencyNuHnuFlow):
+class TestTransitPerf(TestNuHnuFlowPerf):
     tc_id = 5
     flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
     flow_type = NuConfigManager.TRANSIT_FLOW_TYPE
@@ -577,7 +577,7 @@ class TestLatencyTransit(TestLatencyNuHnuFlow):
     streams = []
 
 
-class TestLatencyNuHnuFlowWithSpray(TestLatencyNuHnuFlow):
+class TestNuHnuFlowPerfWithSpray(TestNuHnuFlowPerf):
     tc_id = 6
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
     flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -585,7 +585,7 @@ class TestLatencyNuHnuFlowWithSpray(TestLatencyNuHnuFlow):
     streams = []
 
 
-class TestLatencyHnuNuFlowWithSpray(TestLatencyNuHnuFlow):
+class TestHnuNuFlowPerfWithSpray(TestNuHnuFlowPerf):
     tc_id = 7
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
     flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -593,7 +593,7 @@ class TestLatencyHnuNuFlowWithSpray(TestLatencyNuHnuFlow):
     streams = []
 
 
-class TestLatencyHnuHnuFCPFlowWithSpray(TestLatencyNuHnuFlow):
+class TestHnuHnuFCPFlowPerfWithSpray(TestNuHnuFlowPerf):
     tc_id = 8
     flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -601,7 +601,7 @@ class TestLatencyHnuHnuFCPFlowWithSpray(TestLatencyNuHnuFlow):
     streams = []
 
 
-class TestLatencyHnuHnuFlowWithSpray(TestLatencyNuHnuFlow):
+class TestHnuHnuFlowPerfWithSpray(TestNuHnuFlowPerf):
     tc_id = 9
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -610,20 +610,20 @@ class TestLatencyHnuHnuFlowWithSpray(TestLatencyNuHnuFlow):
 
 
 if __name__ == "__main__":
-    ts = NuVpPerformance()
+    ts = NuPerformance()
 
     # All Flows Without Spray
-    ts.add_test_case(TestLatencyNuHnuFlow())
-    ts.add_test_case(TestLatencyHnuNuFlow())
+    ts.add_test_case(TestNuHnuFlowPerf())
+    ts.add_test_case(TestHnuNuFlowPerf())
     # ts.add_test_case(TestLatencyHnuHnuFCPFlow())
-    ts.add_test_case(TestLatencyHnuHnuFlow())
-    ts.add_test_case(TestLatencyTransit())
+    ts.add_test_case(TestHnuHnuFlowPerf())
+    ts.add_test_case(TestTransitPerf())
 
     # All FLows With Spray
-    ts.add_test_case(TestLatencyNuHnuFlowWithSpray())
-    ts.add_test_case(TestLatencyHnuNuFlowWithSpray())
+    ts.add_test_case(TestNuHnuFlowPerfWithSpray())
+    ts.add_test_case(TestHnuNuFlowPerfWithSpray())
     # ts.add_test_case(TestLatencyHnuHnuFCPFlowWithSpray())
-    ts.add_test_case(TestLatencyHnuHnuFlowWithSpray())
+    ts.add_test_case(TestHnuHnuFlowPerfWithSpray())
 
     ts.run()
 
