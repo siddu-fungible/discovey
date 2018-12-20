@@ -9,9 +9,7 @@ Results Header Dict
   "version": {"is_input": false, "description": "DUT version or FunOS version"}
   "mode": {"is_input": true, "description": "Port modes (25, 50 or 100 G)"},
   "timestamp": {"is_input": false, "description": "Date time of result data"},
-  "flow_type": {"is_input": true, "description": "Traffic Direction for e.g FPG_HU or HU_FPG"},
-  "spray_enable": {"is_input": true, "description": "VP Spray enable i.e adding IP Header Range Modifier to use
-                  specific range of DIPs. For e.g 51.1.1.2 -- 51.1.1.14"}
+  "flow_type": {"is_input": true, "description": "Traffic Direction for e.g FPG_HU or HU_FPG"}
 }
 """
 
@@ -508,7 +506,21 @@ class TestLatencyNuHnuFlow(FunTestCase):
             fun_test.add_checkpoint(message)
 
         checkpoint = "Display Performance Counters"
-        self.template_obj.display_latency_counters(result=self.perf_results)
+        table_data_headers = ['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
+                              'Max Latency (us)', 'Avg. Jitter (us)', 'Min Jitter (us)', 'Max Jitter (us)']
+        table_data_rows = []
+        for key in self.perf_results:
+            table_data_rows.append([key, self.perf_results[key]['pps_count'],
+                                    self.perf_results[key]['throughput_count'],
+                                    self.perf_results[key]['latency_count'][0]['avg'],
+                                    self.perf_results[key]['latency_count'][0]['min'],
+                                    self.perf_results[key]['latency_count'][0]['max'],
+                                    self.perf_results[key]['jitter_count'][0]['avg'],
+                                    self.perf_results[key]['jitter_count'][0]['min'],
+                                    self.perf_results[key]['jitter_count'][0]['max']])
+        table_data = {'headers': table_data_headers, 'rows': table_data_rows}
+        fun_test.add_table(panel_header="NU Performance Latency Counters", table_name="NU --> HNU",
+                           table_data=table_data)
         fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):
