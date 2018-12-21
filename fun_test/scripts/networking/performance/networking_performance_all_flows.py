@@ -254,7 +254,8 @@ class TestNuHnuFlowPerf(FunTestCase):
                 recycle_count = perf_loads[self.flow_direction]['spray_ip_count']
                 dest_ip = l3_config['hnu_fcp_destination_ip1']
             else:
-                recycle_count = perf_loads[self.flow_direction]['spray_ip_count']
+                if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
+                    recycle_count = perf_loads[self.flow_direction]['spray_ip_count']
                 dest_ip = l3_config['destination_ip1']
             ip_header_obj = Ipv4Header(destination_address=dest_ip,
                                        protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
@@ -613,16 +614,17 @@ if __name__ == "__main__":
     ts = NuPerformance()
 
     # All Flows Without Spray
+
     ts.add_test_case(TestNuHnuFlowPerf())
     ts.add_test_case(TestHnuNuFlowPerf())
-    # ts.add_test_case(TestLatencyHnuHnuFCPFlow())
+    ts.add_test_case(TestHnuHnuFCPFlowPerf())
     ts.add_test_case(TestHnuHnuFlowPerf())
     ts.add_test_case(TestTransitPerf())
 
     # All FLows With Spray
     ts.add_test_case(TestNuHnuFlowPerfWithSpray())
     ts.add_test_case(TestHnuNuFlowPerfWithSpray())
-    # ts.add_test_case(TestLatencyHnuHnuFCPFlowWithSpray())
+    ts.add_test_case(TestHnuHnuFCPFlowPerfWithSpray())
     ts.add_test_case(TestHnuHnuFlowPerfWithSpray())
 
     ts.run()

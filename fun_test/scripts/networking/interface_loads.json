@@ -27,7 +27,7 @@
       "spray_enable": {"64": 230, "1500": 200},
       "spray_disable": {"64": 115, "1500": 110}
     },
-    "FPG_FPG": {
+    "NU_NU": {
       "spray_disable": {"64": 9500, "1500": 530}
     },
     "duration": 60
