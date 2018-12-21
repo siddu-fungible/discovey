@@ -596,8 +596,8 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Sequential write and then read by failing m number of data volumes in n = k+m "
-                                      "EC volume",
+                              summary="Sequential write and then read of zero-filled data by failing m number of data "
+                                      "volumes in n = k+m EC volume",
                               steps="""
         1. Run the outer loop from ndata_partition_start_range to ndata_partition_end_range. Say it as k
         2. Run the inner loop from nparity_start_range = min(int(ndata / 4) + 1, self.max_parity) to 
@@ -606,7 +606,7 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
         4. Configure k:m EC volume.
         5. Create a LS volume on top of the EC volume.
         6. Export (Attach) the above LS volume to PCIe controller. 
-        7. Write dataset_size bytes of random data into the LSV in a sequential manner.
+        7. Write dataset_size bytes of zero-filled data into the LSV in a sequential manner.
         8. Start a loop to run 0 to m-1 and inside it fail the data volume in that index and read back the previously
         written data   
         """)
