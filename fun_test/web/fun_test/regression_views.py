@@ -10,15 +10,22 @@ from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
+from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import CatalogSuiteExecution, Module
 from web.fun_test.models import JenkinsJobIdMap, JenkinsJobIdMapSerializer
-from web.web_global import initialize_result, api_safe_json_response
+from web.web_global import initialize_result, api_safe_json_response, string_to_json
 import glob, collections
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from fun_global import get_localized_time
+from datetime import datetime, timedelta
+from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
+from web.fun_test.models import TestCaseExecutionSerializer
 import logging
 import dateutil.parser
 import re
+from rest_framework.renderers import JSONRenderer
+
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -50,35 +57,45 @@ def jobs_by_tag(request, tag):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     tags = json.dumps([tag])
     # tags = json.dumps(["none"])
-    return render(request, 'qa_dashboard/regression.html', locals())
+    return render(request, 'qa_dashboard/angular_home.html', locals())
 
 def submit_job_page(request):
     return render(request, 'qa_dashboard/submit_job_page.html')
 
-def suite_re_run(request, suite_execution_id):
-    return HttpResponse(re_queue_job(suite_execution_id=suite_execution_id))
 
 @csrf_exempt
+@api_safe_json_response
+def suite_re_run(request, suite_execution_id):
+    return re_queue_job(suite_execution_id=suite_execution_id)
+
+@csrf_exempt
+@api_safe_json_response
 def test_case_re_run(request):
     request_json = json.loads(request.body)
     suite_execution_id = request_json["suite_execution_id"]
     test_case_execution_id = request_json["test_case_execution_id"]
     script_path = request_json["script_path"]
 
-    return HttpResponse(re_queue_job(suite_execution_id=suite_execution_id,
+    return re_queue_job(suite_execution_id=suite_execution_id,
                                      test_case_execution_id=test_case_execution_id,
-                                     script_path=script_path))
+                                     script_path=script_path)
 
 @csrf_exempt
+@api_safe_json_response
 def submit_job(request):
     job_id = 0
     if request.method == 'POST':
         request_json = json.loads(request.body)
         suite_path = request_json["suite_path"]
         build_url = request_json["build_url"]
-        tags = request_json["tags"]
+        tags = None
+        if "tags" in request_json:
+            tags = request_json["tags"]
         email_list = None
         email_on_fail_only = None
+        environment = None
+        if "environment" in request_json:
+            environment = request_json["environment"]
         if "email_list" in request_json:
             email_list = request_json["email_list"]
         if "email_on_fail_only" in request_json:
@@ -95,7 +112,8 @@ def submit_job(request):
                                schedule_at=schedule_at_value,
                                repeat=schedule_at_repeat,
                                email_list=email_list,
-                               email_on_fail_only=email_on_fail_only)
+                               email_on_fail_only=email_on_fail_only,
+                               environment=environment)
 
         elif "schedule_in_minutes" in request_json and request_json["schedule_in_minutes"]:
             schedule_in_minutes_value = request_json["schedule_in_minutes"]
@@ -108,14 +126,15 @@ def submit_job(request):
                                repeat_in_minutes=schedule_in_minutes_repeat,
                                tags=tags,
                                email_list=email_list,
-                               email_on_fail_only=email_on_fail_only)
+                               email_on_fail_only=email_on_fail_only,
+                               environment=environment)
         else:
             job_id = queue_job(suite_path=suite_path,
                                build_url=build_url,
                                tags=tags,
                                email_list=email_list,
-                               email_on_fail_only=email_on_fail_only)
-    return HttpResponse(job_id)
+                               email_on_fail_only=email_on_fail_only, environment=environment)
+    return job_id
 
 def static_serve_log_directory(request, suite_execution_id):
     path = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(suite_execution_id) + "/*"
@@ -123,15 +142,20 @@ def static_serve_log_directory(request, suite_execution_id):
     files = [os.path.basename(f) for f in files]
     return render(request, 'qa_dashboard/list_directory.html', locals())
 
+
+@csrf_exempt
+@api_safe_json_response
 def kill_job(request, suite_execution_id):
     scheduler.scheduler_helper.kill_job(job_id=suite_execution_id)
     suite_execution = SuiteExecution.objects.get(execution_id=suite_execution_id)
     suite_execution.result = RESULTS["KILLED"]
     suite_execution.save()
-    return HttpResponse("OK")
+    return "OK"
 
+@csrf_exempt
+@api_safe_json_response
 def tags(request):
-    return HttpResponse(serializers.serialize('json', Tag.objects.all()))
+    return serializers.serialize('json', Tag.objects.all())
 
 def engineers(request):
     result = initialize_result(failed=True)
@@ -141,6 +165,8 @@ def engineers(request):
     result["status"] = True
     return HttpResponse(json.dumps(result))
 
+@csrf_exempt
+@api_safe_json_response
 def suites(request):
     suites_info = collections.OrderedDict()
     suite_files = glob.glob(SUITES_DIR + "/*.json")
@@ -153,10 +179,10 @@ def suites(request):
 
         except Exception as ex:
             pass
-    return HttpResponse(json.dumps(suites_info))
-
+    return json.dumps(suites_info)
 
 @csrf_exempt
+@api_safe_json_response
 def suite_executions_count(request, filter_string):
     tags = None
     if request.method == 'POST':
@@ -166,9 +192,10 @@ def suite_executions_count(request, filter_string):
                 tags = request_json["tags"]
                 tags = json.loads(tags)
     count = _get_suite_executions(get_count=True, filter_string=filter_string, tags=tags)
-    return HttpResponse(count)
+    return count
 
 @csrf_exempt
+@api_safe_json_response
 def suite_executions(request, records_per_page=10, page=None, filter_string="ALL"):
     tags = None
     if request.method == 'POST':
@@ -182,12 +209,16 @@ def suite_executions(request, records_per_page=10, page=None, filter_string="ALL
                                              records_per_page=records_per_page,
                                              filter_string=filter_string,
                                              tags=tags)
-    return HttpResponse(json.dumps(all_objects_dict))
+    return json.dumps(all_objects_dict)
 
+@csrf_exempt
+@api_safe_json_response
 def suite_execution(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
-    return HttpResponse(json.dumps(all_objects_dict[0])) #TODO: Validate
+    return json.dumps(all_objects_dict[0]) #TODO: Validate
 
+@csrf_exempt
+@api_safe_json_response
 def last_jenkins_hourly_execution_status(request):
     result = RESULTS["UNKNOWN"]
     suite_executions = _get_suite_executions(tags=["jenkins-hourly"],
@@ -195,14 +226,29 @@ def last_jenkins_hourly_execution_status(request):
                                              page=1, records_per_page=10)
     if suite_executions:
         result = suite_executions[0]["suite_result"]
-    return HttpResponse(result)
+    return result
 
 def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
-    return render(request, 'qa_dashboard/suite_detail.html', locals())
+    return render(request, 'qa_dashboard/angular_home.html', locals())
 
+@csrf_exempt
+@api_safe_json_response
+def suite_execution_attributes(request, execution_id):
+    all_objects_dict = _get_suite_executions(execution_id=execution_id)
+    suite_execution = all_objects_dict[0]
+    suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
+    return suite_execution_attributes
+
+@csrf_exempt
+@api_safe_json_response
+def log_path(request):
+    return LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX
+
+@csrf_exempt
+@api_safe_json_response
 def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj = TestCaseExecution.objects.get(suite_execution_id=suite_execution_id,
                                                         execution_id=test_case_execution_id)
@@ -210,10 +256,7 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
 
     data = serializers.serialize('json', [test_case_execution_obj])
-    return HttpResponse(data)
-
-def log_path(request):
-    return HttpResponse(LOGS_RELATIVE_DIR + "/" + LOG_DIR_PREFIX)
+    return data
 
 def get_catalog_test_case_execution_summary_result_multiple_jiras(suite_execution_id, jira_ids):
     summary_result = {}
@@ -278,6 +321,25 @@ def jenkins_job_id_map(request):
 
 @csrf_exempt
 @api_safe_json_response
+def script_history(request):
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+
+@csrf_exempt
+@api_safe_json_response
+def scripts_by_module(request, module):
+    matched_scripts = []
+    regression_scripts = RegresssionScripts.objects.all()
+    for regression_script in regression_scripts:
+        modules = regression_script.modules
+        modules = json.loads(modules)
+        if module in modules:
+            serializer = RegresssionScriptsSerializer(regression_script)
+            matched_scripts.append(serializer.data)
+    return matched_scripts
+
+@csrf_exempt
+@api_safe_json_response
 def build_to_date_map(request):
     all_entries = JenkinsJobIdMap.objects.all()
     build_info = {}
@@ -287,10 +349,26 @@ def build_to_date_map(request):
         key = 0
         if m:
             key = int(m.group(1))
-        build_info[entry.completion_date] = {"software_date": entry.software_date,
-                                             "hardware_version": entry.hardware_version,
-                                             "fun_sdk_branch": entry.fun_sdk_branch,
-                                             "git_commit": entry.git_commit}
+        # print "Completion date:" + entry.completion_date
+        try:
+            key = entry.completion_date
+            dt = get_localized_time(datetime.strptime(entry.completion_date, "%Y-%m-%d %H:%M"))
+
+            if (dt.year == 2018 and ((dt.month == 11 and dt.day >= 4) or dt.month > 11)) or (dt.year == 2019 and ((dt.month < 3) or (dt.month == 3 and dt.day < 10))):
+                dt = dt + timedelta(hours=8)  #TODO: hardcoded
+            else:
+                dt = dt + timedelta(hours=7)  # TODO: hardcoded
+            key = str(dt)
+            key = re.sub(r':\d{2}-.*', '', key)
+            build_info[key] = {"software_date": entry.software_date,
+                                                 "hardware_version": entry.hardware_version,
+                                                 "fun_sdk_branch": entry.fun_sdk_branch,
+                                                 "git_commit": entry.git_commit,
+                                                 "build_properties": entry.build_properties}
+            # print str(dt)
+        except Exception as ex:
+            print ex
+            # pass
     return build_info
 
 
@@ -343,3 +421,96 @@ def update_test_case_execution(request):
         logger.critical(str(ex))
 
     return HttpResponse(json.dumps(result))
+
+def suite_execution_properties(suite_execution_id, properties):
+    result = {}
+    try:
+        suite_execution = SuiteExecution.objects.get(execution_id=suite_execution_id)
+        for property in properties:
+            result[property] = getattr(suite_execution, property)
+    except ObjectDoesNotExist:
+        pass
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def get_suite_execution_properties(request):
+    request_json = string_to_json(request.body)
+    suite_execution_id = request_json["suite_execution_id"]
+    properties = request_json["properties"]
+    return suite_execution_properties(suite_execution_id=suite_execution_id, properties=properties)
+
+@csrf_exempt
+@api_safe_json_response
+def get_all_versions(request):
+    versions = SuiteExecution.objects.values('version', 'execution_id')
+    serializer = SuiteExecutionSerializer(versions, many=True)
+    return serializer.data
+
+@csrf_exempt
+@api_safe_json_response
+def get_script_history(request):
+    history = []
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+    tes = TestCaseExecution.objects.filter(script_path=script_path).order_by("-suite_execution_id")[:100]
+    for te in tes:
+        # version = suite_execution_properties(te.suite_execution_id, "version")
+        serializer = TestCaseExecutionSerializer(te)
+        history.append(serializer.data)
+    return history
+
+@csrf_exempt
+@api_safe_json_response
+def scripts(request):
+    all_regression_scripts = RegresssionScripts.objects.all()
+    for r in all_regression_scripts:
+        i = 0
+    regression_serializer = RegresssionScriptsSerializer(all_regression_scripts, many=True)
+    regression_scripts = regression_serializer.data
+    return regression_scripts
+
+@csrf_exempt
+@api_safe_json_response
+def script(request):
+    request_json = json.loads(request.body)
+    script_path = request_json["script_path"]
+    modules = request_json["modules"]
+    module_names = [x["name"] for x in modules]
+    try:
+        r = RegresssionScripts.objects.get(script_path=script_path)
+        r.modules = json.dumps(module_names)
+        r.save()
+    except ObjectDoesNotExist:
+        r = RegresssionScripts(script_path=script_path, modules=json.dumps(module_names))
+        r.save()
+
+    return True
+
+@csrf_exempt
+@api_safe_json_response
+def unallocated_script(request):
+    unallocated_scripts = []
+    suites_info = collections.OrderedDict()
+    suite_files = glob.glob(SUITES_DIR + "/*.json")
+    for suite_file in suite_files:
+        try:
+            with open(suite_file, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents)
+                for entry in result:
+                    path = entry["path"]
+                    path = "/" + path
+                    try:
+                        RegresssionScripts.objects.get(script_path=path)
+                    except ObjectDoesNotExist:
+                        if path not in unallocated_scripts:
+                            unallocated_scripts.append(path)
+        except Exception as ex:
+            pass
+    return unallocated_scripts
+
+
+
+def test(request):
+    return render(request, 'qa_dashboard/test.html', locals())

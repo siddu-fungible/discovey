@@ -267,7 +267,8 @@ status_strs = [
 "Current Time             : ",
 "Boot Status              : ",
 "eSecure Firmware Version : ",
-"Host Firmware Version    : "]
+"Host Firmware Version    : ",
+"Debug Grants             : "]
 
 def dump_status_data():
     i = 0
@@ -478,3 +479,108 @@ def esecure_inject_certificate(certificate, customer=False):
    print "Status: " + decode_cmd_status(status)
 
    return status
+
+
+##### Local changes #####
+def write_command(command):
+    esecure_write(0x8)
+    esecure_write(command)
+    # dump_status_data()
+
+
+
+    result = ""
+    data = esecure_read()
+    status = data
+    print "Status: " + decode_cmd_status(status)
+
+    result += struct.pack('<I', data)
+    size = data & 0xFFFF
+
+    # for i in range((data - 4)/4):  # Sub size of header, divide by size of word
+    for i in range((size - 4) / 4):  # Sub size of header, divide by size of word
+        read_data = esecure_read()
+        result += struct.pack('<I', read_data)
+    return result
+    
+
+
+
+
+def get_challenge():
+    prepare_target()
+    check_for_esecure()
+
+    #Send Get Challenge Command
+    esecure_write(0x8)
+    esecure_write(0xFD000000)
+
+    #Read Challenge
+    status = esecure_read()
+    if status != 0x14:
+        print "Unexpected status from get challenge: " + hex(status)
+        dump_return_data()
+        raise RuntimeError()
+
+    print "challenge_data:"
+    challenge = [0,0,0,0]
+    for i in range(len(challenge)):
+        challenge[i] = esecure_read()
+        print hex(challenge[i])
+
+    if (mdh_read_(CONTROL) & RD_REQ) != 0:
+        print "Warning Extra Read data still pending:"
+        dump_return_data()
+        #todo raise exception ??
+    return challenge
+
+def disable_tamper(challenge, tamper, developer_certificate, developer_key, key_password=None):
+    command = 0xFD020000
+
+    challenge.insert(0,tamper)
+    challenge.insert(0,command)
+
+    challenge_bs = ""
+    for word in challenge:
+        challenge_bs += struct.pack('<I',word)
+
+    if DEBUG: print "data to sign (command + param + challenge): " +  binascii.hexlify(challenge_bs)
+
+    #sign challenge
+    developer_cert = read(developer_certificate)
+    # if verbose: print "developer cert:"
+    # if verbose: print binascii.hexlify(developer_cert)
+    with open(developer_key, 'rb') as key_file:
+       signing_key = serialization.load_pem_private_key(key_file.read(),
+                                                        password=key_password,
+                                                        backend=default_backend())
+
+    signed_challenge = signing_key.sign(challenge_bs,
+                                        padding.PKCS1v15(),
+                                        hashes.SHA512())
+    if DEBUG: print "signed challenge:"
+    if DEBUG: print binascii.hexlify(signed_challenge)
+    signed_challenge_len = len(signed_challenge)
+
+    #Send Debug Access Request Command
+    print "Unlocking..."
+
+    # total length = 4 /length/ + 4 /command/ + 4 /dbg_grant/ + developer_cert + 4 /size/ + signed_challenge
+    msglen = 4 + 4 + 4 + len(developer_cert) + 4 + signed_challenge_len
+
+    if DEBUG: print "writing: " + hex(msglen)
+    esecure_write(msglen)
+    if DEBUG: print "writing: " + hex(command)
+    esecure_write(command)
+    if DEBUG: print "writing: " + hex(dbg_grant)
+    esecure_write(command)
+    esecure_write_bytes(developer_cert)
+    if DEBUG: print "writing: " + hex(signed_challenge_len)
+    esecure_write(signed_challenge_len)
+    esecure_write_bytes(signed_challenge)
+
+    status = esecure_read()
+
+    print "Status: " + decode_cmd_status(status)
+
+    return status

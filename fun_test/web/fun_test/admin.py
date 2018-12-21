@@ -5,6 +5,8 @@ from web.fun_test.models import CatalogTestCaseExecution
 from web.fun_test.models import TestBed
 from web.fun_test.models import Module, JenkinsJobIdMap
 from web.fun_test.metrics_model_admin import *
+from web.fun_test.demo_model_admin import *
+from web.fun_test.models import LastSuiteExecution, LastTestCaseExecution
 
 @admin.register(SuiteExecution)
 class SuiteExecutionAdmin(admin.ModelAdmin):
@@ -49,4 +51,12 @@ class ModuleAdmin(admin.ModelAdmin):
 
 @admin.register(JenkinsJobIdMap)
 class JenkinsJobIdMapAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(LastSuiteExecution)
+class LastSuiteExecutionAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(LastTestCaseExecution)
+class LastTestCaseExecutionAdmin(admin.ModelAdmin):
     pass

@@ -4,17 +4,47 @@ import os
 
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 # django.setup()
-
+from fun_settings import COMMON_WEB_LOGGER_NAME
 from django.db import models
 from fun_global import RESULTS
-from fun_global import is_performance_server
+from fun_global import is_performance_server, get_current_time
 from web.fun_test.jira_models import *
+from web.fun_test.demo1_models import *
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
+from datetime import datetime, timedelta
+from scheduler.scheduler_states import SchedulerStates
+import json
 
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 
 TAG_LENGTH = 50
+
+class TimeKeeper(models.Model):
+    time = models.DateTimeField(default=datetime.now)
+    name = models.TextField(default="", unique=True)
+
+    @staticmethod
+    def set_time(name, time):
+        try:
+            time_keeper_obj = TimeKeeper.objects.get(name=name)
+        except ObjectDoesNotExist:
+            time_keeper_obj = TimeKeeper(name=name, time=time)
+        time_keeper_obj.time = time
+        time_keeper_obj.save()
+
+    @staticmethod
+    def get(name):
+        result = None
+        try:
+            time_keeper_obj = TimeKeeper.objects.get(name=name)
+            result = time_keeper_obj.time
+        except ObjectDoesNotExist as ex:
+            logging.exception(str(ex))
+        return result
+
 
 class CatalogTestCase(models.Model):
     jira_id = models.IntegerField()
@@ -50,14 +80,23 @@ class SuiteExecution(models.Model):
     scheduled_time = models.DateTimeField()
     completed_time = models.DateTimeField()
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
     tags = models.TextField(default="[]")
     version = models.CharField(max_length=50, default="UNKNOWN")
     catalog_reference = models.TextField(null=True, blank=True, default=None)
+    finalized = models.BooleanField(default=False)
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
         return s
+
+class SuiteExecutionSerializer(serializers.Serializer):
+    version = serializers.CharField(max_length=50)
+    execution_id = serializers.IntegerField()
+
+    class Meta:
+        model = SuiteExecution
+        fields = ('version', 'execution_id')
 
 
 class LastSuiteExecution(models.Model):
@@ -72,7 +111,7 @@ class TestCaseExecution(models.Model):
     execution_id = models.IntegerField(unique=True)
     test_case_id = models.IntegerField()
     suite_execution_id = models.IntegerField()
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="NOTRUN")
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="NOTRUN")
     started_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True)
     overridden_result = models.BooleanField(default=False)
@@ -87,6 +126,17 @@ class TestCaseExecution(models.Model):
                                                    self.script_path)
         return s
 
+class TestCaseExecutionSerializer(serializers.Serializer):
+    script_path = serializers.CharField(max_length=128)
+    execution_id = serializers.IntegerField()
+    test_case_id = serializers.IntegerField()
+    suite_execution_id = serializers.IntegerField()
+    started_time = serializers.DateTimeField()
+    result = serializers.CharField(max_length=20)
+
+    class Meta:
+        model = TestCaseExecution
+        fields = ('script_path', 'execution_id', 'test_case_id', 'suite_execution_id', 'started_time', 'result')
 
 class Tag(models.Model):
     tag = models.CharField(max_length=TAG_LENGTH)
@@ -108,7 +158,7 @@ class CatalogSuiteExecution(models.Model):
     owner_email = models.EmailField()
     instance_name = models.CharField(max_length=50, unique=True)
     catalog_name = models.TextField(default="UNKNOWN")
-    result = models.CharField(max_length=10, choices=RESULT_CHOICES, default="UNKNOWN")
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
     active = models.BooleanField(default=False)
 
     def __str__(self):
@@ -137,6 +187,7 @@ class JenkinsJobIdMap(models.Model):
     software_date = models.IntegerField(default=0)
     hardware_version = models.TextField(default="")
     completion_date = models.TextField(default="")
+    build_properties = models.TextField(default="")
 
     def __str__(self):
         return "{} {} {} {}".format(self.completion_date, self.jenkins_job_id, self.fun_sdk_branch, self.hardware_version)
@@ -150,8 +201,47 @@ class JiraCache(models.Model):
     jira_id = models.IntegerField()
     module = models.CharField(max_length=100, default="networking")
 
+class RegresssionScripts(models.Model):
+    """
+    This is probably a temporary model. We can store the path to several scripts that can be considered as regression
+    scripts
+    """
+    script_path = models.TextField(unique=True)
+    modules = models.TextField(default='["storage"]')  # Refers to class Module
+    components = models.TextField(default=json.dumps(['component1']))
+    tags = models.TextField(default=json.dumps(['tag1']))
+
+class RegresssionScriptsSerializer(serializers.Serializer):
+    script_path = serializers.CharField(max_length=200)
+    modules = serializers.SerializerMethodField()
+    components = serializers.SerializerMethodField()
+    tags = serializers.SerializerMethodField()
+
+    def get_modules(self, obj):
+        return json.loads(obj.modules)
+
+    def get_components(self, obj):
+        return json.loads(obj.components)
+
+    def get_tags(self, obj):
+        return json.loads(obj.tags)
+
+    class Meta:
+        model = RegresssionScripts
+        fields = ('script_path', 'modules', 'components', 'tags')
+
+class SchedulerInfo(models.Model):
+    """
+    A place to store scheduler state such as time started, time restarted, current state
+    """
+    state = models.CharField(max_length=30, default=SchedulerStates.SCHEDULER_STATE_UNKNOWN)
+    last_start_time = models.DateTimeField(default=datetime.now)
+    last_restart_request_time = models.DateTimeField(default=datetime.now)
+
+
 if is_performance_server():
     from web.fun_test.metrics_models import *
+
 
 if __name__ == "__main__":
     #import django

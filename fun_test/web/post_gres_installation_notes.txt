@@ -1,0 +1,47 @@
+sudo apt-get install postgresql
+
+
+update-rc.d postgresql enable
+
+
+service postgresql start
+sudo -u postgres -i
+
+
+
+
+
+postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
+
+
+CREATE ROLE
+
+
+
+
+
+
+auto_admin@qa-ubuntu-01:/local/auto_admin/Projects/Integration/fun_test$ python web/manage.py migrate --database=performance2 --run-syncdb
+
+
+
+
+auto_admin@qa-ubuntu-01:/local/auto_admin/Projects/Integration/fun_test$ web/manage.py dumpdata --exclude auth.permission --exclude contenttypes > dump.json
+
+/usr/local/lib/python2.7/dist-packages/psycopg2/__init__.py:144: UserWarning: The psycopg2 wheel package will be renamed from release 2.8; in order to keep installing from binary please use "pip install psycopg2-binary" instead. For details see: <http://initd.org/psycopg/docs/install.html#binary-install-from-pypi>.
+
+  """)
+
+auto_admin@qa-ubuntu-01:/local/auto_admin/Projects/Integration/fun_test$ vim web/fun_test/settings.py
+
+auto_admin@qa-ubuntu-01:/local/auto_admin/Projects/Integration/fun_test$ 
+
+auto_admin@qa-ubuntu-01:/local/auto_admin/Projects/Integration/fun_test$ 
+
+auto_admin@qa-ubuntu-01:/local/auto_admin/Projects/Integration/fun_test$ 
+
+auto_admin@qa-ubuntu-01:/local/auto_admin/Projects/Integration/fun_test$ python web/manage.py loaddata dump.json --database=performance --exclude contenttypes
+
+
+
+

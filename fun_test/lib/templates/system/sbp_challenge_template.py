@@ -148,6 +148,7 @@ COMMANDS = {
     "SetUpgradeFlag": 0xFE030000,
     "SetStartCertificate": 0xFE0A0000,
     "DiagReadOTP": 0xFE0B0000,
+    "SetTamperLevel": 0xFE0C0000,
     "InitOTP": 0xFF000000,
     "CreateEKPair": 0xFF010000,
     "CreateSRK": 0xFF020000,
@@ -307,6 +308,12 @@ class SbpChallengeTemplate():
 
         sd.esecure_inject_certificate(certificate="/tmp/start_certificate.bin")
 
+    def set_tamper_level(self):
+        sd.prepare_target()
+        sd.check_for_esecure()
+        self.chal_cmd("SetTamperLevel",
+                 params=[(31, "tamper: ..."),
+                         (1, "level: reboot")])
 
     def load_otp(otpfilename):
         otp = open(otpfilename).read().splitlines()
@@ -321,7 +328,7 @@ class SbpChallengeTemplate():
     def test3(self):
         # check dbg grant
         # sd.dump_id_regs()
-        otpcmr = Buffer(size=48, cmt="CM OTP")
+        otpcmr = Buffer(size=13, cmt="CM OTP")
         self.chal_cmd("DiagReadOTP-CM", outputs=[otpcmr])
         otpcmr.print_words()
         # import pdb; pdb.set_trace()
@@ -329,11 +336,26 @@ class SbpChallengeTemplate():
         # print "OTP CM: {}".format(otpcmr.addr)
 
 
-    def test2(self):
+    def test2(self, dbg_grant=0x00000000):
+        print "Requesting DBG_GRANT {}".format(hex(dbg_grant))
         sd.esecure_enable_debug(developer_key=SbpZynqSetupTemplate.DEVELOPER_PRIVATE_KEY_FILE,
                                 developer_certificate=SbpZynqSetupTemplate.DEVELOPER_CERT_FILE,
-                                dbg_grant=0x0000FF00,
+                                dbg_grant=dbg_grant,
                                 key_password="fun123", verbose=True)
+
+    def disable_tamper(self, tamper):
+        print "Disabling tamper: {}".format(tamper)
+        challenge = sd.get_challenge()
+        sd.disable_tamper(challenge=challenge, tamper=tamper, developer_certificate=SbpZynqSetupTemplate.DEVELOPER_CERT_FILE, developer_key=SbpZynqSetupTemplate.DEVELOPER_PRIVATE_KEY_FILE, key_password="fun123")
+
+
+    def write_command(self, command):
+        print "Writing command: {}".format(hex(command))
+        result = sd.write_command(command)
+        num_words = len(result) * 8 / 32
+        words = list(struct.unpack('{}I'.format(num_words), result))
+        for word in words:
+            print "%08x" % word
 
     def test(self):
         sd.probe(self.probe_name, self.probe_ip, force_disconnect=True)
@@ -341,7 +363,7 @@ class SbpChallengeTemplate():
         # sd.dump_status()
         # self.chal_cmd(command=0xFD000000)
         tamper_status = Buffer(size=16, cmt="Tamper Status")
-        boot_status = Buffer(size=12, cmt="Boot Status")
+        boot_status = Buffer(size=16, cmt="Boot Status")
         self.chal_cmd("GetStatus", outputs=[tamper_status, boot_status])
         tamper_status.print_words()
         boot_status.print_words()
@@ -370,7 +392,7 @@ class SbpChallengeTemplate():
             if x in COMMANDS:
                 word |= COMMANDS[x]
             else:
-                word |= parse_command_word(x)
+                word |= self.parse_command_word(x)
 
         return word
 
@@ -383,8 +405,11 @@ class SbpChallengeTemplate():
         result = ""
         data = sd.esecure_read()
         result += struct.pack('<I', data)
+        size = data & 0xFFFF
 
-        for i in range((data - 4)/4):  # Sub size of header, divide by size of word
+        # for i in range((data - 4)/4):  # Sub size of header, divide by size of word
+        for i in range((size - 4) / 4):  # Sub size of header, divide by size of word
+
             read_data = sd.esecure_read()
             result += struct.pack('<I', read_data)
         return result

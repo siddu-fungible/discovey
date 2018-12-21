@@ -1,6 +1,7 @@
 import xlrd
 import logging
 import sys
+import json
 from jira_manager import JiraManager
 from collections import OrderedDict
 logger = logging.getLogger(__name__)
@@ -100,8 +101,15 @@ class TcmsExcel:
             raise Exception("Index of key exceeds columns on row")
         return result
 
-if __name__ == "__main__":
+
+
+
+
+
+'''
+if __name__ == "__main2__":
     tcms_excel = TcmsExcel(workbook_filename='/Users/johnabraham/Desktop/tcms_format.xlsx')
     tcms_excel.validate()
     tcms_excel.pretty_print_test_case(row_index=1)
 
+'''

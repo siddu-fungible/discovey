@@ -380,8 +380,8 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Inject failure to the BLT volume having the "
                                                                "UUID {}".format(self.uuids["blt"][index]))
                 fun_test.sleep("Sleeping for a second to enable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["blt"],
-                                                  self.uuids["blt"][index])
+                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["blt"],
+                                                     self.uuids["blt"][index], "stats")
                 command_result = self.storage_controller["blt"][index].peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=1,
@@ -434,7 +434,8 @@ class ReplicaDPULevelTestcase(FunTestCase):
                     initial_volume_status[combo][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         initial_volume_status[combo][mode][type][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type],
+                                                                     uuid, "stats")
                         command_result = self.storage_controller[type][index].peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT instance {}".
                                                format(index))
@@ -487,7 +488,8 @@ class ReplicaDPULevelTestcase(FunTestCase):
                     final_volume_status[combo][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         final_volume_status[combo][mode][type][index] = {}
-                        storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type],
+                                                                     uuid, "stats")
                         command_result = self.storage_controller[type][index].peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
                                                format(type, index))
@@ -720,8 +722,8 @@ class ReplicaDPULevelTestcase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Disable fault_injection from the BLT volume having the "
                                                                "UUID {}".format(self.uuids["ndata"][index]))
                 fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["blt"],
-                                                  self.uuids["blt"][index])
+                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["blt"],
+                                                     self.uuids["blt"][index], "stats")
                 command_result = self.storage_controller["blt"][index].peek(props_tree)
                 fun_test.log(command_result)
                 fun_test.test_assert_expected(actual=int(command_result["blt"]["fault_injection"]), expected=0,
@@ -947,7 +949,8 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
                     for index, uuid in enumerate(self.uuids[type]):
                         initial_volume_status[size][mode][type][index] = {}
 
-                        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid,
+                                                             "stats")
                         command_result = {}
                         command_result = self.storage_controller[type][index].peek(props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT instance {}".
@@ -1002,7 +1005,8 @@ class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
                     final_volume_status[size][mode][type] = {}
                     for index, uuid in enumerate(self.uuids[type]):
                         final_volume_status[size][mode][type][index] = {}
-                        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid)
+                        props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types[type], uuid,
+                                                             "stats")
                         command_result = {}
                         command_result = self.storage_controller[type][index].peek(props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".

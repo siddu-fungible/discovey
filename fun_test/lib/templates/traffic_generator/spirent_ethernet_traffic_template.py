@@ -2,50 +2,53 @@ from lib.system.fun_test import *
 from lib.host.spirent_manager import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
 from prettytable import PrettyTable
+# Currently Nu Config manager is in scripts dir we will move it later to proper place
+from scripts.networking.nu_config_manager import nu_config_obj, NuConfigManager
 
 
 class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
+    ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP = 1
+    ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP = 2
+    ETH_IPV4_UDP_VXLAN_ETH_IPV6_TCP = 3
+    ETH_IPV4_UDP_VXLAN_ETH_IPV6_UDP = 4
+    ETH_IPV6_UDP_VXLAN_ETH_IPV4_TCP = 5
+    ETH_IPV6_UDP_VXLAN_ETH_IPV4_UDP = 6
+    ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP = 7
+    ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP = 8
+    MPLS_ETH_IPV4_UDP_CUST_IPV4_TCP = 9
+    MPLS_ETH_IPV4_UDP_CUST_IPV4_UDP = 10
 
     def __init__(self, session_name, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         SpirentTrafficGeneratorTemplate.__init__(self, spirent_config=spirent_config, chassis_type=chassis_type)
         self.session_name = session_name
         self.stc_connected = False
 
-    def setup(self, no_of_ports_needed):
+    def setup(self, no_of_ports_needed, flow_type=NuConfigManager.TRANSIT_FLOW_TYPE,
+              flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU, ports_map={}):
         result = {"result": False, 'port_list': [], 'interface_obj_list': []}
 
+        project_handle = self.stc_manager.create_project(project_name=self.session_name)
+        fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
+        physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
+
+        if not self.stc_connected:
+            fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
+                                 message="Health of Spirent Test Center")
+            self.stc_connected = True
+
         try:
-            if not self.stc_connected:
-                fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
-                                     message="Health of Spirent Test Center")
-                self.stc_connected = True
-
-            no_of_ports_in_config = len(self.spirent_config[self.chassis_type]["port_nos"])
-            fun_test.debug("Ports Needed: %d    Ports found in nu config: %d" % (no_of_ports_needed,
-                                                                                 no_of_ports_in_config))
-            fun_test.test_assert(no_of_ports_needed <= no_of_ports_in_config,
-                                 message="Ensure no of ports needed to run script exists in nu config.")
-
-            chassis_info = self.stc_manager.get_test_module_info()
-            slot_found = False
-            for module in chassis_info['module_info']:
-                if int(module['Index']) == self.spirent_config[self.chassis_type]['slot_no'] and \
-                        int(module['PortCount']) >= no_of_ports_needed:
-                    slot_found = True
-                    #status = self.stc_manager.ensure_port_groups_status(port_group_list=chassis_info['port_group_info'])
-                    #fun_test.simple_assert(status, "Ports are not free. Please check")
-
-            fun_test.simple_assert(slot_found, "Ensure slot num mentioned in config exists on STC")
-
-            project_handle = self.stc_manager.create_project(project_name=self.session_name)
-            fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
-            physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
-
-            for port_no in self.spirent_config[self.chassis_type]['port_nos']:
-                port_location = "//%s/%s/%s" % (self.stc_manager.chassis_ip,
-                                                self.spirent_config[self.chassis_type]['slot_no'], port_no)
-                port_handle = self.stc_manager.create_port(location=port_location)
-                fun_test.test_assert(port_handle, "Create Port: %s" % port_location)
+            if not ports_map:
+                ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
+                                                                      flow_type=flow_type,
+                                                                      flow_direction=flow_direction)
+            else:
+                fun_test.simple_assert(int(no_of_ports_needed) == len(ports_map),
+                                       message="Number of ports needed is %s and provided in ports_map is %s "
+                                               % (no_of_ports_needed, len(ports_map)))
+            for key, val in ports_map.iteritems():
+                fun_test.log("Using %s -----> %s" % (key, val))
+                port_handle = self.stc_manager.create_port(location=val)
+                fun_test.test_assert(port_handle, "Create Port: %s" % val)
                 result['port_list'].append(port_handle)
                 interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
                                                                port_handle=port_handle)
@@ -62,8 +65,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
     def cleanup(self):
         try:
-            self.stc_manager.disconnect_session()
-            self.stc_manager.disconnect_lab_server()
+            if self.spirent_config['connect_via_lab_server']:
+                self.stc_manager.disconnect_session()
+                self.stc_manager.disconnect_lab_server()
             # self.stc_manager.disconnect_chassis()
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -428,7 +432,6 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         result_handle = None
         try:
             fun_test.log("Subscribing to port analyzer results on port %s" % parent)
-            pass
             op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
                                                            result_type=result_type,
                                                            view_attribute_list=view_attribute_list)
@@ -438,15 +441,14 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result_handle
 
-    def subscribe_diff_serv_results(self,  parent, config_type="Analyzer", result_type="DiffServResults",
+    def subscribe_diff_serv_results(self,  parent, result_parent, config_type="Analyzer", result_type="DiffServResults",
                                     view_attribute_list=None):
         result_handle = None
         try:
             fun_test.log("Subscribing to diff serv results on %s" % parent)
-            pass
             op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
                                                            result_type=result_type,
-                                                           view_attribute_list=view_attribute_list)
+                                                           view_attribute_list=view_attribute_list, result_parent=result_parent)
             fun_test.simple_assert(op_handle, "Getting diffServ subscribe handle")
             result_handle = op_handle
         except Exception as ex:
@@ -501,6 +503,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         result = False
         try:
             for handle in subscribe_handle_list:
+                if type(handle) == bool:
+                    continue
                 output = self.stc_manager.clear_results_view_command(result_dataset=handle)
                 fun_test.simple_assert(output, message="Clear results for handle %s" % handle)
                 result = True
@@ -530,9 +534,10 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                    "TcpChecksumErrorCount", "UdpChecksumErrorCount", "DroppedFrameCount",
                                    "DuplicateFrameCount", "OutSeqFrameCount", "LateFrameCount", "ReorderedFrameCount"]
             for counter in error_counters_list:
-                if not rx_results[counter] == '0':
-                    result[counter] = rx_results[counter]
-                    fun_test.log("Error counter seen for %s with value %s" % (counter, rx_results[counter]))
+                if counter in rx_results:
+                    if not rx_results[counter] == '0':
+                        result[counter] = rx_results[counter]
+                        fun_test.log("Error counter seen for %s with value %s" % (counter, rx_results[counter]))
             if len(result) == 1:
                 result['result'] = True
         except Exception as ex:
@@ -556,7 +561,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def subscribe_to_all_results(self, parent, diff_serv=False, pfc=False):
+    def subscribe_to_all_results(self, parent, diff_serv=False, pfc=False, port=None):
         result = {'result': False}
         try:
             fun_test.debug("Subscribing to tx results")
@@ -590,8 +595,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             result['analyzer_subscribe'] = analyzer_subscribe
 
             if diff_serv:
+                fun_test.simple_assert(port, "Port handle must be provided for diffserv results")
                 fun_test.debug("Subscribing to diff serv results")
-                diff_serv_subscribe = self.subscribe_diff_serv_results(parent=parent)
+                diff_serv_subscribe = self.subscribe_diff_serv_results(parent=parent, result_parent=port, view_attribute_list=["qos", "Ipv4FrameCount"])
                 fun_test.simple_assert(diff_serv_subscribe, "Check diff serv subscribe")
                 result['diff_serv_subscribe'] = diff_serv_subscribe
 
@@ -632,53 +638,92 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         return int(count_in_mbps)
 
     def validate_traffic_rate_results(self, rx_summary_subscribe_handle, tx_summary_subscribe_handle, stream_objects,
-                                      wait_before_fetching_results=True, validate_throughput=True):
+                                      wait_before_fetching_results=True, validate_throughput=True, tx_port=None,
+                                      rx_port=None):
         result = {'result': False, 'pps_count': {}, 'throughput_count': {}}
         try:
             if wait_before_fetching_results:
-                fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
+                fun_test.sleep("Waiting for traffic to reach full throughput", seconds=25)
 
             for stream_obj in stream_objects:
-                checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
-                tx_result = self.stc_manager.get_tx_stream_block_results(stream_block_handle=stream_obj.spirent_handle,
-                                                                         subscribe_handle=tx_summary_subscribe_handle,
-                                                                         summary=True, refresh=False)
-                fun_test.simple_assert(expression=tx_result, message=checkpoint)
+                if stream_obj.FixedFrameLength == 64:
+                    if not tx_port and not rx_port:
+                        raise Exception("Please provide Spirent Tx Port and Rx Port handles")
 
-                checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
-                rx_result = self.stc_manager.get_rx_stream_block_results(stream_block_handle=stream_obj.spirent_handle,
-                                                                         subscribe_handle=rx_summary_subscribe_handle,
-                                                                         summary=True, refresh=False)
-                fun_test.simple_assert(expression=rx_result, message=checkpoint)
+                    checkpoint = "Fetch Tx Port Results for %s" % tx_port
+                    tx_port_result = self.stc_manager.get_generator_port_results(
+                        port_handle=tx_port, subscribe_handle=tx_summary_subscribe_handle)
+                    fun_test.simple_assert(expression=tx_port_result, message=checkpoint)
+                    checkpoint = "Fetch Rx Port Results for %s" % rx_port
+                    rx_port_result = self.stc_manager.get_rx_port_analyzer_results(
+                        port_handle=rx_port, subscribe_handle=rx_summary_subscribe_handle)
+                    fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
 
-                checkpoint = "Ensure Tx FrameRate(PPS) is equal to Rx FrameRate(PPS) for %d Frame Size (%s)" % \
-                             (stream_obj.FixedFrameLength, stream_obj.spirent_handle)
-                fun_test.log("FrameRate (PPS) Results for %s : Tx --> %d fps and Rx --> %d fps" % (
-                    stream_obj.spirent_handle, int(tx_result['FrameRate']), int(rx_result['FrameRate'])))
-                fun_test.simple_assert(expression=int(tx_result['FrameRate']) != 0, message="Tx FrameRate is zero")
-                rx_pps_count = self._manipulate_rate_counters(tx_rate_count=int(tx_result['FrameRate']),
-                                                              rx_rate_count=int(rx_result['FrameRate']))
-                fun_test.test_assert_expected(expected=int(tx_result['FrameRate']),
-                                              actual=rx_pps_count,
-                                              message=checkpoint)
+                    checkpoint = "Ensure Tx GeneratorFrameRate(PPS) is equal to Rx TotalFrameRate(PPS) for %d " \
+                                 "Frame Size (%s)" % (stream_obj.FixedFrameLength, stream_obj.spirent_handle)
+                    fun_test.log("FrameRate (PPS) Results for %s : Tx --> %d fps and Rx --> %d fps" % (
+                        stream_obj.spirent_handle, int(tx_port_result['GeneratorFrameRate']),
+                        int(rx_port_result['TotalFrameRate'])))
+                    rx_pps_count = self._manipulate_rate_counters(tx_rate_count=int(tx_port_result['GeneratorFrameRate']),
+                                                                  rx_rate_count=int(rx_port_result['TotalFrameRate']))
+                    fun_test.test_assert_expected(expected=int(tx_port_result['GeneratorFrameRate']),
+                                                  actual=rx_pps_count,
+                                                  message=checkpoint)
+                    if validate_throughput:
+                        checkpoint = "Ensure Throughput Tx Rate is equal to Rx Rate for %d Frame Size (%s)" % \
+                                     (stream_obj.FixedFrameLength, stream_obj.spirent_handle)
+                        tx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(tx_port_result['L1BitRate']))
+                        rx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(rx_port_result['L1BitRate']))
+                        fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d Mbps and Rx --> %d Mbps " % (
+                            stream_obj.spirent_handle, tx_l1_bit_rate_in_mbps, rx_l1_bit_rate_in_mbps))
+                        rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_mbps,
+                                                                     rx_rate_count=rx_l1_bit_rate_in_mbps)
+                        fun_test.test_assert_expected(expected=tx_l1_bit_rate_in_mbps,
+                                                      actual=rx_bit_rate,
+                                                      message=checkpoint)
+                    result['pps_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength):
+                                               int(rx_port_result['TotalFrameRate'])}
+                else:
+                    checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
+                    tx_result = self.stc_manager.get_tx_stream_block_results(stream_block_handle=stream_obj.spirent_handle,
+                                                                             subscribe_handle=tx_summary_subscribe_handle,
+                                                                             summary=True, refresh=False)
+                    fun_test.simple_assert(expression=tx_result, message=checkpoint)
 
-                if validate_throughput:
-                    checkpoint = "Ensure Throughput Tx Rate is equal to Rx Rate for %d Frame Size (%s)" % \
+                    checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
+                    rx_result = self.stc_manager.get_rx_stream_block_results(stream_block_handle=stream_obj.spirent_handle,
+                                                                             subscribe_handle=rx_summary_subscribe_handle,
+                                                                             summary=True, refresh=False)
+                    fun_test.simple_assert(expression=rx_result, message=checkpoint)
+
+                    checkpoint = "Ensure Tx FrameRate(PPS) is equal to Rx FrameRate(PPS) for %d Frame Size (%s)" % \
                                  (stream_obj.FixedFrameLength, stream_obj.spirent_handle)
-                    tx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(tx_result['L1BitRate']))
-                    rx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(rx_result['L1BitRate']))
-                    fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d Mbps and Rx --> %d Mbps " % (
-                        stream_obj.spirent_handle, tx_l1_bit_rate_in_mbps, rx_l1_bit_rate_in_mbps))
-                    fun_test.simple_assert(expression=int(tx_result['L1BitRate']) != 0, message="Tx L1 Rate is zero")
-                    rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_mbps,
-                                                                 rx_rate_count=rx_l1_bit_rate_in_mbps)
-                    fun_test.test_assert_expected(expected=tx_l1_bit_rate_in_mbps,
-                                                  actual=rx_bit_rate,
+                    fun_test.log("FrameRate (PPS) Results for %s : Tx --> %d fps and Rx --> %d fps" % (
+                        stream_obj.spirent_handle, int(tx_result['FrameRate']), int(rx_result['FrameRate'])))
+                    # fun_test.simple_assert(expression=int(tx_result['FrameRate']) != 0, message="Tx FrameRate is zero")
+                    rx_pps_count = self._manipulate_rate_counters(tx_rate_count=int(tx_result['FrameRate']),
+                                                                  rx_rate_count=int(rx_result['FrameRate']))
+                    fun_test.test_assert_expected(expected=int(tx_result['FrameRate']),
+                                                  actual=rx_pps_count,
                                                   message=checkpoint)
 
-                result['pps_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): int(rx_result['FrameRate'])}
+                    if validate_throughput:
+                        checkpoint = "Ensure Throughput Tx Rate is equal to Rx Rate for %d Frame Size (%s)" % \
+                                     (stream_obj.FixedFrameLength, stream_obj.spirent_handle)
+                        tx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(tx_result['L1BitRate']))
+                        rx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(rx_result['L1BitRate']))
+                        fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d Mbps and Rx --> %d Mbps " % (
+                            stream_obj.spirent_handle, tx_l1_bit_rate_in_mbps, rx_l1_bit_rate_in_mbps))
+                        # fun_test.simple_assert(expression=int(tx_result['L1BitRate']) != 0, message="Tx L1 Rate is zero")
+                        rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_mbps,
+                                                                     rx_rate_count=rx_l1_bit_rate_in_mbps)
+                        fun_test.test_assert_expected(expected=tx_l1_bit_rate_in_mbps,
+                                                      actual=rx_bit_rate,
+                                                      message=checkpoint)
+
+                    result['pps_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): int(rx_result['FrameRate'])}
                 if validate_throughput:
-                    result['throughput_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): rx_bit_rate}
+                    result['throughput_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): float(rx_bit_rate)}
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -699,49 +744,57 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         """
         result = {'result': False}
         try:
+            frame_size = str(stream_obj.FixedFrameLength)
             if not expected_latency_count:
                 # TODO: Later on we need to integrate RFC 2544 standards for benchmarking
-                pass
+                # If existing record not found for given frame size dump the result as it is for now
+                result['frame_%s' % frame_size] = {'avg': 0, 'min': 0, 'max': 0}
             else:
                 # For performance benchmarking we are comparing existing benchmarking results
-                frame_size = str(stream_obj.FixedFrameLength)
-                checkpoint = "Validate Avg. latency for %s Frame Size with Load %s " \
-                             "Actual latency <= Expected Threshold latency (%s) " % \
-                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
-                expected_threshold_latency = self._calculate_threshold_count(
-                    count=expected_latency_count['latency_avg'],
-                    tolerance_percent=tolerance_percent)
-                fun_test.log("Avg Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
-                                                                            frame_size, str(rx_result['AvgLatency'])))
-                fun_test.test_assert(expression=float(rx_result['AvgLatency']) <= float(expected_threshold_latency),
-                                     message=checkpoint)
+                if rx_result:
+                    checkpoint = "Validate Avg. latency for %s Frame Size with Load %s " \
+                                 "Actual latency <= Expected Threshold latency (%s) " % \
+                                 (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                    expected_threshold_latency = self._calculate_threshold_count(
+                        count=expected_latency_count['latency_avg'],
+                        tolerance_percent=tolerance_percent)
+                    fun_test.log("Expected Avg latency: %s us Frame Size: %s" % (str(expected_threshold_latency),
+                                                                                 frame_size))
+                    fun_test.log("Avg Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
+                                                                                frame_size, str(rx_result['AvgLatency'])))
+                    # fun_test.test_assert(expression=float(rx_result['AvgLatency']) <= float(expected_threshold_latency),
+                    #                      message=checkpoint)
 
-                checkpoint = "Validate Min. latency for %s Frame Size with Load %s " \
-                             "Actual latency <= Expected Threshold latency (%s) " % \
-                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
-                expected_threshold_latency = self._calculate_threshold_count(
-                    count=expected_latency_count['latency_min'],
-                    tolerance_percent=tolerance_percent)
+                    checkpoint = "Validate Min. latency for %s Frame Size with Load %s " \
+                                 "Actual latency <= Expected Threshold latency (%s) " % \
+                                 (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                    expected_threshold_latency = self._calculate_threshold_count(
+                        count=expected_latency_count['latency_min'],
+                        tolerance_percent=tolerance_percent)
+                    fun_test.log("Expected Min latency: %s us Frame Size: %s" % (str(expected_threshold_latency),
+                                                                                 frame_size))
+                    fun_test.log("Min Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
+                                                                                frame_size, str(rx_result['MinLatency'])))
+                    # fun_test.test_assert(expression=float(rx_result['MinLatency']) <= float(expected_threshold_latency),
+                    #                     message=checkpoint)
 
-                fun_test.log("Min Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
-                                                                            frame_size, str(rx_result['MinLatency'])))
-                fun_test.test_assert(expression=float(rx_result['MinLatency']) <= float(expected_threshold_latency),
-                                     message=checkpoint)
-
-                checkpoint = "Validate Max. latency for %s Frame Size with Load %s " \
-                             "Actual latency <= Expected Threshold latency (%s)" % \
-                             (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
-                expected_threshold_latency = self._calculate_threshold_count(
-                    count=expected_latency_count['latency_max'],
-                    tolerance_percent=tolerance_percent)
-
-                fun_test.log("Max Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
-                                                                            frame_size, str(rx_result['MaxLatency'])))
-                fun_test.test_assert(expression=float(rx_result['MaxLatency']) <= float(expected_threshold_latency),
-                                     message=checkpoint)
-                result['frame_%s' % frame_size] = {'avg': float(rx_result['AvgLatency']),
-                                                   'min': float(rx_result['MinLatency']),
-                                                   'max': float(rx_result['MaxLatency'])}
+                    checkpoint = "Validate Max. latency for %s Frame Size with Load %s " \
+                                 "Actual latency <= Expected Threshold latency (%s)" % \
+                                 (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
+                    expected_threshold_latency = self._calculate_threshold_count(
+                        count=expected_latency_count['latency_max'],
+                        tolerance_percent=tolerance_percent)
+                    fun_test.log("Expected Max latency: %s us Frame Size: %s" % (str(expected_threshold_latency),
+                                                                                 frame_size))
+                    fun_test.log("Max Latency for %s Frame Size %s B: %s us" % (stream_obj.spirent_handle,
+                                                                                frame_size, str(rx_result['MaxLatency'])))
+                    # fun_test.test_assert(expression=float(rx_result['MaxLatency']) <= float(expected_threshold_latency),
+                    #                     message=checkpoint)
+                    result['frame_%s' % frame_size] = {'avg': float(rx_result['AvgLatency']),
+                                                       'min': float(rx_result['MinLatency']),
+                                                       'max': float(rx_result['MaxLatency'])}
+                else:
+                    result['frame_%s' % frame_size] = {'avg': 0, 'min': 0, 'max': 0}
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -761,7 +814,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         try:
             if not expected_jitter_count:
                 # TODO: Later on we need to integrate RFC 2544 standards for benchmarking
-                pass
+                result['frame_%s' % stream_obj.FixedFrameLength] = {'avg': float(rx_result['AvgJitter']),
+                                                                    'min': float(rx_result['MinJitter']),
+                                                                    'max': float(rx_result['MaxJitter'])}
             else:
                 # For performance benchmarking we are comparing existing benchmarking results
                 frame_size = str(stream_obj.FixedFrameLength)
@@ -770,30 +825,36 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
                     count=expected_jitter_count['jitter_avg'], tolerance_percent=tolerance_percent)
+                fun_test.log("Expected Avg jitter: %s us Frame Size: %s" % (str(expected_threshold_jitter),
+                                                                            frame_size))
                 fun_test.log("Avg Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['AvgJitter'])))
-                fun_test.test_assert(expression=float(rx_result['AvgJitter']) <= float(expected_threshold_jitter),
-                                     message=checkpoint)
+                # fun_test.test_assert(expression=float(rx_result['AvgJitter']) <= float(expected_threshold_jitter),
+                #                     message=checkpoint)
 
                 checkpoint = "Validate Min. jitter for %s Frame Size with Load %s " \
                              "Actual jitter <= Expected Threshold jitter (%s)" % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
                     count=expected_jitter_count['jitter_min'], tolerance_percent=tolerance_percent)
+                fun_test.log("Expected Min jitter: %s us Frame Size: %s" % (str(expected_threshold_jitter),
+                                                                            frame_size))
                 fun_test.log("Min Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['MinJitter'])))
-                fun_test.test_assert(expression=float(rx_result['MinJitter']) <= float(expected_threshold_jitter),
-                                     message=checkpoint)
+                # fun_test.test_assert(expression=float(rx_result['MinJitter']) <= float(expected_threshold_jitter),
+                #                     message=checkpoint)
 
                 checkpoint = "Validate Max. jitter for %s Frame Size with Load %s " \
                              "Actual jitter <= Expected Threshold jitter (%s)" % \
                              (frame_size, str(stream_obj.Load), stream_obj.spirent_handle)
                 expected_threshold_jitter = self._calculate_threshold_count(
                     count=expected_jitter_count['jitter_max'], tolerance_percent=tolerance_percent)
+                fun_test.log("Expected Max jitter: %s us Frame Size: %s" % (str(expected_threshold_jitter),
+                                                                            frame_size))
                 fun_test.log("Max Jitter for %s Frame Size %s B: %s " % (stream_obj.spirent_handle,
                                                                          frame_size, str(rx_result['MaxJitter'])))
-                fun_test.test_assert(expression=float(rx_result['MaxJitter']) <= float(expected_threshold_jitter),
-                                     message=checkpoint)
+                # fun_test.test_assert(expression=float(rx_result['MaxJitter']) <= float(expected_threshold_jitter),
+                #                     message=checkpoint)
                 result['frame_%s' % frame_size] = {'avg': float(rx_result['AvgJitter']),
                                                    'min': float(rx_result['MinJitter']),
                                                    'max': float(rx_result['MaxJitter'])}
@@ -805,42 +866,82 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
     def validate_performance_result(self, tx_subscribe_handle, rx_subscribe_handle, stream_objects,
                                     jitter=False, expected_performance_data=[],
-                                    tolerance_percent=10):
+                                    tx_port=None, rx_port=None,
+                                    tolerance_percent=10, flow_type=None, spray_enabled=False, dut_stats_success=False):
         result = {'result': False}
         try:
-
+            expected_performance_data.reverse()
             key = "frame_%s" % str(stream_objects[0].FixedFrameLength)
             result[key] = []
+            rx_result = None
             for stream_obj in stream_objects:
-                checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
-                rx_result = self.stc_manager.get_rx_stream_block_results(
-                    stream_block_handle=stream_obj.spirent_handle,
-                    subscribe_handle=rx_subscribe_handle, summary=True)
-                fun_test.simple_assert(expression=rx_result, message=checkpoint)
+                if stream_obj.FixedFrameLength == 64:
+                    checkpoint = "Fetch Tx Port Results for %s" % tx_port
+                    tx_port_result = self.stc_manager.get_generator_port_results(
+                        port_handle=tx_port, subscribe_handle=tx_subscribe_handle)
+                    fun_test.simple_assert(expression=tx_port_result, message=checkpoint)
+                    checkpoint = "Fetch Rx Port Results for %s" % rx_port
+                    rx_port_result = self.stc_manager.get_rx_port_analyzer_results(
+                        port_handle=rx_port, subscribe_handle=rx_subscribe_handle)
+                    fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
 
-                checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
-                tx_result = self.stc_manager.get_tx_stream_block_results(
-                    stream_block_handle=stream_obj.spirent_handle,
-                    subscribe_handle=tx_subscribe_handle)
-                fun_test.simple_assert(expression=tx_result, message=checkpoint)
+                    checkpoint = "Ensure Tx FrameCount is equal to Rx FrameCount for %d frame size (%s)" % (
+                        stream_obj.FixedFrameLength, stream_obj.spirent_handle
+                    )
+                    fun_test.log("Frame Count Results for %d B: \n Tx Frame Count: %d \n Rx Frame Count: %d " % (
+                        stream_obj.FixedFrameLength, int(tx_port_result['GeneratorFrameCount']),
+                        int(rx_port_result['TotalFrameCount'])
+                    ))
+                    if (int(tx_port_result['GeneratorFrameCount']) != int(rx_port_result['TotalFrameCount'])) and \
+                            dut_stats_success:
+                        fun_test.test_assert(dut_stats_success, checkpoint)
+                    else:
+                        fun_test.test_assert_expected(expected=int(tx_port_result['GeneratorFrameCount']),
+                                                      actual=int(rx_port_result['TotalFrameCount']),
+                                                      message=checkpoint)
+                else:
+                    checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
+                    rx_result = self.stc_manager.get_rx_stream_block_results(
+                        stream_block_handle=stream_obj.spirent_handle,
+                        subscribe_handle=rx_subscribe_handle, summary=True)
+                    fun_test.log("TX Results: %s" % rx_result)
+                    fun_test.simple_assert(expression=rx_result, message=checkpoint)
 
-                checkpoint = "Ensure Tx FrameCount is equal to Rx FrameCount for %d frame size (%s)" % (
-                    stream_obj.FixedFrameLength, stream_obj.spirent_handle
-                )
-                fun_test.log("Frame Count Results for %d B: \n Tx Frame Count: %d \n Rx Frame Count: %d " % (
-                    stream_obj.FixedFrameLength, int(tx_result['FrameCount']), int(rx_result['FrameCount'])
-                ))
-                fun_test.test_assert_expected(expected=int(tx_result['FrameCount']),
-                                              actual=int(rx_result['FrameCount']),
-                                              message=checkpoint)
+                    checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
+                    tx_result = self.stc_manager.get_tx_stream_block_results(
+                        stream_block_handle=stream_obj.spirent_handle,
+                        subscribe_handle=tx_subscribe_handle)
+                    fun_test.log("RX Results: %s" % tx_result)
+                    fun_test.simple_assert(expression=tx_result, message=checkpoint)
+
+                    checkpoint = "Ensure Tx FrameCount is equal to Rx FrameCount for %d frame size (%s)" % (
+                        stream_obj.FixedFrameLength, stream_obj.spirent_handle
+                    )
+                    fun_test.log("Frame Count Results for %d B: \n Tx Frame Count: %d \n Rx Frame Count: %d " % (
+                        stream_obj.FixedFrameLength, int(tx_result['FrameCount']), int(rx_result['FrameCount'])
+                    ))
+                    if (flow_type == NuConfigManager.FLOW_DIRECTION_FPG_HNU or flow_type == NuConfigManager.FLOW_DIRECTION_HNU_FPG) \
+                            and spray_enabled:
+                        fun_test.log("Reordered Frame Count: %d for %d B frame." % (
+                            int(rx_result['ReorderedFrameCount']), stream_obj.FixedFrameLength))
+                    else:
+                        fun_test.test_assert_expected(expected=int(tx_result['FrameCount']),
+                                                      actual=int(rx_result['FrameCount']),
+                                                      message=checkpoint)
                 if jitter:
                     expected_jitter_dict = {}
                     for record in expected_performance_data:
                         if "_name" in record:
                             continue
                         if record['frame_size'] == stream_obj.FixedFrameLength:
-                            expected_jitter_dict = record
-                            break
+                            if 'flow_type' in record:
+                                if flow_type == record['flow_type']:
+                                    expected_jitter_dict = record
+                                    break
+                            else:
+                                if 'jitter_avg' in record:
+                                    expected_jitter_dict = record
+                                    break
                     checkpoint = "Validate Jitter Counters"
                     jitter_result = self.validate_jitter_results(rx_result=rx_result,
                                                                  stream_obj=stream_obj,
@@ -854,8 +955,13 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         if '_name' in record:
                             continue
                         if record['frame_size'] == stream_obj.FixedFrameLength:
-                            expected_latency_dict = record
-                            break
+                            if "flow_type" in record:
+                                if flow_type == record['flow_type']:
+                                    expected_latency_dict = record
+                                    break
+                            else:
+                                expected_latency_dict = record
+                                break
 
                     checkpoint = "Validate Latency Counters"
                     latency_result = self.validate_latency_results(rx_result=rx_result,
@@ -873,7 +979,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def display_latency_counters(self, result):
         try:
             fun_test.log_disable_timestamps()
-            fun_test.log_section("Nu Transit Performance Latency Counters")
+            fun_test.log_section("NU Performance Latency Counters")
             table_obj = PrettyTable(['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
                                      'Max Latency (us)'])
             for key in result:
@@ -902,7 +1008,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def display_jitter_counters(self, result):
         try:
             fun_test.log_disable_timestamps()
-            fun_test.log_section("Nu Transit Performance Jitter Counters")
+            fun_test.log_section("NU Performance Jitter Counters")
             if 'throughput_count' in result:
                 column_list = ['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Jitter (us)', 'Min Jitter (us)',
                                'Max Jitter (us)']
@@ -940,14 +1046,19 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-    def configure_pause_mac_control_header(self, stream_obj, source_mac, destination_mac, length="8808", pause_time=0,
+    def configure_pause_mac_control_header(self, stream_obj, source_mac="00:10:94:00:00:02",
+                                           destination_mac="01:80:C2:00:00:01", length="8808", pause_time=0,
                                            op_code="0001", preamble="55555555555555d5"):
         result = {}
         result['result'] = False
         try:
-            ethernet_header_obj = Ethernet8023MacControlHeader(destination_mac=destination_mac,
+            ethernet_header_obj = MacControlHeader(destination_mac=destination_mac,
                                                                source_mac=source_mac, length=length, preamble=preamble)
             pause_header_obj = PauseMacControlHeader(op_code=op_code, pause_time=pause_time)
+
+            fun_test.log("Removing ethernet and ip header from streamblock")
+            self.stc_manager.stc.config(stream_obj.spirent_handle, FrameConfig='')
+
             fun_test.log("Creating Pause Mac Control Frame with Ethernet 802.3 Mac Control header")
             header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
                                                                     header_obj=ethernet_header_obj)
@@ -983,7 +1094,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                                                preamble="55555555555555d5", op_code="0101", time0="", time1="",
                                                time2="", time3="", time4="", time5="", time6="", time7="",
                                                class_enable_vector=False, ls_octet="00000000", ms_octet="00000000",
-                                               reserved=''):
+                                               reserved='', update=False):
         result = {}
         result['result'] = False
         try:
@@ -992,6 +1103,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             pfc_header_obj = PriorityFlowControlHeader(op_code=op_code, time0=time0, time1=time1, time2=time2,
                                                        time3=time3, time4=time4, time5=time5, time6=time6, time7=time7,
                                                        reserved=reserved)
+            fun_test.log("Removing ethernet and ip header from streamblock")
+            self.stc_manager.stc.config(stream_obj.spirent_handle, FrameConfig='')
+            #self.stc_manager.apply_configuration()
             fun_test.log("Creating Priority Flow Control Frame with Mac Control header")
             header_created = self.stc_manager.configure_frame_stack(stream_block_handle=stream_obj.spirent_handle,
                                                                     header_obj=ethernet_header_obj)
@@ -1030,23 +1144,51 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def configure_diffserv(self, ip_header_obj, streamblock_obj, dscp_high='0',
-                           dscp_low='0', name=None, reserved='00'):
+    def configure_diffserv(self, streamblock_obj, dscp_high='0',
+                           dscp_low='0', name=None, reserved='00', ip_header_obj=None, update=False):
         result = False
         try:
             fun_test.log("Creating tos_diffServ obj")
             # Get latest ip handle
-            child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
-            new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
-                                                                 child_type=child_type)[0]
+
+            new_ip_handle = None
+            if not ip_header_obj:
+                ip_header_obj = Ipv4Header()
+                child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
+                new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                     child_type=child_type)[0]
+            if (not new_ip_handle) and (not ip_header_obj):
+                ip_header_obj = Ipv6Header()
+                child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
+                new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                     child_type=child_type)[0]
+            else:
+                child_type = 'children-' + ip_header_obj.HEADER_TYPE.lower()
+                new_ip_handle = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                     child_type=child_type)[0]
+
             ip_header_obj._spirent_handle = new_ip_handle
             tos_diffserv_obj = TosDiffServ()
-            tosdiffserv_handle = self.stc_manager.stc.create(tos_diffserv_obj.HEADER_TYPE.lower(),
-                                                             under=new_ip_handle)
+            child_type = 'children-' + tos_diffserv_obj.HEADER_TYPE.lower()
+            tosdiffserv_handle = self.stc_manager.get_object_children(handle=ip_header_obj._spirent_handle,
+                                                                      child_type=child_type)[0]
+            if not update:
+                tosdiffserv_handle = self.stc_manager.stc.create(tos_diffserv_obj.HEADER_TYPE.lower(),
+                                                                 under=new_ip_handle)
 
-            fun_test.simple_assert(tosdiffserv_handle, "Created tosdiffServ under ip header")
+                fun_test.simple_assert(tosdiffserv_handle, "Created tosdiffServ under ip header")
             tos_diffserv_obj._spirent_handle = tosdiffserv_handle
             fun_test.log("Adding diff serv under tosdiffServ")
+
+            if update:
+                child_type = 'children-' + DiffServ.HEADER_TYPE.lower()
+                old_diffserv_handle = self.stc_manager.get_object_children(handle=tosdiffserv_handle,
+                                                                           child_type=child_type)
+                if old_diffserv_handle:
+                    old_diffserv_handle = old_diffserv_handle[0]
+                    del_diff_serv = self.stc_manager.delete_handle(old_diffserv_handle)
+                    fun_test.simple_assert(del_diff_serv, "Delete old diff serv handle")
+
             diff_serv_obj = DiffServ(dscp_high=dscp_high, dscp_low=dscp_low, name=name, reserved=reserved)
             diff_serv_handle = self.stc_manager.stc.create(diff_serv_obj.HEADER_TYPE, under=tosdiffserv_handle,
                                                            dscpHigh=dscp_high, dscpLow=dscp_low, reserved=reserved,
@@ -1060,8 +1202,226 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
+    def configure_ptp_header(self, header_obj, stream_block_handle, create_header=False, delete_header_type="ipv4"):
+        result = False
+        try:
+            attributes = header_obj.get_attributes_dict()
+            if create_header:
+                if delete_header_type:
+                    existing_headers = self.stc_manager.get_object_children(stream_block_handle)
+                    fun_test.debug("headers found in %s: %s" % (stream_block_handle, existing_headers))
+                    for header in existing_headers:
+                        if delete_header_type in header:
+                            fun_test.log("Deleting Header: %s" % header)
+                            self.stc_manager.delete_handle(header)
+                            break
+                fun_test.log("Creating %s Header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
+                handle = self.stc_manager.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle,
+                                                     Name=attributes['Name'])
+                fun_test.simple_assert(handle, "Handle Created")
 
+            child = header_obj.HEADER_TYPE.lower()
+            child_type = 'children-' + child
+            parent_handle = self.stc_manager.get_object_children(stream_block_handle, child_type=child_type)[0]
+            # child_handle = self.stc_manager.get_object_children(parent_handle)
+            # print child_handle
+            fun_test.log("Updating %s Header under %s" % (parent_handle, stream_block_handle))
+            handle = self.stc_manager.stc.create("ptpHeader", under=parent_handle, **attributes)
+            fun_test.simple_assert(handle, "Handle updated")
 
+            if self.stc_manager.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
+    def create_overlay_frame_stack(self, streamblock_obj, mpls, header_list=[], headers_created=False,
+                                   byte_pattern="00012140"):
+        result = {}
+        result['result'] = False
+        try:
+            fun_test.simple_assert(header_list, "Headers are not provided to be created in streamblock")
+            header_obj_list = []
+            if not mpls:
+                destination_port = 4789
+                underlay_list = header_list[0:header_list.index(VxLAN)]
+                overlay_list = header_list[header_list.index(VxLAN):]
+            else:
+                destination_port = 6635
+                underlay_list = header_list[0:header_list.index(CustomBytePatternHeader)]
+                overlay_list = header_list[header_list.index(CustomBytePatternHeader):]
+            spirent_configs = self.spirent_config
 
+            if headers_created:
+                header_obj_list = header_list
+            else:
+                for header in underlay_list:
+                    if header == Ethernet2Header:
+                        ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
+                        if 'ipv6' in underlay_list[1].HEADER_TYPE.lower():
+                            ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
+                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'],
+                                                  ether_type=ether_type)
+                        header_obj_list.append(eth_obj)
+                    elif header == Ipv4Header:
+                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_config']['ipv4']['destination_ip1'])
+                        current_index = header_list.index(header)
+                        ipv4_obj.protocol = ipv4_obj.PROTOCOL_TYPE_TCP if 'tcp' in header_list[
+                            current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
+                        header_obj_list.append(ipv4_obj)
+                    elif header == Ipv6Header:
+                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_config']['ipv6']['destination_ip1'])
+                        current_index = header_list.index(header)
+                        ipv6_obj.nextHeader = ipv6_obj.NEXT_HEADER_TCP if 'tcp' in header_list[
+                            current_index + 1].HEADER_TYPE.lower() else ipv6_obj.NEXT_HEADER_UDP
+                        header_obj_list.append(ipv6_obj)
+                    elif header == UDP:
+                        udp_obj = UDP(destination_port=destination_port)
+                        header_obj_list.append(udp_obj)
+                for header in overlay_list:
+                    if header == VxLAN:
+                        vxlan_obj = VxLAN()
+                        header_obj_list.append(vxlan_obj)
+                    elif header == CustomBytePatternHeader:
+                        custom_header_obj = CustomBytePatternHeader(byte_pattern=byte_pattern)
+                        header_obj_list.append(custom_header_obj)
+                    elif header == Ethernet2Header:
+                        ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
+                        if 'ipv6' in overlay_list[2].HEADER_TYPE.lower():
+                            ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
+                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'],
+                                                  ether_type=ether_type)
+                        header_obj_list.append(eth_obj)
+                    elif header == Ipv4Header:
+                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip2'])
+                        index_list = [i for i, n in enumerate(header_list) if n == header]
+                        current_index = index_list[0]
+                        if len(index_list) == 2:
+                            current_index = index_list[1]
+                        ipv4_obj.protocol = ipv4_obj.PROTOCOL_TYPE_TCP if 'tcp' in header_list[
+                            current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
+                        header_obj_list.append(ipv4_obj)
+                    elif header == Ipv6Header:
+                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_overlay_config']['ipv6']['destination_ip2'])
+                        index_list = [i for i, n in enumerate(header_list) if n == header]
+                        current_index = index_list[0]
+                        if len(index_list) == 2:
+                            current_index = index_list[1]
+                        ipv6_obj.nextHeader = ipv6_obj.NEXT_HEADER_TCP if 'tcp' in header_list[
+                            current_index + 1].HEADER_TYPE.lower() else ipv6_obj.NEXT_HEADER_UDP
+                        header_obj_list.append(ipv6_obj)
+                    elif header == UDP:
+                        udp_obj = UDP()
+                        header_obj_list.append(udp_obj)
+                    elif header == TCP:
+                        tcp_obj = TCP()
+                        header_obj_list.append(tcp_obj)
+                    else:
+                        raise Exception("Header %s not found in overlay options" % header.HEADER_TYPE)
+
+            for header_obj in header_obj_list:
+                delete_header = []
+                if header_obj is header_obj_list[0]:
+                    delete_header = [Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE]
+                output = self.stc_manager.configure_frame_stack(stream_block_handle=streamblock_obj._spirent_handle,
+                                                                header_obj=header_obj, delete_header=delete_header)
+                fun_test.test_assert(output, "Added header %s to framestack" % header_obj.HEADER_TYPE)
+            result['result'] = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def configure_overlay_frame_stack(self, port, overlay_type=ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP, streamblock_obj=None,
+                                      mpls=False, byte_pattern="00012140", streamblock_frame_length=148):
+        result = {}
+        try:
+            if mpls:
+                if overlay_type == self.MPLS_ETH_IPV4_UDP_CUST_IPV4_TCP:
+                    header_list = [Ethernet2Header, Ipv4Header, UDP, CustomBytePatternHeader, Ipv4Header, TCP]
+                elif overlay_type == self.MPLS_ETH_IPV4_UDP_CUST_IPV4_UDP:
+                    header_list = [Ethernet2Header, Ipv4Header, UDP, CustomBytePatternHeader, Ipv4Header, UDP]
+            if not streamblock_obj:
+                streamblock_obj = StreamBlock(fixed_frame_length=streamblock_frame_length)
+                stream = self.configure_stream_block(stream_block_obj=streamblock_obj, port_handle=port)
+                fun_test.simple_assert(stream, "Creating streamblock for overlay")
+            if overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP:
+                header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, TCP]
+            elif overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP:
+                header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, UDP]
+            elif overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV6_TCP:
+                header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, TCP]
+            elif overlay_type == self.ETH_IPV4_UDP_VXLAN_ETH_IPV6_UDP:
+                header_list = [Ethernet2Header, Ipv4Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, UDP]
+            elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV4_TCP:
+                header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, TCP]
+            elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV4_UDP:
+                header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv4Header, UDP]
+            elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP:
+                header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, TCP]
+            elif overlay_type == self.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP:
+                header_list = [Ethernet2Header, Ipv6Header, UDP, VxLAN, Ethernet2Header, Ipv6Header, UDP]
+
+            result['streamblock_obj'] = streamblock_obj
+            result.update(self.create_overlay_frame_stack(header_list=header_list, streamblock_obj=streamblock_obj,
+                          mpls=mpls, byte_pattern=byte_pattern))
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def update_overlay_frame_header(self, streamblock_obj, header_obj, updated_header_attributes_dict={}, overlay=True):
+        result = False
+        try:
+            fun_test.simple_assert(updated_header_attributes_dict, "Empty attributes sent for update")
+            child_type = 'children-' + header_obj.HEADER_TYPE.lower()
+            child_handle_list = self.stc_manager.get_object_children(handle=streamblock_obj._spirent_handle,
+                                                                     child_type=child_type)
+            fun_test.simple_assert(child_handle_list, "Fetch all header handles")
+            child_handle = child_handle_list[0]
+            if overlay:
+                if len(child_handle_list) > 1:
+                    child_handle = child_handle_list[1]
+            fun_test.log("Modifying atrributes on handle %s" % child_handle)
+            self.stc_manager.stc.config(child_handle, **updated_header_attributes_dict)
+            fun_test.simple_assert(self.stc_manager.apply_configuration(), message="Changed attributes of header")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def setup_ports_using_command(self, no_of_ports_needed, flow_type,
+                                  flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU):
+        result = {"result": False, 'port_list': [], 'interface_obj_list': []}
+        try:
+            offline_ports = {}
+            ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
+                                                                  flow_type=flow_type,
+                                                                  flow_direction=flow_direction)
+            physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
+            existing_ports = self.stc_manager.get_port_list()
+            for port_handle in existing_ports:
+                port_info = self.stc_manager.get_port_details(port=port_handle)
+                offline_ports[port_info['Location'].split('//')[1]] = port_handle
+
+            for key, val in ports_map.iteritems():
+                fun_test.log("Using %s -----> %s" % (key, val))
+                if val in offline_ports:
+                    result['port_list'].append(offline_ports[val])
+                else:
+                    port_handle = self.stc_manager.create_port(location=val)
+                    fun_test.test_assert(port_handle, "Create Port: %s" % val)
+                    result['port_list'].append(port_handle)
+                    interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
+                                                                   port_handle=port_handle)
+                    fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
+                                                                                             port_handle))
+                    result['interface_obj_list'].append(interface_obj)
+
+            ports_attached = self.stc_manager.attach_ports_by_command(port_handles=result['port_list'],
+                                                                      auto_connect_chassis=True)
+            fun_test.test_assert(ports_attached, "%s ports attached successfully" % result['port_list'])
+            result['result'] = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 

@@ -61,9 +61,11 @@ class HypervisorEndPoint(EndPoint, ToDictMixin):
 class QemuColocatedHypervisorEndPoint(HypervisorEndPoint, ToDictMixin):
     end_point_type = EndPoint.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED
 
-    def __init__(self, num_vms=None):
+    def __init__(self, num_vms=None, vm_start_mode=None, vm_host_os=None):
         super(QemuColocatedHypervisorEndPoint, self).__init__()
         self.num_vms = num_vms
+        self.vm_start_mode = vm_start_mode
+        self.vm_host_os = vm_host_os
         self.mode = self.MODE_SIMULATION
         self.TO_DICT_VARS.extend(["mode", "num_vms", "end_point_type", "instances", "orchestrator"])
 

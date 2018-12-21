@@ -1,0 +1,24 @@
+#email-set {
+  display: inline-block;
+  width: 40em;
+}
+#email-set > label#emails-label, #email-set > input#emails {
+  display: block;
+  text-align: left;
+  width: 27em;
+}
+.field-width {
+  width: 27em;
+}
+#emails-label {
+  margin: 0;
+}
+table {
+  margin: 0;
+}
+.header {
+  background-color: rgba(0,0,0,.03);
+}
+.side-table {
+  padding: 4px;
+}

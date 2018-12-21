@@ -1,3 +1,4 @@
+import os
 from os.path import dirname, abspath
 import sys
 
@@ -5,6 +6,7 @@ FUN_TEST_DIR = dirname(abspath(__file__))
 INTEGRATION_DIR = dirname(abspath(FUN_TEST_DIR))
 SCHEDULER_DIR = FUN_TEST_DIR + "/scheduler"
 WEB_DIR = FUN_TEST_DIR + "/web"
+STASH_DIR = FUN_TEST_DIR + "/stash"
 WEB_ROOT_DIR = WEB_DIR + "/fun_test"
 STATIC_RELATIVE_DIR = "/static"
 UPLOADS_RELATIVE_DIR = STATIC_RELATIVE_DIR + "/uploads"
@@ -17,6 +19,9 @@ LOGS_RELATIVE_DIR = STATIC_RELATIVE_DIR + "/logs"
 MEDIA_DIR = WEB_STATIC_DIR + "/media"
 
 WEB_SERVER_PORT = 5000
+if "PERFORMANCE_SERVER" in os.environ:
+    WEB_SERVER_PORT = 80
+
 COMMON_WEB_LOGGER_NAME = "web"
 
 
@@ -48,4 +53,6 @@ TEAM_REGRESSION_EMAIL = "team-regression@fungible.com"
 SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"
 
 REGRESSION_USER = "regression"
-REGRESSION_USER_PASSWORD = "fun123"
+REGRESSION_USER_PASSWORD = "FunPrecious123"
+
+MAIN_WEB_APP = 'fun_test'

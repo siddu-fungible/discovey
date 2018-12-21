@@ -35,7 +35,7 @@ static bool rdsock_running;
 struct rdsock_msghdr {
 	uint32_t magic;
 	uint16_t msglen;
-	uint16_t datalen;
+	uint32_t datalen;
 };
 
 struct rdsock_impl;
@@ -60,7 +60,7 @@ struct rdsock_listener {
 struct rdsock_msg_in {
 	struct rdsock_msg msg;
 	void *data;
-	uint16_t datalen;
+	uint32_t datalen;
 };
 
 struct rdsock_state {
@@ -217,7 +217,7 @@ rdsock_sendmsg(struct rdsock *sock,
 	msghdr.msglen = htons(msg->msglen);
 
 	if (msg->buf) {
-		msghdr.datalen = htons(msg->buf_size);
+		msghdr.datalen = htonl(msg->buf_size);
 	} else
 		msghdr.datalen = 0;
 
@@ -414,7 +414,7 @@ read_fd(struct rdsock_state *state, struct rdsock_impl *rds)
 		goto read_fail;
 	}
 	msghdr.msglen = ntohs(msghdr.msglen);
-	msghdr.datalen = ntohs(msghdr.datalen);
+	msghdr.datalen = ntohl(msghdr.datalen);
 
 	rdmsg_in = malloc(sizeof(struct rdsock_msg_in));
 	rdmsg = &rdmsg_in->msg;

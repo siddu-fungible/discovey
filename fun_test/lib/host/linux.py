@@ -1,4 +1,5 @@
-import pexpect, paramiko
+import pexpect
+import paramiko
 from paramiko_expect import SSHClientInteraction
 import re
 import collections
@@ -7,7 +8,8 @@ import os
 import time
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
-import commentjson
+import json
+import copy
 
 class NoLogger:
     def __init__(self):
@@ -111,6 +113,7 @@ class Linux(object, ToDictMixin):
         self.trace_id = None
         self.tmp_dir = None
         self.prompt_terminator = None
+        self.root_prompt_terminator = Linux.ROOT_PROMPT_TERMINATOR_DEFAULT
         self.buffer = None
         self.saved_prompt_terminator = None
         self._set_defaults()
@@ -148,7 +151,7 @@ class Linux(object, ToDictMixin):
         return d
 
     def __setstate__(self, state):
-        state["logger"] = self.logger = LinuxLogger()  #TODO? What is the current logger?
+        state["logger"] = self.logger = LinuxLogger()  # TODO? What is the current logger?
         state["handle"] = None
         self.__dict__.update(state)
 
@@ -202,6 +205,8 @@ class Linux(object, ToDictMixin):
             expects = collections.OrderedDict()
             expects[0] = '[pP]assword'
             expects[1] = '\(yes/no\)?'
+            if self.ssh_username == 'root':
+                self.prompt_terminator = self.root_prompt_terminator
             expects[2] = self.prompt_terminator + r'$'
 
             attempt = 0
@@ -216,7 +221,7 @@ class Linux(object, ToDictMixin):
                         "Attempting SSH connect to %s username: %s password: %s" % (self.host_ip,
                                                                                     self.ssh_username,
                                                                                     self.ssh_password))
-                    fun_test.debug("Prompt terminator:%s" % self.prompt_terminator)
+                    fun_test.debug("Prompt terminator:%s " % self.prompt_terminator)
                     if self.ssh_port:
                         ssh_command = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s@%s -p %d' % (self.ssh_username,
                                                                                            self.host_ip,
@@ -241,7 +246,7 @@ class Linux(object, ToDictMixin):
                         "Attempting Telnet connect to %s username: %s password: %s" % (self.host_ip,
                                                                                     self.ssh_username,
                                                                                     self.ssh_password))
-                    fun_test.debug("Prompt terminator:%s" % self.prompt_terminator)
+                    fun_test.debug("Prompt terminator:{} Root prompt terminator: {}".format(self.prompt_terminator, self.root_prompt_terminator))
                     telnet_command = 'telnet -l {} {} {}'.format(self.telnet_username, self.host_ip, self.telnet_port)
                     self.logger.log(telnet_command)
                     self.handle = pexpect.spawn(telnet_command,
@@ -539,6 +544,50 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def systemctl(self,
+                  service_name,
+                  action="restart"):
+
+        result = False
+        start_action = ["start", "restart", "reload"]
+        stop_action  = ["stop"]
+        start_status = "active"
+        stop_status  = "inactive"
+
+        # Applying the requested action on the desired service
+        command = "systemctl %s %s --no-pager" % (action, service_name)
+        try:
+            output = self.sudo_command(command)
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+            return result
+        # Checking whether the requested action applied correctly on the desired service
+        command = "systemctl is-active %s" % (service_name)
+        try:
+            output = self.sudo_command(command)
+            if action in start_action:
+                if output.find(start_status) != -1:
+                    result = True
+                    fun_test.debug("{}ing of service {}: Passed".format(action.capitalize(), service_name))
+                else:
+                    result = False
+                    fun_test.debug("{}ing of service {}: Failed".format(action.capitalize(), service_name))
+            elif action in stop_action:
+                if output.find(stop_status) != -1:
+                    result = True
+                    fun_test.debug("{}ing of service {}: Passed".format(action.capitalize(), service_name))
+                else:
+                    result = False
+                    fun_test.debug("{}ing of service {}: Failed".format(action.capitalize(), service_name))
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        return result
+
+    @fun_test.safe
     def get_process_id(self, process_name):
         pid = None
         command = "pidof -x " + process_name
@@ -553,6 +602,28 @@ class Linux(object, ToDictMixin):
             self.logger.critical(critical_str)
 
         return pid
+
+
+    @fun_test.safe
+    def get_process_id_by_pattern(self, process_pat):
+        pid = None
+        command = "ps -ef | grep '" + process_pat + "'| grep -v grep"
+        try:
+            output = self.command(command)
+            if output:
+                # Converting the multi line output into list of lines
+                output = output.split('\n')
+                # If the output contains 2 lines, then the process matching the given pattern exists
+                if len(output) >= 1:
+                    # Extracting the pid of the process matched the given pattern
+                    pid = output[0].split()[1]
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+
+        return pid
+
 
     @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, **kwargs):
@@ -637,7 +708,7 @@ class Linux(object, ToDictMixin):
                          nohup=True):
         command = command.rstrip()
         if output_file != "":
-            command += r' &>' + output_file + " "
+            command += r' >&' + output_file + " "
         command += r'&'
         if nohup:
             command = "nohup " + command
@@ -687,7 +758,8 @@ class Linux(object, ToDictMixin):
                      signal=15,
                      override=False,
                      kill_seconds=5,
-                     minimum_process_id=50):
+                     minimum_process_id=50,
+                     sudo=True):
         if not process_id and not job_id:
             fun_test.critical(message="Please provide a valid process-id or job-id")
             return
@@ -700,7 +772,10 @@ class Linux(object, ToDictMixin):
             job_str = "%"
         command = "kill -%s %s%s" % (str(signal), str(job_str), str(process_id))
         try:
-            self.sudo_command(command=command)
+            if sudo:
+                self.sudo_command(command=command)
+            else:
+                self.command(command=command)
         except pexpect.ExceptionPexpect:
             pass
         fun_test.sleep("Waiting for kill to complete", seconds=kill_seconds)
@@ -726,7 +801,7 @@ class Linux(object, ToDictMixin):
         if not self.handle:
             self._connect()
         self.saved_prompt_terminator = self.prompt_terminator
-        self.set_prompt_terminator(prompt_terminator=r'# ')
+        self.set_prompt_terminator(prompt_terminator=self.root_prompt_terminator)
         prompt = r'assword\s+for\s+%s: ' % self.ssh_username
         mac_prompt = r'Password:.*'
         options_str = ""
@@ -741,6 +816,10 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def set_prompt_terminator(self, prompt_terminator):
         self.prompt_terminator = prompt_terminator
+
+    @fun_test.safe
+    def set_root_prompt_terminator(self, root_prompt_terminator):
+        self.root_prompt_terminator = root_prompt_terminator
 
     @fun_test.safe
     def exit_sudo(self):
@@ -1038,9 +1117,11 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, timeout=60):
+    def scp(self, source_file_path, target_ip, target_file_path, target_username, target_password, target_port=22, timeout=60):
         transfer_complete = False
-        scp_command = "scp %s %s@%s:%s" % (source_file_path, target_username, target_ip, target_file_path)
+        scp_command = "scp -P %d %s %s@%s:%s" % (target_port, source_file_path, target_username, target_ip, target_file_path)
+        if not self.handle:
+            self._connect()
 
         handle = self.handle
         handle.sendline(scp_command)
@@ -1141,6 +1222,10 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def modprobe(self, module):
         return self.sudo_command("modprobe {}".format(module))
+
+    @fun_test.safe
+    def rmmod(self, module):
+        return self.sudo_command("modprobe -r {}".format(module))
 
     @fun_test.safe
     def lsmod(self, module):
@@ -1410,7 +1495,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug(trim_fio_result)
 
         # Converting the json into python dictionary
-        fio_result_dict = commentjson.loads(trim_fio_result)
+        fio_result_dict = json.loads(trim_fio_result)
         fun_test.debug(fio_result_dict)
 
         # Populating the resultant fio_dict dictionary
@@ -1419,6 +1504,83 @@ class Linux(object, ToDictMixin):
             for stat in ["bw", "iops", "latency"]:
                 if stat != "latency":
                     fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][stat]))
+                else:
+                    for key in fio_result_dict["jobs"][0][operation].keys():
+                        if key.startswith("lat"):
+                            # Extracting the latency unit
+                            unit = key[-2:]
+                            # Converting the units into microseconds
+                            if unit == "ns":
+                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                value /= 1000
+                                fio_dict[operation][stat] = value
+                            elif unit == "us":
+                                fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                            else:
+                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                value *= 1000
+                                fio_dict[operation][stat] = value
+
+        fun_test.debug(fio_dict)
+        return fio_dict
+
+    @fun_test.safe
+    def pcie_fio(self, filename, timeout=60, **kwargs):
+
+        fio_command = "sudo fio"
+        fio_result = ""
+        fio_dict = {}
+
+        fun_test.debug(kwargs)
+
+        # Building the fio command
+        if 'name' not in kwargs:
+            fio_command += " --name=nvme_pcie"
+
+        if 'ioengine' not in kwargs:
+            fio_command += " --ioengine=libaio"
+
+        fio_command += " --filename={}".format(filename)
+
+        if 'numjobs' not in kwargs:
+            fio_command += " --numjobs=1"
+
+        if 'output-format' not in kwargs:
+            fio_command += " --output-format=json"
+
+        if kwargs:
+            for key in kwargs:
+                fio_command += " --" + key + "=" + str(kwargs[key])
+
+        fun_test.debug(fio_command)
+
+        # Executing the fio command
+        fio_result = self.command(command=fio_command, timeout=timeout)
+        # fio_result += '\n'
+        fun_test.debug(fio_result)
+
+        # Checking there is no error occured during the FIO test
+        match = ""
+        match = re.search(r'Assertion .* failed', fio_result, re.I)
+        if match:
+            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+            return fio_dict
+
+        # Trimming initial few lines to convert the output into a valid json format
+        before, sep, after = fio_result.partition("{")
+        trim_fio_result = sep + after
+        fun_test.debug(trim_fio_result)
+
+        # Converting the json into python dictionary
+        fio_result_dict = json.loads(trim_fio_result)
+        fun_test.debug(fio_result_dict)
+
+        # Populating the resultant fio_dict dictionary
+        for operation in ["write", "read"]:
+            fio_dict[operation] = {}
+            for stat in ["bw", "iops", "latency"]:
+                if stat != "latency":
+                    fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
                 else:
                     for key in fio_result_dict["jobs"][0][operation].keys():
                         if key.startswith("lat"):
@@ -1488,7 +1650,7 @@ class Linux(object, ToDictMixin):
         fun_test.debug(trim_fio_result)
 
         # Converting the json into python dictionary
-        fio_result_dict = commentjson.loads(trim_fio_result)
+        fio_result_dict = json.loads(trim_fio_result)
         fun_test.debug(fio_result_dict)
 
         # Populating the resultant fio_dict dictionary
@@ -1517,6 +1679,127 @@ class Linux(object, ToDictMixin):
         fun_test.debug(fio_dict)
         return fio_dict
 
+    @fun_test.safe
+    def reboot(self, timeout=5, retries=6):
+
+        result = True
+        disconnect = True
+
+        # Rebooting the host
+        try:
+            self.sudo_command(command="reboot", timeout=timeout)
+        except Exception as ex:
+            self.disconnect()
+            self._set_defaults()
+            disconnect = False
+
+        fun_test.sleep("Waiting for the host to go down", timeout)
+        if disconnect:
+            self.disconnect()
+            self._set_defaults()
+
+        for i in range(retries):
+            command_output = ""
+            try:
+                command_output = self.command(command="pwd", timeout=timeout)
+                if command_output:
+                    break
+            except Exception as ex:
+                fun_test.sleep("Sleeping for the host to come up from reboot", timeout)
+                self.disconnect()
+                self._set_defaults()
+                continue
+        else:
+            fun_test.critical("Host didn't came up from reboot even after {} seconds".format(retries * timeout))
+            result = False
+
+        return result
+
+    @fun_test.safe
+    def isHostUp(self, timeout=5, retries=6):
+
+        result = True
+
+        for i in range(retries):
+            command_output = ""
+            try:
+                command_output = self.command(command="pwd", timeout=timeout)
+                if command_output:
+                    break
+            except Exception as ex:
+                fun_test.sleep("Waiting for the host to become reachable", timeout)
+                self.disconnect()
+                self._set_defaults()
+                continue
+        else:
+            fun_test.critical("Host is not reachable even after trying it for {} seconds".format(retries * timeout))
+            result = False
+
+        return result
+
+    @fun_test.safe
+    def ipmi_power_off(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+        result = True
+        fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}".format(host, interface, user, passwd))
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {} chassis power off".format(interface, host, user, passwd)
+        expected_pat = r'Chassis Power Control: Down/Off'
+        ipmi_out = self.command(command=ipmi_cmd)
+        if ipmi_out:
+            match = re.search(expected_pat, ipmi_out, re.I)
+            if not match:
+                fun_test.critical("IPMI power off: Failed")
+                result = False
+            else:
+                fun_test.log("IPMI power off: Passed")
+        else:
+            fun_test.critical("IPMI power off: Failed")
+            result = False
+
+        return result
+
+    @fun_test.safe
+    def ipmi_power_on(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN"):
+        result = True
+        ipmi_cmd = "ipmitool -I {} -H {} -U {} -P {} chassis power on".format(interface, host, user, passwd)
+        expected_pat = r'Chassis Power Control: Up/On'
+        ipmi_out = self.command(command=ipmi_cmd)
+        if ipmi_out:
+            match = re.search(expected_pat, ipmi_out, re.I)
+            if not match:
+                fun_test.critical("IPMI power on: Failed")
+                result = False
+            else:
+                fun_test.log("IPMI power on: Passed")
+        else:
+            fun_test.critical("IPMI power on: Failed")
+            result = False
+
+        return result
+
+    @fun_test.safe
+    def ipmi_power_cycle(self, host, interface="lanplus", user="ADMIN", passwd="ADMIN", interval=30):
+        result = True
+        fun_test.log("Host: {}; Interface:{}; User: {}; Passwd: {}; Interval: {}".format(host, interface, user, passwd,
+                                                                                         interval))
+        off_status = self.ipmi_power_off(host=host, interface=interface, user=user, passwd=passwd)
+        if off_status:
+            fun_test.sleep("Sleeping for {} seconds for the host to go down".format(interval), interval)
+            on_status = self.ipmi_power_on(host=host, interface=interface, user=user, passwd=passwd)
+            if not on_status:
+                result = False
+        else:
+            result = False
+
+        return result
+
+    def clone(self):
+        # Do a shallow copy
+        c = copy.copy(self)
+        try:
+            c.handle = None
+        except:
+            pass
+        return c
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):

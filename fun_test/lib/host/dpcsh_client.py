@@ -27,9 +27,8 @@ class DpcshClient(object):
                     time.sleep(0.1)
                     continue
 
-    def _read(self, command_duration=1):
+    def _read(self, command_duration=1, chunk=4096):
         start = time.time()
-        chunk = 4096
 
         output = ""
         while not output.endswith("\n"):
@@ -65,7 +64,7 @@ class DpcshClient(object):
         self.sock = None
         return True
 
-    def command(self, command, legacy=False, command_duration=2):
+    def command(self, command, legacy=False, command_duration=2, sleep_duration=2, chunk=4096):
         result = {"status": False, "data": None, "error_message": None, "command": command}
         output = ""
         try:
@@ -77,8 +76,8 @@ class DpcshClient(object):
                 fun_test.log("DPCSH Send:" + command + "\n")
 
             self.sendall(command, command_duration)
-            time.sleep(2)
-            output = self._read(command_duration)
+            time.sleep(sleep_duration)
+            output = self._read(command_duration, chunk)
             if output:
                 actual_output = self._parse_actual_output(output=output)
                 result["raw_output"] = output
@@ -119,18 +118,18 @@ class DpcshClient(object):
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
         fun_test.log("Raw output: {}".format(result["raw_output"]))
 
-    def json_execute(self, verb, data=None, command_duration=1):
+    def json_execute(self, verb, data=None, command_duration=1, sleep_duration=2, tid=0, chunk=4096):
         jdict = None
         if data:
             if type(data) is not list:
-                jdict = {"verb": verb, "arguments": [data], "tid": 0}
+                jdict = {"verb": verb, "arguments": [data], "tid": tid}
             elif type(data) is list:
-                jdict = {"verb": verb, "arguments": data, "tid": 0}
+                jdict = {"verb": verb, "arguments": data, "tid": tid}
         else:
-            jdict = {"verb": verb, "arguments": [], "tid": 0}
+            jdict = {"verb": verb, "arguments": [], "tid": tid}
 
         return self.command('{}'.format(json.dumps(jdict)),
-                            command_duration=command_duration)
+                            command_duration=command_duration, sleep_duration=sleep_duration, chunk=chunk)
 
     def json_command(self, data, action="", additional_info="", command_duration=1):
         return self.command('#!sh {} {} {} {}'.format(self.mode, action, json.dumps(data), additional_info),

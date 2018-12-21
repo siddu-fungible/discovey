@@ -1,14 +1,12 @@
-FROM    nw-reg-base:v1 
+FROM  nw-reg-base:latest 
 
 ARG  ARG_USER
 ARG  ARG_UID
 ARG  ARG_GID
 
-RUN  groupadd -g $ARG_GID $ARG_USER; \
-     useradd  -g $ARG_GID -u $ARG_UID $ARG_USER -p 9UCUTMOhVIT9o; \
-     usermod -aG sudo $ARG_USER; \
-     usermod -aG frr $ARG_USER; \
-     usermod -aG frrvty $ARG_USER;
+RUN  groupadd -g $ARG_GID $ARG_USER
+RUN  useradd  -g $ARG_GID -u $ARG_UID $ARG_USER -p 9UCUTMOhVIT9o
+RUN  usermod -aG sudo $ARG_USER
 
 RUN  echo "$ARG_USER ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers.d/local
 COPY fungible.conf   /etc/ld.so.conf.d/

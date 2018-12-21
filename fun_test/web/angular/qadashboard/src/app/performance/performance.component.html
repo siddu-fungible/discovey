@@ -1,0 +1,222 @@
+<fun-spinner [status]="status"></fun-spinner>
+<div class="container">
+  <div class="row">
+    <!-- left side of the performance page containing tree structure -->
+    <div class="col-lg-5 col-md-5 col-xxl-4 col-xl-5">
+      <table class="table table-nonfluid">
+        <tr>
+          <th class="text-center">Aspect</th>
+          <th class="text-center">Score</th>
+          <th class="text-center">#</th>
+          <th class="text-center">Today</th>
+          <!--<th class="text-center">     </th>-->
+        </tr>
+            <ng-container *ngFor="let flatNode of getVisibleNodes(flatNodes)">
+            <tr class="fade-element-in">
+              <td id="{{ flatNode.gUid }}" class="child-transition">
+                        <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
+                        </span>
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="flatNode.node.leaf" [routerLink]=""
+                   (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+                <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="!flatNode.node.leaf" [routerLink]=""
+                   (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
+                <span *ngIf="!flatNode.node.leaf">
+              <span [innerHTML]="'&nbsp'"></span>
+              <a [routerLink]="" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
+                <span class="arrow-down"></span>
+              </a>
+              <a [routerLink]="" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
+                <span class="arrow-right"></span>
+              </a>
+            </span>
+              </td>
+              <td class="text-center">
+                <div class="score-label"><span style="vertical-align: top"
+                                               [innerHTML]="getTrendHtml(flatNode.node) | safeHtml"></span>{{
+                  flatNode.node.lastScore | number: '1.1-1' }}
+                </div>
+              </td>
+              <td class="text-center">
+                <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
+              </td>
+
+              <td *ngIf="!flatNode.node.leaf" [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+              <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0">
+                Bld:<label data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
+                           [ngbTooltip]="FailedInfo" [autoClose]="'outside'"
+                           class="badge failed-label no-margin badge-danger">FAILED
+              </label>
+              </td>
+              <td *ngIf="flatNode.node.leaf">
+                <span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
+                </sup></span>
+                <span *ngIf="flatNode.node.numBugs==0 && flatNode.node.showAddJira" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
+                <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
+                  <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
+              </td>
+              <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
+              <ng-template #GitCommitInfo>
+                  <git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>
+              </ng-template>
+              <ng-template #FailedInfo>
+                  <div *ngIf="passedDateTime" style="color: black;">
+                  <b>Last Passed:</b><br> {{ passedDateTime }}<br>
+                  <!--Git Commit: {{ passedGitCommit }}<br>-->
+                  <a *ngIf="passedLsfUrl" [routerLink]="" (click)='openUrl(passedLsfUrl)'>Lsf log<br></a>
+                  <a *ngIf="passedJenkinsUrl" [routerLink]="" (click)='openUrl(passedJenkinsUrl)'>Jenkins log<br></a>
+                  <a *ngIf="passedRegressionUrl" [routerLink]="" (click)='openUrl(passedRegressionUrl)'>Regression
+                    log<br></a>
+                </div>
+                <hr>
+                <div *ngIf="currentJenkinsUrl || currentLsfUrl || currentRegressionUrl" style="color: black;">
+                  <b>Current Failure:</b>
+                  <!--<label data-placement="right" (click)="gitIdentify()" triggers="click"-->
+                           <!--[ngbTooltip]="GitCommitInfo" [autoClose]="'outside'"-->
+                           <!--class="badge failed-label no-margin git-commit">Git Commit History-->
+              <!--</label>-->
+                  <br>
+                  <!--Git Commit: {{ currentGitCommit }}<br>-->
+                  <a *ngIf="currentLsfUrl" [routerLink]="" (click)='openUrl(currentLsfUrl)'>Lsf log<br></a>
+                  <a *ngIf="currentJenkinsUrl" [routerLink]="" (click)='openUrl(currentJenkinsUrl)'>Jenkins log<br></a>
+                  <a *ngIf="currentRegressionUrl" [routerLink]="" (click)='openUrl(currentRegressionUrl)'>Regression log<br></a>
+                </div>
+                <hr>
+                <div *ngIf="failedDateTime" style="color: black;">
+                  <b>First Failure:</b><br> {{ failedDateTime }}<br>
+                  <!--Git Commit: {{ failedGitCommit }}<br>-->
+                  <a *ngIf="failedLsfUrl" [routerLink]="" (click)='openUrl(failedLsfUrl)'>Lsf log<br></a>
+                  <a *ngIf="failedJenkinsUrl" [routerLink]="" (click)='openUrl(failedJenkinsUrl)'>Jenkins log<br></a>
+                  <a *ngIf="failedRegressionUrl" [routerLink]="" (click)='openUrl(failedRegressionUrl)'>Regression
+                    log<br></a>
+                </div>
+              </ng-template>
+            </tr>
+            <tr *ngIf="flatNode.showJiraInfo">
+              <td colspan="6">
+                <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
+                <jira-info [apiUrl]="'/metrics/' + flatNode.node.metricId + '/jiras'" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
+              </td>
+            </tr>
+
+            </ng-container>
+        </table>
+    </div>
+    <!-- right side of the perf page dispalying the charts -->
+    <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7">
+      <span id="chart-info"></span>
+      <div *ngIf="mode != modeType.None" class="card" style="padding: 10px">
+        <table>
+          <tr>
+            <td>
+              <span id="score-table-parent" class="score-card">
+                  <span id="score-table-child">{{ currentNode.lastScore | number: '1.1-1' }}
+                  </span>
+              </span>
+            </td>
+            <td valign="top" align="left">
+              <span id="score-table-info-icon">
+                  <i class="fa fa-info-circle" style="padding: 2px"
+                     (click)="showScoreInfoClick(currentNode)">
+                  </i>
+              </span>
+            </td>
+            <td style="width: 100%">
+              <span style="float: right;">
+                          <button class="btn" style="background-color: white"
+                                  (click)="openAtomicTab()">
+                              <i class="fa fa-external-link"></i></button>
+              </span>
+            </td>
+          </tr>
+        </table>
+        <div *ngIf="showScoreInfo">
+          <div [ngSwitch]="mode">
+            <div *ngSwitchCase="modeType.ShowingAtomicMetric">
+              <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
+            </div>
+            <div *ngSwitchCase="modeType.ShowingNonAtomicMetric">
+              <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
+              <div *ngIf="currentNode">
+                <table class="table table-nonfluid">
+                  <tr>
+                    <th>Aspect</th>
+                    <th>Weight</th>
+                    <th>Last score</th>
+                    <th>Weight * Last Score</th>
+                  </tr>
+                  <tr *ngFor="let childId of getKeys(currentNode.childrenInfo)">
+                    <td>{{ nodeMap.get(childId).chartName }}</td>
+                    <td>
+                      <p (click)="editingWeightClick(currentNode.childrenInfo.get(childId))"
+                         *ngIf="!currentNode.childrenInfo.get(childId).weightEditing">
+                        {{ currentNode.childrenInfo.get(childId).weight }}</p>
+                      <span *ngIf="currentNode.childrenInfo.get(childId).weightEditing">
+                        <input style="padding-right: 10px" type="number"
+                               [(ngModel)]="currentNode.childrenInfo.get(childId).weightBeingEdited">
+                        <button style="border: 1px solid black;overflow: hidden; padding-left: 10px;"
+                                class="btn btn-sm"
+                                (click)="submitWeightClick(currentNode, childId, currentNode.childrenInfo.get(childId))">&#10003;</button>
+                        <button style="border: 1px solid black;" class="btn btn-sm"
+                                (click)="closeEditingWeightClick(currentNode.childrenInfo.get(childId))">&#10060;</button>
+                      </span>
+                    </td>
+                    <td>
+                      {{ currentNode.childrenInfo.get(childId).lastScore | number: '1.1-1' }}
+                    </td>
+                    <td>
+                      {{ currentNode.childrenInfo.get(childId).weight }} *
+                      {{ currentNode.childrenInfo.get(childId).lastScore |
+                      number: '1.1-1' }} =
+                      {{ currentNode.childrenInfo.get(childId).weight * currentNode.childrenInfo.get(childId).lastScore
+                      | number: '1.1-1' }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Total ~ {{ getScoreTotal(currentNode) | number: '1.1-1'}}</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Sum of child weights = {{ getSumChildWeights (currentNode) }}</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Score ~ {{ getScoreTotal(currentNode) | number: '1.1-1'}} /
+                      {{ getSumChildWeights(currentNode) }}
+                      = {{ getScoreTotal(currentNode) / getSumChildWeights(currentNode) | number: '1.1-1'}}
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br>
+        <div class="closed-section"></div>
+        <!-- Fun Metric Chart component -->
+        <fun-metric-chart [id]="currentNode.metricId"></fun-metric-chart>
+        <div class="closed-section"></div>
+        <div *ngIf="mode == modeType.ShowingNonAtomicMetric" class=""
+             style="background-color: whitesmoke; padding-left: 20px; padding-right: 20px">
+          <div *ngIf="currentNode.grid.length">
+            <div *ngFor="let row of currentNode.grid" class="row">
+              <div *ngFor="let node of row" id="grid"
+                   [ngStyle]="{'width': miniGridMaxWidth, 'height': miniGridMaxHeight, 'padding': '20px'}">
+                <!-- Fun Metric Chart component -->
+                <fun-metric-chart [id]="node.metricId" [minimal]="'true'"></fun-metric-chart>
+              </div>
+            </div>
+            <div class="closed-section"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

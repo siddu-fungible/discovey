@@ -4,29 +4,48 @@ from lib.templates.traffic_generator.traffic_generator_template import TrafficGe
 from lib.host.spirent_manager import SpirentManager
 import json
 from collections import OrderedDict
+from uuid import uuid4
+import os
 
 
 class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
-    diff_serv_dscp_values = {'best_effort': {'dscp_value': '000000', 'decimal_value': '0', 'dscp_high': '0', 'dscp_low': '0'},
-                             'AF11': {'dscp_value': '001010', 'decimal_value': '10', 'dscp_high': '1', 'dscp_low': '2'},
-                             'AF12': {'dscp_value': '001100', 'decimal_value': '12', 'dscp_high': '1', 'dscp_low': '4'},
-                             'AF13': {'dscp_value': '001110', 'decimal_value': '14', 'dscp_high': '1', 'dscp_low': '6'},
-                             'AF21': {'dscp_value': '010010', 'decimal_value': '18', 'dscp_high': '2', 'dscp_low': '2'},
-                             'AF22': {'dscp_value': '010100', 'decimal_value': '20', 'dscp_high': '2', 'dscp_low': '4'},
-                             'AF23': {'dscp_value': '010110', 'decimal_value': '22', 'dscp_high': '2', 'dscp_low': '6'},
-                             'AF31': {'dscp_value': '011010', 'decimal_value': '26', 'dscp_high': '3', 'dscp_low': '2'},
-                             'AF32': {'dscp_value': '011100', 'decimal_value': '28', 'dscp_high': '3', 'dscp_low': '4'},
-                             'AF33': {'dscp_value': '011110', 'decimal_value': '30', 'dscp_high': '3', 'dscp_low': '6'},
-                             'AF41': {'dscp_value': '100010', 'decimal_value': '34', 'dscp_high': '4', 'dscp_low': '2'},
-                             'AF42': {'dscp_value': '100100', 'decimal_value': '36', 'dscp_high': '4', 'dscp_low': '4'},
-                             'AF43': {'dscp_value': '100110', 'decimal_value': '38', 'dscp_high': '4', 'dscp_low': '6'},
-                             'EF': {'dscp_value': '101110', 'decimal_value': '46', 'dscp_high': '5', 'dscp_low': '6'},
-                             'CS6': {'dscp_value': '110000', 'decimal_value': '48', 'dscp_high': '6', 'dscp_low': '0'},
-                             'CS7': {'dscp_value': '111000', 'decimal_value': '56', 'dscp_high': '7', 'dscp_low': '0'}}
+    diff_serv_dscp_values = {
+        'best_effort': {'dscp_value': '000000', 'decimal_value': '0', 'dscp_high': '0', 'dscp_low': '0'},
+        '1': {'dscp_value': '000001', 'decimal_value': '1', 'dscp_high': '0', 'dscp_low': '1'},
+        '2': {'dscp_value': '000010', 'decimal_value': '2', 'dscp_high': '0', 'dscp_low': '2'},
+        '3': {'dscp_value': '000011', 'decimal_value': '3', 'dscp_high': '0', 'dscp_low': '3'},
+        '4': {'dscp_value': '000100', 'decimal_value': '4', 'dscp_high': '0', 'dscp_low': '4'},
+        '5': {'dscp_value': '000101', 'decimal_value': '5', 'dscp_high': '0', 'dscp_low': '5'},
+        '6': {'dscp_value': '000110', 'decimal_value': '6', 'dscp_high': '0', 'dscp_low': '6'},
+        '7': {'dscp_value': '000111', 'decimal_value': '7', 'dscp_high': '0', 'dscp_low': '7'},
+        '8': {'dscp_value': '001000', 'decimal_value': '8', 'dscp_high': '1', 'dscp_low': '0'},
+        '9': {'dscp_value': '001001', 'decimal_value': '9', 'dscp_high': '1', 'dscp_low': '1'},
+        'AF11': {'dscp_value': '001010', 'decimal_value': '10', 'dscp_high': '1', 'dscp_low': '2'},
+        '11': {'dscp_value': '000000', 'decimal_value': '11', 'dscp_high': '1', 'dscp_low': '3'},
+        'AF12': {'dscp_value': '001100', 'decimal_value': '12', 'dscp_high': '1', 'dscp_low': '4'},
+        '13': {'dscp_value': '000000', 'decimal_value': '13', 'dscp_high': '1', 'dscp_low': '5'},
+        'AF13': {'dscp_value': '001110', 'decimal_value': '14', 'dscp_high': '1', 'dscp_low': '6'},
+        '15': {'dscp_value': '001111', 'decimal_value': '15', 'dscp_high': '1', 'dscp_low': '7'},
+        '16': {'dscp_value': '010000', 'decimal_value': '16', 'dscp_high': '2', 'dscp_low': '0'},
+        'AF21': {'dscp_value': '010010', 'decimal_value': '18', 'dscp_high': '2', 'dscp_low': '2'},
+        'AF22': {'dscp_value': '010100', 'decimal_value': '20', 'dscp_high': '2', 'dscp_low': '4'},
+        'AF23': {'dscp_value': '010110', 'decimal_value': '22', 'dscp_high': '2', 'dscp_low': '6'},
+        'AF31': {'dscp_value': '011010', 'decimal_value': '26', 'dscp_high': '3', 'dscp_low': '2'},
+        'AF32': {'dscp_value': '011100', 'decimal_value': '28', 'dscp_high': '3', 'dscp_low': '4'},
+        'AF33': {'dscp_value': '011110', 'decimal_value': '30', 'dscp_high': '3', 'dscp_low': '6'},
+        'AF41': {'dscp_value': '100010', 'decimal_value': '34', 'dscp_high': '4', 'dscp_low': '2'},
+        'AF42': {'dscp_value': '100100', 'decimal_value': '36', 'dscp_high': '4', 'dscp_low': '4'},
+        'AF43': {'dscp_value': '100110', 'decimal_value': '38', 'dscp_high': '4', 'dscp_low': '6'},
+        'EF': {'dscp_value': '101110', 'decimal_value': '46', 'dscp_high': '5', 'dscp_low': '6'},
+        'CS6': {'dscp_value': '110000', 'decimal_value': '48', 'dscp_high': '6', 'dscp_low': '0'},
+        'CS7': {'dscp_value': '111000', 'decimal_value': '56', 'dscp_high': '7', 'dscp_low': '0'}}
 
     def __init__(self, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         TrafficGeneratorTemplate.__init__(self)
-        self.chassis_type = chassis_type
+        if not chassis_type:
+            self.chassis_type = SpirentManager.PHYSICAL_CHASSIS_TYPE
+        else:
+            self.chassis_type = chassis_type
         self.spirent_config = spirent_config
         try:
             self.stc_manager = SpirentManager(chassis_type=self.chassis_type, spirent_config=self.spirent_config)
@@ -132,20 +151,26 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def populate_performance_counters_json(self, mode, file_name, latency_results=None, jitter_results=None):
+    def populate_performance_counters_json(self, mode, file_name, latency_results=None, jitter_results=None,
+                                           flow_type=None, spray_enable=False):
         file_created = False
         records = []
         try:
+            timestamp = get_current_time()
             for key in latency_results:
                 record = OrderedDict()
-                record['mode'] = mode
+                record['mode'] = mode.upper()
                 record['version'] = fun_test.get_version()
-                record['timestamp'] = get_current_time()
+                # record['ip_version'] = ip_version
+                record['timestamp'] = timestamp
                 frame_size = int(key.split('_')[1])
                 record['frame_size'] = frame_size
+                if flow_type:
+                    record['flow_type'] = flow_type
+                record['spray'] = spray_enable
                 if jitter_results:
                     if len(latency_results[key]['latency_count']) > 1:
-                        record['throughput'] = str(latency_results[key]['throughput_count']) + " Mbps"
+                        record['throughput'] = float(latency_results[key]['throughput_count'])
                         record['pps'] = latency_results[key]['pps_count']
 
                         record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
@@ -164,7 +189,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                         record['port_b_to_a_jitter_max'] = jitter_results[key]['jitter_count'][1]['max']
                         record['port_b_to_a_jitter_min'] = jitter_results[key]['jitter_count'][1]['min']
                     else:
-                        record['throughput'] = str(latency_results[key]['throughput_count']) + " Mbps"
+                        record['throughput'] = float(latency_results[key]['throughput_count'])
                         record['pps'] = latency_results[key]['pps_count']
 
                         record['latency_avg'] = latency_results[key]['latency_count'][0]['avg']
@@ -176,7 +201,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                         record['jitter_min'] = jitter_results[key]['jitter_count'][0]['min']
                 else:
                     if len(latency_results[key]['latency_count']) > 1:
-                        record['throughput'] = str(latency_results[key]['throughput_count']) + " Mbps"
+                        record['throughput'] = float(latency_results[key]['throughput_count'])
                         record['pps'] = latency_results[key]['pps_count']
 
                         record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
@@ -187,7 +212,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
                         record['port_b_to_a_latency_max'] = latency_results[key]['latency_count'][1]['max']
                         record['port_b_to_a_latency_min'] = latency_results[key]['latency_count'][1]['min']
                     else:
-                        record['throughput'] = str(latency_results[key]['throughput_count']) + " Mbps"
+                        record['throughput'] = float(latency_results[key]['throughput_count'])
                         record['pps'] = latency_results[key]['pps_count']
 
                         record['latency_avg'] = latency_results[key]['latency_count'][0]['avg']
@@ -206,6 +231,38 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return file_created
+
+    def start_default_capture_save_locally(self, port_handle, sleep_time=5):
+        result = {}
+        result['result'] = False
+        result['capture_obj'] = None
+        result['pcap_file_path'] = None
+        try:
+            capture_obj = Capture()
+            start_capture = self.stc_manager.start_capture_command(capture_obj=capture_obj, port_handle=port_handle)
+            fun_test.test_assert(start_capture, "Started capture on port %s" % port_handle)
+            result['capture_obj'] = capture_obj
+
+            fun_test.sleep("Letting captures to happen", seconds=sleep_time)
+
+            stop_capture = self.stc_manager.stop_capture_command(capture_obj._spirent_handle)
+            fun_test.test_assert(stop_capture, "Stopped capture on port %s" % port_handle)
+
+            file = fun_test.get_temp_file_name()
+            file_name = file + '.pcap'
+            file_path = SYSTEM_TMP_DIR
+            pcap_file_path = file_path + "/" + file_name
+
+            saved = self.stc_manager.save_capture_data_command(capture_handle=capture_obj._spirent_handle,
+                                                               file_name=file_name, file_name_path=file_path)
+            fun_test.test_assert(saved, "Saved pcap %s to local machine" % pcap_file_path)
+
+            fun_test.simple_assert(os.path.exists(pcap_file_path), message="Check pcap file exists locally")
+            result['pcap_file_path'] = pcap_file_path
+            result['result'] = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
 
 class StreamBlock(object):
@@ -389,7 +446,21 @@ class Ethernet2Header(object):
     LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
     INTERNET_IP_ETHERTYPE = "0800"
     ARP_ETHERTYPE = "0806"
+    RARP_ETHERTYPE = "8035"
+    LLDP_ETHERTYPE = "88CC"
+    PTP_ETHERTYPE = "88F7"
+    X25_LEVEL_3_ETHERTYPE = "0805"
     BROADCAST_MAC = "FF:FF:FF:FF:FF:FF"
+    OSPF_MULTICAST_MAC_1 = "01:00:5E:00:00:05"
+    OSPF_MULTICAST_MAC_2 = "01:00:5E:00:00:06"
+    PIM_MULTICAST_MAC = "01:00:5E:00:00:0D"
+    LLDP_MULTICAST_MAC = "01:80:C2:00:00:0E"
+    ETHERNET_FLOW_CONTROL_MAC = "01:80:C2:00:00:01"
+    PTP_MULTICAST_MAC = "01:1B:19:00:00:00"
+    INTERNET_IPV6_ETHERTYPE = "86DD"
+    ETHERNET_FLOW_CONTROL_ETHERTYPE = "8808"
+    ISIS_MULTICAST_MAC_1 = "01:80:C2:00:00:14"
+    ISIS_MULTICAST_MAC_2 = "01:80:C2:00:00:15"
 
     def __init__(self, destination_mac="00:00:01:00:00:01", ether_type=INTERNET_IP_ETHERTYPE,
                  preamble="55555555555555d5", source_mac="00:10:94:00:00:02"):
@@ -397,6 +468,134 @@ class Ethernet2Header(object):
         self.etherType = ether_type
         self.preamble = preamble
         self.srcMac = source_mac
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PtpFollowUpHeader(object):
+    HEADER_TYPE = "ptp:FollowUp"
+    CONTROL_FIELD_FOLLOW_UP = "02"
+    CONTROL_FIELD_SYNC = "00"
+    MESSAGE_TYPE_FOLLOW_UP = 8
+    MESSAGE_TYPE_SYNC = 0
+
+    def __init__(self, control_field="", domain_number=0, log_message_interval=127, message_length=0,
+                 message_type=MESSAGE_TYPE_SYNC, name=None, sequence_id=0, transport_specific="0000",
+                 version_ptp=2):
+        self.ControlField = control_field
+        self.DomainNumber = domain_number
+        self.LogMsgInt = log_message_interval
+        self.MessageLength = message_length
+        self.MessageType = message_type
+        self.Name = name
+        self.SeqId = sequence_id
+        self.TransportSpecific = transport_specific
+        self.VersionPtp = version_ptp
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PtpTimeStampHeader(object):
+    HEADER_TYPE = "ptp:Timestamp"
+    CONTROL_FIELD_FOLLOW_UP = "02"
+    CONTROL_FIELD_SYNC = "00"
+    MESSAGE_TYPE_FOLLOW_UP = 8
+    MESSAGE_TYPE_SYNC = 0
+
+    def __init__(self, control_field="", domain_number=0, log_message_interval=127, message_length=0,
+                 message_type=MESSAGE_TYPE_SYNC, name=None, sequence_id=0, transport_specific="0000",
+                 version_ptp=2):
+        self.ControlField = control_field
+        self.DomainNumber = domain_number
+        self.LogMsgInt = log_message_interval
+        self.MessageLength = message_length
+        self.MessageType = message_type
+        self.Name = name
+        self.SeqId = sequence_id
+        self.TransportSpecific = transport_specific
+        self.VersionPtp = version_ptp
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PtpSyncHeader(object):
+    HEADER_TYPE = "ptp:Sync"
+    CONTROL_FIELD_FOLLOW_UP = "02"
+    CONTROL_FIELD_SYNC = "00"
+    MESSAGE_TYPE_FOLLOW_UP = 8
+    MESSAGE_TYPE_SYNC = 0
+
+    def __init__(self, control_field="", domain_number=0, log_message_interval=127, message_length=0,
+                 message_type=MESSAGE_TYPE_SYNC, name=None, sequence_id=0, transport_specific="0000",
+                 version_ptp=2):
+        self.ControlField = control_field
+        self.DomainNumber = domain_number
+        self.LogMsgInt = log_message_interval
+        self.MessageLength = message_length
+        self.MessageType = message_type
+        self.Name = name
+        self.SeqId = sequence_id
+        self.TransportSpecific = transport_specific
+        self.VersionPtp = version_ptp
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+
+class PtpDelayReqHeader(object):
+    HEADER_TYPE = "ptp:DelayReq"
+    CONTROL_FIELD_FOLLOW_UP = "02"
+    CONTROL_FIELD_SYNC = "00"
+    MESSAGE_TYPE_FOLLOW_UP = 8
+    MESSAGE_TYPE_SYNC = 0
+
+    def __init__(self, control_field="", domain_number=0, log_message_interval=127, message_length=0,
+                 message_type=MESSAGE_TYPE_SYNC, name=None, sequence_id=0, transport_specific="0000",
+                 version_ptp=2):
+        self.ControlField = control_field
+        self.DomainNumber = domain_number
+        self.LogMsgInt = log_message_interval
+        self.MessageLength = message_length
+        self.MessageType = message_type
+        self.Name = name
+        self.SeqId = sequence_id
+        self.TransportSpecific = transport_specific
+        self.VersionPtp = version_ptp
 
     def get_attributes_dict(self):
         attributes = {}
@@ -436,10 +635,22 @@ class EthernetPauseHeader(object):
 
 
 class Ipv4Header(object):
-    PROTOCOL_TYPE_EXPERIMENTAL = "Experimental"
+    PROTOCOL_TYPE_EXPERIMENTAL = 253
+    PROTOCOL_TYPE_ICMP = 1
+    PROTOCOL_TYPE_OSPFIGP = 89
+    PROTOCOL_TYPE_PIM = 103
+    PROTOCOL_TYPE_TCP = 6
+    PROTOCOL_TYPE_IGMP = 2
+    PROTOCOL_TYPE_UDP = 17
     HEADER_TYPE = "ipv4:IPv4"
     CHECKSUM_ERROR = '65535'
     TOTAL_HEADER_LENGTH_ERROR = '65535'
+    OSPF_MULTICAST_IP_1 = "224.0.0.5"
+    OSPF_MULTICAST_IP_2 = "224.0.0.6"
+    PIM_MULTICAST_IP = "224.0.0.13"
+    DHCP_RELAY_AGENT_MULTICAST_IP = "224.0.0.12"
+    PTP_SYNC_MULTICAST_IP = "224.0.1.129"
+    PTP_DELAY_MULTICAST_IP = "224.0.0.107"
 
     def __init__(self, checksum=0, destination_address="192.0.0.1", dest_prefix_length=24,
                  frag_offset=0, gateway="192.85.0.1", identification=0, ihl=5, prefix_length=24,
@@ -475,10 +686,12 @@ class Ipv6Header(object):
     HEADER_TYPE = "ipv6:IPv6"
     NEXT_HEADER_TCP = 6
     NEXT_HEADER_UDP = 17
+    NO_NEXT_HEADER = 59
+    PAYLOAD_LENGTH_ERROR = '65535'
     _spirent_handle = None
 
     def __init__(self, destination_address="2000::1", destination_prefix_length=64, flow_label=0, gateway="::0",
-                 hop_limit=255, name="", next_header=NEXT_HEADER_TCP, payload_length=0,
+                 hop_limit=255, name="", next_header=NO_NEXT_HEADER, payload_length=0,
                  prefix_length=64,source_address="2000::2", traffic_class=0, version=6):
         self.destAddr = destination_address
         self.destPrefixLength = destination_prefix_length
@@ -921,6 +1134,49 @@ class ARP(object):
         self._spirent_handle = handle
 
 
+class RARP(object):
+    HEADER_TYPE = "arp:RARP"
+    ETHERNET = "0001"
+    RARP_OPERATION_UNKNOWN = 0
+    RARP_OPERATION_REQUEST = 3
+    RARP_OPERATION_REPLY = 4
+    INTERNET_IP = '0800'
+    _spirent_handle = None
+
+    def __init__(self, hardware=ETHERNET, hardware_address_length=6, protocol_address_length=4, name=None,
+                 operation=RARP_OPERATION_REQUEST, protocol=INTERNET_IP, sender_hw_address='00:00:01:00:00:02',
+                 sender_ip_address='192.85.1.2', target_hw_address='00:00:00:00:00:00', target_ip_address='0.0.0.0'):
+        self.hardware = hardware
+        self.ihAddr = hardware_address_length
+        self.ipAddr = protocol_address_length
+        self.Name = name
+        self.operation = operation
+        self.protocol = protocol
+        self.senderHwAddr = sender_hw_address
+        self.senderPAddr = sender_ip_address
+        self.targetHwAddr = target_hw_address
+        self.targetPAddr = target_ip_address
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
 class TosDiffServ(object):
     HEADER_TYPE = "tosDiffServ"
     _spirent_handle = None
@@ -1017,3 +1273,411 @@ class Tos(object):
     @spirent_handle.setter
     def spirent_handle(self, handle):
         self._spirent_handle = handle
+
+
+class UDP(object):
+    HEADER_TYPE = "udp:UDP"
+    TCPMUX = 1
+    CHECKSUM_ERROR = '65535'
+    _spirent_handle = None
+
+    def __init__(self, checksum='', destination_port=1024, length=0, source_port=1024, name=None):
+        self.checksum = checksum
+        self.destPort = destination_port
+        self.length = length
+        self.sourcePort = source_port
+        if not name:
+            name = 'anon_' + str(uuid4()).split('-')[0]
+        self.Name = name
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class TCP(object):
+    HEADER_TYPE = "tcp:TCP"
+    TCPMUX = 1
+    DESTINATION_PORT_BGP = 179
+    CHECKSUM_ERROR = '65535'
+    _spirent_handle = None
+
+    def __init__(self, ack_bit='1', ack_num=234567, checksum='', cwr_bit='0', destination_port=1024, ecn_bit='0',
+                 finish_bit='0', offset=5, push_bit='0', reserved='0000', reset_bit='0', seq_num=123456,
+                 source_port=1024, sync_bit='0', urgent_bit='0', urgent_pointer=0, window=4096,
+                 name=None):
+        self.window = window
+        self.urgentPtr = urgent_pointer
+        self.urgBit = urgent_bit
+        self.synBit = sync_bit
+        self.sourcePort = source_port
+        self.seqNum = seq_num
+        self.rstBit = reset_bit
+        self.reserved = reserved
+        self.pshBit = push_bit
+        self.offset = offset
+        self.finBit = finish_bit
+        self.ecnBit = ecn_bit
+        self.destPort = destination_port
+        self.cwrBit = cwr_bit
+        self.checksum = checksum
+        self.ackNum = ack_num
+        self.ackBit = ack_bit
+        if not name:
+            name = 'anon_' + str(uuid4()).split('-')[0]
+        self.Name = name
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class VxLAN(object):
+    HEADER_TYPE = "vxlan:VxLAN"
+    _spirent_handle = None
+
+    def __init__(self, auto_select_udp_src_port=1, enable_vm_arp_sending_for_evpn_learning=0, evpn_learning_enabled=0,
+                 flags=8, multicast_group_address='255.0.0.1', reserve_done=0, reserved_two=0,
+                 resolved_ipv4_address='0.0.0.0', source_vtep_interface_address='0.0.0.0', source_vtep_router_id='0.0.0.0',
+                 traffic_control_flags=0, use_target_ip_for_vm_arp=0, vni=0, vxlanIpAddressMode=0):
+        self.vxlanIpAddressMode = vxlanIpAddressMode
+        self.vni = vni
+        self.useTargetIpForVmArp = use_target_ip_for_vm_arp
+        self.trafficControlFlags = traffic_control_flags
+        self.srcVtepRouterId = source_vtep_router_id
+        self.srcVtepinterfaceAddr = source_vtep_interface_address
+        self.resolvedIpv4Addr = resolved_ipv4_address
+        self.reservedtwo = reserved_two
+        self.reservedone = reserve_done
+        self.multicastGroupAddr = multicast_group_address
+        self.flags = flags
+        self.evpnLearningEnabled = evpn_learning_enabled
+        self.enableVmArpSendingForEvpnLearning = enable_vm_arp_sending_for_evpn_learning
+        self.autoSelectUdpSrcPort = auto_select_udp_src_port
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class RangeModifier(object):
+    HEADER_TYPE = 'RangeModifier'
+    NATIVE = 'NATIVE'
+    BYTE = 'BYTE'
+    INCR = 'INCR'
+    DECR = 'DECR'
+    SHUFFLE = 'SHUFFLE'
+
+    def __init__(self, data='00', data_type=NATIVE, enable_stream=False, mask='65535', modifier_mode=INCR, offset='0',
+                 offset_reference='', recycle_count='0', repeat_count='0', step_value='01'):
+        self.StepValue = step_value
+        self.RepeatCount = repeat_count
+        self.RecycleCount = recycle_count
+        self.OffsetReference = offset_reference
+        self.Offset = offset
+        self.ModifierMode = modifier_mode
+        self.Mask = mask
+        self.EnableStream = enable_stream
+        self.DataType = data_type
+        self.Data = data
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class IcmpEchoRequestHeader(object):
+    HEADER_TYPE = "icmp:IcmpEchoRequest"
+    ECHO_REQUEST_TYPE = 8
+
+    def __init__(self, checksum='', code=0, echo_data="0000", identifier=0, name=None, sequence_num=0,
+                 icmp_type=ECHO_REQUEST_TYPE):
+        self.checksum = checksum
+        self.code = code
+        self.data = echo_data
+        self.identifier = identifier
+        self.name = name
+        self.seqNum = sequence_num
+        self.type = icmp_type
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class Ospfv2HelloHeader(object):
+    HEADER_TYPE = "ospfv2:Ospfv2Hello"
+
+    def __init__(self, backup_designated_router="2.2.2.2", designated_router='1.1.1.1', hello_interval=10, name=None,
+                 network_mask="255.255.255.0", router_dead_priority=0, router_dead_interval=40):
+        self.backupDesignatedRouter = backup_designated_router
+        self.designatedRouter = designated_router
+        self.helloInterval = hello_interval
+        self.Name = name
+        self.networkMask = network_mask
+        self.routerDeadInterval = router_dead_interval
+        self.routerPriority = router_dead_priority
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class Ospfv2LinkStateUpdateHeader(object):
+    HEADER_TYPE = "ospfv2:Ospfv2LinkStateUpdate"
+
+    def __init__(self, name=None, number_of_lsas=0):
+        self.Name = name
+        self.numberOfLsas = number_of_lsas
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class Pimv4HelloHeader(object):
+    HEADER_TYPE = "pim:Pimv4Hello"
+
+    def __init__(self, name=None):
+        self.Name = name
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class Igmpv1Header(object):
+    HEADER_TYPE = "igmp:igmpv1"
+    MESSAGE_TYPE_V1_QUERY = 1
+    MESSAGE_TYPE_V1_REPORT = 2
+
+    def __init__(self, checksum='', group_address="225.0.0.1", name=None, message_type=MESSAGE_TYPE_V1_REPORT,
+                 unused=0, version=1):
+        self.checksum = checksum
+        self.groupAddress = group_address
+        self.Name = name
+        self.type = message_type
+        self.unused = unused
+        self.version = version
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+class IPv4HeaderOptionTimestamp(object):
+    PARENT_HEADER_OPTION = "IPv4HeaderOption"
+    OPTION_TYPE = "timestamp"
+    OPTION_TYPE_TIMESTAMP = 68
+
+    def __init__(self, flag=0, length=5, name=None, overflow=0, pointer=0, timestamp="",
+                 option_type=OPTION_TYPE_TIMESTAMP):
+        self.flag = flag
+        self.length = length
+        self.Name = name
+        self.overflow = overflow
+        self.pointer = pointer
+        self.timestamp = timestamp
+        self.type = option_type
+
+    def get_attributes_dict(self):
+        return vars(self)
+
+
+class IPv4HeaderOptionLooseSourceRoute(object):
+    PARENT_HEADER_OPTION = "IPv4HeaderOption"
+    OPTION_TYPE = "looseSrcRoute"
+    OPTION_TYPE_LOOSE_SRC_ROUTE = 131
+
+    def __init__(self, length=0, name=None, pointer=4, option_type=OPTION_TYPE_LOOSE_SRC_ROUTE):
+        self.length = length
+        self.Name = name
+        self.pointer = pointer
+        self.type = option_type
+
+    def get_attributes_dict(self):
+        return vars(self)
+
+
+class DhcpClientMessageHeader(object):
+    HEADER_TYPE = "dhcp:Dhcpclientmsg"
+
+    def __init__(self, boot_file_name='', boot_p_flag='8000', client_address='192.85.1.2',
+                 client_hw_pad='', client_mac='00:00:01:00:00:02', elapsed=0, haddrlen=6, hardware_type=1, hops=0,
+                 magic_cookie=63825363, message_type=1, name=None, next_server_address='0.0.0.0',
+                 relay_agent_address='0.0.0.0', server_host_name='', xid=1, your_address='0.0.0.0'):
+        self.bootfilename = boot_file_name
+        self.bootpflags = boot_p_flag
+        self.clientAddr = client_address
+        self.clientHWPad = client_hw_pad
+        self.elapsed = elapsed
+        self.haddrLen = haddrlen
+        self.hardwareType = hardware_type
+        self.hops = hops
+        self.magiccookie = magic_cookie
+        self.messageType = message_type
+        self.Name = name
+        self.nextservAddr = next_server_address
+        self.relayagentAddr = relay_agent_address
+        self.serverhostname = server_host_name
+        self.xid = xid
+        self.yourAddr = your_address
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+
+
+

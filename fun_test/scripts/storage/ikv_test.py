@@ -93,10 +93,10 @@ class FunTestCase1(FunTestCase):
         contents = "012345678901234567890123456789012345 l6789012345678901234567890123456789"
         input_value = get_hex(contents)
         key_hex = get_sha256_hex(value=contents)
-        dir_vol_uuid = '0020-0001'
-        lvs_vol_uuid = '0020-0002'
-        lvs_allocator_uuid = '0020-0003'
-        volume_id = 10
+        dir_vol_uuid = '00000020-0000001'
+        lvs_vol_uuid = '00000020-0000002'
+        lvs_allocator_uuid = '00000020-0000003'
+        likv_uuid = '00000040-0000010'
         max_lvs_bytes = 1 << 30
         max_keys = 1 << 14
         init_lvs_bytes = 1 << 20
@@ -133,10 +133,10 @@ class FunTestCase1(FunTestCase):
 
         fun_test.sleep("After creating lvs allocator", seconds=2)
         create_d = {"init_lvs_bytes": init_lvs_bytes,
+                    'likv_uuid': likv_uuid,
                     "max_keys": max_keys,
                     "max_lvs_bytes": max_lvs_bytes,
                     "init_keys": init_keys,
-                    "volume_id": volume_id,
                     'dir_uuid': dir_vol_uuid,
                     'lvs_vol_uuid': lvs_vol_uuid,
                     'lvs_allocator_uuid': lvs_allocator_uuid,
@@ -150,16 +150,16 @@ class FunTestCase1(FunTestCase):
 
         result = storage_controller.json_command(action="create", data=create_d, command_duration=2)
         fun_test.test_assert(result["status"], "Likv create")
-        open_d = {"volume_id": volume_id}
+        open_d = {'likv_uuid': likv_uuid}
         result = storage_controller.json_command(data=open_d, action="open")
         fun_test.test_assert(result["status"], "Likv open")
 
-        put_d = {"key_hex": key_hex, "value": input_value, "volume_id": volume_id}
+        put_d = {"key_hex": key_hex, "value": input_value, 'likv_uuid': likv_uuid}
 
         result = storage_controller.json_command(action="put ", data=put_d)
         fun_test.test_assert(result["status"], "Likv put")
 
-        get_d = {"key_hex": key_hex, "volume_id": volume_id}
+        get_d = {"key_hex": key_hex, 'likv_uuid': likv_uuid}
         result = storage_controller.json_command(action="get", data=get_d)
         ba = bytearray.fromhex(result["data"]["value"])
         ba_str = str(ba)
@@ -168,7 +168,7 @@ class FunTestCase1(FunTestCase):
                                       message="Ensure put value and get value are same")
         result = storage_controller.command("peek stats/likv", command_duration=2)
         fun_test.simple_assert(result["status"], "Fetch ikv stats")
-        volume_id = str(volume_id)
+        volume_id = likv_uuid
         fun_test.test_assert(result["data"][volume_id]["LIKV_USED_BYTES"], "LIKV get bytes")
         fun_test.test_assert_expected(actual=result["data"][volume_id]["IKV_GETS"],
                                       expected=1, message="IKV_GETS")

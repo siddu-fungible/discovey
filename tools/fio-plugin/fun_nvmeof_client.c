@@ -32,6 +32,7 @@
 
 extern sem_t sem_fun1;
 extern pthread_mutex_t fun_mutex;
+pthread_mutex_t bitmap_mutex;
 
 struct fun_fio_req_struct {
 	union {
@@ -48,9 +49,10 @@ struct rdsock *rdsock_client;
 static uint16_t get_cid(void)
 {
 	uint16_t cid;
-
+	pthread_mutex_lock(&bitmap_mutex);
 	cid =  bitmap_bget(&fun_fio_req.cid_bm);
 	assert(cid >= 0);
+	pthread_mutex_unlock(&bitmap_mutex);
 
 	return cid;
 }
@@ -142,7 +144,9 @@ static bool handle_nvme_io_resp(struct fabrics_resp *resp, uint16_t buf_size)
 	fio_thread.completed++;
 	pthread_mutex_unlock(&fun_mutex);
 
+	pthread_mutex_lock(&bitmap_mutex);
 	bitmap_bput(&fun_fio_req.cid_bm, resp_cid);
+	pthread_mutex_unlock(&bitmap_mutex);
 	return true;
 }
 
@@ -536,9 +540,18 @@ int fun_prop_set(uint32_t offset, uint8_t size, uint64_t value)
 
 	return 0;
 }
+#define NVME_SQES_LOG2 6
+#define NVME_CC_IOSQES_S 16
+#define NVME_CQES_LOG2 4
+#define NVME_CC_IOCQES_S 20
+#define NVME_CC_ENABLE 1
+#define NVME_CC_ENABLE_VAL (((NVME_SQES_LOG2) << (NVME_CC_IOSQES_S)) | \
+                            ((NVME_CQES_LOG2) << (NVME_CC_IOCQES_S)) | \
+                            (NVME_CC_ENABLE))
 
 int fun_enable_controller()
 {
-	return fun_prop_set(FUN_REG_CC, FABRICS_PROPERTY_ATTRIB_SIZE_4, 1);
+	//return fun_prop_set(FUN_REG_CC, FABRICS_PROPERTY_ATTRIB_SIZE_4, 1);
+	return fun_prop_set(FUN_REG_CC, FABRICS_PROPERTY_ATTRIB_SIZE_4, NVME_CC_ENABLE_VAL);
 }
 

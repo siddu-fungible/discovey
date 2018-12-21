@@ -253,7 +253,7 @@ class SbpZynqSetupTemplate:
         fun_test.test_assert(self.host.list_files(modulus_filename), "modulus created")
 
         self.host.command("cd {}".format(self.DEVTOOLS_FIRMWARE_DIR))
-        command = "python3 ./generate_firmware_image.py certificate --tamper_flags {} --debugger_flags {} --serial_number {} --serial_number_mask {} --public-key-file {} --key {} --output {}".format(tamper_flags, debugger_flags, serial_number, serial_number_mask, modulus_filename, signing_key, cert_filename)
+        command = "python3 ./generate_firmware_image.py certificate --tamper_flags {} --debugger_flags {} --serial_number {} --serial_number_mask {} --public_key_file {} --key {} --output {}".format(tamper_flags, debugger_flags, serial_number, serial_number_mask, modulus_filename, signing_key, cert_filename)
         self.host.command(command)
         fun_test.test_assert(self.host.list_files(cert_filename), "developer cert created")
         fun_test.scp(source_file_path=cert_filename, source_ip=container_ip, source_username=container_ssh_username, source_password=container_ssh_password, source_port=container_ssh_port, target_file_path=cert_filename)

@@ -2,6 +2,7 @@ from lib.system.fun_test import fun_test
 import os
 import types, collections, json, commentjson
 from pathos.multiprocessing import ProcessingPool, cpu_count
+import uuid
 
 
 class ToDictMixin:
@@ -97,3 +98,33 @@ def parse_file_to_json(file_name):
     else:
         fun_test.critical("{} path does not exist".format(file_name))
     return result
+
+
+def parse_string_to_json(input_string):
+    result = None
+    if isinstance(input_string, str):
+        try:
+            result = commentjson.loads(input_string)
+        except Exception as ex:
+            fun_test.critical("{} has an invalid json format".format(input_string))
+    else:
+        fun_test.critical("Argument received is not valid Python String")
+    return result
+
+
+def generate_uuid(length=16):
+    result = None
+    try:
+        result = str(uuid.uuid4()).replace("-", "")[length:]
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def generate_key(length=32):
+    result = None
+    try:
+        result = os.urandom(length).encode('hex')
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return  result

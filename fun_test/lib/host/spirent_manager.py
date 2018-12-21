@@ -3,6 +3,7 @@ from fun_settings import *
 from lib.system.utils import parse_file_to_json
 from lib.utilities.StcPython import StcPython
 import re
+import inspect
 
 
 class SpirentManager(object):
@@ -29,40 +30,45 @@ class SpirentManager(object):
     LINK_STATUS_UP = "LINK_STATUS_UP"
     RESULT_VIEW_MODE_JITTER = "JITTER"
     TIMED_REFRESH_RESULT_VIEW_MODE = "PERIODIC"
+    HOST_CONFIG = {}
 
     def __init__(self, spirent_config, chassis_type=VIRTUAL_CHASSIS_TYPE):
+        self._read_spirent_config()
         try:
             stc_private_install_dir = fun_test.get_environment_variable(variable="STC_PRIVATE_INSTALL_DIR")
             if not stc_private_install_dir:
-                raise FunTestLibException("STC install directory not found. Please export STC_PRIVATE_INSTALL_DIR.")
+                # raise FunTestLibException("STC install directory not found. Please export STC_PRIVATE_INSTALL_DIR.")
+                os.environ['STC_PRIVATE_INSTALL_DIR'] = self.HOST_CONFIG['hosts']['spirent_private_install_dir']
+                os.environ['SPIRENTD_LICENSE_FILE'] = self.HOST_CONFIG['hosts']['license_server_ip']
             self.stc = StcPython()
         except Exception as ex:
             raise FunTestLibException("Unable to initialized Spirent Manager: %s" % str(ex))
         self.project_handle = None
-        self.host_config = {}
         self.chassis_type = chassis_type
         self.spirent_config = spirent_config
-        self.chassis_ip = self._get_chassis_ip_by_chassis_type()
+        # self.chassis_ip = self._get_chassis_ip_by_chassis_type()
+        self.chassis_ip = None  # After dut_spirent_map change we don't need to use this
 
     def health(self, session_name="TestSession"):
         health_result = {"result": False, "error_message": None}
         fun_test.debug("Determining health of Spirent Application and Lab Server. Checking availability of ports")
         try:
-            fun_test.test_assert(self.get_api_version(), "Get STC API Version")
-            fun_test.test_assert(self.connect_lab_server(session_name=session_name), "Connect to Lab Server")
-            fun_test.test_assert(self.connect_license_manager(), "Connect to License Server")
+            if self.spirent_config['connect_via_lab_server']:
+                fun_test.test_assert(self.get_api_version(), "Get STC API Version")
+                fun_test.test_assert(self.connect_lab_server(session_name=session_name), "Connect to Lab Server")
+                fun_test.test_assert(self.connect_license_manager(), "Connect to License Server")
             health_result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return health_result
 
-    def get_test_module_info(self):
+    def get_test_module_info(self, chassis_ip):
         module_list = []
         chassis_info = {}
         port_group_list = []
         port_list = []
         try:
-            if not self.connect_chassis():
+            if not self.connect_chassis(chassis_ip=chassis_ip):
                 raise FunTestLibException("Unable to connect chassis: %s" % self.chassis_ip)
             chassis_mgr = self.get_chassis_manager()
             manager_handles = self.stc.get(chassis_mgr, "children-PhysicalChassis").split()
@@ -117,10 +123,6 @@ class SpirentManager(object):
                 if not port_group['OwnershipState'] == self.OWNERSHIP_STATE_AVAILABLE:
                     raise FunTestLibException("Port Group Reserved by %s@%s" % (port_group['OwnerUserId'],
                                                                                 port_group['OwnerHostname']))
-
-                if not port_group['Status'] == self.MODULE_STATUS_UP:
-                    raise FunTestLibException("Port Group Status is not Up")
-
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -155,17 +157,17 @@ class SpirentManager(object):
         try:
             self._read_spirent_config()
             if self.chassis_type == self.PHYSICAL_CHASSIS_TYPE:
-                ip_address = self.host_config['hosts']['physical_chassis_ip']
+                ip_address = self.HOST_CONFIG['hosts']['physical_chassis_ip']
             else:
-                ip_address = self.host_config['hosts']['virtual_chassis_ip']
+                ip_address = self.HOST_CONFIG['hosts']['virtual_chassis_ip']
         except Exception as ex:
             fun_test.critical(str(ex))
         return ip_address
 
-    def connect_chassis(self):
+    def connect_chassis(self, chassis_ip):
         result = False
         try:
-            self.stc.connect(str(self.chassis_ip))
+            self.stc.connect(str(chassis_ip))
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -190,10 +192,10 @@ class SpirentManager(object):
                     spirent_config = config
                     break
             fun_test.debug("Found: %s" % spirent_config)
-            self.host_config['hosts'] = spirent_config
+            self.HOST_CONFIG['hosts'] = spirent_config
         except Exception as ex:
             fun_test.critical(str(ex))
-        return self.host_config
+        return self.HOST_CONFIG
 
     def get_chassis_manager(self):
         handle = None
@@ -216,11 +218,11 @@ class SpirentManager(object):
     def connect_lab_server(self, session_name):
         result = False
         try:
-            self.stc.perform("CSTestSessionConnect", host=self.host_config['hosts']['lab_server_ip'],
+            self.stc.perform("CSTestSessionConnect", host=self.HOST_CONFIG['hosts']['lab_server_ip'],
                              TestSessionName=session_name,
                              CreateNewTestSession=True)
             self.stc.perform("TerminateBll", TerminateType="ON_LAST_DISCONNECT")
-            fun_test.debug("Connected to Lab Server: %s" % self.host_config['hosts']['lab_server_ip'])
+            fun_test.debug("Connected to Lab Server: %s" % self.HOST_CONFIG['hosts']['lab_server_ip'])
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -230,9 +232,9 @@ class SpirentManager(object):
         result = False
         try:
             license_manager = self.stc.get(self.SYSTEM_OBJECT, "children-licenseservermanager")
-            output = self.stc.create("LicenseServer", under=license_manager, server=self.host_config['hosts']['license_server_ip'])
-            fun_test.simple_assert(output, "Connect to License Server: %s" % self.host_config['hosts']['license_server_ip'])
-            fun_test.debug("Connected to License Server: %s" % self.host_config['hosts']['license_server_ip'])
+            output = self.stc.create("LicenseServer", under=license_manager, server=self.HOST_CONFIG['hosts']['license_server_ip'])
+            fun_test.simple_assert(output, "Connect to License Server: %s" % self.HOST_CONFIG['hosts']['license_server_ip'])
+            fun_test.debug("Connected to License Server: %s" % self.HOST_CONFIG['hosts']['license_server_ip'])
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -322,13 +324,19 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type,
+    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type='0800',
                               frame_type=ETHERNETII_FRAME):
         result = False
         try:
             fun_test.debug("Adding Mac Address for %s Stream" % str(streamblock))
-            handle = self.get_object_children(streamblock)[0]
-            self.stc.config(handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
+            handles = self.get_object_children(streamblock)
+            ethernet_handle = None
+            for handle in handles:
+                if re.search(r'ethernet.*', handle, re.IGNORECASE):
+                    fun_test.log("Handle Fetched: %s" % handle)
+                    ethernet_handle = handle
+                    break
+            self.stc.config(ethernet_handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
             # self.stc.create(frame_type, under=streamblock, srcMac=source_mac, dstMac=destination_mac,
             #                etherType=ethernet_type)
             result = True
@@ -339,19 +347,36 @@ class SpirentManager(object):
     def configure_ip_address(self, streamblock, source, destination, gateway=None, ip_version=IP_VERSION_4):
         result = False
         try:
-            handle = self.get_object_children(handle=streamblock)[1]
-            self.stc.config(handle, sourceAddr=source, destAddr=destination)
+            handles = self.get_object_children(handle=streamblock)
+            ip_handle = None
+            for handle in handles:
+                if re.search(r'ip.*', handle, re.IGNORECASE):
+                    fun_test.log("Handle Fetched: %s" % handle)
+                    ip_handle = handle
+                    break
+            if gateway:
+                self.stc.config(ip_handle, sourceAddr=source, destAddr=destination, gateway=gateway)
+            else:
+                self.stc.config(ip_handle, sourceAddr=source, destAddr=destination)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def configure_frame_stack(self, stream_block_handle, header_obj, update=False):
+    def configure_frame_stack(self, stream_block_handle, header_obj, update=False, delete_header=[]):
         result = False
         try:
             attributes = header_obj.get_attributes_dict()
             fun_test.debug("Configuring %s header under %s" % (header_obj.HEADER_TYPE, stream_block_handle))
             if not update:
+                if delete_header:
+                    existing_headers = self.get_object_children(handle=stream_block_handle)
+                    fun_test.log("Headers found in %s: %s" % (stream_block_handle, existing_headers))
+                    for header in delete_header:
+                        for handle in existing_headers:
+                            if header.lower() in handle:
+                                fun_test.log("Deleting Header: %s" % handle)
+                                self.delete_handle(handle=handle)
                 handle = self.stc.create(header_obj.HEADER_TYPE, under=stream_block_handle, **attributes)
             else:
                 child = header_obj.HEADER_TYPE.lower()
@@ -362,6 +387,21 @@ class SpirentManager(object):
                 header_obj._spirent_handle = handle
             if self.apply_configuration():
                 result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def delete_frame_headers(self, header_types, stream_block_handle):
+        result = False
+        try:
+            headers = self.get_object_children(handle=stream_block_handle)
+            fun_test.debug("Headers found in %s: %s" % (stream_block_handle, headers))
+            for header in header_types:
+                for handle in headers:
+                    if header.lower() in handle:
+                        fun_test.log("Deleting Header: %s" % handle)
+                        self.delete_handle(handle=handle)
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -651,7 +691,7 @@ class SpirentManager(object):
     def subscribe_results(self, parent, config_type, result_type, change_mode=False,
                           result_view_mode=RESULT_VIEW_MODE_JITTER,
                           timed_refresh_result_view_mode=TIMED_REFRESH_RESULT_VIEW_MODE,
-                          view_attribute_list=None):
+                          view_attribute_list=None, result_parent=None):
         result_handle = None
         try:
             if change_mode:
@@ -660,8 +700,13 @@ class SpirentManager(object):
                                 TimedRefreshResultViewMode=timed_refresh_result_view_mode, TimedRefreshInterval="1")
             if view_attribute_list:
                 attributes = ' '.join(view_attribute_list)
-                result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type,
-                                                   viewAttributeList=attributes)
+                if result_parent:
+                    result_handle = self.stc.subscribe(Parent=parent, ResultParent=result_parent,
+                                                       ConfigType=config_type, resulttype=result_type,
+                                                       viewAttributeList=attributes)
+                else:
+                    result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type,
+                                                       viewAttributeList=attributes)
             else:
                 result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type)
         except Exception as ex:
@@ -761,6 +806,23 @@ class SpirentManager(object):
                     if parent == analyzer_handle:
                         result = self.stc.get(output)
                         break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_port_diffserv_results(self, port_handle, subscribe_handle):
+        result = {}
+        try:
+            analyzer_handle = self.stc.get(port_handle, "children-Analyzer")
+            res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
+            fun_test.simple_assert(res_handle_list is not None, "Result handle list is found ofr diff serv result on port %s" % port_handle)
+            for output in res_handle_list:
+                regex = re.compile("diffservresults.")
+                if re.match(regex, output):
+                    parent = self.stc.get(output, "parent")
+                    if parent == analyzer_handle:
+                        qos_val = self.stc.get(output)['QosBinary']
+                        result[qos_val] = self.stc.get(output)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -905,22 +967,28 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def start_capture_command(self, capture_handle, real_time_decoder_location="", real_time_host_name='127.0.0.1',
+    def start_capture_command(self, capture_obj, port_handle, real_time_decoder_location="", real_time_host_name='127.0.0.1',
                               real_time_tcp_port='2006'):
-        result = None
+        result = False
         try:
-            self.stc.perform("CaptureStartCommand", CaptureProxyId=capture_handle,
-                             RealTimeDecoderLocation=real_time_decoder_location, RealTimeHostName=real_time_host_name,
-                             RealTimeTcpPort=real_time_tcp_port)
+            output = self.configure_capture(capture_obj, port_handle)
+            fun_test.simple_assert(output, "Configuring capture on port %s" % port_handle)
+            fun_test.log("Starting capture start command")
+            output = self.stc.perform("CaptureStartCommand", CaptureProxyId=capture_obj._spirent_handle,
+                                      RealTimeDecoderLocation=real_time_decoder_location,
+                                      RealTimeHostName=real_time_host_name,
+                                      RealTimeTcpPort=real_time_tcp_port)
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Start capture")
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
     def stop_capture_command(self, capture_handle):
-        result = None
+        result = False
         try:
-            self.stc.perform("CaptureStopCommand", CaptureProxyId=capture_handle)
+            output = self.stc.perform("CaptureStopCommand", CaptureProxyId=capture_handle)
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Stop capture")
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -929,32 +997,111 @@ class SpirentManager(object):
     def save_capture_data_command(self, capture_handle, file_name, file_name_path, append_suffix_to_file_name=False,
                                   end_frame_index='0', file_name_format='PCAP', start_frame_index='0'):
 
-        result = None
+        result = False
         try:
-            self.stc.perform("CaptureDataSaveCommand", CaptureProxyId=capture_handle,
-                             AppendSuffixToFileName=append_suffix_to_file_name, EndFrameIndex=end_frame_index,
-                             FileName=file_name, FileNamePath=file_name_path, FileNameFormat=file_name_format,
-                             StartFrameIndex=start_frame_index)
+            output = self.stc.perform("CaptureDataSaveCommand", CaptureProxyId=capture_handle,
+                                      AppendSuffixToFileName=append_suffix_to_file_name, EndFrameIndex=end_frame_index,
+                                      FileName=file_name, FileNamePath=file_name_path, FileNameFormat=file_name_format,
+                                      StartFrameIndex=start_frame_index)
+            fun_test.simple_assert(output['State'] == "COMPLETED", "Saved capture %s at path %s" %
+                                   (file_name, file_name_path))
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
-    def configure_arp(self, streamblock_obj, header_obj):
+    def configure_range_modifier(self, range_modifier_obj, streamblock_obj, header_obj, header_attribute, overlay=False,
+                                 custom_header=False):
         result = False
+        header_handle = None
+        assigned_header_name = None
         try:
-            attributes = streamblock_obj.get_attributes_dict()
-            header_attributes = header_obj.get_attributes_dict()
-            frame_config = self.get_streamblock_frame_config(streamblock_obj._spirent_handle)
-            if frame_config:
-                streamblock_obj.FrameConfig = frame_config
-                attributes['FrameConfig'] = frame_config
-                self.stc.config(streamblock_obj._spirent_handle, **attributes)
-            handle = self.stc.create(header_obj.HEADER_TYPE, under=streamblock_obj._spirent_handle, **header_attributes)
-            if handle:
-                header_obj._spirent_handle = handle
+            attributes = header_obj.__dict__.keys()
+            fun_test.simple_assert(header_attribute in attributes, "Attribute %s not found in header obj %s. "
+                                                                   "Available values are %s" % (header_attribute,
+                                                                                                header_obj, attributes))
+            header_type = header_obj.HEADER_TYPE.lower()
+            header_type = 'children-' + header_type
+            header_list = self.get_object_children(handle=streamblock_obj._spirent_handle, child_type=header_type)
+            header_handle = header_list[0]
+            if overlay and len(header_list) > 1:
+                header_handle = header_list[1]
+            elif custom_header:
+                header_handle = header_list[-1]
+            fun_test.simple_assert(header_handle, "Header handle not found for header %s in streamblock %s"
+                                   % (header_obj.HEADER_TYPE, streamblock_obj._spirent_handle))
+            range_attributes = range_modifier_obj.get_attributes_dict()
+            assigned_header_name = self.stc.get(header_handle, "name")
+            fun_test.simple_assert(assigned_header_name, "Header name not found for %s" % header_handle)
+            range_attributes['OffsetReference'] = assigned_header_name + '.' + header_attribute
+            output = self.stc.create(range_modifier_obj.HEADER_TYPE, under=streamblock_obj._spirent_handle,
+                                     **range_attributes)
+            fun_test.simple_assert(output, "range modifier not created")
             if self.apply_configuration():
                 result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def update_header_options(self, header_obj, option_obj, stream_block_handle):
+        result = False
+        try:
+            header_handles = self.get_object_children(handle=stream_block_handle)
+            for header_handle in header_handles:
+                if re.search(header_obj.HEADER_TYPE, header_handle, re.IGNORECASE):
+                    attributes = option_obj.get_attributes_dict()
+                    options_handle = self.get_object_children(handle=header_handle)[2]
+                    new_options_handle = self.stc.create(option_obj.PARENT_HEADER_OPTION, under=options_handle)
+                    self.stc.create(option_obj.OPTION_TYPE, under=new_options_handle, **attributes)
+                    break
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def update_control_flags(self, stream_block_obj, header_obj, df_bit=0, mf_bit=0, reserved=0):
+        result = False
+        try:
+            header_handles = self.get_object_children(handle=stream_block_obj.spirent_handle)
+            for header_handle in header_handles:
+                if re.search(header_obj.HEADER_TYPE, header_handle, re.IGNORECASE):
+                    flags_handle = self.get_object_children(handle=header_handle)[1]
+                    handle = self.stc.config(flags_handle, dfBit=df_bit, mfBit=mf_bit, reserved=reserved)
+                    break
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def detach_ports_by_command(self, port_handles):
+        result = False
+        try:
+            if type(port_handles) == list:
+                port_handles = ' '.join(port_handles)
+            fun_test.debug("Releasing %s from project" % port_handles)
+            output = self.stc.perform("DetachPortsCommand", PortList=port_handles)
+            fun_test.simple_assert(output['State'] == 'COMPLETED', "%s detached" % port_handles)
+            if re.search(r'Successfully\s+detached.*', output['Status'], re.IGNORECASE):
+                fun_test.log("%s released successfully" % port_handles)
+                if self.apply_configuration():
+                    result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def attach_ports_by_command(self, port_handles, auto_connect_chassis=True):
+        result = False
+        try:
+            if type(port_handles) == list:
+                port_handles = ' '.join(port_handles)
+            fun_test.debug("Releasing %s from project" % port_handles)
+            output = self.stc.perform("AttachPortsCommand", PortList=port_handles, AutoConnect=auto_connect_chassis)
+            fun_test.simple_assert(output['State'] == 'COMPLETED', "%s attached" % port_handles)
+            if re.search(r'Reserving.*.*', output['Status'], re.IGNORECASE):
+                if self.apply_configuration():
+                    result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

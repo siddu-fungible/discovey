@@ -194,7 +194,7 @@ def _get_suite_executions(execution_id=None,
         num_in_progress = 0
 
         suite_execution["test_case_info"] = []
-
+        finalized = suite_execution["fields"]["finalized"]
 
         for test_case_execution_id in test_case_execution_ids:
             test_case_execution = TestCaseExecution.objects.get(execution_id=test_case_execution_id)
@@ -209,35 +209,36 @@ def _get_suite_executions(execution_id=None,
                 num_skipped += 1
             elif te_result == RESULTS["IN_PROGRESS"]:
                 num_in_progress += 1
+
             if save_test_case_info:
                 suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
                                                           "test_case_id": test_case_execution.test_case_id,
                                                           "result": test_case_execution.result})
 
 
-        if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
-            suite_result = RESULTS["PASSED"]
-        if finalize and num_failed:
-            suite_result = RESULTS["FAILED"]
+        if not finalized:
+            if finalize and (num_passed == len(test_case_execution_ids)) and test_case_execution_ids:
+                suite_result = RESULTS["PASSED"]
+            if finalize and num_failed:
+                suite_result = RESULTS["FAILED"]
 
-        if finalize and (not num_failed) and (not num_passed):
-            suite_result = RESULTS["ABORTED"]
-        # if num_in_progress:
-        #    suite_result = RESULTS["IN_PROGRESS"]
-        if "result" in suite_execution["fields"]:
-            if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
-                suite_result = RESULTS["KILLED"]
+            if finalize and (not num_failed) and (not num_passed):
+                suite_result = RESULTS["ABORTED"]
+            if "result" in suite_execution["fields"]:
+                if suite_execution["fields"]["result"] == RESULTS["KILLED"]:
+                    suite_result = RESULTS["KILLED"]
 
-
-
-        if save_suite_info or finalize:  #TODO: Perf too many saves
-            se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
-            if suite_result not in pending_states:
-                se.result = suite_result
-            # se.save()
-            ses.append(se)
-            suite_result = se.result
-
+            if save_suite_info or finalize:  #TODO: Perf too many saves
+                se = SuiteExecution.objects.get(execution_id=suite_execution["fields"]["execution_id"])
+                if finalize:
+                    se.finalized = True
+                if suite_result not in pending_states:
+                    se.result = suite_result
+                # se.save()
+                ses.append(se)
+                suite_result = se.result
+        else:
+            suite_result = suite_execution["fields"]["result"]
 
         suite_execution["suite_result"] = suite_result
         suite_execution["num_passed"] = num_passed
@@ -245,9 +246,6 @@ def _get_suite_executions(execution_id=None,
         suite_execution["num_skipped"] = num_skipped
         suite_execution["num_not_run"] = num_not_run
         suite_execution["num_in_progress"] = num_in_progress
-
-
-
 
         suite_execution["fields"]["scheduled_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["scheduled_time"])))
         suite_execution["fields"]["submitted_time"] = str(timezone.localtime(dateutil.parser.parse(suite_execution["fields"]["submitted_time"])))
@@ -260,7 +258,7 @@ def _get_suite_executions(execution_id=None,
 
     return all_objects_dict
 
-def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date):
+def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties):
     print"Hardware_version: {}".format(hardware_version)
     try:
         entry = JenkinsJobIdMap.objects.get(completion_date=completion_date)
@@ -268,6 +266,7 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
         entry.git_commit = git_commit
         entry.software_date = software_date
         entry.hardware_version = hardware_version
+        entry.build_properties = build_properties
         entry.save()
     except ObjectDoesNotExist:
         entry = JenkinsJobIdMap(completion_date=completion_date,
@@ -275,7 +274,8 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 fun_sdk_branch=fun_sdk_branch,
                                 git_commit=git_commit,
                                 software_date=software_date,
-                                hardware_version=hardware_version)
+                                hardware_version=hardware_version,
+                                build_properties=build_properties)
         entry.save()
 
 def _get_suite_execution_attributes(suite_execution):

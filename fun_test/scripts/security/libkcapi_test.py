@@ -5,21 +5,22 @@ from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
 
 topology_dict = {
-    "name": "Basic Security",
-    "dut_info": {
-        0: {
-            "mode": Dut.MODE_SIMULATION,
-            "type": Dut.DUT_TYPE_FSU,
-            "interface_info": {
-                0: {
-                    "vms": 1,
-                    "type": DutInterface.INTERFACE_TYPE_PCIE
-                }
-            },
-            "start_mode": F1.START_MODE_NORMAL
-        }
+   "name": "Basic Security",
+   "dut_info": {
+       0: {
+           "mode": Dut.MODE_SIMULATION,
+           "type": Dut.DUT_TYPE_FSU,
+           "interface_info": {
+               0: {
+                   "vms": 1,
+                   "type": DutInterface.INTERFACE_TYPE_PCIE,
+                   "vm_host_os": "fungible_yocto"
+               }
+           },
+           "start_mode": F1.START_MODE_NORMAL
+       }
 
-    }
+   }
 }
 
 libkcapi_template = ""
@@ -56,6 +57,12 @@ sha224_vector_path = "/test_vectors/nist/dgst/sha224.txt"
 sha256_vector_path = "/test_vectors/nist/dgst/sha256.txt"
 sha384_vector_path = "/test_vectors/nist/dgst/sha384.txt"
 sha512_vector_path = "/test_vectors/nist/dgst/sha512.txt"
+sha512_224_vector_path = "/test_vectors/nist/dgst/sha512_224.txt"
+sha512_256_vector_path = "/test_vectors/nist/dgst/sha512_256.txt"
+sha3_224_vector_path = "/test_vectors/nist/dgst/sha3_224.txt"
+sha3_256_vector_path = "/test_vectors/nist/dgst/sha3_256.txt"
+sha3_384_vector_path = "/test_vectors/nist/dgst/sha3_384.txt"
+sha3_512_vector_path = "/test_vectors/nist/dgst/sha3_512.txt"
 
 
 class LibkcapiScript(FunTestScript):
@@ -73,17 +80,13 @@ class LibkcapiScript(FunTestScript):
         host = self.topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
         libkcapi_template = LibkcapiTemplate(host)
         libkcapi_template.setup()
-        file_path = fun_test.get_script_parent_directory() + vector_path
-        input_dict = libkcapi_template.parse_input_libkcapi(file_path)
         fun_test.shared_variables["host"] = host
         fun_test.shared_variables["libkcapi_template"] = libkcapi_template
-        fun_test.shared_variables["input_dict"] = input_dict
         # setup_path = fun_test.get_script_parent_directory()+ "/lib_crypto/libkcapi"
         # fun_test.test_assert(libkcapi_template.setup(setup_path), "libkcapi Setup complete")
 
     def cleanup(self):
-        if self.topology:
-            TopologyHelper(spec=self.topology).cleanup()
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         pass
 
 
@@ -123,7 +126,7 @@ class TestGcm(FunTestCase):
                                                            tag_len=enc_dict['tag_len'])).strip()
                 # Compare result or tag, coz if input is null only tag is computed.
                 fun_test.simple_assert((enc_output == enc_dict['result'] or
-                                        (enc_output in enc_dict['tag'])), "encryption verified")
+                                        (enc_output == enc_dict['tag'])), "encryption verified")
             fun_test.test_assert(True, "gcm(aes) encryption verified")
 
             for dec_dict in dec_dicts:
@@ -132,8 +135,6 @@ class TestGcm(FunTestCase):
                                                            cipher_text=dec_dict['cipher_text'],
                                                            iv=dec_dict['iv'], assoc_data=dec_dict['assosc_data'],
                                                            tag=dec_dict['tag'])).strip()
-                print "expected :", dec_dict['result']
-                print "current :", dec_output
                 # Below method of check was done for nist vectors. Need to find a better way to handle it.
                 fun_test.simple_assert((dec_output == dec_dict['result']) or
                                        (dec_output in "Received data length 0 does not match expected length 1") or
@@ -564,7 +565,7 @@ class TestSha1(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA1, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA1 verified")
 
 
@@ -595,7 +596,7 @@ class TestSha224(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA224, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA224 verified")
 
 
@@ -626,7 +627,7 @@ class TestSha256(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA256, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA256 verified")
 
 
@@ -657,7 +658,7 @@ class TestSha384(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA384, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA384 verified")
 
 
@@ -688,27 +689,219 @@ class TestSha512(FunTestCase):
             enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA512, enc_dict['cipher_type'],
                                                        msg=enc_dict['MSG'])).strip()
 
-            fun_test.simple_assert((enc_output == enc_dict['MD']), "encryption verified")
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
         fun_test.test_assert(True, "SHA512 verified")
+
+
+class TestSha512224(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=16,
+                              summary="Run SHA512_224 with libkcapi",
+                              steps="""
+        1. Compute digest for input.
+        2. Compare with result file.
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha512_224_vector_path
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
+        enc_dicts = []
+        for dict in input_dict:
+            if dict == "dgst_sha512_224":
+                enc_dicts = input_dict[dict]
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA512_224, enc_dict['cipher_type'],
+                                                       msg=enc_dict['MSG'])).strip()
+
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
+        fun_test.test_assert(True, "SHA512_224 verified")
+
+
+class TestSha512256(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=17,
+                              summary="Run SHA512_256 with libkcapi",
+                              steps="""
+        1. Compute digest for input.
+        2. Compare with result file.
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha512_256_vector_path
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
+        enc_dicts = []
+        for dict in input_dict:
+            if dict == "dgst_sha512_256":
+                enc_dicts = input_dict[dict]
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA512_256, enc_dict['cipher_type'],
+                                                       msg=enc_dict['MSG'])).strip()
+
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
+        fun_test.test_assert(True, "SHA512_256 verified")
+
+
+class TestSha3224(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=18,
+                              summary="Run SHA3_224 with libkcapi",
+                              steps="""
+        1. Compute digest for input.
+        2. Compare with result file.
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha3_224_vector_path
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
+        enc_dicts = []
+        for dict in input_dict:
+            if dict == "dgst_sha3_224":
+                enc_dicts = input_dict[dict]
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA3_224, enc_dict['cipher_type'],
+                                                       msg=enc_dict['MSG'])).strip()
+
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
+        fun_test.test_assert(True, "SHA3_224 verified")
+
+
+class TestSha3256(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=19,
+                              summary="Run SHA3_256 with libkcapi",
+                              steps="""
+        1. Compute digest for input.
+        2. Compare with result file.
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha3_256_vector_path
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
+        enc_dicts = []
+        for dict in input_dict:
+            if dict == "dgst_sha3_256":
+                enc_dicts = input_dict[dict]
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA3_256, enc_dict['cipher_type'],
+                                                       msg=enc_dict['MSG'])).strip()
+
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
+        fun_test.test_assert(True, "SHA3_256 verified")
+
+
+class TestSha3384(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=20,
+                              summary="Run SHA3_384 with libkcapi",
+                              steps="""
+        1. Compute digest for input.
+        2. Compare with result file.
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha3_384_vector_path
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
+        enc_dicts = []
+        for dict in input_dict:
+            if dict == "dgst_sha3_384":
+                enc_dicts = input_dict[dict]
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA3_384, enc_dict['cipher_type'],
+                                                       msg=enc_dict['MSG'])).strip()
+
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
+        fun_test.test_assert(True, "SHA3_384 verified")
+
+
+class TestSha3512(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=21,
+                              summary="Run SHA3_512 with libkcapi",
+                              steps="""
+        1. Compute digest for input.
+        2. Compare with result file.
+                             """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        vect_path = fun_test.get_script_parent_directory() + sha3_512_vector_path
+        libkcapi_template = fun_test.shared_variables["libkcapi_template"]
+        input_dict = libkcapi_template.parse_input_libkcapi(vect_path)
+        enc_dicts = []
+        for dict in input_dict:
+            if dict == "dgst_sha3_512":
+                enc_dicts = input_dict[dict]
+        for enc_dict in enc_dicts:
+            enc_output = (libkcapi_template.kcapi_dgst(LibkcapiTemplate.SHA3_512, enc_dict['cipher_type'],
+                                                       msg=enc_dict['MSG'])).strip()
+
+            fun_test.simple_assert((enc_output == enc_dict['MD']), "Digest verified.")
+        fun_test.test_assert(True, "SHA3_512 verified")
 
 
 if __name__ == "__main__":
     libkcapi_script = LibkcapiScript()
 
     libkcapi_script.add_test_case(TestGcm())
-    libkcapi_script.add_test_case(TestXts())
     libkcapi_script.add_test_case(TestCcm())
-    libkcapi_script.add_test_case(TestCbc())
+    # libkcapi_script.add_test_case(TestCtr())
     libkcapi_script.add_test_case(TestEcb())
-    libkcapi_script.add_test_case(TestCtr())
-    libkcapi_script.add_test_case(TestRfc3686())
-    libkcapi_script.add_test_case(TestRfc4106())
-    libkcapi_script.add_test_case(TestRfc4309())
-    libkcapi_script.add_test_case(TestAuthenc())
+    libkcapi_script.add_test_case(TestXts())
+    # libkcapi_script.add_test_case(TestAuthenc())
+    libkcapi_script.add_test_case(TestCbc())
+    # libkcapi_script.add_test_case(TestRfc3686())
+    # libkcapi_script.add_test_case(TestRfc4106())
+    # libkcapi_script.add_test_case(TestRfc4309())
     libkcapi_script.add_test_case(TestSha1())
     libkcapi_script.add_test_case(TestSha224())
     libkcapi_script.add_test_case(TestSha256())
     libkcapi_script.add_test_case(TestSha384())
     libkcapi_script.add_test_case(TestSha512())
+    # libkcapi_script.add_test_case(TestSha512224())
+    # libkcapi_script.add_test_case(TestSha512256())
+    # libkcapi_script.add_test_case(TestSha3224())
+    # libkcapi_script.add_test_case(TestSha3256())
+    # libkcapi_script.add_test_case(TestSha3384())
+    # libkcapi_script.add_test_case(TestSha3512())
 
     libkcapi_script.run()

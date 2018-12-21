@@ -1,0 +1,160 @@
+<mat-form-field *ngIf="action">
+  <mat-select placeholder="actions" [formControl]="actionControl" [(value)]="actionSelected">
+    <mat-option>-- None --</mat-option>
+    <mat-optgroup *ngFor="let group of actionGroups" [label]="group.name">
+      <mat-option *ngFor="let action of group.actions" [value]="action.value">
+        {{ action.viewValue }}
+      </mat-option>
+    </mat-optgroup>
+  </mat-select>
+</mat-form-field>
+
+
+<div *ngIf="actionSelected">
+  <mat-accordion class="example-headers-align">
+    <mat-expansion-panel [expanded]="step === 0" (opened)="setStep(0)" hideToggle>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          DPUs
+        </mat-panel-title>
+        <mat-panel-description>
+          Please select one or more DPUs
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <dpus></dpus>
+      <mat-action-row>
+        <button mat-button color="primary" (click)="nextStep()">Next</button>
+      </mat-action-row>
+    </mat-expansion-panel>
+    <mat-expansion-panel [expanded]="step === 1" (opened)="setStep(1)" hideToggle>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Configuration
+        </mat-panel-title>
+        <mat-panel-description>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+
+      <div>
+        <mat-form-field>
+          <input matInput placeholder="Name">
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput placeholder="Capacity">
+        </mat-form-field>
+      </div>
+    </mat-expansion-panel>
+    <mat-expansion-panel [expanded]="step === 2" (opened)="setStep(2)" hideToggle>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Validate
+        </mat-panel-title>
+        <mat-panel-description>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <mat-action-row>
+        <button mat-button color="warn" (click)="prevStep()">Previous</button>
+        <button mat-button color="primary" (click)="submit()">Submit</button>
+      </mat-action-row>
+    </mat-expansion-panel>
+  </mat-accordion>
+</div>
+<div>
+  <p *ngIf="action">Available pools</p>
+  <mat-radio-group [(ngModel)]="selectedElement" [required]="true" *ngIf="dataSource.data.length > 0">
+    <table mat-table multiTemplateDataRows [dataSource]="dataSource">
+
+      <ng-container *ngIf="!radioSelection" matColumnDef="select">
+        <th [ngClass]="'radioButtonClass'" mat-header-cell *matHeaderCellDef>
+          <!--mat-checkbox (change)="$event ? masterToggle() : null"
+                        [checked]="selection.hasValue() && isAllSelected()"
+                        [indeterminate]="selection.hasValue() && !isAllSelected()">
+          </mat-checkbox-->
+        </th>
+        <td [ngClass]="'radioButtonClass'" mat-cell *matCellDef="let row">
+          <!--mat-checkbox (click)="$event.stopPropagation()"
+                        (change)="$event ? selection.toggle(row) : null"
+                        [checked]="selection.isSelected(row)">
+          </mat-checkbox-->
+        </td>
+      </ng-container>
+
+      <ng-container *ngIf="radioSelection" matColumnDef="select">
+        <th [ngClass]="'radioButtonClass'" mat-header-cell *matHeaderCellDef>
+        </th>
+
+        <td [ngClass]="'radioButtonClass'" mat-cell *matCellDef="let row">
+          <mat-radio-button [value]="row" (click)="selection.select(row);" [checked]="selection.isSelected(row)">
+          </mat-radio-button>
+        </td>
+      </ng-container>
+
+
+      <ng-container matColumnDef="uuid">
+        <th [ngClass]="'uuidClass'" mat-header-cell *matHeaderCellDef>Pool UUID </th>
+        <td [ngClass]="'uuidClass'" mat-cell *matCellDef="let element"> {{ element.uuid }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pool_name">
+        <th [ngClass]="'uuidClass'" mat-header-cell *matHeaderCellDef>Pool Name </th>
+        <td [ngClass]="'uuidClass'" mat-cell *matCellDef="let element"> global_pool </td>
+      </ng-container>
+
+
+      <ng-container matColumnDef="f1s">
+        <th mat-header-cell *matHeaderCellDef> DPUs</th>
+        <td mat-cell *matCellDef="let element">
+          <button type="button" class="btn btn-primary btn-sm">
+            {{ element.f1s.length }}
+          </button>
+          &nbsp;<u *ngIf="element.f1s.length > 0 && !radioSelection" class="anchor-button pseudo-anchor">More info...</u>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="expandedDetail">
+        <td mat-cell *matCellDef="let element" [attr.colspan]="displayedVolumesColumns.length">
+          <div class="example-element-detail"
+               [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
+            <div>
+              <table>
+                <tr>
+                  <th>DPUs</th>
+                </tr>
+                <tr *ngFor="let dpu of element.f1s">
+                  <td>{{ dpu }}</td>
+                </tr>
+              </table>
+
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <!--tr mat-row *matRowDef="let row; columns: displayedColumns;" [class.highlighted-row]="row.id == selectedRowIndex"
+					class="example-element-row"
+					[class.example-expanded-row]="expandedElement === row"
+					(click)="selection.toggle(row); expandedElement = row;"></tr-->
+
+      <ng-container *ngIf="!radioSelection">
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="example-element-row"
+            [class.example-expanded-row]="expandedElement === row"
+            (click)="selection.toggle(row); toggleExpandedElement(row);">
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="radioSelection">
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="example-element-row"
+            [class.example-expanded-row]="expandedElement === row"
+            (click)="selection.select(row);">
+        </tr>
+      </ng-container>
+
+
+      <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+
+    </table>
+  </mat-radio-group>
+</div>

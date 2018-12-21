@@ -6,8 +6,9 @@ from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR,
 from fun_global import RESULTS, is_regression_server, is_performance_server, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
-from django.utils import timezone
 from fun_settings import TIME_ZONE
+from web.fun_test.models import SchedulerInfo
+from scheduler.scheduler_states import SchedulerStates
 from lib.utilities.http import fetch_text_file
 
 activate(TIME_ZONE)
@@ -27,7 +28,6 @@ scheduler_logger.setLevel(logging.DEBUG)
 
 TEN_MB = 1e7
 DEBUG = False
-
 
 if not DEBUG:
     handler = logging.handlers.RotatingFileHandler(LOG_FILE_NAME, maxBytes=TEN_MB, backupCount=5)
@@ -53,7 +53,8 @@ def set_jenkins_hourly_execution_status(status):
 class SchedulerException(Exception):
     def __init__(self, *args):
         super(SchedulerException, self).__init__(*args)
-        scheduler_logger.critical(*args)
+        scheduler_logger.exception(*args)
+
 
 def get_flat_file_name(path):
     parts = path.split("/")
@@ -62,16 +63,20 @@ def get_flat_file_name(path):
         flat = "_".join(parts[-2:])
     return flat.lstrip("/")
 
+
 def get_flat_console_log_file_name(path):
     return get_flat_file_name(path=path) + CONSOLE_LOG_EXTENSION
 
+
 def get_flat_html_log_file_name(path):
     return get_flat_file_name(path=path) + HTML_LOG_EXTENSION
+
 
 def kill_job(job_id):
     filename = "{}/{}_{}".format(KILLED_JOBS_DIR, job_id, KILLED_JOB_EXTENSION)
     with open(filename, "w") as f:
         f.write(str(job_id))
+
 
 def queue_job(suite_path="unknown",
               build_url=None,
@@ -82,8 +87,10 @@ def queue_job(suite_path="unknown",
               repeat_in_minutes=None,
               email_list=None,
               tags=None,
-              email_on_fail_only=None):
+              email_on_fail_only=None,
+              environment=None):
     time.sleep(0.1)  # enough time to keep the creation timestamp unique
+    print "Environment: {}".format(environment)
 
     if suite_path == "unknown":
         if job_spec:
@@ -108,13 +115,17 @@ def queue_job(suite_path="unknown",
         job_spec["tags"] = tags
         job_spec["email_list"] = email_list
         job_spec["email_on_fail_only"] = email_on_fail_only
+        job_spec["environment"] = environment
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
-
-    f = open("{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION), "w")
-    f.write(json.dumps(job_spec))
-    f.close()
-    print("Job Id: {} suite: {} Queued".format(job_id, suite_path))
+    try:
+        queued_file_name = "{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION)
+        with open(queued_file_name, "w+") as qf:
+            qf.write(json.dumps(job_spec))
+            qf.close()
+    except Exception as ex:
+        print str(ex)
+    print("Job Id: {} suite: {} Queued. Spec: {}".format(job_id, suite_path, job_spec))
     return job_id
 
 
@@ -123,6 +134,7 @@ def get_archived_file_name(suite_execution_id):
                                                    ARCHIVED_JOB_EXTENSION)
     files = glob.glob(glob_str)
     return files[0]
+
 
 def re_queue_job(suite_execution_id,
                  test_case_execution_id=None,
@@ -143,6 +155,7 @@ def re_queue_job(suite_execution_id,
             pass
     return queue_job(job_spec=job_spec)
 
+
 def parse_file_to_json(file_name):
     result = None
     try:
@@ -150,8 +163,9 @@ def parse_file_to_json(file_name):
             contents = infile.read()
             result = json.loads(contents)
     except Exception as ex:
-        scheduler_logger.critical(str(ex))
+        scheduler_logger.exception(str(ex))
     return result
+
 
 def process_list(process_name):
     processes = []
@@ -176,6 +190,7 @@ def process_list(process_name):
             pass
     # print processes
     return processes
+
 
 def _get_table(header_list, list_of_rows):
     s = '<table class="table table-nonfluid"\n'
@@ -205,9 +220,12 @@ def _get_table(header_list, list_of_rows):
 
     return s
 
+def set_scheduler_state(state):
+    o = SchedulerInfo.objects.first()
+    o.state = state
+    o.save()
 
 def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_only=None):
-
     scheduler_logger.info("Suite Execution: {}".format(str(suite_execution)))
     if email_on_fail_only and suite_execution["suite_result"] == RESULTS["PASSED"]:
         return True
@@ -218,7 +236,8 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
     header_list = ["TC-ID", "Summary", "Path", "Result"]
-    list_of_rows = [[x["test_case_id"], "Summary1", x["script_path"], x["result"]] for x in suite_execution["test_case_info"]]
+    list_of_rows = [[x["test_case_id"], "Summary1", x["script_path"], x["result"]] for x in
+                    suite_execution["test_case_info"]]
     table2 = _get_table(header_list=header_list, list_of_rows=list_of_rows)
 
     suite_detail_url = """
@@ -247,15 +266,17 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
         # print html
 
         subject = "Automation: {}: {} P:{} F:{}".format(suite_execution["suite_result"],
-                                            suite_execution["fields"]["suite_path"],
-                                            suite_execution["num_passed"],
-                                            suite_execution["num_failed"])
+                                                        suite_execution["fields"]["suite_path"],
+                                                        suite_execution["num_passed"],
+                                                        suite_execution["num_failed"])
 
-        if is_regression_server() or is_performance_server():
+        try:
             result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
             scheduler_logger.info("Sent mail")
             if not result["status"]:
                 scheduler_logger.error("Send Mail: {}".format(result["error_message"]))
+        except Exception as ex:
+            scheduler_logger.error("Send Mail Failure: {}".format(str(ex)))
 
 
 if __name__ == "__main__":

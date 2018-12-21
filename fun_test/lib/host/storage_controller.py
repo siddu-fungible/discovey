@@ -6,14 +6,15 @@ import os, sys
 
 
 class StorageController(DpcshClient):
+    TIMEOUT = 2
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
         super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
 
-    def ip_cfg(self, ip, command_duration=1):
+    def ip_cfg(self, ip, command_duration=TIMEOUT):
         cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": ip}}
         return self.json_execute(verb=self.mode, data=cfg_dict, command_duration=command_duration)
 
-    def create_thin_block_volume(self, capacity, uuid, block_size, name, command_duration=1):
+    def create_thin_block_volume(self, capacity, uuid, block_size, name, use_ls=False, command_duration=TIMEOUT):
         create_dict = {}
         create_dict["class"] = "volume"
         create_dict["opcode"] = "VOL_ADMIN_OPCODE_CREATE"
@@ -23,22 +24,46 @@ class StorageController(DpcshClient):
         create_dict["params"]["block_size"] = block_size
         create_dict["params"]["uuid"] = uuid
         create_dict["params"]["name"] = name
+        if use_ls:
+            create_dict["params"]["use_ls"] = use_ls
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
-    def volume_attach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=3):
+    def delete_thin_block_volume(self, capacity, uuid, block_size, name, command_duration=TIMEOUT):
+        delete_dict = {"class": "volume", "opcode": "VOL_ADMIN_OPCODE_DELETE", "params": {}}
+        delete_dict["params"]["type"] = "VOL_TYPE_BLK_LOCAL_THIN"
+        delete_dict["params"]["capacity"] = capacity
+        delete_dict["params"]["block_size"] = block_size
+        delete_dict["params"]["uuid"] = uuid
+        delete_dict["params"]["name"] = name
+        return self.json_execute(verb=self.mode, data=delete_dict, command_duration=command_duration)
+
+    def volume_attach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=TIMEOUT):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
                                   "remote_ip": remote_ip}}
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
 
-    def volume_attach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=4, command_duration=3):
+    def volume_detach_remote(self, ns_id, uuid, remote_ip, huid=7, ctlid=0, fnid=5, command_duration=TIMEOUT):
+        detach_dict = {"class": "controller",
+                       "opcode": "DETACH",
+                       "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid,
+                                  "remote_ip": remote_ip}}
+        return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
+
+    def volume_attach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=2, command_duration=TIMEOUT):
         attach_dict = {"class": "controller",
                        "opcode": "ATTACH",
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
         return self.json_execute(verb=self.mode, data=attach_dict, command_duration=command_duration)
 
-    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid, command_duration=2):
+    def volume_detach_pcie(self, ns_id, uuid, huid=0, ctlid=0, fnid=2, command_duration=TIMEOUT):
+        detach_dict = {"class": "controller",
+                       "opcode": "DETACH",
+                       "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
+        return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
+
+    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, remote_nsid, command_duration=TIMEOUT):
         create_dict = {"class": "volume",
                        "opcode": "VOL_ADMIN_OPCODE_CREATE",
                        "params": {"type": "VOL_TYPE_BLK_RDS",
@@ -50,7 +75,7 @@ class StorageController(DpcshClient):
                                   "remote_nsid": remote_nsid}}
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
-    def create_replica_volume(self, capacity, block_size, uuid, name, pvol_id, command_duration=1):
+    def create_replica_volume(self, capacity, block_size, uuid, name, pvol_id, command_duration=TIMEOUT):
         create_dict = {"class": "volume",
                        "opcode": "VOL_ADMIN_OPCODE_CREATE",
                        "params": {"type": "VOL_TYPE_BLK_REPLICA",
@@ -63,7 +88,7 @@ class StorageController(DpcshClient):
                                   "pvol_id": pvol_id}}
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
-    def create_volume(self, command_duration=1, **kwargs):
+    def create_volume(self, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
         volume_dict["class"] = "volume"
         volume_dict["opcode"] = "VOL_ADMIN_OPCODE_CREATE"
@@ -73,7 +98,7 @@ class StorageController(DpcshClient):
                 volume_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
 
-    def delete_volume(self, command_duration=1, **kwargs):
+    def delete_volume(self, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
         volume_dict["class"] = "volume"
         volume_dict["opcode"] = "VOL_ADMIN_OPCODE_DELETE"
@@ -83,15 +108,15 @@ class StorageController(DpcshClient):
                 volume_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
 
-    def peek(self, props_tree, command_duration=2):
+    def peek(self, props_tree, command_duration=TIMEOUT):
         props_tree = "peek " + props_tree
-        return self.command(props_tree, legacy=True)
+        return self.command(props_tree, legacy=True, command_duration=command_duration)
 
-    def poke(self, props_tree, command_duration=2):
+    def poke(self, props_tree, command_duration=TIMEOUT):
         props_tree = "poke " + props_tree
-        return self.command(props_tree, legacy=True)
+        return self.command(props_tree, legacy=True, command_duration=command_duration)
 
-    def fail_volume(self, command_duration=1, **kwargs):
+    def fail_volume(self, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
         volume_dict["class"] = "volume"
         volume_dict["opcode"] = "VOL_ADMIN_OPCODE_INJECT_FAULT"

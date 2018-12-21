@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block javascript %}
+    {{ block.super }}
+    <script src="{% static "js/qa_dashboard/test.js" %}"></script>
+    <!--<script src="{% static "js/qa_dashboard/editable_metric_chart.js" %}"></script>-->
+{% endblock %}
+{% block content %}
+    {% verbatim %}
+    <div class="content" ng-controller="testController">
+        <label>Select module</label>
+        <table ng-if="grid">
+            <tr ng-repeat="row in grid">
+                <td ng-repeat="node in row">
+                    <editable-metric-chart
+                            chart-name="node.name"
+                            model-name="node.metricModelName"
+                            tooltip-formatter="tooltipFormatter" atomic="atomic" chart-only="true">
+                    </editable-metric-chart>
+                </td>
+            </tr>
+
+        </table>
+    </div>
+    {% endverbatim %}
+{% endblock %}

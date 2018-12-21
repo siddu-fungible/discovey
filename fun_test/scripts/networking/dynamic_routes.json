@@ -1,0 +1,10 @@
+{
+  "docker_host": "10.1.23.103",
+  "docker_user": "user",
+  "docker_password": "password1",
+  "ifname": 0,
+  "mac_address": "00:de:ad:be:ef:00",
+  "ip_address": "76.0.0.8",
+  "dpc_cli_machine_ip": "10.1.21.120",
+  "dpc_cli_port": 40221
+}

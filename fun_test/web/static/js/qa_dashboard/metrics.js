@@ -1,6 +1,6 @@
 'use strict';
 
-function MetricsController($scope, $http, commonService, $timeout, $modal) {
+function MetricsController($scope, $http, $window, commonService, $timeout, $modal) {
     let ctrl = this;
 
     ctrl.$onInit = function () {
@@ -67,6 +67,11 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
         }).result.then(function () {
         }).catch(function () {
         });
+    };
+
+    $scope.showScores = (chartName, modelName) => {
+        let url = "/metrics/score_table/" + chartName + "/" + modelName;
+        $window.open(url, '_blank');
     };
 
     function EditChartController($modalInstance, $scope, commonService, $http, chartName, modelName) {
@@ -179,7 +184,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
 
                 // lets validate all inputs
                 $scope.addDataSet["inputs"].forEach((oneField) => {
-                    if(!oneField.selectedChoice && oneField.name !== "input_date_time") {
+                    if(!oneField.selectedChoice && oneField.name !== "input_date_time" && oneField.choices.length) {
                         let message = "Please select a choice for " + oneField.name;
                         alert(message);
                         error = true;
@@ -228,6 +233,7 @@ function MetricsController($scope, $http, commonService, $timeout, $modal) {
             payload["negative_gradient"] = $scope.negativeGradient;
             payload["y1_axis_title"] = $scope.y1AxisTitle;
             payload["y2_axis_title"] = $scope.y2AxisTitle;
+            payload["leaf"] = true;
 
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
                 if(data) {

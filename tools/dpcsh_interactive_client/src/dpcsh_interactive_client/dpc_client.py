@@ -98,7 +98,7 @@ class DpcClient(object):
         print("Raw DPCSH Result")
         print(result)
 
-    def execute(self, verb, arg_list=None):
+    def execute(self, verb, arg_list=None, tid=0):
         jdict = None
         result = None
         output = ""
@@ -106,11 +106,11 @@ class DpcClient(object):
             self.connect(ensure_connect=False)
             if arg_list:
                 if type(arg_list) is not list:
-                    jdict = {"verb": verb, "arguments": [arg_list], "tid": 0}
+                    jdict = {"verb": verb, "arguments": [arg_list], "tid": tid}
                 elif type(arg_list) is list:
-                    jdict = {"verb": verb, "arguments": arg_list, "tid": 0}
+                    jdict = {"verb": verb, "arguments": arg_list, "tid": tid}
             else:
-                jdict = {"verb": verb, "arguments": [], "tid": 0}
+                jdict = {"verb": verb, "arguments": [], "tid": tid}
 
             command = "{}\n".format(json.dumps(jdict))
             self.sendall(command)

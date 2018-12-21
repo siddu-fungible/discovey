@@ -1,7 +1,7 @@
 {
   "RndDataWriteAndReadWithDataVolumeFailure": {
-    "ndata_partition_start_range": 16,
-    "ndata_partition_end_range": 16,
+    "ndata_partition_start_range": 8,
+    "ndata_partition_end_range": 8,
     "nparity_start_range": 4,
     "nparity_end_range": 4,
     "max_parity": 8,
@@ -10,9 +10,9 @@
     "reboot_after_config": 1,
     "volumes": ["ndata", "nparity", "ec", "lsv"],
     "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
-    "volume_capacity": {"ndata": 16777216, "nparity": 16777216, "ec": 16777216},
-    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096},
+                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"ndata": 16777216, "nparity": 16777216, "ec": 16777216, "jvol": 524288},
+    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
     // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
@@ -28,8 +28,8 @@
     "check_lsv_stats": 0
   },
   "ZeroDataWriteAndReadWithDataVolumeFailure": {
-    "ndata_partition_start_range": 16,
-    "ndata_partition_end_range": 16,
+    "ndata_partition_start_range": 8,
+    "ndata_partition_end_range": 8,
     "nparity_start_range": 4,
     "nparity_end_range": 4,
     "max_parity": 8,
@@ -38,9 +38,9 @@
     "reboot_after_config": 1,
     "volumes": ["ndata", "nparity", "ec", "lsv"],
     "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV"},
-    "volume_capacity": {"ndata": 16777216, "nparity": 16777216, "ec": 16777216},
-    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096},
+                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"ndata": 16777216, "nparity": 16777216, "ec": 16777216, "jvol": 524288},
+    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
     // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
@@ -52,7 +52,7 @@
     "output_data": "/tmp/output",
     "dataset_size": 262144,
     // Head room needed for the LS volume in percentage
-    "lsv_pct": 0.32,
+    "lsv_pct": 0.52,
     "check_lsv_stats": 0
   }
 }

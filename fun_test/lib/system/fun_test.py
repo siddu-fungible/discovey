@@ -15,6 +15,7 @@ import signal
 from web.fun_test.web_interface import get_homepage_url
 import pexpect
 from uuid import getnode as get_mac
+from uuid import uuid4
 import getpass
 from threading import Thread
 from inspect import getargspec
@@ -66,6 +67,13 @@ class FunTestThread(Thread):
             self.func()
 
 
+class DatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return super(DatetimeEncoder, obj).default(obj)
+        except TypeError:
+            return str(obj)
+
 class FunTest:
     PASSED = RESULTS["PASSED"]
     FAILED = RESULTS["FAILED"]
@@ -87,16 +95,17 @@ class FunTest:
         LOG_LEVEL_DEBUG: '\033[94m',
         LOG_LEVEL_CRITICAL: '\033[91m',
         LOG_LEVEL_NORMAL: '',
-        "RESET": '\033[30m',
+        "RESET": '\033[0m',
         "GREEN": '\033[92m'
     }
+
 
     fun_test_thread_id = 0
 
     def __init__(self):
         if "DISABLE_FUN_TEST" in os.environ:
 
-            def black_hole(*args):
+            def black_hole(*args, **kwargs):
                 pass
             self.log = black_hole
             return
@@ -127,9 +136,13 @@ class FunTest:
         parser.add_argument('--local_settings_file',
                             dest="local_settings_file",
                             default=None)
+        parser.add_argument('--environment', dest="environment", default=None)
         args = parser.parse_args()
         if args.disable_fun_test:
+            self.fun_test_disabled = True
             return
+        else:
+            self.fun_test_disabled = False
         self.logs_dir = args.logs_dir
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
@@ -137,6 +150,8 @@ class FunTest:
         self.current_test_case_execution_id = None
         self.build_url = args.build_url
         self.local_settings_file = args.local_settings_file
+        self.abort_requested = False
+        self.environment = args.environment
         self.local_settings = {}
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
@@ -151,7 +166,9 @@ class FunTest:
         (frame, file_name, line_number, function_name, lines, index) = \
             inspect.getouterframes(inspect.currentframe())[2]
 
+        self.original_sig_int_handler = None
         if threading.current_thread().__class__.__name__ == '_MainThread':
+            self.original_sig_int_handler = signal.getsignal(signal.SIGINT)
             signal.signal(signal.SIGINT, self.exit_gracefully)
 
         self.initialized = False
@@ -166,7 +183,6 @@ class FunTest:
         script_file_name_without_extension = self.script_file_name.replace(".py", "")
 
         self.test_metrics = collections.OrderedDict()
-
 
         html_log_file = "{}.html".format(script_file_name_without_extension)
         if self.relative_path:
@@ -185,12 +201,29 @@ class FunTest:
         self.shared_variables = {}
         if self.local_settings_file:
             self.local_settings = self.parse_file_to_json(file_name=self.local_settings_file)
+        self.start_time = get_current_time()
         self.wall_clock_timer = FunTimer()
         self.wall_clock_timer.start()
         self.fun_test_threads = {}
         self.fun_test_timers = []
         self.version = "1"
         self.determine_version()
+
+
+    def abort(self):
+        self.abort_requested = True
+
+    def get_start_time(self):
+        return self.start_time
+
+    def get_job_environment(self):
+        result = {}
+        if self.environment:
+            try:
+                result = json.loads(self.environment)
+            except Exception as ex:
+                self.critical("Invalid JSON format: %s " % str(ex))
+        return result
 
     def get_local_setting(self, setting):
         result = None
@@ -258,25 +291,30 @@ class FunTest:
             func(**kwargs)
 
     def join_thread(self, fun_test_thread_id, sleep_time=5):
-        thread_info = self.fun_test_threads[fun_test_thread_id]
-        thread = thread_info["thread"]
-        if thread:
-            success = False
-            while not success:
-                try:
-                    thread.join()
-                    success = True
-                except RuntimeError as r:
-                    r_string = str(r)
-                    if "cannot join thread before it is started" not in r_string:
-                        fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
-                    else:
-                        fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id), seconds=sleep_time)
-        else:
-            fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
-            timer = thread_info["timer"]
-            while timer.isAlive():
-                fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+        thread_complete = False
+        while not thread_complete:
+            thread_info = self.fun_test_threads[fun_test_thread_id]
+            thread = thread_info["thread"]
+            if thread:
+                if not thread_complete:
+                    try:
+                        thread.join()
+
+                    except RuntimeError as r:
+                        r_string = str(r)
+                        if "cannot join thread before it is started" not in r_string:
+                            fun_test.critical("Thread-id: {} Runtime error. {}".format(fun_test_thread_id, r))
+                        else:
+                            fun_test.sleep(message="Thread-id: {} Waiting for thread to start".format(fun_test_thread_id),
+                                           seconds=sleep_time)
+                    thread_complete = True
+            else:
+                fun_test.log("Thread-id: {} has probably not started. Checking if timer should be complete first".format(fun_test_thread_id))
+                timer = thread_info["timer"]
+                while timer.isAlive():
+                    fun_test.sleep(message="Timer is still alive", seconds=sleep_time)
+                if not thread_info["as_thread"]:
+                    thread_complete = True
 
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
@@ -390,43 +428,39 @@ class FunTest:
 
     def critical(self, message):
         message = str(message)
-        tb = sys.exc_info()[2]
-        s = ""
-        stack_found = False
-        if hasattr(tb, "tb_next"):
-            a = tb.tb_next
-            if a:
-                traceback.print_tb(a)
-                f = traceback.format_tb(a)
-                s = "\n".join(f)
-                stack_found = True
-        if not stack_found:
-            s = traceback.format_stack()
-            if "format_stack" in s[-1]:
-                s = s[: -1]
+        exc_type, exc_value, exc_traceback = sys.exc_info()
 
-        asserts_present = None
-        s2 = list(s)
-        s2.reverse()
-        for index, l in enumerate(s2):
-
-            one_assert_found = None
-            for m in ["in test_assert", "in test_assert_expected", "in simple_assert"]:
-                if m in l:
-                    asserts_present = True
-                    one_assert_found = True
-                    break
-            if asserts_present and not one_assert_found:
-                assert_string = l
-                s = s[: len(s) - index]
-                self.log(message="ASSERT Raised by: {}".format(assert_string), level=self.LOG_LEVEL_CRITICAL)
-                break
-
-        stack_s = "".join(s)
-        message = "\nTraceback:\n" + message + "\n" + stack_s
+        tb = traceback.format_tb(exc_traceback)
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
         self.log(message=message, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+
+        if exc_traceback:
+            self.log(message="***** Last Exception At *****", level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+            last_exception_s = "".join(tb)
+            self.log(message=last_exception_s, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+        traceback_stack = traceback.format_stack()
+        if traceback_stack:
+            asserts_present = None
+            s2 = list(traceback_stack)
+            s2.reverse()
+            for index, l in enumerate(s2):
+
+                one_assert_found = None
+                for m in ["in test_assert", "in test_assert_expected", "in simple_assert"]:
+                    if m in l:
+                        asserts_present = True
+                        one_assert_found = True
+                        break
+                if asserts_present and not one_assert_found:
+                    assert_string = l
+                    s2 = s2[: len(s2) - index]
+                    self.log(message="ASSERT Raised by: {}".format(assert_string), level=self.LOG_LEVEL_CRITICAL)
+                    break
+            self.log(message="***** Traceback Stack *****", level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+            stack_s = "".join(traceback_stack[:-1])
+            self.log(message=stack_s, level=self.LOG_LEVEL_CRITICAL, calling_module=calling_module)
+
 
     def _get_module_name(self, outer_frames):
         module_name = os.path.basename(outer_frames[0][1]).replace(".py", "")
@@ -446,7 +480,7 @@ class FunTest:
         return module_name in self.logging_selected_modules
 
     def dict_to_json_string(self, d):
-        return json.dumps(d, indent=4)
+        return json.dumps(d, indent=4, cls=DatetimeEncoder)
 
     def log(self,
             message,
@@ -514,9 +548,9 @@ class FunTest:
                 this_format = "{:<" + str(max_chars_per_column) + "} {}"
                 this_k = k[start: end]
                 if not start:
-                    print this_format.format(this_k, v)
+                    fun_test.log(this_format.format(this_k, v))
                 else:
-                    print this_format.format(this_k, "")
+                    fun_test.log(this_format.format(this_k, ""))
                 if len_k > max_chars_per_column:
                     start += min(len_k - start, max_chars_per_column)
                     end += min(len_k - end, max_chars_per_column)
@@ -563,7 +597,7 @@ class FunTest:
 
     def safe(self, the_function):
         def inner(*args, **kwargs):
-            if self.debug_enabled and self.function_tracing_enabled:
+            if self.debug_enabled and self.function_tracing_enabled and (not self.fun_test_disabled):
                 args_s = "args:" + ",".join([str(x) for x in args])
                 args_s += " kwargs:" + ",".join([(k + ":" + str(v)) + " " for k, v in kwargs.items()])
                 self.debug(args_s)
@@ -719,10 +753,13 @@ class FunTest:
 
     def exit_gracefully(self, sig, _):
         fun_test.critical("Unexpected Exit")
+
         if fun_test.suite_execution_id:
             models_helper.update_test_case_execution(test_case_execution_id=fun_test.current_test_case_execution_id,
                                                      suite_execution_id=fun_test.suite_execution_id,
                                                      result=fun_test.FAILED)
+            signal.signal(signal.SIGINT, self.original_sig_int_handler)
+        sys.exit(-1)
 
     def _get_flat_file_name(self, path):
         parts = path.split("/")
@@ -738,8 +775,6 @@ class FunTest:
                 result = True
                 break
         return result
-
-
 
     def inspect(self, module_name):
         result = {}
@@ -803,18 +838,28 @@ class FunTest:
         # target_port, source_file_path, target_username, target_ip, target_file_path)
         the_password = source_password
         if target_ip:
-            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(recursive,
+            scp_command = "scp {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P {} {} {}@{}:{}".format(recursive,
                                                                                             target_port,
                                                                                             source_file_path,
                                                                                             target_username,
                                                                                             target_ip,
                                                                                             target_file_path)
-            target_password = the_password
+            the_password = target_password
         elif source_ip:
-            scp_command = "scp {} -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(recursive, source_port,
+            scp_command = "scp {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}".format(recursive, source_port,
                                                                                             source_username,
                                                                                             source_ip,
                                                                                             source_file_path,
+                                                                                            target_file_path)
+
+        if target_ip and source_ip:
+            scp_command = "scp {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P {} {}@{}:{} {}@{}:{}".format(recursive,
+                                                                                            source_port,
+                                                                                            source_username,
+                                                                                            source_ip,
+                                                                                            source_file_path,
+                                                                                            target_username,
+                                                                                            target_ip,
                                                                                             target_file_path)
 
         handle = pexpect.spawn(scp_command, env={"TERM": "dumb"}, maxread=4096)
@@ -830,6 +875,7 @@ class FunTest:
         max_loop_count = 10
 
         attempt = 0
+        source_password_sent = False
         try:
             while attempt < max_retry_count and not transfer_complete:
                 current_loop_count = 0
@@ -837,7 +883,13 @@ class FunTest:
                     try:
                         i = handle.expect(expects.values(), timeout=timeout)
                         if i == 0:
-                            fun_test.debug("Sending: %s" % target_password)
+                            if target_ip and source_ip:  # Remote to remote scp
+                                if not source_password_sent:
+                                    the_password = source_password
+                                    source_password_sent = True
+                                else:
+                                    the_password = target_password
+                            fun_test.debug("Sending: %s" % the_password)
                             handle.sendline(the_password)
                             current_loop_count += 1
                         if i == 2:
@@ -855,6 +907,20 @@ class FunTest:
             self.critical(critical_str)
 
         return transfer_complete
+
+    def get_temp_file_name(self):
+        return str(uuid4())
+
+    def get_temp_file_path(self, file_name):
+        full_path = SYSTEM_TMP_DIR + "/" + file_name
+        return full_path
+
+    def remove_file(self, file_path):
+        os.remove(file_path)
+        return True
+
+    def get_helper_dir_path(self):
+        return self.get_script_parent_directory() + "/helper"
 
 
 fun_test = FunTest()
@@ -905,6 +971,7 @@ class FunTestScript(object):
                                                                  suite_execution_id=fun_test.suite_execution_id,
                                                                  result=fun_test.IN_PROGRESS,
                                                                  path=fun_test.relative_path)
+            fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
                 new_order = []
                 for entry in self.test_case_order:
@@ -932,8 +999,12 @@ class FunTestScript(object):
 
                 self.test_cases = new_order
 
+            ids = set()
             for test_case in self.test_cases:
                 test_case.describe()
+                if test_case.id in ids:
+                    fun_test.test_assert(False, "Test-case Id: {} is duplicated".format(test_case.id))
+                ids.add(test_case.id)
                 if fun_test.selected_test_case_ids:
                     if test_case.id not in fun_test.selected_test_case_ids:
                         continue
@@ -993,6 +1064,8 @@ class FunTestScript(object):
         try:
             if super(self.__class__, self).setup():
                 for test_case in self.test_cases:
+                    if fun_test.abort_requested:
+                        break
 
                     test_case.describe()
                     if fun_test.selected_test_case_ids:
@@ -1009,13 +1082,19 @@ class FunTestScript(object):
                                                                      result=fun_test.IN_PROGRESS)
                         test_case.setup()
                         test_case.run()
-                        test_case.cleanup()
-                        test_result = FunTest.PASSED
+                        # We should not call the test case cleanup here, because if there is error or exception occurs
+                        # in the cleanup section, then the same cleanup section will be called once again in the below
+                        # except clause
+                        # test_case.cleanup()
+                        # test_result = FunTest.PASSED
                     except TestException:
                         try:
                             test_case.cleanup()
                         except Exception as ex:
                             fun_test.critical(str(ex))
+                        if test_case.abort_on_failure:
+                            fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
+                            fun_test.abort()
                     except Exception as ex:
                         fun_test.critical(str(ex))
                         fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
@@ -1023,6 +1102,28 @@ class FunTestScript(object):
                             test_case.cleanup()
                         except Exception as ex:
                             fun_test.critical(str(ex))
+                        if test_case.abort_on_failure:
+                            fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
+                            fun_test.abort()
+                    # If the test case setup & run completes properly run the test case's cleanup
+                    else:
+                        try:
+                            test_case.cleanup()
+                            test_result = FunTest.PASSED
+                        except TestException as ex:
+                            fun_test.critical(str(ex))
+                            if test_case.abort_on_failure:
+                                fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id,
+                                                                                           test_case.summary))
+                                fun_test.abort()
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                            fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
+                            if test_case.abort_on_failure:
+                                fun_test.log(
+                                    "Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
+                                fun_test.abort()
+
                     fun_test._add_xml_trace()
                     fun_test.print_test_case_summary(fun_test.current_test_case_id)
                     fun_test._end_test(result=test_result)
@@ -1047,11 +1148,12 @@ class FunTestScript(object):
 class FunTestCase:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
+    def __init__(self, abort_on_failure=False):
         self.id = None
         self.summary = None
         self.steps = None
         self._added_to_script = None
+        self.abort_on_failure = abort_on_failure
 
     def __str__(self):
         s = "{}: {}".format(self.id, self.summary)
