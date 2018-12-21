@@ -630,7 +630,7 @@
     "wred_weight": 2,
     "wred_min_thr": 10,
     "wred_max_thr": 90,
-    "stream_pps_percent": [90, 95, 120],
+    "stream_pps_percent": [90, 95, 105],
     "avg_period": 1024,
     "cap_avg_sz": 1,
     "cap_avg_enable": 1,

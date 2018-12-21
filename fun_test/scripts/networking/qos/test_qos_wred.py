@@ -8,8 +8,7 @@ from qos_helper import *
 from collections import OrderedDict
 import copy
 
-num_ports = 2
-total_normal_streams = 4
+num_ports = 3
 config = nu_config_obj.read_dut_config()
 qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
 if config['type'] == 'f1':
@@ -22,12 +21,14 @@ wred_q_drop = 'wred_q_drop'
 queue_list = [x for x in range(16)]
 reversed_list = copy.deepcopy(queue_list)
 percent_threshold = 5
+DUT_ECN_COUNT = "dut_ecn_count"
+SPIRENT_ECN_COUNT = "spirent_ecn_count"
 
 
 def get_percent_diff(rx_result, tx_result):
     result = None
     try:
-        temp = (rx_result - tx_result)/float(tx_result)
+        temp = (rx_result - tx_result) / float(tx_result)
         result = temp * 100
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -46,12 +47,8 @@ class SpirentSetup(FunTestScript):
                 """)
 
     def setup(self):
-        global template_obj, port_1, port_2, pfc_stream, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, port_obj_list, dut_port_list, mac_header, \
-            pfc_frame, normal_stream, subscribe_results
-
-        min_frame_length = 64
-        max_frame_length = 1500
+        global template_obj, port_1, port_2, port_3, pfc_stream, network_controller_obj, dut_port_2, \
+            dut_port_1, hnu, shape, port_obj_list, dut_port_list, normal_stream, subscribe_results
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
@@ -77,9 +74,11 @@ class SpirentSetup(FunTestScript):
         dut_port_list = []
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
+        dut_port_3 = dut_config['ports'][2]
         dut_port_list.append(dut_port_1)
         dut_port_list.append(dut_port_2)
-        fun_test.log("Using dut ports %s, and %s" % (dut_port_1, dut_port_2))
+        dut_port_list.append(dut_port_3)
+        fun_test.log("Using dut ports %s, %s and %s" % (dut_port_1, dut_port_2, dut_port_3))
 
         # Create network controller object
         dpcsh_server_ip = dut_config['dpcsh_tcp_proxy_ip']
@@ -103,8 +102,9 @@ class SpirentSetup(FunTestScript):
         port_obj_list = result['port_list']
         port_1 = port_obj_list[0]
         port_2 = port_obj_list[1]
+        port_3 = port_obj_list[2]
 
-        for port_obj in port_obj_list:
+        for port_obj in port_obj_list[::2]:
             gen_config_obj = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                              duration_mode=GeneratorConfig.DURATION_MODE_CONTINOUS,
                                              advanced_interleaving=True)
@@ -114,57 +114,34 @@ class SpirentSetup(FunTestScript):
                                                                  generator_config_obj=gen_config_obj)
             fun_test.test_assert(config_obj, "Creating generator config on port %s" % port_obj)
 
-            if port_obj == port_1:
-                for i in range(total_normal_streams):
-                    fun_test.log("Creating stream with starting pps as 40")
-                    normal_stream = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                                min_frame_length=min_frame_length, max_frame_length=max_frame_length,
-                                                frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
-                                                load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=40)
-                    streamblock_1 = template_obj.configure_stream_block(normal_stream, port_handle=port_obj)
-                    fun_test.test_assert(streamblock_1, "Ensure streamblock is created on port %s" % port_obj)
+            fun_test.log("Creating stream with starting pps as 40")
+            normal_stream = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
+                                        frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_FIXED,
+                                        load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=40)
+            streamblock_1 = template_obj.configure_stream_block(normal_stream, port_handle=port_obj)
+            fun_test.test_assert(streamblock_1, "Ensure streamblock is created on port %s" % port_obj)
 
-                    # Configure mac and ip on the stream
-                    ethernet = Ethernet2Header(destination_mac=destination_mac1)
-                    frame_stack = template_obj.stc_manager.configure_frame_stack(
-                        stream_block_handle=normal_stream.spirent_handle, header_obj=ethernet,
-                        delete_header=[Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE])
-                    fun_test.test_assert(frame_stack,
-                                         "Added ethernet header to stream %s" % normal_stream._spirent_handle)
+            # Configure mac and ip on the stream
+            ethernet = Ethernet2Header(destination_mac=destination_mac1)
+            frame_stack = template_obj.stc_manager.configure_frame_stack(
+                stream_block_handle=normal_stream.spirent_handle, header_obj=ethernet,
+                delete_header=[Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE])
+            fun_test.test_assert(frame_stack,
+                                 "Added ethernet header to stream %s" % normal_stream._spirent_handle)
 
-                    ipv4 = Ipv4Header(destination_address=destination_ip1)
-                    frame_stack = template_obj.stc_manager.configure_frame_stack(
-                        stream_block_handle=normal_stream._spirent_handle, header_obj=ipv4)
-                    fun_test.test_assert(frame_stack,
-                                         "Added ipv4 header to stream %s" % normal_stream._spirent_handle)
+            ipv4 = Ipv4Header(destination_address=destination_ip1)
+            frame_stack = template_obj.stc_manager.configure_frame_stack(
+                stream_block_handle=normal_stream._spirent_handle, header_obj=ipv4)
+            fun_test.test_assert(frame_stack,
+                                 "Added ipv4 header to stream %s" % normal_stream._spirent_handle)
 
-                    fun_test.test_assert(normal_stream, "Ensure normal stream is created on port %s" % port_obj)
-                    streamblock_objs_list.append(normal_stream)
-                    streamblock_handles_list.append(normal_stream.spirent_handle)
-
-            else:
-                reserved = '0064' * 13
-                # Create pfc stream
-                fun_test.log("Create pfc stream for priority %s" % 0)
-
-                pfc_stream = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=323,
-                                         fixed_frame_length=64, insert_signature=False)
-                streamblock_4 = template_obj.configure_stream_block(pfc_stream, port_handle=port_obj)
-                fun_test.log("Created pfc stream on %s " % port_2)
-
-                out = template_obj.configure_priority_flow_control_header(pfc_stream,
-                                                                          class_enable_vector=True,
-                                                                          time0=100,
-                                                                          ls_octet='00000001', reserved=reserved)
-                fun_test.test_assert(out['result'], message="Added frame stack")
-
-                mac_header = out['ethernet8023_mac_control_header_obj']
-                pfc_frame = out['pfc_header_obj']
-                streamblock_handles_list.append(pfc_stream.spirent_handle)
+            fun_test.test_assert(normal_stream, "Ensure normal stream is created on port %s" % port_obj)
+            streamblock_objs_list.append(normal_stream)
+            streamblock_handles_list.append(normal_stream.spirent_handle)
 
         # Subscribe to results
         project = template_obj.stc_manager.get_project_handle()
-        subscribe_results = template_obj.subscribe_to_all_results(parent=project)
+        subscribe_results = template_obj.subscribe_to_all_results(parent=project, diff_serv=True, port=port_2)
         fun_test.test_assert(subscribe_results['result'], "Subscribing to results")
         del subscribe_results['result']
 
@@ -176,8 +153,9 @@ class SpirentSetup(FunTestScript):
                 fun_test.test_assert(set_ingress_priority_map, message="Set priority to pg map")
             else:
                 # set egress priority to pg map list
-                set_egress_priority_map = network_controller_obj.set_qos_queue_to_priority_map(port_num=dut_port,
-                                                                                               map_list=reversed_list)
+                set_egress_priority_map = network_controller_obj.set_qos_queue_to_priority_map(
+                    port_num=dut_port,
+                    map_list=reversed_list)
                 fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
 
     def cleanup(self):
@@ -185,87 +163,62 @@ class SpirentSetup(FunTestScript):
 
 
 class Wred_Q0(FunTestCase):
+    test_type = QOS_PROFILE_WRED
     max_egress_load = qos_json_output['max_egress_load']
-    qos_profile_dict = qos_json_output[QOS_PROFILE_WRED]
+    qos_profile_dict = qos_json_output[test_type]
     normal_stream_pps_list = qos_profile_dict['stream_pps']
     timer = qos_profile_dict['wred_timer']
     min_thr = qos_profile_dict['wred_min_thr']
     max_thr = qos_profile_dict['wred_max_thr']
     wred_weight = qos_profile_dict['wred_weight']
     wred_enable = qos_profile_dict['wred_enable']
-    pfc_pps = qos_profile_dict['pfc_pps']
-    pfc_quanta = qos_profile_dict['pfc_quanta']
     prob_index = qos_profile_dict['wred_prob_index']
     prof_num = qos_profile_dict['wred_prof_num']
-    non_wred_load_percent = qos_profile_dict['non_wred_load_percent']
-    wred_queue_list = [0]
-    non_wred_queue_list = [1, 2, 3]
-    test_type = QOS_PROFILE_WRED
-    enable_ecn = 0
+    test_queue = 0
     avg_period = qos_profile_dict['avg_period']
     cap_avg_sz = qos_profile_dict['cap_avg_sz']
     stats_list = [q_depth, wred_q_drop]
+    max_queue_pps = 0
+    port_1_stream_load = normal_stream_pps_list['ingress_port_1']
+    port_3_stream_load_list = normal_stream_pps_list['ingress_port_2']
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test wred drop profiles on DUT for Q0 and Q1, Q2 and Q3 traffic must not be affected",
+                              summary="Test wred drop increases as queue depth increases on DUT for Q0 traffic during ",
                               steps="""
                               1. Update stream on port 1 to start with pps
-                              2. Modify pfc stream from port 2 for appropriate priority
                               3. setup wred config
-                              4. Start normal stream from port 1 and pfc from port 2
+                              4. Start stream from port 1 and port 3
                               5. Note down 5 iterations of wred_ecn stats for q depth and wred drops and take average of it
                               6. Now iterate step 5 for different pps for normal stream.
                               7. Verify that as q depth increases, wred drop increases
                               """)
 
-    def modify_pfc_stream(self):
-        pfc_frame.time0 = self.pfc_quanta
-
-        fun_test.log("Modify pfc stream to correct pps")
-
-        ls_octet = '00000001'
-        output = template_obj.stc_manager.configure_pfc_header(class_enable_vector=True, update=True,
-                                                               stream_block_handle=pfc_stream.spirent_handle,
-                                                               header_obj=pfc_frame, ls_octet=ls_octet)
-        fun_test.test_assert(output, message="Updated %s and %s for pfc stream %s" % (pfc_frame.time0,
-                                                                                      ls_octet,
-                                                                                      pfc_stream.spirent_handle))
-
-        # Update load value
-        pfc_stream.Load = self.pfc_pps
-        update_stream = template_obj.configure_stream_block(stream_block_obj=pfc_stream, update=True)
-        fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
-                            (self.pfc_pps, pfc_stream.spirent_handle))
-
     def setup(self):
-        load_value = get_load_value_from_load_percent(load_percent=self.non_wred_load_percent,
-                                                      max_egress_load=self.max_egress_load)
+        fun_test.log("Setting stream rate on stream coming from port %s to 80 percent of egress b/w" % port_1)
+        self.max_queue_pps = get_load_pps_for_each_queue(self.max_egress_load, 128, 1)
+
+        load_value = int(get_load_value_from_load_percent(load_percent=self.port_1_stream_load,
+                                                          max_egress_load=self.max_queue_pps))
         fun_test.simple_assert(load_value, "Ensure load value is calculated")
 
-        self.modify_pfc_stream()
-        
-        # Assgin dscp bits to stream
-        wred_streamblock_list = []
-        wred_streamblock_list.append(streamblock_objs_list[0])
-        
-        non_wred_streamblock_list = []
-        non_wred_streamblock_list.extend(streamblock_objs_list[1:])
+        # Update streamblock
+        if self.test_type == QOS_PROFILE_WRED:
+            wred_streamblock = streamblock_objs_list[0]
+            wred_streamblock.Load = load_value
+            update_stream = template_obj.configure_stream_block(stream_block_obj=wred_streamblock, update=True)
+            fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
+                                 (load_value, wred_streamblock.spirent_handle))
+        else:
+            for ecn_streamblock in streamblock_objs_list:
+                ecn_streamblock.Load = load_value
+                update_stream = template_obj.configure_stream_block(stream_block_obj=ecn_streamblock, update=True)
+                fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
+                                     (load_value, ecn_streamblock.spirent_handle))
 
-        for stream, queue_num in zip(wred_streamblock_list + non_wred_streamblock_list,
-                                     self.wred_queue_list + self.non_wred_queue_list):
-
-            dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
-                decimal_value_list=[queue_num], dscp_high=True, dscp_low=True)
-            dscp_high = dscp_values[queue_num]['dscp_high']
-            dscp_low = dscp_values[queue_num]['dscp_low']
-
-            # Update dscp value
-            dscp_set = template_obj.configure_diffserv(streamblock_obj=stream,
-                                                       dscp_high=dscp_high,
-                                                       dscp_low=dscp_low, update=True)
-            fun_test.test_assert(dscp_set, "Ensure dscp value of %s is updated on ip header for stream %s"
-                                 % (queue_num, stream.spirent_handle))
+                update_ecn = template_obj.configure_diffserv(streamblock_obj=ecn_streamblock, reserved=self.ecn_bits,
+                                                             update=True)
+                fun_test.test_assert(update_ecn, "Update ecn bits in stream %s" % ecn_streamblock.spirent_handle)
 
         set_prob = set_default_qos_probability(network_controller_obj=network_controller_obj,
                                                profile_type=self.test_type)
@@ -281,7 +234,8 @@ class Wred_Q0(FunTestCase):
                                                                        max_threshold=self.max_thr,
                                                                        wred_prob_index=self.prob_index)
 
-            set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2, queue_num=self.wred_queue_list[0],
+            set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
+                                                                             queue_num=self.test_queue,
                                                                              wred_enable=self.wred_enable,
                                                                              wred_weight=self.wred_weight,
                                                                              wred_prof_num=self.prof_num)
@@ -292,43 +246,44 @@ class Wred_Q0(FunTestCase):
                                                                       ecn_prob_index=self.prob_index)
 
             set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
-                                                                             queue_num=self.wred_queue_list[0],
-                                                                             enable_ecn=self.enable_ecn)
+                                                                             queue_num=self.test_queue,
+                                                                             enable_ecn=1)
         fun_test.test_assert(wred_profile, "Ensure profile is set for %s" % self.test_type)
         fun_test.test_assert(set_queue_cfg, "Ensure queue config is set for %s" % self.test_type)
 
-        start_streams = template_obj.stc_manager.start_traffic_stream(
-            stream_blocks_list=streamblock_handles_list)
-        fun_test.test_assert(start_streams, "Start running traffic")
-
-        fun_test.sleep("Executing traffic")
-
-        # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_2)
-
-        fun_test.log("Check if PFC frames are being rx at dut port %s" % dut_port_2)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
-        fun_test.simple_assert(dut_port_2_results, "Ensure dut stats are captured")
-
-        dut_port_2_pause_receive = get_dut_output_stats_value(dut_port_2_results, CBFC_PAUSE_FRAMES_RECEIVED,
-                                                              tx=False, class_value=self.wred_queue_list[0])
-        fun_test.simple_assert(dut_port_2_pause_receive, "PFC frames received on port %s")
-        fun_test.log("PFC frames are being rx on port %s" % dut_port_2)
-
     def cleanup(self):
+        if self.test_type == QOS_PROFILE_WRED:
+            set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
+                                                                             queue_num=self.test_queue,
+                                                                             wred_enable=0,
+                                                                             wred_weight=self.wred_weight,
+                                                                             wred_prof_num=self.prof_num)
+        else:
+            set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
+                                                                             queue_num=self.test_queue,
+                                                                             enable_ecn=0)
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=streamblock_handles_list)
         fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
     def run(self):
+        start_streams = template_obj.stc_manager.start_traffic_stream(
+            stream_blocks_list=streamblock_handles_list)
+        fun_test.test_assert(start_streams, "Start running traffic")
+
+        fun_test.sleep("Executing traffic", seconds=self.timer)
+
         output_avg_dict = OrderedDict()
-        for current_pps in self.normal_stream_pps_list:
+        for load_percent in self.port_3_stream_load_list:
+            current_pps = int(get_load_value_from_load_percent(load_percent=load_percent,
+                                                               max_egress_load=self.max_queue_pps))
+            fun_test.simple_assert(current_pps, "Ensure load value is calculated")
+
             output_avg_dict[str(current_pps)] = {}
 
             # Update streamblock
-            wred_streamblock = streamblock_objs_list[0]
+            wred_streamblock = streamblock_objs_list[1]
             wred_streamblock.Load = current_pps
             update_stream = template_obj.configure_stream_block(stream_block_obj=wred_streamblock, update=True)
             fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
@@ -340,7 +295,7 @@ class Wred_Q0(FunTestCase):
             # Take 5 observations of q_depth and wred_drops and do average
             observed_dict = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj, iterations=5,
                                                            stats_list=self.stats_list, port_num=dut_port_2,
-                                                           queue_num=self.wred_queue_list[0])
+                                                           queue_num=self.test_queue)
             fun_test.simple_assert(observed_dict['result'], "Get 5 observations")
             fun_test.log("5 observations captured for pps %s" % current_pps)
 
@@ -351,10 +306,10 @@ class Wred_Q0(FunTestCase):
                 output_avg_dict[str(current_pps)][stat] = avg_val
 
         pps_key_list = output_avg_dict.keys()
-        for i in range(0, len(pps_key_list)-1):
+        for i in range(0, len(pps_key_list) - 1):
             for stat in self.stats_list:
-                current_pps = self.normal_stream_pps_list[i]
-                next_pps = self.normal_stream_pps_list[i+1]
+                current_pps = pps_key_list[i]
+                next_pps = pps_key_list[i + 1]
                 fun_test.test_assert(output_avg_dict[str(next_pps)][stat] >
                                      output_avg_dict[str(current_pps)][stat],
                                      "Ensure stat %s has value incremented for pps %s as compared to pps %s and it "
@@ -362,130 +317,300 @@ class Wred_Q0(FunTestCase):
                                      (stat, next_pps, current_pps, output_avg_dict[str(next_pps)][stat],
                                       output_avg_dict[str(current_pps)][stat]))
 
-        # Check if q depth and wred q drops are incrementing
 
-        output = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_results,
-                                                                    streamblock_handle_list=streamblock_handles_list,
-                                                                    rx_summary_result=True, tx_stream_result=True)
-
-        for stream, queue in zip(streamblock_objs_list[1:], self.non_wred_queue_list):
-            tx_result = convert_bps_to_mbps(int(output[stream.spirent_handle]['tx_stream_result']['L1BitRate']))
-            rx_result = convert_bps_to_mbps(int(output[stream.spirent_handle]['rx_summary_result']['L1BitRate']))
-            # TODO: get % loss
-            percent_accept = get_percent_diff(rx_result, tx_result)
-            fun_test.test_assert(percent_accept <= percent_threshold,
-                                          message="Ensure no packet drop seen for queue %s when wred profile is "
-                                                  "applied on %s" % (queue, self.wred_queue_list[0]))
-
-
-class Wred_Q4(Wred_Q0):
-    wred_queue_list = [4]
-    non_wred_queue_list = [5, 6, 7]
+class ECN_10(Wred_Q0):
+    test_type = QOS_PROFILE_ECN
+    ecn_bits = ECN_BITS_10
+    qos_profile_dict = qos_json_output[test_type]
+    normal_stream_pps_list = qos_profile_dict['stream_pps']
+    timer = qos_profile_dict['ecn_timer']
+    min_thr = qos_profile_dict['ecn_min_thr']
+    max_thr = qos_profile_dict['ecn_max_thr']
+    wred_enable = qos_profile_dict['ecn_enable']
+    prob_index = qos_profile_dict['ecn_prob_index']
+    prof_num = qos_profile_dict['ecn_prof_num']
+    test_queue = 0
+    avg_period = qos_profile_dict['avg_period']
+    cap_avg_sz = qos_profile_dict['cap_avg_sz']
+    stats_list = [q_depth, wred_q_drop]
+    max_queue_pps = 0
+    port_1_stream_load = normal_stream_pps_list['ingress_port_1']
+    port_3_stream_load_list = normal_stream_pps_list['ingress_port_2']
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test wred drop profiles on DUT for Q4 and Q5, Q6 and Q7 traffic must not be affected",
+                              summary="Test ecn count increases as queue depth increases on DUT for Q0 traffic during "
+                                      "with ECN bits in packet set to 10",
                               steps="""
-                              1. Update stream on port 1 to start with pps
-                              2. Modify pfc stream from port 2 for appropriate priority
-                              3. setup wred config
-                              4. Start normal stream from port 1 and pfc from port 2
-                              5. Note down 5 iterations of wred_ecn stats for q depth and wred drops and take average of it
-                              6. Now iterate step 5 for different pps for normal stream.
-                              7. Verify that as q depth increases, wred drop increases
-                              """)
+                                  1. Update stream on port 1 to start with pps
+                                  3. setup ecn config
+                                  4. Start stream from port 1 and port 3
+                                  5. Note down 5 iterations of wred_ecn stats for q depth and ecn count and take average of it
+                                  6. Now iterate step 5 for different pps for normal stream.
+                                  7. Verify that as q depth increases, ecn count increases
+                                  8. For every iteration check if ecn count on dut and spirent match
+                                  """)
 
-    def modify_pfc_stream(self):
-        pfc_frame.time4 = self.pfc_quanta
+    def run(self):
+        output_avg_dict = OrderedDict()
+        for load_percent in self.port_3_stream_load_list:
+            current_pps = int(get_load_value_from_load_percent(load_percent=load_percent,
+                                                               max_egress_load=self.max_queue_pps))
+            fun_test.simple_assert(current_pps, "Ensure load value is calculated")
 
-        fun_test.log("Modify pfc stream to correct pps")
+            output_avg_dict[str(current_pps)] = {}
+            output_avg_dict[str(current_pps)][SPIRENT_ECN_COUNT] = 0
 
-        ls_octet = '00010000'
-        output = template_obj.stc_manager.configure_pfc_header(class_enable_vector=True, update=True,
-                                                               stream_block_handle=pfc_stream.spirent_handle,
-                                                               header_obj=pfc_frame, ls_octet=ls_octet)
-        fun_test.test_assert(output, message="Updated %s and %s for pfc stream %s" % (pfc_frame.time4,
-                                                                                      ls_octet,
-                                                                                      pfc_stream.spirent_handle))
+            # Update streamblock
+            wred_streamblock = streamblock_objs_list[1]
+            wred_streamblock.Load = current_pps
+            update_stream = template_obj.configure_stream_block(stream_block_obj=wred_streamblock, update=True)
+            fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
+                                 (current_pps, wred_streamblock.spirent_handle))
 
-        # Update load value
-        pfc_stream.Load = self.pfc_pps
-        update_stream = template_obj.configure_stream_block(stream_block_obj=pfc_stream, update=True)
-        fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
-                            (self.pfc_pps, pfc_stream.spirent_handle))
+            fun_test.sleep("Letting load to be applied")
+
+            fun_test.log("Get initial ecn count")
+            output_1 = network_controller_obj.get_qos_wred_ecn_stats(port_num=dut_port_2, queue_num=self.test_queue)
+            fun_test.simple_assert(output_1, "Get wred ecn stats")
+            ecn_count_before = int(output_1['ecn_count'])
+
+            # Clear spirent stats
+            for key in subscribe_results.iterkeys():
+                template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
+
+            start_streams = template_obj.stc_manager.start_traffic_stream(
+                stream_blocks_list=streamblock_handles_list)
+            fun_test.test_assert(start_streams, "Start running traffic")
+
+            fun_test.sleep("Executing traffic", seconds=self.timer)
+
+            fun_test.log("Taking 5 observations of q_depth and wred_drops for fps %s" % current_pps)
+            # Take 5 observations of q_depth and wred_drops and do average
+            observed_dict = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj, iterations=5,
+                                                           stats_list=self.stats_list, port_num=dut_port_2,
+                                                           queue_num=self.test_queue)
+            fun_test.simple_assert(observed_dict['result'], "Get 5 observations")
+            fun_test.log("5 observations captured for pps %s" % current_pps)
+
+            # Calculate average
+            for stat in self.stats_list:
+                avg_val = reduce(lambda a, b: a + b, observed_dict[stat]) / len(observed_dict[stat])
+                fun_test.log("Average value seen for stat %s for pps %s is %s" % (stat, current_pps, avg_val))
+                output_avg_dict[str(current_pps)][stat] = avg_val
+
+            # Stop traffic
+            stop_streams = template_obj.stc_manager.stop_traffic_stream(
+                stream_blocks_list=streamblock_handles_list)
+            fun_test.simple_assert(stop_streams, "Ensure dscp streams are stopped")
+
+            # Get dut ecn count and subtract with one taken before starting traffic
+            fun_test.log("Get initial ecn count after traffic is stopped")
+            output_1 = network_controller_obj.get_qos_wred_ecn_stats(port_num=dut_port_2, queue_num=self.test_queue)
+            fun_test.simple_assert(output_1, "Get wred ecn stats once")
+            ecn_count_after = int(output_1['ecn_count'])
+
+            # Add dut ecn count to output_avg_dict
+            dut_ecn_count = ecn_count_after - ecn_count_before
+            output_avg_dict[str(current_pps)][DUT_ECN_COUNT] = dut_ecn_count
+
+            # Get spirent count of ecn11
+            out = template_obj.stc_manager.get_port_diffserv_results(port_handle=port_2,
+                                                                     subscribe_handle=subscribe_results[
+                                                                         'diff_serv_subscribe'])
+
+            ecn_qos_val = template_obj.get_diff_serv_dscp_value_from_decimal_value(decimal_value_list=[self.test_queue],
+                                                                                   dscp_value=True)
+            qos_binary_value = get_ecn_qos_binary(qos_binary=ecn_qos_val[self.test_queue]['dscp_value'])
+            for key in out.keys():
+                if key == str(qos_binary_value):
+                    output_avg_dict[str(current_pps)][SPIRENT_ECN_COUNT] = int(out[key]['Ipv4FrameCount'])
+
+        pps_key_list = output_avg_dict.keys()
+        for i in range(0, len(pps_key_list) - 1):
+            for stat in self.stats_list:
+                current_pps = pps_key_list[i]
+                next_pps = pps_key_list[i + 1]
+                fun_test.test_assert(output_avg_dict[str(next_pps)][stat] >
+                                     output_avg_dict[str(current_pps)][stat],
+                                     "Ensure stat %s has value incremented for pps %s as compared to pps %s and it "
+                                     "is %s and %s respectively" %
+                                     (stat, next_pps, current_pps, output_avg_dict[str(next_pps)][stat],
+                                      output_avg_dict[str(current_pps)][stat]))
+
+        for key, val in output_avg_dict.iteritems():
+            fun_test.log("Check for pps %s" % key)
+
+            fun_test.test_assert_expected(expected=val[DUT_ECN_COUNT], actual=val[SPIRENT_ECN_COUNT],
+                                          message="Check ecn counts in DUT and seen on spirent match")
 
 
-class Wred_Q8(Wred_Q0):
-    wred_queue_list = [8]
-    non_wred_queue_list = [9, 10, 11]
+class ECN_01(ECN_10):
+    test_type = QOS_PROFILE_ECN
+    ecn_bits = ECN_BITS_01
+    max_queue_pps = 0
+    stats_list = [q_depth, ecn_count]
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Test wred drop profiles on DUT for Q8 and Q9, Q10 and Q11 traffic must not be affected",
+                              summary="Test ecn count increases as queue depth increases on DUT for Q0 traffic during "
+                                      "with ECN bits in packet set to 01",
                               steps="""
-                              1. Update stream on port 1 to start with pps
-                              2. Modify pfc stream from port 2 for appropriate priority
-                              3. setup wred config
-                              4. Start normal stream from port 1 and pfc from port 2
-                              5. Note down 5 iterations of wred_ecn stats for q depth and wred drops and take average of it
-                              6. Now iterate step 5 for different pps for normal stream.
-                              7. Verify that as q depth increases, wred drop increases
-                              """)
-
-    def modify_pfc_stream(self):
-
-        fun_test.log("Modify pfc stream to correct pps")
-
-        ms_octet = '00000001'
-        ls_octet = '00000000'
-        output = template_obj.stc_manager.configure_pfc_header(class_enable_vector=True, update=True,
-                                                               stream_block_handle=pfc_stream.spirent_handle,
-                                                               header_obj=pfc_frame, ls_octet=ls_octet, ms_octet=ms_octet)
-        fun_test.test_assert(output, message="Updated %s and %s for pfc stream %s" % (self.pfc_quanta,
-                                                                                      ls_octet,
-                                                                                      pfc_stream.spirent_handle))
-
-        # Update load value
-        pfc_stream.Load = self.pfc_pps
-        update_stream = template_obj.configure_stream_block(stream_block_obj=pfc_stream, update=True)
-        fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
-                            (self.pfc_pps, pfc_stream.spirent_handle))
+                                  1. Update stream on port 1 to start with pps
+                                  3. setup ecn config
+                                  4. Start stream from port 1 and port 3
+                                  5. Note down 5 iterations of wred_ecn stats for q depth and ecn count and take average of it
+                                  6. Now iterate step 5 for different pps for normal stream.
+                                  7. Verify that as q depth increases, ecn count increases
+                                  8. For every iteration check if ecn count on dut and spirent match
+                                  """)
 
 
-class Wred_Q12(Wred_Q8):
-    wred_queue_list = [12]
-    non_wred_queue_list = [13, 14, 15]
+class ECN_10_00(FunTestCase):
+    port_1_stream_dscp = 0
+    port_3_stream_dscp = 16
+    stream_ecn_bits_list = [ECN_BITS_10, ECN_BITS_00]
+    stream_dscps = [port_1_stream_dscp, port_3_stream_dscp]
+    test_type = QOS_PROFILE_ECN
+    qos_profile_dict = qos_json_output[test_type]
+    timer = qos_profile_dict['ecn_timer']
+    min_thr = qos_profile_dict['ecn_min_thr']
+    max_thr = qos_profile_dict['ecn_max_thr']
+    prob_index = qos_profile_dict['ecn_prob_index']
+    prof_num = qos_profile_dict['ecn_prof_num']
+    stream_pps_list = qos_profile_dict['stream_pps']['ingress_port_2']
+    enable_ecn = qos_profile_dict['ecn_enable']
+    avg_period = qos_profile_dict['avg_period']
+    cap_avg_sz = qos_profile_dict['cap_avg_sz']
+    cap_avg_enable = qos_profile_dict['cap_avg_enable']
+    max_egress_load = qos_json_output['max_egress_load']
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Test wred drop profiles on DUT for Q12 and Q13, Q14 and Q15 traffic must not be affected",
+                              summary="Test ecn bits are set for packets only who have ecn bit set to 10",
                               steps="""
-                              1. Update stream on port 1 to start with pps
-                              2. Modify pfc stream from port 2 for appropriate priority
-                              3. setup wred config
-                              4. Start normal stream from port 1 and pfc from port 2
-                              5. Note down 5 iterations of wred_ecn stats for q depth and wred drops and take average of it
-                              6. Now iterate step 5 for different pps for normal stream.
-                              7. Verify that as q depth increases, wred drop increases
+                              1. Update stream from port 1 and port 3 with dscp 0 and 16 having ecn bits set to 
+                                 10 and 01 respectively.
+                              2. Add ecn profile for queue 0 on egress dut port.
+                              3. Start traffic for both streams.
+                              4. Verify from diff serv stats on spirent that only dscp 0 has packets with ecn bits set 
+                                 and dscp 16 have no packets with ecn bits set
                               """)
 
-    def modify_pfc_stream(self):
-        fun_test.log("Modify pfc stream to correct pps")
+    def setup(self):
+        # Update streams to dscp and ecn bits
+        stream_pps = get_load_value_from_load_percent(load_percent=self.stream_pps_list[-1],
+                                                      max_egress_load=self.max_egress_load)
 
-        ms_octet = '00010000'
-        ls_octet = '00000000'
-        output = template_obj.stc_manager.configure_pfc_header(class_enable_vector=True, update=True,
-                                                               stream_block_handle=pfc_stream.spirent_handle,
-                                                               header_obj=pfc_frame, ls_octet=ls_octet, ms_octet=ms_octet)
-        fun_test.test_assert(output, message="Updated %s and %s for pfc stream %s" % (self.pfc_quanta,
-                                                                                      ls_octet,
-                                                                                      pfc_stream.spirent_handle))
+        for stream, queue_num, ecn_bits in zip(streamblock_objs_list, self.stream_dscps, self.stream_ecn_bits_list):
+            fun_test.log("Updating stream %s with dscp %s having ecn 10 and load to %s" % (stream.spirent_handle,
+                                                                                           queue_num, stream_pps))
+            dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
+                decimal_value_list=[queue_num], dscp_high=True, dscp_low=True)
+            dscp_high = dscp_values[queue_num]['dscp_high']
+            dscp_low = dscp_values[queue_num]['dscp_low']
 
-        # Update load value
-        pfc_stream.Load = self.pfc_pps
-        update_stream = template_obj.configure_stream_block(stream_block_obj=pfc_stream, update=True)
-        fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
-                            (self.pfc_pps, pfc_stream.spirent_handle))
+            dscp_set = template_obj.configure_diffserv(streamblock_obj=stream,
+                                                       dscp_high=dscp_high,
+                                                       dscp_low=dscp_low, reserved=ecn_bits, update=True)
+            fun_test.test_assert(dscp_set, "Ensure dscp value of %s is updated on ip header for stream %s"
+                                 % (queue_num, stream.spirent_handle))
+
+            stream.Load = stream_pps
+            stream.LoadUnit = stream.LOAD_UNIT_MEGABITS_PER_SECOND
+            streamblock_1 = template_obj.configure_stream_block(stream, update=True)
+            fun_test.test_assert(streamblock_1, "Update stream %s with load as %s" % (stream.spirent_handle,
+                                                                                      stream_pps))
+
+        set_prob = set_default_qos_probability(network_controller_obj=network_controller_obj,
+                                               profile_type=self.test_type)
+        fun_test.test_assert(set_prob, "Ensure prob range is set")
+
+        set_avg_q_cfg = network_controller_obj.set_qos_wred_avg_queue_config(avg_en=self.cap_avg_enable,
+                                                                             avg_period=self.avg_period,
+                                                                             cap_avg_sz=self.cap_avg_sz, q_avg_en=1)
+        fun_test.test_assert(set_avg_q_cfg, "Ensure avg q config is set")
+        wred_profile = network_controller_obj.set_qos_ecn_profile(prof_num=self.prof_num,
+                                                                  min_threshold=self.min_thr,
+                                                                  max_threshold=self.max_thr,
+                                                                  ecn_prob_index=self.prob_index)
+
+        set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
+                                                                         queue_num=self.port_1_stream_dscp,
+                                                                         enable_ecn=self.enable_ecn,
+                                                                         ecn_profile_num=self.prof_num)
+
+        fun_test.test_assert(wred_profile, "Ensure profile is set for %s" % self.test_type)
+        fun_test.test_assert(set_queue_cfg, "Ensure queue config is set for %s" % self.test_type)
+
+        start_streams = template_obj.stc_manager.start_traffic_stream(
+            stream_blocks_list=streamblock_handles_list)
+        fun_test.test_assert(start_streams, "Start running traffic")
+
+        fun_test.sleep("Letting traffic to be run", seconds=self.timer)
+
+    def run(self):
+        result = {}
+        out = template_obj.stc_manager.get_port_diffserv_results(port_handle=port_2,
+                                                                 subscribe_handle=subscribe_results[
+                                                                     'diff_serv_subscribe'])
+
+        for queue in self.stream_dscps:
+            result[str(queue)] = False
+            ecn_qos_val = template_obj.get_diff_serv_dscp_value_from_decimal_value(decimal_value_list=[queue],
+                                                                                   dscp_value=True)
+            qos_binary_value = get_ecn_qos_binary(qos_binary=ecn_qos_val[queue]['dscp_value'])
+            for key in out.keys():
+                if key == str(qos_binary_value):
+                    if int(out[key]['Ipv4FrameCount']) > 0:
+                        result[str(queue)] = True
+        self.do_test_asserts(result)
+
+    def do_test_asserts(self, result):
+        fun_test.test_assert(result[str(self.stream_dscps[0])], "Ensure ECN bits is set to 11 for DSCP 0 as it had "
+                                                                "ecn bits 01")
+
+        fun_test.test_assert(not result[str(self.stream_dscps[1])],
+                             "Ensure ECN bits is not set to 11 for DSCP 16 as it had "
+                             "ecn bits 00")
+
+    def cleanup(self):
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=streamblock_handles_list)
+        fun_test.add_checkpoint("Stop running traffic")
+
+        # Clear all subscribed results
+        for key in subscribe_results.iterkeys():
+            template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
+
+        set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
+                                                                         queue_num=self.port_1_stream_dscp,
+                                                                         enable_ecn=0,
+                                                                         ecn_profile_num=self.prof_num)
+        fun_test.add_checkpoint("Disable ecn on queue %s" % self.port_1_stream_dscp)
+
+
+class ECN_10_10(ECN_10_00):
+    stream_ecn_bits_list = [ECN_BITS_10, ECN_BITS_10]
+
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="Test ecn bits are set for packets coming from all ingress ports",
+                              steps="""
+                              1. Update stream from port 1 and port 3 with dscp 0 and 16 having respectively and 
+                              ecn bits set to 10.
+                              2. Add ecn profile for queue 0 on egress dut port.
+                              3. Start traffic for both streams.
+                              4. Verify from diff serv stats on spirent that both dscp 0 and dscp 16 have 
+                              some packets that have ecn bits set to 11
+                              """)
+
+    def do_test_asserts(self, result):
+        fun_test.test_assert(result[str(self.stream_dscps[0])], "Ensure ECN bits is set to 11 for DSCP 0 as it had "
+                                                                "ecn bits 01")
+
+        fun_test.test_assert(result[str(self.stream_dscps[1])], "Ensure ECN bits is set to 11 for DSCP 16 as it had "
+                                                                "ecn bits 01")
 
 
 if __name__ == "__main__":
@@ -493,7 +618,8 @@ if __name__ == "__main__":
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(Wred_Q0())
-    ts.add_test_case(Wred_Q4())
-    ts.add_test_case(Wred_Q8())
-    ts.add_test_case(Wred_Q12())
+    ts.add_test_case(ECN_10())
+    ts.add_test_case(ECN_01())
+    ts.add_test_case(ECN_10_00())
+    ts.add_test_case(ECN_10_10())
     ts.run()
