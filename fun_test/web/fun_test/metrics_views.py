@@ -523,7 +523,7 @@ def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
 
 
-def traverse_dag(metric_id):
+def traverse_dag(metric_id, sort_by_name=True):
     result = {}
     chart = MetricChart.objects.get(metric_id=metric_id)
 
@@ -564,7 +564,8 @@ def traverse_dag(metric_id):
         for child_id in result["children"]:
             child_chart = MetricChart.objects.get(metric_id=child_id)
             children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
-        result["children"] = map(lambda item: item[0], sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
+        if sort_by_name:
+            result["children"] = map(lambda item: item[0], sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
     return result
 
 
@@ -577,7 +578,7 @@ def dag(request):
     chart_name = request_json["chart_name"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
 
-    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id)
+    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False)
     return result
 
 @csrf_exempt
