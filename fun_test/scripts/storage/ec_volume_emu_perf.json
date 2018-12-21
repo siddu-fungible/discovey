@@ -1,0 +1,262 @@
+{
+  "EC21FioSeqWriteSeqReadOnly": {
+    // Erasure coding ratio
+    "ec_coding": {"ndata": 4, "nparity": 2},
+    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456, "jvol": 524288},
+    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+    // timeout used for the storage controller
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "use_lsv": 1,
+    // Head room needed for the LS volume in percentage
+    "lsv_pct": 0.32,
+    "check_lsv_stats": 0,
+    "ns_id": 1,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    // FIO commandline arguments
+    "fio_cmd_args": {"size": "4m", "direct": 1, "timeout": 300},
+    "fio_modes": ["write", "read"],
+    // The below is the list of tuples in which the first element of the tuple represents the FIO block size in kB and
+    // the second element represents the IO depth
+    // reduced the size from 16mb to 4mb and iodepth from different values to 1, as a workaround to the bugs #702 & #703
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    // Passing threshold for the FIO results from the expected benchmark values
+    "fio_pass_threshold": 0.05,
+    // Passing threshold of the internal volume stats from the expected benchmark values
+    "volume_pass_threshold": 33,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"write": {"write": {"bw": 160, "iops": 40675, "latency": 197}},
+                 "read": {"read": {"bw": 363, "iops": 91461, "latency": 89}}},
+      "(8, 8)": {"write": {"write": {"bw": 158, "iops": 20210, "latency": 396}},
+                 "read": {"read": {"bw": 512, "iops": 64243, "latency": 125}}},
+      "(16, 8)": {"write": {"write": {"bw": 150, "iops": 9642, "latency": 825}},
+                  "read": {"read": {"bw": 457, "iops": 28656, "latency": 278}}},
+      "(32, 8)": {"write": {"write": {"bw": 155, "iops": 4925, "latency": 1608}},
+                  "read": {"read": {"bw": 488, "iops": 15287, "latency": 522}}}
+    },
+    "expected_volume_stats": {
+      "write": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 32, "num_writes": 288},
+                "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 64, "num_writes": 288}},
+      "read": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 171, "num_writes": 0},
+               "VOL_TYPE_BLK_EC":{"fault_injection": 0, "num_reads": 992, "num_writes": 0}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    // The first element is the expected value and the second element is the maximum threshold in absolute value
+    "expected_stats": {
+      "write": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "read": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "EC21FioRandWriteRandReadOnly": {
+    "ec_coding": {"ndata": 4, "nparity": 2},
+    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456, "jvol": 524288},
+    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "use_lsv": 1,
+    "lsv_pct": 0.32,
+    "check_lsv_stats": 0,
+    "ns_id": 1,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"direct": 1, "size": "4m", "timeout": 300},
+    "fio_modes": ["randwrite", "randread"],
+    "fio_pass_threshold": 0.05,
+    "volume_pass_threshold": 33,
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"randwrite": {"write": {"bw": 157, "iops": 39829, "latency": 201}},
+                 "randread": {"read": {"bw": 367, "iops": 92345, "latency": 87}}},
+      "(8, 8)": {"randwrite": {"write": {"bw": 152, "iops": 19177, "latency": 418}},
+                 "randread": {"read": {"bw": 408, "iops": 51332, "latency": 156}}},
+      "(16, 8)": {"randwrite": {"write": {"bw": 147, "iops": 9316, "latency": 859}},
+                  "randread": {"read": {"bw": 403, "iops": 25413, "latency": 313}}},
+      "(32, 8)": {"randwrite": {"write": {"bw": 152, "iops": 4809, "latency": 1655}},
+                  "randread": {"read": {"bw": 415, "iops": 13030, "latency": 613}}}
+    },
+    "expected_volume_stats": {
+      "randwrite": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 42, "num_writes": 528},
+                    "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 34, "num_writes": 528}},
+      "randread": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 330, "num_writes": 0},
+                   "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "randwrite": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "randread": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "EC21FioSeqAndRandReadOnlyWithFailure": {
+    "ec_coding": {"ndata": 4, "nparity": 2},
+    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456, "jvol": 524288},
+    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "use_lsv": 1,
+    "trigger_plex_failure": 1,
+    "failure_plex_indices": [2, 4],
+    "lsv_pct": 0.32,
+    "check_lsv_stats": 0,
+    "ns_id": 1,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"direct": 1, "size": "4m", "timeout": 300},
+    "fio_modes": ["read", "randread"],
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    "fio_pass_threshold": 0.05,
+    "volume_pass_threshold": 10,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"read": {"read": {"bw": 158, "iops": 40647, "latency": 198}},
+                 "randread": {"read": {"bw": 170, "iops": 43555, "latency": 184}}},
+      "(8, 8)": {"read": {"read": {"bw": 162, "iops": 20467, "latency": 391}},
+                 "randread": {"read": {"bw": 175, "iops": 22196, "latency": 360}}},
+      "(16, 8)": {"read": {"read": {"bw": 175, "iops": 11026, "latency": 725}},
+                  "randread": {"read": {"bw": 175, "iops": 10991, "latency": 726}}},
+      "(32, 8)": {"read": {"read": {"bw": 178, "iops": 5691, "latency": 1402}},
+                  "randread": {"read": {"bw": 180, "iops": 5745, "latency": 1388}}}
+    },
+    "expected_volume_stats": {
+      "read": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 661, "num_writes": 0},
+               "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}},
+      "randread": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 661, "num_writes": 0},
+                   "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "read": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "randread": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "EC21FioSeqReadWriteMix": {
+    "ec_coding": {"ndata": 4, "nparity": 2},
+    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456, "jvol": 524288},
+    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "use_lsv": 1,
+    "lsv_pct": 0.32,
+    "check_lsv_stats": 0,
+    "ns_id": 1,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"direct": 1, "size": "4m", "rwmixread": 25, "timeout": 300},
+    "fio_modes": ["rw"],
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    "fio_pass_threshold": 0.05,
+    "volume_pass_threshold": 33,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"rw": {"write": {"bw": 102, "iops": 25808, "latency": 227},
+                         "read": {"bw": 32, "iops": 8160, "latency": 265}}},
+      "(8, 8)": {"rw": {"write": {"bw": 98, "iops": 12516, "latency": 472},
+                         "read": {"bw": 30, "iops": 4172, "latency": 502}}},
+      "(16, 8)": {"rw": {"write": {"bw": 93, "iops": 5998, "latency": 976},
+                         "read": {"bw": 35, "iops": 2257, "latency": 941}}},
+      "(32, 8)": {"rw": {"write": {"bw": 90, "iops": 2940, "latency": 1793},
+                         "read": {"bw": 35, "iops": 1241, "latency": 2169}}}
+    },
+    "expected_volume_stats": {
+      "(4, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 56, "num_writes": 212},
+                        "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 287, "num_writes": 425}}},
+      "(8, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 57, "num_writes": 204},
+                        "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 294, "num_writes": 408}}},
+      "(16, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 61, "num_writes": 196},
+                         "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 318, "num_writes": 391}}},
+      "(32, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 64, "num_writes": 196},
+                         "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 340, "num_writes": 391}}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "rw": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "mbuf": {"bm_in_use": "(0, 40)", "bm_num_bytes": "(0, 163840)", "in_use": "(0, 40)", "num_bytes": "(0, 163840)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "EC21FioRandReadWriteMix": {
+    "ec_coding": {"ndata": 4, "nparity": 2},
+    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"ndata": 268435456, "nparity": 268435456, "ec": 268435456, "jvol": 524288},
+    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "use_lsv": 1,
+    "lsv_pct": 0.32,
+    "check_lsv_stats": 0,
+    "ns_id": 1,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"direct": 1, "size": "4m", "rwmixread": 25, "timeout": 300},
+    "fio_modes": ["randrw"],
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    "fio_pass_threshold": 0.05,
+    "volume_pass_threshold": 33,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"randrw": {"write": {"bw": 105, "iops": 27099, "latency": 224},
+                            "read": {"bw": 30, "iops": 8569, "latency": 225}}},
+      "(8, 8)": {"randrw": {"write": {"bw": 97, "iops": 12350, "latency": 487},
+                            "read": {"bw": 30, "iops": 4117, "latency": 476}}},
+      "(16, 8)": {"randrw": {"write": {"bw": 90, "iops": 5826, "latency": 1011},
+                             "read": {"bw": 33, "iops": 2192, "latency": 952}}},
+      "(32, 8)": {"randrw": {"write": {"bw": 90, "iops": 2897, "latency": 1857},
+                             "read": {"bw": 35, "iops": 1223, "latency": 2112}}}
+    },
+    "expected_volume_stats": {
+      "(4, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 58, "num_writes": 204},
+                            "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 294, "num_writes": 408}}},
+      "(8, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 58, "num_writes": 204},
+                            "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 304, "num_writes": 408}}},
+      "(16, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 62, "num_writes": 196},
+                             "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 326, "num_writes": 391}}},
+      "(32, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 66, "num_writes": 196},
+                             "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 350, "num_writes": 391}}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "randrw": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "mbuf": {"bm_in_use": "(0, 40)", "bm_num_bytes": "(0, 163840)", "in_use": "(0, 40)", "num_bytes": "(0, 163840)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  }
+}

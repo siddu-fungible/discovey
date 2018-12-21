@@ -544,6 +544,50 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def systemctl(self,
+                  service_name,
+                  action="restart"):
+
+        result = False
+        start_action = ["start", "restart", "reload"]
+        stop_action  = ["stop"]
+        start_status = "active"
+        stop_status  = "inactive"
+
+        # Applying the requested action on the desired service
+        command = "systemctl %s %s --no-pager" % (action, service_name)
+        try:
+            output = self.sudo_command(command)
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+            return result
+        # Checking whether the requested action applied correctly on the desired service
+        command = "systemctl is-active %s" % (service_name)
+        try:
+            output = self.sudo_command(command)
+            if action in start_action:
+                if output.find(start_status) != -1:
+                    result = True
+                    fun_test.debug("{}ing of service {}: Passed".format(action.capitalize(), service_name))
+                else:
+                    result = False
+                    fun_test.debug("{}ing of service {}: Failed".format(action.capitalize(), service_name))
+            elif action in stop_action:
+                if output.find(stop_status) != -1:
+                    result = True
+                    fun_test.debug("{}ing of service {}: Passed".format(action.capitalize(), service_name))
+                else:
+                    result = False
+                    fun_test.debug("{}ing of service {}: Failed".format(action.capitalize(), service_name))
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        return result
+
+    @fun_test.safe
     def get_process_id(self, process_name):
         pid = None
         command = "pidof -x " + process_name

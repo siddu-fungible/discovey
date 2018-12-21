@@ -102,6 +102,7 @@ class ECinQemuTestcase(FunTestCase):
         self.uuids = {}
         self.uuids["blt"] = []
         self.uuids["ec"] = []
+        self.uuids["jvol"] = []
         self.uuids["lsv"] = []
 
         self.calc_volume_capacity = {}
@@ -117,7 +118,7 @@ class ECinQemuTestcase(FunTestCase):
                 self.calc_volume_capacity[vtype] = int(tmp + (eight_mb - (tmp % eight_mb)))
 
             # Setting the EC volume capacity also to same as the one of ndata volume capacity
-            self.calc_volume_capacity["ec"] = self.calc_volume_capacity["ndata"]
+            self.calc_volume_capacity["ec"] = self.calc_volume_capacity["ndata"] * self.num_volumes["ndata"]
         else:
             self.calc_volume_capacity.update(self.volume_capacity)
 
@@ -153,7 +154,8 @@ class ECinQemuTestcase(FunTestCase):
             self.storage_controller.disconnect()
             fun_test.log("EC volume creation command didn't received any response. So checking the whether the volume "
                          "is actually created or not")
-            storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ec"], this_uuid)
+            storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ec"], this_uuid,
+                                                         "stats")
             command_result = self.storage_controller.peek(storage_props_tree)
             if command_result["status"]:
                 fun_test.log("EC volume created successfully, but the command returned no output")
@@ -162,14 +164,22 @@ class ECinQemuTestcase(FunTestCase):
         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
         attach_uuid = this_uuid
 
-        # Configuring LS volume based on the script config settting
+        # Configuring LS volume and its associated journal volume based on the script config setting
         if self.use_lsv:
+            self.uuids["jvol"] = generate_uuid()
+            command_result = self.storage_controller.create_volume(
+                type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
+                block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids["jvol"],
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Create Journal volume on DUT instance")
+
             this_uuid = generate_uuid()
             self.uuids["lsv"].append(this_uuid)
             command_result = self.storage_controller.create_volume(
                 type=self.volume_types["lsv"], capacity=self.calc_volume_capacity["lsv"],
                 block_size=self.volume_block["lsv"], name="lsv1", uuid=this_uuid, group=self.num_volumes["ndata"],
-                pvol_id=self.uuids["ec"], command_duration=self.command_timeout)
+                jvol_uuid=self.uuids["jvol"], pvol_id=self.uuids["ec"], command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.simple_assert(command_result["status"], "Create LS volume on DUT instance")
             self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
@@ -231,6 +241,12 @@ class ECinQemuTestcase(FunTestCase):
         attach_uuid = ""
         # Unconfiguring LS volume based on the script config settting
         if self.use_lsv:
+            detach_uid = self.uuids["lsv"][0]
+            command_result = self.storage_controller.volume_detach_pcie(
+                ns_id=self.ns_id, uuid=detach_uid, command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Detaching LS volume on DUT")
+
             this_uuid = self.uuids["lsv"][0]
             command_result = self.storage_controller.delete_volume(
                 type=self.volume_types["lsv"], capacity=self.calc_volume_capacity["lsv"],
@@ -239,6 +255,20 @@ class ECinQemuTestcase(FunTestCase):
             fun_test.simple_assert(command_result["status"], "Delete LS volume on DUT instance")
             self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
             attach_uuid = this_uuid
+
+            this_uuid = self.uuids["jvol"]
+            command_result = self.storage_controller.delete_volume(
+                type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
+                block_size=self.volume_block["jvol"], name="jvol1", uuid=this_uuid,
+                command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Delete Journal volume on DUT instance")
+        else:
+            detach_uid = self.uuids["ec"][0]
+            command_result = self.storage_controller.volume_detach_pcie(
+                ns_id=self.ns_id, uuid=detach_uid, command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Detaching LS volume on DUT")
 
         # Unconfiguring EC volume configured on top of BLT volumes
         this_uuid = self.uuids["ec"][0]
@@ -483,8 +513,8 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                                                                        "the UUID {}".format(self.uuids["ndata"][index]))
                         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
                         fun_test.sleep("to enable the fault_injection", 1)
-                        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                          self.uuids["ndata"][index])
+                        props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                          self.uuids["ndata"][index], "stats")
                         command_result = self.storage_controller.peek(props_tree)
                         fun_test.log(command_result)
                         fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]),
@@ -515,7 +545,7 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                     self.need_dpc_server_start = True
 
                 # Checking whether the funos-posix is running after unconfiguration
-                funos_pid = self.host.get_process_id(F1.FUN_OS_SIMULATION_PROCESS_NAME)
+                funos_pid = self.dut.get_process_id(F1.FUN_OS_SIMULATION_PROCESS_NAME)
                 if not funos_pid:
                     self.unconfig_result[ndata][nparity] = False
                     self.funos_running = False
@@ -552,8 +582,8 @@ class RndDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
         test_result = True
         for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
             for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
-                if not self.write_result[ndata][nparity] or self.read_result[ndata][nparity] or \
-                        self.unconfig_result[ndata][nparity]:
+                if not self.write_result[ndata][nparity] or not self.read_result[ndata][nparity] or \
+                        not self.unconfig_result[ndata][nparity]:
                     test_result = False
 
         fun_test.test_assert(test_result, self.summary)
@@ -635,8 +665,8 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                                                                        "the UUID {}".format(self.uuids["ndata"][index]))
                         self.check_num_dpcsh_cmds()  # Calling this as a workaround for the bug SWOS-1434
                         fun_test.sleep("to enable the fault_injection", 1)
-                        props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
-                                                          self.uuids["ndata"][index])
+                        props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["ndata"],
+                                                          self.uuids["ndata"][index], "stats")
                         command_result = self.storage_controller.peek(props_tree)
                         fun_test.log(command_result)
                         fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]),
@@ -667,7 +697,7 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                     self.need_dpc_server_start = True
 
                 # Checking whether the funos-posix is running after unconfiguration
-                funos_pid = self.host.get_process_id(F1.FUN_OS_SIMULATION_PROCESS_NAME)
+                funos_pid = self.dut.get_process_id(F1.FUN_OS_SIMULATION_PROCESS_NAME)
                 if not funos_pid:
                     self.unconfig_result[ndata][nparity] = False
                     self.funos_running = False
@@ -704,8 +734,8 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
         test_result = True
         for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
             for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
-                if not self.write_result[ndata][nparity] or self.read_result[ndata][nparity] or \
-                        self.unconfig_result[ndata][nparity]:
+                if not self.write_result[ndata][nparity] or not self.read_result[ndata][nparity] or \
+                        not self.unconfig_result[ndata][nparity]:
                     test_result = False
 
         fun_test.test_assert(test_result, self.summary)
