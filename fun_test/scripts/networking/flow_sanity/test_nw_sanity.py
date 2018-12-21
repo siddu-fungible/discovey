@@ -242,7 +242,7 @@ class TransitSweep(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=120)
+        fun_test.sleep("Sleeping for executing traffic", seconds=10)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -1083,7 +1083,7 @@ class TestVpFlows(FunTestCase):
     sleep_duration_seconds = None
     generator_handle = None
     detach_ports = True
-    fps = 10
+    fps = 120
     mtu = max_frame_size
     hnu = False
 
@@ -1212,12 +1212,9 @@ class TestVpFlows(FunTestCase):
             fun_test.test_assert(mtu_2, " Set mtu on DUT port %s" % dut_port_2)
 
     def run(self):
-        bam_stats_1 = None
-        parser_stats_1 = None
         vp_pkts_stats_1 = None
         erp_stats_1 = None
         psw_stats_1 = None
-        wro_stats_1 = None
 
         if self.dut_config['enable_dpcsh']:
             checkpoint = "Clear FPG stats on all DUT ports"
@@ -1236,12 +1233,12 @@ class TestVpFlows(FunTestCase):
         if self.dut_config['enable_dpcsh']:
             # Get stats before starting traffic
             fun_test.log("Get stats before starting traffic")
-            bam_stats_1 = get_bam_stats_values(network_controller_obj=dpcsh_obj)
-            parser_stats_1 = dpcsh_obj.peek_parser_stats()
+            get_bam_stats_values(network_controller_obj=dpcsh_obj)
+            dpcsh_obj.peek_parser_stats()
             vp_pkts_stats_1 = get_vp_pkts_stats_values(network_controller_obj=dpcsh_obj)
             erp_stats_1 = get_erp_stats_values(network_controller_obj=dpcsh_obj, hnu=self.hnu)
             psw_stats_1 = dpcsh_obj.peek_psw_global_stats(hnu=self.hnu)
-            wro_stats_1 = dpcsh_obj.peek_wro_global_stats()
+            dpcsh_obj.peek_wro_global_stats()
 
         # Execute traffic
         start = template_obj.enable_generator_configs(generator_configs=[self.generator_handle])
@@ -1293,12 +1290,12 @@ class TestVpFlows(FunTestCase):
             dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
 
             fun_test.log("Get system stats after traffic execution")
-            bam_stats_2 = get_bam_stats_values(network_controller_obj=dpcsh_obj)
+            get_bam_stats_values(network_controller_obj=dpcsh_obj)
             psw_stats_2 = dpcsh_obj.peek_psw_global_stats(hnu=self.hnu)
             erp_stats_2 = get_erp_stats_values(network_controller_obj=dpcsh_obj, hnu=self.hnu)
             vp_pkts_stats_2 = get_vp_pkts_stats_values(network_controller_obj=dpcsh_obj)
-            parser_stats_2 = dpcsh_obj.peek_parser_stats()
-            wro_stats_2 = dpcsh_obj.peek_wro_global_stats()
+            dpcsh_obj.peek_parser_stats()
+            dpcsh_obj.peek_wro_global_stats()
 
             dut_port_2_fpg_value = get_fpg_port_value(dut_port_2)
             dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
@@ -1324,16 +1321,6 @@ class TestVpFlows(FunTestCase):
                                           message="Ensure frames received on DUT port %s are transmitted from "
                                                   "DUT port %s"
                                                   % (dut_port_2, dut_port_1))
-            # Check system stats
-            # Check bam stats
-            del bam_stats_2['durations_histogram']
-            del bam_stats_1['durations_histogram']
-            del bam_stats_2['num_bytes_in_use']
-            del bam_stats_1['num_bytes_in_use']
-            del bam_stats_2['num_in_use']
-            del bam_stats_1['num_in_use']
-            fun_test.test_assert(bam_stats_1 == bam_stats_2, message="Check BAM stats before and after match")
-
             # Check ERP stats
             diff_stats_erp = get_diff_stats(old_stats=erp_stats_1, new_stats=erp_stats_2,
                                             stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
@@ -1428,11 +1415,10 @@ class VPPathIPv4TCP(TestVpFlows):
                         5. Check egress frame count with spirent rx counter
                         6. Check rx counter on spirent matches with dut egress counter
                         7. Check erp stats for non fcp packets
-                        8. Check bam stats before and after traffic
-                        9. Check psw nu for main_drop, fwd_error to be 0
-                        10. Check psw nu for ifpg, epg0 and fpg counter to match spirent tx count
-                        11. Check parser stats for eop_cnt, sop_cnt, prv_sent with spirent tx
-                        12. Check vp pkts for vp in, vp out, vp forward nu le with spirent tx
+                        8. Check psw nu for main_drop, fwd_error to be 0
+                        9. Check psw nu for ifpg, epg0 and fpg counter to match spirent tx count
+                        10. Check parser stats for eop_cnt, sop_cnt, prv_sent with spirent tx
+                        11. Check vp pkts for vp in, vp out, vp forward nu le with spirent tx
                         """)
 
     def setup(self):
@@ -1488,11 +1474,10 @@ class VPPathIPv4TCPNFCP(TestVpFlows):
                         5. Check egress frame count with spirent rx counter
                         6. Check rx counter on spirent matches with dut egress counter
                         7. Check erp stats for non fcp packets
-                        8. Check bam stats before and after traffic
-                        9. Check psw nu for main_drop, fwd_error to be 0
-                        10. Check psw nu for ifpg, epg0 and fpg counter to match spirent tx count
-                        11. Check parser stats for eop_cnt, sop_cnt, prv_sent with spirent tx
-                        12. Check vp pkts for vp in, vp out, vp forward nu le with spirent tx
+                        8. Check psw nu for main_drop, fwd_error to be 0
+                        9. Check psw nu for ifpg, epg0 and fpg counter to match spirent tx count
+                        10. Check parser stats for eop_cnt, sop_cnt, prv_sent with spirent tx
+                        11. Check vp pkts for vp in, vp out, vp forward nu le with spirent tx
                         """)
 
     def setup(self):
@@ -1500,7 +1485,7 @@ class VPPathIPv4TCPNFCP(TestVpFlows):
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
-        self.fps = 10
+        self.fps = 120
         self.hnu = True
         self.max_frame_size = 9000
         self.mtu = 9000
@@ -1554,11 +1539,10 @@ class VPPathIPv4TCPFCP(TestVpFlows):
                         5. Check egress frame count with spirent rx counter
                         6. Check rx counter on spirent matches with dut egress counter
                         7. Check erp stats for non fcp packets
-                        8. Check bam stats before and after traffic
-                        9. Check psw nu for main_drop, fwd_error to be 0
-                        10. Check psw nu for ifpg, epg0 and fpg counter to match spirent tx count
-                        11. Check parser stats for eop_cnt, sop_cnt, prv_sent with spirent tx
-                        12. Check vp pkts for vp in, vp out, vp forward nu le with spirent tx
+                        8. Check psw nu for main_drop, fwd_error to be 0
+                        9. Check psw nu for ifpg, epg0 and fpg counter to match spirent tx count
+                        10. Check parser stats for eop_cnt, sop_cnt, prv_sent with spirent tx
+                        11. Check vp pkts for vp in, vp out, vp forward nu le with spirent tx
                         """)
 
     def setup(self):
@@ -1566,7 +1550,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
-        self.fps = 10
+        self.fps = 50
 
         self.configure_cadence_pcs_for_fcp()
         self.configure_ports()
@@ -1605,7 +1589,7 @@ if __name__ == "__main__":
     ts = SpirentSetup()
     # Transit NU --> NU Flow
     ts.add_test_case(TransitSweep())
-    ts.add_test_case(TransitV6Sweep())
+    # ts.add_test_case(TransitV6Sweep())
 
     # CC NU --> CC Flow
     ts.add_test_case(TestArpRequestFlow1())
