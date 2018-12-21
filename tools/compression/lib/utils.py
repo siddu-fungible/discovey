@@ -319,18 +319,18 @@ def decode_lzma_header(file):
 
     index = 1
     # History sz in little endian
-    print binascii.hexlify((indata[index:index + 4]))
-    print int(binascii.hexlify((indata[index:index+4])), 16)
-    print bin(int(binascii.hexlify(indata[index:index+4]), 16))[2:].zfill(4*8)
+    #print binascii.hexlify((indata[index:index + 4]))
+    #print int(binascii.hexlify((indata[index:index+4])), 16)
+    #print bin(int(binascii.hexlify(indata[index:index+4]), 16))[2:].zfill(4*8)
     historysz = (indata[index:index + 4])[::-1]
     decoded["historysz"] = int(binascii.hexlify(historysz), 16)
 
     index = 5
 
     # Uncompressed sz in little endian
-    print binascii.hexlify(indata[index:index+8])
-    print int(binascii.hexlify(indata[index:index+8]), 16)
-    print bin(int(binascii.hexlify(indata[index:index+8]), 16))[2:].zfill(8 * 8)
+    #print binascii.hexlify(indata[index:index+8])
+    #print int(binascii.hexlify(indata[index:index+8]), 16)
+    #print bin(int(binascii.hexlify(indata[index:index+8]), 16))[2:].zfill(8 * 8)
     uncompressedsz = (indata[index:index+8])[::-1]
     decoded["uncompressedsz"] = int(binascii.hexlify(uncompressedsz), 16)
 
@@ -353,6 +353,14 @@ def create_lzma_block(properties_dict, historysz, uncompressedsz, compressed_blo
     final_block = bytearray()
 
     # Calculate and add properties
+
+    # Invalid properties
+    # 1. (LC + LP) must not be greater than 4
+    # 2. PB must not be greater than 4
+    properties_dict["lc"] = 4
+    properties_dict["lp"] = 1
+    #properties_dict["pb"] = 5
+
     properties = ((properties_dict["pb"] * 5) + properties_dict["lp"]) * 9 + \
                  properties_dict["lc"]
 
@@ -363,6 +371,9 @@ def create_lzma_block(properties_dict, historysz, uncompressedsz, compressed_blo
     #final_block.extend(bin(properties)[2:].zfill(8))
 
     # Add historysz
+    # Invalid historysz
+    #historysz = 1024 * 1024  # >256KB historysz
+
     history = struct.pack('<I', historysz)
     history = binascii.hexlify(history)
     history = bin(int(history, 16))[2:].zfill(4*8)
@@ -372,13 +383,19 @@ def create_lzma_block(properties_dict, historysz, uncompressedsz, compressed_blo
     #final_block.append(int(history[start:end].zfill(8), 2))
     final_block.extend(history)
 
+
     # Add uncompressedsz
+    # Unknown uncompressedsz
+    # uncompressedsz = 4294967296
+
     if uncompressedsz <= 4294967295:
         uncompressed = struct.pack('<I', uncompressedsz)
         uncompressed = binascii.hexlify(uncompressed)
-        uncompressed = bin(int(uncompressed, 16))[2:].zfill(8*8)
+        #uncompressed = bin(int(uncompressed, 16))[2:].zfill(8 * 8)
+        uncompressed = bin(int(uncompressed, 16))[2:]
         uncompressed = int(uncompressed, 2)
         uncompressed = (hex(uncompressed)[2:])[::-1].zfill(16)[::-1]
+        #uncompressed = hex(uncompressed)[2:]
         uncompressed = binascii.unhexlify(uncompressed)
         #final_block.extend(bin(uncompressedsz)[2:].zfill(8*8))
         final_block.extend(uncompressed)
@@ -415,8 +432,9 @@ if __name__ == '__main__':
     # print generate_static_huffman(280, 287, '11000000')
     print generate_static_huffman(0, 31, '00000')
     """
+    """
     #raw_infile = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/stored.deflate"
-    raw_infile = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/artificial/aaa.txt.lzma"
+    raw_infile = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/artificial/alphabet.txt.lzma"
     outdecoded, outproperties, outheader, outtrailer = decode_lzma_header(raw_infile)
 
     # print decoded
@@ -436,7 +454,7 @@ if __name__ == '__main__':
                                    outdecoded["compressed_block"])
         if result:
             out.write(struct.pack('%dB' % len(result), *result))
-
+    """
     """
     # hex_compressed_data = binascii.hexlify(outdecoded["compressed_block"])
     # print bin(int(hex_compressed_data, 16))[2:]
@@ -454,7 +472,7 @@ if __name__ == '__main__':
     #     reordered_bits.append(reorder_bits(byte))
     # print ''.join(reordered_bits)
     """
-    """
+
     ascii_str = []
     # Pass ASCII literals from 0 to 143
     #for i in range(0, 144):
@@ -472,11 +490,11 @@ if __name__ == '__main__':
         result = create_deflate_block('stored', ''.join(ascii_str))
         if result:
             out.write(struct.pack('%dB' % len(result), *result))
-
+"""
     with open("/tmp/ascii_str_fixed.deflate", "wb+") as out:
         result = create_deflate_block('fixed', ''.join(ascii_str))
         if result:
             out.write(struct.pack('%dB' % len(result), *result))
 
     read_compressor_status()
-    """
+"""

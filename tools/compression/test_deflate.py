@@ -176,16 +176,14 @@ if __name__ == "__main__":
         seq = seq + seq + os.urandom(1)
     #print seq
     compare_results(seq)
-    """
 
     #### Generate test data ####
-
+    """
     # Input file path
-    filepath = '/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/dflttest'
+    filepath = '/Users/radhika/Documents/test-scripts/cntbry-crps-tst/artificial'
     report_file = "/Users/radhika/Documents/test-scripts/cntbry-crps-tst/cust-corpus/results.csv"
     report = open(report_file, "w+")
     input_files = []
-
     """
     # Literals 0 - 143
     filename = filepath + '/uniq-143-literals.input'
@@ -222,28 +220,26 @@ if __name__ == "__main__":
             filename = generate_filename(filepath, length, offset)
             generate_length_offset_data(filename, length, offset)
             input_files.append(filename)
-    """
 
     # Misc input data
     #### Overlapping sequence ####
-    """    
-    filename = filepath + '/overlapping-sequence.input'
-    seq_len = 4
-    repeat = 4
+    """
+    filename = filepath + '/overlapping-sequence-2.in'
+    seq_len = 8
+    repeat = 32
     orig_data = gen_repeated_seq(seq_len, repeat) + os.urandom(4)  # Adding a 4 byte random string at the end
     fwrite_raw_bytes(filename, orig_data)
     input_files.append(filename)
-    """
 
     #### Sequence with incremental repeats ####
-    filename = filepath + '/incremental-repeats.input'
+    filename = filepath + '/incremental-repeats-2.in'
     seq = ""
-    repeat = 16
+    repeat = 8
     for i in range(1, repeat):
         seq = seq + seq + os.urandom(1)
     fwrite_raw_bytes(filename, seq)
     input_files.append(filename)
-
+    """
     print "#### Test with deflate\n"
     for in_file in input_files:
         result = test_f1_compress(in_file, compress_type='f1_deflate')
@@ -269,3 +265,4 @@ if __name__ == "__main__":
         # report.write("%s,%s\n" % (in_file, result))
 
     report.close()
+    """
