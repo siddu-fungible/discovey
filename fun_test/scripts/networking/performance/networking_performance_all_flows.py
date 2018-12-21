@@ -507,11 +507,11 @@ class TestNuHnuFlowPerf(FunTestCase):
             fun_test.add_checkpoint(message)
 
         checkpoint = "Display Performance Counters"
-        table_data_headers = ['Frame Size', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
+        table_data_headers = ['Frame Size (Bytes)', 'PPS', 'Throughput (Mbps)', 'Avg. Latency (us)', 'Min Latency (us)',
                               'Max Latency (us)', 'Avg. Jitter (us)', 'Min Jitter (us)', 'Max Jitter (us)']
         table_data_rows = []
         for key in self.perf_results:
-            table_data_rows.append([key, self.perf_results[key]['pps_count'],
+            table_data_rows.append([int(key.split('_')[1]), self.perf_results[key]['pps_count'],
                                     self.perf_results[key]['throughput_count'],
                                     self.perf_results[key]['latency_count'][0]['avg'],
                                     self.perf_results[key]['latency_count'][0]['min'],
