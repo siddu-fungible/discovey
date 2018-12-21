@@ -1,0 +1,5 @@
+[
+  {"path": "networking/basic/test_bad_address.py"},
+  {"path": "networking/basic/test_good_bad_frames.py"},
+  {"path": "networking/basic/test_good_bad_frames2.py"}
+]

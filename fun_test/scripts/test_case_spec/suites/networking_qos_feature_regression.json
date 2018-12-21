@@ -1,0 +1,12 @@
+[
+  {"path": "networking/qos/test_qos_strict_priority.py", "test_case_ids": [8, 9, 12, 17, 18, 19, 20, 21, 22, 23, 24, 25]},
+  {"path": "networking/qos/test_cir_1.py", "test_case_ids": [2, 3, 4]},
+  {"path": "networking/qos/test_cir_2.py"},
+  {"path": "networking/qos/test_cir_3.py"},
+  {"path": "networking/qos/test_pir.py", "test_case_ids": [5, 9, 13]},
+  {"path": "networking/qos/test_qos_dwrr.py", "test_case_ids": [2, 3, 4]},
+  {"path": "networking/qos/test_sp_shaper_within_cir.py"},
+  {"path": "networking/qos/test_sp_shaper_within_eb.py"},
+  {"path": "networking/qos/test_qos_wred_ecn.py", "test_case_ids": [3, 4, 5]},
+  {"path": "networking/qos/test_qos_all_queues.py", "test_case_ids": [1, 2, 3]}
+]

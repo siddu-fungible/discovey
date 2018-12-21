@@ -830,6 +830,25 @@
         ]
       },
       {
+        "info": "Security",
+        "metric_model_name": "MetricContainer",
+        "leaf": false,
+        "name": "Security",
+        "label": "Security",
+        "weight": 1,
+        "children": [
+          {
+            "info": "PKE",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "PKE",
+            "label": "PKE",
+            "weight": 1,
+            "reference": true
+          }
+        ]
+      },
+      {
         "info": "TeraMarks",
         "metric_model_name": "MetricContainer",
         "leaf": false,
