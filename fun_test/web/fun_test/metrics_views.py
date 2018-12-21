@@ -559,7 +559,7 @@ def traverse_dag(metric_id, sort_by_name=True):
         result["last_two_scores"] = [chart.last_good_score, chart.penultimate_good_score]
     else:
         result["last_two_scores"] = [0, 0]
-    if not chart.leaf:
+    if not chart.leaf or chart.chart_name == "All metrics":
         children_info = result["children_info"]
         for child_id in result["children"]:
             child_chart = MetricChart.objects.get(metric_id=child_id)
