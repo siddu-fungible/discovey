@@ -1580,7 +1580,7 @@ class Linux(object, ToDictMixin):
             fio_dict[operation] = {}
             for stat in ["bw", "iops", "latency"]:
                 if stat != "latency":
-                    fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][stat]))
+                    fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
                 else:
                     for key in fio_result_dict["jobs"][0][operation].keys():
                         if key.startswith("lat"):

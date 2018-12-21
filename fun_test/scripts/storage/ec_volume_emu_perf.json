@@ -90,9 +90,9 @@
                   "randread": {"read": {"bw": 415, "iops": 13030, "latency": 613}}}
     },
     "expected_volume_stats": {
-      "randwrite": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 42, "num_writes": 528},
-                    "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 34, "num_writes": 528}},
-      "randread": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 330, "num_writes": 0},
+      "randwrite": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 42, "num_writes": 288},
+                    "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 34, "num_writes": 288}},
+      "randread": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 169, "num_writes": 0},
                    "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
@@ -142,9 +142,9 @@
                   "randread": {"read": {"bw": 180, "iops": 5745, "latency": 1388}}}
     },
     "expected_volume_stats": {
-      "read": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 661, "num_writes": 0},
+      "read": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 495, "num_writes": 0},
                "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}},
-      "randread": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 661, "num_writes": 0},
+      "randread": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 495, "num_writes": 0},
                    "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 992, "num_writes": 0}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
@@ -192,14 +192,14 @@
                          "read": {"bw": 35, "iops": 1241, "latency": 2169}}}
     },
     "expected_volume_stats": {
-      "(4, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 56, "num_writes": 212},
-                        "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 287, "num_writes": 425}}},
-      "(8, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 57, "num_writes": 204},
-                        "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 294, "num_writes": 408}}},
-      "(16, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 61, "num_writes": 196},
-                         "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 318, "num_writes": 391}}},
-      "(32, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 64, "num_writes": 196},
-                         "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 340, "num_writes": 391}}}
+      "(4, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 62, "num_writes": 225},
+                        "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 280, "num_writes": 225}}},
+      "(8, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 68, "num_writes": 216},
+                        "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 294, "num_writes": 216}}},
+      "(16, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 72, "num_writes": 207},
+                         "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 323, "num_writes": 207}}},
+      "(32, 8)": {"rw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 71, "num_writes": 207},
+                         "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 344, "num_writes": 207}}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
@@ -241,14 +241,14 @@
                              "read": {"bw": 35, "iops": 1223, "latency": 2112}}}
     },
     "expected_volume_stats": {
-      "(4, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 58, "num_writes": 204},
-                            "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 294, "num_writes": 408}}},
-      "(8, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 58, "num_writes": 204},
-                            "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 304, "num_writes": 408}}},
-      "(16, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 62, "num_writes": 196},
-                             "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 326, "num_writes": 391}}},
-      "(32, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 66, "num_writes": 196},
-                             "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 350, "num_writes": 391}}}
+      "(4, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 74, "num_writes": 216},
+                            "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 294, "num_writes": 216}}},
+      "(8, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 74, "num_writes": 216},
+                            "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 304, "num_writes": 216}}},
+      "(16, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 74, "num_writes": 207},
+                             "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 326, "num_writes": 207}}},
+      "(32, 8)": {"randrw": {"VOL_TYPE_BLK_LOCAL_THIN": {"fault_injection": 0, "num_reads": 74, "num_writes": 207},
+                             "VOL_TYPE_BLK_EC": {"fault_injection": 0, "num_reads": 350, "num_writes": 207}}}
     },
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
