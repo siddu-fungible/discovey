@@ -564,7 +564,7 @@ def traverse_dag(metric_id):
         for child_id in result["children"]:
             child_chart = MetricChart.objects.get(metric_id=child_id)
             children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
-        result["children_info"] = OrderedDict(sorted(children_info.iteritems(), key=lambda item: item[1]["chart_name"]))
+        result["children"] = map(lambda item: item[0], sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
     return result
 
 
