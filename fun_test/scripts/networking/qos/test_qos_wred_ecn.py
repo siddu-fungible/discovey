@@ -16,13 +16,39 @@ if config['type'] == 'f1':
 qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 streamblock_objs_list = []
 streamblock_handles_list = []
-q_depth = 'avg_q_integ'
-wred_q_drop = 'wred_q_drop'
 queue_list = [x for x in range(16)]
 reversed_list = copy.deepcopy(queue_list)
 percent_threshold = 5
 DUT_ECN_COUNT = "dut_ecn_count"
 SPIRENT_ECN_COUNT = "spirent_ecn_count"
+
+
+def check_wred_ecn_counter_stopped(network_controller_obj, port_num, queue_num, type=QOS_PROFILE_WRED):
+    result = False
+    try:
+        output_1 = network_controller_obj.get_qos_wred_ecn_stats(port_num=port_num, queue_num=queue_num)
+        fun_test.simple_assert(output_1, "Get wred ecn counts")
+
+        fun_test.sleep("Letting stats to be updated")
+
+        output_2 = network_controller_obj.get_qos_wred_ecn_stats(port_num=port_num, queue_num=queue_num)
+        fun_test.simple_assert(output_2, "Get wred ecn counts")
+
+        if type == QOS_PROFILE_WRED:
+            fun_test.log("Counter value of %s seen before was %s and after is %s" %
+                         (QOS_PROFILE_WRED, output_1[wred_q_drop], output_2[wred_q_drop]))
+            if output_1[wred_q_drop] == output_2[wred_q_drop]:
+                result = True
+        else:
+            fun_test.log("Counter value of %s seen before was %s and after is %s" %
+                         (QOS_PROFILE_ECN, output_1[ecn_count], output_2[ecn_count]))
+            if output_1[ecn_count] == output_2[ecn_count]:
+                result = True
+
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
 
 
 def get_percent_diff(rx_result, tx_result):
@@ -317,6 +343,17 @@ class Wred_Q0(FunTestCase):
                                      (stat, next_pps, current_pps, output_avg_dict[str(next_pps)][stat],
                                       output_avg_dict[str(current_pps)][stat]))
 
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=[streamblock_handles_list[1]])
+        fun_test.add_checkpoint("Ensure one stream is stopped")
+
+        fun_test.sleep("Letting one stream traffic to be stopped")
+
+        # Check wred counters have stopped incrementing
+        check_stop = check_wred_ecn_counter_stopped(network_controller_obj=network_controller_obj, port_num=dut_port_2,
+                                                           queue_num=self.test_queue)
+        fun_test.test_assert(check_stop, "Ensure wred q drop counters are not seen when we do not exceed bandwidth")
+
 
 class ECN_10(Wred_Q0):
     test_type = QOS_PROFILE_ECN
@@ -332,7 +369,7 @@ class ECN_10(Wred_Q0):
     test_queue = 0
     avg_period = qos_profile_dict['avg_period']
     cap_avg_sz = qos_profile_dict['cap_avg_sz']
-    stats_list = [q_depth, wred_q_drop]
+    stats_list = [q_depth, ecn_count]
     max_queue_pps = 0
     port_1_stream_load = normal_stream_pps_list['ingress_port_1']
     port_3_stream_load_list = normal_stream_pps_list['ingress_port_2']
@@ -387,17 +424,23 @@ class ECN_10(Wred_Q0):
 
             fun_test.log("Taking 5 observations of q_depth and wred_drops for fps %s" % current_pps)
             # Take 5 observations of q_depth and wred_drops and do average
-            observed_dict = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj, iterations=5,
+            observed_dict = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj, iterations=3,
                                                            stats_list=self.stats_list, port_num=dut_port_2,
                                                            queue_num=self.test_queue)
             fun_test.simple_assert(observed_dict['result'], "Get 5 observations")
             fun_test.log("5 observations captured for pps %s" % current_pps)
 
-            # Calculate average
-            for stat in self.stats_list:
-                avg_val = reduce(lambda a, b: a + b, observed_dict[stat]) / len(observed_dict[stat])
-                fun_test.log("Average value seen for stat %s for pps %s is %s" % (stat, current_pps, avg_val))
-                output_avg_dict[str(current_pps)][stat] = avg_val
+            # Check stats increase
+            for stats in self.stats_list:
+                fun_test.log("Check %s stats incrementing" % stats)
+
+                out = observed_dict[stats]
+                for i in range(0, len(out) - 1):
+                    current_value = out[i]
+                    next_value = out[i + 1]
+                    fun_test.test_assert(next_value > current_value, "Ensure %s stats incremented. "
+                                                                     "Initial value %s. New value %s" %
+                                         (stats, current_value, next_value))
 
             # Stop traffic
             stop_streams = template_obj.stc_manager.stop_traffic_stream(
@@ -425,7 +468,7 @@ class ECN_10(Wred_Q0):
             for key in out.keys():
                 if key == str(qos_binary_value):
                     output_avg_dict[str(current_pps)][SPIRENT_ECN_COUNT] = int(out[key]['Ipv4FrameCount'])
-
+        '''
         pps_key_list = output_avg_dict.keys()
         for i in range(0, len(pps_key_list) - 1):
             for stat in self.stats_list:
@@ -437,12 +480,19 @@ class ECN_10(Wred_Q0):
                                      "is %s and %s respectively" %
                                      (stat, next_pps, current_pps, output_avg_dict[str(next_pps)][stat],
                                       output_avg_dict[str(current_pps)][stat]))
+        '''
 
         for key, val in output_avg_dict.iteritems():
             fun_test.log("Check for pps %s" % key)
 
             fun_test.test_assert_expected(expected=val[DUT_ECN_COUNT], actual=val[SPIRENT_ECN_COUNT],
                                           message="Check ecn counts in DUT and seen on spirent match")
+
+        # Check ecn counters have stopped incrementing
+        check_stop = check_wred_ecn_counter_stopped(network_controller_obj=network_controller_obj,
+                                                    port_num=dut_port_2,
+                                                    queue_num=self.test_queue, type=QOS_PROFILE_ECN)
+        fun_test.test_assert(check_stop, "Ensure ecn counters are not seen when we do not exceed bandwidth")
 
 
 class ECN_01(ECN_10):

@@ -617,7 +617,7 @@
     "ecn_enable": 1,
     "ecn_min_thr": 10,
     "ecn_max_thr": 9000,
-    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [15, 40, 65, 80]},
+    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [8]},
     "avg_period": 1024,
     "cap_avg_enable": 1,
     "cap_avg_sz": 1
