@@ -604,7 +604,7 @@
     "wred_weight": 2,
     "wred_min_thr": 10,
     "wred_max_thr": 90,
-    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [15, 40, 65, 90]},
+    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [15, 25, 45, 95]},
     "avg_period": 1024,
     "cap_avg_sz": 1,
     "cap_avg_enable": 1,
