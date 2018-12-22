@@ -327,6 +327,7 @@ class Wred_Q0(FunTestCase):
 
             # Calculate average
             for stat in self.stats_list:
+                fun_test.log("Values seen for stats %s for load %s are %s" % (stat, load_percent, observed_dict[stat]))
                 avg_val = reduce(lambda a, b: a + b, observed_dict[stat]) / len(observed_dict[stat])
                 fun_test.log("Average value seen for stat %s for pps %s is %s" % (stat, current_pps, avg_val))
                 output_avg_dict[str(current_pps)][stat] = avg_val
@@ -435,6 +436,7 @@ class ECN_10(Wred_Q0):
                 fun_test.log("Check %s stats incrementing" % stats)
 
                 out = observed_dict[stats]
+                fun_test.log("Values seen for stat %s are %s" % (stats, out))
                 for i in range(0, len(out) - 1):
                     current_value = out[i]
                     next_value = out[i + 1]
