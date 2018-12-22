@@ -19,8 +19,7 @@ class FunethPerformance(FunTestScript):
                               """
         1. In NU/HU host, run pscheduler container, and check pscheduler ping
         2. In NU/HU host, start iperf3 server
-        3. In NU/HU host, do throughput test - a. NU > HU,  b. HU > NU, c. HU > HU
-        4. In NU/HU host, do latency test - a. NU > HU, b. HU > NU, c. HU > HU
+        3. In NU/HU host, do throughput and latency test with 64B/1500B packets - a. NU > HU,  b. HU > NU, c. HU > HU
         """)
 
     def setup(self):
@@ -66,7 +65,7 @@ class FunethPerformance(FunTestScript):
         pass
 
 
-class FunethThroughputBase(FunTestCase):
+class FunethPerformanceBase(FunTestCase):
     def describe(self):
         pass
 
@@ -76,102 +75,118 @@ class FunethThroughputBase(FunTestCase):
     def cleanup(self):
         pass
 
-    def _run(self, host, desc, dst, tool='iperf3'):
-        if host == 'hu':
-            linux_obj_desc = 'hu_linux_obj'
-            cmd_prefix_desc = 'hu_cmd_prefix'
-        elif host == 'nu':
+    def _run(self, flow_type, dst, throughput_tool='iperf3', frame_size=1500):
+
+        def udp_payload(frame_size):
+            return frame_size-18-20-8
+
+        if flow_type == 'NU_HU':
             linux_obj_desc = 'nu_linux_obj'
             cmd_prefix_desc = 'nu_cmd_prefix'
+        else:
+            linux_obj_desc = 'hu_linux_obj'
+            cmd_prefix_desc = 'hu_cmd_prefix'
         linux_obj = fun_test.shared_variables[linux_obj_desc]
         cmd_prefix = fun_test.shared_variables[cmd_prefix_desc]
+        
+        # Throughput
+        duration_time = 30
         output = linux_obj.command(
-            '%s pscheduler task --tool %s throughput -d %s -u -t 30 -b %s' % (cmd_prefix, tool, dst, BW_LIMIT),
-            timeout=300)
-        match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps).*Jitter:\s(\S+ [m|u|n]s)', output, re.DOTALL)
-        fun_test.test_assert(match, "Measure %s throughput" % desc)
-        print '%s - Throughput: %s, Jitter: %s' % (desc, match.group(1), match.group(2))
+            '%s pscheduler task --tool %s throughput -d %s -u -l %s -t %s -b %s' % (
+                cmd_prefix, throughput_tool, dst, udp_payload(frame_size), duration_time, BW_LIMIT), timeout=300)
+        match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)\s+(\d+) / (\d+)\s+Jitter:\s(\S+ [m|u|n]s)', output,
+                          re.DOTALL)
+        fun_test.test_assert(match, "Measure %s throughput" % flow_type)
+
+        throughput = match.group(1)
+        pps = (int(match.group(3)) - int(match.group(2)))/duration_time
+        jitter = match.group(4)
+        print '%s - Throughput: %s, %s pps, Jitter: %s' % (flow_type, throughput, pps, jitter)
+        
+        # Latency
+        packet_count = 30
+        output = linux_obj.command(
+            '%s pscheduler task latency -d %s -p %s -c %s -i 1' % (cmd_prefix, dst, udp_payload(frame_size), packet_count),
+            timeout=180)
+        match = re.findall(r'Delay (Median|Minimum|Maximum|Mean).*?(\S+ [m|u|n]s)', output)
+        fun_test.test_assert(match, "Measure %s latency" % flow_type)
+
+        for i in match:
+            if i[0] == 'Median':
+                latency_median = i[1]
+            elif i[0] == 'Minimum':
+                latency_min = i[1]
+            elif i[0] == 'Maximum':
+                latency_max = i[1]
+            elif i[0] == 'Mean':
+                latency_mean = i[1]
+        print '%s - Latency: %s, %s, %s, %s,' % (flow_type, latency_median, latency_min, latency_max, latency_mean)
+
+        result = {
+            'frame_size': frame_size,
+            'flow_type': flow_type,
+            'throughput': throughput,
+            'pps': pps,
+            'jitter': jitter,
+            'latency_median': latency_mean,
+            'latency_min': latency_min,
+            'latency_max': latency_max,
+            'latency_mean': latency_mean
+        }
 
 
-class FunethThroughput_NUtoHU(FunethThroughputBase):
+class FunethPerformance_NU_HU_64B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Connect to NU host and do throughput test of NU > HU",
+                              summary="Do throughput and latency test of NU > HU with 64B frames",
                               steps="""
-        1. Run pscheduler throughput test with HU host interface as destination
+        1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
         """)
 
     def run(self):
-        FunethThroughputBase._run(self, host='nu', desc='NU to HU', dst=HU_PF_INTF_IP)
+        FunethPerformanceBase._run(self, flow_type='NU_HU', dst=HU_PF_INTF_IP, frame_size=64)
 
 
-class FunethThroughput_HUtoNU(FunethThroughputBase):
+class FunethPerformance_NU_HU_1500B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Connect to HU host and do throughput test of NU < HU",
+                              summary="Do throughput and latency test of NU > HU with 1500B frames",
                               steps="""
-        1. Run pscheduler throughput test with NU host interface as destination
+        1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
         """)
 
     def run(self):
-        FunethThroughputBase._run(self, host='hu', desc='HU to NU', dst=NU_INTF_IP)
+        FunethPerformanceBase._run(self, flow_type='NU_HU', dst=HU_PF_INTF_IP, frame_size=1500)
 
 
-class FunethLatencyBase(FunTestCase):
-    def describe(self):
-        pass
-
-    def setup(self):
-        pass
-
-    def cleanup(self):
-        pass
-
-    def _run(self, host, desc, dst):
-        if host == 'hu':
-            linux_obj_desc = 'hu_linux_obj'
-            cmd_prefix_desc = 'hu_cmd_prefix'
-        elif host == 'nu':
-            linux_obj_desc = 'nu_linux_obj'
-            cmd_prefix_desc = 'nu_cmd_prefix'
-        linux_obj = fun_test.shared_variables[linux_obj_desc]
-        cmd_prefix = fun_test.shared_variables[cmd_prefix_desc]
-        output = linux_obj.command('%s pscheduler task latency -d %s -c 30 -i 1' % (cmd_prefix, dst), timeout=180)
-        match = re.findall(r'Delay (Minimum|Maximum|Mean).*?(\S+ [m|u|n]s)', output)
-        fun_test.test_assert(match, "Measure %s latency" % desc)
-        print '%s - Latency:' % desc
-        for i in match:
-            print ': '.join(i)
-
-
-class FunethLatency_NUtoHU(FunethLatencyBase):
+class FunethPerformance_HU_NU_64B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Connect to NU host and do latency test of NU > HU",
+                              summary="Do throughput and latency test of NU < HU with 64B frames",
                               steps="""
-        1. Run pscheduler latency test with HU host interface as destination
+        1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethLatencyBase._run(self, host='nu', desc='NU to HU', dst=HU_PF_INTF_IP)
+        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, frame_size=64)
 
 
-class FunethLatency_HUtoNU(FunethLatencyBase):
+class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Connect to HU host and do latency test of NU < HU",
+                              summary="Do throughput and latency test of NU < HU with 1500B frames",
                               steps="""
-        1. Run pscheduler latency test with NU host interface as destination
+        1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethLatencyBase._run(self, host='hu', desc='HU PF to NU', dst=NU_INTF_IP)
+        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, frame_size=1500)
 
 
 if __name__ == "__main__":
     FunethScript = FunethPerformance()
-    FunethScript.add_test_case(FunethThroughput_NUtoHU())
-    FunethScript.add_test_case(FunethThroughput_HUtoNU())
-    FunethScript.add_test_case(FunethLatency_NUtoHU())
-    FunethScript.add_test_case(FunethLatency_HUtoNU())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
+    #FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
+    #FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
     FunethScript.run()
