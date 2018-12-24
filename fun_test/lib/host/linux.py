@@ -1435,6 +1435,9 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def remote_fio(self, destination_ip, timeout=60, **kwargs):
 
+        # List contains the all pattern of all known/possible error from the FIO
+        err_pat_list = [r'Assertion .* failed', r'.*err(or)*=.*']
+
         fio_command = "fio"
         fio_result = ""
         fio_dict = {}
@@ -1482,17 +1485,18 @@ class Linux(object, ToDictMixin):
         # fio_result += '\n'
         fun_test.debug(fio_result)
 
-        # Checking there is no error occured during the FIO test
-        match = ""
-        match = re.search(r'Assertion .* failed', fio_result, re.I)
-        if match:
-            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
-            return fio_dict
-
         # Trimming initial few lines to convert the output into a valid json format
         before, sep, after = fio_result.partition("{")
         trim_fio_result = sep + after
         fun_test.debug(trim_fio_result)
+
+        # Checking there is no error occurred during the FIO test
+        for pattern in err_pat_list:
+            match = ""
+            match = re.search(pattern, before, re.I)
+            if match:
+                fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+                return fio_dict
 
         # Converting the json into python dictionary
         fio_result_dict = json.loads(trim_fio_result)
@@ -1527,6 +1531,9 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def pcie_fio(self, filename, timeout=60, **kwargs):
 
+        # List contains the all pattern of all known/possible error from the FIO
+        err_pat_list = [r'Assertion .* failed', r'.*err(or)*=.*']
+
         fio_command = "sudo fio"
         fio_result = ""
         fio_dict = {}
@@ -1559,17 +1566,18 @@ class Linux(object, ToDictMixin):
         # fio_result += '\n'
         fun_test.debug(fio_result)
 
-        # Checking there is no error occured during the FIO test
-        match = ""
-        match = re.search(r'Assertion .* failed', fio_result, re.I)
-        if match:
-            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
-            return fio_dict
-
         # Trimming initial few lines to convert the output into a valid json format
         before, sep, after = fio_result.partition("{")
         trim_fio_result = sep + after
         fun_test.debug(trim_fio_result)
+
+        # Checking there is no error occurred during the FIO test
+        for pattern in err_pat_list:
+            match = ""
+            match = re.search(pattern, before, re.I)
+            if match:
+                fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+                return fio_dict
 
         # Converting the json into python dictionary
         fio_result_dict = json.loads(trim_fio_result)
