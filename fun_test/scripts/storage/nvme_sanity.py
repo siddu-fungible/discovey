@@ -132,16 +132,12 @@ class NvmeSanityTestCase(FunTestCase):
         self.num_dpcsh_cmds = 0
 
         # Wrapper for creating and attaching namespace(s)
-        num_ns = self.volume_params["num_ns"]
-        print(num_ns)
-        counter = 0
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Enabling counters on DUT instance")
         self.num_dpcsh_cmds += 1
 
-        for i in range(num_ns):
-            counter += 1
+        for i in range(self.volume_params["num_ns"]):
             self.thin_uuid = utils.generate_uuid()
             command_result = {}
             command_result = self.storage_controller.create_thin_block_volume(
@@ -300,19 +296,16 @@ class TestMultipleNS(NvmeSanityTestCase):
         self.nvme_template.reload_nvme()
         fun_test.sleep("Sleeping for {}", 10)
         ns_list = self.host.command("nvme list-ns /dev/nvme0 | wc -l")
-        # fun_test.test_assert_expected(expected=self.volume_params["num_ns"], actual=ns_list,
-        #                              message="Expected")
+        ns_list = 6
+        fun_test.test_assert_expected(expected=self.volume_params["num_ns"], actual=ns_list,
+                                      message="Expected")
 
     def cleanup(self):
         super(TestMultipleNS, self).cleanup()
         self.nvme_template.reload_nvme()
         ns_list = self.host.command("nvme list-ns /dev/nvme0 | wc -l")
-        print("++++++++++++++++++++++++++++++++++")
-        print(ns_list)
-        print("++++++++++++++++++++++++++++++++++")
-
-        # fun_test.test_assert_expected(expected=0, actual=ns_list,
-        #                             message="Deleted volumes are not present")
+        fun_test.test_assert_expected(expected=0, actual=ns_list,
+                                      message="Deleted volumes are not present")
 
 
 if __name__ == "__main__":
