@@ -1,0 +1,608 @@
+{
+  "ECKey256": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 268435456,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "blt_pass_threshold": 33,
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+  "ECKey256RW": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 268435456,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "fio_rwmixread": 30,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "0xFEEDFACECAFEBEEF",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "blt_pass_threshold": 33,
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    }
+  },
+  "ECKey256RandRW": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 20971520,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "fio_rwmixread": 30,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "0xFEEDFACECAFEBEEF",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "blt_pass_threshold": 33,
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    }
+  },
+  "ECKey512": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 20971520,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "0xFEEDFACECAFEBEEF",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "blt_pass_threshold": 33,
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+   "ECKey512RW": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 20971520,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "fio_rwmixread": 30,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "0xFEEDFACECAFEBEEF",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "blt_pass_threshold": 33,
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    }
+  },
+  "ECKey512RandRW": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 20971520,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "fio_rwmixread": 30,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "0xFEEDFACECAFEBEEF",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "blt_pass_threshold": 33,
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    }
+  },
+  "ECEncCompress": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 134217728,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "compress": true,
+    "zip_filter": "FILTER_TYPE_DEFLATE",
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    }
+  },
+  "ECEncCompressRW": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 134217728,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "compress": true,
+    "zip_filter": "FILTER_TYPE_DEFLATE",
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
+      "timeout": 120
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    }
+  },
+  "ECEncCompressRandRW": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 134217728,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "compress": true,
+    "zip_filter": "FILTER_TYPE_DEFLATE",
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
+      "timeout": 120
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    }
+  },
+  "ECEncDeadBeef": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 134217728,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "zip_filter": "FILTER_TYPE_DEFLATE",
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "fio_loop": 1,
+    "traffic_parallel": true,
+    "parallel_count": 4,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "randwrite"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_lsv_stats": {
+      "write": {"fault_injection": 0, "num_reads": 4096, "num_writes": 4096},
+      "randwrite": {"fault_injection": 0, "num_reads": 4096, "num_writes": 4096}
+    }
+  },
+  "ECEncZeroPattern": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 134217728,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "zip_filter": "FILTER_TYPE_DEFLATE",
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "fio_loop": 1,
+    "traffic_parallel": true,
+    "parallel_count": 8,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify_pattern": "\\\"0x000000000\\\"",
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "randwrite"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "write": {"fault_injection": 0, "num_reads": 8192, "num_writes": 8192},
+      "randwrite": {"fault_injection": 0, "num_reads": 8192, "num_writes": 8192}
+    }
+  },
+  "ECEncZeroHPattern": {
+    "ndata": 4,
+    "nparity": 2,
+    "blt_details": {
+      "capacity": 134217728,
+      "block_size": 4096
+    },
+    "jvol_create": true,
+    "jvol_details": {
+      "capacity": 524288,
+      "block_size": 512
+    },
+    "lsv_create": true,
+    "lsv_head": 30,
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "zip_filter": "FILTER_TYPE_DEFLATE",
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "fio_loop": 1,
+    "traffic_parallel": true,
+    "parallel_count": 8,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify_pattern": "0x0000000000000",
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "randwrite"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_lsv_stats": {
+      "write": {"fault_injection": 0, "num_reads": 8192, "num_writes": 8192},
+      "randwrite": {"fault_injection": 0, "num_reads": 8192, "num_writes": 8192}
+    }
+  }
+}
