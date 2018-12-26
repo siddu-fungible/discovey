@@ -5,6 +5,7 @@ from web.fun_test.models import Engineer
 from web.fun_test.models import Tag
 from web.fun_test.models import TestBed
 from web.fun_test.models import Module
+from web.fun_test.metrics_models import MetricsGlobalSettings
 from django.apps import apps
 from web.fun_test.metrics_models import MetricChart, LastMetricId
 import json
@@ -159,6 +160,10 @@ class SiteState():
         if total_chart.chart_name == "Total":
             total_chart.add_child(all_metrics_chart.metric_id)
 
+    def set_metrics_settings(self):
+        if MetricsGlobalSettings.objects.count() == 0:
+            global_settings = MetricsGlobalSettings()
+            global_settings.save()
 
 if not site_state:
     site_state = SiteState()

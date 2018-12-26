@@ -29,6 +29,7 @@ from datetime import datetime
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
+from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -228,6 +229,13 @@ def metric_info(request):
     # serialized_data["num_child_degrades"] = result["num_child_degrades"]
     serialized_data["children_info"] = result["children_info"]
     return serialized_data
+
+@csrf_exempt
+@api_safe_json_response
+def global_settings(request):
+    c = MetricsGlobalSettings.objects.first()
+    serialized = MetricsGlobalSettingsSerializer(c, many=False)
+    return serialized.data
 
 
 @csrf_exempt

@@ -105,6 +105,8 @@ export class PerformanceComponent implements OnInit {
   jenkinsUrl: string = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
   regressionUrl: string = "/regression/suite_detail/";
 
+  globalSettings: any = null;
+
   constructor(
     private location: Location,
     private apiService: ApiService,
@@ -123,7 +125,7 @@ export class PerformanceComponent implements OnInit {
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
     this.miniGridMaxHeight = '50%';
-    this.fetchDag();
+    this.fetchGlobalSettings();
     if (window.screen.width >= 1690) {
       this.numGridColumns = 4;
       this.miniGridMaxWidth = '25%';
@@ -139,6 +141,15 @@ export class PerformanceComponent implements OnInit {
 
   gitIdentify(): void {
     this.gitDiagnose = !this.gitDiagnose
+  }
+
+  fetchGlobalSettings(): void {
+    this.apiService.get("/metrics/global_settings").subscribe(response => {
+      this.globalSettings = response.data;
+      this.fetchDag();
+    }, error => {
+      this.loggerService.error("fetchGlobalSettings");
+    }
   }
 
   fetchDag(): void {
@@ -229,10 +240,14 @@ export class PerformanceComponent implements OnInit {
     try {
 
       node.trend = 0;
-      if (lastScore < penultimateScore) {
+      let tolerancePercentage = 0;
+      if (this.globalSettings) {
+        tolerancePercentage = this.globalSettings.tolerance_percentage/100;
+      }
+      if (lastScore < (penultimateScore * (1 - tolerancePercentage))) {
         node.trend = -1;
       }
-      if (lastScore > penultimateScore) {
+      if (lastScore > (penultimateScore * (1 + tolerancePercentage))) {
         node.trend = 1;
       }
       node.lastScore = lastScore;

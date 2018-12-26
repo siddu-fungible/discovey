@@ -17,6 +17,7 @@ from web.fun_test.metrics_models import MetricChart, ShaxPerformance
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
+from web.fun_test.metrics_models import MetricsGlobalSettings
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 start_month = 4
@@ -101,6 +102,10 @@ def interpolate(chart, model, from_date, to_date):
 
 
 fixup_results_cache = {}
+
+def get_tolerance():
+    global_settings = MetricsGlobalSettings.objects.first()
+    return global_settings.tolerance_percentage/100
 
 def prepare_status(chart, purge_old_status=False):
     metric_id = chart.metric_id
@@ -288,10 +293,10 @@ def prepare_status(chart, purge_old_status=False):
                     if not replacement:  # Bertrand wanted to keep track of the last good score
                         if last_good_score:
                             penultimate_good_score = last_good_score
-                        is_leaf_degrade = current_score < last_good_score
+                        is_leaf_degrade = current_score < (last_good_score * (1 - get_tolerance()))
                         last_good_score = current_score
                     else:
-                        is_leaf_degrade = current_score < penultimate_good_score
+                        is_leaf_degrade = current_score < (penultimate_good_score * (1 - get_tolerance()))
 
                     scores[current_date] = current_score
 
