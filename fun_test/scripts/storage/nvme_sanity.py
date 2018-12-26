@@ -3,15 +3,10 @@ from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
-from lib.host.storage_controller import StorageController
 from lib.templates.storage.qemu_storage_template import QemuStorageTemplate
 from lib.orchestration.simulation_orchestrator import DockerContainerOrchestrator
-from web.fun_test.analytics_models_helper import VolumePerformanceHelper
-import uuid
-import re
 from lib.templates.storage.nvme_template import NvmeTemplate
 from lib.host.storage_controller import StorageController
-from lib.host.traffic_generator import TrafficGenerator
 from lib.host.linux import *
 
 
@@ -67,8 +62,8 @@ class NvmeSanityScript(FunTestScript):
         """)
 
     def setup(self):
-        topology_obj_helper = TopologyHelper(spec=topology_dict)
-        self.topology = topology_obj_helper.deploy()
+        self.topology_obj_helper = TopologyHelper(spec=topology_dict)
+        self.topology = self.topology_obj_helper.deploy()
         fun_test.test_assert(self.topology, "Ensure deploy is successful")
         fun_test.shared_variables["topology"] = self.topology
         fun_test.shared_variables["ctrl_created"] = False
@@ -113,7 +108,7 @@ class NvmeSanityTestCase(FunTestCase):
         self.nvme_template = NvmeTemplate(self.host)
         fun_test.shared_variables["host"] = self.host
         fun_test.shared_variables["nvme_template"] = self.nvme_template
-        self.host.command("sudo apt install fio")
+        # self.host.command("sudo apt install fio")
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
@@ -293,23 +288,24 @@ class TestMultipleNS(NvmeSanityTestCase):
         super(TestMultipleNS, self).setup()
 
     def run(self):
+        self.ns_list = 0
         self.nvme_template.reload_nvme()
-        fun_test.sleep("Sleeping for {}", 10)
-        ns_list = self.host.command("nvme list-ns /dev/nvme0 | wc -l")
-        ns_list = 6
+        fun_test.sleep("Sleeping for {}", 2)
+        ns_list = int(self.host.command("nvme list-ns /dev/nvme0 | wc -l"))
         fun_test.test_assert_expected(expected=self.volume_params["num_ns"], actual=ns_list,
-                                      message="Expected")
+                                      message="Expected number of namespaces created")
 
     def cleanup(self):
+        self.ns_list = -1
         super(TestMultipleNS, self).cleanup()
         self.nvme_template.reload_nvme()
-        ns_list = self.host.command("nvme list-ns /dev/nvme0 | wc -l")
+        ns_list = int(self.host.command("nvme list-ns /dev/nvme0 | wc -l"))
         fun_test.test_assert_expected(expected=0, actual=ns_list,
-                                      message="Deleted volumes are not present")
+                                      message="All namespaces deleted")
 
 
 if __name__ == "__main__":
     nvme_script = NvmeSanityScript()
-    nvme_script.add_test_case(TestInitialization())
+    # nvme_script.add_test_case(TestInitialization())
     nvme_script.add_test_case(TestMultipleNS())
     nvme_script.run()
