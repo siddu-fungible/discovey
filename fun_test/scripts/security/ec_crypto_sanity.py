@@ -130,9 +130,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
         self.blt_delete_count = 0
         self.blt_capacity = 0
         self.uuid_list = []
-        self.capacity_list = []
-        self.blocksize_list = []
-        self.correct_key_tweak = None
         self.blt_creation_fail = None
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
@@ -159,11 +156,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
             self.blt_count = self.ndata + self.nparity
             fun_test.shared_variables["blt_count"] = self.blt_count + 1
             self.blt_uuid = {}
-            self.block_size = {}
-            self.vol_capacity = {}
-            self.encrypted_vol = {}
-            bs_auto = None
-            capacity_auto = None
 
             # LSV should be 70% of BLT capacity. So increase the BLT capacity by 30% and use BLT capacity for LSV.
             # Make sure the capacity is multiple of block size
@@ -180,7 +172,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                        capacity=self.blt_capacity,
                                                                        block_size=self.blt_details["block_size"],
-                                                                       name="think-block" + str(x),
+                                                                       name="thin_block" + str(x),
                                                                        uuid=self.blt_uuid[x],
                                                                        command_duration=self.command_timeout)
 
@@ -191,8 +183,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
                     self.blt_creation_fail = True
 
                 self.uuid_list.append(self.blt_uuid[x])
-                self.capacity_list.append(self.blt_details["capacity"])
-                self.blocksize_list.append(self.blt_details["block_size"])
 
             # Create EC Vol from updated blt capacity
             self.ec_uuid = []
@@ -679,16 +669,25 @@ class ECCryptoVolumeTestCase(FunTestCase):
         fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
-        bs_auto = None
-        capacity_auto = None
 
         if not self.blt_creation_fail:
-            command_result = {}
-            command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
-                                                                          uuid=self.lsv_uuid,
-                                                                          remote_ip=self.linux_host.internal_ip)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Detach LSV")
+            if self.traffic_parallel:
+                self.attach_count = self.parallel_count + 1
+                for x in range(1, self.attach_count, 1):
+                    command_result = {}
+                    command_result = self.storage_controller.volume_detach_remote(ns_id=x,
+                                                                                  uuid=self.lsv_uuid,
+                                                                                  remote_ip=self.linux_host.internal_ip)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detach LSV {}".format(x))
+
+            else:
+                command_result = {}
+                command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
+                                                                              uuid=self.lsv_uuid,
+                                                                              remote_ip=self.linux_host.internal_ip)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Detach LSV")
 
             command_result = {}
             command_result = self.storage_controller.delete_volume(capacity=self.lsv_capacity,
@@ -723,7 +722,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 command_result = {}
                 command_result = self.storage_controller.delete_volume(capacity=self.blt_capacity,
                                                                        block_size=self.blt_details["block_size"],
-                                                                       name="thin-block" + str(x),
+                                                                       name="thin_block" + str(x),
                                                                        uuid=self.blt_uuid[x],
                                                                        type="VOL_TYPE_BLK_LOCAL_THIN")
                 fun_test.log(command_result)
