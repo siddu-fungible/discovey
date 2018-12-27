@@ -28,7 +28,7 @@ ARG    JSONC_LOCAL_DIR=/usr/lib/
 ARG    JSONC_LOCAL=/usr/lib/json-c-$JSONC_VER.tar.gz
 
 
-RUN             apt -y update; apt-get -y upgrade; \
+RUN             apt-get -y update; apt-get -y upgrade; \
                 apt-get install --no-install-recommends --no-install-suggests -y \
                         python bc procps openssh-client openssh-server cpio libtool libasan2 less bzip2 \
                         vim curl wget rsync libcap2 libpci3 libpng16-16 libpixman-1-0 \
@@ -42,13 +42,7 @@ RUN             easy_install setuptools_git
 
 RUN     apt-get install -y build-essential software-properties-common && \
         add-apt-repository ppa:ubuntu-toolchain-r/test && \
-        apt-get update && \
-        apt-get install --no-install-recommends --no-install-suggests -y \
-                gcc-6 g++-6 && \
-        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 60 \
-                --slave /usr/bin/g++ g++ /usr/bin/g++-6 && \
-        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 \
-                --slave /usr/bin/g++ g++ /usr/bin/g++-7
+        apt-get update
 
 RUN     apt-get install --no-install-recommends --no-install-suggests -y \
                 make automake autoconf bison flex gdb bc git \
@@ -88,6 +82,10 @@ RUN   cd /fun_external; git clone https://github.com/zeromq/libzmq.git; \
       cd libzmq; git checkout tags/v4.2.2; ./autogen.sh; ./configure; \
       make; make install
 
+# Add nanomsg
+RUN   cd /fun_external; wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz; \
+      tar xvfz 1.0.0.tar.gz; cd nanomsg-1.0.0; mkdir -p build; cd build; \
+      cmake ..; make install; ldconfig
 
 # Add Redis
 RUN   cd /fun_external; git clone https://github.com/antirez/redis.git; \
@@ -103,7 +101,7 @@ RUN   cd /fun_external; git clone https://github.com/redis/hiredis.git; \
 
 
 # Ydk-gen build requirements
-RUN   apt install -y libxml2-dev doxygen graphviz libssh-dev libcurl4-openssl-dev libxslt-dev libtool-bin \
+RUN   apt-get install -y libxml2-dev doxygen graphviz libssh-dev libcurl4-openssl-dev libxslt-dev libtool-bin \
         libpcre3-dev libxslt1-dev python3-dev python-dev devscripts debhelper
 RUN   pip install -I pyang==1.6
 RUN   pip install -I Sphinx==1.4a1
@@ -112,7 +110,7 @@ RUN   pip install -I GitPython==1.0.1
 RUN   pip install -I rstr==2.2.6
 
 # Add Tools
-RUN   apt install -y gdb tcpdump strace net-tools
+RUN   apt-get install -y gdb tcpdump strace net-tools
 # HACK around https://github.com/dotcloud/docker/issues/5490
 RUN   mv /usr/sbin/tcpdump /usr/bin/tcpdump
 
@@ -129,11 +127,7 @@ RUN             cd /usr/lib/x86_64-linux-gnu/; ln -s /opt/poky/2.3.1/sysroots/x8
 #
 RUN		apt-get install -y build-essential software-properties-common && \
 		add-apt-repository ppa:ubuntu-toolchain-r/test && \
-		apt-get update && \
-		apt-get install --no-install-recommends --no-install-suggests -y \
-			gcc-5 g++-5 && \
-		update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 40 \
-			--slave /usr/bin/g++ g++ /usr/bin/g++-5
+		apt-get update
 
 #
 # Add a public space for Jenkins to use in future
@@ -231,6 +225,13 @@ COPY  funcp_start_redis.sh /fun_external
 RUN   chmod 777 /fun_external/funcp_start_redis.sh
 RUN   wget -O $REDIS_SO_LOCAL $REDIS_SO
 CMD   /fun_external/funcp_start_redis.sh
+
+
+# Set default GCC to gcc-8 (8.2.0)
+RUN   apt-get install -y gcc-8 g++-8
+RUN   update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+RUN   update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+
 
 # Enable root SSH access 
 RUN mkdir /var/run/sshd
