@@ -57,6 +57,7 @@ class LSVCryptoVolumeScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["vol_encrypt_filter"] = 0
         fun_test.shared_variables["vol_decrypt_filter"] = 0
+        fun_test.shared_variables["total_lsv_ops"] = 0
         fun_test.shared_variables["ctrl_created"] = False
 
     def cleanup(self):
@@ -109,11 +110,6 @@ class LSVCryptoVolumeTestCase(FunTestCase):
         fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
                      format(testcase, self.expected_lsv_stats))
 
-        if 'blt_pass_threshold' not in testcase_dict[testcase]:
-            self.blt_pass_threshold = 20
-            fun_test.log("Setting blt passing threshold number to {} for this {} testcase, because its not set in "
-                         "the {} file".format(self.blt_pass_threshold, testcase, testcase_file))
-
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
 
         self.topology = fun_test.shared_variables["topology"]
@@ -125,14 +121,10 @@ class LSVCryptoVolumeTestCase(FunTestCase):
 
         key256_count = 0
         key512_count = 0
-        self.blt_create_count = 0
-        self.blt_attach_count = 0
-        self.blt_detach_count = 0
         self.blt_delete_count = 0
         self.uuid_list = []
         self.capacity_list = []
         self.blocksize_list = []
-        self.correct_key_tweak = None
         self.blt_creation_fail = None
 
         if "lsv" not in fun_test.shared_variables or not fun_test.shared_variables["lsv"]["setup_created"]:
@@ -158,11 +150,6 @@ class LSVCryptoVolumeTestCase(FunTestCase):
             command_result = {}
             fun_test.shared_variables["blt_count"] = self.blt_count + 1
             self.blt_uuid = {}
-            self.block_size = {}
-            self.vol_capacity = {}
-            self.encrypted_vol = {}
-            bs_auto = None
-            capacity_auto = None
 
             for x in range(1, fun_test.shared_variables["blt_count"], 1):
                 self.blt_uuid[x] = utils.generate_uuid()
@@ -178,14 +165,17 @@ class LSVCryptoVolumeTestCase(FunTestCase):
                 command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                        capacity=self.blt_capacity,
                                                                        block_size=self.blt_details["block_size"],
-                                                                       name="think-block" + str(x),
+                                                                       name="thin_block" + str(x),
                                                                        uuid=self.blt_uuid[x],
                                                                        command_duration=self.command_timeout)
 
-                if command_result:
-                    fun_test.test_assert(command_result["status"], "Creation of BLT {} on DUT".format(x))
+                if command_result["status"]:
+                    fun_test.test_assert(command_result["status"],
+                                         "Creation of BLT {} on DUT with capacity {}".format(x, self.blt_capacity))
                 else:
                     self.blt_creation_fail = True
+                    fun_test.test_assert(command_result["status"],
+                                         "Creation of BLT {} on DUT with capacity {}".format(x, self.blt_capacity))
 
                 self.uuid_list.append(self.blt_uuid[x])
                 self.capacity_list.append(self.blt_details["capacity"])
@@ -204,7 +194,8 @@ class LSVCryptoVolumeTestCase(FunTestCase):
                                                                        uuid=self.jvol_uuid,
                                                                        command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Jvol creation on DUT")
+                fun_test.test_assert(command_result["status"],
+                                     "Jvol creation on DUT with capacity {}".format(self.jvol_details["capacity"]))
 
             # Key generation for encryption based on size or input is random or alternate
             self.lsv_uuid = utils.generate_uuid()
@@ -241,7 +232,9 @@ class LSVCryptoVolumeTestCase(FunTestCase):
                                                                        zip_effort=self.zip_effort,
                                                                        command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "LSV creation with compression & encryption")
+                fun_test.test_assert(
+                    command_result["status"],
+                    "LSV creation with compression & encryption with capacity {}".format(self.lsv_capacity))
             else:
                 command_result = {}
                 command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LSV",
@@ -257,7 +250,8 @@ class LSVCryptoVolumeTestCase(FunTestCase):
                                                                        xtweak=self.xts_tweak,
                                                                        command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "LSV creation with encryption")
+                fun_test.test_assert(command_result["status"],
+                                     "LSV creation with encryption only with capacity {}".format(self.lsv_capacity))
 
             if self.traffic_parallel:
                 self.attach_count = self.parallel_count + 1
@@ -539,7 +533,6 @@ class LSVCryptoVolumeTestCase(FunTestCase):
                         fun_test.log(command_result["data"])
 
         # The total LSV write/read should match the total crypto operations.
-        self.total_lsv_ops = 0
         command_result = {}
         storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
                                                      "volumes",
@@ -550,9 +543,9 @@ class LSVCryptoVolumeTestCase(FunTestCase):
         total_lsv_ops = command_result["data"]
         for tkey, tvalue in total_lsv_ops.items():
             if tkey == "num_writes":
-                self.total_lsv_ops += tvalue
+                fun_test.shared_variables["total_lsv_ops"] += tvalue
             elif tkey == "num_reads":
-                self.total_lsv_ops += tvalue
+                fun_test.shared_variables["total_lsv_ops"] += tvalue
 
         command_result = {}
         command_result = self.storage_controller.peek(crypto_props_tree)
@@ -560,16 +553,16 @@ class LSVCryptoVolumeTestCase(FunTestCase):
 
         fun_test.log("The total crypto ops is {}". format(self.total_crypto_ops))
 
-        if self.total_crypto_ops == self.total_lsv_ops:
+        if self.total_crypto_ops == fun_test.shared_variables["total_lsv_stats"]:
             fun_test.add_checkpoint("The total crypto operations and lsv operations match".
                                     format(self),
                                     "PASSED", self.total_crypto_ops,
-                                    self.total_lsv_ops)
+                                    fun_test.shared_variables["total_lsv_stats"])
         else:
-            fun_test.add_checkpoint("The total crypto operations and lsv operations doesn't match".
+            fun_test.add_checkpoint("The total crypto operations and lsv operations match".
                                     format(self),
                                     "FAILED", self.total_crypto_ops,
-                                    self.total_lsv_ops)
+                                    fun_test.shared_variables["total_lsv_stats"])
 
         command_result = {}
         final_crypto_cluster_stats = {}
@@ -603,16 +596,24 @@ class LSVCryptoVolumeTestCase(FunTestCase):
         fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
-        bs_auto = None
-        capacity_auto = None
 
         if not self.blt_creation_fail:
-            command_result = {}
-            command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
-                                                                          uuid=self.lsv_uuid,
-                                                                          remote_ip=self.linux_host.internal_ip)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Detach LSV")
+            if self.traffic_parallel:
+                self.attach_count = self.parallel_count + 1
+                for x in range(1, self.attach_count, 1):
+                    command_result = {}
+                    command_result = self.storage_controller.volume_detach_remote(ns_id=x,
+                                                                                  uuid=self.lsv_uuid,
+                                                                                  remote_ip=self.linux_host.internal_ip)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detach LSV {}".format(x))
+            else:
+                command_result = {}
+                command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
+                                                                              uuid=self.lsv_uuid,
+                                                                              remote_ip=self.linux_host.internal_ip)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Detach LSV")
 
             command_result = {}
             command_result = self.storage_controller.delete_volume(capacity=self.lsv_capacity,
@@ -634,18 +635,10 @@ class LSVCryptoVolumeTestCase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Deleted Journal")
 
             for x in range(1, fun_test.shared_variables["blt_count"], 1):
-                if self.blt_details["block_size"] == "Auto":
-                    bs_auto = True
-                    self.blt_details["block_size"] = self.block_size[x]
-
-                if self.blt_details["capacity"] == "Auto":
-                    capacity_auto = True
-                    self.blt_details["capacity"] = self.vol_capacity[x]
-
                 command_result = {}
                 command_result = self.storage_controller.delete_volume(capacity=self.blt_capacity,
                                                                        block_size=self.blt_details["block_size"],
-                                                                       name="thin-block" + str(x),
+                                                                       name="thin_block" + str(x),
                                                                        uuid=self.blt_uuid[x],
                                                                        type="VOL_TYPE_BLK_LOCAL_THIN")
                 fun_test.log(command_result)
@@ -653,11 +646,6 @@ class LSVCryptoVolumeTestCase(FunTestCase):
                     self.blt_delete_count += 1
                 else:
                     fun_test.test_assert(not command_result["status"], "Deleting BLT {} on DUT".format(x))
-
-                if bs_auto:
-                    self.blt_details["block_size"] = "Auto"
-                if capacity_auto:
-                        self.blt_details["capacity"] = "Auto"
 
             if self.blt_delete_count == self.blt_count:
                 fun_test.add_checkpoint("Total BLT count {} & deleted BLT count {}".
@@ -1070,7 +1058,7 @@ class MultipleFio512(LSVCryptoVolumeTestCase):
         super(MultipleFio512, self).run()
 
     def cleanup(self):
-        super(MultipleFio256, self).cleanup()
+        super(MultipleFio512, self).cleanup()
 
 
 class MultipleFio512RW(LSVCryptoVolumeTestCase):
@@ -1092,7 +1080,7 @@ class MultipleFio512RW(LSVCryptoVolumeTestCase):
         super(MultipleFio512RW, self).run()
 
     def cleanup(self):
-        super(MultipleFio256RW, self).cleanup()
+        super(MultipleFio512RW, self).cleanup()
 
 
 class MultipleFio512RandRW(LSVCryptoVolumeTestCase):
