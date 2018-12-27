@@ -51,7 +51,7 @@ class FunethSanity(FunTestScript):
         fun_test.test_assert(
             re.search(r'100 packets transmitted, 100 received, 0% packet loss', output),
             "HU PF and VF interface loopback ping test via NU")
-        linux_obj.command('/home/localadmin/gliang/hu.sh')
+        linux_obj.command('sudo ip route add 19.1.1.0/24 via 53.1.1.1')
         fun_test.shared_variables['hu_linux_obj'] = linux_obj
 
 
@@ -77,7 +77,7 @@ class FunethTestNUPingHU(FunTestCase):
     def run(self):
         linux_obj = fun_test.shared_variables['nu_linux_obj']
         fun_test.test_assert(linux_obj.ping("53.1.1.5"), "Ping PF interface success")
-        fun_test.test_assert(linux_obj.ping("53.1.9.5"), "Ping VF interface success")
+        #fun_test.test_assert(linux_obj.ping("53.1.9.5"), "Ping VF interface success")
 
 
 if __name__ == "__main__":
