@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
@@ -109,6 +109,10 @@ export class PerformanceComponent implements OnInit {
 
   globalSettings: any = null;
   private location: Location;
+  toolTipMessage: string = null;
+  @ViewChild('copyUrlTooltip') copyUrlTooltip;
+  chartReady: boolean = false;
+
 
   constructor(
     private apiService: ApiService,
@@ -612,7 +616,7 @@ export class PerformanceComponent implements OnInit {
   };
 
   showAtomicMetric = (flatNode) => {
-    this.commonService.scrollTo("chart-info");
+    this.chartReady = false;
     if (this.currentNode && this.currentNode.showAddJira) {
       this.currentNode.showAddJira = false;
     }
@@ -624,10 +628,13 @@ export class PerformanceComponent implements OnInit {
     this.currentNode.showAddJira = true;
     this.mode = Mode.ShowingAtomicMetric;
     this.expandNode(flatNode);
+    this.commonService.scrollTo("chart-info");
+    this.chartReady = true;
+
   };
 
   showNonAtomicMetric = (flatNode) => {
-    this.commonService.scrollTo("chart-info");
+    this.chartReady = false;
     if (this.currentNode && this.currentNode.showAddJira) {
       this.currentNode.showAddJira = false;
     }
@@ -639,6 +646,9 @@ export class PerformanceComponent implements OnInit {
     this.mode = Mode.ShowingNonAtomicMetric;
     this.expandNode(flatNode);
     this.prepareGridNodes(flatNode.node);
+    this.commonService.scrollTo("chart-info");
+    this.chartReady = true;
+
   };
 
   submitWeightClick = (node, childId, info) => {
@@ -662,13 +672,17 @@ export class PerformanceComponent implements OnInit {
   }
 
   //copy atomic URL to clipboard
-  copyAtomicUrl(): void {
+  copyAtomicUrl(): string {
     let baseUrl = window.location.protocol +
       '//' + window.location.hostname +
       ':' + window.location.port;
     let url = baseUrl + "/performance/atomic/" + this.currentNode.metricId;
     this.clipboardService.copyFromContent(url);
-    alert('URL: ' + url + " copied to clipboard");
+    let message = 'URL: ' + url + " copied to clipboard";
+    this.toolTipMessage = message;
+    //alert(message);
+    this.copyUrlTooltip.open();
+    return message;
   }
 
 }
