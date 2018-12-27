@@ -3,6 +3,7 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 
+
 @Component({
   selector: 'fun-metric-chart',
   templateUrl: './fun-metric-chart.component.html',
@@ -702,4 +703,5 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
     return result;
   }
+
 }

@@ -1,9 +1,11 @@
 import {Component, OnInit} from '@angular/core';
-import {Location} from '@angular/common';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
+import { ClipboardService } from 'ngx-clipboard';
+import { Location }   from '@angular/common';
+
 
 class ChildInfo {
   lastScore: number;
@@ -106,13 +108,15 @@ export class PerformanceComponent implements OnInit {
   regressionUrl: string = "/regression/suite_detail/";
 
   globalSettings: any = null;
+  private location: Location;
 
   constructor(
-    private location: Location,
     private apiService: ApiService,
     private loggerService: LoggerService,
     private title: Title,
-    private commonService: CommonService
+    private commonService: CommonService,
+    private clipboardService: ClipboardService
+
   ) {
   }
 
@@ -149,7 +153,7 @@ export class PerformanceComponent implements OnInit {
       this.fetchDag();
     }, error => {
       this.loggerService.error("fetchGlobalSettings");
-    }
+    });
   }
 
   fetchDag(): void {
@@ -655,6 +659,16 @@ export class PerformanceComponent implements OnInit {
 
   updateNumBug(numBugs, node): void{
     node.numBugs = numBugs;
+  }
+
+  //copy atomic URL to clipboard
+  copyAtomicUrl(): void {
+    let baseUrl = window.location.protocol +
+      '//' + window.location.hostname +
+      ':' + window.location.port;
+    let url = baseUrl + "/performance/atomic/" + this.currentNode.metricId;
+    this.clipboardService.copyFromContent(url);
+    alert('URL: ' + url + " copied to clipboard");
   }
 
 }
