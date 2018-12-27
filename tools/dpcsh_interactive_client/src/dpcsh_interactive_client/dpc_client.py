@@ -123,10 +123,10 @@ class DpcClient(object):
                     if self.verbose:
                         print("Unable to parse JSON data")
                     json_output = output
-                try:
+                if 'result' in json_output:
                     result = json_output['result']
-                except KeyError as ex:
-                    print (str(ex))
+                else:
+                    result = json_output
         except socket.error, msg:
             print msg
         except Exception as ex:

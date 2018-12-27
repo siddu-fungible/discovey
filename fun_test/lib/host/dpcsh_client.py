@@ -87,11 +87,11 @@ class DpcshClient(object):
                     fun_test.debug("Unable to parse JSON data")
                     json_output = output
                 result["status"] = True
-                try:
+
+                if 'result' in json_output:
                     result["data"] = json_output['result']
-                except KeyError as ex:
-                    fun_test.debug("Something went wrong !!")
-                    print (str(ex))
+                else:
+                    result['data'] = json_output
                 result["error_message"] = None
             if (type(result["data"]) is bool and result["data"] is False) or (type(result["data"]) is int and
                                                                               result["data"] < 0):
