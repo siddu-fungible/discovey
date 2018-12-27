@@ -123,7 +123,7 @@ class DpcClient(object):
                     if self.verbose:
                         print("Unable to parse JSON data")
                     json_output = output
-                if 'result' in json_output:
+                if "result" in json_output:
                     result = json_output['result']
                 else:
                     result = json_output

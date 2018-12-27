@@ -88,10 +88,10 @@ class DpcshClient(object):
                     json_output = output
                 result["status"] = True
 
-                if 'result' in json_output:
-                    result["data"] = json_output['result']
+                if "result" in json_output:
+                    result["data"] = json_output["result"]
                 else:
-                    result['data'] = json_output
+                    result["data"] = json_output
                 result["error_message"] = None
             if (type(result["data"]) is bool and result["data"] is False) or (type(result["data"]) is int and
                                                                               result["data"] < 0):
