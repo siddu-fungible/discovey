@@ -123,7 +123,7 @@
   },
   {
     "name": "local_settings",
-    "flow_direction": "NU_NU",
+    "flow_direction": "FPG_CC",
     "ip_version": "4",
     "spray_enable": false
   }
