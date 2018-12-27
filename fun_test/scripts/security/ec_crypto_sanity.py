@@ -194,12 +194,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 self.capacity_list.append(self.blt_details["capacity"])
                 self.blocksize_list.append(self.blt_details["block_size"])
 
-                if bs_auto:
-                    self.blt_details["block_size"] = "Auto"
-                if capacity_auto:
-                    self.blt_details["capacity"] = "Auto"
-
-            # Create EC Vol from blt capacity
+            # Create EC Vol from updated blt capacity
             self.ec_uuid = []
             self.ec_uuid = utils.generate_uuid()
             self.ec_capacity = self.blt_capacity * self.ndata
@@ -214,6 +209,9 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                    pvol_id=self.uuid_list,
                                                                    command_duration=self.command_timeout)
 
+            # Create JVol
+            # The minimum jvol_capacity requirement is LSV chunk size * block size * 4
+            # For current script we have hardcoded this 32 * 4096 * 4 as input
             if self.jvol_create:
                 self.jvol_uuid = utils.generate_uuid()
                 command_result = {}
@@ -543,9 +541,9 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                 diff_crypto_stats[combo][mode])
                     else:
                         fun_test.add_checkpoint("Crypto count for the block size & IO depth combo {}".format(combo),
-                                               "FAILED",
-                                               total_diff_stats,
-                                               diff_crypto_stats[combo][mode])
+                                                "FAILED",
+                                                total_diff_stats,
+                                                diff_crypto_stats[combo][mode])
                         fun_test.critical("Crypto stats don't match LSV stats")
 
                     for ekey, evalue in expected_lsv_stats[mode].items():
@@ -567,6 +565,31 @@ class ECCryptoVolumeTestCase(FunTestCase):
                         else:
                             internal_result[combo][mode] = False
                             fun_test.critical("{} is not found in volume stats".format(ekey))
+
+                    # TODO : Check uncompress stats once SWOS-3737 is fixed
+                    if self.compress:
+                        storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
+                                                                     "volumes",
+                                                                     "VOL_TYPE_BLK_LSV",
+                                                                     self.lsv_uuid,
+                                                                     "compression")
+                        command_result = {}
+                        command_result = self.storage_controller.peek(storage_props_tree)
+                        compression_stats = command_result["data"]
+                        for ckey, cvalue in compression_stats.items():
+                            if ckey == "compress_reqs":
+                                compress_reqs = cvalue
+                            elif ckey == "compress_done":
+                                compress_done = cvalue
+                            elif ckey == "compress_fails":
+                                compress_fails = cvalue
+                            elif ckey == "uncompress_fails":
+                                uncompress_fails = cvalue
+                        # fun_test.simple_assert(expression=compress_reqs == compress_done,
+                        #                       message="Compression reqs & ops done")
+                        fun_test.simple_assert(expression=compress_fails == uncompress_fails == 0,
+                                               message="Compression failures")
+                        fun_test.log(command_result["data"])
 
         # Get total write/read stats from the ndata BLT
         blt_count = fun_test.shared_variables["blt_count"] - self.nparity
@@ -645,18 +668,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                 crypto_ops += xts_ops
                                 fun_test.log("Crypto operations on {} is {}".format(key, xts_ops))
 
-        if self.compress:
-            storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
-                                                         "volumes",
-                                                         "VOL_TYPE_BLK_LSV",
-                                                         self.lsv_uuid,
-                                                         "compression")
-            command_result = {}
-            command_result = self.storage_controller.peek(storage_props_tree)
-            compression_stats = command_result["data"]
-            fun_test.log(command_result["data"])
-
-
         test_result = True
         fun_test.log(fio_result)
         fun_test.log(internal_result)
@@ -709,14 +720,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Deleted EC Vol")
 
             for x in range(1, fun_test.shared_variables["blt_count"], 1):
-                if self.blt_details["block_size"] == "Auto":
-                    bs_auto = True
-                    self.blt_details["block_size"] = self.block_size[x]
-
-                if self.blt_details["capacity"] == "Auto":
-                    capacity_auto = True
-                    self.blt_details["capacity"] = self.vol_capacity[x]
-
                 command_result = {}
                 command_result = self.storage_controller.delete_volume(capacity=self.blt_capacity,
                                                                        block_size=self.blt_details["block_size"],
@@ -729,11 +732,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 else:
                     fun_test.test_assert(not command_result["status"], "Deleting BLT {} on DUT".format(x))
 
-                if bs_auto:
-                    self.blt_details["block_size"] = "Auto"
-                if capacity_auto:
-                        self.blt_details["capacity"] = "Auto"
-
             if self.blt_delete_count == self.blt_count:
                 fun_test.add_checkpoint("Total BLT count {} & deleted BLT count {}".
                                         format(self.blt_count, self.blt_delete_count),
@@ -743,8 +741,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 fun_test.simple_assert(True, "Deleted all BLT")
         fun_test.shared_variables["ec"]["setup_created"] = False
 
+        # TODO code this check after SWOS-3597 is fixed
         # Cleanup should not have any traces of volumes left
-        # SWOS-3597
         command_result = {}
         storage_props_tree = "{}/{}".format("storage", "volumes")
         command_result = self.storage_controller.peek(storage_props_tree)
