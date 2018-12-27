@@ -23,14 +23,6 @@ q_depth = 'avg_q_integ'
 wred_q_drop = 'wred_q_drop'
 
 
-def get_load_pps_for_each_queue(max_egress_load_mbps, packet_size, total_queues=None):
-    max_load_bits = max_egress_load_mbps * 1000000
-    bit_packet_size = packet_size * 8
-    if not total_queues:
-        total_queues = 16
-    return  int(max_load_bits / (bit_packet_size * total_queues))
-
-
 class SpirentSetup(FunTestScript):
 
     def describe(self):
@@ -158,7 +150,7 @@ class SpirentSetup(FunTestScript):
 
         # Subscribe to results
         project = template_obj.stc_manager.get_project_handle()
-        subscribe_results = template_obj.subscribe_to_all_results(parent=project)
+        subscribe_results = template_obj.subscribe_to_all_results(parent=project, diff_serv=True)
         fun_test.test_assert(subscribe_results['result'], "Subscribing to results")
         del subscribe_results['result']
 
@@ -175,13 +167,13 @@ class SpirentSetup(FunTestScript):
                 fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
 
         reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
-        fun_test.simple_assert(reset_config, "Ensure default scheduler config is set for all queues")
+        fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
     def cleanup(self):
         reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
-        fun_test.simple_assert(reset_config, "Ensure default scheduler config is set for all queues")
+        fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class All_Queues_Share_BW(FunTestCase):
@@ -211,12 +203,12 @@ class All_Queues_Share_BW(FunTestCase):
     def cleanup(self):
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=streamblock_handle_list)
-        fun_test.test_assert(stop_streams, "Ensure all streams are stopped")
+        fun_test.add_checkpoint("Ensure all streams are stopped")
 
     def start_and_fetch_streamblock_results(self):
         start_streams = template_obj.stc_manager.start_traffic_stream(
             stream_blocks_list=streamblock_handle_list)
-        fun_test.test_assert(start_streams, "Ensure all streams are started")
+        fun_test.add_checkpoint("Ensure all streams are started")
 
         fun_test.sleep("Sleeping %s seconds for traffic to execute", seconds=self.sleep_timer)
 
@@ -291,7 +283,7 @@ class All_Queues_Pir(All_Queues_Share_BW):
 
     def setup(self):
         reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
-        fun_test.simple_assert(reset_config, "Ensure default scheduler config is set for all queues")
+        fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
         for queue in queue_list:
             disable = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
@@ -310,7 +302,7 @@ class All_Queues_Pir(All_Queues_Share_BW):
                                                                       shaper_enable=False,
                                                                       max_rate=0,
                                                                       shaper_threshold=0)
-            fun_test.test_assert(disable, "Remove pir on queue %s" % queue, ignore_on_success=True)
+            fun_test.add_checkpoint("Remove pir on queue %s" % queue, ignore_on_success=True)
 
 
 class All_Queues_DWRR(All_Queues_Share_BW):
@@ -372,14 +364,14 @@ class All_Queues_DWRR(All_Queues_Share_BW):
             weight = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
                                                                      scheduler_type=network_controller_obj.SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN,
                                                                      weight=1)
-            fun_test.simple_assert(weight, "Set weight %s on queue %s" % (1, queue), ignore_on_success=True)
+            fun_test.add_checkpoint("Set weight %s on queue %s" % (1, queue))
 
 
             rate = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
                                                                    scheduler_type=network_controller_obj.SCHEDULER_TYPE_SHAPER,
                                                                    shaper_enable=True, min_rate=2000,
                                                                    shaper_threshold=1000)
-            fun_test.simple_assert(rate, "Set default rate 2000 on queue %s" % queue, ignore_on_success=True)
+            fun_test.add_checkpoint("Set default rate 2000 on queue %s" % queue)
         fun_test.log("Resetted dwrr and shaper values to default")
 
 class All_Queues_WRED(FunTestCase):
@@ -565,7 +557,7 @@ class All_Queues_WRED(FunTestCase):
                                                                              wred_enable=0,
                                                                              wred_weight=self.wred_weight,
                                                                              wred_prof_num=self.prof_num)
-            fun_test.test_assert(set_queue_cfg, "Ensure queue config is set for %s" % queue)
+            fun_test.add_checkpoint("Ensure queue config is set for %s" % queue)
 
 
 class All_Queues_ECN(All_Queues_WRED):
@@ -582,7 +574,7 @@ class All_Queues_ECN(All_Queues_WRED):
     prof_num = qos_test_json['ecn_prof_num']
     avg_period = qos_test_json['avg_period']
     cap_avg_sz = qos_test_json['cap_avg_sz']
-    stats_list = [q_depth, wred_q_drop]
+    stats_list = [q_depth, ecn_count]
     reserved_val = '0064' * 13
     current_ecn_bits = ECN_BITS_10
 
@@ -598,8 +590,35 @@ class All_Queues_ECN(All_Queues_WRED):
                                     """)
 
     def run(self):
-        # TODO. Get frame count of ecn bits using diff serv
-        pass
+        super(All_Queues_ECN).run()
+
+        result = {}
+        out = template_obj.stc_manager.get_port_diffserv_results(port_handle=port_2,
+                                                                 subscribe_handle=subscribe_results[
+                                                                     'diff_serv_subscribe'])
+
+        for queue in queue_list:
+            result[str(queue)] = False
+            ecn_qos_val = template_obj.get_diff_serv_dscp_value_from_decimal_value(decimal_value_list=[queue],
+                                                                                   dscp_value=True)
+            qos_binary_value = get_ecn_qos_binary(qos_binary=ecn_qos_val[queue]['dscp_value'])
+            for key in out.keys():
+                if key == str(qos_binary_value):
+                    if int(out[key]['Ipv4FrameCount']) > 0:
+                        result[str(queue)] = True
+
+        for queue in queue_list:
+            fun_test.test_assert(result[str(queue)], message="Check ECN set counters on spirent are seen for queue %s" % queue)
+
+    def cleanup(self):
+        for queue in queue_list:
+            set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
+                                                                             queue_num=queue,
+                                                                             enable_ecn=0,
+                                                                             ecn_profile_num=self.prof_num)
+            fun_test.add_checkpoint("Ensure queue config is set for %s" % queue)
+
+
 
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)

@@ -168,9 +168,9 @@ class SpirentSetup(FunTestScript):
 
     def cleanup(self):
         reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
-        fun_test.test_assert(reset_config, "Ensure default scheduler config is set for all queues")
+        fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class SP_Shaper_Q0_SP_EB(FunTestCase):
@@ -272,7 +272,7 @@ class SP_Shaper_Q0_SP_EB(FunTestCase):
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=self.streamblock_handles_list)
-        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+        fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():
@@ -356,9 +356,9 @@ class EB_SP_Shaper_DWRR_Non_SP(SP_Shaper_Q0_SP_EB):
                                                                          queue_num=i,
                                                                          scheduler_type=network_controller_obj.SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN,
                                                                          weight=qos_json_output['dwrr']['default_weight'])
-            fun_test.test_assert(set_weight, "Ensure dwrr weight is %s set on port %s for queue %s" %
+            fun_test.add_checkpoint("Ensure dwrr weight is %s set on port %s for queue %s" %
                                  (qos_json_output['dwrr']['default_weight'], dut_port_2,
-                                  i), ignore_on_success=True)
+                                  i))
         fun_test.log("Resetted DWRR to default values")
 
 

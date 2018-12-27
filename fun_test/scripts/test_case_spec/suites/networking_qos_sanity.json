@@ -1,9 +1,9 @@
 [
-  {"path": "networking/qos/test_pfc.py"},
+  {"path": "networking/qos/test_pfc.py", "test_case_ids": [4]},
+  {"path": "networking/qos/test_pfc_on_4ports.py"},
   {"path": "networking/qos/test_qos_strict_priority.py", "test_case_ids": [1]},
   {"path": "networking/qos/test_cir_1.py", "test_case_ids": [1]},
   {"path": "networking/qos/test_pir.py", "test_case_ids": [1]},
   {"path": "networking/qos/test_qos_dwrr.py", "test_case_ids": [1]},
-  {"path": "networking/qos/test_qos_wred.py", "test_case_ids": [1]},
-  {"path": "networking/qos/test_qos_ecn.py", "test_case_ids": [1]}
+  {"path": "networking/qos/test_qos_wred_ecn.py", "test_case_ids": [1, 2]}
 ]

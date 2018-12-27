@@ -95,12 +95,10 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                            self.QEMU_FS, internal_ssh_port)
             elif vm_host_os == self.HOST_OS_FUNGIBLE_UBUNTU["name"]:
                 command = './{} {} -daemonize -vnc :1 -smp {} -m {} ' \
-                          '-device nvme-rem-fe  -machine q35 ' \
-                          '-redir tcp:{}::22 -redir tcp:40220::40220 -enable-kvm'.format(self.QEMU_PROCESS,
-                                                                                         self.HOST_IMAGE_PATH,
-                                                                                         qemu_num_cpus,
-                                                                                         2048,  # TODO
-                                                                                         internal_ssh_port)
+                          '-device nvme-rem-fe -machine q35 ' \
+                          '-redir tcp:{}::22 -enable-kvm'.format(self.QEMU_PROCESS, self.HOST_IMAGE_PATH,
+                                                                 qemu_num_cpus, 2048,  # TODO
+                                                                 internal_ssh_port)
 
             self.start_bg_process(command=command, output_file=self.QEMU_LOG)
 

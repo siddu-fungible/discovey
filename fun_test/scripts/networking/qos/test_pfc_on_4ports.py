@@ -267,7 +267,7 @@ class SpirentSetup(FunTestScript):
 
     def cleanup(self):
         # Cleanup spirent session
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
         for dut_port in dut_port_list:
             disable_1 = network_controller_obj.disable_priority_flow_control(dut_port, shape=shape)
@@ -306,7 +306,7 @@ class TestCase1(FunTestCase):
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=[port_1_dscp_0_stream.spirent_handle, port_3_dscp_0_stream_2.spirent_handle,
                                 port_3_dscp_1_stream.spirent_handle, port_2_pfc_stream.spirent_handle])
-        fun_test.test_assert(stop_streams, "Ensure stream dscp2 stream and pfc streams are stopped")
+        fun_test.add_checkpoint("Ensure stream dscp2 stream and pfc streams are stopped")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():

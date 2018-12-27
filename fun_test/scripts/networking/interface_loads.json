@@ -7,31 +7,27 @@
     "rx_range_min": 350, "rx_range_max": 500, "duration": 10
   },
   "vp_performance": {
-    "FPG_HU": {
-      "spray_enable": {"64": 6000, "200": 3200, "1000": 740, "1500": 450, "3000": 250, "9000": 84},
-      "spray_disable": {"64": 570, "200": 570, "1000": 560, "1500": 450, "3000": 250, "9000": 84}
-    },
-    "HU_FPG": {
-      "spray_enable": {"64": 115, "200": 115, "1000": 115, "1500": 115, "3000": 115, "9000": 78},
-      "spray_disable": {"64": 115, "200": 115, "1000": 115, "1500": 115, "3000": 115, "9000": 78}
-    },
     "FPG_HNU": {
+      "spray_ip_count": 13,
       "spray_enable": {"64": 460, "1500": 450},
       "spray_disable": {"64": 210, "1500": 190}
     },
     "HNU_FPG": {
+      "spray_ip_count": 200,
       "spray_enable": {"64": 580, "1500": 530},
       "spray_disable": {"64": 180, "1500": 180}
     },
     "FCP_HNU_HNU": {
+      "spray_ip_count": 1,
       "spray_enable": {"64": 220, "1000": 130},
       "spray_disable": {"64": 140, "1000": 110}
     },
     "HNU_HNU": {
+      "spray_ip_count": 13,
       "spray_enable": {"64": 230, "1500": 200},
       "spray_disable": {"64": 115, "1500": 110}
     },
-    "FPG_FPG": {
+    "NU_NU": {
       "spray_disable": {"64": 9500, "1500": 530}
     },
     "duration": 60

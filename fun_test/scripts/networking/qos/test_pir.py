@@ -169,9 +169,9 @@ class SpirentSetup(FunTestScript):
 
     def cleanup(self):
         reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
-        fun_test.test_assert(reset_config, "Ensure default scheduler config is set for all queues")
+        fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class Pir_Q0(FunTestCase):
@@ -252,13 +252,12 @@ class Pir_Q0(FunTestCase):
                                                                    shaper_enable=False,
                                                                    max_rate=0,
                                                                    shaper_threshold=0)
-        fun_test.test_assert(set_rate,
-                             "Reset shaper rate to 0, threshold is 0 set on port %s for queue %s" %
+        fun_test.add_checkpoint("Reset shaper rate to 0, threshold is 0 set on port %s for queue %s" %
                              (dut_port_2, self.pir_stream_dscp))
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=self.streamblock_handles_list)
-        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+        fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():

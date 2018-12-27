@@ -544,6 +544,50 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def systemctl(self,
+                  service_name,
+                  action="restart"):
+
+        result = False
+        start_action = ["start", "restart", "reload"]
+        stop_action  = ["stop"]
+        start_status = "active"
+        stop_status  = "inactive"
+
+        # Applying the requested action on the desired service
+        command = "systemctl %s %s --no-pager" % (action, service_name)
+        try:
+            output = self.sudo_command(command)
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+            return result
+        # Checking whether the requested action applied correctly on the desired service
+        command = "systemctl is-active %s" % (service_name)
+        try:
+            output = self.sudo_command(command)
+            if action in start_action:
+                if output.find(start_status) != -1:
+                    result = True
+                    fun_test.debug("{}ing of service {}: Passed".format(action.capitalize(), service_name))
+                else:
+                    result = False
+                    fun_test.debug("{}ing of service {}: Failed".format(action.capitalize(), service_name))
+            elif action in stop_action:
+                if output.find(stop_status) != -1:
+                    result = True
+                    fun_test.debug("{}ing of service {}: Passed".format(action.capitalize(), service_name))
+                else:
+                    result = False
+                    fun_test.debug("{}ing of service {}: Failed".format(action.capitalize(), service_name))
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        return result
+
+    @fun_test.safe
     def get_process_id(self, process_name):
         pid = None
         command = "pidof -x " + process_name
@@ -1391,6 +1435,9 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def remote_fio(self, destination_ip, timeout=60, **kwargs):
 
+        # List contains the all pattern of all known/possible error from the FIO
+        err_pat_list = [r'Assertion .* failed', r'.*err(or)*=.*']
+
         fio_command = "fio"
         fio_result = ""
         fio_dict = {}
@@ -1438,17 +1485,18 @@ class Linux(object, ToDictMixin):
         # fio_result += '\n'
         fun_test.debug(fio_result)
 
-        # Checking there is no error occured during the FIO test
-        match = ""
-        match = re.search(r'Assertion .* failed', fio_result, re.I)
-        if match:
-            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
-            return fio_dict
-
         # Trimming initial few lines to convert the output into a valid json format
         before, sep, after = fio_result.partition("{")
         trim_fio_result = sep + after
         fun_test.debug(trim_fio_result)
+
+        # Checking there is no error occurred during the FIO test
+        for pattern in err_pat_list:
+            match = ""
+            match = re.search(pattern, before, re.I)
+            if match:
+                fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+                return fio_dict
 
         # Converting the json into python dictionary
         fio_result_dict = json.loads(trim_fio_result)
@@ -1483,6 +1531,9 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def pcie_fio(self, filename, timeout=60, **kwargs):
 
+        # List contains the all pattern of all known/possible error from the FIO
+        err_pat_list = [r'Assertion .* failed', r'.*err(or)*=.*']
+
         fio_command = "sudo fio"
         fio_result = ""
         fio_dict = {}
@@ -1515,17 +1566,18 @@ class Linux(object, ToDictMixin):
         # fio_result += '\n'
         fun_test.debug(fio_result)
 
-        # Checking there is no error occured during the FIO test
-        match = ""
-        match = re.search(r'Assertion .* failed', fio_result, re.I)
-        if match:
-            fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
-            return fio_dict
-
         # Trimming initial few lines to convert the output into a valid json format
         before, sep, after = fio_result.partition("{")
         trim_fio_result = sep + after
         fun_test.debug(trim_fio_result)
+
+        # Checking there is no error occurred during the FIO test
+        for pattern in err_pat_list:
+            match = ""
+            match = re.search(pattern, before, re.I)
+            if match:
+                fun_test.critical("FIO test failed due to an error: {}".format(match.group(0)))
+                return fio_dict
 
         # Converting the json into python dictionary
         fio_result_dict = json.loads(trim_fio_result)
@@ -1536,7 +1588,7 @@ class Linux(object, ToDictMixin):
             fio_dict[operation] = {}
             for stat in ["bw", "iops", "latency"]:
                 if stat != "latency":
-                    fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][stat]))
+                    fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
                 else:
                     for key in fio_result_dict["jobs"][0][operation].keys():
                         if key.startswith("lat"):

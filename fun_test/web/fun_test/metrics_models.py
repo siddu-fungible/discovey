@@ -21,6 +21,16 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 LAST_ANALYTICS_DB_STATUS_UPDATE = "last_status_update"
 
+class MetricsGlobalSettings(models.Model):
+    tolerance_percentage = models.FloatField(default=3.0)
+
+class MetricsGlobalSettingsSerializer(ModelSerializer):
+
+    class Meta:
+        model = MetricsGlobalSettings
+        fields = "__all__"
+
+
 class MetricChartStatus(models.Model):
     metric_id = models.IntegerField(default=-1)
     chart_name = models.TextField(default="Unknown")

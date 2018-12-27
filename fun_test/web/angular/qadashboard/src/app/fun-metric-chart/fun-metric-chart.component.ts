@@ -3,6 +3,7 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 
+
 @Component({
   selector: 'fun-metric-chart',
   templateUrl: './fun-metric-chart.component.html',
@@ -681,18 +682,26 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
+
   //creates the point values for the funchart
   getValidatedData(data, minimum, maximum): any {
     let result = data;
     if (data < 0) {
       data = null;
     }
+    let i = 0;
     result = {
       y: data,
       marker: {
         radius: 3
       }
     };
+    if (data > maximum) {
+      result.y = maximum;
+      result.marker['symbol'] = "url(/static/media/red-x-png-7.png)";
+      result.marker.radius = 3;
+    }
     return result;
   }
+
 }

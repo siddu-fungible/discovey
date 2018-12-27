@@ -2,7 +2,7 @@ import logging
 import sys
 ###################################################################################
 # Coding
-import pylzma
+# import pylzma
 
 
 def encode(stream):
@@ -59,9 +59,9 @@ def code_pointer(i, s):
     return len(s), i
 
 
-MAX_WINDOW_SIZE = 32 << 10
+MAX_WINDOW_SIZE = 256 << 10
 MIN_PAT_LEN = 2
-MAX_PAT_LEN = 258
+MAX_PAT_LEN = 273
 
 
 def lookback(window, s):

@@ -159,5 +159,9 @@ def convert_int_to_byte_array(data):
 
 
 if __name__ == '__main__':
-    with open("/tmp/datagen.test", "w+") as infile:
-        infile.write(generate_random_literals(2048))
+    dat = generate_random_literals(256)
+    with open("/tmp/rand-256.dat", "w+") as infile:
+        infile.write(dat)
+        infile.write(dat)
+        infile.write(dat)
+        infile.write(dat)

@@ -26,7 +26,7 @@ docker build . -t nw-reg-base
 
 ```
 cd user
-docker build . -t reg-nw-user --build-arg ARG_USER=$USER --build-arg ARG_UID=$UID --build-arg ARG_GID=`id -g`
+docker build . -t nw-reg-user --build-arg ARG_USER=$USER --build-arg ARG_UID=$UID --build-arg ARG_GID=`id -g`
 ```
 
 5. To run FunCP container:

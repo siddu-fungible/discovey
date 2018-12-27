@@ -142,7 +142,7 @@ class SpirentSetup(FunTestScript):
 
     def cleanup(self):
         # Cleanup spirent session
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
         disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
         disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2, shape=shape)

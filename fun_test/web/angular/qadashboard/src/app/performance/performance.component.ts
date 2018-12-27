@@ -1,9 +1,11 @@
-import {Component, OnInit} from '@angular/core';
-import {Location} from '@angular/common';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
+import { ClipboardService } from 'ngx-clipboard';
+import { Location }   from '@angular/common';
+
 
 class ChildInfo {
   lastScore: number;
@@ -105,12 +107,20 @@ export class PerformanceComponent implements OnInit {
   jenkinsUrl: string = "http://jenkins-sw-master:8080/job/emulation/job/scheduled_emulation/";
   regressionUrl: string = "/regression/suite_detail/";
 
+  globalSettings: any = null;
+  private location: Location;
+  toolTipMessage: string = null;
+  @ViewChild('copyUrlTooltip') copyUrlTooltip;
+  chartReady: boolean = false;
+
+
   constructor(
-    private location: Location,
     private apiService: ApiService,
     private loggerService: LoggerService,
     private title: Title,
-    private commonService: CommonService
+    private commonService: CommonService,
+    private clipboardService: ClipboardService
+
   ) {
   }
 
@@ -123,7 +133,7 @@ export class PerformanceComponent implements OnInit {
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
     this.miniGridMaxHeight = '50%';
-    this.fetchDag();
+    this.fetchGlobalSettings();
     if (window.screen.width >= 1690) {
       this.numGridColumns = 4;
       this.miniGridMaxWidth = '25%';
@@ -139,6 +149,15 @@ export class PerformanceComponent implements OnInit {
 
   gitIdentify(): void {
     this.gitDiagnose = !this.gitDiagnose
+  }
+
+  fetchGlobalSettings(): void {
+    this.apiService.get("/metrics/global_settings").subscribe(response => {
+      this.globalSettings = response.data;
+      this.fetchDag();
+    }, error => {
+      this.loggerService.error("fetchGlobalSettings");
+    });
   }
 
   fetchDag(): void {
@@ -229,10 +248,14 @@ export class PerformanceComponent implements OnInit {
     try {
 
       node.trend = 0;
-      if (lastScore < penultimateScore) {
+      let tolerancePercentage = 0;
+      if (this.globalSettings) {
+        tolerancePercentage = this.globalSettings.tolerance_percentage/100;
+      }
+      if (lastScore < (penultimateScore * (1 - tolerancePercentage))) {
         node.trend = -1;
       }
-      if (lastScore > penultimateScore) {
+      if (lastScore > (penultimateScore * (1 + tolerancePercentage))) {
         node.trend = 1;
       }
       node.lastScore = lastScore;
@@ -593,7 +616,7 @@ export class PerformanceComponent implements OnInit {
   };
 
   showAtomicMetric = (flatNode) => {
-    this.commonService.scrollTo("chart-info");
+    this.chartReady = false;
     if (this.currentNode && this.currentNode.showAddJira) {
       this.currentNode.showAddJira = false;
     }
@@ -605,10 +628,13 @@ export class PerformanceComponent implements OnInit {
     this.currentNode.showAddJira = true;
     this.mode = Mode.ShowingAtomicMetric;
     this.expandNode(flatNode);
+    this.commonService.scrollTo("chart-info");
+    this.chartReady = true;
+
   };
 
   showNonAtomicMetric = (flatNode) => {
-    this.commonService.scrollTo("chart-info");
+    this.chartReady = false;
     if (this.currentNode && this.currentNode.showAddJira) {
       this.currentNode.showAddJira = false;
     }
@@ -620,6 +646,9 @@ export class PerformanceComponent implements OnInit {
     this.mode = Mode.ShowingNonAtomicMetric;
     this.expandNode(flatNode);
     this.prepareGridNodes(flatNode.node);
+    this.commonService.scrollTo("chart-info");
+    this.chartReady = true;
+
   };
 
   submitWeightClick = (node, childId, info) => {
@@ -640,6 +669,20 @@ export class PerformanceComponent implements OnInit {
 
   updateNumBug(numBugs, node): void{
     node.numBugs = numBugs;
+  }
+
+  //copy atomic URL to clipboard
+  copyAtomicUrl(): string {
+    let baseUrl = window.location.protocol +
+      '//' + window.location.hostname +
+      ':' + window.location.port;
+    let url = baseUrl + "/performance/atomic/" + this.currentNode.metricId;
+    this.clipboardService.copyFromContent(url);
+    let message = 'URL: ' + url + " copied to clipboard";
+    this.toolTipMessage = message;
+    //alert(message);
+    this.copyUrlTooltip.open();
+    return message;
   }
 
 }

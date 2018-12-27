@@ -568,11 +568,11 @@
           "dwrr_traffic_time": 15,
           "default_weight": 1,
           "ingress_port1": [
-              {"dscp": 12, "load_percent": 50, "expected_load_percent": 10, "weight": 1, "rate": 1, "threshold": 282000},
-              {"dscp": 13, "load_percent": 50, "expected_load_percent": 20, "weight": 2, "rate": 1, "threshold": 282000}],
+              {"load_percent": 50, "expected_load_percent": 10, "weight": 1, "rate": 1, "threshold": 282000},
+              {"load_percent": 50, "expected_load_percent": 20, "weight": 2, "rate": 1, "threshold": 282000}],
           "ingress_port2": [
-              {"dscp": 14, "load_percent": 50, "expected_load_percent": 30, "weight": 3, "rate": 1, "threshold": 282000},
-              {"dscp": 15, "load_percent": 50, "expected_load_percent": 40, "weight": 4, "rate": 1, "threshold": 282000}]
+              {"load_percent": 50, "expected_load_percent": 30, "weight": 3, "rate": 1, "threshold": 282000},
+              {"load_percent": 50, "expected_load_percent": 40, "weight": 4, "rate": 1, "threshold": 282000}]
     },
   "all_queues_dwrr": {
     "all_queues_traffic_time": 15,
@@ -597,31 +597,27 @@
               {"dscp": 15, "load_percent": 14, "expected_load_percent": 11.5, "weight": 23, "rate": 1, "threshold": 282000}]
   },
   "wred": {
-    "wred_timer": 5,
+    "wred_timer": 15,
     "wred_prob_index": 0,
     "wred_prof_num": 0,
     "wred_enable": 1,
     "wred_weight": 2,
     "wred_min_thr": 10,
     "wred_max_thr": 90,
-    "stream_pps": [40, 70, 100, 150, 250],
-    "pfc_pps": 323,
-    "pfc_quanta": 100,
+    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [15, 40, 65, 80]},
     "avg_period": 1024,
     "cap_avg_sz": 1,
     "cap_avg_enable": 1,
     "non_wred_load_percent": 15
   },
   "ecn": {
-    "ecn_enable": 1,
     "ecn_timer": 15,
     "ecn_prob_index": 0,
     "ecn_prof_num": 0,
+    "ecn_enable": 1,
     "ecn_min_thr": 10,
     "ecn_max_thr": 9000,
-    "stream_pps": 150,
-    "pfc_pps": 323,
-    "pfc_quanta": 100,
+    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [15, 40, 65, 80]},
     "avg_period": 1024,
     "cap_avg_enable": 1,
     "cap_avg_sz": 1
@@ -634,9 +630,7 @@
     "wred_weight": 2,
     "wred_min_thr": 10,
     "wred_max_thr": 90,
-    "stream_pps_percent": [90, 95],
-    "pfc_pps": 323,
-    "pfc_quanta": 100,
+    "stream_pps_percent": [90, 95, 105],
     "avg_period": 1024,
     "cap_avg_sz": 1,
     "cap_avg_enable": 1,

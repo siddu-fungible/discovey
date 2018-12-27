@@ -17,3 +17,4 @@ class Command(BaseCommand):
             site_state.register_testbeds()
         if is_regression_server() or is_performance_server():
             site_state.register_product_metrics()
+            site_state.set_metrics_settings()

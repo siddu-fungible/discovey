@@ -25,7 +25,8 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
         'AF12': {'dscp_value': '001100', 'decimal_value': '12', 'dscp_high': '1', 'dscp_low': '4'},
         '13': {'dscp_value': '000000', 'decimal_value': '13', 'dscp_high': '1', 'dscp_low': '5'},
         'AF13': {'dscp_value': '001110', 'decimal_value': '14', 'dscp_high': '1', 'dscp_low': '6'},
-        '15': {'dscp_value': '000000', 'decimal_value': '15', 'dscp_high': '1', 'dscp_low': '7'},
+        '15': {'dscp_value': '001111', 'decimal_value': '15', 'dscp_high': '1', 'dscp_low': '7'},
+        '16': {'dscp_value': '010000', 'decimal_value': '16', 'dscp_high': '2', 'dscp_low': '0'},
         'AF21': {'dscp_value': '010010', 'decimal_value': '18', 'dscp_high': '2', 'dscp_low': '2'},
         'AF22': {'dscp_value': '010100', 'decimal_value': '20', 'dscp_high': '2', 'dscp_low': '4'},
         'AF23': {'dscp_value': '010110', 'decimal_value': '22', 'dscp_high': '2', 'dscp_low': '6'},
@@ -150,73 +151,31 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def populate_performance_counters_json(self, mode, file_name, latency_results=None, jitter_results=None,
-                                           flow_type=None, spray_enable=False):
+    def populate_performance_counters_json(self, mode, file_name, results=None, flow_type=None, timestamp=None):
         file_created = False
         records = []
         try:
-            timestamp = get_current_time()
-            for key in latency_results:
+            if not timestamp:
+                timestamp = get_current_time()
+            for key in results:
                 record = OrderedDict()
                 record['mode'] = mode.upper()
                 record['version'] = fun_test.get_version()
-                # record['ip_version'] = ip_version
                 record['timestamp'] = timestamp
                 frame_size = int(key.split('_')[1])
                 record['frame_size'] = frame_size
                 if flow_type:
                     record['flow_type'] = flow_type
-                record['spray'] = spray_enable
-                if jitter_results:
-                    if len(latency_results[key]['latency_count']) > 1:
-                        record['throughput'] = float(latency_results[key]['throughput_count'])
-                        record['pps'] = latency_results[key]['pps_count']
+                record['throughput'] = float(results[key]['throughput_count'])
+                record['pps'] = results[key]['pps_count']
 
-                        record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
-                        record['port_a_to_b_latency_max'] = latency_results[key]['latency_count'][0]['max']
-                        record['port_a_to_b_latency_min'] = latency_results[key]['latency_count'][0]['min']
+                record['latency_avg'] = results[key]['latency_count'][0]['avg']
+                record['latency_max'] = results[key]['latency_count'][0]['max']
+                record['latency_min'] = results[key]['latency_count'][0]['min']
 
-                        record['port_b_to_a_latency_avg'] = latency_results[key]['latency_count'][1]['avg']
-                        record['port_b_to_a_latency_max'] = latency_results[key]['latency_count'][1]['max']
-                        record['port_b_to_a_latency_min'] = latency_results[key]['latency_count'][1]['min']
-
-                        record['port_a_to_b_jitter_avg'] = jitter_results[key]['jitter_count'][0]['avg']
-                        record['port_a_to_b_jitter_max'] = jitter_results[key]['jitter_count'][0]['max']
-                        record['port_a_to_b_jitter_min'] = jitter_results[key]['jitter_count'][0]['min']
-
-                        record['port_b_to_a_jitter_avg'] = jitter_results[key]['jitter_count'][1]['avg']
-                        record['port_b_to_a_jitter_max'] = jitter_results[key]['jitter_count'][1]['max']
-                        record['port_b_to_a_jitter_min'] = jitter_results[key]['jitter_count'][1]['min']
-                    else:
-                        record['throughput'] = float(latency_results[key]['throughput_count'])
-                        record['pps'] = latency_results[key]['pps_count']
-
-                        record['latency_avg'] = latency_results[key]['latency_count'][0]['avg']
-                        record['latency_max'] = latency_results[key]['latency_count'][0]['max']
-                        record['latency_min'] = latency_results[key]['latency_count'][0]['min']
-
-                        record['jitter_avg'] = jitter_results[key]['jitter_count'][0]['avg']
-                        record['jitter_max'] = jitter_results[key]['jitter_count'][0]['max']
-                        record['jitter_min'] = jitter_results[key]['jitter_count'][0]['min']
-                else:
-                    if len(latency_results[key]['latency_count']) > 1:
-                        record['throughput'] = float(latency_results[key]['throughput_count'])
-                        record['pps'] = latency_results[key]['pps_count']
-
-                        record['port_a_to_b_latency_avg'] = latency_results[key]['latency_count'][0]['avg']
-                        record['port_a_to_b_latency_max'] = latency_results[key]['latency_count'][0]['max']
-                        record['port_a_to_b_latency_min'] = latency_results[key]['latency_count'][0]['min']
-
-                        record['port_b_to_a_latency_avg'] = latency_results[key]['latency_count'][1]['avg']
-                        record['port_b_to_a_latency_max'] = latency_results[key]['latency_count'][1]['max']
-                        record['port_b_to_a_latency_min'] = latency_results[key]['latency_count'][1]['min']
-                    else:
-                        record['throughput'] = float(latency_results[key]['throughput_count'])
-                        record['pps'] = latency_results[key]['pps_count']
-
-                        record['latency_avg'] = latency_results[key]['latency_count'][0]['avg']
-                        record['latency_max'] = latency_results[key]['latency_count'][0]['max']
-                        record['latency_min'] = latency_results[key]['latency_count'][0]['min']
+                record['jitter_avg'] = results[key]['jitter_count'][0]['avg']
+                record['jitter_max'] = results[key]['jitter_count'][0]['max']
+                record['jitter_min'] = results[key]['jitter_count'][0]['min']
                 records.append(record)
             fun_test.debug(records)
             previous_run_records = self.read_json_file_contents(file_path=file_name)

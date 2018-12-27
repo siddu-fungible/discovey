@@ -19,8 +19,9 @@ class F1(Linux, ToDictMixin):
     DPCSH_PROXY_LOG = "/tmp/dpcsh_proxy.log.txt"
 
     START_MODE_NORMAL = "START_MODE_NORMAL"  # How do we define NORMAL ? #TODO
-    START_MODE_DPCSH_ONLY = "START_MODE_DPCSH_ONLY"   # Start with dpcsh only
-    START_MODE_CUSTOM_APP = "START_MODE_CUSTOM_APP" # the user will start it from the script by specifying the app
+    START_MODE_DPCSH_ONLY = "START_MODE_DPCSH_ONLY"  # Start with dpcsh only
+    START_MODE_QEMU_PLUS_DPCSH = "START_MODE_QEMU_PLUS_DPCSH"  # Start with dpcsh server for the prem_test app also
+    START_MODE_CUSTOM_APP = "START_MODE_CUSTOM_APP"  # the user will start it from the script by specifying the app
 
     CONNECT_RETRY_TIMEOUT_DEFAULT = 90
 
@@ -96,7 +97,6 @@ class F1(Linux, ToDictMixin):
 
         if simulation_mode:
             if start_mode == self.START_MODE_NORMAL:
-
                 try:
                     process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
                     if process_id:
@@ -115,6 +115,42 @@ class F1(Linux, ToDictMixin):
                             self.FUN_OS_SIMULATION_PROCESS_NAME), output_file=self.F1_LOG)
                     fun_test.sleep("Ensure FunOS is started", seconds=10)
                     fun_test.test_assert(new_process_id, "Started FunOs")
+                    result = True
+                except:
+                    pass  #TODO
+            if start_mode == self.START_MODE_QEMU_PLUS_DPCSH:
+                try:
+                    process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
+                    if process_id:
+                        self.kill_process(process_id=process_id[0], signal=9)
+
+                    self.command("cd {}".format(self.SIMULATION_FUNOS_BUILD_PATH))
+                    # Creating the metadata file needed for the funos-posix
+                    # self.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
+                    self.command("ulimit -Sc unlimited")
+                    self.command(r'export ASAN_OPTIONS="disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=true"')
+                    # self.command("./funos-posix app=mdt_test nvfile=nvfile")
+                    # self.interactive_command("./funos-posix app=prem_test sim_id=nvme_test nvfile=nvfile",
+                    #                          expected_prompt="Remote PCIe EP NVME Test")
+
+                    # Formatting the drive
+                    mdt_command = "./{} app=mdt_test nvfile=nvfile &> {}".format(self.FUN_OS_SIMULATION_PROCESS_NAME,
+                                                                                 self.F1_LOG)
+                    self.command(command=mdt_command)
+
+                    # Starting the funos-poix to run the prem_test app along with the dpc-server
+                    funos_command = "./{} --dpc-server app=prem_test nvfile=nvfile".format(
+                        self.FUN_OS_SIMULATION_PROCESS_NAME)
+                    self.fun_os_process_id = self.start_bg_process(command=funos_command, output_file=self.F1_LOG)
+                    fun_test.sleep("Ensure FunOS is started", seconds=10)
+                    fun_test.test_assert(self.fun_os_process_id, "Started FunOs")
+
+                    # Starting the dpcsh tcp proxy
+                    dpcsh_tcp_proxy_cmd = "{}/{} --tcp_proxy={}".format(self.DPCSH_PATH, self.DPCSH_PROCESS_NAME,
+                                                                        self.INTERNAL_DPCSH_PORT)
+                    self.dpcsh_tcp_proxy_process_id = self.start_bg_process(command=dpcsh_tcp_proxy_cmd,
+                                                                            output_file=self.DPCSH_PROXY_LOG)
+                    fun_test.test_assert(self.dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
                     result = True
                 except:
                     pass  #TODO

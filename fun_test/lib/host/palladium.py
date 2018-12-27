@@ -76,7 +76,7 @@ class DpcshProxy(object):
 
     @fun_test.safe
     def stop_dpcsh_proxy(self, dpcsh_proxy_name="dpcsh", dpcsh_proxy_port=40221, dpcsh_proxy_tty="ttyUSB8"):
-        process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty + '.*' + str(dpcsh_proxy_port)
+        process_pat = dpcsh_proxy_name + '.*' + dpcsh_proxy_tty
         current_dpcsh_proxy_pid = self.linux.get_process_id_by_pattern(process_pat)
         if current_dpcsh_proxy_pid:
             self.linux.kill_process(process_id=current_dpcsh_proxy_pid, sudo=False)

@@ -189,7 +189,7 @@ class SpirentSetup(FunTestScript):
         del subscribe_results['result']
 
     def cleanup(self):
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class ECN_10(FunTestCase):
@@ -395,7 +395,7 @@ class ECN_10(FunTestCase):
                                                                          queue_num=self.ecn_applied_queue_num,
                                                                          enable_ecn=0,
                                                                          ecn_profile_num=self.prof_num)
-        fun_test.simple_assert(set_queue_cfg, "Disable ecn on queue %s" % self.ecn_applied_queue_num)
+        fun_test.add_checkpoint("Disable ecn on queue %s" % self.ecn_applied_queue_num)
 
 class ECN_01(ECN_10):
     ecn_applied_queue_num = 0
@@ -559,7 +559,7 @@ class ECN_10_00(FunTestCase):
     def cleanup(self):
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=streamblock_handles_list + [pfc_stream.spirent_handle])
-        fun_test.test_assert(stop_streams, "Stop running traffic")
+        fun_test.add_checkpoint("Stop running traffic")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():
@@ -569,7 +569,7 @@ class ECN_10_00(FunTestCase):
                                                                          queue_num=self.port_1_stream_dscp,
                                                                          enable_ecn=0,
                                                                          ecn_profile_num=self.prof_num)
-        fun_test.simple_assert(set_queue_cfg, "Disable ecn on queue %s" % self.port_1_stream_dscp)
+        fun_test.add_checkpoint("Disable ecn on queue %s" % self.port_1_stream_dscp)
 
 class ECN_10_10(ECN_10_00):
     stream_ecn_bits_list = [ECN_BITS_10, ECN_BITS_10]
