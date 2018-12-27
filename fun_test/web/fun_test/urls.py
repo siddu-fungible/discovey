@@ -137,6 +137,7 @@ metric_urls = [
     url(r'^test$', metrics_views.test),
     url(r'^scores', metrics_views.scores),
     url(r'^dag$', metrics_views.dag),
+    url(r'^global_settings', metrics_views.global_settings),
     url(r'^(.*)/jiras$', metrics_views.fetch_jira_info),
     url(r'^(.*)/jiras/delete/(.*)$', metrics_views.delete_jira_info),
     url(r'^(.*)/jiras/(.*)$', metrics_views.update_jira_info)

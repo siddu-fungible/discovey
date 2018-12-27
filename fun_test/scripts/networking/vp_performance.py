@@ -240,7 +240,7 @@ class NuVpLatencyIPv4Test(FunTestCase):
                 dest_ip = l3_config['vp_destination_ip1']
             elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FPG_HNU or \
                     FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-                recycle_count = 13
+                recycle_count = 4
                 dest_ip = l3_config['hnu_destination_ip2']
             elif FLOW_DIRECTION == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
                 recycle_count = 1
@@ -443,10 +443,8 @@ class NuVpLatencyIPv4Test(FunTestCase):
 
         mode = dut_config['interface_mode']
         output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, flow_type=FLOW_DIRECTION,
-                                                        latency_results=latency_results,
-                                                        jitter_results=jitter_results,
-                                                        file_name=output_file_path, spray_enable=SPRAY_ENABLE)
+        template_obj.populate_performance_counters_json(mode=mode, file_name=output_file_path, results=latency_results,
+                                                        flow_type=FLOW_DIRECTION)
 
 
 class NuVpJitterTest(FunTestCase):
@@ -679,10 +677,8 @@ class NuVpJitterTest(FunTestCase):
 
         mode = dut_config['interface_mode']
         output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
-        template_obj.populate_performance_counters_json(mode=mode, flow_type=FLOW_DIRECTION,
-                                                        latency_results=latency_results,
-                                                        jitter_results=jitter_results,
-                                                        file_name=output_file_path, spray_enable=SPRAY_ENABLE)
+        template_obj.populate_performance_counters_json(mode=mode, file_name=output_file_path, results=latency_results,
+                                                        flow_type=FLOW_DIRECTION)
 
 
 if __name__ == "__main__":

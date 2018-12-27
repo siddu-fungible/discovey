@@ -2229,20 +2229,22 @@ class SampleCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
-    def set_sample(self, id, fpg, dest, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
+    def set_sample(self, id, dest, fpg=None, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
                    pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None, sampler_run_sz=None,
                    first_cell_only=None, mode=0, pps_tick=None):
         try:
-            cmd_arg_dict = {"id": id, "fpg": fpg, "mode": mode, "dest": dest}
-            if acl:
+            cmd_arg_dict = {"id": id, "mode": mode, "dest": dest}
+            if fpg is not None:
+                cmd_arg_dict['fpg'] = fpg
+            if acl is not None:
                 cmd_arg_dict['acl'] = acl
             if flag_mask:
                 cmd_arg_dict['flag_mask'] = flag_mask
-            if hu:
+            if hu is not None:
                 cmd_arg_dict['hu'] = hu
-            if psw_drop:
+            if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
-            if pps_en:
+            if pps_en is not None:
                 cmd_arg_dict['pps_en'] = pps_en
             if pps_interval:
                 cmd_arg_dict['pps_interval'] = pps_interval
@@ -2250,13 +2252,13 @@ class SampleCommands(object):
                 cmd_arg_dict['pps_burst'] = pps_burst
             if pps_tick:
                 cmd_arg_dict['pps_tick'] = pps_tick
-            if sampler_en:
+            if sampler_en is not None:
                 cmd_arg_dict['sampler_en'] = sampler_en
             if sampler_rate:
                 cmd_arg_dict['sampler_rate'] = sampler_rate
-            if sampler_run_sz:
+            if sampler_run_sz is not None:
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
-            if first_cell_only:
+            if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only
 
             result = self.dpc_client.execute(verb='sample', arg_list=cmd_arg_dict)

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
@@ -13,7 +13,10 @@ export class RegressionAdminComponent implements OnInit {
   versionSet = new Set(); // The set of all software versions
   versionList = [];
   suiteExectionVersionMap = {};
-  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
+
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) {
+  }
+
   xValues: any [] = [];
   y1Values = [];
   detailedInfo = null;
@@ -25,9 +28,58 @@ export class RegressionAdminComponent implements OnInit {
   selectedModules: any[] = [];
   availableModules = [];
   modifyingScriptAllocation = null;
+  tableInfo: any = [];
 
 
   ngOnInit() {
+    this.tableInfo.push({
+      "moduleName": "accelerators",
+      "name": "Accelerators",
+      "totalCases": 793,
+      "showChildren": false,
+      "children": [{"name": "Crypto", "totalCases": 338}, {"name": "PKE", "totalCases": 20}, {
+        "name": "ZIP",
+        "totalCases": 26
+      }, {"name": "EC", "totalCases": 37}, {"name": "Regex", "totalCases": 372}]
+    });
+    this.tableInfo.push({
+      "moduleName": "storage",
+      "name": "Storage",
+      "totalCases": 29,
+      "showChildren": false,
+      "children": [{"name": "EC DPU Performance", "totalCases": 5}, {
+        "name": "EC Volume Performance",
+        "totalCases": 6
+      }, {"name": "ikv", "totalCases": 2}, {
+        "name": "Replica Volume Performance",
+        "totalCases": 5
+      }, {"name": "Thin Block Volume Performance", "totalCases": 6}, {
+        "name": "Thin Block Volume Sanity",
+        "totalCases": 5
+      }]
+    });
+    this.tableInfo.push({
+      "moduleName": "networking",
+      "name": "Networking",
+      "totalCases": 216,
+      "showChildren": false,
+      "children": [{"name": "VP Performance", "totalCases": 2}, {"name": "Transit Performance", "totalCases": 8}, {
+        "name": "Flow Sanity",
+        "totalCases": 7
+      }, {"name": "CoPP", "totalCases": 45}, {"name": "Sample", "totalCases": 16}, {
+        "name": "PFC and Pause",
+        "totalCases": 32
+      },
+        {"name": "VP Path", "totalCases": 41}, {"name": "Bad header fields", "totalCases": 20},
+        {"name": "QOS", "totalCases": 45}]
+    });
+    this.tableInfo.push({
+      "moduleName": "system",
+      "name": "System",
+      "totalCases": 22,
+      "showChildren": false,
+      "children": []
+    });
     this.dropdownSettings = {
       singleSelection: false,
       idField: 'name',
@@ -52,6 +104,15 @@ export class RegressionAdminComponent implements OnInit {
     this.pointClickCallback = this.pointDetail.bind(this);
     //this.fetchRegressionScripts();
 
+
+    // for (let info of this.tableInfo) {
+    //   let moduleInfo = this.info[info.moduleName];
+    //   let length = moduleInfo.xValues.length;
+    //   if (length > 0) {
+    //     info["softwareVersion"] = moduleInfo.xValues[length - 1]
+    //   }
+    // }
+
   }
 
   fetchAllVersions() {
@@ -63,7 +124,7 @@ export class RegressionAdminComponent implements OnInit {
         this.suiteExectionVersionMap[entry.execution_id] = version;
 
       });
-      console.log(this.versionSet);
+      //console.log(this.versionSet);
       if (this.versionSet.size > 0) {
         this.versionSet.forEach((element) => {
           this.versionList.push(element);
@@ -77,6 +138,14 @@ export class RegressionAdminComponent implements OnInit {
       this.loggerService.error("/regression/get_all_versions");
     });
 
+  }
+
+  showInfo(info): void {
+    let pointInfo = {};
+    pointInfo["metadata"] = {"module": info.moduleName};
+    pointInfo["name"] = "PASSED";
+    pointInfo["category"] = info.softwareVersion;
+    this.showPointDetails(pointInfo);
   }
 
   showPointDetails(pointInfo): void {
@@ -99,9 +168,9 @@ export class RegressionAdminComponent implements OnInit {
     return "xx";
   }
 
-  fetchModules () {
+  fetchModules() {
     this.apiService.get("/regression/modules").subscribe((response) => {
-      console.log(response);
+      // console.log(response);
       this.availableModules = response.data;
       this.availableModules.forEach((module) => {
         this.info[module.name] = {name: module.name, verboseName: module.verbose_name};
@@ -114,25 +183,25 @@ export class RegressionAdminComponent implements OnInit {
     })
   }
 
-  preparePlaceHolders (moduleName, moduleInfo) {
+  preparePlaceHolders(moduleName, moduleInfo) {
     // create a bySoftwareVersion key under each module
     // byVersion is an array of software versions
     moduleInfo["y1Values"] = [{
-        name: 'Passed',
-        data: [],
-        color: 'green',
-        metadata: {module: moduleName}
+      name: 'Passed',
+      data: [],
+      color: 'green',
+      metadata: {module: moduleName}
     }, {
-        name: 'Failed',
-        data: [],
-        color: 'red',
-        metadata: {module: moduleName}
+      name: 'Failed',
+      data: [],
+      color: 'red',
+      metadata: {module: moduleName}
 
     }, {
-        name: 'Not-run',
-        data: [],
-        color: 'grey',
-        metadata: {module: moduleName}
+      name: 'Not-run',
+      data: [],
+      color: 'grey',
+      metadata: {module: moduleName}
 
     }];
     moduleInfo["modifyingScriptAllocation"] = false;
@@ -141,20 +210,22 @@ export class RegressionAdminComponent implements OnInit {
     moduleInfo["showDetailedInfo"] = false;
     moduleInfo["detailedInfo"] = {};
     this.versionList.forEach((softwareVersion) => {
-      moduleInfo.bySoftwareVersion[softwareVersion] = {scriptDetailedInfo: {},
+      moduleInfo.bySoftwareVersion[softwareVersion] = {
+        scriptDetailedInfo: {},
         numPassed: 0,
         numFailed: 0,
-        numNotRun: 0};
+        numNotRun: 0
+      };
 
     })
   }
 
-  modifyScriptAllocationClick () {
+  modifyScriptAllocationClick() {
     this.modifyingScriptAllocation = !this.modifyingScriptAllocation;
     this.fetchRegressionScripts();
   }
 
-  aggregateHistoryResults (historyElement) {
+  aggregateHistoryResults(historyElement) {
     let result = {numPassed: 0, numFailed: 0, numNotRun: 0};
     if (historyElement.result === "PASSED") {
       result.numPassed += 1;
@@ -198,7 +269,7 @@ export class RegressionAdminComponent implements OnInit {
       let numScripts = scripts.length;
       let scriptsFetched = 0;
       scripts.forEach((script) => {
-        console.log(script);
+        //console.log(script);
         let scriptPath = script.script_path;
         let payload = {};
         payload["script_path"] = scriptPath;
@@ -206,7 +277,7 @@ export class RegressionAdminComponent implements OnInit {
           let history = response.data;
 
           history.forEach((historyElement) => {
-            console.log(historyElement);
+            //console.log(historyElement);
             let elementSuiteExecutionId = historyElement.suite_execution_id;
             let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
             this.parseHistory(moduleInfo, historyElement, scriptPath, matchingSoftwareVersion);
@@ -215,7 +286,16 @@ export class RegressionAdminComponent implements OnInit {
           if (scriptsFetched === numScripts) {
             this.prepareValuesForChart(moduleInfo);
           }
+          for (let info of this.tableInfo) {
+            if (moduleName === info.moduleName) {
+              let length = moduleInfo.xValues.length;
+              if (length > 0) {
+                info["softwareVersion"] = moduleInfo.xValues[length - 1]
+              }
+              break;
+            }
 
+          }
 
         }, error => {
           scriptsFetched += 1;
@@ -264,7 +344,7 @@ export class RegressionAdminComponent implements OnInit {
         newEntry["dirty"] = false;
         this.unallocatedRegressionScripts.push(newEntry);
       });
-      console.log(response);
+      // console.log(response);
     }, error => {
 
     })
@@ -275,14 +355,14 @@ export class RegressionAdminComponent implements OnInit {
     for (let i = 0; i < this.availableModules.length; i++) {
       let availableModule = this.availableModules[i];
       if (availableModule.name === moduleName) {
-       matchedModule = availableModule;
+        matchedModule = availableModule;
       }
     }
     return matchedModule;
   }
 
   submitSelectModuleClick(regressionScript) {
-    console.log(regressionScript.selectedModules);
+    //console.log(regressionScript.selectedModules);
     let payload = {script_path: regressionScript.script_path, modules: regressionScript.selectedModules};
     this.apiService.post("/regression/script", payload).subscribe((response) => {
       regressionScript.dirty = false;

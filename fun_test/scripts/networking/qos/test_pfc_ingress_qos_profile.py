@@ -221,7 +221,7 @@ class SpirentSetup(FunTestScript):
         # TODO: Add code for re-setting qos profile values
 
         # Cleanup spirent session
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
         disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
         fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
@@ -540,11 +540,11 @@ class TestCase2(FunTestCase):
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=good_stream_list)
-        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+        fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=pfc_stream_list)
-        fun_test.test_assert(stop_streams, "Ensure pfc streams are stopped")
+        fun_test.add_checkpoint("Ensure pfc streams are stopped")
 
     def run(self):
         tobe_stopped_streams = good_stream_list[:4]

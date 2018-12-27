@@ -147,6 +147,18 @@ arrow-icon {
   padding-top: 70px;
 }
 
+::ng-deep #copy-url-button > .tooltip > .tooltip-inner {
+  background-color: black;
+  color: black;
+}
+
+::ng-deep #actions > .tooltip > .tooltip-inner {
+  background-color: black;
+  color: black;
+}
+
+
+
 ::ng-deep .tooltip-inner {
   background-color: whitesmoke !important;
   /*width: 200px !important;*/
@@ -203,3 +215,4 @@ sup {
   color: black !important;
   font-weight: 600;
 }
+

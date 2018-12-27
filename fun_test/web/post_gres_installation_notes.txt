@@ -12,9 +12,8 @@ sudo -u postgres -i
 
 
 postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
+postgres=# CREATE DATABASE
 
-
-CREATE ROLE
 
 
 
@@ -45,3 +44,6 @@ auto_admin@qa-ubuntu-01:/local/auto_admin/Projects/Integration/fun_test$ python 
 
 
 
+Mac Installation:
+   brew install postgres
+   brew services start postgresql

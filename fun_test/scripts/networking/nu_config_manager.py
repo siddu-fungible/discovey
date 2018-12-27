@@ -70,6 +70,10 @@ class NuConfigManager(object):
             for config in configs:
                 if config["type"] == dut_type:
                     result = config
+                    job_environment = fun_test.get_job_environment()
+                    if 'UART_HOST' in job_environment and 'UART_TCP_PORT_0' in job_environment:
+                        result['dpcsh_tcp_proxy_ip'] = job_environment['UART_HOST']
+                        result['dpcsh_tcp_proxy_port'] = int(job_environment['UART_TCP_PORT_0'])
                     break
             dut_spirent_map = self.read_dut_spirent_map()
             result['ports'] = []

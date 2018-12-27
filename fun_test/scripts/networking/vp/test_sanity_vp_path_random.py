@@ -904,7 +904,7 @@ class OverlayMPLSUDP(OverlayMPLSTCP):
 
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
+    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HU
     ip_version = local_settings[nu_config_obj.IP_VERSION]
     fps = 150
     if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:

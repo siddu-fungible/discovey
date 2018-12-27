@@ -152,6 +152,8 @@ class SuiteWorker(Thread):
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
+                if "test_case_ids" in script_item:
+                    popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
                 if self.job_environment:
                     popens.append("--environment={}".format(json.dumps(self.job_environment)))
                 self.current_script_process = subprocess.Popen(popens,

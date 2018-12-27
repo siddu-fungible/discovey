@@ -195,3 +195,11 @@ def capture_wred_ecn_stats_n_times(network_controller_obj, port_num, queue_num, 
 
 def get_ecn_qos_binary(qos_binary, ecn_bits=CONGESTION_BITS):
     return qos_binary + str(ecn_bits) + 'b'
+
+
+def get_load_pps_for_each_queue(max_egress_load_mbps, packet_size, total_queues=None):
+    max_load_bits = max_egress_load_mbps * 1000000
+    bit_packet_size = packet_size * 8
+    if not total_queues:
+        total_queues = 16
+    return int(max_load_bits / (bit_packet_size * total_queues))

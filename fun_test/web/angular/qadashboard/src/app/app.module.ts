@@ -39,6 +39,8 @@ import { RegressionAdminComponent } from './regression/regression-admin/regressi
 import { JiraInfoComponent } from './jira-info/jira-info.component';
 import { RegressionSummaryComponent } from './regression/regression-summary/regression-summary.component';
 import { GitHistoryComponent } from './git-history/git-history.component';
+import { ClipboardModule } from 'ngx-clipboard';
+
 
 @NgModule({
   declarations: [
@@ -80,7 +82,8 @@ import { GitHistoryComponent } from './git-history/git-history.component';
     AngularCollapseModule,
     NgMultiSelectDropDownModule,
     NgbModule,
-    NgbTooltipModule
+    NgbTooltipModule,
+    ClipboardModule
   ],
 
   providers: [ApiService, LoggerService],

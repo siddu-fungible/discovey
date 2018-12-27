@@ -10,7 +10,10 @@ num_ports = 3
 streamblock_objs = {}
 generator_config_objs = {}
 generator_dict = {}
+config = nu_config_obj.read_dut_config()
 qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+if config['type'] == 'f1':
+    qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
 qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 test_type = "shaper"
 qos_sp_json = qos_json_output[test_type]
@@ -161,7 +164,7 @@ class SpirentSetup(FunTestScript):
                 fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
 
     def cleanup(self):
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class Cir_1(FunTestCase):
@@ -258,7 +261,7 @@ class Cir_1(FunTestCase):
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=self.streamblock_handles_list)
-        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+        fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():

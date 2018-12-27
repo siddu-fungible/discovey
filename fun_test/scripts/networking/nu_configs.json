@@ -30,9 +30,9 @@
           "source_ip1": "206.1.1.2",
           "source_ip2": "192.85.1.2",
           "destination_ip1": "50.0.1.1",
-          "destination_ip2": "75.0.0.2",
-          "destination_ip3": "75.0.4.3",
-          "destination_ip4": "75.0.2.2",
+          "destination_ip2": "75.0.0.5",
+          "destination_ip3": "75.0.0.3",
+          "destination_ip4": "75.0.0.2",
           "gateway": "192.85.1.1",
           "hnu_destination_ip1": "51.1.1.10",
           "hnu_destination_ip2": "52.1.1.2",
@@ -45,6 +45,7 @@
         "ipv6": {
           "source_ip1": "1001::10:10:1:1",
           "destination_ip1": "2001::50:0:1:1",
+          "destination_ip4": "2001::50:0:2:1",
           "source_ip2": "1001::10:10:2:1",
           "destination_ip2": "2001::75:0:0:2",
           "hnu_destination_ip1": "2001::18.0.6.2",
@@ -115,14 +116,14 @@
       "FCP_HNU_HNU": {"FPG1": "10.1.23.139/1/1", "FPG2": "10.1.23.139/1/2"}
     },
     "sample_flow": {
-      "NU_NU": {"FPG13": "10.1.23.137/1/1", "FPG5": "10.1.23.137/1/2", "FPG15": "10.1.23.138/1/1",
-        "FPG18": "10.1.23.138/1/2", "FPG8": "10.1.23.140/1/1"},
+      "NU_NU": {"FPG18": "10.1.23.138/1/2", "FPG5": "10.1.23.137/1/2", "FPG15": "10.1.23.138/1/1",
+        "FPG13": "10.1.23.137/1/1", "FPG8": "10.1.23.140/1/1"},
       "FPG_HNU": {"FPG13": "10.1.23.137/1/1", "FPG5": "10.1.23.137/1/2", "FPG1": "10.1.23.139/1/1"}
     }
   },
   {
     "name": "local_settings",
-    "flow_direction": "NU_NU",
+    "flow_direction": "FPG_CC",
     "ip_version": "4",
     "spray_enable": false
   }

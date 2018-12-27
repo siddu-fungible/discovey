@@ -218,11 +218,11 @@ class FunTest:
 
     def get_job_environment(self):
         result = {}
-        try:
-            # fun_test.log("The env: {}".format(self.environment))
-            result = json.loads(self.environment)
-        except Exception as ex:
-            fun_test.critical(str(ex))
+        if self.environment:
+            try:
+                result = json.loads(self.environment)
+            except Exception as ex:
+                self.critical("Invalid JSON format: %s " % str(ex))
         return result
 
     def get_local_setting(self, setting):
@@ -1082,8 +1082,11 @@ class FunTestScript(object):
                                                                      result=fun_test.IN_PROGRESS)
                         test_case.setup()
                         test_case.run()
-                        test_case.cleanup()
-                        test_result = FunTest.PASSED
+                        # We should not call the test case cleanup here, because if there is error or exception occurs
+                        # in the cleanup section, then the same cleanup section will be called once again in the below
+                        # except clause
+                        # test_case.cleanup()
+                        # test_result = FunTest.PASSED
                     except TestException:
                         try:
                             test_case.cleanup()
@@ -1102,6 +1105,25 @@ class FunTestScript(object):
                         if test_case.abort_on_failure:
                             fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
                             fun_test.abort()
+                    # If the test case setup & run completes properly run the test case's cleanup
+                    else:
+                        try:
+                            test_case.cleanup()
+                            test_result = FunTest.PASSED
+                        except TestException as ex:
+                            fun_test.critical(str(ex))
+                            if test_case.abort_on_failure:
+                                fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id,
+                                                                                           test_case.summary))
+                                fun_test.abort()
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                            fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
+                            if test_case.abort_on_failure:
+                                fun_test.log(
+                                    "Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
+                                fun_test.abort()
+
                     fun_test._add_xml_trace()
                     fun_test.print_test_case_summary(fun_test.current_test_case_id)
                     fun_test._end_test(result=test_result)

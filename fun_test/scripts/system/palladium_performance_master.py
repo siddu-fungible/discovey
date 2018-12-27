@@ -301,7 +301,7 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-            set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                          test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
                                          git_commit=self.git_commit, model_name="BcopyPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")

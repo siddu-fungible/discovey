@@ -8,7 +8,10 @@ from qos_helper import *
 import itertools
 
 num_ports = 3
+config = nu_config_obj.read_dut_config()
 qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+if config['type'] == 'f1':
+    qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
 qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 test_type = "strict_priority"
 qos_sp_json = qos_json_output[test_type]
@@ -164,9 +167,9 @@ class SpirentSetup(FunTestScript):
 
     def cleanup(self):
         reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
-        fun_test.test_assert(reset_config, "Ensure default scheduler config is set for all queues")
+        fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
         
         
 class Q0_SP_Channel0(FunTestCase):
@@ -210,7 +213,6 @@ class Q0_SP_Channel0(FunTestCase):
                     current_list = []
                     current_list.append(self.sp_dscp_list[1])
 
-
             counter = 0
             for stream_details, dscp_val in zip(streams, current_list):
                 self.testcase_streamblocks[str(port)][dscp_val] = {}
@@ -247,7 +249,7 @@ class Q0_SP_Channel0(FunTestCase):
             strict = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=dscp_val,
                                                                      scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
                                                                      strict_priority_enable=strict_priority,
-                                                                     extra_bandwidth=0)
+                                                                     extra_bandwidth=1)
             fun_test.add_checkpoint("Set strict priority of %s on queue %s" % (strict_priority, dscp_val))
 
             shaper = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=dscp_val,
@@ -265,7 +267,7 @@ class Q0_SP_Channel0(FunTestCase):
     def cleanup(self):
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=self.streamblock_handles_list)
-        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+        fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():

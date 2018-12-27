@@ -10,7 +10,10 @@ num_ports = 3
 streamblock_objs = {}
 generator_config_objs = {}
 generator_dict = {}
+config = nu_config_obj.read_dut_config()
 qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+if config['type'] == 'f1':
+    qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
 qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 test_type = "dwrr"
 qos_sp_json = qos_json_output[test_type]
@@ -157,28 +160,35 @@ class SpirentSetup(FunTestScript):
                                                                                                map_list=k_list)
                 fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
 
+        for queue in [0,8]:
+            remove_strict_priority = network_controller_obj.set_qos_scheduler_config(
+                port_num=dut_port_2, queue_num=queue, scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
+                strict_priority_enable=False, extra_bandwidth=0)
+            fun_test.simple_assert(remove_strict_priority, "Remove SP for queue %s" % queue)
+
     def cleanup(self):
         reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
         fun_test.test_assert(reset_config, "Ensure default scheduler config is set for all queues")
 
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
-class DWRR(FunTestCase):
+class Dwrr_Q0_Q1_Q2_Q3(FunTestCase):
     max_egress_load = qos_json_output['max_egress_load']
     json_load_unit = qos_json_output['load_unit']
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    dwrr = "dwrr"
-    test_streams = qos_sp_json[dwrr]
+    test_streams = qos_sp_json
     all_streamblock_handle_list = []
     fixed_frame_length = True
+    port_1_dscp = [0, 1]
+    port_3_dscp = [2, 3]
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test dwrr based on assigned weights",
+                              summary="Test dwrr based on assigned weights assigned to Q0, Q1, Q2, Q3",
                               steps="""
-                              1. Create stream with dscp 12 and dscp 13 on port 1 and with dscp 14 and 15 on port 3
+                              1. Create stream with dscp 0 and dscp 1 on port 1 and with dscp 2 and 3 on port 3
                               2. Start traffic
                               3. After 10 seconds, get RxL1BitRate from spirent for each stream
                               4. Check throughput is as per weights assigned
@@ -188,30 +198,34 @@ class DWRR(FunTestCase):
 
         # Create streams
         for port, streams in self.test_streams.iteritems():
+            if not 'ingress' in port:
+                continue
             self.testcase_streamblocks[str(port)] = {}
             spirent_port = port_1
+            current_list = self.port_1_dscp
             if port == "ingress_port2":
                 spirent_port = port_3
+                current_list = self.port_3_dscp
 
             counter = 0
-            for stream_details in streams:
-                self.testcase_streamblocks[str(port)][stream_details['dscp']] = {}
+            for stream_details, dscp_val in zip(streams, current_list):
+                self.testcase_streamblocks[str(port)][dscp_val] = {}
                 current_streamblock_obj = streamblock_objs[spirent_port][counter]
                 load_value = get_load_value_from_load_percent(load_percent=stream_details['load_percent'],
                                                               max_egress_load=self.max_egress_load)
                 fun_test.simple_assert(load_value, "Ensure load value is calculated")
 
                 dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
-                    decimal_value_list=[stream_details['dscp']], dscp_high=True, dscp_low=True)
-                dscp_high = dscp_values[stream_details['dscp']]['dscp_high']
-                dscp_low = dscp_values[stream_details['dscp']]['dscp_low']
+                    decimal_value_list=[dscp_val], dscp_high=True, dscp_low=True)
+                dscp_high = dscp_values[dscp_val]['dscp_high']
+                dscp_low = dscp_values[dscp_val]['dscp_low']
 
                 # Update dscp value
                 dscp_set = template_obj.configure_diffserv(streamblock_obj=current_streamblock_obj,
                                                            dscp_high=dscp_high,
                                                            dscp_low=dscp_low, update=True)
                 fun_test.test_assert(dscp_set, "Ensure dscp value of %s is updated on ip header for stream %s"
-                                     % (stream_details['dscp'], current_streamblock_obj.spirent_handle))
+                                     % (dscp_val, current_streamblock_obj.spirent_handle))
 
                 # Update load value
                 current_streamblock_obj.Load = load_value
@@ -223,12 +237,12 @@ class DWRR(FunTestCase):
                 fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
                                      (load_value, current_streamblock_obj.spirent_handle))
                 counter += 1
-                self.testcase_streamblocks[str(port)][stream_details['dscp']][
+                self.testcase_streamblocks[str(port)][dscp_val][
                     'streamblock_obj'] = current_streamblock_obj
                 self.streamblock_handles_list.append(current_streamblock_obj.spirent_handle)
 
                 set_rate = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2,
-                                                                           queue_num=stream_details['dscp'],
+                                                                           queue_num=dscp_val,
                                                                            scheduler_type=network_controller_obj.SCHEDULER_TYPE_SHAPER,
                                                                            shaper_enable=True,
                                                                            min_rate=stream_details['rate'],
@@ -237,23 +251,29 @@ class DWRR(FunTestCase):
                 fun_test.test_assert(set_rate,
                                      "Ensure shaper rate is %s, threshold is %s set on port %s for queue %s" %
                                      (stream_details['rate'], stream_details['threshold'], dut_port_2,
-                                      stream_details['dscp']))
+                                      dscp_val))
 
         # Set dwrr config
         for port, streams in self.test_streams.iteritems():
-            for stream_details in streams:
+            if not 'ingress' in port:
+                continue
+
+            current_list = self.port_1_dscp
+            if port == "ingress_port2":
+                current_list = self.port_3_dscp
+            for stream_details, dscp_val in zip(streams, current_list):
                 set_dwrr = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2,
-                                                                           queue_num=stream_details['dscp'],
+                                                                           queue_num=dscp_val,
                                                                            scheduler_type=network_controller_obj.SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN,
                                                                            weight=stream_details['weight'])
                 fun_test.test_assert(set_dwrr, "Ensure dwrr weight of %s is set on queue %s of port %s" %
-                                     (stream_details['weight'], stream_details['dscp'], dut_port_2))
+                                     (stream_details['weight'], dscp_val, dut_port_2))
 
     def cleanup(self):
 
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
             stream_blocks_list=self.streamblock_handles_list)
-        fun_test.test_assert(stop_streams, "Ensure dscp streams are stopped")
+        fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():
@@ -271,61 +291,31 @@ class DWRR(FunTestCase):
                                                                     streamblock_handle_list=self.streamblock_handles_list,
                                                                     rx_summary_result=True)
         return output
-    '''
+
     def run(self):
         result_dict = {}
 
         output = self.start_and_fetch_streamblock_results()
 
         for port, streams in self.test_streams.iteritems():
-            for stream_details in streams:
-                current_streamblock_handle = \
-                    self.testcase_streamblocks[str(port)][stream_details['dscp']]['streamblock_obj'].spirent_handle
-                frame_rate = int(output[current_streamblock_handle]['rx_summary_result']['FrameRate'])
-
-                result_dict[stream_details['dscp']] = {}
-                result_dict[stream_details['dscp']]['frame_rate'] = frame_rate
-                result_dict[stream_details['dscp']]['weight'] = stream_details['weight']
-
-        self.validate_stats(result_dict=result_dict)
-
-    def validate_stats(self, result_dict):
-        cushion_range = 10
-        first_stream_dscp_value = self.test_streams['ingress_port1'][0]['dscp']
-        initial_frame_rate = result_dict[first_stream_dscp_value]['frame_rate']
-        for dscp, values in result_dict.iteritems():
-            if dscp == first_stream_dscp_value:
-                pps = values['frame_rate']
-                total_bits = pps * 1024
-                total_percent = (total_bits * 100.0)/(self.max_egress_load * 1000000)
-                fun_test.test_assert(values['frame_rate'], "Ensure fps value is seen for queue %s and is %s" % (dscp,
-                                                                                                                values[
-                                                                                                                    'frame_rate']))
-            else:
-                start_range = (initial_frame_rate * values['weight']) - cushion_range
-                end_range = (initial_frame_rate * values['weight']) + cushion_range
-                fun_test.test_assert(start_range < values['frame_rate'] < end_range,
-                                     "Ensure fps seen for queue %s with weight %s is between %s and %s. Actual seen %s" %
-                                     (dscp, values['weight'], start_range, end_range, values['frame_rate']))
-    '''
-    def run(self):
-        result_dict = {}
-
-        output = self.start_and_fetch_streamblock_results()
-
-        for port, streams in self.test_streams.iteritems():
-            for stream_details in streams:
+            if not 'ingress' in port:
+                continue
+            current_list = self.port_1_dscp
+            if port == "ingress_port2":
+                current_list = self.port_3_dscp
+            for stream_details, dscp_val in zip(streams, current_list):
                 expected_load_value = get_load_value_from_load_percent(load_percent=stream_details['expected_load_percent'],
                                                                        max_egress_load=self.max_egress_load)
                 fun_test.simple_assert(expected_load_value, "Ensure expected load value is calculated")
 
                 current_streamblock_handle = \
-                    self.testcase_streamblocks[str(port)][stream_details['dscp']]['streamblock_obj'].spirent_handle
+                    self.testcase_streamblocks[str(port)][dscp_val]['streamblock_obj'].spirent_handle
                 rx_l1_bit_rate = convert_bps_to_mbps(int(output[current_streamblock_handle]['rx_summary_result']['L1BitRate']))
 
-                result_dict[stream_details['dscp']] = {}
-                result_dict[stream_details['dscp']]['actual'] = rx_l1_bit_rate
-                result_dict[stream_details['dscp']]['expected'] = expected_load_value
+                result_dict[dscp_val] = {}
+                result_dict[dscp_val]['actual'] = rx_l1_bit_rate
+                result_dict[dscp_val]['expected'] = expected_load_value
+        fun_test.log("Results dict %s" % result_dict)
         self.validate_stats(result_dict)
 
     def validate_stats(self, result_dict):
@@ -336,9 +326,69 @@ class DWRR(FunTestCase):
                                  (values['expected'], dscp, values['actual']))
 
 
+class Dwrr_Q4_Q5_Q6_Q7(Dwrr_Q0_Q1_Q2_Q3):
+    testcase_streamblocks = {}
+    streamblock_handles_list = []
+    all_streamblock_handle_list = []
+    fixed_frame_length = True
+    port_1_dscp = [4, 5]
+    port_3_dscp = [6, 7]
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Test dwrr based on assigned weights assigned to Q4, Q5, Q6, Q7",
+                              steps="""
+                              1. Create stream with dscp 4 and dscp 5 on port 1 and with dscp 6 and 7 on port 3
+                              2. Start traffic
+                              3. After 10 seconds, get RxL1BitRate from spirent for each stream
+                              4. Check throughput is as per weights assigned
+                              """)
+
+
+class Dwrr_Q8_Q9_Q10_Q11(Dwrr_Q0_Q1_Q2_Q3):
+    testcase_streamblocks = {}
+    streamblock_handles_list = []
+    all_streamblock_handle_list = []
+    fixed_frame_length = True
+    port_1_dscp = [8, 9]
+    port_3_dscp = [10, 11]
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Test dwrr based on assigned weights assigned to Q8, Q9, Q10, Q11",
+                              steps="""
+                              1. Create stream with dscp 8 and dscp 9 on port 1 and with dscp 10 and 11 on port 3
+                              2. Start traffic
+                              3. After 10 seconds, get RxL1BitRate from spirent for each stream
+                              4. Check throughput is as per weights assigned
+                              """)
+
+
+class Dwrr_Q12_Q13_Q14_Q15(Dwrr_Q0_Q1_Q2_Q3):
+    testcase_streamblocks = {}
+    streamblock_handles_list = []
+    all_streamblock_handle_list = []
+    fixed_frame_length = True
+    port_1_dscp = [12, 13]
+    port_3_dscp = [14, 15]
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Test dwrr based on assigned weights assigned to Q12, Q13, Q14, Q15",
+                              steps="""
+                              1. Create stream with dscp 12 and dscp 13 on port 1 and with dscp 14 and 15 on port 3
+                              2. Start traffic
+                              3. After 10 seconds, get RxL1BitRate from spirent for each stream
+                              4. Check throughput is as per weights assigned
+                              """)
+
+
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
-    ts.add_test_case(DWRR())
+    ts.add_test_case(Dwrr_Q0_Q1_Q2_Q3())
+    ts.add_test_case(Dwrr_Q4_Q5_Q6_Q7())
+    ts.add_test_case(Dwrr_Q8_Q9_Q10_Q11())
+    ts.add_test_case(Dwrr_Q12_Q13_Q14_Q15())
     ts.run()

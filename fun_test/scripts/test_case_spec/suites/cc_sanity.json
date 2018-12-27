@@ -1,9 +1,0 @@
-[
-  {"path": "networking/palladium_image_build.py", "abort_suite_on_failure": true},
-  {"path": "networking/palladium_bringup.py", "abort_suite_on_failure": true},
-  {"path": "networking/test_cc_ethernet_sanity.py"},
-  {"path": "networking/test_cc_ipv4_sanity.py"},
-  {"path": "networking/test_cc_error_traps.py"},
-  {"path": "networking/test_cc_not_for_us.py"},
-  {"path": "networking/palladium_cleanup.py"}
-]

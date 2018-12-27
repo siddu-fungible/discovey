@@ -1,6 +1,0 @@
-[
-  {"path": "networking/palladium_image_build.py", "abort_suite_on_failure": true},
-  {"path": "networking/palladium_bringup.py", "abort_suite_on_failure": true},
-  {"path": "networking/test_nw_sanity.py"},
-  {"path": "networking/palladium_cleanup.py"}
-]

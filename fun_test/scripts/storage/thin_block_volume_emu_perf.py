@@ -4,7 +4,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
-from web.fun_test.analytics_models_helper import VolumePerformanceHelper
+from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper
 from lib.host.linux import Linux
 from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
@@ -36,7 +36,8 @@ tb_config = {
                     "type": DutInterface.INTERFACE_TYPE_PCIE
                 }
             },
-            "start_mode": F1.START_MODE_DPCSH_ONLY
+            "start_mode": F1.START_MODE_DPCSH_ONLY,
+            "perf_multiplier": 5000
         },
     },
     "dpcsh_proxy": {
@@ -66,19 +67,19 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    VolumePerformanceHelper().add_entry(key=fun_test.get_version(),
-                                        volume=volume,
-                                        test=test,
-                                        block_size=block_size,
-                                        io_depth=int(io_depth),
-                                        size=size,
-                                        operation=operation,
-                                        write_iops=write_iops,
-                                        read_iops=read_iops,
-                                        write_bw=write_bw,
-                                        read_bw=read_bw,
-                                        write_latency=write_latency,
-                                        read_latency=read_latency)
+        VolumePerformanceEmulationHelper().add_entry(date_time=fun_test.get_start_time(),
+                                                     volume=volume,
+                                                     test=test,
+                                                     block_size=block_size,
+                                                     io_depth=int(io_depth),
+                                                     size=size,
+                                                     operation=operation,
+                                                     write_iops=write_iops,
+                                                     read_iops=read_iops,
+                                                     write_bw=write_bw,
+                                                     read_bw=read_bw,
+                                                     write_latency=write_latency,
+                                                     read_latency=read_latency)
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
@@ -95,13 +96,6 @@ def compare(actual, expected, threshold, operation):
         return (actual > (expected * (1 + threshold)) and ((actual - expected) > 2))
 
 
-def generate_uuid(length=16):
-
-    this_uuid = str(uuid.uuid4()).replace("-", "")[length:]
-    # this_uuid = this_uuid[:3] + '-' + this_uuid[3:6] + '-' + this_uuid[6:9] + '-' + this_uuid[9:]
-    return this_uuid
-
-
 class BLTVolumePerformanceScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -112,32 +106,54 @@ class BLTVolumePerformanceScript(FunTestScript):
     def setup(self):
         # topology_obj_helper = TopologyHelper(spec=topology_dict)
         # topology = topology_obj_helper.deploy()
-        self.dpcsh_host = DpcshProxy(ip=tb_config['dpcsh_proxy']['ip'],
-                                     dpcsh_port=tb_config['dpcsh_proxy']['dpcsh_port'],
-                                     user=tb_config['dpcsh_proxy']['user'],
-                                     password=tb_config['dpcsh_proxy']['passwd'])
+        self.dpcsh_host = DpcshProxy(ip=tb_config["dpcsh_proxy"]["ip"],
+                                     dpcsh_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
+                                     user=tb_config["dpcsh_proxy"]["user"],
+                                     password=tb_config["dpcsh_proxy"]["passwd"])
+
+        self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
+                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])
 
         # Start the dpcsh proxy and ensure that the funos & dpcsh proxy is started to ready to accept inputs
-        status = self.dpcsh_host.start_dpcsh_proxy(dpcsh_proxy_port=tb_config['dpcsh_proxy']['dpcsh_port'],
-                                                   dpcsh_proxy_tty=tb_config['dpcsh_proxy']['dpcsh_tty'])
+        status = self.dpcsh_host.start_dpcsh_proxy(dpcsh_proxy_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
+                                                   dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
         fun_test.test_assert(status, "Start dpcsh with {} in tcp proxy mode".
-                             format(tb_config['dpcsh_proxy']['dpcsh_tty']))
+                             format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))
         status = ""
         status = self.dpcsh_host.ensure_started(max_time=900, interval=10)
         fun_test.test_assert(status, "dpcsh proxy ready")
-        status = self.dpcsh_host.network_controller_obj.disable_syslog(level=2)
-        fun_test.test_assert(status, "Setting syslog level to 2")
         self.dpcsh_host.network_controller_obj.disconnect()
 
-        fun_test.shared_variables["tb_config"] = tb_config
+        # Setting the syslog level to 2
+        status = self.storage_controller.poke("params/syslog/level 2")
+        fun_test.test_assert(status, "Setting syslog level to 2")
+
         fun_test.shared_variables["dpcsh_host"] = self.dpcsh_host
+        fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        status = self.dpcsh_host.stop_dpcsh_proxy(dpcsh_proxy_port=tb_config['dpcsh_proxy']['dpcsh_port'],
-                                                  dpcsh_proxy_tty=tb_config['dpcsh_proxy']['dpcsh_tty'])
+        # Detach the volume
+        self.volume_details = fun_test.shared_variables["volume_details"]
+        command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
+                                                                    uuid=fun_test.shared_variables["thin_uuid"],
+                                                                    huid=tb_config['dut_info'][0]['huid'],
+                                                                    command_duration=30)
+        fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
+
+        # Deleting the volume
+        command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
+                                                               block_size=self.volume_details["block_size"],
+                                                               type=self.volume_details["type"],
+                                                               name=self.volume_details["name"],
+                                                               uuid=fun_test.shared_variables["thin_uuid"],
+                                                               command_duration=10)
+        fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
+
+        status = self.dpcsh_host.stop_dpcsh_proxy(dpcsh_proxy_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
+                                                  dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
         fun_test.test_assert(status, "Stopped dpcsh with {} in tcp proxy mode".
-                             format(tb_config['dpcsh_proxy']['dpcsh_tty']))
+                             format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))
 
 
 class BLTVolumePerformanceTestcase(FunTestCase):
@@ -207,32 +223,29 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                      format(testcase, self.expected_volume_stats))
         # End of benchmarking json file parsing
 
-        self.tb_config    = fun_test.shared_variables["tb_config"]
-        self.dpcsh_host   = fun_test.shared_variables["dpcsh_host"]
-        self.dut_instance = Linux(host_ip=tb_config['dut_info'][0]['ip'],
-                                  ssh_username=tb_config['dut_info'][0]['user'],
-                                  ssh_password=tb_config['dut_info'][0]['passwd'])
-        fun_test.test_assert(self.dut_instance, "Retrieved dut instance 0")
+        self.nvme_block_device = self.nvme_device + "n" + str(self.volume_details["ns_id"])
+        self.dpcsh_host = fun_test.shared_variables["dpcsh_host"]
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
 
-        self.end_host = Linux(host_ip=tb_config['tg_info'][0]['ip'],
-                                  ssh_username=tb_config['tg_info'][0]['user'],
-                                  ssh_password=tb_config['tg_info'][0]['passwd'])
-
-        self.storage_controller = StorageController(target_ip=self.tb_config['dpcsh_proxy']['ip'],
-                                                    target_port=self.tb_config['dpcsh_proxy']['dpcsh_port'])
+        self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
+                                  ssh_username=tb_config["tg_info"][0]["user"],
+                                  ssh_password=tb_config["tg_info"][0]["passwd"])
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
+            fun_test.shared_variables["volume_details"] = self.volume_details
 
             # Configuring Local thin block volume
             command_result = {}
-            command_result = self.storage_controller.command(command="enable_counters", legacy=True)
+            command_result = self.storage_controller.command(command="enable_counters", legacy=True,
+                                                             command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT Instance 0")
 
             command_result = {}
-            self.thin_uuid = generate_uuid()
+            self.thin_uuid = utils.generate_uuid()
+            fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_thin_block_volume(
                 capacity=self.volume_details["capacity"], block_size=self.volume_details["block_size"],
                 name=self.volume_details["name"], uuid=self.thin_uuid, command_duration=self.command_timeout)
@@ -241,7 +254,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             command_result = {}
             command_result = self.storage_controller.volume_attach_pcie(
-                ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, huid=self.tb_config['dut_info'][0]['huid'],
+                ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, huid=tb_config['dut_info'][0]['huid'],
                 command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
@@ -251,23 +264,28 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
 
             # Rebooting the host to make the above volume accessible
-            reboot_status = self.dpcsh_host.ipmi_power_cycle(host=tb_config['tg_info'][0]['ipmi_name'],
-                                                             interface=tb_config['tg_info'][0]['ipmi_iface'],
-                                                             user=tb_config['tg_info'][0]['ipmi_user'],
-                                                             passwd=tb_config['tg_info'][0]['ipmi_passwd'],
+            reboot_status = self.dpcsh_host.ipmi_power_cycle(host=tb_config["tg_info"][0]["ipmi_name"],
+                                                             interface=tb_config["tg_info"][0]["ipmi_iface"],
+                                                             user=tb_config["tg_info"][0]["ipmi_user"],
+                                                             passwd=tb_config["tg_info"][0]["ipmi_passwd"],
                                                              interval=30)
-            fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(self.tb_config['tg_info'][0]['ip']))
+            fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(tb_config["tg_info"][0]["ip"]))
             host_up_status = self.end_host.isHostUp(timeout=self.command_timeout)
-            fun_test.test_assert(host_up_status, "End Host {} is up".format(self.tb_config['tg_info'][0]['ip']))
+            fun_test.test_assert(host_up_status, "End Host {} is up".format(tb_config["tg_info"][0]["ip"]))
 
 
             # Checking that the above created BLT volume is visible to the end host
             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.volume_details["ns_id"])
-            self.nvme_block_device = self.nvme_device + "n" + str(self.volume_details["ns_id"])
             lsblk_output = self.end_host.lsblk()
             fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                           message="{} device type check".format(self.volume_name))
+
+            # Disable the udev daemon which will skew the read stats of the volume during the test
+            udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+            for service in udev_services:
+                service_status = self.end_host.systemctl(service_name=service, action="stop")
+                fun_test.test_assert(service_status, "Stopping {} service".format(service))
 
             # Executing the FIO command to warm up the system
             if self.warm_up_traffic:
@@ -347,7 +365,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 # Pulling the initial volume stats in dictionary format
                 command_result = {}
                 initial_volume_status[combo][mode] = {}
-                command_result = self.storage_controller.peek(storage_props_tree)
+                command_result = self.storage_controller.peek(storage_props_tree, command_duration=self.command_timeout)
                 fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance 0")
                 initial_volume_status[combo][mode] = command_result["data"]
                 fun_test.log("Volume Status at the beginning of the test:")
@@ -361,13 +379,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     if value:
                         for item in value:
                             props_tree = "{}/{}/{}".format("stats", key, item)
-                            command_result = self.storage_controller.peek(props_tree)
+                            command_result = self.storage_controller.peek(props_tree,
+                                                                          command_duration=self.command_timeout)
                             fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
                                                    format(props_tree))
                             initial_stats[combo][mode][key][item] = command_result["data"]
                     else:
                         props_tree = "{}/{}".format("stats", key)
-                        command_result = self.storage_controller.peek(props_tree)
+                        command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
                         fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
                                                format(props_tree))
                         initial_stats[combo][mode][key] = command_result["data"]
@@ -381,14 +400,27 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                                  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
-                # fun_test.simple_assert(fio_output[combo][mode], "Execution of FIO command")
+                # Boosting the fio output with the testbed performance multiplier
+                multiplier = tb_config["dut_info"][0]["perf_multiplier"]
+                for op, stats in fio_output[combo][mode].items():
+                    for field, value in stats.items():
+                        if field == "iops":
+                            fio_output[combo][mode][op][field] = int(round(value * multiplier))
+                        if field == "bw":
+                            # Converting the KBps to MBps
+                            fio_output[combo][mode][op][field] = int(round(value * multiplier / 1000))
+                        if field == "latency":
+                            fio_output[combo][mode][op][field] = int(round(value / multiplier))
+                fun_test.log("FIO Command Output after multiplication:")
+                fun_test.log(fio_output[combo][mode])
+
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
                 # Getting the volume stats after the FIO test
                 command_result = {}
                 final_volume_status[combo][mode] = {}
-                command_result = self.storage_controller.peek(storage_props_tree)
+                command_result = self.storage_controller.peek(storage_props_tree, command_duration=self.command_timeout)
                 fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
                 final_volume_status[combo][mode] = command_result["data"]
                 fun_test.log("Volume Status at the end of the test:")
@@ -402,13 +434,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     if value:
                         for item in value:
                             props_tree = "{}/{}/{}".format("stats", key, item)
-                            command_result = self.storage_controller.peek(props_tree)
+                            command_result = self.storage_controller.peek(props_tree,
+                                                                          command_duration=self.command_timeout)
                             fun_test.simple_assert(command_result["status"], "Final {} stats of DUT Instance 0".
                                                    format(props_tree))
                             final_stats[combo][mode][key][item] = command_result["data"]
                     else:
                         props_tree = "{}/{}".format("stats", key)
-                        command_result = self.storage_controller.peek(props_tree)
+                        command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
                         fun_test.simple_assert(command_result["status"], "Final {} stats of DUT Instance 0".
                                                format(props_tree))
                         final_stats[combo][mode][key] = command_result["data"]
@@ -476,9 +509,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                          format(op, field, actual, row_data_dict[op + field][1:]))
 
                 # Comparing the internal volume stats with the expected value
-                for k, v in diff_volume_stats[combo][mode].items():
-                    fun_test.log("Key: {}; Value: {}".format(k, v))
-
                 for ekey, evalue in expected_volume_stats[mode].items():
                     if ekey in diff_volume_stats[combo][mode]:
                         actual = diff_volume_stats[combo][mode][ekey]
@@ -557,7 +587,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                post_results("BLT", test_method, *row_data_list)
+                # post_results("BLT_EMU", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -583,13 +613,12 @@ class BLTFioSeqWriteSeqReadOnly(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Sequential Write & Read only performance of Thin Provisioned local block volume "
-                                      "over RDS",
+                              summary="Sequential Write & Read only performance of BLT volume",
                               steps='''
-        1. Create a local thin block volume in dut instances 0.
-        2. Export (Attach) this local thin volume to the external Linux instance/container. 
+        1. Create a BLT volume in DUT.
+        2. Export (Attach) this BLT volume to the EP host connected via the PCIe interface. 
         3. Run the FIO sequential write and read only test(without verify) for various block size and IO depth from the 
-        external Linux server and check the performance are inline with the expected threshold. 
+        EP host and check the performance are inline with the expected threshold. 
         ''')
 
     def setup(self):
@@ -608,10 +637,10 @@ class BLTFioRandWriteRandReadOnly(BLTVolumePerformanceTestcase):
                               summary='Random Write & Read only performance of Thin Provisioned local block volume over'
                                       ' RDS',
                               steps='''
-        1. Create a local thin block volume in dut instances 0.
-        2. Export (Attach) this local thin volume to the external Linux instance/container. 
+        1. Create a BLT volume in DUT.
+        2. Export (Attach) this BLT volume to the EP host connected via the PCIe interface. 
         3. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
-        external Linux server and check the performance are inline with the expected threshold. 
+        EP host and check the performance are inline with the expected threshold. 
         ''')
 
     def setup(self):
@@ -630,10 +659,10 @@ class BLTFioSeqReadWriteMix(BLTVolumePerformanceTestcase):
                               summary='Sequential 75% Write & 25% Read performance of Thin Provisioned local block '
                                       'volume over RDS',
                               steps='''
-        1. Create a local thin block volume in dut instances 0.
-        2. Export (Attach) this local thin volume to the external Linux instance/container. 
+        1. Create a BLT volume in DUT.
+        2. Export (Attach) this BLT volume to the EP host connected via the PCIe interface. 
         3. Run the FIO sequential write and read mix test with 3:1 ratio for various block size and IO depth from the 
-        external Linux server and check the performance are inline with the expected threshold. 
+        EP host and check the performance are inline with the expected threshold. 
         ''')
 
     def setup(self):
@@ -652,10 +681,10 @@ class BLTFioRandReadWriteMix(BLTVolumePerformanceTestcase):
                               summary='Random 75% Write & 25% Read performance of Thin Provisioned local block '
                                       'volume over RDS',
                               steps='''
-        1. Create a local thin block volume in dut instances 0.
-        2. Export (Attach) this local thin volume to the external Linux instance/container. 
+        1. Create a BLT volume in DUT.
+        2. Export (Attach) this BLT volume to the EP host connected via the PCIe interface. 
         3. Run the FIO random write and read mix test with 3:1 ratio for various block size and IO depth from the 
-        external Linux server and check the performance are inline with the expected threshold. 
+        EP host and check the performance are inline with the expected threshold. 
         ''')
 
     def setup(self):
@@ -671,13 +700,13 @@ class BLTFioRandReadWriteMix(BLTVolumePerformanceTestcase):
 class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
     def describe(self):
         self.set_test_details(id=5,
-                              summary='Write & Read only performance(for both Sequential and random) for large sizes '
-                                      'of Thin Provisioned local block volume over RDS',
+                              summary='Write & Read only performance(for both Sequential and random) for large size '
+                                      'BLT volume',
                               steps='''
-        1. Create a local thin block volume in dut instances 0.
-        2. Export (Attach) this local thin volume to the external Linux instance/container. 
-        3. Run the FIO write and read only test(without verify) for various sizes from the external Linux server and 
-        check the performance are inline with the expected threshold. 
+        1. Create a large BLT volume in DUT.
+        2. Export (Attach) this BLT volume to the EP host connected via the PCIe interface. 
+        3. Run the FIO write and read only test(without verify) for the entire volume size from the EP host and check 
+        the performance are inline with the expected threshold. 
         ''')
 
     def setup(self):
@@ -687,8 +716,6 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
 
         testcase = self.__class__.__name__
         test_method = testcase[3:]
-
-        destination_ip = self.dut_instance.data_plane_ip
 
         # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
         self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
@@ -753,7 +780,7 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 # Pulling in the initial volume stats in dictionary format
                 command_result = {}
                 initial_volume_status[size][mode] = {}
-                command_result = self.storage_controller.peek(storage_props_tree)
+                command_result = self.storage_controller.peek(storage_props_tree, command_duration=self.command_timeout)
                 fun_test.simple_assert(command_result["status"], "Initial volume stats of DUT Instance {}".format(0))
                 initial_volume_status[size][mode] = command_result["data"]
                 fun_test.log("Volume Status at the beginning of the test:")
@@ -767,13 +794,14 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                     if value:
                         for item in value:
                             props_tree = "{}/{}/{}".format("stats", key, item)
-                            command_result = self.storage_controller.peek(props_tree)
+                            command_result = self.storage_controller.peek(props_tree,
+                                                                          command_duration=self.command_timeout)
                             fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
                                                    format(props_tree))
                             initial_stats[size][mode][key][item] = command_result["data"]
                     else:
                         props_tree = "{}/{}".format("stats", key)
-                        command_result = self.storage_controller.peek(props_tree)
+                        command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
                         fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
                                                format(props_tree))
                         initial_stats[size][mode][key] = command_result["data"]
@@ -795,7 +823,7 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                 # Getting the volume stats after the FIO test
                 command_result = {}
                 final_volume_status[size][mode] = {}
-                command_result = self.storage_controller.peek(storage_props_tree)
+                command_result = self.storage_controller.peek(storage_props_tree, command_duration=self.command_timeout)
                 fun_test.simple_assert(command_result["status"], "Final volume stats of DUT Instance {}".format(0))
                 final_volume_status[size][mode] = command_result["data"]
                 fun_test.log("Volume Status at the end of the test:")
@@ -809,13 +837,14 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                     if value:
                         for item in value:
                             props_tree = "{}/{}/{}".format("stats", key, item)
-                            command_result = self.storage_controller.peek(props_tree)
+                            command_result = self.storage_controller.peek(props_tree,
+                                                                          command_duration=self.command_timeout)
                             fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
                                                    format(props_tree))
                             final_stats[size][mode][key][item] = command_result["data"]
                     else:
                         props_tree = "{}/{}".format("stats", key)
-                        command_result = self.storage_controller.peek(props_tree)
+                        command_result = self.storage_controller.peek(props_tree, command_duration=self.command_timeout)
                         fun_test.simple_assert(command_result["status"], "Initial {} stats of DUT Instance 0".
                                                format(props_tree))
                         final_stats[size][mode][key] = command_result["data"]
@@ -969,7 +998,7 @@ class BLTFioLargeWriteReadOnly(BLTVolumePerformanceTestcase):
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
-                post_results("BLT", test_method, *row_data_list)
+                post_results("BLT_EMU", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
@@ -999,8 +1028,8 @@ if __name__ == "__main__":
 
     bltscript = BLTVolumePerformanceScript()
     bltscript.add_test_case(BLTFioSeqWriteSeqReadOnly())
-    # bltscript.add_test_case(BLTFioRandWriteRandReadOnly())
-    # bltscript.add_test_case(BLTFioSeqReadWriteMix())
-    # bltscript.add_test_case(BLTFioRandReadWriteMix())
+    bltscript.add_test_case(BLTFioRandWriteRandReadOnly())
+    bltscript.add_test_case(BLTFioSeqReadWriteMix())
+    bltscript.add_test_case(BLTFioRandReadWriteMix())
     # bltscript.add_test_case(BLTFioLargeWriteReadOnly())
     bltscript.run()
