@@ -212,7 +212,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                        capacity=self.volume_details["capacity"],
                                                                        block_size=self.volume_details["block_size"],
-                                                                       name="think-block" + str(x),
+                                                                       name="thin_block" + str(x),
                                                                        uuid=self.thin_uuid[x],
                                                                        encrypt=self.vol_encrypt,
                                                                        key=self.xts_key,
@@ -613,7 +613,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 command_result = {}
                 command_result = self.storage_controller.delete_volume(capacity=self.volume_details["capacity"],
                                                                        block_size=self.volume_details["block_size"],
-                                                                       name="thin-block" + str(x),
+                                                                       name="thin_block" + str(x),
                                                                        uuid=self.thin_uuid[x],
                                                                        type="VOL_TYPE_BLK_LOCAL_THIN")
                 fun_test.log(command_result)

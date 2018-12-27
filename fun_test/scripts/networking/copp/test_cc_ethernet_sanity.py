@@ -1043,8 +1043,8 @@ class TestCcEthernetAllTogether(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
-        MIN_RX_PORT_COUNT = 600 * len(streams_group)
-        MAX_RX_PORT_COUNT = 800 * len(streams_group)
+        MIN_RX_PORT_COUNT = 200 * len(streams_group)
+        MAX_RX_PORT_COUNT = 500 * len(streams_group)
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d pps" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
@@ -1148,7 +1148,7 @@ if __name__ == '__main__':
     # Ethernet CC
     ts.add_test_case(TestCcEthernetArpRequest())
     ts.add_test_case(TestCcEthernetArpResponse())
-    
+
     ts.add_test_case(TestCcEthernetRarp())
     ts.add_test_case(TestCcEthernetLLDP())
     ts.add_test_case(TestCcEthernetPTP())
