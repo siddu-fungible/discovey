@@ -20,7 +20,7 @@ class FunControlPlaneSanity(FunTestScript):
         workspace = dirname(abspath(dirname(abspath(FUN_TEST_DIR))))
         self.container_name = "parser"
         f1_hostname = "parser"
-        f1_image_name = "nw-reg-user:v1"
+        f1_image_name = "nw-reg-user:latest"
         self.target_workspace = "/workspace"
         entry_point = "{}/Integration/tools/docker/funcp/user/fungible/scripts/parser-test.sh".format(self.target_workspace)
         environment_variables = {"DOCKER": True,
@@ -106,14 +106,15 @@ class NwSanitySimpleL3Integration(FunTestCase):
         output = linux_obj.command("make clean", timeout=60)
         output = linux_obj.command("make", timeout=60)
         output = linux_obj.command("cd {}/FunControlPlane".format(target_workspace))
+        output = linux_obj.command("make clean", timeout=60)
         output = linux_obj.command("make -j8", timeout=600)
-        output = linux_obj.command("cd {}/FunOS".format(target_workspace))
-        output = linux_obj.command("make -j8 MACHINE=posix", timeout=600)
+        #output = linux_obj.command("cd {}/FunOS".format(target_workspace))
+        #output = linux_obj.command("make -j8 MACHINE=posix", timeout=600)
         output = linux_obj.command(
-            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -s > {}/nutest.txt 2>&1"
-            .format(target_workspace, target_workspace), timeout=300)
+            command="sudo -E python -u {}/FunControlPlane/scripts/nutest/test_l3_traffic.py -s -p > {}/nutest.txt 2>&1"
+            .format(target_workspace, target_workspace), timeout=1200)
 
-        timer = FunTimer(max_time=300)
+        timer = FunTimer(max_time=1200)
         status = False
         while not timer.is_expired():
             output = linux_obj.command(command="grep --text '{}' {}/psim.log".format(qemu_status, target_workspace),
@@ -125,7 +126,7 @@ class NwSanitySimpleL3Integration(FunTestCase):
             fun_test.sleep("Waiting for QEMU/PSIM to come up", seconds=10)
         fun_test.test_assert(status, "QEMU/PSIM UP")
 
-        timer = FunTimer(max_time=300)
+        timer = FunTimer(max_time=1200)
         status = False
         while not timer.is_expired():
             output = linux_obj.command(command="grep --text '{}' {}/nutest.txt".format(sanity_status, target_workspace),
