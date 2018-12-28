@@ -174,8 +174,8 @@ class F1(Linux, ToDictMixin):
 
                     if True:
                         new_process_id = self.start_bg_process(
-                            command="{}/{} --dpc-server app=load_mods".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                                                                self.FUN_OS_SIMULATION_PROCESS_NAME),
+                            command="{}/{} --dpc-server --dpc-early-init app=load_mods".format(
+                                self.SIMULATION_FUNOS_BUILD_PATH, self.FUN_OS_SIMULATION_PROCESS_NAME),
                             output_file=self.F1_LOG)
                         fun_test.sleep("Ensure FunOS is started", seconds=10)
                         self.dpcsh_tcp_proxy_process_id = self.start_bg_process("{}/{} --tcp_proxy={}".format(self.DPCSH_PATH,
