@@ -49,6 +49,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   pointInfo: any;
   buildProps: any;
   showBuildProps: boolean = false;
+  paddingNeeded: boolean = false;
 
   public formatter: Function;
   public tooltip: Function;
@@ -121,6 +122,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   fetchNames() {
     this.route.params.subscribe(params => {
       if (params['id']) {
+        this.paddingNeeded = true;
         this.id = params['id'];
         this.fetchMetricsById();
       }
