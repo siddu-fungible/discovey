@@ -1,21 +1,16 @@
 {
   "TestInitialization": {
-    "volume_params": {
+    "num_namespace": 1,
+    "namespace_params": {
       "ns_id": 1,
-      "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1073741824,
       "block_size": 4096,
-      "name": "thin-block1",
-      "command_timeout": 5,
-      "iter_interval": 2,
-      "use_ls": false,
-      "hu_id": 0,
-      "ctl_id": 0,
-      "fn_id": 2,
-      "num_ns": 1
+      "ctl_id": 0
     },
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
     "fio_params": {
-      "filename" : "/dev/nvme0n1",
       "rw": "randwrite",
       "bs": "4k",
       "iodepth": 8,
@@ -27,19 +22,25 @@
     }
   },
   "TestMultipleNS": {
-    "volume_params": {
+    "num_namespace": 5,
+    "namespace_params": {
       "ns_id": 1,
-      "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 4096,
+      "capacity": 1073741824,
       "block_size": 4096,
-      "name": "thin-block1",
-      "command_timeout": 5,
-      "iter_interval": 2,
-      "use_ls": false,
-      "hu_id": 0,
-      "ctl_id": 0,
-      "fn_id": 2,
-      "num_ns": 5
+      "ctl_id": 0
+    },
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_params": {
+      "rw": "randwrite",
+      "bs": "4k",
+      "iodepth": 8,
+      "size": "128k",
+      "do_verify": 1,
+      "verify": "md5",
+      "verify_fatal": 1,
+      "timeout": 60
     }
   }
 }
