@@ -56,8 +56,7 @@ class ECCryptoVolumeScript(FunTestScript):
         fun_test.shared_variables["topology"] = self.topology
         fun_test.shared_variables["storage_controller"] = self.storage_controller
         fun_test.shared_variables["total_lsv_ops"] = 0
-        fun_test.shared_variables["vol_encrypt_filter"] = 0
-        fun_test.shared_variables["vol_decrypt_filter"] = 0
+        fun_test.shared_variables["crypto_filter_count"] = 0
         fun_test.shared_variables["ctrl_created"] = False
 
     def cleanup(self):
@@ -184,7 +183,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
                 self.uuid_list.append(self.blt_uuid[x])
 
-            # Create EC Vol from updated blt capacity
+            # Create EC Vol from updated blt capacity multiplied by ndata count
             self.ec_uuid = []
             self.ec_uuid = utils.generate_uuid()
             self.ec_capacity = self.blt_capacity * self.ndata
@@ -228,6 +227,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
             self.xts_tweak = utils.generate_key(self.xtweak_size)
 
+            # Create LSV Vol from blt capacity multiplied by ndata count
             if self.lsv_create:
                 self.lsv_uuid = utils.generate_uuid()
                 self.lsv_capacity = self.blt_details["capacity"] * self.ndata
@@ -280,6 +280,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                         fun_test.log(command_result)
                         if not command_result["status"]:
                             fun_test.test_assert(command_result["status"], "LSV attach {}".format(x))
+                        else:
+                            fun_test.shared_variables["crypto_filter_count"] += 2
                 else:
                     command_result = {}
                     command_result = self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
@@ -288,6 +290,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                                   command_duration=self.command_timeout)
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "LSV attach")
+                    fun_test.shared_variables["crypto_filter_count"] += 2
 
                 # Disable the error_injection for the EC volume
                 command_result = {}
@@ -602,7 +605,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
         fun_test.log("Total ndata BLT ops is {}".format(self.total_blt_ops))
 
         # The total LSV write/read should match the total crypto operations.
-        self.total_lsv_ops = 0
         command_result = {}
         storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
                                                      "volumes",
@@ -626,16 +628,68 @@ class ECCryptoVolumeTestCase(FunTestCase):
         fun_test.log("The total crypto ops is {}". format(self.total_crypto_ops))
 
         if self.total_crypto_ops == fun_test.shared_variables["total_lsv_ops"]:
-            fun_test.add_checkpoint("The total crypto operations and lsv operations".
-                                    format(self),
-                                    "PASSED", self.total_crypto_ops,
+            fun_test.add_checkpoint("The total crypto operations and lsv operations",
+                                    "PASSED",
+                                    self.total_crypto_ops,
                                     fun_test.shared_variables["total_lsv_ops"])
         else:
-            fun_test.add_checkpoint("The total crypto operations and lsv operations".
-                                    format(self),
-                                    "FAILED", self.total_crypto_ops,
+            fun_test.add_checkpoint("The total crypto operations and lsv operations",
+                                    "FAILED",
+                                    self.total_crypto_ops,
                                     fun_test.shared_variables["total_lsv_ops"])
             fun_test.simple_assert(False, "Crypto ops don't match")
+
+        fun_test.sleep(message="Sleeping before collecting final stats", seconds=5)
+        # Check if all crypto stats match, but not using as sometimes the output is skewed
+        # final_crypto_counts = {}
+        # crypto_props_tree = "{}/{}/{}".format("stats", "wus", "counts")
+        # command_result = {}
+        # command_result = self.storage_controller.peek(crypto_props_tree)
+        # final_crypto_counts = command_result["data"]
+        for filter_param in self.filter_params:
+            if filter_param != "vol_encrypt_filter_added" and filter_param != "vol_decrypt_filter_added":
+                crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
+                command_result = {}
+                command_result = self.storage_controller.peek(crypto_props_tree)
+                if filter_param == "cryptofilter_create":
+                    cryptofilter_create = command_result["data"]
+                filter_result = command_result["data"]
+                fun_test.simple_assert(
+                    expression=filter_result == fun_test.shared_variables["crypto_filter_count"],
+                    message="Filter {} doesn't match".format(filter_param))
+            elif filter_param == "vol_encrypt_filter_added":
+                crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
+                command_result = {}
+                command_result = self.storage_controller.peek(crypto_props_tree)
+                encrypt_filter_count = command_result["data"]
+            elif filter_param == "vol_decrypt_filter_added":
+                crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
+                command_result = {}
+                command_result = self.storage_controller.peek(crypto_props_tree)
+                decrypt_filter_count = command_result["data"]
+
+        total_filter_count = encrypt_filter_count + decrypt_filter_count
+        if total_filter_count == cryptofilter_create:
+            fun_test.add_checkpoint("Total Crypto filter count",
+                                    "PASSED",
+                                    cryptofilter_create,
+                                    total_filter_count)
+        else:
+            fun_test.add_checkpoint("Total Crypto filter count",
+                                    "FAILED",
+                                    cryptofilter_create,
+                                    total_filter_count)
+
+        for crypto_ops_param in self.crypto_ops_params:
+            crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", crypto_ops_param)
+            command_result = {}
+            command_result = self.storage_controller.peek(crypto_props_tree)
+            final_crypto_counts = command_result["data"]
+            if final_crypto_counts != self.total_crypto_ops:
+                fun_test.add_checkpoint("{} parameter match cryptofilter_aes_xts?".format(crypto_ops_param),
+                                        "FAILED",
+                                        self.total_crypto_ops,
+                                        final_crypto_counts)
 
         command_result = {}
         final_crypto_cluster_stats = {}
