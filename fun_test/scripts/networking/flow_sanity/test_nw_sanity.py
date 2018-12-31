@@ -1485,7 +1485,7 @@ class VPPathIPv4TCPNFCP(TestVpFlows):
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
-        self.fps = 120
+        self.fps = 100
         self.hnu = True
         self.max_frame_size = 9000
         self.mtu = 9000
@@ -1588,6 +1588,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 if __name__ == "__main__":
     ts = SpirentSetup()
     # Transit NU --> NU Flow
+    '''
     ts.add_test_case(TransitSweep())
     # ts.add_test_case(TransitV6Sweep())
 
@@ -1599,7 +1600,7 @@ if __name__ == "__main__":
 
     # VP NU --> HNU Flow
     ts.add_test_case(VPPathIPv4TCP())
-
+    '''
     # VP HNU --> HNU (NFCP) Flow
     ts.add_test_case(VPPathIPv4TCPNFCP())
 
