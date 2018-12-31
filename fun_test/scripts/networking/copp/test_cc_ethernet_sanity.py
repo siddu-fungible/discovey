@@ -1076,7 +1076,8 @@ if __name__ == '__main__':
     ts.add_test_case(TestCcEthernetArpRequest())
     ts.add_test_case(TestCcEthernetArpResponse())
 
-    ts.add_test_case(TestCcEthernetRarp())
+    # Disable RARP as this is deprecated protocol
+    # ts.add_test_case(TestCcEthernetRarp())
     ts.add_test_case(TestCcEthernetLLDP())
     ts.add_test_case(TestCcEthernetPTP())
 
