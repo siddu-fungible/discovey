@@ -681,7 +681,7 @@ class LSVOnBLTF1FaultInjectFio(BLTF1RestartTestCase):
 
 if __name__ == "__main__":
     blt_f1_restart = BltF1RestartScript()
-    # blt_f1_restart.add_test_case(BLTF1RestartFio())
+    blt_f1_restart.add_test_case(BLTF1RestartFio())
     blt_f1_restart.add_test_case(LSVOnBLTF1RestartFio())
     blt_f1_restart.add_test_case(BLTF1FaultInjectFio())
     blt_f1_restart.add_test_case(LSVOnBLTF1FaultInjectFio())
