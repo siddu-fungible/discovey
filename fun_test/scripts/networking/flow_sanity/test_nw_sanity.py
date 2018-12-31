@@ -1588,7 +1588,6 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 if __name__ == "__main__":
     ts = SpirentSetup()
     # Transit NU --> NU Flow
-    '''
     ts.add_test_case(TransitSweep())
     # ts.add_test_case(TransitV6Sweep())
 
@@ -1600,7 +1599,7 @@ if __name__ == "__main__":
 
     # VP NU --> HNU Flow
     ts.add_test_case(VPPathIPv4TCP())
-    '''
+
     # VP HNU --> HNU (NFCP) Flow
     ts.add_test_case(VPPathIPv4TCPNFCP())
 
