@@ -71,7 +71,8 @@ class F1(Linux, ToDictMixin):
               foreground=False,
               timeout=20,
               get_output=False,
-              run_to_completion=False):
+              run_to_completion=False,
+              mdt_rebuild=True):
         result = None
         self.last_start_parameters = {
             "app": app,
@@ -161,12 +162,13 @@ class F1(Linux, ToDictMixin):
                         self.kill_process(process_id=process_id, signal=9)
 
                     self.command("cd {}".format(self.SIMULATION_FUNOS_BUILD_PATH))
-                    self.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
+                    if mdt_rebuild:
+                        self.command("dd if=/dev/zero of=nvfile bs=4096 count=256")
                     self.command("ulimit -Sc unlimited")
                     self.command(r'export ASAN_OPTIONS="disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=true"')
-                    self.command("{}/{} app=mdt_test nvfile=nvfile &> {}".format(self.SIMULATION_FUNOS_BUILD_PATH,
-                                                                                 self.FUN_OS_SIMULATION_PROCESS_NAME,
-                                                                                 self.F1_LOG))
+                    if mdt_rebuild:
+                        self.command("{}/{} app=mdt_test nvfile=nvfile &> {}".format(
+                            self.SIMULATION_FUNOS_BUILD_PATH, self.FUN_OS_SIMULATION_PROCESS_NAME, self.F1_LOG))
                     '''
                     if not dpcsh_only:
 
@@ -236,6 +238,9 @@ class F1(Linux, ToDictMixin):
         super(F1, self).disconnect()
 
     def stop(self):
+        fun_test.debug("Stopping dpcsh {}".format(self))
+        self.kill_process(self.dpcsh_tcp_proxy_process_id, signal=9)
+        fun_test.sleep("Kill dpcsh")
         fun_test.debug("Stopping F1: {}".format(self))
         self.kill_process(self.fun_os_process_id, signal=9)
         fun_test.sleep("Kill FunOs")
@@ -244,7 +249,7 @@ class F1(Linux, ToDictMixin):
         self.dpcsh_tcp_proxy_process_id = None
 
     @fun_test.safe
-    def restart(self):
+    def restart(self, mdt_rebuild=True):
         self.stop()
         if self.last_start_parameters:
             result = self.start(app=self.last_start_parameters["app"],
@@ -252,7 +257,8 @@ class F1(Linux, ToDictMixin):
                                 timeout=self.last_start_parameters["timeout"],
                                 get_output=self.last_start_parameters["get_output"],
                                 foreground=self.last_start_parameters["foreground"],
-                                run_to_completion=self.last_start_parameters["run_to_completion"])
+                                run_to_completion=self.last_start_parameters["run_to_completion"],
+                                mdt_rebuild=mdt_rebuild)
         else:
             result = self.start()
         return result
