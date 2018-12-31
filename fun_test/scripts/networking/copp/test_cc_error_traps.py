@@ -556,7 +556,7 @@ class TestCcIpv4ErrorTrapIpOpts1(TestCcErrorTrapTtlError1):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['destination_ip1'])
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['destination_ip1'], ihl=7)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Configure Ipv4 Header")
@@ -619,7 +619,7 @@ class TestCcIpv4ErrorTrapIpOpts2(TestCcErrorTrapTtlError1):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['destination_ip1'])
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['destination_ip1'], ihl=7)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Configure Ipv4 Header")
@@ -2042,17 +2042,14 @@ if __name__ == '__main__':
     FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_CC
 
     ts = SetupSpirent()
+
     ts.add_test_case(TestCcErrorTrapTtlError1())
     ts.add_test_case(TestCcErrorTrapTtlError2())
     ts.add_test_case(TestCcErrorTrapTtlError3())
-
+    
     if FLOW_DIRECTION != "HU_CC":
         ts.add_test_case(TestCcIpv4ErrorTrapIpOpts1())
         ts.add_test_case(TestCcIpv4ErrorTrapIpOpts2())
-
-    ts.add_test_case(TestCcIpChecksumError())
-
-    ts.add_test_case(TestCcFSFError())
 
     ts.add_test_case(TestCcOuterChecksumError())
 
