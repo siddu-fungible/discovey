@@ -1,5 +1,4 @@
 [
-  {"path": "networking/parser/nw_sanity.py"},
   {"path": "networking/flow_sanity/test_nw_sanity.py"},
   {"path": "networking/sample/test_sample.py", "test_case_ids": [1]},
   {"path": "networking/sample/test_advanced_sampling.py", "test_case_ids": [3, 4]},
