@@ -242,7 +242,7 @@ class TransitSweep(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=10)
+        fun_test.sleep("Sleeping for executing traffic", seconds=120)
 
         # Get results for streamblock 1
         fun_test.log(
