@@ -108,6 +108,16 @@ class StorageController(DpcshClient):
                 volume_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
 
+    def mount_volume(self, command_duration=TIMEOUT, **kwargs):
+        volume_dict = {}
+        volume_dict["class"] = "volume"
+        volume_dict["opcode"] = "VOL_ADMIN_OPCODE_MOUNT"
+        volume_dict["params"] = {}
+        if kwargs:
+            for key in kwargs:
+                volume_dict["params"][key] = kwargs[key]
+        return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
+
     def peek(self, props_tree, command_duration=TIMEOUT):
         props_tree = "peek " + props_tree
         return self.command(props_tree, legacy=True, command_duration=command_duration)

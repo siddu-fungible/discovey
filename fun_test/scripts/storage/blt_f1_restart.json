@@ -1,0 +1,101 @@
+{
+  "BLTF1RestartFio": {
+    "volume_params": {
+      "type": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "capacity": {"blt": 268435456},
+      "block_size": {"blt": 4096},
+      "name": {"blt": "thin-block-vol"},
+      "command_timeout": 5
+    },
+    "fio_modes": ["write", "read"],
+    "fio_params": {
+      "bs": "4k",
+      "iodepth": 1,
+      "size": "1m",
+      "io_queues": 2,
+      "verify_pattern": "01234567",
+      "timeout": 60
+    },
+    "ns_id": 1,
+    "restart_f1": true,
+    "use_lsv": false,
+    "lsv_pct": 0.32,
+    "iter_interval": 2
+  },
+  "LSVOnBLTF1RestartFio": {
+    "volume_params": {
+      "type": {"blt": "VOL_TYPE_BLK_LOCAL_THIN", "jvol": "VOL_TYPE_BLK_NV_MEMORY", "lsv": "VOL_TYPE_BLK_LSV"},
+      "capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+      "block_size": {"blt": 4096, "jvol": 512, "lsv": 4096},
+      "name": {"blt": "thin-block-vol", "jvol": "journal-vol", "lsv": "lsv-vol"},
+      "command_timeout": 10
+    },
+    "fio_modes": ["write", "read"],
+    "fio_params": {
+      "bs": "4k",
+      "iodepth": 1,
+      "size": "1m",
+      "io_queues": 2,
+      "verify_pattern": "01234567",
+      "timeout": 180
+    },
+    "ns_id": 1,
+    "restart_f1": true,
+    "use_lsv": true,
+    "lsv_pct": 0.32,
+    "group": 1,
+    "vol_stats_threshold_pass": 32,
+    "iter_interval": 2
+  },
+  "BLTF1FaultInjectFio": {
+    "volume_params": {
+      "type": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "capacity": {"blt": 268435456},
+      "block_size": {"blt": 4096},
+      "name": {"blt": "thin-block-vol"},
+      "command_timeout": 5
+    },
+    "fio_modes": ["write", "read"],
+    "fio_params": {
+      "bs": "4k",
+      "iodepth": 1,
+      "size": "1m",
+      "io_queues": 2,
+      "verify_pattern": "01234567",
+      "timeout": 60
+    },
+    "ns_id": 1,
+    "restart_f1": true,
+    "use_lsv": false,
+    "lsv_pct": 0.32,
+    "iter_interval": 2,
+    "trigger_blt_failure": 1
+  },
+  "LSVOnBLTF1FaultInjectFio": {
+    "volume_params": {
+      "type": {"blt": "VOL_TYPE_BLK_LOCAL_THIN", "jvol": "VOL_TYPE_BLK_NV_MEMORY", "lsv": "VOL_TYPE_BLK_LSV"},
+      "capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+      "block_size": {"blt": 4096, "jvol": 512, "lsv": 4096},
+      "name": {"blt": "thin-block-vol", "jvol": "journal-vol", "lsv": "lsv-vol"},
+      "command_timeout": 15
+    },
+    "fio_modes": ["write", "read"],
+    "fio_params": {
+      "bs": "4k",
+      "iodepth": 1,
+      "size": "1m",
+      "io_queues": 2,
+      "verify_pattern": "01234567",
+      "timeout": 180
+    },
+    "ns_id": 1,
+    "restart_f1": true,
+    "use_lsv": true,
+    "lsv_pct": 0.32,
+    "group": 1,
+    "iter_interval": 2,
+    "vol_stats_threshold_pass": 32,
+    "trigger_lsv_failure": 0,
+    "trigger_blt_failure": 1
+  }
+}
