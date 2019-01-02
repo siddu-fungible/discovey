@@ -557,3 +557,48 @@ def remove_strict_priority_from_queue(network_controller_obj, dut_port):
 def convert_bps_to_mbps(count_in_bps):
     count_in_mbps = count_in_bps / float(1000000)
     return count_in_mbps
+
+
+def reset_pfc_configs(network_controller_obj, dut_port_list, queue_list=[], quanta=False, threshold=False, shared_configs=False, shared_config_port_list=[]):
+    result = False
+    default_quanta = 0
+    default_threshold = 0
+    default_min_thr = 16383
+    default_shr_thr = 16383
+    default_hdr_thr = 16383
+    default_xoff_enable = 0
+    default_shared_xon_thr = 100
+    try:
+        fun_test.simple_assert(network_controller_obj.disable_qos_pfc(), "Disable QOS pfc")
+
+        for dut_port in dut_port_list:
+            fun_test.simple_assert(network_controller_obj.disable_priority_flow_control(port_num=dut_port),
+                                   "Disable PFC on %s" % dut_port)
+
+            if quanta or threshold:
+                for queue in queue_list:
+                    if quanta:
+                        fun_test.simple_assert(network_controller_obj.set_priority_flow_control_quanta(
+                            port_num=dut_port, quanta=default_quanta, class_num=queue),
+                            "Reset default quanta of %s on queue %s" % (default_quanta, dut_port))
+                    if threshold:
+                        fun_test.simple_assert(network_controller_obj.set_priority_flow_control_threshold(
+                            port_num=dut_port, threshold=default_threshold, class_num=queue),
+                            "Reset default threshold of %s on queue %s" % (default_threshold, dut_port))
+
+        if shared_configs:
+            for dut_port in shared_config_port_list:
+                for queue in queue_list:
+                    fun_test.simple_assert(network_controller_obj.
+                                           set_qos_ingress_priority_group(port_num=dut_port,
+                                                                          priority_group_num=queue,
+                                                                          min_threshold=default_min_thr,
+                                                                          shared_threshold=default_shr_thr,
+                                                                          headroom_threshold=default_hdr_thr,
+                                                                          xoff_enable=default_xoff_enable,
+                                                                          shared_xon_threshold=default_shared_xon_thr),
+                                           "Ensure shared configs are reset on queue %s of port %s" % (queue, dut_port))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
