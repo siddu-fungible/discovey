@@ -18,6 +18,7 @@ streamblock_objs_list = []
 streamblock_handles_list = []
 queue_list = [x for x in range(16)]
 reversed_list = copy.deepcopy(queue_list)
+reversed_list.reverse()
 percent_threshold = 5
 DUT_ECN_COUNT = "dut_ecn_count"
 SPIRENT_ECN_COUNT = "spirent_ecn_count"
