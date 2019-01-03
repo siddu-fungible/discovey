@@ -50,7 +50,7 @@ RUN     apt-get install --no-install-recommends --no-install-suggests -y \
                 libglib2.0-dev libpci-dev libreadline-dev libzlcore-dev \
                 libpng16-16 libncurses5-dev libpixman-1-dev u-boot-tools \
                 libcap-dev libattr1-dev device-tree-compiler libpcap-dev \
-                libelf-dev;
+                libelf-dev libvirt-bin libguestfs-tools;
 
 RUN   mkdir -p $DEP_INSTALL_DIR
 RUN   cd /fun_external; wget -O $CMAKE_PKG $CMAKE_URL; bash $CMAKE_PKG --skip-license --prefix=/usr/
