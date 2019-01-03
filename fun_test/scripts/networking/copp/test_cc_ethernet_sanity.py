@@ -161,7 +161,6 @@ class TestCcEthernetArpRequest(FunTestCase):
         wro_stats_before = None
         meter_stats_before = None
         if dut_config['enable_dpcsh']:
-            # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in dut_config['ports']:
                 clear_stats = network_controller_obj.clear_port_stats(port_num=port)
@@ -195,7 +194,7 @@ class TestCcEthernetArpRequest(FunTestCase):
         fun_test.test_assert(result, checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
-
+        '''
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
@@ -221,6 +220,7 @@ class TestCcEthernetArpRequest(FunTestCase):
         fun_test.log("Tx Port Stats: %s" % tx_port_results)
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
         fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
+        '''
 
         dut_tx_port_stats = None
         dut_rx_port_stats = None
@@ -269,6 +269,8 @@ class TestCcEthernetArpRequest(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
+        # TODO: Skip Spirent validation for now as on real CC we don't have spirent
+        '''
         checkpoint = "Validate Tx and Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
@@ -283,7 +285,7 @@ class TestCcEthernetArpRequest(FunTestCase):
         checkpoint = "Ensure no errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
         fun_test.test_assert(expression=result['result'], message=checkpoint)
-
+        '''
         # DUT stats validation
         if dut_config['enable_dpcsh']:
             checkpoint = "Validate Tx and Rx on DUT"
@@ -376,12 +378,6 @@ class TestCcEthernetArpRequest(FunTestCase):
                 fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
                 fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
                                               message=checkpoint)
-                checkpoint = "Ensure red pkts are equal to DroppedFrameCount on Spirent Rx results"
-                dropped_frame_count = int(rx_results['DroppedFrameCount'])
-                fun_test.log("Dropped Frame Count on Spirent: %d" % dropped_frame_count)
-                fun_test.test_assert_expected(expected=tx_port_results['TotalFrameCount'],
-                                              actual=(red_pkts + green_pkts + yellow_pkts),
-                                              message=checkpoint)
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
@@ -449,17 +445,6 @@ class TestCcEthernetArpResponse(TestCcEthernetArpRequest):
         streams_group.append(self.stream_obj)
         self.meter_id = ETH_COPP_ARP_RESP_METER_ID
 
-    def run(self):
-        super(TestCcEthernetArpResponse, self).run()
-
-    def cleanup(self):
-        fun_test.log("In test case cleanup")
-        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
-
-        checkpoint = "Deactivate %s " % self.stream_obj.spirent_handle
-        template_obj.deactivate_stream_blocks(stream_obj_list=[self.stream_obj])
-        fun_test.add_checkpoint(checkpoint)
-
 
 class TestCcEthernetRarp(TestCcEthernetArpRequest):
     stream_obj = None
@@ -513,18 +498,7 @@ class TestCcEthernetRarp(TestCcEthernetArpRequest):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
-        self.meter_id = ETH_COPP_RARP_METER_ID
-
-    def run(self):
-        super(TestCcEthernetRarp, self).run()
-
-    def cleanup(self):
-        fun_test.log("In test case cleanup")
-        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
-
-        checkpoint = "Deactivate %s " % self.stream_obj.spirent_handle
-        template_obj.deactivate_stream_blocks(stream_obj_list=[self.stream_obj])
-        fun_test.add_checkpoint(checkpoint)
+        self.validate_meter_stats = False
 
 
 class TestCcEthernetLLDP(TestCcEthernetArpRequest):
@@ -578,18 +552,6 @@ class TestCcEthernetLLDP(TestCcEthernetArpRequest):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = ETH_COPP_LLDP_METER_ID
-
-    def run(self):
-        super(TestCcEthernetLLDP, self).run()
-
-    def cleanup(self):
-        fun_test.log("In test case cleanup")
-
-        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
-
-        checkpoint = "Deactivate %s " % self.stream_obj.spirent_handle
-        template_obj.deactivate_stream_blocks(stream_obj_list=[self.stream_obj])
-        fun_test.add_checkpoint(checkpoint)
 
 
 class TestCcEthernetPTP(TestCcEthernetArpRequest):
@@ -650,17 +612,6 @@ class TestCcEthernetPTP(TestCcEthernetArpRequest):
         streams_group.append(self.stream_obj)
         self.meter_id = ETH_COPP_PTP_METER_ID
 
-    def run(self):
-        super(TestCcEthernetPTP, self).run()
-
-    def cleanup(self):
-        fun_test.log("In test case cleanup")
-        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
-
-        checkpoint = "Deactivate %s " % self.stream_obj.spirent_handle
-        template_obj.deactivate_stream_blocks(stream_obj_list=[self.stream_obj])
-        fun_test.add_checkpoint(checkpoint)
-
 
 class TestCcEthArpRequestUnicast(TestCcEthernetArpRequest):
     stream_obj = None
@@ -718,17 +669,6 @@ class TestCcEthArpRequestUnicast(TestCcEthernetArpRequest):
         streams_group.append(self.stream_obj)
         self.validate_meter_stats = False
 
-    def run(self):
-        super(TestCcEthArpRequestUnicast, self).run()
-
-    def cleanup(self):
-        fun_test.log("In test case cleanup")
-        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
-
-        checkpoint = "Deactivate %s " % self.stream_obj.spirent_handle
-        template_obj.deactivate_stream_blocks(stream_obj_list=[self.stream_obj])
-        fun_test.add_checkpoint(checkpoint)
-
 
 class TestCcEthernetIsis1(TestCcEthernetArpRequest):
     stream_obj = None
@@ -781,17 +721,6 @@ class TestCcEthernetIsis1(TestCcEthernetArpRequest):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = ETH_COPP_ISIS_1_METER_ID
-
-    def run(self):
-        super(TestCcEthernetIsis1, self).run()
-
-    def cleanup(self):
-        fun_test.log("In test case cleanup")
-        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
-
-        checkpoint = "Deactivate %s " % self.stream_obj.spirent_handle
-        template_obj.deactivate_stream_blocks(stream_obj_list=[self.stream_obj])
-        fun_test.add_checkpoint(checkpoint)
 
 
 class TestCcEthernetIsis2(TestCcEthernetArpRequest):
@@ -846,17 +775,6 @@ class TestCcEthernetIsis2(TestCcEthernetArpRequest):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = ETH_COPP_ISIS_2_METER_ID
-
-    def run(self):
-        super(TestCcEthernetIsis2, self).run()
-
-    def cleanup(self):
-        fun_test.log("In test case cleanup")
-        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
-
-        checkpoint = "Deactivate %s " % self.stream_obj.spirent_handle
-        template_obj.deactivate_stream_blocks(stream_obj_list=[self.stream_obj])
-        fun_test.add_checkpoint(checkpoint)
 
 
 class TestCcGlean(TestCcEthernetArpRequest):
@@ -918,17 +836,6 @@ class TestCcGlean(TestCcEthernetArpRequest):
         streams_group.append(self.stream_obj)
         self.validate_meter_stats = False
 
-    def run(self):
-        super(TestCcGlean, self).run()
-
-    def cleanup(self):
-        fun_test.log("In test case cleanup")
-        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
-
-        checkpoint = "Deactivate %s " % self.stream_obj.spirent_handle
-        template_obj.deactivate_stream_blocks(stream_obj_list=[self.stream_obj])
-        fun_test.add_checkpoint(checkpoint)
-
 
 class TestCcEthernetAllTogether(FunTestCase):
 
@@ -967,8 +874,11 @@ class TestCcEthernetAllTogether(FunTestCase):
 
     def run(self):
         global MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT
+        vp_stats_before = None
+        wro_stats_before = None
+        erp_stats_before = None
+
         if dut_config['enable_dpcsh']:
-            # TODO: Clear PSW, VP, WRO, meter stats. Will add this once support for clear stats provided in dpc
             checkpoint = "Clear FPG stats on all DUT ports"
             for port in dut_config['ports']:
                 clear_stats = network_controller_obj.clear_port_stats(port_num=port)
@@ -978,9 +888,25 @@ class TestCcEthernetAllTogether(FunTestCase):
             checkpoint = "Get PSW and Parser NU stats before traffic"
             psw_stats = network_controller_obj.peek_psw_global_stats()
             parser_stats = network_controller_obj.peek_parser_stats()
+            fun_test.add_checkpoint(checkpoint)
+
+            checkpoint = "Fetch VP stats"
+            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.simple_assert(vp_stats_before, checkpoint)
+
+            checkpoint = "Fetch ERP NU stats"
+            erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.simple_assert(erp_stats_before, checkpoint)
+
+            checkpoint = "Fetch WRO NU stats"
+            wro_stats_before = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.simple_assert(wro_stats_before, checkpoint)
+
             fun_test.log("PSW Stats: %s \n" % psw_stats)
             fun_test.log("Parser stats: %s \n" % parser_stats)
-            fun_test.add_checkpoint(checkpoint)
+            fun_test.log("VP stats: %s \n" % vp_stats_before)
+            fun_test.log("ERP stats: %s \n" % erp_stats_before)
+            fun_test.log("WRO stats: %s \n" % wro_stats_before)
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
         result = template_obj.enable_generator_configs([generator_handle])
@@ -988,6 +914,7 @@ class TestCcEthernetAllTogether(FunTestCase):
 
         fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
 
+        '''
         checkpoint = "Ensure Spirent stats fetched"
         rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
                                                                                 subscribe_handle=subscribed_results
@@ -1003,6 +930,7 @@ class TestCcEthernetAllTogether(FunTestCase):
         fun_test.log("Tx Port Stats: %s" % tx_port_results)
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
         fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
+        '''
 
         dut_tx_port_stats = None
         dut_rx_port_stats = None
@@ -1045,6 +973,8 @@ class TestCcEthernetAllTogether(FunTestCase):
         # Spirent stats validation
         MIN_RX_PORT_COUNT = 200 * len(streams_group)
         MAX_RX_PORT_COUNT = 500 * len(streams_group)
+        # TODO: We need to figure out how to validate actual CC so for now we skipped spirent validation
+        '''
         checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d pps" % (
             MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
@@ -1060,6 +990,7 @@ class TestCcEthernetAllTogether(FunTestCase):
         checkpoint = "Ensure no errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
         fun_test.test_assert(expression=result['result'], message=checkpoint)
+        '''
 
         # DUT stats validation
         if dut_config['enable_dpcsh']:
@@ -1074,82 +1005,79 @@ class TestCcEthernetAllTogether(FunTestCase):
                                  checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
+            vp_diff_stats = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats)
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(vp_stats[VP_PACKETS_CONTROL_T2C_COUNT]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(vp_diff_stats[VP_PACKETS_CONTROL_T2C_COUNT]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(vp_stats[VP_PACKETS_CC_OUT]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(vp_diff_stats[VP_PACKETS_CC_OUT]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             checkpoint = "Ensure VP total packets IN == VP total packets OUT"
-            fun_test.test_assert_expected(expected=int(vp_stats[VP_PACKETS_TOTAL_IN]),
-                                          actual=int(vp_stats[VP_PACKETS_TOTAL_OUT]),
+            fun_test.test_assert_expected(expected=int(vp_diff_stats[VP_PACKETS_TOTAL_IN]),
+                                          actual=int(vp_diff_stats[VP_PACKETS_TOTAL_OUT]),
                                           message=checkpoint)
             # ERP stats validation
             checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
+            erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats)
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(erp_stats[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(erp_stats[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
             fun_test.test_assert(
                 (MIN_RX_PORT_COUNT <= int(
-                    erp_stats[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]) <= MAX_RX_PORT_COUNT),
+                    erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(erp_stats[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(erp_stats[ERP_COUNT_FOR_EFP_FCP_VLD]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             # WRO stats validation
-            checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(wro_stats[WRO_IN_PKTS]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
+            wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
             checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(wro_stats[WRO_IN_NFCP_PKTS]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(wro_stats_diff[WRO_IN_NFCP_PKTS]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(wro_stats[WRO_OUT_WUS]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(wro_stats_diff[WRO_OUT_WUS]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
             checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
             fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(wro_stats[WRO_WU_COUNT_VPP]) <= MAX_RX_PORT_COUNT),
+                (MIN_RX_PORT_COUNT <= int(wro_stats_diff[WRO_WU_COUNT_VPP]) <= MAX_RX_PORT_COUNT),
                 checkpoint)
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
-        pass
 
 
 if __name__ == '__main__':
-    cc_flow_type = nu_config_obj.get_local_settings_parameters(flow_direction=True)
-    FLOW_DIRECTION = cc_flow_type[nu_config_obj.FLOW_DIRECTION]
+    FLOW_DIRECTION = NuConfigManager.FLOW_DIRECTION_FPG_CC
 
     ts = SetupSpirent()
     # Ethernet CC
     ts.add_test_case(TestCcEthernetArpRequest())
     ts.add_test_case(TestCcEthernetArpResponse())
 
-    ts.add_test_case(TestCcEthernetRarp())
+    # Disable RARP as this is deprecated protocol
+    # ts.add_test_case(TestCcEthernetRarp())
     ts.add_test_case(TestCcEthernetLLDP())
     ts.add_test_case(TestCcEthernetPTP())
 

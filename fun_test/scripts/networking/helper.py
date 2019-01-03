@@ -64,35 +64,34 @@ SFG_SAMPLER_COPY = "SAMPLER_COPY"
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1
 ETH_COPP_ARP_RESP_METER_ID = 2
-ETH_COPP_RARP_METER_ID = 3
 ETH_COPP_ISIS_1_METER_ID = 4
 ETH_COPP_ISIS_2_METER_ID = 5
 ETH_COPP_LLDP_METER_ID = 6
 ETH_COPP_PTP_METER_ID = 7
-IPV4_COPP_ICMP_METER_ID = 30
-IPV4_COPP_OSPF_1_METER_ID = 31
-IPV4_COPP_OSPF_2_METER_ID = 32
-IPV4_COPP_DHCP_METER_ID = 33
-IPV4_COPP_PIM_METER_ID = 34
-IPV4_COPP_BGP_METER_ID = 35
-IPV4_COPP_IGMP_METER_ID = 36
-IPV4_COPP_PTP_1_METER_ID = 37
-IPV4_COPP_PTP_2_METER_ID = 38
-IPV4_COPP_PTP_3_METER_ID = 39
-IPV4_COPP_PTP_4_METER_ID = 40
-IPV4_COPP_TTL_ERR_METER_ID = 41
-IPV4_COPP_OPTS_METER_ID = 42
+IPV4_COPP_ICMP_METER_ID = 8
+IPV4_COPP_OSPF_1_METER_ID = 9
+IPV4_COPP_OSPF_2_METER_ID = 10
+IPV4_COPP_DHCP_METER_ID = 11
+IPV4_COPP_PIM_METER_ID = 12
+IPV4_COPP_BGP_METER_ID = 13
+IPV4_COPP_IGMP_METER_ID = 14
+IPV4_COPP_PTP_1_METER_ID = 15
+IPV4_COPP_PTP_2_METER_ID = 16
+IPV4_COPP_PTP_3_METER_ID = 17
+IPV4_COPP_PTP_4_METER_ID = 18
+IPV4_COPP_TTL_ERR_METER_ID = 19
+IPV4_COPP_OPTS_METER_ID = 20
 IPV4_COPP_FOR_US_METER_ID = 21
-ERR_TRAP_COPP_FSF_METER_ID = 3
-ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 4
-ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 5
-ERR_TRAP_COPP_PRSR_V4_VER_METER_ID = 14
-ERR_TRAP_COPP_PRSR_V6_VER_METER_ID = 15
-ERR_TRAP_COPP_PRSR_IHL_METER_ID = 16
-ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 17
-ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 18
-ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 19
-ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 20
+ERR_TRAP_COPP_FSF_METER_ID = 40
+ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 41
+ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 42
+ERR_TRAP_COPP_PRSR_V4_VER_METER_ID = 51
+ERR_TRAP_COPP_PRSR_V6_VER_METER_ID = 52
+ERR_TRAP_COPP_PRSR_IHL_METER_ID = 53
+ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 54
+ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 55
+ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 56
+ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 57
 
 
 psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx_drop',
@@ -558,3 +557,48 @@ def remove_strict_priority_from_queue(network_controller_obj, dut_port):
 def convert_bps_to_mbps(count_in_bps):
     count_in_mbps = count_in_bps / float(1000000)
     return count_in_mbps
+
+
+def reset_pfc_configs(network_controller_obj, dut_port_list, queue_list=[], quanta=False, threshold=False, shared_configs=False, shared_config_port_list=[]):
+    result = False
+    default_quanta = 0
+    default_threshold = 0
+    default_min_thr = 16383
+    default_shr_thr = 16383
+    default_hdr_thr = 16383
+    default_xoff_enable = 0
+    default_shared_xon_thr = 100
+    try:
+        fun_test.simple_assert(network_controller_obj.disable_qos_pfc(), "Disable QOS pfc")
+
+        for dut_port in dut_port_list:
+            fun_test.simple_assert(network_controller_obj.disable_priority_flow_control(port_num=dut_port),
+                                   "Disable PFC on %s" % dut_port)
+
+            if quanta or threshold:
+                for queue in queue_list:
+                    if quanta:
+                        fun_test.simple_assert(network_controller_obj.set_priority_flow_control_quanta(
+                            port_num=dut_port, quanta=default_quanta, class_num=queue),
+                            "Reset default quanta of %s on queue %s" % (default_quanta, dut_port))
+                    if threshold:
+                        fun_test.simple_assert(network_controller_obj.set_priority_flow_control_threshold(
+                            port_num=dut_port, threshold=default_threshold, class_num=queue),
+                            "Reset default threshold of %s on queue %s" % (default_threshold, dut_port))
+
+        if shared_configs:
+            for dut_port in shared_config_port_list:
+                for queue in queue_list:
+                    fun_test.simple_assert(network_controller_obj.
+                                           set_qos_ingress_priority_group(port_num=dut_port,
+                                                                          priority_group_num=queue,
+                                                                          min_threshold=default_min_thr,
+                                                                          shared_threshold=default_shr_thr,
+                                                                          headroom_threshold=default_hdr_thr,
+                                                                          xoff_enable=default_xoff_enable,
+                                                                          shared_xon_threshold=default_shared_xon_thr),
+                                           "Ensure shared configs are reset on queue %s of port %s" % (queue, dut_port))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result

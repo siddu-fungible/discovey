@@ -242,7 +242,7 @@ class TransitSweep(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=10)
+        fun_test.sleep("Sleeping for executing traffic", seconds=120)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -1485,7 +1485,7 @@ class VPPathIPv4TCPNFCP(TestVpFlows):
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
-        self.fps = 120
+        self.fps = 100
         self.hnu = True
         self.max_frame_size = 9000
         self.mtu = 9000
