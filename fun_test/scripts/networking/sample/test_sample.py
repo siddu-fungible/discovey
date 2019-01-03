@@ -134,7 +134,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
     capture_results = None
 
     def describe(self):
-        self.set_test_details(id=1, summary="Test Ingress Traffic Sampling FPG to FPG",
+        self.set_test_details(id=1, summary="Transit Flow Ingress Sampling Source FPG and Destination FPG",
                               steps="""
                               1. Create TCP frame stream on Tx Port with following settings
                                  a. Frame Size Mode: Random Min: 78 B and Max: 1500 B

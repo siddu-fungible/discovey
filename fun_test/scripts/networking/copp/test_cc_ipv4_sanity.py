@@ -103,7 +103,8 @@ class TestCcIPv4ICMP(FunTestCase):
     meter_id = None
 
     def describe(self):
-        self.set_test_details(id=1, summary="Test CC IPv4 ICMP (Internet Control Message Protocol)",
+        self.set_test_details(id=1, summary="NU --> CC IPv4 ICMP (Internet Control Message Protocol) destined to "
+                                            "CC meter to 100 pps",
                               steps="""
                               1. Create a stream with EthernetII and IPv4 and ICMP Echo Request 
                                  headers under port %s

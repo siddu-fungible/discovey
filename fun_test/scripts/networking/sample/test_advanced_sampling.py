@@ -653,7 +653,7 @@ class SampleSourceMultiDestination(FunTestCase):
     capture_results = None
 
     def describe(self):
-        self.set_test_details(id=3, summary="Test Sampling Multiple Destination Single Source",
+        self.set_test_details(id=3, summary="Transit Flow Single FPG source and Multiple sampling destinations",
                               steps="""
                               1. Create TCP frame stream on Tx Port with following settings
                                  a. Frame Size Mode: Random Min: 78 B and Max: 1500 B
@@ -933,7 +933,7 @@ class SampleFlagMaskTTL0Packets(FunTestCase):
     capture_results = None
 
     def describe(self):
-        self.set_test_details(id=4, summary="Test Sampling Using FlagMask 45 (TTL 0)",
+        self.set_test_details(id=4, summary="Sampling Source FlagMask 45 (TTL 0)",
                               steps="""
                               1. Create TCP frame stream on Tx Port with following settings
                                  a. Frame Size Mode: Random Min: 78 B and Max: 1500 B
