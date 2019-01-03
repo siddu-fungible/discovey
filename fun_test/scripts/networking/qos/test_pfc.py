@@ -143,10 +143,9 @@ class SpirentSetup(FunTestScript):
     def cleanup(self):
         # Cleanup spirent session
         template_obj.cleanup()
-        disable_1 = network_controller_obj.disable_priority_flow_control(dut_port_1, shape=shape)
-        fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port_1)
-        disable_2 = network_controller_obj.disable_priority_flow_control(dut_port_2, shape=shape)
-        fun_test.test_assert(disable_2, "Disable pfc on port %s" % dut_port_2)
+
+        reset_pfc_configs(network_controller_obj=network_controller_obj, dut_port_list=[dut_port_1, dut_port_2],
+                          queue_list=[0], quanta=True, threshold=True, shared_configs=True, shared_config_port_list=[dut_port_1])
 
 
 class TestCase1(FunTestCase):
@@ -615,9 +614,9 @@ class TestCase4(FunTestCase):
     pcap_file_path = None
     pcap_file_path_1 = None
     pg = 0
-    min_thr = 100
-    shr_thr = 100
-    hdr_thr = 20
+    min_thr = 10
+    shr_thr = 20
+    hdr_thr = 5
     xoff_enable = 1
     shared_xon_thr = 10
     quanta = 50000
@@ -626,7 +625,7 @@ class TestCase4(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Test DUT with pfc enabled on both DUT ports with quanta 52428 for priority 0",
+                              summary="Test DUT with pfc enabled on both DUT ports with quanta 5000 for priority 0",
                               steps="""
                         1. Enable pfc on both port of DUT
                         2. Start traffic of good frame from port 1 of spirent.

@@ -269,9 +269,10 @@ class SpirentSetup(FunTestScript):
         # Cleanup spirent session
         template_obj.cleanup()
 
-        for dut_port in dut_port_list:
-            disable_1 = network_controller_obj.disable_priority_flow_control(dut_port, shape=shape)
-            fun_test.test_assert(disable_1, "Disable pfc on port %s" % dut_port)
+        reset_pfc_configs(network_controller_obj=network_controller_obj, dut_port_list=[dut_port_1, dut_port_2,
+                                                                                        dut_port_3, dut_port_4],
+                          queue_list=[0], quanta=True, threshold=True, shared_configs=True,
+                          shared_config_port_list=[dut_port_1, dut_port_3])
 
 
 class TestCase1(FunTestCase):

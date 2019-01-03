@@ -128,3 +128,27 @@ def generate_key(length=32):
     except Exception as ex:
         fun_test.critical(str(ex))
     return  result
+
+
+def convert_to_bytes(size):
+    size = str(size)
+    if size.isdigit():
+        bytes = int(size)
+    else:
+        bytes = size[:-1]
+        unit = size[-1]
+        if bytes.isdigit():
+            bytes = int(bytes)
+            if unit == 'G' or unit == 'g':
+                bytes *= 1024 * 1024 * 1024
+            elif unit == 'M' or unit == 'm':
+                bytes *= 1024 * 1024
+            elif unit == 'K' or unit == 'k':
+                bytes *= 1024
+            elif unit == 'B':
+                pass
+            else:
+                bytes = -1
+        else:
+            bytes = -1
+    return bytes

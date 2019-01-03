@@ -603,7 +603,6 @@ class Linux(object, ToDictMixin):
 
         return pid
 
-
     @fun_test.safe
     def get_process_id_by_pattern(self, process_pat):
         pid = None
@@ -623,7 +622,6 @@ class Linux(object, ToDictMixin):
             self.logger.critical(critical_str)
 
         return pid
-
 
     @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, **kwargs):
@@ -1261,21 +1259,32 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def nvme_restart(self):
-        command = "rmmod nvme"
-        self.sudo_command(command)
-        self.insmod(module="nvme.ko")
-        return True
+        result = True
+        # Unloading the nvme driver
+        unload_status = self.rmmod("nvme")
+        if not unload_status:
+            fun_test.sleep("Waiting for nvme driver unload to complete")
+            load_status = self.modprobe("nvme")
+            if load_status:
+                result = False
+        else:
+            result = False
+        return result
 
     @fun_test.safe
-    def lsblk(self):
+    def lsblk(self, options=None):
         result = collections.OrderedDict()
-        output = self.command("lsblk")
+        if options:
+            cmd = "lsblk " + options
+        else:
+            cmd = "lsblk"
+        output = self.command(cmd)
         lines = output.split("\n")
         for line in lines:
 
             """NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
                sr0      11:0    1 1024M  0 rom  """
-            m = re.search(r'(.*\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)?', line)
+            m = re.search(r'(.*\S+)\s+(\S+)\s+(\d+)\s+(\S+|\d+)\s+(\d+)\s+(\S+)\s+(\S+)?', line)
             if m:
                 name = m.group(1)
                 major_min = m.group(2)
@@ -1798,6 +1807,122 @@ class Linux(object, ToDictMixin):
         else:
             result = False
 
+        return result
+
+    @fun_test.safe
+    def get_process_cmdline(self, process_name):
+
+        process_cmdline = ""
+        process_id = self.get_process_id(process_name)
+        if process_id:
+            # command = r"echo `cat /proc/{}/cmdline | tr '\0' '\n'`".format(process_id)
+            command = r"ps -p {} -o args --no-headers".format(process_id)
+            process_cmdline = self.command(command=command)
+
+        return process_cmdline
+
+    @fun_test.safe
+    def create_filesystem(self, fs_type, device, sector_size=None, timeout=60):
+        result = True
+
+        if fs_type == "ext4":
+            fs = "mkfs.ext4"
+        elif fs_type == "ext3":
+            fs = "mkfs.ext3"
+        elif fs_type == "ext2":
+            fs = "mkfs.ext2"
+        elif fs_type == "xfs":
+            fs = "mkfs.xfs"
+        else:
+            fun_test.critical("Creation of {} filesystem is not yet supported".format(fs_type))
+            result = False
+            return result
+
+        if sector_size:
+            fs_command = "{} -F {} -b {}".format(fs, device, sector_size)
+        else:
+            fs_command = "{} -F {}".format(fs, device)
+
+        try:
+            output = self.sudo_command(fs_command)
+            output_search = re.findall(r"done", output, re.MULTILINE)
+            if output_search:
+                if fs_type == "ext2":
+                    if len(output_search) != 3:
+                        result = False
+                elif fs_type == "ext3" or fs_type == "ext4":
+                    if len(output_search) != 4:
+                        result = False
+            else:
+                result = False
+        except Exception as ex:
+            result = False
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+
+        return result
+
+    @fun_test.safe
+    def create_directory(self, dir_name):
+        result = True
+        # Check if the directory already exists. If so return True
+        dir_status = self.check_file_directory_exists(path=dir_name)
+        if dir_status:
+            return result
+
+        mkdir_cmd = "mkdir -p {}".format(dir_name)
+        self.sudo_command(mkdir_cmd)
+
+        dir_status = self.check_file_directory_exists(path=dir_name)
+        if not dir_status:
+            result = False
+
+        return result
+
+    @fun_test.safe
+    def mount_volume(self, volume, directory):
+        result = True
+        try:
+            mnt_cmd = "mount {} {}".format(volume, directory)
+            mnt_out = self.sudo_command(mnt_cmd)
+            if not mnt_out:
+                pattern = r'.*{}.*'.format(directory)
+                mnt_out = self.command("mount")
+                match = re.search(pattern, mnt_out, re.M)
+                if not match:
+                    result = False
+            else:
+                result = False
+        except Exception as ex:
+            result = False
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        return result
+
+    @fun_test.safe
+    def unmount_volume(self, volume=None, directory=None):
+        result = True
+        if volume:
+            mnt_cmd = "umount -f {}".format(volume)
+        elif directory:
+            mnt_cmd = "umount -f {}".format(directory)
+        try:
+            mnt_out = self.sudo_command(mnt_cmd)
+            if not mnt_out:
+                pattern = r'.*{}.*'.format(volume)
+                mnt_out = self.command("mount")
+                match = re.search(pattern, mnt_out, re.M)
+                if match:
+                    result = False
+            else:
+                result = False
+        except Exception as ex:
+            result = False
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
         return result
 
     def clone(self):
