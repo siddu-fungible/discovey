@@ -1,9 +1,7 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
 from fun_global import get_current_time
-from fun_settings import TIME_ZONE
-import datetime
-import pytz
+from fun_settings import FUN_TEST_DIR
 import json
 import re
 
@@ -15,7 +13,7 @@ HU_HOST = 'cadence-pc-5'
 NU_INTF_IP = 'cadence-pc-3'
 HU_PF_INTF_IP = 'cadence-pc-5'
 BW_LIMIT = '1M'
-RESULT_FILE = 'funeth_performance_data.json'
+RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
 
 class FunethPerformance(FunTestScript):
@@ -31,6 +29,8 @@ class FunethPerformance(FunTestScript):
 
         # NU_HOST
         linux_obj = Linux(host_ip=NU_HOST, ssh_username="user", ssh_password="Precious1*")
+        linux_obj.command('sudo ptp4l -i enp10s0 -2 &')
+        linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
         match = re.search(r'(\w+)\s+perfsonar/testpoint.*Up', output)
@@ -38,13 +38,14 @@ class FunethPerformance(FunTestScript):
         container_id = match.group(1)
         nu_cmd_prefix = 'docker exec -t %s' % container_id
         linux_obj.command('%s iperf3 -sD' % nu_cmd_prefix)
-        linux_obj.command('service ntp status')
         fun_test.shared_variables['nu_linux_obj'] = linux_obj
         fun_test.shared_variables['nu_cmd_prefix'] = nu_cmd_prefix
         fun_test.shared_variables['nu_container_id'] = container_id
 
         # HU_HOST
         linux_obj = Linux(host_ip=HU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
+        linux_obj.command('sudo ptp4l -i eth0 -2 &')
+        linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
         match = re.search(r'(\w+)\s+perfsonar/testpoint.*Up', output)
@@ -52,13 +53,12 @@ class FunethPerformance(FunTestScript):
         container_id = match.group(1)
         hu_cmd_prefix = 'docker exec -t %s' % container_id
         linux_obj.command('%s iperf3 -sD' % hu_cmd_prefix)
-        linux_obj.command('service ntp status')
         fun_test.shared_variables['hu_linux_obj'] = linux_obj
         fun_test.shared_variables['hu_cmd_prefix'] = hu_cmd_prefix
         fun_test.shared_variables['hu_container_id'] = container_id
 
         # From NU host, do pscheduler ping HU host to make sure it's alive
-        fun_test.sleep('Sleep for a while to wait for pscheduler fully up', 5)
+        fun_test.sleep('Sleep for a while to wait for ptp sync and pscheduler fully up', 10)
         output = fun_test.shared_variables['nu_linux_obj'].command(
             '%s pscheduler ping %s' % (fun_test.shared_variables['nu_cmd_prefix'], HU_PF_INTF_IP))
         fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "NU pscheduler ping HU")
@@ -67,10 +67,13 @@ class FunethPerformance(FunTestScript):
         output = fun_test.shared_variables['hu_linux_obj'].command(
             '%s pscheduler ping %s' % (fun_test.shared_variables['hu_cmd_prefix'], NU_INTF_IP))
         # TODO: Need to debug below failure
-        #fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "HU pscheduler ping NU")
+        fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "HU pscheduler ping NU")
 
-        fun_test.shared_variables['nu_linux_obj'].command('%s ps aux' % fun_test.shared_variables['nu_cmd_prefix'])
-        fun_test.shared_variables['hu_linux_obj'].command('%s ps aux' % fun_test.shared_variables['hu_cmd_prefix'])
+        for h in ('nu', 'hu'):
+            for cmd in ('ps aux | egrep "ptp|phc" | grep -v grep',
+                        'timedatectl status',
+                        '%s ps aux' % fun_test.shared_variables['%s_cmd_prefix' % h]):
+                fun_test.shared_variables['%s_linux_obj' % h].command(cmd)
 
 
     def cleanup(self):
@@ -78,6 +81,9 @@ class FunethPerformance(FunTestScript):
             'docker kill {0}; docker rm {0}'.format(fun_test.shared_variables['nu_container_id']))
         fun_test.shared_variables['hu_linux_obj'].command(
             'docker kill {0}; docker rm {0}'.format(fun_test.shared_variables['hu_container_id']))
+        for cmd in ('sudo pkill ptp4l', 'sudo pkill phc2sys'):
+            fun_test.shared_variables['nu_linux_obj'].command(cmd)
+            fun_test.shared_variables['hu_linux_obj'].command(cmd)
         pass
 
 
@@ -111,21 +117,21 @@ class FunethPerformanceBase(FunTestCase):
         }
 
         # Throughput
-        duration_time = 10
-        output = linux_obj.command(
-            '%s pscheduler task --tool %s throughput -d %s -u -l %s -t %s -b %s' % (
-                cmd_prefix, throughput_tool, dst, udp_payload(frame_size), duration_time, BW_LIMIT), timeout=300)
-        match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)\s+(\d+) / (\d+)\s+Jitter:\s(\S+ [m|u|n]s)', output,
-                          re.DOTALL)
-        fun_test.test_assert(match, "Measure %s throughput" % flow_type)
-        
-        result.update(
-            {
-                'throughput': match.group(1),
-                'pps': (int(match.group(3)) - int(match.group(2)))/duration_time,
-                'jitter': match.group(4),
-            }
-        )
+        #duration_time = 10
+        #output = linux_obj.command(
+        #    '%s pscheduler task --tool %s throughput -d %s -u -l %s -t %s -b %s' % (
+        #        cmd_prefix, throughput_tool, dst, udp_payload(frame_size), duration_time, BW_LIMIT), timeout=300)
+        #match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)\s+(\d+) / (\d+)\s+Jitter:\s(\S+ [m|u|n]s)', output,
+        #                  re.DOTALL)
+        #fun_test.test_assert(match, "Measure %s throughput" % flow_type)
+        #
+        #result.update(
+        #    {
+        #        'throughput': match.group(1),
+        #        'pps': (int(match.group(3)) - int(match.group(2)))/duration_time,
+        #        'jitter': match.group(4),
+        #    }
+        #)
 
         # Latency
         packet_count = 10
@@ -147,14 +153,12 @@ class FunethPerformanceBase(FunTestCase):
             result.update({k: i[1]})
 
         result.update(
-            #{'timestamp': get_current_time(),
-            {'timestamp': pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(TIME_ZONE)),
+            {'timestamp': '%s' % get_current_time(),
              'version': fun_test.get_version(),
              }
         )
 
-        import pprint; pprint.pprint(result)
-
+        # Update file with result
         with open(RESULT_FILE) as f:
             r = json.load(f)
             r.append(result)
@@ -214,8 +218,8 @@ class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
 
 if __name__ == "__main__":
     FunethScript = FunethPerformance()
-    FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
+    #FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
     FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
     #FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
-    #FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
+    FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
     FunethScript.run()
