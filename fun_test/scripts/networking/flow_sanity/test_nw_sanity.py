@@ -104,7 +104,7 @@ class TransitSweep(FunTestCase):
     
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test all frame size in incremental way (IPv4) (64 to 9K)",
+                              summary="Transit flow, packet sweep IPv4 (64B-9KB)",
                               steps="""
                               1. Create Bi-directional stream with frame size mode = Incremental Min: 64 and Max: 9000 
                               2. Start traffic @ 5 Mbps
@@ -531,7 +531,7 @@ class TransitV6Sweep(TransitSweep):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test all frame size in incremental way (IPv6) (78 to 9K)",
+                              summary="Transit flow, packet sweep IPv6 (78B-9KB)",
                               steps="""
                               1. Create a Bi-directional stream with IPv6 header and frame size mode = Incremental 
                                  Min: 78 and Max: 9000
@@ -950,7 +950,7 @@ class TestCcFlows(FunTestCase):
 class TestArpRequestFlow1(TestCcFlows):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Test CC Ethernet ARP Request (NU --> CC)",
+                              summary="NU --> CC, Ethernet ARP Request",
                               steps="""
                               1. Create a stream with EthernetII and ARP headers under port
                                  a. Frame Size Mode: %s Frame Size %d
@@ -1012,7 +1012,7 @@ class TestArpRequestFlow1(TestCcFlows):
 class TestArpRequestFlow2(TestCcFlows):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Test CC Ethernet ARP Request (HNU --> CC)",
+                              summary="HNU --> CC, Ethernet ARP Request",
                               steps="""
                               1. Create a stream with EthernetII and ARP headers under port
                                  a. Frame Size Mode: %s Frame Size %d
@@ -1404,8 +1404,7 @@ class VPPathIPv4TCP(TestVpFlows):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Test VP path from NU ---> HNU for IPv4 with TCP with frame size incrementing "
-                                      "from 78B to %s" % MAX_FRAME_SIZE,
+                              summary="NU --> HNU IPv4 TCP Packet Sweep 78B to 9KB ",
                               steps="""
                         1. Create streamblock and add ethernet, ipv4 and tcp headers
                         1. Start traffic in incremental
@@ -1463,8 +1462,7 @@ class VPPathIPv4TCPNFCP(TestVpFlows):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Test VP path from HNU ---> HNU (NFCP) for IPv4 with TCP with frame size "
-                                      "incrementing from 78B to 1500B",
+                              summary="HNU --> HNU (NFCP) IPv4 TCP Packet Sweep 78B to 9KB",
                               steps="""
                         1. Create streamblock and add ethernet, ipv4 and tcp headers
                         1. Start traffic in incremental
@@ -1528,8 +1526,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 
     def describe(self):
         self.set_test_details(id=7,
-                              summary="Test VP path from HNU ---> HNU (FCP) for IPv4 with TCP with frame size "
-                                      "incrementing from 78B to %s" % MAX_FRAME_SIZE,
+                              summary="HNU --> HNU (FCP) IPv4 TCP Packet Sweep 78B to 9KB",
                               steps="""
                         1. Create streamblock and add ethernet, ipv4 and tcp headers
                         1. Start traffic in incremental
