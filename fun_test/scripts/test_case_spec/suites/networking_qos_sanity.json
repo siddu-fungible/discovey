@@ -1,5 +1,5 @@
 [
-  {"path": "networking/qos/test_pfc.py", "test_case_ids": [4]},
+  {"path": "networking/qos/test_pfc_on_2ports.py", "test_case_ids": [4]},
   {"path": "networking/qos/test_pfc_on_4ports.py"},
   {"path": "networking/qos/test_qos_strict_priority.py", "test_case_ids": [1]},
   {"path": "networking/qos/test_cir_1.py", "test_case_ids": [1]},

@@ -186,8 +186,7 @@ class Cir_Q0_Q1_Q2_Q3(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test shaper cir by having same ingress load such that two queues have same cir "
-                                      "rate each for queues 0,1,2,3",
+                              summary="Test throughput allocated to queues 0,1,2,3 is based on cir rates assigned to them",
                               steps="""
                               1. Create stream with dscp 0 and dscp 1 on port 1 and with dscp 2 and 3 on port 3
                               2. Ensure strict priority is applied to dscp 0 on egress port.
@@ -335,8 +334,7 @@ class Cir_Q4_Q5_Q6_Q7(Cir_Q0_Q1_Q2_Q3):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test shaper cir by having same ingress load such that two queues have same cir "
-                                      "rate each for queues 4,5,6,7",
+                              summary="Test throughput allocated to queues 4,5,6,7 is based on cir rates assigned to them",
                               steps="""
                               1. Create stream with dscp 4 and dscp 5 on port 1 and with dscp 6 and 7 on port 3
                               2. Ensure strict priority is applied to dscp 0 on egress port.
@@ -358,8 +356,7 @@ class Cir_Q8_Q9_Q10_Q11(Cir_Q0_Q1_Q2_Q3):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Test shaper cir by having same ingress load such that two queues have same cir "
-                                      "rate each for queues 8,9,10,11",
+                              summary="Test throughput allocated to queues 8,9,10,11 is based on cir rates assigned to them",
                               steps="""
                               1. Create stream with dscp 8 and dscp 9 on port 1 and with dscp 10 and 11 on port 3
                               2. Ensure strict priority is applied to dscp 0 on egress port.
@@ -381,8 +378,7 @@ class Cir_Q12_Q13_Q14_Q15(Cir_Q0_Q1_Q2_Q3):
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Test shaper cir by having same ingress load such that two queues have same cir "
-                                      "rate each for queues 12,13,14,15",
+                              summary="Test throughput allocated to queues 12,13,14,15 is based on cir rates assigned to them",
                               steps="""
                               1. Create stream with dscp 12 and dscp 13 on port 1 and with dscp 14 and 15 on port 3
                               2. Ensure strict priority is applied to dscp 0 on egress port.

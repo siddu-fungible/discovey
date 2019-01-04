@@ -211,7 +211,7 @@ class Wred_Q0(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test wred drop increases as queue depth increases on DUT for Q0 traffic during ",
+                              summary="Test wred drop increases as queue depth increases on DUT for Q0",
                               steps="""
                               1. Update stream on port 1 to start with pps
                               3. setup wred config
@@ -378,8 +378,7 @@ class ECN_10(Wred_Q0):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test ecn count increases as queue depth increases on DUT for Q0 traffic during "
-                                      "with ECN bits in packet set to 10",
+                              summary="Test ecn count increases as queue depth increases on DUT for Q0 with ECN bits in packet set to 10",
                               steps="""
                                   1. Update stream on port 1 to start with pps
                                   3. setup ecn config
@@ -506,8 +505,7 @@ class ECN_01(ECN_10):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Test ecn count increases as queue depth increases on DUT for Q0 traffic during "
-                                      "with ECN bits in packet set to 01",
+                              summary="Test ecn count increases as queue depth increases on DUT for Q0 with ECN bits in packet set to 01",
                               steps="""
                                   1. Update stream on port 1 to start with pps
                                   3. setup ecn config
