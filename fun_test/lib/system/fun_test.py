@@ -784,10 +784,11 @@ class FunTest:
 
         import imp
         import inspect
-
-        temp_module_name = self._get_flat_file_name(path=module_name)
-        imp.load_source(temp_module_name, module_name)
-        members = inspect.getmembers(sys.modules[temp_module_name], inspect.isclass)
+        f, filename, description = imp.find_module(os.path.basename(module_name).replace(".py", ""),
+                                                   [os.path.dirname(module_name)])
+        loaded_module_name = "dynamic_load"
+        imp.load_module(loaded_module_name, f, filename, description)
+        members = inspect.getmembers(sys.modules[loaded_module_name], inspect.isclass)
         for m in members:
             if len(m) > 1:
                 klass = m[1]
