@@ -2,8 +2,6 @@ from lib.system.fun_test import *
 from lib.system import utils
 from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
-from lib.templates.storage.qemu_storage_template import QemuStorageTemplate
-from lib.templates.storage.nvme_template import NvmeTemplate
 from lib.host.storage_controller import StorageController
 from lib.host.linux import *
 
@@ -31,30 +29,6 @@ def fio_parser(arg1, **kwargs):
     arg1.pcie_fio(**kwargs)
 
 
-# To Do
-def byte_converter(size):
-    if (size.isdigit()):
-        bytes = int(size)
-    else:
-        bytes = size[:-1]
-        unit = size[-1]
-        if bytes.isdigit():
-            bytes = int(bytes)
-            if unit == 'G' or unit == 'g':
-                bytes *= 1024 * 1024 * 1024
-            elif unit == 'M' or unit == 'm':
-                bytes *= 1024 * 1024
-            elif unit == 'K' or unit == 'k':
-                bytes *= 1024
-            elif unit == 'B':
-                pass
-            else:
-                bytes = -1
-        else:
-            bytes = -1
-    return bytes
-
-
 class NvmeSanityScript(FunTestScript):
 
     def describe(self):
@@ -66,21 +40,18 @@ class NvmeSanityScript(FunTestScript):
     def setup(self):
         self.topology_obj_helper = TopologyHelper(spec=topology_dict)
         self.topology = self.topology_obj_helper.deploy()
-        self.topology_obj_helper.save(file_name="/tmp/divya_nvme.pkl")
-        # self.topology = self.topology_obj_helper.load(file_name="/tmp/divya_nvme.pkl")
         fun_test.test_assert(self.topology, "Ensure deploy is successful")
         self.dut = self.topology.get_dut_instance(index=0)
+        fun_test.test_assert(self.dut, "Retrieved dut instance")
         self.storage_controller = StorageController(target_ip=self.dut.host_ip,
                                                     target_port=self.dut.external_dpcsh_port)
         fun_test.shared_variables["topology"] = self.topology
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables["ctrl_created"] = False
 
     def cleanup(self):
         if self.topology:
-            pass
-            # self.storage_controller.disconnect()
-            # TopologyHelper(spec=self.topology).cleanup()
+            self.storage_controller.disconnect()
+            TopologyHelper(spec=self.topology).cleanup()
 
 
 class NvmeSanityTestCase(FunTestCase):
@@ -107,16 +78,11 @@ class NvmeSanityTestCase(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         self.host = self.topology.get_host_instance(dut_index=0, interface_index=0, host_index=0)
-        self.host_inst = {}
         self.dut = self.topology.get_dut_instance(index=0)
-        fun_test.test_assert(self.dut, "Retrieved dut instance 0")
         self.storage_controller = fun_test.shared_variables["storage_controller"]
-        self.qemu = QemuStorageTemplate(host=self.host, dut=self.dut)
         self.funos_running = True
-        self.nvme_template = NvmeTemplate(self.host)
-        fun_test.shared_variables["host"] = self.host
-        fun_test.shared_variables["nvme_template"] = self.nvme_template
-        self.host.command("sudo apt install fio")
+        # self.host.command("sudo apt install fio")
+        install_status = self.host.install_package("fio")
         self.blt_create_count = 0
         self.blt_attach_count = 0
         self.blt_detach_count = 0
@@ -125,12 +91,6 @@ class NvmeSanityTestCase(FunTestCase):
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
-
-            if self.namespace_params["capacity"] % self.namespace_params["block_size"]:
-                fun_test.test_assert(
-                    False,
-                    "{} capacity not a multiple of {} blocksize".format(self.namespace_params["capacity"],
-                                                                        self.namespace_params["block_size"]))
 
             # Wrapper for creating and attaching namespace(s)
             command_result = self.storage_controller.command(command="enable_counters", legacy=True)
@@ -141,49 +101,35 @@ class NvmeSanityTestCase(FunTestCase):
             for i in range(1, fun_test.shared_variables["num_ns"], 1):
                 self.thin_uuid[i] = utils.generate_uuid()
                 command_result = {}
-                command_result = self.storage_controller.create_volume(
-                    type="VOL_TYPE_BLK_LOCAL_THIN",
-                    capacity=self.namespace_params["capacity"],
-                    block_size=self.namespace_params["block_size"],
-                    uuid=self.thin_uuid[i],
-                    name="thin_blk" + str(i),
-                    command_duration=self.command_timeout)
+                command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                       capacity=self.namespace_params["capacity"],
+                                                                       block_size=self.namespace_params["block_size"],
+                                                                       uuid=self.thin_uuid[i],
+                                                                       name="thin_blk" + str(i),
+                                                                       command_duration=self.command_timeout)
                 if command_result["status"]:
                     self.blt_create_count += 1
                 else:
-                    fun_test.test_assert(
-                        command_result["status"],
-                        "Thin Block volume {} creation with capacity {}".format(i, self.namespace_params["capacity"]))
+                    fun_test.test_assert(command_result["status"],
+                                         "Thin Block volume {} creation with capacity {}".
+                                         format(i, self.namespace_params["capacity"]))
 
                 command_result = {}
-                command_result = self.storage_controller.volume_attach_pcie(
-                    ns_id=i,
-                    uuid=self.thin_uuid[i],
-                    huid=0,
-                    ctlid=self.namespace_params["ctl_id"],
-                    fnid=2,
-                    command_duration=self.command_timeout)
+                command_result = self.storage_controller.volume_attach_pcie(ns_id=i, uuid=self.thin_uuid[i],
+                                                                            ctlid=self.namespace_params["ctl_id"],
+                                                                            command_duration=self.command_timeout)
                 if command_result["status"]:
                     self.blt_attach_count += 1
                 else:
-                    fun_test.test_assert(
-                        command_result["status"],
-                        "Thin Block volume {} attach with capacity {}".format(i, self.namespace_params["capacity"]))
+                    fun_test.test_assert(command_result["status"],
+                                         "Thin Block volume {} attach with capacity {}".
+                                         format(i, self.namespace_params["capacity"]))
 
-            if self.blt_create_count == self.num_namespace:
-                fun_test.add_checkpoint("Total BLT create count {}".format(self.blt_create_count),
-                                        "PASSED",
-                                        self.num_namespace,
-                                        self.blt_create_count)
-            else:
-                fun_test.test_assert(False, "Create and namespace count")
-            if self.blt_attach_count == self.num_namespace:
-                fun_test.add_checkpoint("Total BLT attach count {}".format(self.blt_attach_count),
-                                        "PASSED",
-                                        self.num_namespace,
-                                        self.blt_attach_count)
-            else:
-                fun_test.test_assert(False, "Attach and namespace count")
+            fun_test.test_assert_expected(expected=self.num_namespace, actual=self.blt_create_count,
+                                          message="Total BLT created")
+            fun_test.test_assert_expected(expected=self.num_namespace, actual=self.blt_attach_count,
+                                          message="Total BLT attached")
+            fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
         testcase = self.__class__.__name__
@@ -205,13 +151,14 @@ class NvmeSanityTestCase(FunTestCase):
             fun_test.log(initial_volume_stats[i])
             # for i in range(1, fun_test.shared_variables["num_ns"], 1):
             self.fname = "/dev/nvme0n" + str(i)
-            self.host.pcie_fio(filename=self.fname, **self.fio_params)
+            fio_result = self.host.pcie_fio(filename=self.fname, **self.fio_params)
+            fun_test.test_assert(fio_result, "fio {} test".format(self.fio_params["rw"]))
 
         # Calculating the expected stats
-        size_in_bytes = byte_converter(str(self.fio_params["size"]))
-        bs_in_bytes = byte_converter(str(self.namespace_params["block_size"]))
-        fun_test.test_assert(size_in_bytes != -1, "Invalid fio size ")
-        fun_test.test_assert(bs_in_bytes != -1, "Invalid volume block size")
+        size_in_bytes = utils.convert_to_bytes(str(self.fio_params["size"]))
+        bs_in_bytes = utils.convert_to_bytes(str(self.namespace_params["block_size"]))
+        fun_test.simple_assert(size_in_bytes != -1, "Invalid test size ")
+        fun_test.simple_assert(bs_in_bytes != -1, "Invalid volume block size")
         expected_counter_stat = (size_in_bytes / bs_in_bytes)
 
         # Fetching final stats after running traffic
@@ -253,16 +200,12 @@ class NvmeSanityTestCase(FunTestCase):
             #                              message="Read counter is correct")
 
     def cleanup(self):
-        if "blt" in fun_test.shared_variables:
+        if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             for i in range(1, fun_test.shared_variables["num_ns"], 1):
                 command_result = {}
-                command_result = self.storage_controller.volume_detach_pcie(
-                    ns_id=i,
-                    uuid=self.thin_uuid[i],
-                    huid=0,
-                    ctlid=self.namespace_params["ctl_id"],
-                    fnid=2,
-                    command_duration=self.command_timeout)
+                command_result = self.storage_controller.volume_detach_pcie(ns_id=i, uuid=self.thin_uuid[i],
+                                                                            ctlid=self.namespace_params["ctl_id"],
+                                                                            command_duration=self.command_timeout)
                 if command_result["status"]:
                     self.blt_detach_count += 1
                 else:
@@ -271,33 +214,23 @@ class NvmeSanityTestCase(FunTestCase):
                         "Thin Block volume {} detach with capacity {}".format(i, self.namespace_params["capacity"]))
 
                 command_result = {}
-                command_result = self.storage_controller.delete_volume(
-                    type="VOL_TYPE_BLK_LOCAL_THIN",
-                    capacity=self.namespace_params["capacity"],
-                    uuid=self.thin_uuid[i],
-                    block_size=self.namespace_params["block_size"],
-                    name="thin_blk" + str(i),
-                    command_duration=self.command_timeout)
+                command_result = self.storage_controller.delete_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                       capacity=self.namespace_params["capacity"],
+                                                                       uuid=self.thin_uuid[i],
+                                                                       block_size=self.namespace_params["block_size"],
+                                                                       name="thin_blk" + str(i),
+                                                                       command_duration=self.command_timeout)
                 if command_result["status"]:
                     self.blt_delete_count += 1
                 else:
                     fun_test.test_assert(
                         command_result["status"],
                         "Thin Block volume {} delete with capacity {}".format(i, self.namespace_params["capacity"]))
-            if self.blt_detach_count == self.num_namespace:
-                fun_test.add_checkpoint("Total BLT detach count {}".format(self.blt_detach_count),
-                                        "PASSED",
-                                        self.num_namespace,
-                                        self.blt_detach_count)
-            else:
-                fun_test.test_assert(False, "Detach and namespace count")
-            if self.blt_delete_count == self.num_namespace:
-                fun_test.add_checkpoint("Total BLT delete count {}".format(self.blt_delete_count),
-                                        "PASSED",
-                                        self.num_namespace,
-                                        self.blt_delete_count)
-            else:
-                fun_test.test_assert(False, "Delete and namespace count")
+
+            fun_test.test_assert_expected(expected=self.num_namespace, actual=self.blt_detach_count,
+                                          message="Total BLT detached")
+            fun_test.test_assert_expected(expected=self.num_namespace, actual=self.blt_delete_count,
+                                          message="Total BLT deleted")
 
         fun_test.shared_variables["blt"]["setup_created"] = False
 
@@ -305,11 +238,11 @@ class NvmeSanityTestCase(FunTestCase):
 class TestInitialization(NvmeSanityTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="PCIe device initialization",
+                              summary="PCIe controller initialization",
                               steps="""
         1. Create and attach namespace. 
         2. Load nvme driver on host. 
-        2. Check lspci for fungible pcie devices 
+        3. Check lspci for fungible pcie devices 
         4. Check nvme controller under /dev/
         5. Run fio on the namespace
         6. Detach and delete namespace
@@ -322,7 +255,8 @@ class TestInitialization(NvmeSanityTestCase):
     def run(self):
         lspci_cmd = self.host.command("lspci | grep -i 1dad")
         fun_test.test_assert("Non-Volatile" in lspci_cmd, "PCIe device is present")
-        self.nvme_template.reload_nvme()
+        nvme_reload = self.host.nvme_restart()
+        fun_test.test_assert(nvme_reload, "nvme driver module reloaded")
         nv_ctrlr = self.host.command("ls /dev/nvme*")
         fun_test.test_assert("No such file or directory" not in nv_ctrlr, "Controller is present")
         super(TestInitialization, self).run()
@@ -348,7 +282,7 @@ class TestMultipleNS(NvmeSanityTestCase):
 
     def run(self):
         self.ns_list = 0
-        self.nvme_template.reload_nvme()
+        nvme_reload = self.host.nvme_restart()
         fun_test.sleep("Sleeping for {}", 2)
         ns_list = int(self.host.command("nvme list-ns /dev/nvme0 | wc -l"))
         fun_test.test_assert_expected(expected=self.num_namespace, actual=ns_list,
@@ -358,7 +292,8 @@ class TestMultipleNS(NvmeSanityTestCase):
     def cleanup(self):
         self.ns_list = -1
         super(TestMultipleNS, self).cleanup()
-        self.nvme_template.reload_nvme()
+        nvme_reload = self.host.nvme_restart()
+        fun_test.sleep("Sleeping for {}", 1)
         ns_list = int(self.host.command("nvme list-ns /dev/nvme0 | wc -l"))
         fun_test.test_assert_expected(expected=0, actual=ns_list,
                                       message="All namespaces deleted")
