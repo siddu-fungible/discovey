@@ -283,6 +283,7 @@ class TestMultipleNS(NvmeSanityTestCase):
     def run(self):
         self.ns_list = 0
         nvme_reload = self.host.nvme_restart()
+        fun_test.test_assert(nvme_reload, "nvme driver module reloaded")
         fun_test.sleep("Sleeping for {}", 2)
         ns_list = int(self.host.command("nvme list-ns /dev/nvme0 | wc -l"))
         fun_test.test_assert_expected(expected=self.num_namespace, actual=ns_list,
@@ -293,6 +294,7 @@ class TestMultipleNS(NvmeSanityTestCase):
         self.ns_list = -1
         super(TestMultipleNS, self).cleanup()
         nvme_reload = self.host.nvme_restart()
+        fun_test.test_assert(nvme_reload, "nvme driver module reloaded")
         fun_test.sleep("Sleeping for {}", 1)
         ns_list = int(self.host.command("nvme list-ns /dev/nvme0 | wc -l"))
         fun_test.test_assert_expected(expected=0, actual=ns_list,
