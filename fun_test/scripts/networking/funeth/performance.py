@@ -8,6 +8,8 @@ import re
 
 NU_HOST = 'cadence-pc-3'
 HU_HOST = 'cadence-pc-5'
+NU_HOST_MGMT_INTF = 'enp10s0'
+HU_HOST_MGMT_INTF = 'eth0'
 #NU_INTF_IP = '19.1.1.1'
 #HU_PF_INTF_IP = '53.1.1.5'
 NU_INTF_IP = 'cadence-pc-3'
@@ -28,8 +30,8 @@ class FunethPerformance(FunTestScript):
     def setup(self):
 
         # NU_HOST
-        linux_obj = Linux(host_ip=NU_HOST, ssh_username="user", ssh_password="Precious1*")
-        linux_obj.command('sudo ptp4l -i enp10s0 -2 &')
+        linux_obj = Linux(host_ip=NU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
+        linux_obj.command('sudo ptp4l -i %s -2 &' % NU_HOST_MGMT_INTF)
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
@@ -44,7 +46,7 @@ class FunethPerformance(FunTestScript):
 
         # HU_HOST
         linux_obj = Linux(host_ip=HU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
-        linux_obj.command('sudo ptp4l -i eth0 -2 &')
+        linux_obj.command('sudo ptp4l -i %s -2 &' % HU_HOST_MGMT_INTF)
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
@@ -97,7 +99,7 @@ class FunethPerformanceBase(FunTestCase):
     def cleanup(self):
         pass
 
-    def _run(self, flow_type, dst, throughput_tool='iperf3', frame_size=1500):
+    def _run(self, flow_type, dst, throughput_tool='iperf3', duration=10, frame_size=1500):
 
         def udp_payload(frame_size):
             return frame_size-18-20-8
@@ -117,26 +119,27 @@ class FunethPerformanceBase(FunTestCase):
         }
 
         # Throughput
-        #duration_time = 10
-        #output = linux_obj.command(
-        #    '%s pscheduler task --tool %s throughput -d %s -u -l %s -t %s -b %s' % (
-        #        cmd_prefix, throughput_tool, dst, udp_payload(frame_size), duration_time, BW_LIMIT), timeout=300)
-        #match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)\s+(\d+) / (\d+)\s+Jitter:\s(\S+ [m|u|n]s)', output,
-        #                  re.DOTALL)
-        #fun_test.test_assert(match, "Measure %s throughput" % flow_type)
-        #
-        #result.update(
-        #    {
-        #        'throughput': match.group(1),
-        #        'pps': (int(match.group(3)) - int(match.group(2)))/duration_time,
-        #        'jitter': match.group(4),
-        #    }
-        #)
+        output = linux_obj.command(
+            '%s pscheduler task --tool %s throughput -d %s -u -l %s -t %s -b %s' % (
+                cmd_prefix, throughput_tool, dst, udp_payload(frame_size), duration, BW_LIMIT), timeout=300)
+        match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)\s+(\d+) / (\d+)\s+Jitter:\s(\S+ [m|u|n]s)', output,
+                          re.DOTALL)
+        fun_test.test_assert(match, "Measure %s throughput" % flow_type)
+
+        result.update(
+            {
+                'throughput': match.group(1),
+                'pps': (int(match.group(3)) - int(match.group(2)))/duration,
+                'jitter': match.group(4),
+            }
+        )
 
         # Latency
-        packet_count = 10
+        packet_count = duration * result.get('pps', 1)
+        packet_interval = float(1)/result.get('pps', 1)
         output = linux_obj.command(
-            '%s pscheduler task latency -d %s -p %s -c %s -i 1' % (cmd_prefix, dst, udp_payload(frame_size), packet_count),
+            '%s pscheduler task latency -d %s -p %s -c %s -i %s' % (
+                cmd_prefix, dst, udp_payload(frame_size), packet_count, packet_interval),
             timeout=180)
         match = re.findall(r'Delay (Median|Minimum|Maximum|Mean).*?(\S+ [m|u|n]s)', output)
         fun_test.test_assert(match, "Measure %s latency" % flow_type)
