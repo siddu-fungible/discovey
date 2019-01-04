@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from lib.system.fun_test import fun_test
 import glob
 import os
