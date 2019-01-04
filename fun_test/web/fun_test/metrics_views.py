@@ -78,9 +78,17 @@ def describe_table(request, table_name):
 @api_safe_json_response
 def chart_info(request):
     request_json = json.loads(request.body)
-    metric_model_name = request_json["metric_model_name"]
-    chart_name = request_json["chart_name"]
-    chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+    metric_model_name = None
+    if "metric_model_name" in request_json:
+        metric_model_name = request_json["metric_model_name"]
+    chart_name = None
+    if "chart_name" in request_json:
+        chart_name = request_json["chart_name"]
+    metric_id = int(request_json["metric_id"])
+    if not chart_name:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+    else:
+        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result = None
     if chart:
         result = {"data_sets": json.loads(chart.data_sets),
@@ -445,36 +453,41 @@ def metric_by_id(request):
 @api_safe_json_response
 def data(request):
     request_json = json.loads(request.body)
-    metric_model_name = request_json["metric_model_name"]
-    chart_name = request_json["chart_name"]
+    # metric_model_name = request_json["metric_model_name"]
+    # chart_name = request_json["chart_name"]
+    metric_id = int(request_json["metric_id"])
     preview_data_sets = request_json["preview_data_sets"]
     chart = None
-    try:
-        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
-    except ObjectDoesNotExist:
-        pass
-    model = app_config.get_metric_models()[metric_model_name]
-    if preview_data_sets is not None:
-        data_sets = preview_data_sets
-    else:
-        data_sets = chart.data_sets
-        data_sets = json.loads(data_sets)
     data = []
-    for data_set in data_sets:
-        inputs = data_set["inputs"]
-        d = {}
-        for input_name, input_value in inputs.iteritems():
-            d[input_name] = input_value
-        # skip today's  #TODO
-        # del d["input_date_time"]
-        # today = get_current_time()
-        # today = today.replace(hour=0, minute=0, second=1)
-        # d["input_date_time__lt"] = today
-        try:
-            result = model.objects.filter(**d)  # unpack, pack
-            data.append([model_to_dict(x) for x in result])
-        except ObjectDoesNotExist:
-            logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
+    try:
+        # chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        metric_model_name = chart.metric_model_name
+        model = app_config.get_metric_models()[metric_model_name]
+        if preview_data_sets is not None:
+            data_sets = preview_data_sets
+        else:
+            data_sets = chart.data_sets
+            data_sets = json.loads(data_sets)
+
+        for data_set in data_sets:
+            inputs = data_set["inputs"]
+            d = {}
+            for input_name, input_value in inputs.iteritems():
+                d[input_name] = input_value
+            # skip today's  #TODO
+            # del d["input_date_time"]
+            # today = get_current_time()
+            # today = today.replace(hour=0, minute=0, second=1)
+            # d["input_date_time__lt"] = today
+            try:
+                result = model.objects.filter(**d)  # unpack, pack
+                data.append([model_to_dict(x) for x in result])
+            except ObjectDoesNotExist:
+                logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
+    except ObjectDoesNotExist:
+        logging.error("Metric Id: {} does not exist".format(metric_id))
+
     return data
 
 
@@ -482,47 +495,52 @@ def data(request):
 @api_safe_json_response
 def get_data_by_model(request):
     request_json = json.loads(request.body)
-    metric_model_name = request_json["metric_model_name"]
-    chart_name = request_json["chart_name"]
+
+    # metric_model_name = request_json["metric_model_name"]
+    # chart_name = request_json["chart_name"]
+    metric_id = int(request_json["metric_id"])
     preview_data_sets = request_json["preview_data_sets"]
     chart = None
+    modified_data = []
     try:
-        chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
+        chart = MetricChart.objects.get(metric_id=metric_id)
+        metric_model_name = chart.metric_model_name
+        model = app_config.get_metric_models()[metric_model_name]
+        if preview_data_sets is not None:
+            data_sets = preview_data_sets
+        else:
+            data_sets = chart.data_sets
+            data_sets = json.loads(data_sets)
+        data = []
+
+        d = {}
+        duplicate = True
+        for data_set in data_sets:
+            inputs = data_set["inputs"]
+            for input_name, input_value in inputs.iteritems():
+                if input_name in d:
+                    if d.get(input_name) != input_value:
+                        duplicate = False
+                d[input_name] = input_value
+            # skip today's  #TODO
+            # del d["input_date_time"]
+            # today = get_current_time()
+            # today = today.replace(hour=0, minute=0, second=1)
+            # d["input_date_time__lt"] = today
+            try:
+                result = model.objects.filter(**d)  # unpack, pack
+                data.append([model_to_dict(x) for x in result])
+            except ObjectDoesNotExist:
+                logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
+        if duplicate is False:
+            for data_set in data:
+                for record in data_set:
+                    modified_data.append(record)
+        else:
+            modified_data = data[0]
     except ObjectDoesNotExist:
         pass
-    model = app_config.get_metric_models()[metric_model_name]
-    if preview_data_sets is not None:
-        data_sets = preview_data_sets
-    else:
-        data_sets = chart.data_sets
-        data_sets = json.loads(data_sets)
-    data = []
-    modified_data = []
-    d = {}
-    duplicate = True
-    for data_set in data_sets:
-        inputs = data_set["inputs"]
-        for input_name, input_value in inputs.iteritems():
-            if input_name in d:
-                if d.get(input_name) != input_value:
-                    duplicate = False
-            d[input_name] = input_value
-        # skip today's  #TODO
-        # del d["input_date_time"]
-        # today = get_current_time()
-        # today = today.replace(hour=0, minute=0, second=1)
-        # d["input_date_time__lt"] = today
-        try:
-            result = model.objects.filter(**d)  # unpack, pack
-            data.append([model_to_dict(x) for x in result])
-        except ObjectDoesNotExist:
-            logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
-    if duplicate == False:
-        for data_set in data:
-            for record in data_set:
-                modified_data.append(record)
-    else:
-        modified_data = data[0]
+
     return modified_data
 
 

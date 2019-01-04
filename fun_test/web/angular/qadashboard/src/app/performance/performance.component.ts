@@ -398,7 +398,7 @@ export class PerformanceComponent implements OnInit {
     });
   }
 
-
+  /*
   fetchRootMetricInfo(chartName, metricModelName): any {
     let payload = {"metric_model_name": metricModelName, chart_name: chartName};
     this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
@@ -406,7 +406,7 @@ export class PerformanceComponent implements OnInit {
     }, error => {
       this.loggerService.error("fetchRootMetricInfo");
     });
-  }
+  } */
 
   populateNodeInfoCache(data) {
     if (!(data.metric_id in this.cachedNodeInfo)) {
@@ -512,7 +512,8 @@ export class PerformanceComponent implements OnInit {
 
   openTooltip(node): void {
     this.setDefaultUrls();
-    let payload = {"metric_model_name": node.metricModelName, chart_name: node.chartName};
+    //let payload = {"metric_model_name": node.metricModelName, chart_name: node.chartName};
+    let payload = {"metric_id": node.metricId};
     this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
       let result = data.data;
       if (result.last_suite_execution_id && result.last_suite_execution_id !== -1) {

@@ -238,8 +238,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   // populates chartInfo and fetches metrics data
   fetchInfo(): void {
     let payload = {};
-    payload["metric_model_name"] = this.modelName;
-    payload["chart_name"] = this.chartName;
+    // payload["metric_model_name"] = this.modelName;
+    // payload["chart_name"] = this.chartName;
+    payload["metric_id"] = this.id;
     this.apiService.post("/metrics/chart_info", payload).subscribe((response) => {
       this.chartInfo = response.data;
       if (this.chartInfo !== null) {
@@ -457,17 +458,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   //fetch the data from backend
-  fetchData(metricModelName, chartName, chartInfo, previewDataSets, tableInfo) {
+  fetchData(metricId, chartInfo, previewDataSets, tableInfo) {
     let payload = {};
-    payload["metric_model_name"] = metricModelName;
-    payload["chart_name"] = chartName;
+    // payload["metric_model_name"] = metricModelName;
+    // payload["chart_name"] = chartName;
     payload["preview_data_sets"] = previewDataSets;
-    payload["metric_id"] = -1;
+    payload["metric_id"] = metricId;
     if (chartInfo) {
       payload["metric_id"] = chartInfo["metric_id"];
       this.metricId = chartInfo["metric_id"];
     }
-    if (metricModelName !== 'MetricContainer') {
+    if (this.modelName !== 'MetricContainer') {
       this.fetchLeafData(chartInfo, previewDataSets, tableInfo, payload);
     } else {
       this.fetchContainerData(payload);
@@ -577,8 +578,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let index = 0;
       let self = this;
       let payload = {};
-      payload["metric_model_name"] = this.modelName;
-      payload["chart_name"] = this.chartName;
+      // payload["metric_model_name"] = this.modelName;
+      // payload["chart_name"] = this.chartName;
+      payload["metric_id"] = this.id;
       payload["preview_data_sets"] = this.filterDataSets;
       this.apiService.post("/metrics/data_by_model", payload).subscribe((response) => {
         let dataSet = response.data;
@@ -672,15 +674,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       return;
     }
     var self = this;
-    if (metricModelName !== 'MetricContainer') {
-      return this.apiService.get("/metrics/describe_table/" + metricModelName).subscribe(function (response) {
+    if (this.modelName !== 'MetricContainer') {
+      return this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (response) {
         self.tableInfo = response.data;
-        self.fetchData(metricModelName, chartName, chartInfo, previewDataSets, self.tableInfo);
+        self.fetchData(this.id, chartInfo, previewDataSets, self.tableInfo);
       }, error => {
         this.loggerService.error("fetchMetricsData");
       })
     } else {
-      this.fetchData(metricModelName, chartName, chartInfo, previewDataSets, this.tableInfo);
+      this.fetchData(this.id, chartInfo, previewDataSets, this.tableInfo);
     }
   }
 
