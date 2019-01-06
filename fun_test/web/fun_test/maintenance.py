@@ -347,7 +347,7 @@ if __name__ == "__main_delete__":
         for entry in entries:
             entry.delete()
 
-if __name__ == "__main__":
+if __name__ == "__mainBootTimePerformance__":
     model = apps.get_model(app_label='fun_test', model_name='BootTimePerformance')
     mcs_entries = model.objects.all()
     for entry in mcs_entries:
@@ -362,3 +362,11 @@ if __name__ == "__main__":
         print entry
 
 
+
+
+if __name__ == "__main__":
+    # Set internal name
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        chart.internal_chart_name = chart.chart_name
+        chart.save()
