@@ -1229,6 +1229,30 @@ class TeraMarkDfaPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class TeraMarkJpegPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_operation = models.TextField(verbose_name="Operation")
+    output_average_bandwidth = models.IntegerField(verbose_name="Average bandwidth", default=-1)
+    output_total_bandwidth = models.IntegerField(verbose_name="Total bandwidth", default=-1)
+    input_count = models.IntegerField(verbose_name="Count", default=0)
+    input_image = models.TextField(verbose_name="Image", default="None")
+    output_iops = models.IntegerField(verbose_name="IOPS", default=-1)
+    output_max_latency = models.IntegerField(verbose_name="Max latency", default=-1)
+    output_min_latency = models.IntegerField(verbose_name="Min latency", default=-1)
+    output_average_latency = models.IntegerField(verbose_name="Average latency", default=-1)
+    output_compression_ratio = models.FloatField(verbose_name="Compression ratio", default=-1)
+    output_percentage_savings = models.FloatField(verbose_name="Percentage savings", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class FlowTestPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)

@@ -11,7 +11,7 @@ from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkP
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
     TeraMarkCryptoPerformance
 from web.fun_test.metrics_models import TeraMarkLookupEnginePerformance, FlowTestPerformance, \
-    TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance
+    TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance, TeraMarkJpegPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
 from web.fun_test.analytics_models_helper import prepare_status_db
 from web.fun_test.models import TimeKeeper
@@ -27,6 +27,7 @@ TERAMARK_LOOKUP = "le_teramark"
 FLOW_TEST_TAG = "qa_storage2_endpoint"
 TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
+TERAMARK_JPEG = "jpeg_teramark"
 
 
 def get_rounded_time():
@@ -1399,6 +1400,88 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name="TeraMarkDfaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_JPEG
+
+    def describe(self):
+        self.set_test_details(id=23,
+                              summary="TeraMark Jpeg Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        current_file_name = None
+        final_file_name = None
+        try:
+            fun_test.test_assert(self.validate_job(validation_required=False), "validating job")
+            teramark_begin = False
+
+            for line in self.lines:
+                compression_ratio_found = False
+                if "Compression-ratio to 1" in line:
+                    line = line + "}"
+                    compression_ratio_found = True
+                m = re.search(r'JPEG Compression/Decompression performance stats (?P<current_file_name>\S+?)(?=#)', line)
+                if m:
+                    current_file_name = m.group("current_file_name")
+                    final_file_name = current_file_name
+                if "TeraMark Begin" in line:
+                    teramark_begin = True
+                    continue
+                if "TeraMark End" in line:
+                    teramark_begin = False
+                    fun_test.test_assert(current_file_name, "Filename detected")
+
+                    current_file_name = None
+                if teramark_begin:
+                    pass
+                    m = re.search(r'({.*})', line)
+                    if m:
+                        j = m.group(1)
+                        try:
+                            d = json.loads(j)
+                        except Exception as ex:
+                            message = "Invalid json for : {}".format(j)
+                            fun_test.critical(message)
+                            raise Exception(message)
+
+                        try:
+                            metrics = {}
+                            if not compression_ratio_found:
+
+                                metrics["input_operation"] = d["Operation"]
+                                metrics["input_count"] = d['Stats']['_count']
+                                metrics["input_image"] = final_file_name
+                                metrics["output_iops"] = d['Stats']['_iops']
+                                metrics["output_max_latency"] = d['Stats']['_max_latency']
+                                metrics["output_min_latency"] = d['Stats']['_min_latency']
+                                metrics["output_average_latency"] = d['Stats']['_avg_latency']
+                                metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_kbps']
+                                metrics["output_total_bandwidth"] = d['Stats']['_total_bw_kbps']
+                            else:
+                                metrics["input_operation"] = d["Operation"]
+                                metrics["input_image"] = final_file_name
+                                metrics["output_compression_ratio"] = d['Stats']["Compression-ratio to 1"]
+                                metrics["output_percentage_savings"] = d['Stats']["PercentageSpaceSaving"]
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            MetricHelper(model=TeraMarkJpegPerformance).add_entry(**d)
+
+                        except Exception as ex:
+                            message = "Unable to add metric : {}".format(str(ex))
+                            fun_test.critical(message)
+                            raise Exception(message)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="TeraMarkJpegPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1442,6 +1525,7 @@ if __name__ == "__main__":
     # myscript.add_test_case(FlowTestPerformanceTC())
     myscript.add_test_case(TeraMarkZipPerformanceTC())
     # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJpegPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
