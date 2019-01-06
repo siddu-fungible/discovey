@@ -116,7 +116,8 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
 
         $scope.describeTable = () => {
             $scope.inputs = [];
-            commonService.apiGet("/metrics/describe_table/" + modelName, "fetchMetricsData").then(function (tableInfo) {
+            payload["editing_chart"] = true;
+            commonService.apiGet("/metrics/describe_table/" + modelName, payload, "fetchMetricsData").then(function (tableInfo) {
                 $scope.tableInfo = tableInfo;
                 angular.forEach($scope.tableInfo, (fieldInfo, field) => {
                     let oneField = {};

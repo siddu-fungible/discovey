@@ -55,8 +55,16 @@ def metrics_list(request):
     return site_state.metric_models.keys()
 
 
+@csrf_exempt
 @api_safe_json_response
 def describe_table(request, table_name):
+    editing_chart = False
+    try:
+        request_json = json.loads(request.body)
+        if "editing" in request_json:
+            editing_chart = True
+    except:
+        pass
     result = None
     metric_model = app_config.get_metric_models()[table_name]
     if metric_model:
@@ -67,6 +75,13 @@ def describe_table(request, table_name):
             verbose_name = "verbose_name"
             if hasattr(field, "choices"):
                 choices = field.choices
+                if editing_chart:
+                    if field.column.startswith("input_") and (not field.column.startswith("input_date_time")):
+                        all_values = metric_model.objects.values(field.column).distinct()
+                        choices = []
+
+                        for index, value in enumerate(all_values):
+                            choices.append((index, value[field.column]))
             if hasattr(field, "verbose_name"):
                 verbose_name = field.verbose_name
             payload[field.name] = {"choices": choices, "verbose_name": verbose_name}
