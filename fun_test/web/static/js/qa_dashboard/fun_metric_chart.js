@@ -13,7 +13,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
         $scope.chartName = ctrl.chartName;
         $scope.modelName = ctrl.modelName;
         $scope.headers = null;
-        $scope.metricId = -1;
+        $scope.metricId = ctrl.metricId;
         $scope.editingDescription = false;
         $scope.inner = {};
         if (ctrl.atomic) {
@@ -35,7 +35,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             $scope.fetchChartInfo().then((chartInfo) => {
                 let thisChartInfo = chartInfo;
                 $timeout(() => {
-                    $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, thisChartInfo, null);
+                    $scope.fetchMetricsData(ctrl.modelName, ctrl.metricId, ctrl.chartName, thisChartInfo, null);
                 }, $scope.waitTime);
             })
         }
@@ -174,9 +174,9 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
                 //$scope.timeMode = ctrl.timeMode;
                 //console.log("C I:" + ctrl.chartInfo);
                 if ($scope.chartInfo) {
-                    $scope.fetchMetricsData($scope.modelName, $scope.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
+                    $scope.fetchMetricsData($scope.modelName, $scope.metricId, $scope.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
                 } else {
-                    $scope.fetchMetricsData($scope.modelName, $scope.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
+                    $scope.fetchMetricsData($scope.modelName, $scope.metricId, $scope.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
                 }
 
             });
@@ -189,8 +189,9 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
     $scope.fetchChartInfo = () => {
         let payload = {};
-        payload["metric_model_name"] = ctrl.modelName;
-        payload["chart_name"] = ctrl.chartName;
+        //payload["metric_model_name"] = ctrl.modelName;
+        //payload["chart_name"] = ctrl.chartName;
+        payload["metric_id"] = ctrl.metricId;
         // Fetch chart info
         //$scope.status = "Fetching chart info";
 
@@ -411,13 +412,16 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
     $scope.setTimeMode = (mode) => {
         $scope.timeMode = mode;
         if ($scope.chartInfo) {
-            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.metricId, ctrl.chartName, $scope.chartInfo, $scope.previewDataSets); // TODO: Race condition on chartInfo
         } else {
-            $scope.fetchMetricsData(ctrl.modelName, ctrl.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
+            $scope.fetchMetricsData(ctrl.modelName, ctrl.metricId, ctrl.chartName, null, $scope.previewDataSets); // TODO: Race condition on chartInfo
         }
     };
 
-    $scope.fetchMetricsData = (metricModelName, chartName, chartInfo, previewDataSets) => {
+    $scope.fetchMetricsData = (metricModelName, metricId, chartName, chartInfo, previewDataSets) => {
+        if (!metricId && chartName) {
+
+        }
         $scope.title = chartName;
         if (!chartName) {
             return;
@@ -428,7 +432,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
             payload["metric_model_name"] = metricModelName;
             payload["chart_name"] = chartName;
             payload["preview_data_sets"] = previewDataSets;
-            payload["metric_id"] = -1;
+            payload["metric_id"] = metricId;
             if (chartInfo) {
                 payload["metric_id"] = chartInfo["metric_id"];
                 $scope.metricId = chartInfo["metric_id"];
@@ -453,7 +457,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 
                 commonService.apiPost("/metrics/data", payload, "fetchMetricsData").then((allDataSets) => {
                     $scope.status = "idle";
-                    if (allDataSets.length === 0) {
+                    if (!allDataSets || allDataSets.length === 0) {
                         $scope.values = null;
                         return;
                     }
@@ -646,6 +650,7 @@ function FunMetricChartController($scope, commonService, $attrs, $q, $timeout) {
 angular.module('qa-dashboard').component("funMetricChart", {
     templateUrl: '/static/qa_dashboard/fun_metric_chart.html',
     bindings: {
+        metricId: '<',
         chartName: '<',
         y1AxisTitle: '<',
         modelName: '<',

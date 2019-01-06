@@ -4,22 +4,23 @@ function ScoreTableController($scope, commonService, $timeout) {
     let ctrl = this;
 
     this.$onInit = function () {
-        $scope.modelName = ctrl.modelName;
-        $scope.chartName = ctrl.chartName;
-        $scope.metricId = -1;
+        //$scope.modelName = ctrl.modelName;
+        //$scope.chartName = ctrl.chartName;
+        $scope.metricId = ctrl.metricId;
         $scope.rows = {};
         let payload = {};
-        payload["chart_name"] = $scope.chartName;
-        payload["metric_model_name"] = $scope.modelName;
+        //payload["chart_name"] = $scope.chartName;
+        //payload["metric_model_name"] = $scope.modelName;
+        payload["metric_id"] = $scope.metricId;
         let self = $scope;
-        if($scope.chartName) {
+        if($scope.metricId) {
             commonService.apiPost("/metrics/chart_info", payload, "Scores Table: chart_info").then((chartInfo) => {
                 if(chartInfo) {
                   self.metricId = chartInfo["metric_id"];
                 payload = {};
                 payload["metric_id"] = $scope.metricId;
-                self.chartName = $scope.chartName;
-                self.modelName = $scope.modelName;
+                self.chartName = chartInfo.chart_name;
+                self.modelName = chartInfo.metric_model_name;
                 let rows = {};
                 commonService.apiPost("/metrics/scores", payload, "Scores Table: scores").then((response) => {
                     if (response.length !== 0) {
@@ -46,8 +47,7 @@ function ScoreTableController($scope, commonService, $timeout) {
 angular.module('qa-dashboard').component("scoreTable", {
         templateUrl: '/static/qa_dashboard/scores_table.html',
         bindings: {
-                   modelName: '@',
-                    chartName: '@'
-                  },
+                   metricId: '@'
+        },
         controller: ScoreTableController
  });

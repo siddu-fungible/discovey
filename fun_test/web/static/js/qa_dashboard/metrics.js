@@ -38,30 +38,19 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
     $scope.addChartClick = (modelName) => {
         $modal.open({
             templateUrl: "/static/qa_dashboard/edit_chart.html",
-            controller: ['$modalInstance', '$scope', 'commonService', '$http', 'chartName', 'modelName', EditChartController],
+            controller: ['$modalInstance', '$scope', 'commonService', '$http', 'metricId', 'chartName', 'internalChartName', 'modelName', EditChartController],
             resolve: {
                 chartName: () => {
                     return null;
                 },
-                modelName: () => {
-                    return modelName;
-                }
-            }
-        }).result.then(function () {
-        }).catch(function () {
-        });
-    };
-
-    $scope.editChartClick = (chartName, modelName) => {
-        $modal.open({
-            templateUrl: "/static/qa_dashboard/edit_chart.html",
-            controller: ['$modalInstance', '$scope', 'commonService', '$http', 'chartName', 'modelName', EditChartController],
-            resolve: {
-                chartName: () => {
-                    return chartName;
+                internalChartName: () => {
+                    return null;
                 },
                 modelName: () => {
                     return modelName;
+                },
+                metricId: () => {
+                    return null;
                 }
             }
         }).result.then(function () {
@@ -69,18 +58,42 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
         });
     };
 
-    $scope.showScores = (chartName, modelName) => {
-        let url = "/metrics/score_table/" + chartName + "/" + modelName;
+    $scope.editChartClick = (chartInfo, modelName) => {
+        $modal.open({
+            templateUrl: "/static/qa_dashboard/edit_chart.html",
+            controller: ['$modalInstance', '$scope', 'commonService', '$http', 'metricId', 'chartName', 'internalChartName', 'modelName', EditChartController],
+            resolve: {
+                chartName: () => {
+                    return chartInfo.chart_name;
+                },
+                modelName: () => {
+                    return modelName;
+                },
+                internalChartName: () => {
+                    return chartInfo.internal_chart_name;
+                },
+                metricId: () => {
+                    return chartInfo.metric_id;
+                }
+            }
+        }).result.then(function () {
+        }).catch(function () {
+        });
+    };
+
+    $scope.showScores = (metricId) => {
+        let url = "/metrics/score_table/" + metricId;
         $window.open(url, '_blank');
     };
 
-    function EditChartController($modalInstance, $scope, commonService, $http, chartName, modelName) {
+    function EditChartController($modalInstance, $scope, commonService, $http, metricId, chartName, internalChartName, modelName) {
         let ctrl = this;
         $scope.mode = "Edit";
         if(!chartName) {
             $scope.mode = "Create";
         }
         $scope.chartName = chartName;
+        $scope.internalChartName = internalChartName;
         $scope.y1AxisTitle = null;
         $scope.y2AxisTitle = null;
         $scope.modelName = modelName;
@@ -93,11 +106,13 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
         $scope.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
         $scope.showOutputSelection = true;
         $scope.negativeGradient = null;
+        $scope.metricId = metricId;
 
 
         let payload = {};
-        payload["metric_model_name"] = modelName;
-        payload["chart_name"] = chartName;
+        //payload["metric_model_name"] = modelName;
+        //payload["chart_name"] = chartName;
+        payload["metric_id"] = metricId;
 
         $scope.describeTable = () => {
             $scope.inputs = [];
@@ -227,6 +242,7 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
         $scope.submit = () => {
             //$scope.previewDataSets = $scope.copyChartInfo.data_sets;
             let payload = {};
+            payload["internal_chart_name"] = $scope.internalChartName;
             payload["metric_model_name"] = $scope.modelName;
             payload["chart_name"] = $scope.chartName;
             payload["data_sets"] = $scope.previewDataSets;
