@@ -1,0 +1,273 @@
+{
+  "Ext2OnECBufferedWriteDetachFirst": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext2",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_timeout_ratio": 16
+  },
+  "Ext2OnECDirectWriteDeleteFirst": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext2",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
+    "test_timeout_ratio": 16
+  },
+  "Ext3OnECBufferedWriteDetachFirst": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext3",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_timeout_ratio": 16
+  },
+  "Ext3OnECDirectWriteDeleteFirst": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext3",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
+    "test_timeout_ratio": 16
+  },
+  "Ext4OnECBufferedWriteDetachFirst": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext4",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_timeout_ratio": 16
+  },
+  "Ext4OnECDirectWriteDeleteFirst": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext4",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
+    "test_timeout_ratio": 12
+  },
+  "XFSOnECBufferedWriteDetachFirst": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [16777216, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "xfs",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_timeout_ratio": 16
+  },
+  "XFSOnECDirectWriteDeleteFirst": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [16777216, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "xfs",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
+    "test_timeout_ratio": 16
+  },
+  "ECVolumeCreateDeleteInBatch": {
+    "ec_list": ["(4, 2)", "(8, 3)"],
+    "volumes": ["ndata", "nparity", "ec", "jvol", "lsv"],
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "use_lsv": 1,
+      "lsv_pct": 0.30,
+      "lsv_chunk_size": 32,
+      "jvol_size_multiplier": 8
+    },
+    "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
+    "min_ec_plex_blocks": 128,
+    // Head room needed for the LS volume in percentage
+    "ns_id": 1,
+    "check_lsv_stats": 0,
+    // timeout used for the storage controller
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "loop": 1,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext2",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_timeout_ratio": 16
+  }
+}
