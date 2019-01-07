@@ -471,6 +471,7 @@ def metric_by_id(request):
     result = {}
     result["metric_model_name"] = chart.metric_model_name
     result["chart_name"] = chart.chart_name
+    result["internal_chart_name"] = chart.internal_chart_name
     return result
 
 

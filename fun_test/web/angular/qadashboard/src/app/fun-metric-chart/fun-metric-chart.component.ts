@@ -44,6 +44,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   y1AxisTitle: any;
   mileStoneIndex: number = null;
   chartName: string;
+  internalChartName: string;
   modelName: string;
   pointClicked: boolean = false;
   pointInfo: any;
@@ -110,6 +111,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["metric_id"] = this.id;
     this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
       this.chartName = data.data["chart_name"];
+      this.internalChartName = data.data["internal_chart_name"]
       this.modelName = data.data["metric_model_name"];
       this.setDefault();
       this.fetchInfo();
@@ -319,6 +321,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
+    payload["internal_chart_name"] = this.internalChartName;
     payload["data_sets"] = this.previewDataSets;
     payload["description"] = this.inner.currentDescription;
     payload["owner_info"] = this.inner.currentOwner;
