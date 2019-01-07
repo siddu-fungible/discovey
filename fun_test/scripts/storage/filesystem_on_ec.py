@@ -64,7 +64,6 @@ class FSOnECScript(FunTestScript):
     def cleanup(self):
         self.storage_controller.disconnect()
         TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        pass
 
 
 class FSOnECTestcase(FunTestCase):
@@ -686,7 +685,7 @@ class XFSOnECDirectWriteDeleteFirst(FSOnECTestcase):
 
 class ECVolumeCreateDeleteInBatch(FSOnECTestcase):
     def describe(self):
-        self.set_test_details(id=8,
+        self.set_test_details(id=9,
                               summary="Configuring and UnConfiguring EC volume in a batch without attaching them to an "
                                       "end host",
                               steps="""
