@@ -1160,40 +1160,6 @@
             "label": "JPEG",
             "children": [
               {
-                "info": "JPEG Compression",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "JPEG Compression",
-                "weight": 1,
-                "label": "JPEG Compression",
-                "children": [
-                  {
-                    "info": "JPEG Compression_output_average_bandwidth",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "JPEG Compression_output_average_bandwidth",
-                    "weight": 1,
-                    "label": "JPEG Compression_output_average_bandwidth"
-                  },
-                  {
-                    "info": "JPEG Compression_output_iops",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "JPEG Compression_output_iops",
-                    "weight": 1,
-                    "label": "JPEG Compression_output_iops"
-                  },
-                  {
-                    "info": "JPEG Compression_output_average_latency",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "JPEG Compression_output_average_latency",
-                    "weight": 1,
-                    "label": "JPEG Compression_output_average_latency"
-                  }
-                ]
-              },
-              {
                 "info": "Compression-ratio",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
