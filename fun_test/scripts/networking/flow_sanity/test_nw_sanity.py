@@ -643,7 +643,7 @@ class TransitV6Sweep(TransitSweep):
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
                                                            source=l3_config['source_ip2'],
-                                                           destination=l3_config['destination_ip2'])
+                                                           destination=l3_config['destination_ip4'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
 
@@ -1303,8 +1303,9 @@ class TestVpFlows(FunTestCase):
             main_pkt_drop_eop = 'main_pkt_drop_eop'
             epg0_pkt = 'epg0_pkt'
             ifpg = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
+            fpg1_pkt = "fpg%d_pkt" % dut_port_2_fpg_value
             input_list = [frv_error, main_pkt_drop_eop, epg0_pkt, ifpg]
-            output_list = [epg0_pkt]
+            output_list = [epg0_pkt, fpg1_pkt]
 
             parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_1, input=True,
                                                              input_key_list=input_list, output=True,
@@ -1322,26 +1323,28 @@ class TestVpFlows(FunTestCase):
                                                   "DUT port %s"
                                                   % (dut_port_2, dut_port_1))
             # Check ERP stats
-            diff_stats_erp = get_diff_stats(old_stats=erp_stats_1, new_stats=erp_stats_2,
-                                            stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
-            diff_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) - int(tx_results_1['FrameCount'])
-            expected_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
-            if diff_stats == 1:
-                expected_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) - 1
+            if flow_direction != NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+                diff_stats_erp = get_diff_stats(old_stats=erp_stats_1, new_stats=erp_stats_2,
+                                                stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
+                diff_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) - int(tx_results_1['FrameCount'])
+                expected_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
+                if diff_stats == 1:
+                    expected_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) - 1
 
-            fun_test.test_assert_expected(expected=expected_erp_stats,
-                                          actual=(int(tx_results_1['FrameCount'])),
-                                          message="Check non fcp packets counter from erp stats")
+                fun_test.test_assert_expected(expected=expected_erp_stats,
+                                              actual=(int(tx_results_1['FrameCount'])),
+                                              message="Check non fcp packets counter from erp stats")
 
             stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE]
-            if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-                stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_OUT_ETP, VP_FAE_REQUESTS_SENT,
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG or \
+                    flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+                stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_NU_OUT_ETP, VP_FAE_REQUESTS_SENT,
                               VP_FAE_RESPONSES_RECEIVED]
                 diff_stats_vppkts = get_diff_stats(old_stats=vp_pkts_stats_1, new_stats=vp_pkts_stats_2,
                                                    stats_list=stats_list)
 
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
-                                              actual=int(diff_stats_vppkts[VP_PACKETS_OUT_ETP]),
+                                              actual=int(diff_stats_vppkts[VP_PACKETS_NU_OUT_ETP]),
                                               message="Ensure VP stats has correct etp out packets")
 
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
@@ -1358,19 +1361,29 @@ class TestVpFlows(FunTestCase):
                                               actual=int(diff_stats_vppkts[VP_PACKETS_FORWARDING_NU_LE]),
                                               message="Ensure VP stats has correct nu le packets")
 
-            fun_test.test_assert_expected(expected=int(diff_stats_vppkts[VP_PACKETS_TOTAL_IN]),
-                                          actual=int(diff_stats_vppkts[VP_PACKETS_TOTAL_OUT]),
-                                          message="Ensure VP stats has correct total IN packets == total OUT packets")
+            if int(diff_stats_vppkts[VP_PACKETS_TOTAL_IN]) == int(diff_stats_vppkts[VP_PACKETS_TOTAL_OUT]):
+                fun_test.test_assert_expected(expected=int(diff_stats_vppkts[VP_PACKETS_TOTAL_IN]),
+                                              actual=int(diff_stats_vppkts[VP_PACKETS_TOTAL_OUT]),
+                                              message="Ensure VP stats has correct total IN packets == total OUT "
+                                                      "packets")
 
             # Check psw nu input stats
             psw_diff_stats = get_diff_stats(old_stats=parsed_input_1, new_stats=parsed_input_2)
 
-            fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[ifpg],
-                                          message="Check ifpg counter in psw nu stats in input")
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[epg0_pkt],
+                                              message="Check EPG 0 counter in psw nu stats in input")
+            else:
+                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[ifpg],
+                                              message="Check ifpg counter in psw nu stats in input")
             # Check psw nu output stats
             psw_diff_stats = get_diff_stats(old_stats=parsed_output_1, new_stats=parsed_output_2)
-            fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[epg0_pkt],
-                                          message="Check epg_pkt counter in psw nu stats in output")
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[fpg1_pkt],
+                                              message="Check FPG1 counter in psw nu stats in output")
+            else:
+                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[epg0_pkt],
+                                              message="Check epg_pkt counter in psw nu stats in output")
 
         # SPIRENT ASSERTS
         if int(tx_results_1['FrameCount']) == int(rx_results_1['FrameCount']):
@@ -1582,6 +1595,63 @@ class VPPathIPv4TCPFCP(TestVpFlows):
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
 
+class VpPathIpv4HnuNu(TestVpFlows):
+
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="HNU --> NU IPv4 TCP Packet Sweep 78B to 9KB",
+                              steps="""
+                              1. Create streamblock and add ethernet, ipv4 and tcp headers
+                              2. Start traffic in incremental
+                              3. Compare Tx and Rx results for frame count
+                              4. Check for error counters. there must be no error counter
+                              5. Check dut ingress and egress frame count match
+                              6. Check egress frame count with spirent rx counter
+                              7. Check rx counter on spirent matches with dut egress counter
+                              8. Check psw nu for main_drop, fwd_error to be 0
+                              9. Check psw nu for ifpg, epg0 and fpg counter to match spirent tx count
+                              10. Check parser stats for eop_cnt, sop_cnt, prv_sent with spirent tx
+                              11. Check vp pkts for vp in, vp out, vp forward nu le with spirent tx
+                              """)
+
+    def setup(self):
+        global flow_direction, flow_type
+
+        flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
+        flow_type = NuConfigManager.VP_FLOW_TYPE
+
+        self.configure_ports()
+        self.detach_ports = False
+
+        l2_config = spirent_config["l2_config"]
+        l3_config = spirent_config["l3_config"]["ipv4"]
+        ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
+
+        # Create streamblock 1
+        self.streamblock_obj_1 = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND,
+                                             load=self.fps, fill_type=StreamBlock.FILL_TYPE_PRBS,
+                                             insert_signature=True,
+                                             frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_INCR,
+                                             min_frame_length=self.min_frame_size, max_frame_length=MAX_FRAME_SIZE,
+                                             step_frame_length=1)
+        streamblock1 = template_obj.configure_stream_block(self.streamblock_obj_1, self.port_1)
+        fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % self.port_1)
+
+        # Adding source and destination ip
+        ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                               source_mac=l2_config['source_mac'],
+                                                               destination_mac=l2_config['destination_mac'],
+                                                               ethernet_type=ether_type)
+        fun_test.test_assert(ether, "Adding source and destination mac")
+
+        # Adding Ip address and gateway
+        destination = l3_config['destination_ip1']
+        ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
+                                                           source=l3_config['source_ip1'],
+                                                           destination=destination)
+        fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+
 if __name__ == "__main__":
     ts = SpirentSetup()
     # Transit NU --> NU Flow
@@ -1603,5 +1673,8 @@ if __name__ == "__main__":
     # VP HNU --> HNU (FCP) Flow
     # TODO: Enable FCP test after we did some changes in master nutest for FCP to work
     # ts.add_test_case(VPPathIPv4TCPFCP())
+
+    # VP HNU --> NU Flow
+    ts.add_test_case(VpPathIpv4HnuNu())
 
     ts.run()
