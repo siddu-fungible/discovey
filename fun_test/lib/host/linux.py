@@ -1826,35 +1826,44 @@ class Linux(object, ToDictMixin):
         result = True
 
         if fs_type == "ext4":
-            fs = "mkfs.ext4"
+            fs_command = "mkfs.ext4 -F {}".format(device)
         elif fs_type == "ext3":
-            fs = "mkfs.ext3"
+            fs_command = "mkfs.ext3 -F {}".format(device)
         elif fs_type == "ext2":
-            fs = "mkfs.ext2"
+            fs_command = "mkfs.ext2 -F {}".format(device)
         elif fs_type == "xfs":
-            fs = "mkfs.xfs"
+            fs_command = "mkfs.xfs -f {}".format(device)
         else:
             fun_test.critical("Creation of {} filesystem is not yet supported".format(fs_type))
             result = False
             return result
 
         if sector_size:
-            fs_command = "{} -F {} -b {}".format(fs, device, sector_size)
-        else:
-            fs_command = "{} -F {}".format(fs, device)
+            fs_command += " -b {}".format(sector_size)
 
         try:
             output = self.sudo_command(fs_command)
-            output_search = re.findall(r"done", output, re.MULTILINE)
-            if output_search:
+            match = re.findall(r"done", output, re.M)
+            if match:
                 if fs_type == "ext2":
-                    if len(output_search) != 3:
+                    if len(match) != 3:
                         result = False
                 elif fs_type == "ext3" or fs_type == "ext4":
-                    if len(output_search) != 4:
-                        result = False
+                    if len(match) != 4:
+                        # In case the size of the volume is too small, then the journal won't be created
+                        # In that case the total done will be only 3
+                        sub_match = re.search(r'Filesystem too small for a journal', output, re.M|re.I)
+                        if not sub_match or len(match) != 3:
+                            result = False
             else:
-                result = False
+                if fs_type == "xfs":
+                    match = re.search(r"bsize=(\d+)\s+blocks=(\d+)", output, re.MULTILINE)
+                    if match:
+                        result = match.group(2)
+                    else:
+                        result = False
+                else:
+                    result = False
         except Exception as ex:
             result = False
             critical_str = str(ex)
@@ -1923,6 +1932,33 @@ class Linux(object, ToDictMixin):
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
+        return result
+
+    @fun_test.safe
+    def check_package(self, pkg):
+        result = True
+        dpkg_cmd = "dpkg -s {}".format(pkg)
+        output = self.sudo_command(dpkg_cmd)
+        match = re.search(r'Status: install ok installed', output, re.M|re.I)
+        if not match:
+            result = False
+        return result
+
+    @fun_test.safe
+    def install_package(self, pkg):
+        result = True
+
+        # At first check whether the requested package is already installed or not
+        status = self.check_package(pkg)
+        # If the package installed, then return True, else proceed to install the same
+        if status:
+            return result
+        install_cmd = "apt-get -yq install {}".format(pkg)
+        self.sudo_command(install_cmd)
+        # Check whether the package is installed successfully
+        status = self.check_package(pkg)
+        if not status:
+            result = False
         return result
 
     def clone(self):

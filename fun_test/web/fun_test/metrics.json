@@ -442,6 +442,15 @@
             "label": "Zip",
             "weight": 1,
             "reference": true
+          },
+          {
+            "info": "JPEG",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "JPEG",
+            "label": "JPEG",
+            "weight": 1,
+            "reference": true
           }
         ],
         "weight": 1
@@ -1137,6 +1146,153 @@
                     "label": "Lzma Decompression Latency",
                     "children": [],
                     "weight": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "info": "JPEG",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "JPEG",
+            "weight": 1,
+            "label": "JPEG",
+            "children": [
+
+              {
+                "info": "Decompression Accelerator throughput",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Decompression Accelerator throughput",
+                "weight": 1,
+                "label": "Decompression Accelerator throughput",
+                "children": [
+                  {
+                    "info": "Decompression Accelerator throughput_output_average_bandwidth",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Decompression Accelerator throughput_output_average_bandwidth",
+                    "weight": 1,
+                    "label": "Decompression Accelerator throughput_output_average_bandwidth"
+                  },
+                  {
+                    "info": "Decompression Accelerator throughput_output_iops",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Decompression Accelerator throughput_output_iops",
+                    "weight": 1,
+                    "label": "Decompression Accelerator throughput_output_iops"
+                  },
+                  {
+                    "info": "Decompression Accelerator throughput_output_average_latency",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Decompression Accelerator throughput_output_average_latency",
+                    "weight": 1,
+                    "label": "Decompression Accelerator throughput_output_average_latency"
+                  }
+                ]
+              },
+              {
+                "info": "JPEG Decompress",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "JPEG Decompress",
+                "weight": 1,
+                "label": "JPEG Decompress",
+                "children": [
+                  {
+                    "info": "JPEG Decompress_output_average_bandwidth",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "JPEG Decompress_output_average_bandwidth",
+                    "weight": 1,
+                    "label": "JPEG Decompress_output_average_bandwidth"
+                  },
+                  {
+                    "info": "JPEG Decompress_output_iops",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "JPEG Decompress_output_iops",
+                    "weight": 1,
+                    "label": "JPEG Decompress_output_iops"
+                  },
+                  {
+                    "info": "JPEG Decompress_output_average_latency",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "JPEG Decompress_output_average_latency",
+                    "weight": 1,
+                    "label": "JPEG Decompress_output_average_latency"
+                  }
+                ]
+              },
+              {
+                "info": "Compression Accelerator throughput",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Compression Accelerator throughput",
+                "weight": 1,
+                "label": "Compression Accelerator throughput",
+                "children": [
+                  {
+                    "info": "Compression Accelerator throughput_output_average_bandwidth",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Compression Accelerator throughput_output_average_bandwidth",
+                    "weight": 1,
+                    "label": "Compression Accelerator throughput_output_average_bandwidth"
+                  },
+                  {
+                    "info": "Compression Accelerator throughput_output_iops",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Compression Accelerator throughput_output_iops",
+                    "weight": 1,
+                    "label": "Compression Accelerator throughput_output_iops"
+                  },
+                  {
+                    "info": "Compression Accelerator throughput_output_average_latency",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Compression Accelerator throughput_output_average_latency",
+                    "weight": 1,
+                    "label": "Compression Accelerator throughput_output_average_latency"
+                  }
+                ]
+              },
+              {
+                "info": "Compression throughput with Driver",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Compression throughput with Driver",
+                "weight": 1,
+                "label": "Compression throughput with Driver",
+                "children": [
+                  {
+                    "info": "Compression throughput with Driver_output_average_bandwidth",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Compression throughput with Driver_output_average_bandwidth",
+                    "weight": 1,
+                    "label": "Compression throughput with Driver_output_average_bandwidth"
+                  },
+                  {
+                    "info": "Compression throughput with Driver_output_iops",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Compression throughput with Driver_output_iops",
+                    "weight": 1,
+                    "label": "Compression throughput with Driver_output_iops"
+                  },
+                  {
+                    "info": "Compression throughput with Driver_output_average_latency",
+                    "metric_model_name": "TeraMarkJpegPerformance",
+                    "leaf": true,
+                    "name": "Compression throughput with Driver_output_average_latency",
+                    "weight": 1,
+                    "label": "Compression throughput with Driver_output_average_latency"
                   }
                 ]
               }

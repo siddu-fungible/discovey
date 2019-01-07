@@ -8,10 +8,16 @@
         <div *ngIf="mode === 'Create'">
             <table class="table table-nonfluid">
                 <tr>
-                    <td><label>Chart name: </label></td>
+                    <td><label>Chart display name: </label></td>
                     <td>
                         <input type="text" required
                                    [(ngModel)]="chartName"/>
+                    </td>
+
+                    <td><label>Internal chart name: </label></td>
+                    <td>
+                        <input type="text" required
+                                   [(ngModel)]="internalChartName"/>
                     </td>
                 </tr>
             <tr>

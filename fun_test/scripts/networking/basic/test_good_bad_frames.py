@@ -29,8 +29,10 @@ SFD_ERROR = '55555555555555d6'
 
 stream_list = [CRC_64B, CRC_1500B, PREAMBLE, SFD, CHECKSUM_ERROR,
                IHL_ERROR, IP_VERSION_ERROR, TTL_ERROR, GOOD_FRAME]
+# TODO: Change when physical/virtual discussion is out
 
-# TODO: Checksum to ip_checksum{errror
+stream_list = [PREAMBLE, SFD, CHECKSUM_ERROR,
+               IHL_ERROR, IP_VERSION_ERROR, TTL_ERROR, GOOD_FRAME]
 
 for stream in stream_list:
     streamblock_objects[stream] = {}
@@ -187,7 +189,7 @@ class SpirentSetup(FunTestScript):
         del subscribe_results['result']
 
     def cleanup(self):
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class TestCase1(FunTestCase):

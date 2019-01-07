@@ -1,5 +1,5 @@
 [
   {"path": "networking/basic/test_bad_address.py"},
-  {"path": "networking/basic/test_good_bad_frames.py"},
-  {"path": "networking/basic/test_good_bad_frames2.py"}
+  {"path": "networking/basic/test_good_bad_frames.py", "test_case_ids": [3, 4, 5, 6, 7, 8, 9]},
+  {"path": "networking/basic/test_good_bad_frames2.py", "test_case_ids": [1, 3, 4, 5, 6, 7, 8]}
 ]

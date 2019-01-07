@@ -20,6 +20,7 @@ from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSeri
 from web.fun_test.metrics_models import MetricsGlobalSettings
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
+start_year = 2018
 start_month = 4
 start_day = 1
 minute = 59
@@ -34,8 +35,8 @@ def get_rounded_time(dt):
 
 def get_day_bounds(dt):
     d = get_rounded_time(dt)
-    start = d.replace(hour=0, minute=0, second=0)
-    end = d.replace(hour=23, minute=59, second=59)
+    start = d.replace(hour=0, minute=0, second=0, year=dt.year)
+    end = d.replace(hour=23, minute=59, second=59, year=dt.year)
     return start, end
 
 def get_entries_for_day(model, day, data_set):
@@ -144,7 +145,7 @@ def prepare_status(chart, purge_old_status=False):
     today = datetime.now(pytz.timezone('US/Pacific'))
 
     # from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
-    from_date = today.replace(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=0, microsecond=0)
+    from_date = today.replace(year=start_year, month=start_month, day=start_day, minute=minute, hour=hour, second=0, microsecond=0)
     # from_date = get_localized_time(from_date)
 
     # yesterday = today - timedelta(days=0) # Just use today
@@ -313,12 +314,25 @@ def prepare_status(chart, purge_old_status=False):
                                             score=current_score)
                     if replacement:
                         mcs.copied_score = True
+                        mcs.copied_score_disposition = 0
+                        if current_score > penultimate_good_score:
+                            if current_score > (penultimate_good_score * (1 + get_tolerance())):
+                                mcs.copied_score_disposition = 1
+                        elif current_score < penultimate_good_score:
+                            if current_score < (penultimate_good_score * (1 - get_tolerance())):
+                                mcs.copied_score_disposition = -1
+                        else:
+                            mcs.copied_score_disposition = 0
+
+                        '''
                         if (current_score - penultimate_good_score) > 0:
                             mcs.copied_score_disposition = 1
                         elif (current_score - penultimate_good_score) < 0:
                             mcs.copied_score_disposition = -1
                         else:
                             mcs.copied_score_disposition = 0
+                        '''
+
                     # print current_date, scores
                     print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
                                                                         scores[current_date])
@@ -374,14 +388,19 @@ def prepare_status(chart, purge_old_status=False):
     chart.copied_score = result["copied_score"]
     chart.copied_score_disposition = result["copied_score_disposition"]
     if chart.leaf:
-        print "Leaf Chart: {} num_degrades: {}".format(chart.chart_name, result["num_degrades"])
+        print "Leaf Chart: {} num_degrades: {} score: {} penultimate_score: {} build date: {}".format(chart.chart_name,
+                                                                                       result["num_degrades"],
+                                                                                       chart.last_good_score,
+                                                                                       chart.penultimate_good_score, chart.last_build_date)
     chart.save()
     return result
 
 if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=False)
+
+    #total_chart = MetricChart.objects.get(metric_model_name="WuSendSpeedTestPerformance", chart_name="Average WU send ungated cycles")
+    prepare_status(chart=total_chart, purge_old_status=True)
 
 
 if __name__ == "__main2__":

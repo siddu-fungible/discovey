@@ -1052,9 +1052,11 @@ class NetworkController(DpcshClient):
     def peek_psw_port_stats(self, port_num, queue_num=None, hnu=False):
         stats = None
         try:
+            self.COMMAND_DURATION = 30
             max_retry = 3
             current_retry = 0
             sleep_duration = 2
+            chunk=16384
             type = 'nu'
             if hnu:
                 type = 'hnu'
@@ -1067,14 +1069,14 @@ class NetworkController(DpcshClient):
                 fun_test.debug("Getting PSW stats for port %d" % port_num)
             while current_retry < max_retry:
                 result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION,
-                                           sleep_duration=sleep_duration, chunk=8192)
+                                           sleep_duration=sleep_duration, chunk=chunk)
                 fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %
                                                                             (port_num))
                 fun_test.debug("PSW port %d stats: %s" % (port_num, result['data']))
                 if isinstance(result['data'], dict):
                     break
                 self.disconnect()
-                fun_test.sleep("Before reconnecting", seconds=3)
+                fun_test.sleep("Before reconnecting", seconds=5)
                 current_retry += 1
             stats = result['data']
         except Exception as ex:

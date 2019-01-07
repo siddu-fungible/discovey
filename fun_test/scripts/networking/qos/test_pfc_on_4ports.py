@@ -280,8 +280,8 @@ class TestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Test PFC using 4 ports to check"
-                                      "1. Streams with different dscp value are unaffected"
-                                      "2. Stream transmitted to another port are unaffected",
+                                      "1. Traffic going to different queue is unaffected"
+                                      "2. Traffic transmitted to another port is unaffected",
                               steps="""
                         1. Start dscp 0 stream from port_1 to port_2, port_3 to port_4
                         2. Start dscp 1 stream from port_3 to port_2
@@ -385,9 +385,8 @@ class TestCase2(TestCase1):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Test dscp streams behaviour"
-                                      "1. When dscp stream with priority that caused PFC is stopped."
-                                      "2. PFC stream is stopped",
+                              summary="Test PFC frames are transmitted out of DUT even if ingress traffic is stopped and"
+                                      " transmission is stopped only when pfc stream is stopped from spirent",
                               steps="""
                         1. Start dscp 0 streams from port_1 to port_2 and port_3 towards port_2 and port_4
                         2. Start pfc frame from port_2

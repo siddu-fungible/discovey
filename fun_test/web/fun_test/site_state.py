@@ -75,18 +75,22 @@ class SiteState():
         all_metrics_chart = None
         try:
             all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
-                                                        chart_name="All metrics")
+                                                        internal_chart_name="All metrics")
         except ObjectDoesNotExist:
             all_metrics_chart = MetricChart(metric_model_name="MetricContainer",
                                             chart_name="All metrics",
+                                            internal_chart_name="All metrics",
                                             leaf=False, metric_id=LastMetricId.get_next_id())
         m = None
         children = []
         if "children" in metric:
             children = metric["children"]
+
         description = "TBD"
 
         if "Erasure" in metric["name"]:
+            i = 0
+        if "JPEG Compression_Compression-ratio" in metric["name"]:
             i = 0
         try:
             metric_model_name = "MetricContainer"
@@ -95,7 +99,9 @@ class SiteState():
                 metric_model_name = metric["metric_model_name"]
             if "info" in metric:
                 description = metric["info"]
-            m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
+            # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
+            m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
+
             m.save()
             if description and not m.description:
                 m.description = description
@@ -112,6 +118,7 @@ class SiteState():
         except ObjectDoesNotExist:
             if len(children):
                 m = MetricChart(metric_model_name="MetricContainer",
+                                internal_chart_name=metric["name"],
                                 chart_name=metric["name"],
                                 leaf=False, metric_id=LastMetricId.get_next_id(),
                                 description=description)
@@ -120,7 +127,11 @@ class SiteState():
         if "reference" in metric and metric["reference"]:
             pass
         else:
-            m.children = "[]"
+            try:
+                m.children = "[]"
+            except Exception as ex:
+                pass
+
             m.children_weights = "{}"
             m.save()
             for child in children:
@@ -154,9 +165,9 @@ class SiteState():
                 self._do_register_metric(metric=metric)
 
         total_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
-                                                            chart_name="Total")
+                                                            internal_chart_name="Total")
         all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
-                                                            chart_name="All metrics")
+                                                    internal_chart_name="All metrics")
         if total_chart.chart_name == "Total":
             total_chart.add_child(all_metrics_chart.metric_id)
 

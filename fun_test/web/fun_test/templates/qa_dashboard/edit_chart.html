@@ -1,18 +1,25 @@
 <div class="modal-content">
     <div class="modal-header">
-        <h3 ng-if="mode === 'Edit'" class="modal-title">Edit chart: {{ chartName }}</h3>
+        <h3 ng-if="mode === 'Edit'" class="modal-title">Edit chart: {{ chartName }}({{ internalChartName }})</h3>
         <h3 ng-if="mode === 'Create'" class="modal-title">Create chart</h3>
     </div>
     <div class="modal-body edit-modal-body">
-        <fun-metric-chart chart-name="chartName" model-name="modelName" width="350" height="350" xaxis-formatter="xAxisFormatter"
+        <fun-metric-chart metric-id="metricId" chart-name="chartName" model-name="modelName" width="350" height="350" xaxis-formatter="xAxisFormatter"
                           preview-data-sets="previewDataSets"></fun-metric-chart>
         <div ng-if="mode === 'Create'">
             <table class="table table-nonfluid">
                 <tr>
-                    <td><label>Chart name</label></td>
+                    <td><label>Chart display name</label></td>
                     <td>
                         <fun-field type="text" min-length="1" max-length="100" required="true"
                                    bind-value="$parent.chartName">
+                    </td>
+                </tr>
+                <tr>
+                    <td><label>Chart internal name</label></td>
+                    <td>
+                        <fun-field type="text" min-length="1" max-length="100" required="true"
+                                   bind-value="$parent.internalChartName">
                     </td>
                 </tr>
                 <tr>

@@ -4,11 +4,12 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
     let ctrl = this;
 
     ctrl.$onInit = function () {
-        $scope.metricModelName = ctrl.modelName;
-        $scope.chartName = ctrl.chartName;
+        $scope.metricId = ctrl.metricId;
+        $scope.metricModelName = ctrl.metricModelName;
+        //$scope.chartName = ctrl.chartName;
 
         console.log($scope.metricModelName);
-        console.log($scope.chartName);
+        //console.log($scope.chartName);
         $scope.describeTable().then(() => {
             $scope.fetchTableData();
         });
@@ -78,8 +79,8 @@ function AnalyticsTablesController($scope, $http, commonService, $timeout) {
 
     $scope.fetchTableData = () => {
         let payload = {};
-        payload["metric_model_name"] = $scope.metricModelName;
-        payload["chart_name"] = $scope.chartName;
+        payload["model_name"] = $scope.metricModelName;
+        //payload["chart_name"] = $scope.chartName;
         commonService.apiPost("/metrics/table_data", payload, "fetchTableData").then((data) => {
             let remoteTable = data["data"];
             $scope.headers = data["headers"];
@@ -156,8 +157,8 @@ angular.module('qa-dashboard').component('analyticsTables', {
         templateUrl: '/static/qa_dashboard/analytics_tables_template.html',
         controller: AnalyticsTablesController,
         bindings: {
-            modelName: '@',
-            chartName: '@'
+            metricModelName: '@',
+            metricId: '@'
         }
 });
 

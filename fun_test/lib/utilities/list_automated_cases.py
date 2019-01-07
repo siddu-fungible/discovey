@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from lib.system.fun_test import fun_test
 import glob
 import os
@@ -5,9 +6,9 @@ import sys
 
 
 all_classses = []
-# directories = ["storage", "networking", "security"]
+directories = ["storage", "networking", "security"]
 # directories = ["storage", "security"]
-directories = ["storage"]
+# directories = ["storage"]
 
 file_based_view = {}
 
@@ -23,7 +24,7 @@ for directory in directories:
                 all_classses.append(s)
                 # file_based_view[os.path.basename(file)].append(klass["summary"])
                 file_based_view.setdefault(os.path.basename(file), []).append(klass["summary"])
-
+        # fun_test.critical("Unable to parse: {}".format(file))
 # for k in all_classses:
 # print k
 

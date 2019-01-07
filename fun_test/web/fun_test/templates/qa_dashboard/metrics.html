@@ -29,9 +29,9 @@
                         <button class="btn btn-sm" ng-click="removeClick($index)"><i class="fa fa-trash-o" style="font-size:15px; color: red"></i></button>
                     </td>
                     <td class="fun-center">
-                        {{ chartInfo }}&nbsp<a href="#" ng-click="editChartClick(chartInfo, modelName)">Edit</a>
-                        <a target="_blank" href="/metrics/tables/{{ modelName }}/{{ chartInfo }}">Tables</a>
-                        <a href="" ng-click="showScores(chartInfo, modelName)">Scores</a>
+                        {{ chartInfo.chart_name }}&nbsp, {{ chartInfo.internal_chart_name }}&nbsp<a href="#" ng-click="editChartClick(chartInfo, modelName)">Edit</a>
+                        <a target="_blank" href="/metrics/tables/{{ chartInfo.metric_model_name }}/{{ chartInfo.metric_id }}">Tables</a>
+                        <a href="" ng-click="showScores(chartInfo.metric_id)">Scores</a>
                     </td>
                 </tr>
             </table>
