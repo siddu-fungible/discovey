@@ -22,6 +22,7 @@ MIN_FRAME_LENGTH = 64
 MAX_FRAME_LENGTH = 1500
 OVERSIZED_FRAME_LENGTH = 2000
 MTU_TEST_FRAME_LENGTH = 1400
+cushion_sleep = 5
 
 
 stream_list = [OVERSIZED, CRC_OVERSIZED, TOTAL_LENGTH_ERROR, TOTAL_LENGTH_ERROR_1K, TOTAL_LENGTH_ERROR_100B, MTU_EGRESS,
@@ -245,6 +246,12 @@ class TestCase1(FunTestCase):
         clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
+        set_mtu = network_controller_obj.set_port_mtu(port_num=dut_port_1, mtu_value=1500, shape=shape)
+        fun_test.test_assert(set_mtu, "Set mtu to 1500 on port %s" % dut_port_1)
+
+        set_mtu = network_controller_obj.set_port_mtu(port_num=dut_port_2, mtu_value=1500, shape=shape)
+        fun_test.test_assert(set_mtu, "Set mtu to 1500 on port %s" % dut_port_2)
+
     def cleanup(self):
         for key in subscribe_results.iterkeys():
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
@@ -259,7 +266,7 @@ class TestCase1(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -462,7 +469,7 @@ class TestCase2(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -639,7 +646,7 @@ class TestCase3(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -718,7 +725,7 @@ class TestCase4(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -824,7 +831,7 @@ class TestCase5(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -930,7 +937,7 @@ class TestCase6(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -1036,7 +1043,7 @@ class TestCase7(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
