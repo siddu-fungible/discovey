@@ -391,7 +391,7 @@ def update_chart(request):
         owner_info = request_json["owner_info"]
 
     try:
-        c = MetricChart.objects.get(metric_model_name=model_name, chart_name=chart_name)
+        c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
         if data_sets:
             c.data_sets = json.dumps(data_sets)
         if description:
@@ -476,7 +476,9 @@ def metric_by_id(request):
 @api_safe_json_response
 def data(request):
     request_json = json.loads(request.body)
-    metric_model_name = request_json["metric_model_name"]
+    metric_model_name = None
+    if "metric_model_name" in request_json:
+        metric_model_name = request_json["metric_model_name"]
     # chart_name = request_json["chart_name"]
     metric_id = None
     if request_json["metric_id"]:

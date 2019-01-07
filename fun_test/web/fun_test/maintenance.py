@@ -6,9 +6,12 @@ import re
 from fun_global import get_current_time
 from datetime import datetime
 from web.web_global import PRIMARY_SETTINGS_FILE
+from django.apps import apps
 from fun_global import get_localized_time
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 import logging
+from fun_settings import MAIN_WEB_APP
+
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
@@ -26,6 +29,7 @@ from web.fun_test.metrics_models import VoltestPerformance
 
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus
+from web.fun_test.metrics_models import LastMetricId
 
 
 class MetricHelper(object):
@@ -221,6 +225,23 @@ def get_entries_for_day(model, day, data_set):
     return result
 
 
+def get_possible_values(model_name):
+    metric_model = app_config.get_metric_models()[model_name]
+    fields = metric_model._meta.get_fields()
+    field_choices = {}
+    for field in fields:
+        choices = None
+        if hasattr(field, "choices"):
+            if field.column.startswith("input_") and (not field.column.startswith("input_date_time")):
+                all_values = metric_model.objects.values(field.column).distinct()
+                choices = []
+                for index, value in enumerate(all_values):
+                    choices.append(value[field.column])
+
+                field_choices[field.column] = choices
+    return field_choices
+
+
 if __name__ == "__main2__":
     today = datetime.now()
 
@@ -341,7 +362,9 @@ if __name__ == "__main_owner__":
             entry.save()
 
 if __name__ == "__main_delete__":
-    chart_names = ['Lookup-engine', 'HT HBM non-coherent - FP HBM non-coherent', 'HT HBM coherent - FP HBM coherent', 'HT DDR non-coherent - FP DDR non-coherent', 'HT DDR coherent - FP DDR coherent', 'TCAM', 'Total', 'All metrics', 'TeraMarks', 'Networking']
+    chart_names = ['Lookup-engine', 'HT HBM non-coherent - FP HBM non-coherent', 'HT HBM coherent - FP HBM coherent',
+                   'HT DDR non-coherent - FP DDR non-coherent', 'HT DDR coherent - FP DDR coherent', 'TCAM', 'Total',
+                   'All metrics', 'TeraMarks', 'Networking']
     for chart_name in chart_names:
         entries = MetricChartStatus.objects.filter(chart_name=chart_name).order_by('-date_time')[:2]
         for entry in entries:
@@ -361,12 +384,95 @@ if __name__ == "__mainBootTimePerformance__":
         entry.save()
         print entry
 
-
-
-
-if __name__ == "__main__":
+if __name__ == "__mainappend_internal_chart_name__":
     # Set internal name
     charts = MetricChart.objects.all()
     for chart in charts:
         chart.internal_chart_name = chart.chart_name
         chart.save()
+
+if __name__ == "__main__":
+    display_name_map = {"output_average_bandwidth": "Bandwidth",
+                        "output_iops": "IOPS",
+                        "output_average_latency": "Latency"}
+    yaxis_title_map = {"output_average_bandwidth": "kbps",
+                        "output_iops": "ops/sec",
+                        "output_average_latency": "ns"}
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+
+    outputs = ["output_average_bandwidth", "output_iops", "output_average_latency"]
+    # for operation in operations:
+    #    for input_image in input_images:
+    #        one_data_set = [operation, image, ]
+    model_name = "TeraMarkJpegPerformance"
+    input_choices = get_possible_values(model_name=model_name)
+    for key, value in input_choices.iteritems():
+        print key, value
+
+    d = {"info": "JPEG",
+         "metric_model_name": "MetricContainer",
+         "leaf": False,
+         "name": "JPEG",
+         "label": "JPEG",
+         "weight": 1, "children": []}
+    jpeg_children = d["children"]
+    for input_operation_choice in input_choices["input_operation"]:
+        new_operation_entry = {"info": input_operation_choice,
+                               "metric_model_name": "MetricContainer",
+                               "leaf": False,
+                               "name": input_operation_choice,
+                               "label": input_operation_choice,
+                               "weight": 1, "children": []}
+        jpeg_children.append(new_operation_entry)
+        operation_children = new_operation_entry["children"]
+        for output_choice in outputs:
+            data_sets = []
+            positive = True
+
+            chart_internal_name = "{}_{}".format(input_operation_choice, output_choice)
+            chart_display_name = display_name_map[output_choice]
+            new_output_entry = {"info": chart_internal_name,
+                               "metric_model_name": model_name,
+                               "leaf": True,
+                               "name": chart_internal_name,
+                               "label": chart_internal_name,
+                               "weight": 1}
+            operation_children.append(new_output_entry)
+            print "This chart: {}, {}".format(chart_display_name, chart_internal_name)
+            for input_image_choice in input_choices["input_image"]:
+                one_data_set = {}
+                one_data_set["inputs"] = {}
+                one_data_set["inputs"]["input_operation"] = input_operation_choice
+                one_data_set["inputs"]["input_image"] = input_image_choice
+                one_data_set["output"] = {"name": output_choice, 'min': 0, "max": 9999999}
+                one_data_set["name"] = input_image_choice
+                data_sets.append(one_data_set)
+            print data_sets
+            if "latency" in output_choice.lower():
+                positive = False
+
+
+            MetricChart(chart_name=chart_display_name,
+                        metric_id=LastMetricId.get_next_id(),
+                        internal_chart_name=chart_internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info='aamir.shaikh@fungible.com',
+                        positive=positive,
+                        y1_axis_title=yaxis_title_map[output_choice],
+                        metric_model_name=model_name).save()
+
+
+
+    # for input_operation_choice in input_choices["input_operation"]:
+
+    print json.dumps(d)
+
+    '''
+    a = [
+        {"inputs": {"input_type": "LZMA", "input_effort": "8", "input_operation": "Decompress"}, 
+         "name": "All Efforts",
+         "output": {"expected": 182179, "max": 99999, "name": "output_latency_avg", "min": 0}}
+    ]
+    '''
