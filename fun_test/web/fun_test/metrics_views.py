@@ -61,7 +61,7 @@ def describe_table(request, table_name):
     editing_chart = False
     try:
         request_json = json.loads(request.body)
-        if "editing" in request_json:
+        if "editing_chart" in request_json:
             editing_chart = True
     except:
         pass
