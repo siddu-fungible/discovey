@@ -3,6 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header, CustomBytePatternHeader
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
+from scripts.networking.nu_config_manager import nu_config_obj
 
 num_ports = 2
 loads_file = "interface_loads.json"
@@ -25,6 +26,9 @@ MTU_TEST_FRAME_LENGTH = 1400
 
 stream_list = [OVERSIZED, CRC_OVERSIZED, TOTAL_LENGTH_ERROR, TOTAL_LENGTH_ERROR_1K, TOTAL_LENGTH_ERROR_100B, MTU_EGRESS,
                PADDED, GOOD_FRAME]
+# TODO: Remove when physical/virtual discussion is out
+stream_list = [OVERSIZED, TOTAL_LENGTH_ERROR, TOTAL_LENGTH_ERROR_1K, TOTAL_LENGTH_ERROR_100B, MTU_EGRESS,
+               PADDED, GOOD_FRAME]
 
 for stream in stream_list:
     streamblock_objects[stream] = {}
@@ -43,35 +47,52 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, duration_seconds, subscribe_results, port_obj_list, bad_frame_load, \
-            good_frame_load, interface_obj_list, network_controller_obj, dut_port_1, dut_port_2
+            good_frame_load, interface_obj_list, network_controller_obj, dut_port_1, dut_port_2, shape, hnu
+
+        dut_type = fun_test.get_local_setting(setting="dut_type")
+        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+
+        shape = 0
+        hnu = False
+        if flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_HNU:
+            shape = 1
+            hnu = True
+
+        chassis_type = fun_test.get_local_setting(setting="chassis_type")
+        spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames2")
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames", chassis_type=chassis_type,
+                                                      spirent_config=spirent_config)
         fun_test.test_assert(template_obj, "Create template object")
 
         # Create network controller object
-        dpcsh_server_ip = template_obj.stc_manager.dpcsh_server_config['dpcsh_server_ip']
-        dpcsh_server_port = int(template_obj.stc_manager.dpcsh_server_config['dpcsh_server_port'])
+        dpcsh_server_ip = dut_config['dpcsh_tcp_proxy_ip']
+        dpcsh_server_port = int(dut_config['dpcsh_tcp_proxy_port'])
         network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
-        poke = network_controller_obj.set_syslog_level(3)
-        fun_test.simple_assert(poke, "Ensure syslogs are disabled")
+        #poke = network_controller_obj.set_syslog_level(3)
+        #fun_test.simple_assert(poke, "Ensure syslogs are disabled")
 
-        result = template_obj.setup(no_of_ports_needed=num_ports)
+        result = template_obj.setup(no_of_ports_needed=num_ports, flow_direction=flow_direction)
         fun_test.test_assert(result['result'], "Configure setup")
 
         port_obj_list = result['port_list']
         interface_obj_list = result['interface_obj_list']
 
-        source_mac1 = template_obj.stc_manager.dut_config['source_mac1']
-        destination_mac1 = template_obj.stc_manager.dut_config['destination_mac1']
-        source_ip1 = template_obj.stc_manager.dut_config['source_ip1']
-        source_ip2 = template_obj.stc_manager.dut_config['source_ip2']
-        destination_ip1 = template_obj.stc_manager.dut_config['destination_ip1']
-        destination_ip2 = template_obj.stc_manager.dut_config['destination_ip2']
-        dut_port_1 = template_obj.stc_manager.dut_config['port_nos'][0]
-        dut_port_2 = template_obj.stc_manager.dut_config['port_nos'][1]
-        interface_mode = template_obj.stc_manager.interface_mode
+        source_mac1 = spirent_config['l2_config']['source_mac']
+        destination_mac1 = spirent_config['l2_config']['destination_mac']
+        source_ip1 = spirent_config['l3_config']['ipv4']['source_ip1']
+        source_ip2 = spirent_config['l3_config']['ipv4']['source_ip2']
+        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        if hnu:
+            destination_ip1 = spirent_config['l3_config']['ipv4']['hnu_destination_ip1']
+        destination_ip2 = spirent_config['l3_config']['ipv4']['destination_ip2']
+        if hnu:
+            destination_ip2 = spirent_config['l3_config']['ipv4']['hnu_destination_ip2']
+        dut_port_1 = dut_config['ports'][0]
+        dut_port_2 = dut_config['ports'][1]
+        interface_mode = dut_config['interface_mode']
 
         #  Read loads from file
         file_path = SCRIPTS_DIR + "/networking" + "/" + loads_file
@@ -79,7 +100,8 @@ class SpirentSetup(FunTestScript):
         bad_frame_load = output[interface_mode]["bad_frame_load_mbps"]
         good_frame_load = output[interface_mode]["good_frame_load_mbps"]
 
-        port_nos = template_obj.stc_manager.host_config['test_module']["port_nos"]
+        port_1 = port_obj_list[0]
+        port_2 = port_obj_list[1]
 
         # Configure streams
         for port in port_obj_list:
@@ -89,7 +111,7 @@ class SpirentSetup(FunTestScript):
             current_1k = output["padding"]["reverse"]["1k"]
             current_100B = output["padding"]["reverse"]["100B"]
 
-            if str(port) == 'port' + str(port_nos[0]):
+            if str(port) == str(port_1):
                 current_source_ip = source_ip1
                 current_destination_ip = destination_ip1
                 current_positive = output["padding"]["straight"]["positive"]
@@ -99,6 +121,7 @@ class SpirentSetup(FunTestScript):
             else:
                 port_2 = port
             for stream_type in stream_list:
+                fun_test.log("Creating stream %s on port %s" % (stream_type, port))
                 current_streamblock_obj = StreamBlock()
                 current_streamblock_obj.Load = 1
                 current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_MEGABITS_PER_SECOND
@@ -151,7 +174,8 @@ class SpirentSetup(FunTestScript):
                                        (current_streamblock_obj, port))
 
                 configure_ethernet = template_obj.stc_manager.configure_frame_stack(
-                    stream_block_handle=current_streamblock_obj.spirent_handle, header_obj=current_ethernet_obj)
+                    stream_block_handle=current_streamblock_obj.spirent_handle, header_obj=current_ethernet_obj,
+                    delete_header=[Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE])
                 fun_test.simple_assert(configure_ethernet,
                                        "Ensure ethernet frame is configured for stream %s on port %s and streamblock %s" % (
                                            stream_type, port, current_streamblock_obj.spirent_handle))
@@ -215,10 +239,10 @@ class TestCase1(FunTestCase):
         fun_test.test_assert(deactivate, "Deactivating all streamblocks")
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -299,14 +323,14 @@ class TestCase1(FunTestCase):
                                       expected=rx_port_analyzer_results_2['FcsErrorFrameCount'],
                                       message="Ensure packets are received with FcsError")
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_error_transmit = get_dut_output_stats_value(dut_port_1_results, IF_OUT_ERRORS)
@@ -356,7 +380,7 @@ class TestCase1(FunTestCase):
 
         '''
         # Fetch psw global stats
-        psw_stats = network_controller_obj.peek_psw_global_stats()
+        psw_stats = network_controller_obj.peek_psw_global_stats(hnu=hnu)
         different = False
         fwd_frv = 'fwd_frv'
         ct_pkt = 'ct_pkt'
@@ -418,10 +442,10 @@ class TestCase2(FunTestCase):
         fun_test.test_assert(deactivate, "Deactivating all streamblocks")
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -502,9 +526,9 @@ class TestCase2(FunTestCase):
                                       expected=rx_port_analyzer_results_2['FcsErrorFrameCount'],
                                       message="Ensure packets are received with FcsError")
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_error_transmit = get_dut_output_stats_value(dut_port_1_results, IF_OUT_ERRORS)
@@ -563,10 +587,10 @@ class TestCase3(FunTestCase):
         fun_test.test_assert(deactivate, "Deactivating all streamblocks")
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -574,7 +598,7 @@ class TestCase3(FunTestCase):
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
         # Set back to default
-        set_mtu = network_controller_obj.set_port_mtu(dut_port_2, self.DEFAULT_MTU_VALUE)
+        set_mtu = network_controller_obj.set_port_mtu(dut_port_2, self.DEFAULT_MTU_VALUE, shape=shape)
         fun_test.test_assert(set_mtu, message="Ensure egress mtu is set to %s" % self.DEFAULT_MTU_VALUE)
 
         self.interface_obj.Mtu = self.DEFAULT_MTU_VALUE
@@ -593,7 +617,7 @@ class TestCase3(FunTestCase):
         else:
             self.interface_obj = interface_obj_list[1]
 
-        set_mtu = network_controller_obj.set_port_mtu(dut_port_2, self.EGRESS_MTU_VALUE)
+        set_mtu = network_controller_obj.set_port_mtu(dut_port_2, self.EGRESS_MTU_VALUE, shape=shape)
         fun_test.test_assert(set_mtu, message="Ensure egress mtu is set to %s" % self.EGRESS_MTU_VALUE)
 
         # Set MTU 1200 on spirent on port2
@@ -633,9 +657,9 @@ class TestCase3(FunTestCase):
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Analyzer port results on port %s are %s" % (port_2, rx_port_analyzer_results_1))
 
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
@@ -674,10 +698,10 @@ class TestCase4(FunTestCase):
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -741,9 +765,9 @@ class TestCase4(FunTestCase):
                                       message="Ensure all frames are dropped")
 
         # Check from dut
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
@@ -780,10 +804,10 @@ class TestCase5(FunTestCase):
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -845,9 +869,9 @@ class TestCase5(FunTestCase):
                                       message="Ensure all frames are received")
 
         # Check from dut
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
@@ -886,10 +910,10 @@ class TestCase6(FunTestCase):
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -951,9 +975,9 @@ class TestCase6(FunTestCase):
                                       message="Ensure all frames are received")
 
         # Check from dut
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
@@ -992,10 +1016,10 @@ class TestCase7(FunTestCase):
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
 
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -1057,9 +1081,9 @@ class TestCase7(FunTestCase):
                                       message="Ensure all frames are sent correctly")
 
         # Check from dut
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
@@ -1094,10 +1118,10 @@ class TestCase8(FunTestCase):
 
     def setup(self):
         # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
         fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
         fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
@@ -1331,9 +1355,9 @@ class TestCase8(FunTestCase):
         # 1. Check FramesReceivedOK on ingress DUT port
         # 2. Check FramesTransmittedOK on egress DUT port
         # 3. Set DUT check to true
-        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+        dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
         fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+        dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
         fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
         dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, FRAMES_TRANSMITTED_OK)
@@ -1385,6 +1409,8 @@ class TestCase8(FunTestCase):
 
 
 if __name__ == "__main__":
+    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
+    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())
