@@ -1159,23 +1159,7 @@
             "weight": 1,
             "label": "JPEG",
             "children": [
-              {
-                "info": "JPEG-Compression-ratio",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "JPEG-Compression-ratio",
-                "weight": 1,
-                "label": "JPEG-Compression-ratio",
-                "children": [
-                  {
-                    "info": "JPEG Compression_Compression-ratio",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "JPEG Compression_Compression-ratio",
-                    "weight": 1,
-                    "label": "JPEG Compression_Compression-ratio"
-                  }]
-              },
+
               {
                 "info": "Decompression Accelerator throughput",
                 "metric_model_name": "MetricContainer",

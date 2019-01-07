@@ -85,9 +85,12 @@ class SiteState():
         children = []
         if "children" in metric:
             children = metric["children"]
+
         description = "TBD"
 
         if "Erasure" in metric["name"]:
+            i = 0
+        if "JPEG Compression_Compression-ratio" in metric["name"]:
             i = 0
         try:
             metric_model_name = "MetricContainer"
@@ -124,7 +127,11 @@ class SiteState():
         if "reference" in metric and metric["reference"]:
             pass
         else:
-            m.children = "[]"
+            try:
+                m.children = "[]"
+            except Exception as ex:
+                pass
+
             m.children_weights = "{}"
             m.save()
             for child in children:

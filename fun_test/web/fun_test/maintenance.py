@@ -417,6 +417,8 @@ if __name__ == "__main__":
          "weight": 1, "children": []}
     jpeg_children = d["children"]
     for input_operation_choice in input_choices["input_operation"]:
+        if input_operation_choice == "JPEG Compression":
+            continue
         new_operation_entry = {"info": input_operation_choice,
                                "metric_model_name": "MetricContainer",
                                "leaf": False,
