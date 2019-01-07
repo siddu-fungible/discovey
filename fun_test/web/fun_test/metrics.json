@@ -1160,12 +1160,12 @@
             "label": "JPEG",
             "children": [
               {
-                "info": "Compression-ratio",
+                "info": "JPEG-Compression-ratio",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "Compression-ratio",
+                "name": "JPEG-Compression-ratio",
                 "weight": 1,
-                "label": "Compression-ratio",
+                "label": "JPEG-Compression-ratio",
                 "children": [
                   {
                     "info": "JPEG Compression_Compression-ratio",
