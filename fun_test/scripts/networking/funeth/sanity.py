@@ -1,3 +1,4 @@
+from funeth import Funeth
 from lib.system.fun_test import *
 from lib.host.linux import Linux
 import re
@@ -46,13 +47,19 @@ class FunethSanity(FunTestScript):
 
         # HU host
         linux_obj = Linux(host_ip=HU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
-        cmd = "/home/localadmin/gliang/test_funeth.py --sriov 4 --nu_loopback --packets 100"
-        output = linux_obj.command(cmd, timeout=300)
+        # cmd = "/home/localadmin/gliang/test_funeth.py --sriov 4 --nu_loopback --packets 100"
+        # output = linux_obj.command(cmd, timeout=300)
+        funeth_obj = Funeth(linux_obj)
+        fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
+        fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
+        fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+        output = funeth_obj.configure_intfs()
         fun_test.test_assert(
             re.search(r'100 packets transmitted, 100 received, 0% packet loss', output),
             "HU PF and VF interface loopback ping test via NU")
         linux_obj.command('sudo ip route add 19.1.1.0/24 via 53.1.1.1')
         fun_test.shared_variables['hu_linux_obj'] = linux_obj
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
 
 
     def cleanup(self):
