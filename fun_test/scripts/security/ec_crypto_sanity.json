@@ -1,22 +1,29 @@
 {
   "ECKey256": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
     // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
-    // Configuration details for BLT
+    // BLT details used for configuring
     "blt_details": {
       "capacity": 268435456,
       "block_size": 4096
     },
-    // Used if Jvol creation in enabled
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
     // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": 32,
@@ -27,7 +34,7 @@
     "traffic_parallel": false,
     "parallel_count": 4,
     "fio_loop": 1,
-    // Fio arguments
+    // Fio arguements
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
@@ -54,27 +61,52 @@
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    // Expected LSV stats and threshold for acceptance
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
       "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 170, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 170, "num_writes": 0}
     }
   },
   "ECKey256RW": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
     "ndata": 4,
     "nparity": 2,
     "blt_details": {
       "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": 32,
@@ -107,27 +139,51 @@
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
     }
   },
   "ECKey256RandRW": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
     "ndata": 4,
     "nparity": 2,
     "blt_details": {
-      "capacity": 20971520,
+      "capacity": 268435456,
       "block_size": 4096
-    },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
     },
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": 32,
@@ -160,27 +216,54 @@
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
     }
   },
   "ECKey512": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 20971520,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": 64,
@@ -211,31 +294,60 @@
       "(16, 1)",
       "(32, 1)"
     ],
+    // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    // Expected LSV stats and threshold for acceptance
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
       "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 170, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 170, "num_writes": 0}
     }
   },
    "ECKey512RW": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 20971520,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": 64,
@@ -268,27 +380,54 @@
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
     }
   },
   "ECKey512RandRW": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 20971520,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": 64,
@@ -321,27 +460,54 @@
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
     }
   },
   "ECEncCompress": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 134217728,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "compress": true,
@@ -374,31 +540,67 @@
       "(16, 1)",
       "(32, 1)"
     ],
+    // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    // Expected LSV stats and threshold for acceptance
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
       "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 170, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 170, "num_writes": 0}
+    },
+    // Expected compression stats
+    "expected_compression_stats": {
+      "write": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
+      "read": {"zipfilter_compress_done": 0, "zipfilter_decompress_done": 1024},
+      "randwrite": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
+      "randread": {"zipfilter_compress_done": 0, "zipfilter_decompress_done": 1024}
     }
   },
   "ECEncCompressRW": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 134217728,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "compress": true,
@@ -433,27 +635,54 @@
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
     }
   },
   "ECEncCompressRandRW": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 134217728,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "compress": true,
@@ -488,27 +717,140 @@
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
+    }
+  },
+  "ECKey256NoLSV": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
+    "ndata": 4,
+    "nparity": 2,
+    // BLT details used for configuring
+    "blt_details": {
+      "capacity": 268435456,
+      "block_size": 4096
+    },
+    // Used in LSV creation
+    "lsv_create": false,
+    "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "compress": false,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    // Fio arguements
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+
+    ],
+    // Filter & crypto operations parameters for verifying stats
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
+      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
+      "vol_encrypt_filter_added", "vol_filter_create_done"],
+    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    // Expected LSV stats and threshold for acceptance
+    "lsv_pass_threshold": 0,
+    "expected_lsv_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "write": {"fault_injection": 0,"num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0,"num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0,"num_reads": 1024, "num_writes": 0}
+    },
+    // Expected BLT stats, threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "write": {"fault_injection": 0,"num_reads": 860, "num_writes": 515},
+      "read": {"fault_injection": 0,"num_reads": 170, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 860, "num_writes": 515},
+      "randread": {"fault_injection": 0,"num_reads": 170, "num_writes": 0}
     }
   },
   "ECEncDeadBeef": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 134217728,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": "random",
@@ -540,29 +882,59 @@
       "(16, 1)",
       "(32, 1)"
     ],
+    // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    // Expected LSV stats and threshold for acceptance
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
-      "write": {"fault_injection": 0, "num_reads": 4096, "num_writes": 4096},
-      "randwrite": {"fault_injection": 0, "num_reads": 4096, "num_writes": 4096}
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279}
+    },
+    // Expected compression stats
+    "expected_compression_stats": {
+      "write": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
+      "randwrite": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024}
     }
   },
   "ECEncZeroPattern": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 134217728,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": "random",
@@ -594,29 +966,59 @@
       "(16, 1)",
       "(32, 1)"
     ],
+    // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    // Expected LSV stats and threshold for acceptance
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
-      "write": {"fault_injection": 0, "num_reads": 8192, "num_writes": 8192},
-      "randwrite": {"fault_injection": 0, "num_reads": 8192, "num_writes": 8192}
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279}
+    },
+    // Expected compression stats
+    "expected_compression_stats": {
+      "write": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
+      "randwrite": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024}
     }
   },
   "ECEncZeroHPattern": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    // EC configuration : Ndata & NParity count
     "ndata": 4,
     "nparity": 2,
+    // BLT details used for configuring
     "blt_details": {
-      "capacity": 134217728,
+      "capacity": 268435456,
       "block_size": 4096
     },
-    "jvol_create": true,
-    "jvol_details": {
-      "capacity": 524288,
-      "block_size": 512
-    },
+    // Used in LSV creation
     "lsv_create": true,
     "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
     "ns_id": 1,
     "encrypt": true,
     "key_size": "random",
@@ -648,13 +1050,40 @@
       "(16, 1)",
       "(32, 1)"
     ],
+    // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
       "vol_encrypt_filter_added", "vol_filter_create_done"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    // Expected LSV stats and threshold for acceptance
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
-      "write": {"fault_injection": 0, "num_reads": 8192, "num_writes": 8192},
-      "randwrite": {"fault_injection": 0, "num_reads": 8192, "num_writes": 8192}
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    // Expected EC threshold for acceptance
+    "ec_pass_threshold": 35,
+    "expected_ec_stats": {
+      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
+    },
+    // Expected BLT stats and threshold for acceptance is from EC threshold
+    "expected_blt_stats": {
+      "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 170, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 170, "num_writes": 0}
+    },
+    // Expected compression stats
+    "expected_compression_stats": {
+      "write": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
+      "read": {"zipfilter_compress_done": 0, "zipfilter_decompress_done": 1024},
+      "randwrite": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
+      "randread": {"zipfilter_compress_done": 0, "zipfilter_decompress_done": 1024}
     }
   }
 }
