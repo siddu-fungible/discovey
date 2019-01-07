@@ -206,7 +206,9 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
                         error = true;
                         return commonService.showError(message);
                     } else {
-                        validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
+                        if (oneField.selectedChoice !== "any") {
+                            validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
+                        }
 
                     }
                 });

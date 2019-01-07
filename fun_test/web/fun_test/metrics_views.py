@@ -82,6 +82,8 @@ def describe_table(request, table_name):
 
                         for index, value in enumerate(all_values):
                             choices.append((index, value[field.column]))
+
+                choices.append((len(choices), "any"))
             if hasattr(field, "verbose_name"):
                 verbose_name = field.verbose_name
             payload[field.name] = {"choices": choices, "verbose_name": verbose_name}
