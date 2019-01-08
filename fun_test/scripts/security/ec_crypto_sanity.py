@@ -125,6 +125,19 @@ class ECCryptoVolumeTestCase(FunTestCase):
             fun_test.critical("Expected internal BLT stats needed for this {} testcase is not available in "
                               "the {} file".format(testcase, testcase_dict))
 
+        fun_test.log("Expected internal BLT stats for this {} testcase: \n{}".
+                     format(testcase, self.expected_blt_stats))
+
+        if self.compress:
+            if ('expected_compression_stats' not in testcase_dict[testcase] or
+                    not testcase_dict[testcase]['expected_compression_stats']):
+                benchmark_parsing = False
+                fun_test.critical("Expected internal compression stats needed for this {} testcase is not available in "
+                                  "the {} file".format(testcase, testcase_dict))
+
+            fun_test.log("Expected internal compression stats for this {} testcase: \n{}".
+                         format(testcase, self.expected_compression_stats))
+
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
 
         self.topology = fun_test.shared_variables["topology"]
@@ -406,7 +419,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
         final_ec_stats = {}
         diff_ec_stats = {}
         expected_stats = {}
-        expected_compression_stats = {}
 
         command_result = {}
         command_result = self.storage_controller.peek(crypto_props_tree)
@@ -429,7 +441,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
             initial_ec_stats[combo] = {}
             final_ec_stats[combo] = {}
             diff_ec_stats[combo] = {}
-            expected_compression_stats[combo] = {}
 
             if self.lsv_create:
                 if combo in self.expected_lsv_stats:
@@ -551,6 +562,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                         fun_test.log("Running fio test is threaded mode...")
                         thread_id = {}
                         wait_time = 0
+                        self.attach_count = self.parallel_count + 1
                         for x in range(1, self.attach_count, 1):
                             if mode == "rw" or mode == "randrw":
                                 wait_time = self.attach_count - x
@@ -790,44 +802,24 @@ class ECCryptoVolumeTestCase(FunTestCase):
                             fun_test.log(diff_zip_stats[combo][mode][x])
 
                         for ekey, evalue in expected_compression_stats[mode].items():
-                            if ekey in expected_compression_stats[mode]:
-                                actual = diff_zip_stats[combo][mode][ekey]
-                                if actual != evalue:
-                                    fun_test.add_checkpoint(
-                                        "{} check on volume for {} test for the block size & IO "
-                                        "depth combo {}".
-                                        format(ekey, mode, combo), "FAILED", evalue, actual)
-                                    fun_test.critical(
-                                        "Final {} value {} on volume is not within the expected "
-                                        "range {}".format(ekey, actual, evalue))
-                                else:
-                                    fun_test.add_checkpoint(
-                                        "{} check on volume for {} test for the block size & IO "
-                                        "depth combo {}".
-                                        format(ekey, mode, combo), "PASSED", evalue, actual)
-                                    fun_test.log(
-                                        "Final {} value {} on volume matches the expected "
-                                        "compression value {}".format(ekey, actual, evalue))
+                            actual = diff_zip_stats[combo][mode][ekey]
+                            if actual != evalue:
+                                fun_test.add_checkpoint(
+                                    "{} check on volume for {} test for the block size & IO "
+                                    "depth combo {}".
+                                    format(ekey, mode, combo), "FAILED", evalue, actual)
+                                fun_test.critical(
+                                    "Final {} value {} on volume is not within the expected "
+                                    "range {}".format(ekey, actual, evalue))
+                            else:
+                                fun_test.add_checkpoint(
+                                    "{} check on volume for {} test for the block size & IO "
+                                    "depth combo {}".
+                                    format(ekey, mode, combo), "PASSED", evalue, actual)
+                                fun_test.log(
+                                    "Final {} value {} on volume matches the expected "
+                                    "compression value {}".format(ekey, actual, evalue))
 
-                    # Calculate diff of crypto and Vol stats is equal
-                    if self.encrypt:
-                        fun_test.log("The diff of crypto is {}".format(diff_crypto_stats[combo][mode]))
-                        fun_test.log("The total diff is {}".format(total_diff_stats))
-                        if diff_crypto_stats[combo][mode] == total_diff_stats:
-                            fun_test.add_checkpoint("Crypto count for {} test, block size & IO depth combo {}".
-                                                    format(mode, combo),
-                                                    "PASSED",
-                                                    total_diff_stats,
-                                                    diff_crypto_stats[combo][mode])
-                        else:
-                            fun_test.add_checkpoint("Crypto count for {} test, block size & IO depth combo {}".
-                                                    format(mode, combo),
-                                                    "FAILED",
-                                                    total_diff_stats,
-                                                    diff_crypto_stats[combo][mode])
-                            fun_test.critical("Crypto stats match vol stats")
-
-                    if self.compress:
                         storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
                                                                      "volumes",
                                                                      self.attch_type,
@@ -850,6 +842,22 @@ class ECCryptoVolumeTestCase(FunTestCase):
                         fun_test.simple_assert(expression=compress_fails == uncompress_fails == 0,
                                                message="Compression failures")
                         fun_test.log(command_result["data"])
+
+                    # Calculate diff of crypto and Vol stats is equal
+                    if self.encrypt:
+                        if diff_crypto_stats[combo][mode] == total_diff_stats:
+                            fun_test.add_checkpoint("Crypto count for {} test, block size & IO depth combo {}".
+                                                    format(mode, combo),
+                                                    "PASSED",
+                                                    total_diff_stats,
+                                                    diff_crypto_stats[combo][mode])
+                        else:
+                            fun_test.add_checkpoint("Crypto count for {} test, block size & IO depth combo {}".
+                                                    format(mode, combo),
+                                                    "FAILED",
+                                                    total_diff_stats,
+                                                    diff_crypto_stats[combo][mode])
+                            fun_test.critical("Crypto stats match vol stats")
 
         # Get total write/read stats from the ndata BLT
         blt_ndata = self.blt_count - self.nparity

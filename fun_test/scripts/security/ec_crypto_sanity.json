@@ -226,17 +226,17 @@
     // Expected EC threshold for acceptance
     "ec_pass_threshold": 35,
     "expected_ec_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 748, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 207}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 993, "num_writes": 198}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1023, "num_writes": 189}}
     },
     // Expected BLT stats and threshold for acceptance is from EC threshold
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 154, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 183, "num_writes": 207}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 194, "num_writes": 198}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 200, "num_writes": 189}}
     }
   },
   "ECKey512": {
@@ -467,20 +467,19 @@
       "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
     },
-    // Expected EC threshold for acceptance
     "ec_pass_threshold": 35,
     "expected_ec_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 748, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 207}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 993, "num_writes": 198}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1023, "num_writes": 189}}
     },
     // Expected BLT stats and threshold for acceptance is from EC threshold
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 154, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 183, "num_writes": 207}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 194, "num_writes": 198}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 200, "num_writes": 189}}
     }
   },
   "ECEncCompress": {
@@ -656,6 +655,13 @@
       "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
       "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
       "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
+    },
+    // Expected compression stats
+    "expected_compression_stats": {
+      "(4, 1)": {"rw": {"zipfilter_compress_done": 734, "zipfilter_decompress_done": 1024}},
+      "(8, 1)": {"rw": {"zipfilter_compress_done": 726, "zipfilter_decompress_done": 1024}},
+      "(16, 1)": {"rw": {"zipfilter_compress_done": 692, "zipfilter_decompress_done": 1024}},
+      "(32, 1)": {"rw": {"zipfilter_compress_done": 672, "zipfilter_decompress_done": 1024}}
     }
   },
   "ECEncCompressRandRW": {
@@ -724,20 +730,27 @@
       "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
     },
-    // Expected EC threshold for acceptance
-    "ec_pass_threshold": 35,
+    // Expected EC threshold for acceptance, with compression threshold is higher for BLT stats
+    "ec_pass_threshold": 60,
     "expected_ec_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 748, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 207}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 993, "num_writes": 198}},
       "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
     },
     // Expected BLT stats and threshold for acceptance is from EC threshold
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 198}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 198, "num_writes": 189}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 197, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 154, "num_writes": 198}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 190, "num_writes": 207}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 213, "num_writes": 198}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 200, "num_writes": 189}}
+    },
+    // Expected compression stats
+    "expected_compression_stats": {
+      "(4, 1)": {"randrw": {"zipfilter_compress_done": 734, "zipfilter_decompress_done": 734}},
+      "(8, 1)": {"randrw": {"zipfilter_compress_done": 726, "zipfilter_decompress_done": 889}},
+      "(16, 1)": {"randrw": {"zipfilter_compress_done": 692, "zipfilter_decompress_done": 957}},
+      "(32, 1)": {"randrw": {"zipfilter_compress_done": 672, "zipfilter_decompress_done": 989}}
     }
   },
   "ECKey256NoLSV": {
@@ -987,11 +1000,6 @@
     "expected_blt_stats": {
       "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
       "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279}
-    },
-    // Expected compression stats
-    "expected_compression_stats": {
-      "write": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
-      "randwrite": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024}
     }
   },
   "ECEncZeroHPattern": {
@@ -1042,7 +1050,9 @@
     },
     "fio_modes": [
       "write",
-      "randwrite"
+      "read",
+      "randwrite",
+      "randread"
     ],
     "fio_bs_iodepth": [
       "(4, 1)",
@@ -1077,13 +1087,6 @@
       "read": {"fault_injection": 0,"num_reads": 170, "num_writes": 0},
       "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
       "randread": {"fault_injection": 0,"num_reads": 170, "num_writes": 0}
-    },
-    // Expected compression stats
-    "expected_compression_stats": {
-      "write": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
-      "read": {"zipfilter_compress_done": 0, "zipfilter_decompress_done": 1024},
-      "randwrite": {"zipfilter_compress_done": 1024, "zipfilter_decompress_done": 1024},
-      "randread": {"zipfilter_compress_done": 0, "zipfilter_decompress_done": 1024}
     }
   }
 }
