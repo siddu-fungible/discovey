@@ -1,3 +1,4 @@
+from lib.system.fun_test import *
 import os
 import sys
 from time import asctime
@@ -15,6 +16,10 @@ class Funeth:
         self.pf_intf = None
         self.vf_intf = None
 
+    def lspci(self):
+        """Do lspci to check funeth controller."""
+        return self.linux_obj.command('lspci -d 1dad:')
+
     def update_src(self):
         """Update driver source."""
 
@@ -26,32 +31,26 @@ class Funeth:
 
             sys.stderr.write('+ [{0}] Update mirror: {1}\n'.format(asctime(), repo))
 
-            if not os.path.exists(mirror):
-                os.makedirs(mirror)
+            if not self.linux_obj.check_file_directory_exists(mirror):
+                self.linux_obj.create_directory(mirror, sudo=False)
 
-            os.chdir(mirror)
-            if os.path.exists(repo):
-                os.chdir(repo)
-                self.linux_obj.command('git remote update')
+            if self.linux_obj.check_file_directory_exists(mirror + '/' + repo):
+                self.linux_obj.command('cd {}; git remote update'.format(mirror + '/' + repo))
             else:
-                self.linux_obj.command('{0} {1}/{2}.git {2}'.format(_cmd, _ghbase, repo))
-            os.chdir(ws)
+                self.linux_obj.command('cd {3}; {0} {1}/{2}.git {2}'.format(_cmd, _ghbase, repo, mirror))
 
         def local_checkout(ws, repo, **kwargs):
             subdir = kwargs.get('subdir', repo)
             branch = kwargs.get('branch', None)
             mirror = kwargs.get('mirror', '/mnt/github-mirror')
 
-            self.linux_obj.command('git clone {0}/{1} {2}'.format(mirror, repo, subdir))
+            self.linux_obj.command('cd {3}; git clone {0}/{1} {2}'.format(mirror, repo, subdir, ws))
             if branch:
-                os.chdir(subdir)
-                self.linux_obj.command('git checkout {0}'.format(branch))
-            os.chdir(ws)
+                self.linux_obj.command('cd {1}; git checkout {0}'.format(branch, ws))
 
         sdkdir = os.path.join(self.ws, 'FunSDK')
         self.linux_obj.command('sudo rm -rf {}'.format(self.ws))
-        os.makedirs(self.ws)
-        os.chdir(self.ws)
+        self.linux_obj.create_directory(self.ws, sudo=False)
 
         update_mirror(self.ws, 'fungible-host-drivers')
         update_mirror(self.ws, 'FunSDK-small')
@@ -64,9 +63,7 @@ class Funeth:
         if self.funos_branch:
             local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-        os.chdir(sdkdir)
-        self.linux_obj.command('scripts/bob --sdkup -C {}/FunSDK-cache'.format(self.ws))
-        os.chdir(self.ws)
+        self.linux_obj.command('cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws))
 
         return True
 
@@ -76,13 +73,9 @@ class Funeth:
         funsdkdir = os.path.join(self.ws, 'FunSDK')
 
         if self.funos_branch:
-            os.chdir(funsdkdir)
-            self.linux_obj.command('scripts/bob --build hci')
+            self.linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-        os.chdir(drvdir)
-        self.linux_obj.command('make clean')
-        self.linux_obj.command('make PALLADIUM=yes')
-        os.chdir(self.ws)
+        self.linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir))
 
         return True
 
@@ -90,9 +83,8 @@ class Funeth:
         """Load driver."""
 
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
-        os.chdir(drvdir)
 
-        _ports = range(0, 1)
+        #_ports = range(0, 1)
         _modparams = []
 
         if debug:
@@ -101,9 +93,9 @@ class Funeth:
         if sriov > 0:
             _modparams.append('sriov_test=yes')
 
-        self.linux_obj.command('sudo insmod funeth.ko {}'.format(" ".join(_modparams)))
+        self.linux_obj.command('cd {0}; sudo insmod funeth.ko {1}'.format(drvdir, " ".join(_modparams)), timeout=300)
 
-        fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 30)
+        fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 10)
 
         if cc:
             self.pf_intf = 'fpg0'
@@ -113,12 +105,12 @@ class Funeth:
 
         if sriov > 0:
             sriov_en = '/sys/class/net/{0}/device'.format(self.pf_intf)
-            self.linux_obj.command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en))
-            fun_test.sleep('Sleep for a while to wait for sriov enabled', 30)
+            self.linux_obj.command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en), timeout=300)
+            fun_test.sleep('Sleep for a while to wait for sriov enabled', 10)
             self.linux_obj.command('ifconfig -a')
             # vfs start from fnid 8
-            _ports.extend(range(8, 8 + sriov))
-        
+            #_ports.extend(range(8, 8 + sriov))
+
         return True
 
     def configure_intfs(self):
@@ -140,10 +132,18 @@ class Funeth:
         self.linux_obj.command('sudo ip netns exec n8 arp -s 53.1.9.1 00:de:ad:be:ef:00')
         self.linux_obj.command('sudo ip netns exec n8 ip route add 53.1.1.0/24 via 53.1.9.1')
 
-        packet_count = 100
-        self.linux_obj.command('sudo ping -c {} -i 0.1 53.1.9.5'.format(packet_count))
+        return True
 
-        os.chdir(self.ws)
+    def loopback_test(self, packet_count=100):
+        """Do loopback test between PF and VF via NU."""
+
+        return self.linux_obj.command('sudo ping -c {} -i 0.1 53.1.9.5'.format(packet_count))
+
+    def configure_ip_route(self):
+        """Configure IP routes to NU."""
+
+        self.linux_obj.command('sudo ip route add 19.1.1.0/24 via 53.1.1.1')
+
         return True
 
     def unload(self):

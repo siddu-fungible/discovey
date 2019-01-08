@@ -47,20 +47,23 @@ class FunethSanity(FunTestScript):
 
         # HU host
         linux_obj = Linux(host_ip=HU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
-        # cmd = "/home/localadmin/gliang/test_funeth.py --sriov 4 --nu_loopback --packets 100"
-        # output = linux_obj.command(cmd, timeout=300)
+        #cmd = "/home/localadmin/gliang/test_funeth.py --sriov 4 --nu_loopback --packets 100"
+        #output = linux_obj.command(cmd, timeout=300)
         funeth_obj = Funeth(linux_obj)
+        fun_test.test_assert(re.search(r'Ethernet controller: Device 1dad:1000', funeth_obj.lspci()),
+                             'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
         fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
-        output = funeth_obj.configure_intfs()
+        fun_test.test_assert(funeth_obj.configure_intfs(), 'Configure funeth interfaces.')
+        packet_count = 100
+        output = funeth_obj.loopback_test(packet_count=packet_count)
         fun_test.test_assert(
-            re.search(r'100 packets transmitted, 100 received, 0% packet loss', output),
+            re.search(r'{0} packets transmitted, {0} received, 0% packet loss'.format(packet_count), output),
             "HU PF and VF interface loopback ping test via NU")
-        linux_obj.command('sudo ip route add 19.1.1.0/24 via 53.1.1.1')
+        fun_test.test_assert(funeth_obj.configure_ip_route(), 'Configure IP routes to NU.')
         fun_test.shared_variables['hu_linux_obj'] = linux_obj
         fun_test.shared_variables['funeth_obj'] = funeth_obj
-
 
     def cleanup(self):
         pass
