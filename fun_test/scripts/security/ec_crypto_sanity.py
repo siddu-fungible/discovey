@@ -769,7 +769,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                             if filter_param != "vol_decrypt_filter_added" and \
                                     filter_param != "vol_encrypt_filter_added":
                                 fun_test.simple_assert(expression=
-                                fun_test.shared_variables["compress_filter_count"] == self.filter_values[filter_param],
+                                fun_test.shared_variables["crypto_filter_count"] == self.filter_values[filter_param],
                                 message="{} stat doesn't match filter count".format(filter_param))
                         fun_test.simple_assert(
                             expression=self.filter_values["vol_decrypt_filter_added"] ==
