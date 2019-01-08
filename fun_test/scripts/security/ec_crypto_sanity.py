@@ -546,6 +546,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                                  rwmixread=self.fio_rwmixread,
                                                                                  nsid=self.ns_id,
                                                                                  **self.fio_cmd_args)
+                            fun_test.test_assert(fio_output[combo][mode], "Fio run is completed")
                             fun_test.log("FIO Command Output:")
                             fun_test.log(fio_output[combo][mode])
                         else:
@@ -556,6 +557,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                                  iodepth=fio_iodepth,
                                                                                  nsid=self.ns_id,
                                                                                  **self.fio_cmd_args)
+                            fun_test.test_assert(fio_output[combo][mode], "Fio run is completed")
                             fun_test.log("FIO Command Output:")
                             fun_test.log(fio_output[combo][mode])
                     else:
