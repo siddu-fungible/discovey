@@ -1,11 +1,10 @@
 {
   "TestInitialization": {
-    "num_namespace": 1,
+    "num_namespace": 2,
+    "num_host" : 1,
     "namespace_params": {
-      "ns_id": 1,
       "capacity": 1073741824,
-      "block_size": 4096,
-      "ctl_id": 0
+      "block_size": 4096
     },
     "command_timeout": 5,
     "iter_interval": 2,
@@ -23,11 +22,10 @@
   },
   "TestMultipleNS": {
     "num_namespace": 5,
+    "num_host" : 1,
     "namespace_params": {
-      "ns_id": 1,
       "capacity": 1073741824,
-      "block_size": 4096,
-      "ctl_id": 0
+      "block_size": 4096
     },
     "command_timeout": 5,
     "iter_interval": 2,

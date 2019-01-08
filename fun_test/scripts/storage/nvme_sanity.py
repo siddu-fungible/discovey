@@ -4,6 +4,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.host.storage_controller import StorageController
 from lib.host.linux import *
+import ast
 
 topology_dict = {
     "name": "Basic Storage",
@@ -27,6 +28,12 @@ topology_dict = {
 
 def fio_parser(arg1, **kwargs):
     arg1.pcie_fio(**kwargs)
+
+# Differnt huid ctlid combination used for S2FULL simulation, we will change this when we know what is supprted for
+# FS1600
+
+host_dict = {'1':{'huid':0,'ctlid':0}, '2':{'huid':1,'ctlid':0}, '3':{'huid':1,'ctlid':1}, '4':{'huid':2,'ctlid':0},
+             '5': {'huid': 2, 'ctlid': 1}, '6':{'huid':2,'ctlid':2},}
 
 
 class NvmeSanityScript(FunTestScript):
@@ -72,7 +79,7 @@ class NvmeSanityTestCase(FunTestCase):
             fun_test.critical("Configuration is not available for the current testcase {} in {} file".
                               format(testcase, config_file))
             fun_test.test_assert(config_parsing, "Parsing Config json file for this {} testcase".format(testcase))
-        #
+
         for k, v in config_dict[testcase].iteritems():
             setattr(self, k, v)
 
@@ -81,7 +88,6 @@ class NvmeSanityTestCase(FunTestCase):
         self.dut = self.topology.get_dut_instance(index=0)
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         self.funos_running = True
-        # self.host.command("sudo apt install fio")
         install_status = self.host.install_package("fio")
         self.blt_create_count = 0
         self.blt_attach_count = 0
@@ -96,7 +102,9 @@ class NvmeSanityTestCase(FunTestCase):
             command_result = self.storage_controller.command(command="enable_counters", legacy=True)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Enabling counters on DUT instance")
-            fun_test.shared_variables["num_ns"] = self.num_namespace + 1
+            # Create volumes for all hosts
+            fun_test.shared_variables["num_ns"] = self.num_namespace * self.num_host
+            fun_test.shared_variables["num_ns"] += 1
             self.thin_uuid = {}
             for i in range(1, fun_test.shared_variables["num_ns"], 1):
                 self.thin_uuid[i] = utils.generate_uuid()
@@ -113,21 +121,37 @@ class NvmeSanityTestCase(FunTestCase):
                     fun_test.test_assert(command_result["status"],
                                          "Thin Block volume {} creation with capacity {}".
                                          format(i, self.namespace_params["capacity"]))
+            # Creating host_list having huid & ctlid
+            self.num_host += 1
+            host_list = []
+            for i in range(1, self.num_host, 1):
+                host_list.append(i)
+            self.host_list1 = str(map(str, host_list)).strip("")
+            self.host_list1 = ast.literal_eval(self.host_list1)
+            self.num_host = self.num_host - 1
 
-                command_result = {}
-                command_result = self.storage_controller.volume_attach_pcie(ns_id=i, uuid=self.thin_uuid[i],
-                                                                            ctlid=self.namespace_params["ctl_id"],
-                                                                            command_duration=self.command_timeout)
-                if command_result["status"]:
-                    self.blt_attach_count += 1
-                else:
-                    fun_test.test_assert(command_result["status"],
-                                         "Thin Block volume {} attach with capacity {}".
-                                         format(i, self.namespace_params["capacity"]))
-
-            fun_test.test_assert_expected(expected=self.num_namespace, actual=self.blt_create_count,
+            fun_test.shared_variables["num_ns"] = self.num_namespace +1
+            self.uuid_cnt = 1
+            for key in self.host_list1:
+                self.val = host_dict[key]
+                for i in range(1, fun_test.shared_variables["num_ns"], 1):
+                    command_result = {}
+                    command_result = self.storage_controller.volume_attach_pcie(ns_id=i,
+                                                                                uuid=self.thin_uuid[self.uuid_cnt],
+                                                                                huid=self.val['huid'],
+                                                                                ctlid=self.val['ctlid'],
+                                                                                command_duration=self.command_timeout)
+                    self.uuid_cnt += 1
+                    if command_result["status"]:
+                        self.blt_attach_count += 1
+                    else:
+                        fun_test.test_assert(command_result["status"],
+                                             "Thin Block volume {} attach with capacity {}".
+                                              format(i, self.namespace_params["capacity"]))
+            fun_test.shared_variables["num_ns"] = self.num_namespace * self.num_host
+            fun_test.test_assert_expected(expected=fun_test.shared_variables["num_ns"], actual=self.blt_create_count,
                                           message="Total BLT created")
-            fun_test.test_assert_expected(expected=self.num_namespace, actual=self.blt_attach_count,
+            fun_test.test_assert_expected(expected=fun_test.shared_variables["num_ns"], actual=self.blt_attach_count,
                                           message="Total BLT attached")
             fun_test.shared_variables["blt"]["setup_created"] = True
 
@@ -137,7 +161,9 @@ class NvmeSanityTestCase(FunTestCase):
         # Fetching initial stats
         fio_result = {}
         wait_time = 0
+        fun_test.shared_variables["num_ns"] += 1
         for i in range(1, fun_test.shared_variables["num_ns"], 1):
+            command_result = {}
             initial_volume_stats[i] = {}
             self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
                                                               "volumes",
@@ -149,7 +175,6 @@ class NvmeSanityTestCase(FunTestCase):
             initial_volume_stats[i] = command_result["data"]
             fun_test.log("Volume Stats at the beginning of the test:")
             fun_test.log(initial_volume_stats[i])
-            # for i in range(1, fun_test.shared_variables["num_ns"], 1):
             self.fname = "/dev/nvme0n" + str(i)
             fio_result = self.host.pcie_fio(filename=self.fname, **self.fio_params)
             fun_test.test_assert(fio_result, "fio {} test".format(self.fio_params["rw"]))
@@ -165,6 +190,7 @@ class NvmeSanityTestCase(FunTestCase):
         final_volume_stats = {}
         diff_volume_stats = {}
         for i in range(1, fun_test.shared_variables["num_ns"], 1):
+            command_result = {}
             final_volume_stats[i] = {}
             diff_volume_stats[i] = {}
             self.storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
@@ -194,42 +220,56 @@ class NvmeSanityTestCase(FunTestCase):
             fun_test.log("Expected counters are: {}".format(expected_counter_stat))
             fun_test.test_assert_expected(expected=expected_counter_stat,
                                           actual=diff_volume_stats[i]["num_writes"],
-                                          message="Write counter is correct")
-            # To do check read counter
-            # fun_test.test_assert_expected(expected=expected_counter_stat, actual=diff_volume_stats["num_reads"],
-            #                              message="Read counter is correct")
+                                          message="Write counter for nsid{}, uuid:{}"
+                                          .format(i, self.thin_uuid[i]))
+            # SWOS-3839 Read counters are inconsistent
+            # fun_test.test_assert_expected(expected=expected_counter_stat,
+            #                              actual=diff_volume_stats[i]["num_reads"],
+            #                              message="Read counter for nsid{}, uuid:{}"
+            #                              .format(self.nsid, self.thin_uuid[self.uuid_count]))
+
 
     def cleanup(self):
         if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
-            for i in range(1, fun_test.shared_variables["num_ns"], 1):
-                command_result = {}
-                command_result = self.storage_controller.volume_detach_pcie(ns_id=i, uuid=self.thin_uuid[i],
-                                                                            ctlid=self.namespace_params["ctl_id"],
-                                                                            command_duration=self.command_timeout)
-                if command_result["status"]:
-                    self.blt_detach_count += 1
-                else:
-                    fun_test.test_assert(
-                        command_result["status"],
-                        "Thin Block volume {} detach with capacity {}".format(i, self.namespace_params["capacity"]))
+            fun_test.shared_variables["num_ns"] = self.num_namespace + 1
+            for key in self.host_list1:
+                self.val = host_dict[key]
+                self.uuid_cnt = 1
+                self.nsid = 1
+                for i in range(1, fun_test.shared_variables["num_ns"], 1):
+                    command_result = {}
+                    command_result = self.storage_controller.volume_detach_pcie(ns_id=self.nsid,
+                                                                                uuid=self.thin_uuid[self.uuid_cnt],
+                                                                                huid=self.val['huid'],
+                                                                                ctlid=self.val['ctlid'],
+                                                                                command_duration=self.command_timeout)
+                    if command_result["status"]:
+                        self.blt_detach_count += 1
+                    else:
+                        fun_test.test_assert(command_result["status"],
+                                             "Thin Block volume {} detach with capacity {}".
+                                             format(i, self.namespace_params["capacity"]))
 
-                command_result = {}
-                command_result = self.storage_controller.delete_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                       capacity=self.namespace_params["capacity"],
-                                                                       uuid=self.thin_uuid[i],
-                                                                       block_size=self.namespace_params["block_size"],
-                                                                       name="thin_blk" + str(i),
-                                                                       command_duration=self.command_timeout)
-                if command_result["status"]:
-                    self.blt_delete_count += 1
-                else:
-                    fun_test.test_assert(
-                        command_result["status"],
-                        "Thin Block volume {} delete with capacity {}".format(i, self.namespace_params["capacity"]))
+                    command_result = {}
+                    command_result = self.storage_controller.delete_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                           capacity=self.namespace_params["capacity"],
+                                                                           uuid=self.thin_uuid[i],
+                                                                           block_size=self.namespace_params
+                                                                           ["block_size"],name="thin_blk" + str(i),
+                                                                           command_duration=self.command_timeout)
+                    self.uuid_cnt += 1
+                    self.nsid += 1
+                    if command_result["status"]:
+                        self.blt_delete_count += 1
+                    else:
+                        fun_test.test_assert(command_result["status"],
+                                             "Thin Block volume {} delete with capacity {}".
+                                             format(i, self.namespace_params["capacity"]))
 
-            fun_test.test_assert_expected(expected=self.num_namespace, actual=self.blt_detach_count,
+            fun_test.shared_variables["num_ns"] = self.num_namespace * self.num_host
+            fun_test.test_assert_expected(expected=fun_test.shared_variables["num_ns"], actual=self.blt_detach_count,
                                           message="Total BLT detached")
-            fun_test.test_assert_expected(expected=self.num_namespace, actual=self.blt_delete_count,
+            fun_test.test_assert_expected(expected=fun_test.shared_variables["num_ns"], actual=self.blt_delete_count,
                                           message="Total BLT deleted")
 
         fun_test.shared_variables["blt"]["setup_created"] = False
