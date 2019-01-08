@@ -59,7 +59,7 @@
     // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
@@ -137,7 +137,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -214,7 +214,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -297,7 +297,7 @@
     // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
@@ -378,7 +378,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -458,7 +458,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -542,7 +542,7 @@
     // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
@@ -632,7 +632,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -721,7 +721,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -813,7 +813,7 @@
     // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
@@ -898,7 +898,7 @@
     // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
@@ -959,7 +959,7 @@
     "zip_effort": "ZIP_EFFORT_AUTO",
     "fio_loop": 1,
     "traffic_parallel": true,
-    "parallel_count": 4,
+    "parallel_count": 8,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
@@ -982,24 +982,24 @@
     // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
-      "write": {"fault_injection": 0, "num_reads": 4096, "num_writes": 4096},
-      "randwrite": {"fault_injection": 0, "num_reads": 4096, "num_writes": 4096}
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024}
     },
     // Expected EC threshold for acceptance
     "ec_pass_threshold": 35,
     "expected_ec_stats": {
-      "write": {"fault_injection": 0,"num_reads": 4282, "num_writes": 1143},
-      "randwrite": {"fault_injection": 0,"num_reads": 4282, "num_writes": 1143}
+      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279}
     },
     // Expected BLT stats and threshold for acceptance is from EC threshold
     "expected_blt_stats": {
-      "write": {"fault_injection": 0,"num_reads": 930, "num_writes": 1143},
-      "randwrite": {"fault_injection": 0,"num_reads": 930, "num_writes": 1143}
+      "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279}
     }
   },
   "ECEncZeroHPattern": {
@@ -1038,7 +1038,7 @@
     "zip_effort": "ZIP_EFFORT_AUTO",
     "fio_loop": 1,
     "traffic_parallel": true,
-    "parallel_count": 4,
+    "parallel_count": 8,
     "fio_cmd_args": {
       "io_queues": 2,
       "size": "4m",
@@ -1063,26 +1063,30 @@
     // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
       "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added", "vol_filter_create_done"],
+      "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
-      "write": {"fault_injection": 0, "num_reads": 4096, "num_writes": 4096},
-      "randwrite": {"fault_injection": 0, "num_reads": 4096, "num_writes": 4096}
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
     },
     // Expected EC threshold for acceptance
     "ec_pass_threshold": 35,
     "expected_ec_stats": {
-      "write": {"fault_injection": 0,"num_reads": 4282, "num_writes": 1143},
-      "randwrite": {"fault_injection": 0,"num_reads": 4282, "num_writes": 1143}
+      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
     },
     // Expected BLT stats and threshold for acceptance is from EC threshold
     "expected_blt_stats": {
-      "write": {"fault_injection": 0,"num_reads": 930, "num_writes": 1143},
-      "read": {"fault_injection": 0,"num_reads": 1143, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 930, "num_writes": 1143},
-      "randread": {"fault_injection": 0,"num_reads": 1143, "num_writes": 0}
+      "write": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "read": {"fault_injection": 0,"num_reads": 170, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 216, "num_writes": 279},
+      "randread": {"fault_injection": 0,"num_reads": 170, "num_writes": 0}
     }
   }
 }
