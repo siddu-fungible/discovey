@@ -13,6 +13,7 @@ NU_HOST_FPG0_MAC_ADDR = 'fe:dc:ba:44:66:33'
 NU_ROUTE_TO_HU_PF = '53.1.1.0/24'
 NU_ROUTE_TO_HU_VF = '53.1.9.0/24'
 NU_ROUTE_NEXTHOP = '19.1.1.2'
+ROUTER_MAC = '00:de:ad:be:ef:00'
 
 
 class FunethSanity(FunTestScript):
@@ -33,13 +34,13 @@ class FunethSanity(FunTestScript):
         # TODO: Pass configs in a nice way
         cmds = (
             'sudo ifconfig fpg0 0.0.0.0',
-            'sudo ip route delete 53.1.1.0/24',
-            'sudo ip route delete 53.1.9.0/24',
+            'sudo ip route delete {}'.format(NU_ROUTE_TO_HU_PF),
+            'sudo ip route delete {}'.format(NU_ROUTE_TO_HU_VF),
             'sudo ifconfig fpg0 hw ether fe:dc:ba:44:66:33',
-            'sudo ifconfig fpg0 19.1.1.1 netmask 255.255.255.0',
-            'sudo route add -net 53.1.1.0/24 gw 19.1.1.2',
-            'sudo route add -net 53.1.9.0/24 gw 19.1.1.2',
-            'sudo arp -s 19.1.1.2 00:de:ad:be:ef:00',
+            'sudo ifconfig fpg0 {} netmask {}'.format(NU_HOST_FPG0_IP_ADDR, NU_HOST_FPG0_IP_NETMASK),
+            'sudo route add -net {} gw {}'.format(NU_ROUTE_TO_HU_PF, NU_ROUTE_NEXTHOP),
+            'sudo route add -net {} gw {}'.format(NU_ROUTE_TO_HU_VF, NU_ROUTE_NEXTHOP),
+            'sudo arp -s {} {}'.format(NU_ROUTE_NEXTHOP, ROUTER_MAC),
         )
         for cmd in cmds:
             linux_obj.command(cmd)
