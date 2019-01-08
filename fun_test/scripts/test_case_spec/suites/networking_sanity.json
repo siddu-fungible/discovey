@@ -9,5 +9,5 @@
   {"path": "networking/qos/test_qos_wred_ecn.py", "test_case_ids": [1, 2]},
   {"path": "networking/sample/test_sample.py", "test_case_ids": [1]},
   {"path": "networking/sample/test_advanced_sampling.py", "test_case_ids": [3, 4]},
-  {"path": "networking/copp/test_cc_ipv4_sanity.py", "test_case_ids": [1]},
+  {"path": "networking/copp/test_cc_ipv4_sanity.py", "test_case_ids": [1]}
 ]
