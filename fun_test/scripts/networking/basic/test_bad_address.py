@@ -138,6 +138,18 @@ class TestCase1(FunTestCase):
                                                                 header_obj=ipv4, update=True)
         fun_test.test_assert(output, message="Changed destination ip to bad ip")
 
+        # Fetch psw global stats
+        psw_stats = network_controller_obj.peek_psw_global_stats(hnu=hnu)
+        dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
+        ifpg_pkt = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
+        frv_error = 'frv_error'
+        fwd_frv = 'fwd_frv'
+        fwd_main_pkt_drop = 'fwd_main_pkt_drop'
+        main_pkt_drop_eop = 'main_pkt_drop_eop'
+        fetch_list = [frv_error, fwd_frv, fwd_main_pkt_drop, main_pkt_drop_eop, ifpg_pkt]
+
+        psw_fetched_output_before = get_psw_global_stats_values(psw_stats, input=True, input_key_list=fetch_list)
+
         start = template_obj.enable_generator_configs(generator_configs=generator_list)
         fun_test.test_assert(start, "Starting generator config")
 
@@ -170,7 +182,7 @@ class TestCase1(FunTestCase):
         main_pkt_drop_eop = 'main_pkt_drop_eop'
         fetch_list = [frv_error, fwd_frv, fwd_main_pkt_drop, main_pkt_drop_eop, ifpg_pkt]
 
-        psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+        psw_fetched_output_after = get_psw_global_stats_values(psw_stats, input=True, input_key_list=fetch_list)
 
         expected_rx_count = 0
         fun_test.test_assert_expected(expected=expected_rx_count, actual=spirent_rx_counter,
@@ -182,11 +194,11 @@ class TestCase1(FunTestCase):
 
         fun_test.test_assert(not dut_port_2_transmit, message=" Ensure no frames are transmitted by dut port %s" %
                                                               dut_port_2)
-        '''
+
         for key in fetch_list:
-            fun_test.test_assert_expected(expected=int(spirent_tx_counter), actual=psw_fetched_output[key],
+            fun_test.test_assert_expected(expected=int(spirent_tx_counter), actual=psw_fetched_output_after['input'][key] - psw_fetched_output_before['input'][key],
                                           message="Check counter %s in psw global stats" % key)
-        '''
+
 
 class TestCase2(FunTestCase):
     def describe(self):
@@ -229,6 +241,18 @@ class TestCase2(FunTestCase):
                                                                 header_obj=ethernet, update=True)
         fun_test.test_assert(output, message="Changed destination mac to bad mac")
 
+        # Fetch psw global stats
+        psw_stats = network_controller_obj.peek_psw_global_stats(hnu=hnu)
+        dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
+        ifpg_pkt = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
+        frv_error = 'frv_error'
+        fwd_frv = 'fwd_frv'
+        fwd_main_pkt_drop = 'fwd_main_pkt_drop'
+        main_pkt_drop_eop = 'main_pkt_drop_eop'
+        fetch_list = [frv_error, fwd_frv, fwd_main_pkt_drop, main_pkt_drop_eop, ifpg_pkt]
+
+        psw_fetched_output_before = get_psw_global_stats_values(psw_stats, input=True, input_key_list=fetch_list)
+
         start = template_obj.enable_generator_configs(generator_configs=generator_list)
         fun_test.test_assert(start, "Starting generator config")
 
@@ -261,7 +285,7 @@ class TestCase2(FunTestCase):
         main_pkt_drop_eop = 'main_pkt_drop_eop'
         fetch_list = [frv_error, fwd_frv, fwd_main_pkt_drop, main_pkt_drop_eop, ifpg_pkt]
 
-        psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+        psw_fetched_output_after = get_psw_global_stats_values(psw_stats, input=True, input_key_list=fetch_list)
 
         expected_rx_count = 0
         fun_test.test_assert_expected(expected=expected_rx_count, actual=spirent_rx_counter,
@@ -273,11 +297,11 @@ class TestCase2(FunTestCase):
 
         fun_test.test_assert(not dut_port_2_transmit, message=" Ensure no frames are transmitted by dut port %s" %
                                                               dut_port_2)
-        '''
+
         for key in fetch_list:
-            fun_test.test_assert_expected(expected=int(spirent_tx_counter), actual=psw_fetched_output[key],
+            fun_test.test_assert_expected(expected=int(spirent_tx_counter), actual=psw_fetched_output_after['input'][key] - psw_fetched_output_before['input'][key],
                                           message="Check counter %s in psw global stats" % key)
-        '''
+
 
 class TestCase3(FunTestCase):
     def describe(self):
@@ -375,5 +399,5 @@ if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())
-    ts.add_test_case(TestCase3())
+    #ts.add_test_case(TestCase3())
     ts.run()

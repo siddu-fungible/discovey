@@ -26,12 +26,13 @@ OVERSIZED_FRAME_LENGTH = 2000
 MTU_TEST_FRAME_LENGTH = 1400
 PREAMBLE_ERROR = '55555555556655d5'
 SFD_ERROR = '55555555555555d6'
+cushion_sleep = 5
 
 stream_list = [CRC_64B, CRC_1500B, PREAMBLE, SFD, CHECKSUM_ERROR,
                IHL_ERROR, IP_VERSION_ERROR, TTL_ERROR, GOOD_FRAME]
 # TODO: Change when physical/virtual discussion is out
 
-stream_list = [PREAMBLE, SFD, CHECKSUM_ERROR,
+stream_list = [CHECKSUM_ERROR,
                IHL_ERROR, IP_VERSION_ERROR, TTL_ERROR, GOOD_FRAME]
 
 for stream in stream_list:
@@ -232,7 +233,7 @@ class TestCase1(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -397,7 +398,7 @@ class TestCase2(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -595,7 +596,7 @@ class TestCase3(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -688,7 +689,7 @@ class TestCase4(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -781,7 +782,7 @@ class TestCase5(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -881,7 +882,7 @@ class TestCase6(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -981,7 +982,7 @@ class TestCase7(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -1082,7 +1083,7 @@ class TestCase8(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -1202,7 +1203,7 @@ class TestCase9(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration)
+        fun_test.sleep("Sleeping for executing traffic", seconds=duration + cushion_sleep)
 
         # Get results for streamblock 1
         fun_test.log(
@@ -1249,32 +1250,27 @@ class TestCase9(FunTestCase):
             port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
         # Get results for streamblock 1
-        fun_test.log(
-            "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[CRC_1500B][
-                                                                                str(port_1)].spirent_handle))
-        tx_crc_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[CRC_1500B][str(port_1)].spirent_handle,
-            subscribe_handle=subscribe_results['tx_subscribe'])
+        if CRC_1500B in stream_list:
+            fun_test.log(
+                "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
+                                                                                streamblock_objects[CRC_1500B][
+                                                                                    str(port_1)].spirent_handle))
+            tx_crc_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
+                stream_block_handle=streamblock_objects[CRC_1500B][str(port_1)].spirent_handle,
+                subscribe_handle=subscribe_results['tx_subscribe'])
 
-        fun_test.log(
-            "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[CRC_1500B][
-                                                                                str(port_2)].spirent_handle))
-        tx_crc_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[CRC_1500B][str(port_2)].spirent_handle,
-            subscribe_handle=subscribe_results['tx_subscribe'])
+            fun_test.log(
+                "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
+                                                                                streamblock_objects[CRC_1500B][
+                                                                                    str(port_2)].spirent_handle))
+            tx_crc_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
+                stream_block_handle=streamblock_objects[CRC_1500B][str(port_2)].spirent_handle,
+                subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log("Tx 1 Results %s " % tx_results_1)
         fun_test.log("Rx 1 Results %s" % rx_results_1)
         fun_test.log("Tx 2 Results %s " % tx_results_2)
         fun_test.log("Rx 2 Results %s" % rx_results_2)
-
-        # Check from spirent
-        fun_test.test_assert_expected(expected=tx_results_1['FrameCount'], actual=rx_results_1['FrameCount'],
-                                      message="Check good frames are transmitted successfully")
-        fun_test.test_assert_expected(expected=tx_results_2['FrameCount'], actual=rx_results_2['FrameCount'],
-                                      message="Check good frames are transmitted successfully")
 
         # Check from dut
         dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
@@ -1287,7 +1283,14 @@ class TestCase9(FunTestCase):
         dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
         dut_port_2_receive = get_dut_output_stats_value(dut_port_2_results, FRAMES_RECEIVED_OK, tx=False)
 
+        # Check from spirent
+        fun_test.test_assert_expected(expected=tx_results_1['FrameCount'], actual=rx_results_1['FrameCount'],
+                                      message="Check good frames are transmitted successfully")
+        fun_test.test_assert_expected(expected=tx_results_2['FrameCount'], actual=rx_results_2['FrameCount'],
+                                      message="Check good frames are transmitted successfully")
+
         # Assumption that 1500B wont cause any issue. Please check manually first
+        '''
         fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
                                       message="Ensure frames received on DUT port %s are transmitted by DUT port %s" %
                                               (dut_port_1, dut_port_2))
@@ -1295,33 +1298,43 @@ class TestCase9(FunTestCase):
         fun_test.test_assert_expected(expected=int(dut_port_2_receive), actual=int(dut_port_1_transmit),
                                       message="Ensure frames received on DUT port %s are transmitted by DUT port %s" %
                                               (dut_port_2, dut_port_1))
+        '''
 
-        fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1),
+        fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1['FrameCount']),
                                       message="Ensure frames transmitted from DUT port %s matches spirent %s port" %
                                               (dut_port_2, port_2))
 
-        fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2),
+        fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
                                       message="Ensure frames transmitted from DUT port %s matches spirent %s port" %
                                               (dut_port_1, port_1))
 
         port_2_errors = template_obj.check_non_zero_error_count(rx_port_analyzer_results_1)
         port_1_errors = template_obj.check_non_zero_error_count(rx_port_analyzer_results_2)
+        fun_test.log("Error dict on port2 is %s" % port_2_errors)
+        fun_test.log("Error dict on port1 is %s" % port_1_errors)
 
-        if (port_2_errors['FcsErrorFrameCount'] == tx_crc_results_1['FrameCount']) and len(port_2_errors) == 2:
-            port_2_errors['result'] = True
-        if (port_1_errors['FcsErrorFrameCount'] == tx_crc_results_2['FrameCount']) and len(port_1_errors) == 2:
-            port_1_errors['result'] = True
+        if CRC_1500B in stream_list:
+            if (port_2_errors['FcsErrorFrameCount'] == tx_crc_results_1['FrameCount']) and len(port_2_errors) == 2:
+                port_2_errors['result'] = True
+            if (port_1_errors['FcsErrorFrameCount'] == tx_crc_results_2['FrameCount']) and len(port_1_errors) == 2:
+                port_1_errors['result'] = True
 
-        fun_test.test_assert(port_2_errors['result'],
-                             message="No error counters are seen for good frames received on %s" % port_2)
-        fun_test.test_assert(port_1_errors['result'],
-                             message="No error counters are seen for good frames received on %s" % port_1)
+            fun_test.test_assert(port_2_errors['result'],
+                                 message="No error counters are seen for good frames received on %s" % port_2)
+            fun_test.test_assert(port_1_errors['result'],
+                                 message="No error counters are seen for good frames received on %s" % port_1)
+        else:
+            fun_test.test_assert(port_2_errors['result'],
+                                 message="No error counters are seen for good frames received on %s" % port_2)
+            fun_test.test_assert(port_1_errors['result'],
+                                 message="No error counters are seen for good frames received on %s" % port_1)
 
 
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
+    #TODO: First 4 testcases need physical spirent ports
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())
     ts.add_test_case(TestCase3())
