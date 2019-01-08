@@ -1520,6 +1520,9 @@ class TestCase17(TestCase16):
     def cleanup(self):
         super(TestCase17, self).cleanup()
 
+        network_controller_obj.disable_priority_flow_control(port_num=dut_port_1, shape=shape)
+        network_controller_obj.disable_priority_flow_control(port_num=dut_port_2, shape=shape)
+
     def run(self):
         super(TestCase17, self).run()
 
@@ -1790,6 +1793,13 @@ class TestCase20(TestCase18):
         out = pcap_parser_1.verify_pause_header_fields(last_packet=True, time=0)
         fun_test.test_assert(out, "Ensure last packet capture shows quanta value 0")
         '''
+
+    def cleanup(self):
+        super(TestCase20, self).cleanup()
+
+        network_controller_obj.disable_link_pause(port_num=dut_port_1, shape=shape)
+        network_controller_obj.disable_link_pause(port_num=dut_port_2, shape=shape)
+
 
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
