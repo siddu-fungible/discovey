@@ -116,33 +116,40 @@ class Funeth:
     def configure_intfs(self):
         """Configure interface."""
 
-        # TODO: Pass IP/MAC/arp/route/etc. as args
-
         # Configure PF interface IP/MAC/arp/route
-        self.linux_obj.command('sudo ifconfig {} hw ether 00:de:ad:be:ef:11'.format(self.pf_intf))
-        self.linux_obj.command('sudo ifconfig {} 53.1.1.5 netmask 255.255.255.0'.format(self.pf_intf))
-        self.linux_obj.command('sudo arp -s 53.1.1.1 00:de:ad:be:ef:00')
-        self.linux_obj.command('sudo ip route add 53.1.9.0/24 via 53.1.1.1')
+        # TODO: Pass IP/MAC/arp/route/etc. as args
+        cmds = (
+            'sudo ifconfig {} hw ether 00:de:ad:be:ef:11'.format(self.pf_intf),
+            'sudo ifconfig {} 53.1.1.5 netmask 255.255.255.0'.format(self.pf_intf),
+            'sudo arp -s 53.1.1.1 00:de:ad:be:ef:00',
+            'sudo ip route add 53.1.9.0/24 via 53.1.1.1',
+        )
+        for cmd in cmds:
+            self.linux_obj.command(cmd)
 
         # Configure VF interface hu3-f8 namespace/IP/MAC/arp/route
-        self.linux_obj.command('sudo ip netns add n8')
-        self.linux_obj.command('sudo ip link set {} netns n8'.format(self.vf_intf))
-        self.linux_obj.command('sudo ip netns exec n8 ifconfig {} hw ether 00:de:ad:be:ef:51'.format(self.vf_intf))
-        self.linux_obj.command('sudo ip netns exec n8 ifconfig {} 53.1.9.5/24 up'.format(self.vf_intf))
-        self.linux_obj.command('sudo ip netns exec n8 arp -s 53.1.9.1 00:de:ad:be:ef:00')
-        self.linux_obj.command('sudo ip netns exec n8 ip route add 53.1.1.0/24 via 53.1.9.1')
+        cmds = (
+            'sudo ip netns add n8',
+            'sudo ip link set {} netns n8'.format(self.vf_intf),
+            'sudo ip netns exec n8 ifconfig {} hw ether 00:de:ad:be:ef:51'.format(self.vf_intf),
+            'sudo ip netns exec n8 ifconfig {} 53.1.9.5/24 up'.format(self.vf_intf),
+            'sudo ip netns exec n8 arp -s 53.1.9.1 00:de:ad:be:ef:00',
+            'sudo ip netns exec n8 ip route add 53.1.1.0/24 via 53.1.9.1',
+        )
+        for cmd in cmds:
+            self.linux_obj.command(cmd)
 
         return True
 
-    def loopback_test(self, packet_count=100):
+    def loopback_test(self, ip_addr='53.1.9.5', packet_count=100):
         """Do loopback test between PF and VF via NU."""
 
-        return self.linux_obj.command('sudo ping -c {} -i 0.1 53.1.9.5'.format(packet_count))
+        return self.linux_obj.command('sudo ping -c {} -i 0.1 {}'.format(packet_count, ip_addr))
 
-    def configure_ip_route(self):
+    def configure_ip_route(self, ip_prefix='19.1.1.0/24', next_hop='53.1.1.1'):
         """Configure IP routes to NU."""
 
-        self.linux_obj.command('sudo ip route add 19.1.1.0/24 via 53.1.1.1')
+        self.linux_obj.command('sudo ip route add {} via {}'.format(ip_prefix, next_hop))
 
         return True
 

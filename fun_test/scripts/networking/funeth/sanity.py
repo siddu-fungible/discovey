@@ -30,7 +30,20 @@ class FunethSanity(FunTestScript):
         # NU host
         linux_obj = Linux(host_ip=NU_HOST, ssh_username="user", ssh_password="Precious1*")
         linux_obj.command("/home/user/FunControlPlane/scripts/palladium_test/traffic_server/change_intf_name")
-        linux_obj.command("/home/user/gliang/configure_fpg0.sh")
+        # TODO: Pass configs in a nice way
+        cmds = (
+            'sudo ifconfig fpg0 0.0.0.0',
+            'sudo ip route delete 53.1.1.0/24',
+            'sudo ip route delete 53.1.9.0/24',
+            'sudo ifconfig fpg0 hw ether fe:dc:ba:44:66:33',
+            'sudo ifconfig fpg0 19.1.1.1 netmask 255.255.255.0',
+            'sudo route add -net 53.1.1.0/24 gw 19.1.1.2',
+            'sudo route add -net 53.1.9.0/24 gw 19.1.1.2',
+            'sudo arp -s 19.1.1.2 00:de:ad:be:ef:00',
+        )
+        for cmd in cmds:
+            linux_obj.command(cmd)
+
         output = linux_obj.command('ifconfig %s' % NU_INTF)
         fun_test.test_assert(
             re.search(r'%s.*%s.*%s' % (NU_HOST_FPG0_IP_ADDR, NU_HOST_FPG0_IP_NETMASK, NU_HOST_FPG0_MAC_ADDR), output,
@@ -72,7 +85,7 @@ class FunethSanity(FunTestScript):
 class FunethTestNUPingHU(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Connect to NU host NU host and ping HU host HU host",
+                              summary="Connect to NU host NU host and ping HU host.",
                               steps="""
         1. Ping PF interface 53.1.1.5
         2. Ping VF interface 53.1.9.5
@@ -88,6 +101,60 @@ class FunethTestNUPingHU(FunTestCase):
         linux_obj = fun_test.shared_variables['nu_linux_obj']
         fun_test.test_assert(linux_obj.ping("53.1.1.5"), "Ping PF interface success")
         #fun_test.test_assert(linux_obj.ping("53.1.9.5"), "Ping VF interface success")
+
+
+class FunethTestPacketSweep(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="From HU host, ping NU host with all available packeet sizes.",
+                              steps="""
+        1. 
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        pass
+
+
+class FunethTestInterfaceFlap(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Shut and no shut funeth interface.",
+                              steps="""
+        1. 
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        pass
+
+
+class FunethTestUnloadDriver(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Unload funeth driver and reload it.",
+                              steps="""
+        1. 
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+        pass
 
 
 if __name__ == "__main__":
