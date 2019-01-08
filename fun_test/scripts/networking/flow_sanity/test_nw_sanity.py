@@ -1656,7 +1656,7 @@ if __name__ == "__main__":
     ts = SpirentSetup()
     # Transit NU --> NU Flow
     ts.add_test_case(TransitSweep())
-    # ts.add_test_case(TransitV6Sweep())
+    ts.add_test_case(TransitV6Sweep())
 
     # CC NU --> CC Flow
     ts.add_test_case(TestArpRequestFlow1())
