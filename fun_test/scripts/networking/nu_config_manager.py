@@ -345,6 +345,17 @@ class NuConfigManager(object):
         return result
 
 
+    def get_dut_type(self):
+        result = None
+        try:
+            result = self.DUT_TYPE_PALLADIUM
+            # TODO: get dut type from environment
+            #job_environment = fun_test.get_job_environment()
+            #result = job_environment['DUT_TYPE']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
 
 
 nu_config_obj = NuConfigManager()
