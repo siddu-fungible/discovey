@@ -10,11 +10,9 @@ NU_HOST = 'cadence-pc-3'
 HU_HOST = 'cadence-pc-5'
 NU_HOST_MGMT_INTF = 'enp10s0'
 HU_HOST_MGMT_INTF = 'eth0'
-#NU_INTF_IP = '19.1.1.1'
-#HU_PF_INTF_IP = '53.1.1.5'
-NU_INTF_IP = 'cadence-pc-3'
-HU_PF_INTF_IP = 'cadence-pc-5'
-BW_LIMIT = '1M'
+NU_INTF_IP = '19.1.1.1'
+HU_PF_INTF_IP = '53.1.1.5'
+BW_LIMIT = '100M'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
 
@@ -31,6 +29,7 @@ class FunethPerformance(FunTestScript):
 
         # NU_HOST
         linux_obj = Linux(host_ip=NU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
+        linux_obj.command('sudo ifconfig fpg0 mtu 1482')  # TODO: Remove after MTU issue is fixed
         linux_obj.command('sudo ptp4l -i %s -2 &' % NU_HOST_MGMT_INTF)
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
@@ -46,6 +45,7 @@ class FunethPerformance(FunTestScript):
 
         # HU_HOST
         linux_obj = Linux(host_ip=HU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
+        linux_obj.command('sudo ifconfig hu3-f0 mtu 1482')  # TODO: Remove after MTU issue is fixed
         linux_obj.command('sudo ptp4l -i %s -2 &' % HU_HOST_MGMT_INTF)
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
@@ -68,7 +68,6 @@ class FunethPerformance(FunTestScript):
         # From HU host, do pscheduler ping NU host to make sure it's alive
         output = fun_test.shared_variables['hu_linux_obj'].command(
             '%s pscheduler ping %s' % (fun_test.shared_variables['hu_cmd_prefix'], NU_INTF_IP))
-        # TODO: Need to debug below failure
         fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "HU pscheduler ping NU")
 
         for h in ('nu', 'hu'):
@@ -139,7 +138,7 @@ class FunethPerformanceBase(FunTestCase):
         packet_interval = float(1)/result.get('pps', 1)
         output = linux_obj.command(
             '%s pscheduler task latency -d %s -p %s -c %s -i %s' % (
-                cmd_prefix, dst, udp_payload(frame_size), packet_count, packet_interval),
+                cmd_prefix, dst, udp_payload(frame_size)-14, packet_count, packet_interval),
             timeout=180)
         match = re.findall(r'Delay (Median|Minimum|Maximum|Mean).*?(\S+ [m|u|n]s)', output)
         fun_test.test_assert(match, "Measure %s latency" % flow_type)
@@ -222,7 +221,7 @@ class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
 if __name__ == "__main__":
     FunethScript = FunethPerformance()
     #FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
-    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
+    #FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
     #FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
     FunethScript.run()
