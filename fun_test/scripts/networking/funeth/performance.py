@@ -220,8 +220,10 @@ class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
 
 if __name__ == "__main__":
     FunethScript = FunethPerformance()
+    # TODO: Uncomment below after EM-804 is fixed
     #FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
     #FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
-    #FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
+    # TODO: Below throughput result is too small in SN2, need further investigation
+    FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
     FunethScript.run()
