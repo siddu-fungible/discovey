@@ -152,6 +152,17 @@ class ECCryptoVolumeTestCase(FunTestCase):
         self.blt_capacity = 0
         self.blt_creation_fail = None
 
+        # Getting initial crypto filter stats
+        initial_filter_values = {}
+        internal_filter_stats = True
+        for filter_param in self.expected_filter_params.keys():
+            crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
+            command_result = {}
+            command_result = self.storage_controller.peek(crypto_props_tree)
+            if command_result["data"] is None:
+                command_result["data"] = 0
+            initial_filter_values[filter_param] = command_result["data"]
+
         # Configuring EC volume
         command_result = {}
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)
@@ -349,6 +360,36 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 fun_test.shared_variables["compress_filter_count"] += 2
             if self.encrypt:
                 fun_test.shared_variables["crypto_filter_count"] += 2
+
+        # Check the expected filter params
+        final_filter_values = {}
+        diff_filter_values = {}
+        for filter_param in self.expected_filter_params.keys():
+            crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
+            command_result = {}
+            command_result = self.storage_controller.peek(crypto_props_tree)
+            if command_result["data"] is None:
+                command_result["data"] = 0
+            final_filter_values[filter_param] = command_result["data"]
+
+            evalue = self.expected_filter_params[filter_param]
+            diff_filter_values[filter_param] = final_filter_values[filter_param] - initial_filter_values[filter_param]
+            if diff_filter_values[filter_param] != evalue:
+                internal_filter_stats = False
+                fun_test.add_checkpoint("Crypter filter {} count {} match expected count {}".
+                                        format(filter_param, diff_filter_values[filter_param], evalue),
+                                        "FAILED",
+                                        evalue,
+                                        diff_filter_values[filter_param])
+            else:
+                fun_test.add_checkpoint("Crypter filter {} count {} match expected count {}".
+                                        format(filter_param, diff_filter_values[filter_param], evalue),
+                                        "PASSED",
+                                        evalue,
+                                        diff_filter_values[filter_param])
+
+        fun_test.test_assert(internal_filter_stats, self.summary)
+
         # Disable the error_injection for the EC volume
         command_result = {}
         command_result = self.storage_controller.poke("params/ecvol/error_inject 0")
@@ -497,9 +538,9 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
                     # Use this check as without compress flag the stats are not enabled.
                     if self.compress:
-                        compress_flags = ["zipfilter_compress_done", "zipfilter_decompress_done"]
+                        # TODO change this to below format of zip
                         initial_zip_stats[combo][mode] = {}
-                        for x in compress_flags:
+                        for x in expected_compression_stats[mode].keys():
                             initial_zip_stats[combo][mode][x] = {}
                             zip_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", x)
                             command_result = self.storage_controller.peek(zip_props_tree)
@@ -736,7 +777,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                     fun_test.log(
                                         "Final {} value {} for {} volume matches the expected "
                                         "value {}".format(ekey, actual, vol_type, evalue))
-                                # TODO add only num_read & num_write
+
                                 if ekey == "num_reads" or ekey == "num_writes":
                                     if vol_type == "ec" and "lsv" not in self.volume_list:
                                         total_diff_stats += diff_vol_stats[combo][mode][vol_type][ekey]
@@ -759,49 +800,34 @@ class ECCryptoVolumeTestCase(FunTestCase):
                         fun_test.log("Difference of Crypto stats before and after the test:")
                         fun_test.log(diff_crypto_stats[combo][mode])
 
-                        self.filter_values = {}
-                        for filter_param in self.filter_params:
-                            crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
-                            command_result = {}
-                            command_result = self.storage_controller.peek(crypto_props_tree)
-                            self.filter_values[filter_param] = command_result["data"]
-                            if filter_param != "vol_decrypt_filter_added" and \
-                                    filter_param != "vol_encrypt_filter_added":
+                        if diff_crypto_stats[combo][mode] == total_diff_stats:
+                            fun_test.add_checkpoint("Crypto count for {} test, block size & IO depth combo {}".
+                                                    format(mode, combo),
+                                                    "PASSED",
+                                                    total_diff_stats,
+                                                    diff_crypto_stats[combo][mode])
+                        else:
+                            internal_crypto_result[combo][mode] = False
+                            fun_test.add_checkpoint("Crypto count for {} test, block size & IO depth combo {}".
+                                                    format(mode, combo),
+                                                    "FAILED",
+                                                    total_diff_stats,
+                                                    diff_crypto_stats[combo][mode])
+                            fun_test.critical("Crypto stats match vol stats")
 
-                                fun_test.simple_assert(
-                                    expression=
-                                    fun_test.shared_variables["crypto_filter_count"] ==
-                                    self.filter_values[filter_param],
-                                    message="{} count {} doesn't match expected filter count {}".
-                                    format(filter_param,
-                                           self.filter_values[filter_param],
-                                           fun_test.shared_variables["crypto_filter_count"]))
-                        fun_test.simple_assert(
-                            expression=
-                            self.filter_values["vol_decrypt_filter_added"] ==
-                            self.filter_values["vol_encrypt_filter_added"],
-                            message="Encrypt filter {} & decrypt filter {}".
-                            format(self.filter_values["vol_encrypt_filter_added"],
-                                   self.filter_values["vol_decrypt_filter_added"]))
-                        filter_count = \
-                            self.filter_values["vol_decrypt_filter_added"] + \
-                            self.filter_values["vol_encrypt_filter_added"]
-
-                        fun_test.simple_assert(expression=filter_count == self.filter_values["cryptofilter_create"],
-                                               message="Encrypt + Decrypt count {}, cryptofilter_create count {}".
-                                               format(filter_count, self.filter_values["cryptofilter_create"]))
-
+                        # TODO Move the filter checking to setup, so that we can do initital & final
+                        filter_values = {}
                         for crypto_ops_param in self.crypto_ops_params:
                             crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", crypto_ops_param)
                             command_result = {}
                             command_result = self.storage_controller.peek(crypto_props_tree)
-                            self.filter_values[crypto_ops_param] = command_result["data"]
+                            filter_values[crypto_ops_param] = command_result["data"]
                             fun_test.simple_assert(
-                                expression=final_crypto_stats[combo][mode] == self.filter_values[crypto_ops_param],
+                                expression=final_crypto_stats[combo][mode] == filter_values[crypto_ops_param],
                                 message=
                                 "{} stat count {} doesn't match final crypto count {}".
                                 format(crypto_ops_param,
-                                       self.filter_values[crypto_ops_param],
+                                       filter_values[crypto_ops_param],
                                        final_crypto_stats[combo][mode]))
 
                     if self.compress:
@@ -819,75 +845,33 @@ class ECCryptoVolumeTestCase(FunTestCase):
                             fun_test.log("{} stats at the end of the test:".format(x))
                             fun_test.log(final_zip_stats[combo][mode][x])
 
-                            diff_zip_stats[combo][mode][x] = {}
                             diff_zip_stats[combo][mode][x] = \
                                 final_zip_stats[combo][mode][x] - initial_zip_stats[combo][mode][x]
                             fun_test.log("Difference of {} stats before and after the test:".format(x))
                             fun_test.log(diff_zip_stats[combo][mode][x])
 
-                        for ekey, evalue in expected_compression_stats[mode].items():
-                            if ekey in diff_zip_stats[combo][mode]:
-                                actual = diff_zip_stats[combo][mode][ekey]
-                                if actual != evalue:
-                                    # TODO initialize it to false during failure and assert test.
-                                    internal_zip_result[combo][mode] = False
-                                    fun_test.add_checkpoint(
-                                        "{} check on volume for {} test for the block size & IO "
-                                        "depth combo {}".
-                                        format(ekey, mode, combo), "FAILED", evalue, actual)
-                                    fun_test.critical(
-                                        "Final {} value {} on volume is not within the expected "
-                                        "range {}".format(ekey, actual, evalue))
-                                else:
-                                    fun_test.add_checkpoint(
-                                        "{} check on volume for {} test for the block size & IO "
-                                        "depth combo {}".
-                                        format(ekey, mode, combo), "PASSED", evalue, actual)
-                                    fun_test.log(
-                                        "Final {} value {} on volume matches the expected "
-                                        "compression value {}".format(ekey, actual, evalue))
+                            evalue = expected_compression_stats[mode][x]
+                            actual = diff_zip_stats[combo][mode][x]
+                            if actual != evalue:
+                                internal_zip_result[combo][mode] = False
+                                fun_test.add_checkpoint(
+                                    "{} check on volume for {} test for the block size & IO "
+                                    "depth combo {}".
+                                    format(x, mode, combo), "FAILED", evalue, actual)
+                                fun_test.critical(
+                                    "Final {} value {} on volume is not within the expected "
+                                    "range {}".format(x, actual, evalue))
+                            else:
+                                fun_test.add_checkpoint(
+                                    "{} check on volume for {} test for the block size & IO "
+                                    "depth combo {}".
+                                    format(x, mode, combo), "PASSED", evalue, actual)
+                                fun_test.log(
+                                    "Final {} value {} on volume matches the expected "
+                                    "compression value {}".format(x, actual, evalue))
 
                         # TODO add volume level compression stats. Add once SWOS- is fixed
 
-                    # Calculate diff of crypto and Vol stats is equal
-                    if self.encrypt:
-                        if diff_crypto_stats[combo][mode] == total_diff_stats:
-                            fun_test.add_checkpoint("Crypto count for {} test, block size & IO depth combo {}".
-                                                    format(mode, combo),
-                                                    "PASSED",
-                                                    total_diff_stats,
-                                                    diff_crypto_stats[combo][mode])
-                        else:
-                            internal_crypto_result[combo][mode] = False
-                            fun_test.add_checkpoint("Crypto count for {} test, block size & IO depth combo {}".
-                                                    format(mode, combo),
-                                                    "FAILED",
-                                                    total_diff_stats,
-                                                    diff_crypto_stats[combo][mode])
-                            fun_test.critical("Crypto stats match vol stats")
-
-        # Get total write/read stats from the ndata BLT
-        blt_ndata = self.blt_count - self.nparity
-        self.blt_ndata_ops = 0
-        for x in range(1, blt_ndata + 1, 1):
-            cur_uuid = self.uuid["blt"][x-1]
-            command_result = {}
-            storage_props_tree = "{}/{}/{}/{}/{}".format("storage",
-                                                         "volumes",
-                                                         self.vol_types["blt"],
-                                                         cur_uuid,
-                                                         "stats")
-            command_result = self.storage_controller.peek(storage_props_tree)
-            blt_vol_ops = command_result["data"]
-            for bkey, bvalue in blt_vol_ops.items():
-                if bkey == "num_writes":
-                    self.blt_ndata_ops += bvalue
-                elif bkey == "num_reads":
-                    self.blt_ndata_ops += bvalue
-
-        fun_test.log("Total ndata BLT ops is {}".format(self.blt_ndata_ops))
-
-        # TODO change to dictionary and use it
         test_result = True
         fun_test.log(fio_result)
         fun_test.log(internal_vol_result)
@@ -905,8 +889,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
         if not self.blt_creation_fail:
             if self.traffic_parallel:
-                self.attach_count = self.parallel_count + 1
-                for x in range(1, self.attach_count, 1):
+                for x in range(1, self.parallel_count + 1, 1):
                     command_result = {}
                     command_result = self.storage_controller.volume_detach_remote(ns_id=x,
                                                                                   uuid=self.attach_uuid,
@@ -922,17 +905,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Detach Vol")
 
-            if not self.lsv_create:
-                command_result = {}
-                command_result = self.storage_controller.delete_volume(capacity=self.ec_capacity,
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="ec_vol1",
-                                                                       uuid=self.uuid["ec"],
-                                                                       type=self.vol_types["ec"])
-
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleted EC Vol")
-            else:
+            if self.lsv_create:
                 command_result = {}
                 command_result = self.storage_controller.delete_volume(capacity=self.lsv_capacity,
                                                                        block_size=self.lsv_blocksize,
@@ -952,15 +925,14 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Deleted Journal")
 
-                command_result = {}
-                command_result = self.storage_controller.delete_volume(capacity=self.ec_capacity,
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="ec_vol1",
-                                                                       uuid=self.uuid["ec"],
-                                                                       type=self.vol_types["ec"])
-
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleted EC Vol")
+            command_result = {}
+            command_result = self.storage_controller.delete_volume(capacity=self.ec_capacity,
+                                                                   block_size=self.blt_details["block_size"],
+                                                                   name="ec_vol1",
+                                                                   uuid=self.uuid["ec"],
+                                                                   type=self.vol_types["ec"])
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Deleted EC Vol")
 
             for x in range(1, self.blt_count + 1, 1):
                 cur_uuid = self.uuid["blt"][x-1]
