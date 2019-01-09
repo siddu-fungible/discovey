@@ -1315,7 +1315,7 @@ class TestVpFlows(FunTestCase):
             parsed_input_2 = parsed_psw_stats_2['input']
             parsed_output_2 = parsed_psw_stats_2['output']
 
-            fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
+            fun_test.test_assert_expected(expected=dut_port_1_receive, actual=dut_port_2_transmit,
                                           message="Ensure frames received on DUT port %s are transmitted from "
                                                   "DUT port %s"
                                                   % (dut_port_2, dut_port_1))
