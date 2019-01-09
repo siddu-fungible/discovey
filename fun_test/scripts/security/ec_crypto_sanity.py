@@ -374,9 +374,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
         self.ec_config = str(self.ndata) + ":" + str(self.nparity)
 
-        crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", "cryptofilter_aes_xts")
-        crypto_cluster_props_tree = "{}/{}/{}".format("stats", "crypto", "crypto_alg_stats")
-
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
         fio_result = {}
@@ -488,6 +485,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
                     # Use this check as without encrypt flag the stats are not enabled.
                     if self.encrypt:
+                        crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", "cryptofilter_aes_xts")
                         initial_crypto_stats[combo][mode] = {}
                         command_result = self.storage_controller.peek(crypto_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial crypto stats of DUT")
@@ -746,6 +744,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                         total_diff_stats += diff_vol_stats[combo][mode][vol_type][ekey]
 
                     if self.encrypt:
+                        crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", "cryptofilter_aes_xts")
                         final_crypto_stats[combo][mode] = {}
                         command_result = self.storage_controller.peek(crypto_props_tree)
                         fun_test.simple_assert(command_result["status"], "Final crypto stats on DUT")
@@ -768,17 +767,29 @@ class ECCryptoVolumeTestCase(FunTestCase):
                             self.filter_values[filter_param] = command_result["data"]
                             if filter_param != "vol_decrypt_filter_added" and \
                                     filter_param != "vol_encrypt_filter_added":
-                                fun_test.simple_assert(expression=
-                                fun_test.shared_variables["crypto_filter_count"] == self.filter_values[filter_param],
-                                message="{} stat doesn't match filter count".format(filter_param))
+
+                                fun_test.simple_assert(
+                                    expression=
+                                    fun_test.shared_variables["crypto_filter_count"] ==
+                                    self.filter_values[filter_param],
+                                    message="{} count {} doesn't match expected filter count {}".
+                                    format(filter_param,
+                                           self.filter_values[filter_param],
+                                           fun_test.shared_variables["crypto_filter_count"]))
                         fun_test.simple_assert(
-                            expression=self.filter_values["vol_decrypt_filter_added"] ==
-                                       self.filter_values["vol_encrypt_filter_added"],
-                            message="Encrypt & decrypt filter count")
-                        filter_count = self.filter_values["vol_decrypt_filter_added"] + \
-                                       self.filter_values["vol_encrypt_filter_added"]
+                            expression=
+                            self.filter_values["vol_decrypt_filter_added"] ==
+                            self.filter_values["vol_encrypt_filter_added"],
+                            message="Encrypt filter {} & decrypt filter {}".
+                            format(self.filter_values["vol_encrypt_filter_added"],
+                                   self.filter_values["vol_decrypt_filter_added"]))
+                        filter_count = \
+                            self.filter_values["vol_decrypt_filter_added"] + \
+                            self.filter_values["vol_encrypt_filter_added"]
+
                         fun_test.simple_assert(expression=filter_count == self.filter_values["cryptofilter_create"],
-                                               message="Total Encrypt & Decrypt filter")
+                                               message="Encrypt + Decrypt count {}, cryptofilter_create count {}".
+                                               format(filter_count, self.filter_values["cryptofilter_create"]))
 
                         for crypto_ops_param in self.crypto_ops_params:
                             crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", crypto_ops_param)
@@ -788,13 +799,15 @@ class ECCryptoVolumeTestCase(FunTestCase):
                             fun_test.simple_assert(
                                 expression=final_crypto_stats[combo][mode] == self.filter_values[crypto_ops_param],
                                 message=
-                                "{} stat doesn't match final crypto count".format(crypto_ops_param))
+                                "{} stat count {} doesn't match final crypto count {}".
+                                format(crypto_ops_param,
+                                       self.filter_values[crypto_ops_param],
+                                       final_crypto_stats[combo][mode]))
 
                     if self.compress:
                         final_zip_stats[combo][mode] = {}
                         diff_zip_stats[combo][mode] = {}
                         for x in expected_compression_stats[mode].keys():
-                            print "The value of x is " + str(x)
                             final_zip_stats[combo][mode][x] = {}
                             diff_zip_stats[combo][mode][x] = {}
                             zip_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", x)

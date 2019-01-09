@@ -57,10 +57,9 @@
 
     ],
     // Filter & crypto operations parameters for verifying stats
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -135,10 +134,9 @@
       "(16, 1)",
       "(32, 1)"
     ],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -212,10 +210,9 @@
       "(16, 1)",
       "(32, 1)"
     ],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -295,10 +292,9 @@
       "(32, 1)"
     ],
     // Filter & crypto operations parameters for verifying stats
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -376,10 +372,9 @@
       "(16, 1)",
       "(32, 1)"
     ],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -456,10 +451,9 @@
       "(16, 1)",
       "(32, 1)"
     ],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -540,10 +534,9 @@
       "(32, 1)"
     ],
     // Filter & crypto operations parameters for verifying stats
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -630,10 +623,9 @@
       "(16, 1)",
       "(32, 1)"
     ],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -719,10 +711,9 @@
       "(16, 1)",
       "(32, 1)"
     ],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -811,10 +802,9 @@
 
     ],
     // Filter & crypto operations parameters for verifying stats
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -896,10 +886,9 @@
       "(32, 1)"
     ],
     // Filter & crypto operations parameters for verifying stats
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -980,10 +969,9 @@
       "(32, 1)"
     ],
     // Filter & crypto operations parameters for verifying stats
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -1061,10 +1049,9 @@
       "(32, 1)"
     ],
     // Filter & crypto operations parameters for verifying stats
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "fun_crypto_aes_setkey",
-      "fun_crypto_setkey", "hw_crypto_aes_keyx_hw_done", "hw_crypto_passthrough_done", "vol_decrypt_filter_added",
-      "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "fun_crypto_aes_wu", "hw_crypto_aes_hw_done"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
