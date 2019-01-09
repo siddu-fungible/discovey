@@ -11,12 +11,14 @@ import {SubmitJobComponent} from "./regression/submit-job/submit-job.component";
 import {SuiteDetailComponent} from "./regression/suite-detail/suite-detail.component";
 import {RegressionAdminComponent} from "./regression/regression-admin/regression-admin.component";
 import {RegressionSummaryComponent} from "./regression/regression-summary/regression-summary.component";
+import {GitHistoryComponent} from "./git-history/git-history.component";
 
 const routes: Routes = [
   { path: 'upgrade', component: DashboardComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'performance', component: PerformanceComponent },
   { path: 'performance/atomic/:id', component: FunMetricChartComponent},
+  { path: 'performance/atomic/:id/history', component: GitHistoryComponent},
   { path: 'regression/summary', component: RegressionAdminComponent},
   { path: 'regression/admin', component: RegressionAdminComponent },
   { path: 'regression', component: RegressionComponent },

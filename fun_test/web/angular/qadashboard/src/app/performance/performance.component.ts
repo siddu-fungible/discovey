@@ -45,6 +45,7 @@ class FlatNode {
   hide: boolean;
   indent: number;
   showJiraInfo: boolean = false;
+  showGitInfo: boolean = false;
   children: FlatNode[] = [];
 
   addChild(flatNode: FlatNode) {
@@ -328,6 +329,7 @@ export class PerformanceComponent implements OnInit {
     newFlatNode.collapsed = true;
     newFlatNode.indent = indent;
     newFlatNode.showJiraInfo = false;
+    newFlatNode.showGitInfo = false;
     return newFlatNode;
   }
 
@@ -608,6 +610,11 @@ export class PerformanceComponent implements OnInit {
     window.open(url, '_blank');
   };
 
+  openGitDetails(node): void {
+    let url = "/performance/atomic/" + node.metricId + "/history";
+    window.open(url, '_blank');
+  }
+
   expandNode = (flatNode, all = false) => {
     flatNode.collapsed = false;
     flatNode.hide = false;
@@ -623,6 +630,9 @@ export class PerformanceComponent implements OnInit {
     }
     if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
       this.currentFlatNode.showJiraInfo = false;
+    }
+    if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
+      this.currentFlatNode.showGitInfo = false;
     }
     this.currentNode = flatNode.node;
     this.currentFlatNode = flatNode;
@@ -641,6 +651,9 @@ export class PerformanceComponent implements OnInit {
     }
     if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
       this.currentFlatNode.showJiraInfo = false;
+    }
+    if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
+      this.currentFlatNode.showGitInfo = false;
     }
     this.currentNode = flatNode.node;
     this.currentFlatNode = flatNode;

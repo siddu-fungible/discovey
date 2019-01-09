@@ -716,5 +716,4 @@ def get_git_commits(request):
     m = GitManager()
     commits = m.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
     result["commits"] = commits["commits"]
-    result["changed_files"] = commits["changed_files"]
     return result

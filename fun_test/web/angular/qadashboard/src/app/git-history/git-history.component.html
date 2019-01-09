@@ -1,17 +1,41 @@
-<fun-spinner [status]="status"></fun-spinner>
-<div *ngIf="status===null" style="color: black;">
-  <u><b>Commit History:</b></u><br>
-  <p class="no-margin" style="color: red">
-    {{ faultyCommit }}
-  </p>
-  <p class="no-margin" *ngFor="let commit of commits">
-    {{ commit }}
-  </p>
-  <p class="no-margin" style="color: green">
-    {{ successCommit }}
-  </p>
-  <u><b>Changed Files:</b></u><br>
-  <p class="no-margin" *ngFor="let fileNames of changedFiles">
-    {{ fileNames }}
-  </p>
+<div class="component">
+  <fun-spinner [status]="status"></fun-spinner>
+  <div *ngIf="status===null">
+    <div class="row">
+      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
+        <div class="card card-primary" style="margin: 4px;">
+          <div class="card-header min-padding"><b>Commit History</b></div>
+          <div class="card-body min-padding">
+            <div class="min-padding">
+              <p class="no-margin" style="color: red">
+                {{ faultyCommit }}
+              </p>
+              <p class="no-margin" *ngFor="let commit of commits">
+                <a [routerLink]="" style="color: black" (click)="showFilesChanged()">{{ commit.name }} {{ commit.date }}</a>
+              </p>
+              <p class="no-margin" *ngFor="let date of commitDates">
+                {{ date }}
+              </p>
+              <p class="no-margin" style="color: green">
+                {{ successCommit }}
+              </p><br>
+              <a [routerLink]="" (click)="fetchGitCommits()">Total Files Changed</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="showChanged" class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
+        <div class="card card-primary" style="margin: 4px;">
+          <div class="card-header min-padding"><b>Files Changed:</b></div>
+          <div class="card-body min-padding">
+            <div class="min-padding">
+              <p class="no-margin" *ngFor="let fileNames of changedFiles">
+                {{ fileNames }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

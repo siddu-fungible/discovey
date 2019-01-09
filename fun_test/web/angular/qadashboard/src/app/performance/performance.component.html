@@ -55,9 +55,9 @@
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
               </td>
               <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
-              <ng-template #GitCommitInfo>
-                  <git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>
-              </ng-template>
+              <!--<ng-template #GitCommitInfo>-->
+                  <!--<git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>-->
+              <!--</ng-template>-->
               <ng-template #FailedInfo>
                   <div *ngIf="passedDateTime" style="color: black;">
                   <b>Last Passed:</b><br> {{ passedDateTime }}<br>
@@ -74,6 +74,9 @@
                            <!--[ngbTooltip]="GitCommitInfo" [autoClose]="'outside'"-->
                            <!--class="badge failed-label no-margin git-commit">Git Commit History-->
               <!--</label>-->
+                  <label (click)="openGitDetails(flatNode.node)" class="badge failed-label no-margin git-commit">
+                    Git Commit History
+                  </label>
                   <br>
                   <!--Git Commit: {{ currentGitCommit }}<br>-->
                   <a *ngIf="currentLsfUrl" [routerLink]="" (click)='openUrl(currentLsfUrl)'>Lsf log<br></a>
@@ -97,6 +100,11 @@
                 <jira-info [apiUrl]="'/metrics/' + flatNode.node.metricId + '/jiras'" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
               </td>
             </tr>
+              <!--<tr *ngIf="flatNode.showGitInfo">-->
+                <!--<td colspan="6">-->
+                <!--<git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>-->
+              <!--</td>-->
+              <!--</tr>-->
 
             </ng-container>
         </table>

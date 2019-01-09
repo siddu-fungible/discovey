@@ -20,7 +20,6 @@ class GitManager:
     def get_commits_between(self, faulty_commit, success_commit):
         result = {}
         result["commits"] = []
-        result["changed_files"] = []
         try:
             self.clone_funos()
             repo = self.initialize_repository(STASH_DIR + "/FunOS")
@@ -29,15 +28,44 @@ class GitManager:
             for commit in commits_list:
                 if success_commit in commit.hexsha:
                     success = commit
+                    commit_detail = {}
+                    commit_detail["name"] = commit
+                    if commit.authored_datetime:
+                        commit_detail["date"] = commit.authored_datetime
+                    else:
+                        commit_detail["date"] = None
+                    commit_detail["changed_files"] = []
+                    diff = faulty.diff(success)
+                    for file in diff:
+                        if file.a_rawpath not in commit_detail["changed_files"]:
+                            commit_detail["changed_files"].append(file.a_rawpath)
+                    result["commits"].append(commit_detail)
                     break
                 if start:
-                    result["commits"].append(commit)
+                    commit_detail = {}
+                    commit_detail["name"] = commit
+                    if commit.authored_datetime:
+                        commit_detail["date"] = commit.authored_datetime
+                    else:
+                        commit_detail["date"] = None
+                    commit_detail["changed_files"] = []
+                    diff = faulty.diff(commit)
+                    for file in diff:
+                        if file.a_rawpath not in commit_detail["changed_files"]:
+                            commit_detail["changed_files"].append(file.a_rawpath)
+                    result["commits"].append(commit_detail)
+                    faulty = commit
                 if faulty_commit in commit.hexsha:
                     faulty = commit
                     start = True
-            diff = faulty.diff(success)
-            for file in diff:
-                result["changed_files"].append(file.a_rawpath)
+                    commit_detail = {}
+                    commit_detail["name"] = commit
+                    if commit.authored_datetime:
+                        commit_detail["date"] = commit.authored_datetime
+                    else:
+                        commit_detail["date"] = None
+                    commit_detail["changed_files"] = []
+                    result["commits"].append(commit_detail)
         except Exception as ex:
             logger.exception("Exception: {}".format(str(ex)))
         return result
@@ -49,5 +77,5 @@ class GitManager:
 
 if __name__ == "__main__":
      m = GitManager()
-     list = m.get_commits_between('0af7f75c8a6f89620792ecd6f46212cda81a40b3', 'ec109dc331af27c23a23203b9cff9619e515cbfd')
+     list = m.get_commits_between('cee548b56f7ab19165473a2eee74d9b757cb4b6c', '651641b62b6e14a50f14a449a2144b7220dae6ca')
      print "Completed"
