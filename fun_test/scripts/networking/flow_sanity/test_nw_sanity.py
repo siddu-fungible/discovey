@@ -739,6 +739,7 @@ class TestCcFlows(FunTestCase):
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 10)
 
+        '''
         checkpoint = "Ensure Spirent stats fetched"
         tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
                                                                           spirent_handle,
@@ -764,7 +765,7 @@ class TestCcFlows(FunTestCase):
         fun_test.log("Tx Port Stats: %s" % tx_port_results)
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
         fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
-
+        '''
         dut_tx_port_stats = None
         dut_rx_port_stats = None
         vp_stats = None
@@ -820,6 +821,8 @@ class TestCcFlows(FunTestCase):
 
         # validation asserts
         # Spirent stats validation
+        # TODO: Skip Spirent validation for now as on real CC we don't have spirent
+        '''
         checkpoint = "Validate Tx and Rx on spirent"
         fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
                                                               int(rx_port_results['TotalFrameCount'])))
@@ -834,7 +837,7 @@ class TestCcFlows(FunTestCase):
         checkpoint = "Ensure no errors are seen on spirent"
         result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
         fun_test.test_assert(expression=result['result'], message=checkpoint)
-
+        '''
         # DUT stats validation
         if self.dut_config['enable_dpcsh']:
             checkpoint = "Validate Tx and Rx on DUT"
@@ -923,12 +926,6 @@ class TestCcFlows(FunTestCase):
                 red_pkts = int(meter_stats_diff['red']['pkts'])
                 fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
                 fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
-                                              message=checkpoint)
-                checkpoint = "Ensure red pkts are equal to DroppedFrameCount on Spirent Rx results"
-                dropped_frame_count = int(rx_results['DroppedFrameCount'])
-                fun_test.log("Dropped Frame Count on Spirent: %d" % dropped_frame_count)
-                fun_test.test_assert_expected(expected=tx_port_results['TotalFrameCount'],
-                                              actual=(red_pkts + green_pkts + yellow_pkts),
                                               message=checkpoint)
 
     def cleanup(self):
