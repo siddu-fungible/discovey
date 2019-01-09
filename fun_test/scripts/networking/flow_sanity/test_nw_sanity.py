@@ -1344,13 +1344,9 @@ class TestVpFlows(FunTestCase):
                                               actual=int(diff_stats_vppkts[VP_PACKETS_NU_OUT_ETP]),
                                               message="Ensure VP stats has correct etp out packets")
 
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
-                                              actual=int(diff_stats_vppkts[VP_FAE_REQUESTS_SENT]),
-                                              message="Ensure VP stats has correct fae requests sent")
-
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
+                fun_test.test_assert_expected(expected=int(diff_stats_vppkts[VP_FAE_REQUESTS_SENT]),
                                               actual=int(diff_stats_vppkts[VP_FAE_RESPONSES_RECEIVED]),
-                                              message="Ensure VP stats has correct fae responses received")
+                                              message="Ensure VP stats fae request send == fae responses received ")
             else:
                 diff_stats_vppkts = get_diff_stats(old_stats=vp_pkts_stats_1, new_stats=vp_pkts_stats_2,
                                                    stats_list=stats_list)

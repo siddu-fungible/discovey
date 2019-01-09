@@ -35,7 +35,7 @@
           "destination_ip4": "75.0.0.2",
           "gateway": "192.85.1.1",
           "hnu_destination_ip1": "51.1.1.10",
-          "hnu_destination_ip2": "52.1.1.2",
+          "hnu_destination_ip2": "52.1.1.10",
           "hnu_fcp_destination_ip1": "52.1.1.1",
           "hu_destination_ip1": "18.0.6.1",
           "vp_destination_ip1": "18.0.6.1",
