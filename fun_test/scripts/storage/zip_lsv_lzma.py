@@ -342,7 +342,6 @@ class LSVVolumeLevelTestcase(FunTestCase):
                 test_result = False
         # take the final stats and verify
         for key, value in self.zip_params_to_monitor.items():
-            fun_test.log("Trying " + str(key))
             if key not in per_volume_zip_stats:
                 prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
             else:
@@ -433,10 +432,10 @@ class LSVVolumeLevelTestcase(FunTestCase):
         self.storage_controller.disconnect()
 
 
-class LSVFioSeqWriteSeqRead(LSVVolumeLevelTestcase):
+class LSVLZMAFioSeqWriteSeqRead(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="fio Sequential Write & Read on  LSV volume with compression enabled on it",
+                              summary="fio Sequential Write & Read on  LSV volume with compression",
                               steps="""
         1. Create 1 BLT volume on dut instance 0.
         2. Create a jvol and an LS volume on top of the BLT volume.
@@ -446,19 +445,19 @@ class LSVFioSeqWriteSeqRead(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqRead, self).setup()
+        super(LSVLZMAFioSeqWriteSeqRead, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqRead, self).run()
+        super(LSVLZMAFioSeqWriteSeqRead, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqRead, self).cleanup()
+        super(LSVLZMAFioSeqWriteSeqRead, self).cleanup()
 
 
-class LSVFioRandWriteRandRead(LSVVolumeLevelTestcase):
+class LSVLZMAFioRandWriteRandRead(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="fio Random Write & Read on LS volume with compression enabled on it",
+                              summary="fio Random Write & Read on LS volume with compression",
                               steps="""
         1. Create 1 BLT volume in dut instance 0.
         2. Create a LS volume on top of the BLT volume .
@@ -468,19 +467,19 @@ class LSVFioRandWriteRandRead(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioRandWriteRandRead, self).setup()
+        super(LSVLZMAFioRandWriteRandRead, self).setup()
 
     def run(self):
-        super(LSVFioRandWriteRandRead, self).run()
+        super(LSVLZMAFioRandWriteRandRead, self).run()
 
     def cleanup(self):
-        super(LSVFioRandWriteRandRead, self).cleanup()
+        super(LSVLZMAFioRandWriteRandRead, self).cleanup()
 
 
-class LSVFioRW(LSVVolumeLevelTestcase):
+class LSVLZMAFioRW(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="fio RW on LS volume with compression enabled on it",
+                              summary="fio RW on LS volume with compression",
                               steps="""
         1. Create 1 BLT volume in dut instance 0.
         2. Create a LS volume on top of the BLT volume .
@@ -490,19 +489,19 @@ class LSVFioRW(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioRW, self).setup()
+        super(LSVLZMAFioRW, self).setup()
 
     def run(self):
-        super(LSVFioRW, self).run()
+        super(LSVLZMAFioRW, self).run()
 
     def cleanup(self):
-        super(LSVFioRW, self).cleanup()
+        super(LSVLZMAFioRW, self).cleanup()
 
 
-class LSVFioRandRW(LSVVolumeLevelTestcase):
+class LSVLZMAFioRandRW(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="fio RandRW on LS volume with compression enabled on it",
+                              summary="fio RandRW on LS volume with compression",
                               steps="""
         1. Create 1 BLT volume in dut instance 0.
         2. Create a LS volume on top of the BLT volume .
@@ -512,19 +511,19 @@ class LSVFioRandRW(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioRandRW, self).setup()
+        super(LSVLZMAFioRandRW, self).setup()
 
     def run(self):
-        super(LSVFioRandRW, self).run()
+        super(LSVLZMAFioRandRW, self).run()
 
     def cleanup(self):
-        super(LSVFioRandRW, self).cleanup()
+        super(LSVLZMAFioRandRW, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnBLT(LSVVolumeLevelTestcase):
+class LSVLZMAFioSeqWriteSeqReadWithCRCOnBLT(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=5,
-                              summary="FIO Random Write/Read, CRC32 on BLT, compression on LSV enabled",
+                              summary="FIO Random Write/Read compression & CRC32 on BLT",
                               steps="""
         1. Create 1 BLT volume in dut instance 0.
         2. Create a LS volume on top of the BLT volume .
@@ -534,19 +533,19 @@ class LSVFioSeqWriteSeqReadWithCRCOnBLT(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnBLT, self).setup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnBLT, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnBLT, self).run()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnBLT, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnBLT, self).cleanup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnBLT, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnJVOL(LSVVolumeLevelTestcase):
+class LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOL(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=6,
-                              summary="FIO Random Write/Read, CRC32 on JVOL, compression on LSV enabled",
+                              summary="FIO Random Write/Read compression & CRC32 on JVOL",
                               steps="""
         1. Create 1 BLT volume in dut instance 0.
         2. Create a LS volume on top of the BLT volume .
@@ -556,19 +555,19 @@ class LSVFioSeqWriteSeqReadWithCRCOnJVOL(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOL, self).setup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOL, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOL, self).run()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOL, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOL, self).cleanup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOL, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnLSV(LSVVolumeLevelTestcase):
+class LSVLZMAFioSeqWriteSeqReadWithCRCOnLSV(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=7,
-                              summary="FIO Random Write/Read, CRC32 on LSV, compression on LSV enabled",
+                              summary="FIO Random Write/Read compression & CRC32 on LSV",
                               steps="""
         1. Create 1 BLT volume in dut instance 0.
         2. Create a LS volume on top of the BLT volume .
@@ -578,16 +577,16 @@ class LSVFioSeqWriteSeqReadWithCRCOnLSV(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSV, self).setup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnLSV, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSV, self).run()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnLSV, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSV, self).cleanup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnLSV, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWthEnc(LSVVolumeLevelTestcase):
+class LSVLZMAFioSeqWriteSeqReadWthEnc(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=8,
                               summary="Sequential Write & Read only fio on  LSV volume with compression and Encryption",
@@ -600,16 +599,16 @@ class LSVFioSeqWriteSeqReadWthEnc(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWthEnc, self).setup()
+        super(LSVLZMAFioSeqWriteSeqReadWthEnc, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWthEnc, self).run()
+        super(LSVLZMAFioSeqWriteSeqReadWthEnc, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWthEnc, self).cleanup()
+        super(LSVLZMAFioSeqWriteSeqReadWthEnc, self).cleanup()
 
 
-class LSVFioRandWriteRandReadWthEnc(LSVVolumeLevelTestcase):
+class LSVLZMAFioRandWriteRandReadWthEnc(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=9,
                               summary="Random Write & Read only fio on LS volume with compression and Encryption",
@@ -622,16 +621,16 @@ class LSVFioRandWriteRandReadWthEnc(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioRandWriteRandReadWthEnc, self).setup()
+        super(LSVLZMAFioRandWriteRandReadWthEnc, self).setup()
 
     def run(self):
-        super(LSVFioRandWriteRandReadWthEnc, self).run()
+        super(LSVLZMAFioRandWriteRandReadWthEnc, self).run()
 
     def cleanup(self):
-        super(LSVFioRandWriteRandReadWthEnc, self).cleanup()
+        super(LSVLZMAFioRandWriteRandReadWthEnc, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc(LSVVolumeLevelTestcase):
+class LSVLZMAFioSeqWriteSeqReadWithCRCOnBLTWthEnc(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=10,
                               summary="FIO Random Write/Read compression & CRC32 on BLT with Encryption",
@@ -644,16 +643,16 @@ class LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc, self).setup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnBLTWthEnc, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc, self).run()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnBLTWthEnc, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc, self).cleanup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnBLTWthEnc, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc(LSVVolumeLevelTestcase):
+class LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOLWthEnc(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=11,
                               summary="FIO Random Write/Read compression & CRC32 on JVOL with Encryption",
@@ -666,16 +665,16 @@ class LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).setup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).run()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).cleanup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc(LSVVolumeLevelTestcase):
+class LSVLZMAFioSeqWriteSeqReadWithCRCOnLSVWthEnc(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=12,
                               summary="FIO Random Write/Read compression & CRC32 on LSV with Encryption",
@@ -688,16 +687,16 @@ class LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc, self).setup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnLSVWthEnc, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc, self).run()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnLSVWthEnc, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc, self).cleanup()
+        super(LSVLZMAFioSeqWriteSeqReadWithCRCOnLSVWthEnc, self).cleanup()
 
 
-class LSVStressPlain(LSVVolumeLevelTestcase):
+class LSVLZMAStressPlain(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=13,
                               summary="FIO compression stress",
@@ -710,16 +709,16 @@ class LSVStressPlain(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVStressPlain, self).setup()
+        super(LSVLZMAStressPlain, self).setup()
 
     def run(self):
-        super(LSVStressPlain, self).run()
+        super(LSVLZMAStressPlain, self).run()
 
     def cleanup(self):
-        super(LSVStressPlain, self).cleanup()
+        super(LSVLZMAStressPlain, self).cleanup()
 
 
-class LSVStressPlainCRC(LSVVolumeLevelTestcase):
+class LSVLZMAStressPlainCRC(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=14,
                               summary="FIO compression stress with CRC32",
@@ -732,16 +731,16 @@ class LSVStressPlainCRC(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVStressPlainCRC, self).setup()
+        super(LSVLZMAStressPlainCRC, self).setup()
 
     def run(self):
-        super(LSVStressPlainCRC, self).run()
+        super(LSVLZMAStressPlainCRC, self).run()
 
     def cleanup(self):
-        super(LSVStressPlainCRC, self).cleanup()
+        super(LSVLZMAStressPlainCRC, self).cleanup()
 
 
-class LSVStressEnc(LSVVolumeLevelTestcase):
+class LSVLZMAStressEnc(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=15,
                               summary="FIO compression stress with Encryption",
@@ -754,16 +753,16 @@ class LSVStressEnc(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVStressEnc, self).setup()
+        super(LSVLZMAStressEnc, self).setup()
 
     def run(self):
-        super(LSVStressEnc, self).run()
+        super(LSVLZMAStressEnc, self).run()
 
     def cleanup(self):
-        super(LSVStressEnc, self).cleanup()
+        super(LSVLZMAStressEnc, self).cleanup()
 
 
-class LSVStressEncCRC(LSVVolumeLevelTestcase):
+class LSVLZMAStressEncCRC(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=16,
                               summary="FIO tress with compression, CRC32 and Encryption",
@@ -776,39 +775,42 @@ class LSVStressEncCRC(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVStressEncCRC, self).setup()
+        super(LSVLZMAStressEncCRC, self).setup()
 
     def run(self):
-        super(LSVStressEncCRC, self).run()
+        super(LSVLZMAStressEncCRC, self).run()
 
     def cleanup(self):
-        super(LSVStressEncCRC, self).cleanup()
+        super(LSVLZMAStressEncCRC, self).cleanup()
 
 
 if __name__ == "__main__":
 
     lsvscript = LSVVolumeLevelScript()
+    '''
+    # LZMA filter is not enabled in FunOS yet SWOS-3666
+    lsvscript.add_test_case(LSVLZMAFioSeqWriteSeqRead())
+    lsvscript.add_test_case(LSVLZMAFioRandWriteRandRead())
 
-    lsvscript.add_test_case(LSVFioSeqWriteSeqRead())
+    lsvscript.add_test_case(LSVLZMAFioRW())
+    lsvscript.add_test_case(LSVLZMAFioRandRW())
 
-    lsvscript.add_test_case(LSVFioRandWriteRandRead())
-
-    lsvscript.add_test_case(LSVFioRW())
-    lsvscript.add_test_case(LSVFioRandRW())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnBLT())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnJVOL())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnLSV())
+    lsvscript.add_test_case(LSVLZMAFioSeqWriteSeqReadWithCRCOnBLT())
+    lsvscript.add_test_case(LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOL())
+    lsvscript.add_test_case(LSVLZMAFioSeqWriteSeqReadWithCRCOnLSV())
     
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWthEnc())
+    lsvscript.add_test_case(LSVLZMAFioSeqWriteSeqReadWthEnc())
 
-    lsvscript.add_test_case(LSVFioRandWriteRandReadWthEnc())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc())
+    lsvscript.add_test_case(LSVLZMAFioRandWriteRandReadWthEnc())
+    lsvscript.add_test_case(LSVLZMAFioSeqWriteSeqReadWithCRCOnBLTWthEnc())
+    lsvscript.add_test_case(LSVLZMAFioSeqWriteSeqReadWithCRCOnJVOLWthEnc())
+    lsvscript.add_test_case(LSVLZMAFioSeqWriteSeqReadWithCRCOnLSVWthEnc())
 
-    #DEFLATE STRESS TESTS
-    lsvscript.add_test_case(LSVStressPlain())
-    lsvscript.add_test_case(LSVStressPlainCRC())
-    lsvscript.add_test_case(LSVStressEnc())
-    lsvscript.add_test_case(LSVStressEncCRC())
+
+    #LZMA STRESS TESTS
+    lsvscript.add_test_case(LSVLZMAStressPlain())
+    lsvscript.add_test_case(LSVLZMAStressPlainCRC())
+    lsvscript.add_test_case(LSVLZMAStressEnc())
+    lsvscript.add_test_case(LSVLZMAStressEncCRC())
+    '''
     lsvscript.run()
