@@ -89,6 +89,7 @@ class IPv4GoodFrameTestCase1(FunTestCase):
     streamblock_obj = None
     subscribe_results = None
     duration_seconds = 30
+    cushion_sleep = 5
 
     def describe(self):
         self.set_test_details(id=1,
@@ -161,7 +162,7 @@ class IPv4GoodFrameTestCase1(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=self.duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=self.duration_seconds + self.cushion_sleep)
 
         # Subscribe to results
         project = template_obj.stc_manager.get_project_handle()
@@ -285,6 +286,7 @@ class IPv4RuntTestCase2(FunTestCase):
     streamblock_obj = None
     subscribe_results = None
     duration_seconds = 30
+    cushion_sleep = 5
 
     def describe(self):
         self.set_test_details(id=3,
@@ -358,7 +360,7 @@ class IPv4RuntTestCase2(FunTestCase):
         fun_test.test_assert(start, "Starting generator config")
 
         # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=self.duration_seconds)
+        fun_test.sleep("Sleeping for executing traffic", seconds=self.duration_seconds + self.cushion_sleep)
 
         # Subscribe to results
         project = template_obj.stc_manager.get_project_handle()
@@ -492,119 +494,14 @@ class IPv6RuntTestCase2(IPv4RuntTestCase2):
         super(IPv6RuntTestCase2, self).cleanup()
 
 
-class BroadcastTestCase4(FunTestCase):
-
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Test DUT broadcast frames",
-                              steps="""
-                        1. Create with following settings
-                           a. Load: 10 fps
-                           b. Frame Size: 64 
-                           c. Payload Fill Type: PRBS
-                           d. Insert Signature False
-                           e. Headers: EthernetII and ARP
-                        2. Execute traffic for 10 seconds
-                        3. Check if arp is received at other end
-                        4. Check DUT stats for frames with broadcast
-                        """)
-
-    def setup(self):
-        if dut_config['enable_dpcsh']:
-            # Clear port results on DUT
-            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
-            fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
-
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
-            fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
-
-    def cleanup(self):
-        pass
-
-    def run(self):
-        duration_seconds = 10
-        fun_test.log("Creating streamblock")
-        streamblock = StreamBlock(fixed_frame_length=64, insert_signature=False,
-                                  load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=10,
-                                  fill_type=StreamBlock.FILL_TYPE_PRBS)
-        config_streamblock = template_obj.configure_stream_block(stream_block_obj=streamblock, port_handle=port_1)
-        fun_test.test_assert(config_streamblock, " Created streamblock %s" % streamblock._spirent_handle)
-
-        fun_test.log("Adding ethernet frame")
-        ethernet = Ethernet2Header(destination_mac=Ethernet2Header.BROADCAST_MAC,
-                                   ether_type=Ethernet2Header.ARP_ETHERTYPE)
-        config_ethernet = template_obj.stc_manager.configure_frame_stack(stream_block_handle=streamblock._spirent_handle,
-                                                                         header_obj=ethernet)
-        fun_test.test_assert(config_ethernet, "Ethernet frame added to streamblock")
-
-        fun_test.log("Adding ARP into streamblock")
-        arp = ARP()
-        config_arp = template_obj.stc_manager.configure_frame_stack(stream_block_handle=streamblock._spirent_handle,
-                                                                    header_obj=arp)
-        fun_test.test_assert(config_arp, "ARP added to streamblock %s" % streamblock._spirent_handle)
-
-        # Execute traffic
-        start = template_obj.enable_generator_configs(generator_configs=gen_obj)
-        fun_test.test_assert(start, "Starting generator config")
-
-        # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds)
-
-        project = template_obj.stc_manager.get_project_handle()
-        subscribe_results = template_obj.subscribe_to_all_results(parent=project)
-        fun_test.test_assert(subscribe_results['result'], "Subscribing to results")
-        del subscribe_results['result']
-
-        result_dict = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_results,
-                                                                         streamblock_handle_list=[
-                                                                             streamblock._spirent_handle],
-                                                                         tx_result=True, rx_result=False)
-
-        port_dict = template_obj.stc_manager.fetch_port_results(subscribe_result=subscribe_results,
-                                                                port_handle_list=[port_2],
-                                                                analyzer_result=True)
-        if dut_config['enable_dpcsh']:
-            # Fetch results from dut
-            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
-
-            dut_port_1_broadcast_receive = get_dut_output_stats_value(dut_port_1_results, IF_IN_BROADCAST_PKTS, tx=False)
-            dut_port_1_good_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
-
-            # Currently getting dropped
-            # TODO: Change later
-
-            expected_rx_count = 0
-            fun_test.test_assert_expected(expected=int(result_dict[streamblock._spirent_handle]['tx_result']['FrameCount']),
-                                          actual=int(dut_port_1_good_receive),
-                                          message="Ensure frames are received as good")
-
-            fun_test.test_assert_expected(expected=int(result_dict[streamblock._spirent_handle]['tx_result']['FrameCount']),
-                                          actual=int(dut_port_1_broadcast_receive),
-                                          message="Ensure frames are received as broadcast on dut port %s" % dut_port_1)
-
-
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
-    test_case_mode = local_settings[nu_config_obj.IP_VERSION]
+    dut_type = nu_config_obj.get_dut_type()
     ts = SpirentSetup()
-    test_case_mode = test_case_mode if test_case_mode else 4
-
-    if test_case_mode == 6:
-        ts.add_test_case(IPv6GoodFrameTestCase1())
-        # ts.add_test_case(IPv6RuntTestCase2())
-        # ts.add_test_case(IPv6GoodRuntTestCase3())
-    elif test_case_mode == 4:
-        ts.add_test_case(IPv4GoodFrameTestCase1())
+    ts.add_test_case(IPv4GoodFrameTestCase1())
+    ts.add_test_case(IPv6GoodFrameTestCase1())
+    if not dut_type == nu_config_obj.DUT_TYPE_PALLADIUM:
         ts.add_test_case(IPv4RuntTestCase2())
-    else:
-        ts.add_test_case(IPv4GoodFrameTestCase1())
-        ts.add_test_case(IPv4RuntTestCase2())
-
-        ts.add_test_case(IPv6GoodFrameTestCase1())
-        # ts.add_test_case(IPv6RuntTestCase2())
-        # ts.add_test_case(IPv6GoodRuntTestCase3())
-
-    # ts.add_test_case(BroadcastTestCase4())
+        ts.add_test_case(IPv6RuntTestCase2())
     ts.run()
