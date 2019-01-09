@@ -1,6 +1,6 @@
 {
   "TestInitialization": {
-    "num_namespace": 2,
+    "num_namespace": 1,
     "num_host" : 1,
     "namespace_params": {
       "capacity": 1073741824,
@@ -24,7 +24,7 @@
     "num_namespace": 5,
     "num_host" : 1,
     "namespace_params": {
-      "capacity": 1073741824,
+      "capacity": 32768,
       "block_size": 4096
     },
     "command_timeout": 5,
@@ -34,7 +34,7 @@
       "rw": "randwrite",
       "bs": "4k",
       "iodepth": 8,
-      "size": "128k",
+      "size": "32k",
       "do_verify": 1,
       "verify": "md5",
       "verify_fatal": 1,
