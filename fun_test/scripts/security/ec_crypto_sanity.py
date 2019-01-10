@@ -51,12 +51,8 @@ class ECCryptoVolumeScript(FunTestScript):
         self.dut_instance = self.topology.get_dut_instance(index=0)
         self.storage_controller = StorageController(target_ip=self.dut_instance.host_ip,
                                                     target_port=self.dut_instance.external_dpcsh_port)
-        # We have declared this here since when we remove volume, the counters are from zero but crypto
-        # counters are not from zero.
         fun_test.shared_variables["topology"] = self.topology
         fun_test.shared_variables["storage_controller"] = self.storage_controller
-        fun_test.shared_variables["crypto_filter_count"] = 0
-        fun_test.shared_variables["compress_filter_count"] = 0
         fun_test.shared_variables["ctrl_created"] = False
 
     def cleanup(self):
@@ -152,22 +148,24 @@ class ECCryptoVolumeTestCase(FunTestCase):
         self.blt_capacity = 0
         self.blt_creation_fail = None
 
-        # Getting initial crypto filter stats
-        initial_filter_values = {}
-        internal_filter_stats = True
-        for filter_param in self.expected_filter_params.keys():
-            crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
-            command_result = {}
-            command_result = self.storage_controller.peek(crypto_props_tree)
-            if command_result["data"] is None:
-                command_result["data"] = 0
-            initial_filter_values[filter_param] = command_result["data"]
+        self.internal_filter_stats = True
+        if self.encrypt:
+            # Getting initial crypto filter stats
+            initial_filter_values = {}
+            for filter_param in self.expected_filter_params.keys():
+                crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
+                command_result = {}
+                command_result = self.storage_controller.peek(crypto_props_tree)
+                if command_result["data"] is None:
+                    command_result["data"] = 0
+                initial_filter_values[filter_param] = command_result["data"]
 
         # Configuring EC volume
         command_result = {}
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
+
         # Configuring controller
         if not fun_test.shared_variables["ctrl_created"]:
             command_result = {}
@@ -177,7 +175,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
             fun_test.test_assert(command_result["status"], "ip_cfg {} on DUT".
                                  format(self.dut_instance.data_plane_ip))
             fun_test.shared_variables["ctrl_created"] = True
-        command_result = {}
+
         self.blt_count = self.ndata + self.nparity
         self.uuid = {}
         self.uuid["blt"] = []
@@ -185,6 +183,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
         self.uuid["jvol"] = []
         self.uuid["lsv"] = []
         self.volume_list = []
+
         if self.lsv_create:
             # LSV should be 70% of BLT capacity. So increase the BLT capacity by 30% and use BLT capacity for LSV.
             self.blt_capacity = (self.blt_details["capacity"] * self.lsv_head / 100) + self.blt_details["capacity"]
@@ -196,6 +195,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
         for x in range(1, self.blt_count + 1, 1):
             cur_uuid = utils.generate_uuid()
             self.uuid["blt"].append(cur_uuid)
+            command_result = {}
             command_result = self.storage_controller.create_volume(type=self.vol_types["blt"],
                                                                    capacity=self.blt_capacity,
                                                                    block_size=self.blt_details["block_size"],
@@ -210,6 +210,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
         fun_test.simple_assert(expression=self.blt_create_count == self.blt_count,
                                message="BLT creation count")
         self.volume_list.append("blt")
+
         # Key generation for encryption based on size or input is random or alternate
         if self.key_size == "random":
             key_range = [32, 64]
@@ -222,6 +223,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
         else:
             self.xts_key = utils.generate_key(self.key_size)
         self.xts_tweak = utils.generate_key(self.xtweak_size)
+
         if not self.lsv_create:
             # Creating EC vol and setting it to attach_vol
             self.attch_type = "VOL_TYPE_BLK_EC"
@@ -343,11 +345,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 fun_test.log(command_result)
                 if not command_result["status"]:
                     fun_test.test_assert(command_result["status"], "Vol attach {}".format(x))
-                else:
-                    if self.compress:
-                        fun_test.shared_variables["compress_filter_count"] += 2
-                    if self.encrypt:
-                        fun_test.shared_variables["crypto_filter_count"] += 2
         else:
             command_result = {}
             command_result = self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
@@ -356,39 +353,35 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                           command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Vol attach")
-            if self.compress:
-                fun_test.shared_variables["compress_filter_count"] += 2
-            if self.encrypt:
-                fun_test.shared_variables["crypto_filter_count"] += 2
 
         # Check the expected filter params
-        final_filter_values = {}
-        diff_filter_values = {}
-        for filter_param in self.expected_filter_params.keys():
-            crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
-            command_result = {}
-            command_result = self.storage_controller.peek(crypto_props_tree)
-            if command_result["data"] is None:
-                command_result["data"] = 0
-            final_filter_values[filter_param] = command_result["data"]
+        if self.encrypt:
+            final_filter_values = {}
+            diff_filter_values = {}
+            for filter_param in self.expected_filter_params.keys():
+                crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
+                command_result = {}
+                command_result = self.storage_controller.peek(crypto_props_tree)
+                if command_result["data"] is None:
+                    command_result["data"] = 0
+                final_filter_values[filter_param] = command_result["data"]
 
-            evalue = self.expected_filter_params[filter_param]
-            diff_filter_values[filter_param] = final_filter_values[filter_param] - initial_filter_values[filter_param]
-            if diff_filter_values[filter_param] != evalue:
-                internal_filter_stats = False
-                fun_test.add_checkpoint("Crypter filter {} count {} match expected count {}".
-                                        format(filter_param, diff_filter_values[filter_param], evalue),
-                                        "FAILED",
-                                        evalue,
-                                        diff_filter_values[filter_param])
-            else:
-                fun_test.add_checkpoint("Crypter filter {} count {} match expected count {}".
-                                        format(filter_param, diff_filter_values[filter_param], evalue),
-                                        "PASSED",
-                                        evalue,
-                                        diff_filter_values[filter_param])
-
-        fun_test.test_assert(internal_filter_stats, self.summary)
+                evalue = self.expected_filter_params[filter_param]
+                diff_filter_values[filter_param] = \
+                    final_filter_values[filter_param] - initial_filter_values[filter_param]
+                if diff_filter_values[filter_param] != evalue:
+                    self.internal_filter_stats = False
+                    fun_test.add_checkpoint("Crypter filter {} count {} match expected count {}".
+                                            format(filter_param, diff_filter_values[filter_param], evalue),
+                                            "FAILED",
+                                            evalue,
+                                            diff_filter_values[filter_param])
+                else:
+                    fun_test.add_checkpoint("Crypter filter {} count {} match expected count {}".
+                                            format(filter_param, diff_filter_values[filter_param], evalue),
+                                            "PASSED",
+                                            evalue,
+                                            diff_filter_values[filter_param])
 
         # Disable the error_injection for the EC volume
         command_result = {}
@@ -538,7 +531,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
                     # Use this check as without compress flag the stats are not enabled.
                     if self.compress:
-                        # TODO change this to below format of zip
                         initial_zip_stats[combo][mode] = {}
                         for x in expected_compression_stats[mode].keys():
                             initial_zip_stats[combo][mode][x] = {}
@@ -561,7 +553,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                                  rwmixread=self.fio_rwmixread,
                                                                                  nsid=self.ns_id,
                                                                                  **self.fio_cmd_args)
-                            fun_test.test_assert(fio_output[combo][mode], "Fio test completed")
+                            fun_test.test_assert(fio_output[combo][mode], "Fio test completed for {} mode & {} combo".
+                                                 format(mode, combo))
                             fun_test.log("FIO Command Output:")
                             fun_test.log(fio_output[combo][mode])
                         else:
@@ -572,7 +565,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                                  iodepth=fio_iodepth,
                                                                                  nsid=self.ns_id,
                                                                                  **self.fio_cmd_args)
-                            fun_test.test_assert(fio_output[combo][mode], "Fio test completed")
+                            fun_test.test_assert(fio_output[combo][mode], "Fio test completed for {} mode & {} combo".
+                                                 format(mode, combo))
                             fun_test.log("FIO Command Output:")
                             fun_test.log(fio_output[combo][mode])
                     else:
@@ -815,7 +809,6 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                     diff_crypto_stats[combo][mode])
                             fun_test.critical("Crypto stats match vol stats")
 
-                        # TODO Move the filter checking to setup, so that we can do initital & final
                         filter_values = {}
                         for crypto_ops_param in self.crypto_ops_params:
                             crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", crypto_ops_param)
@@ -882,7 +875,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 if not internal_vol_result[combo][mode] or not internal_zip_result[combo][mode] or not \
                         internal_crypto_result[combo][mode]:
                     test_result = False
-
+        if not self.internal_filter_stats:
+            test_result = False
         fun_test.test_assert(test_result, self.summary)
 
     def cleanup(self):
@@ -969,8 +963,8 @@ class ECKey256(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Create 4:2 EC with 256 bit key and run FIO with different RW pattern, block size"
-                                      " & depth",
+                              summary="4.2 EC with 256 bit key and run FIO with different RW pattern(write,read"
+                                      "randwrite,randread), with different block size & depth",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
                               2. Attach it to external linux/container.
@@ -991,7 +985,7 @@ class ECKey256RW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Create 4:2 EC with 256 bit key and run FIO RW pattern with different block size"
+                              summary="4.2 EC with 256 bit key and run FIO RW pattern with different block size"
                                       " & depth",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
@@ -1013,7 +1007,7 @@ class ECKey256RandRW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Create 4:2 EC with 256 bit key and run FIO RandRW pattern with different block "
+                              summary="4.2 EC with 256 bit key and run FIO RandRW pattern with different block "
                                       "size & depth",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
@@ -1035,8 +1029,8 @@ class ECKey512(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Create 4:2 EC with 512 bit key and run FIO with different RW pattern, block size"
-                                      " & depth",
+                              summary="4.2 EC with 512 bit key and run FIO with different RW pattern(write,read"
+                                      "randwrite,randread), with different block size & depth",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1057,7 +1051,7 @@ class ECKey512RW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Create 4:2 EC with 512 bit key and run FIO RW pattern with different block size"
+                              summary="4.2 EC with 512 bit key and run FIO RW pattern with different block size"
                                       " & depth",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
@@ -1079,7 +1073,7 @@ class ECKey512RandRW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Create 4:2 EC with 512 bit key and run FIO RandRW pattern with different block "
+                              summary="4.2 EC with 512 bit key and run FIO RandRW pattern with different block "
                                       "size & depth",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
@@ -1101,7 +1095,7 @@ class ECEncCompress(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=7,
-                              summary="Create 4:2 EC with random key & compression and run diff FIO RW pattern(write,"
+                              summary="4.2 EC with random key & compression and run diff FIO RW pattern(write,"
                                       " read,randwrite,randread) with different block size & depth & deadbeef data "
                                       "pattern",
                               steps='''
@@ -1124,7 +1118,7 @@ class ECEncCompressRW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=8,
-                              summary="Create 4:2 EC with random key & compression and run FIO RW pattern set to"
+                              summary="4.2 EC with random key & compression and run FIO RW pattern set to"
                                       " rwmix:30 using different block size & depth & deadbeef data pattern",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
@@ -1146,7 +1140,7 @@ class ECEncCompressRandRW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=9,
-                              summary="Create 4:2 EC with random key & compression and run FIO RandRW pattern"
+                              summary="4.2 EC with random key & compression and run FIO RandRW pattern"
                                       " with different block size & depth & deadbeef data pattern",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
@@ -1168,10 +1162,10 @@ class ECKey256NoLSV(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=10,
-                              summary="Create 4:2 EC with 256 bit key and run FIO with different RW pattern, block size"
-                                      " & depth without LSV",
+                              summary="4.2 EC with 256 bit key and run FIO with different RW pattern(write,read"
+                                      "randwrite,randread), with different block size & depth without LSV",
                               steps='''
-                              1. Create a EC with encryption using 256 bit key on dut.
+                              1. Create a EC with encryption using 256 bit key on dut without LSV.
                               2. Attach it to external linux/container.
                               3. Run FIO traffic.
         ''')
@@ -1190,12 +1184,13 @@ class ECEncDeadBeef(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=11,
-                              summary="Create 4:2 EC with random key and run diff FIO RW pattern with different block "
-                                      "size & depth & deadbeef pattern in parallel",
+                              summary="4.2 EC with random key and run diff FIO RW pattern(write,read"
+                                      "randwrite,randread), with different block size & depth & deadbeef "
+                                      "pattern in parallel",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
-                              3. Run FIO traffic.
+                              3. Run FIO traffic in parallel.
         ''')
 
     def setup(self):
@@ -1212,12 +1207,13 @@ class ECEncZeroPattern(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=12,
-                              summary="Create 4:2 EC with random key and run diff FIO RW pattern with different block "
-                                      "size & depth & 0x000000000 string pattern in parallel",
+                              summary="4.2 EC with random key and run diff FIO RW pattern(write,read"
+                                      "randwrite,randread), with different block size & depth & 0x000000000 string "
+                                      "pattern in parallel",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
-                              3. Run FIO traffic.
+                              3. Run FIO traffic in parallel.
         ''')
 
     def setup(self):
@@ -1234,12 +1230,13 @@ class ECEncZeroHPattern(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=13,
-                              summary="Create 4:2 EC with random key and run diff FIO RW pattern with different block "
-                                      "size & depth & 0x000000000 hex pattern in parallel",
+                              summary="4.2 EC with random key and run diff FIO RW pattern(write,read"
+                                      "randwrite,randread), with different block size & depth & 0x000000000 hex "
+                                      "pattern in parallel",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
-                              3. Run FIO traffic.
+                              3. Run FIO traffic in parallel.
         ''')
 
     def setup(self):

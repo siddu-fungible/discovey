@@ -935,7 +935,7 @@
       "(16, 1)",
       "(32, 1)"
     ],
-    // Filter & crypto operations parameters for verifying stats
+    // Filter & crypto operations parameters for verifying stats.Filter count should change according to parallel_count
     "expected_filter_params": {
       "cryptofilter_create": 8,
       "cryptofilter_xform_flow_alloc_done": 8,
