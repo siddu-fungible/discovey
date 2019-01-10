@@ -283,7 +283,6 @@ def prepare_status(chart, purge_old_status=False):
                                                                      chart.metric_model_name)
                     current_score = round(data_set_combined_goodness / len(data_sets), 1)
 
-
                     # is_leaf_degrade = current_score < last_good_score
                     replacement = False
                     if current_score <= 0:
@@ -323,20 +322,28 @@ def prepare_status(chart, purge_old_status=False):
                                 mcs.copied_score_disposition = -1
                         else:
                             mcs.copied_score_disposition = 0
-
-                        '''
-                        if (current_score - penultimate_good_score) > 0:
-                            mcs.copied_score_disposition = 1
-                        elif (current_score - penultimate_good_score) < 0:
-                            mcs.copied_score_disposition = -1
-                        else:
-                            mcs.copied_score_disposition = 0
-                        '''
-
                     # print current_date, scores
                     print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
                                                                         scores[current_date])
                     mcs.save()
+                else:
+                    if replacement:
+                        chart_status[0].copied_score = True
+                        chart_status[0].copied_score_disposition = 0
+                        if current_score > penultimate_good_score:
+                            if current_score > (penultimate_good_score * (1 + get_tolerance())):
+                                chart_status[0].copied_score_disposition = 1
+                        elif current_score < penultimate_good_score:
+                            if current_score < (penultimate_good_score * (1 - get_tolerance())):
+                                chart_status[0].copied_score_disposition = -1
+                        else:
+                            chart_status[0].copied_score_disposition = 0
+                    else:
+                        chart_status[0].copied_score = False
+                        chart_status[0].copied_score_disposition = 0
+                    chart_status[0].score = current_score
+                    chart_status[0].save()
+
                 if is_leaf_degrade or not current_score:
                     result["num_degrades"] = 1
                 current_date = current_date + timedelta(days=1)
@@ -399,8 +406,8 @@ if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
 
-    #total_chart = MetricChart.objects.get(metric_model_name="WuSendSpeedTestPerformance", chart_name="Average WU send ungated cycles")
-    prepare_status(chart=total_chart, purge_old_status=True)
+    # total_chart = MetricChart.objects.get(metric_model_name="WuSendSpeedTestPerformance", chart_name="Average WU send ungated cycles")
+    prepare_status(chart=total_chart, purge_old_status=False)
 
 
 if __name__ == "__main2__":

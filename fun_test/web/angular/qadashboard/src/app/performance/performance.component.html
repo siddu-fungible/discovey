@@ -31,9 +31,33 @@
             </span>
               </td>
               <td class="text-center">
-                <div class="score-label"><span style="vertical-align: top"
-                                               [innerHTML]="getTrendHtml(flatNode.node) | safeHtml"></span>{{
-                  flatNode.node.lastScore | number: '1.1-1' }}
+                <div class="score-label">
+                  <!--<span style="vertical-align: top"-->
+                                               <!--[innerHTML]="getTrendHtml(flatNode.node) | safeHtml">-->
+                    <!---->
+                  <!--</span>-->
+                  <span style="vertical-align: top;">
+                    <span *ngIf="flatNode.node.chartName!='All metrics'">
+                      <span *ngIf="flatNode.node.trend > 0">
+                        <span style='color: green'>
+                          <label class="no-margin" (click)="calculateScores(flatNode.node)" data-placement="right" triggers="click"
+                           [ngbTooltip]="TrendInfo" [autoClose]="'outside'">
+                            <i class="fa fa-arrow-up aspect-trend-icon fa-icon-green"></i></label></span>
+                      </span>
+                      <span *ngIf="flatNode.node.trend == 0">
+                        <span><i class="fa fa-arrow-down aspect-trend-icon" style="visibility: hidden;"></i> </span>
+                      </span>
+                      <span *ngIf="flatNode.node.trend < 0">
+                        <span style='color: red'>
+                          <label class="no-margin" (click)="calculateScores(flatNode.node)" data-placement="right" triggers="click"
+                                 [ngbTooltip]="TrendInfo" [autoClose]="'outside'"><i class="fa fa-arrow-down aspect-trend-icon fa-icon-red"></i></label></span>
+                      </span>
+                    </span>
+                    <span *ngIf="flatNode.node.chartName=='All metrics'">
+                      <span><i class="fa fa-arrow-down aspect-trend-icon" style="visibility: hidden;"></i> </span>
+                    </span>
+                  </span>
+                  {{ flatNode.node.lastScore | number: '1.1-1' }}
                 </div>
               </td>
               <td class="text-center">
@@ -57,6 +81,30 @@
               <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
               <ng-template #GitCommitInfo>
                   <git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>
+              </ng-template>
+              <ng-template #TrendInfo>
+                  <div *ngIf="!flatNode.node.copiedScore" style="color: black">
+                    <b><u>Trend with respect to yesterday</u></b><br>
+                    Deviation = ((Current Score - Previous Score)/(min(Current Score, Previous Score))) * 100<br>
+                    Tolerance = <span>&#177;</span>3%<br>
+                    Up Trend = Deviation > +3% = Performance Improved<br>
+                    Down Trend = Deviation < -3% = Performance Degraded<br>
+                    <b><u>Calculation:</u></b><br>
+                    Current Score = {{ this.lastScore }}<br>
+                    Previous Score = {{ this.penultimateScore }}<br>
+                    Deviation = (({{ this.lastScore }} - {{ this.penultimateScore }})/(min({{ this.lastScore }}, {{ this.penultimateScore }}))) * 100<br>
+                    Deviation = {{ this.deviation }}%
+                  </div>
+                <div *ngIf="flatNode.node.copiedScore" style="color: black">
+                    <b><u>Trend with respect to yesterday</u></b><br>
+                    Deviation = ((Current Score - Previous Score)/(min(Current Score, Previous Score))) * 100<br>
+                    Tolerance = <span>&#177;</span>3%<br>
+                    Up Trend = Deviation > +3% = Performance Improved<br>
+                    Down Trend = Deviation < -3% = Performance Degraded<br>
+                    <br>
+                    The current score is a copied score from yesterday due to unavailability of data.<br>
+                    The trend is copied from existing score's trend.
+                </div>
               </ng-template>
               <ng-template #FailedInfo>
                   <div *ngIf="passedDateTime" style="color: black;">
