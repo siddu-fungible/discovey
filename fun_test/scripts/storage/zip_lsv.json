@@ -20,20 +20,20 @@
     // FIO commandline arguments //"do_verify": 1, "verify":"sha1",
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
     "zip_params_to_monitor": {
-      "zipinflate_filter":256,
-      "zipdeflate_filter":128,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+      "zipinflate_filter":256,// tells how many times we got the request to decompress
+      "zipdeflate_filter":128,// tells how many times we got the request to compress
+      "zipfilter_compress_done":128,// tells how many times zipdeflte_filter (above) called this wu to compress
+      "zipfilter_decompress_done":256,// tells how many times zipinflate_filter (above) called this wu to decompress
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
       "compress_fails":0,
-      "uncompress_reqs":0,
+      "uncompress_reqs":0,// this tells how many times we sent decompression request to the hw
       "uncompress_done":0,
       "uncompress_fails":0,
       "uncompressible":0
@@ -81,18 +81,18 @@
     "iter_interval": 2,
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify":"sha1",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["randwrite", "randread"],
 
-    "expected_compressed_bytes": 2500,
+    "expected_compressed_bytes": 0,
     "zip_params_to_monitor": {
       "zipinflate_filter":256,
       "zipdeflate_filter":128,
-      "zipfilter_compress_done":0, // random data cannot be compressed
+      "zipfilter_compress_done":128, // random data cannot be compressed
       "zipfilter_decompress_done":0, // random data
       "accumulated_out_bytes":0,
       "compress_reqs":128,
-      "compress_done":128,
+      "compress_done":0,
       "compress_fails":0,
       "uncompress_reqs":0,
       "uncompress_done":0,
@@ -142,7 +142,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
@@ -203,7 +203,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
@@ -265,7 +265,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
     "expected_compressed_bytes": 2500,
     "zip_params_to_monitor": {
@@ -326,7 +326,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
     "expected_compressed_bytes": 2500,
     "zip_params_to_monitor": {
@@ -387,7 +387,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
     "expected_compressed_bytes": 2500,
     "zip_params_to_monitor": {
@@ -447,7 +447,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "4m", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
     //0.005 times of input ie 4 x 4m x 0.005 = 81920
     "expected_compressed_bytes": 81920,
@@ -511,7 +511,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "4m", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 81920,
@@ -575,7 +575,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
     "expected_compressed_bytes": 2500,
 
@@ -636,7 +636,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
@@ -698,7 +698,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
@@ -760,7 +760,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
@@ -822,7 +822,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
@@ -883,7 +883,7 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "4m", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_pattern": "0xffffffffffffffff", "buffer_compress_percentage": 100},
+                      "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 81920,

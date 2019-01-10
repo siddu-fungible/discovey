@@ -299,8 +299,6 @@ class LSVVolumeLevelTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
-                command_result = self.storage_controller.peek("storage", command_duration=5)
-                fun_test.log(command_result)
                 if (mode == "read") or (mode == "randread"):
                     adjust_fio_read_counters = True
                 if (mode == "write") or (mode == "randwrite") or (mode == "rw") or (mode == "randrw"):
@@ -342,6 +340,7 @@ class LSVVolumeLevelTestcase(FunTestCase):
                 test_result = False
         # take the final stats and verify
         for key, value in self.zip_params_to_monitor.items():
+            final_value = 0
             fun_test.log("Trying " + str(key))
             if key not in per_volume_zip_stats:
                 prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
@@ -351,21 +350,23 @@ class LSVVolumeLevelTestcase(FunTestCase):
                                                        str(key))
             command_result = self.storage_controller.peek(prop_tree, command_duration=5)
             fun_test.log(command_result["data"])
+            if command_result["data"]:
+                final_value = command_result["data"]
             if key == "accumulated_out_bytes":
-                if command_result["data"] and (command_result["data"] - self.expected_compressed_bytes < 200):
+                if final_value - self.expected_compressed_bytes < 200:
                     fun_test.add_checkpoint("zip RATIO: " + str(key) + " :0.005 x input: " + str(len(self.fio_bs_iodepth))
                                             + "x " +
                                             self.fio_cmd_args["size"].format(self),
                                             "PASSED",
                                             self.expected_compressed_bytes,
-                                            command_result["data"])
+                                            final_value)
                 else:
                     fun_test.add_checkpoint("zip ratio " + str(key) + " not 0.005 x input " + str(len(self.fio_bs_iodepth)) +
                                             "x " +
                                             self.fio_cmd_args["size"].format(self),
                                             "Failed",
                                             self.expected_compressed_bytes,
-                                            command_result["data"])
+                                            final_value)
                     test_result = False
             elif command_result["data"] - self.my_shared_variables["initial_" + str(key)] == value:
                 fun_test.add_checkpoint("zip stats match: " + str(key).format(self),
@@ -790,7 +791,6 @@ if __name__ == "__main__":
     lsvscript = LSVVolumeLevelScript()
 
     lsvscript.add_test_case(LSVFioSeqWriteSeqRead())
-
     lsvscript.add_test_case(LSVFioRandWriteRandRead())
 
     lsvscript.add_test_case(LSVFioRW())
@@ -799,8 +799,8 @@ if __name__ == "__main__":
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnJVOL())
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnLSV())
     
+    #With Encryption
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWthEnc())
-
     lsvscript.add_test_case(LSVFioRandWriteRandReadWthEnc())
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc())
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc())
