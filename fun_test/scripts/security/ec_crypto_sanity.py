@@ -963,7 +963,7 @@ class ECKey256(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="4.2 EC with 256 bit key and run FIO with different RW pattern(write,read"
+                              summary="4:2 EC with 256 bit key and run FIO with different RW pattern(write,read"
                                       "randwrite,randread), with different block size & depth",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
@@ -985,7 +985,7 @@ class ECKey256RW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="4.2 EC with 256 bit key and run FIO RW pattern with different block size"
+                              summary="4:2 EC with 256 bit key and run FIO RW pattern with different block size"
                                       " & depth",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
@@ -1007,7 +1007,7 @@ class ECKey256RandRW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="4.2 EC with 256 bit key and run FIO RandRW pattern with different block "
+                              summary="4:2 EC with 256 bit key and run FIO RandRW pattern with different block "
                                       "size & depth",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
@@ -1029,7 +1029,7 @@ class ECKey512(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="4.2 EC with 512 bit key and run FIO with different RW pattern(write,read"
+                              summary="4:2 EC with 512 bit key and run FIO with different RW pattern(write,read"
                                       "randwrite,randread), with different block size & depth",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
@@ -1051,7 +1051,7 @@ class ECKey512RW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="4.2 EC with 512 bit key and run FIO RW pattern with different block size"
+                              summary="4:2 EC with 512 bit key and run FIO RW pattern with different block size"
                                       " & depth",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
@@ -1073,7 +1073,7 @@ class ECKey512RandRW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="4.2 EC with 512 bit key and run FIO RandRW pattern with different block "
+                              summary="4:2 EC with 512 bit key and run FIO RandRW pattern with different block "
                                       "size & depth",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
@@ -1095,7 +1095,7 @@ class ECEncCompress(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=7,
-                              summary="4.2 EC with random key & compression and run diff FIO RW pattern(write,"
+                              summary="4:2 EC with random key & compression and run diff FIO RW pattern(write,"
                                       " read,randwrite,randread) with different block size & depth & deadbeef data "
                                       "pattern",
                               steps='''
@@ -1118,7 +1118,7 @@ class ECEncCompressRW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=8,
-                              summary="4.2 EC with random key & compression and run FIO RW pattern set to"
+                              summary="4:2 EC with random key & compression and run FIO RW pattern set to"
                                       " rwmix:30 using different block size & depth & deadbeef data pattern",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
@@ -1140,7 +1140,7 @@ class ECEncCompressRandRW(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=9,
-                              summary="4.2 EC with random key & compression and run FIO RandRW pattern"
+                              summary="4:2 EC with random key & compression and run FIO RandRW pattern"
                                       " with different block size & depth & deadbeef data pattern",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
@@ -1162,7 +1162,7 @@ class ECKey256NoLSV(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=10,
-                              summary="4.2 EC with 256 bit key and run FIO with different RW pattern(write,read"
+                              summary="4:2 EC with 256 bit key and run FIO with different RW pattern(write,read"
                                       "randwrite,randread), with different block size & depth without LSV",
                               steps='''
                               1. Create a EC with encryption using 256 bit key on dut without LSV.
@@ -1184,7 +1184,7 @@ class ECEncDeadBeef(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=11,
-                              summary="4.2 EC with random key and run diff FIO RW pattern(write,read"
+                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read"
                                       "randwrite,randread), with different block size & depth & deadbeef "
                                       "pattern in parallel",
                               steps='''
@@ -1207,7 +1207,7 @@ class ECEncZeroPattern(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=12,
-                              summary="4.2 EC with random key and run diff FIO RW pattern(write,read"
+                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read"
                                       "randwrite,randread), with different block size & depth & 0x000000000 string "
                                       "pattern in parallel",
                               steps='''
@@ -1230,7 +1230,7 @@ class ECEncZeroHPattern(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=13,
-                              summary="4.2 EC with random key and run diff FIO RW pattern(write,read"
+                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read"
                                       "randwrite,randread), with different block size & depth & 0x000000000 hex "
                                       "pattern in parallel",
                               steps='''
