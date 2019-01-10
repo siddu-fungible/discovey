@@ -4,7 +4,6 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.host.storage_controller import StorageController
 from lib.host.linux import *
-import ast
 
 topology_dict = {
     "name": "Basic Storage",
@@ -29,8 +28,8 @@ topology_dict = {
 # Different huid ctlid combination used for S2FULL simulation, we will change this when we know what is supported for
 # FS1600
 
-host_dict = {'1':{'huid':0,'ctlid':0}, '2':{'huid':1,'ctlid':0}, '3':{'huid':1,'ctlid':1}, '4':{'huid':2,'ctlid':0},
-             '5': {'huid': 2, 'ctlid': 1}, '6':{'huid':2,'ctlid':2}}
+host_dict = {1:{'huid':0,'ctlid':0}, 2:{'huid':1,'ctlid':0}, 3:{'huid':1,'ctlid':1}, 4:{'huid':2,'ctlid':0},
+             5: {'huid': 2, 'ctlid': 1}, 6:{'huid':2,'ctlid':2}}
 
 
 class NvmeSanityScript(FunTestScript):
@@ -86,6 +85,7 @@ class NvmeSanityTestCase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         self.funos_running = True
         install_status = self.host.install_package("fio")
+        fun_test.test_assert(install_status, "fio installed successfully")
         self.blt_create_count = 0
         self.blt_attach_count = 0
         self.blt_detach_count = 0
@@ -115,15 +115,13 @@ class NvmeSanityTestCase(FunTestCase):
                                      format(i, self.namespace_params["capacity"]))
         # Creating host_list having huid & ctlid
         self.num_host += 1
-        host_list = []
+        self.host_list = []
         for i in range(1, self.num_host, 1):
-            host_list.append(i)
+            self.host_list.append(i)
 
-        self.host_list1 = str(map(str, host_list)).strip("")
-        self.host_list1 = ast.literal_eval(self.host_list1)
         # We are initializing the uuid index as same uuid shouldn't be attached to 2 hosts.
         cur_uuid = 1
-        for key in self.host_list1:
+        for key in self.host_list:
             self.val = host_dict[key]
             for i in range(1, self.num_namespace + 1, 1):
                 command_result = {}
@@ -155,6 +153,11 @@ class NvmeSanityTestCase(FunTestCase):
         initial_volume_stats = {}
         # Fetching initial stats
         fio_result = {}
+        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+        for service in udev_services:
+            service_status = self.host.systemctl(service_name=service, action="stop")
+            fun_test.test_assert(service_status, "Stopping {} service".format(service))
+
         for i in range(1, self.total_num_ns + 1, 1):
             command_result = {}
             initial_volume_stats[i] = {}
@@ -175,7 +178,7 @@ class NvmeSanityTestCase(FunTestCase):
         final_volume_stats = {}
         diff_volume_stats = {}
         cur_uuid = 1
-        for key in self.host_list1:
+        for key in self.host_list:
             self.val = host_dict[key]
             if self.val['huid'] == 0 and self.val['ctlid'] == 0:
                 for i in range(1, self.num_namespace + 1, 1):
@@ -223,11 +226,12 @@ class NvmeSanityTestCase(FunTestCase):
                     #                              actual=diff_volume_stats[i]["num_reads"],
                     #                              message="Read counter for nsid{}, uuid:{}"
                     #                              .format(self.nsid, self.thin_uuid[self.uuid_count]))
+                    cur_uuid += 1
 
 
     def cleanup(self):
         cur_uuid = 1
-        for key in self.host_list1:
+        for key in self.host_list:
             self.val = host_dict[key]
             for i in range(1, self.num_namespace + 1, 1):
                 command_result = {}
