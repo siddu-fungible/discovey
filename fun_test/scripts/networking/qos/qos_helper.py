@@ -248,3 +248,25 @@ def reset_pfc_configs(network_controller_obj, dut_port_list, queue_list=[], quan
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def reset_link_pause_configs(network_controller_obj, dut_port_list, quanta=True, threshold=True):
+    result = False
+    default_quanta = 0
+    default_threshold = 0
+    try:
+        for dut_port in dut_port_list:
+            fun_test.simple_assert(network_controller_obj.disable_link_pause(port_num=dut_port),
+                                   message="Disable link pause on port %s" % dut_port)
+            if quanta:
+                fun_test.simple_assert(network_controller_obj.set_link_pause_quanta(port_num=dut_port_list,
+                                                                                    quanta=default_quanta),
+                                       message="Set pause quanta to 0 on port %s" % default_quanta)
+            if threshold:
+                fun_test.simple_assert(network_controller_obj.set_link_pause_threshold(port_num=dut_port_list,
+                                                                                       threshold=default_threshold),
+                                       message="Set pause threshold to 0 on port %s" % default_threshold)
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result

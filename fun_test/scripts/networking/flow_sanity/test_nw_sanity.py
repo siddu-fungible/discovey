@@ -643,7 +643,7 @@ class TransitV6Sweep(TransitSweep):
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
                                                            source=l3_config['source_ip2'],
-                                                           destination=l3_config['destination_ip4'])
+                                                           destination=l3_config['destination_ip2'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
 
@@ -1647,6 +1647,8 @@ class VpPathIpv4HnuNu(TestVpFlows):
 
 if __name__ == "__main__":
     ts = SpirentSetup()
+    ts.add_test_case(TransitV6Sweep())
+    '''
     # Transit NU --> NU Flow
     ts.add_test_case(TransitSweep())
     ts.add_test_case(TransitV6Sweep())
@@ -1669,5 +1671,5 @@ if __name__ == "__main__":
 
     # VP HNU --> NU Flow
     ts.add_test_case(VpPathIpv4HnuNu())
-
+    '''
     ts.run()
