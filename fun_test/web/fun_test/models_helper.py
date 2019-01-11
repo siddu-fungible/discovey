@@ -49,7 +49,8 @@ def inspect(module_name):
     import inspect
     f, filename, description = imp.find_module(os.path.basename(module_name).replace(".py", ""),
                                                [os.path.dirname(module_name)])
-    loaded_module_name = "dynamic_load"
+    flat_base_name = os.path.basename(module_name).replace(".", "_")
+    loaded_module_name = "dynamic_load" + flat_base_name
     imp.load_module(loaded_module_name, f, filename, description)
     members = inspect.getmembers(sys.modules[loaded_module_name], inspect.isclass)
     for m in members:
