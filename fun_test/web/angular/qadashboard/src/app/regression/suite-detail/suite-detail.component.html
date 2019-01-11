@@ -13,6 +13,9 @@
     </div>
 </div>
 
+<div *ngIf="suiteExecution" [innerHTML]="suiteExecution.fields.banner | safeHtml">
+
+</div>
 <div class="card" *ngFor="let scriptInfo of scriptExecutionsMap | keyvalue">
   <div class="card card-primary">
     <div class="card-header"><b>Script: {{ scriptInfo.key }}</b>

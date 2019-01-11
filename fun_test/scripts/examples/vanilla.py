@@ -35,6 +35,8 @@ class FunTestCase1(FunTestCase):
 
     def run(self):
         fun_test.log("Some log: vanilla 2")
+        banner = '<iframe width="420" height="345" src="https://www.youtube.com/embed/KNZSXnrbs_k"></iframe>'
+        fun_test.set_suite_execution_banner(banner=banner)
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
 
 class FunTestCase2(FunTestCase):

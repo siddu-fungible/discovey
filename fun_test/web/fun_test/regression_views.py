@@ -254,12 +254,14 @@ def suite_executions(request, records_per_page=10, page=None, filter_string="ALL
                                              filter_string=filter_string,
                                              tags=tags)
     return json.dumps(all_objects_dict)
+    # return all_objects_dict
 
 @csrf_exempt
 @api_safe_json_response
 def suite_execution(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
-    return json.dumps(all_objects_dict[0]) #TODO: Validate
+    # return json.dumps(all_objects_dict[0]) #TODO: Validate
+    return all_objects_dict[0]
 
 @csrf_exempt
 @api_safe_json_response

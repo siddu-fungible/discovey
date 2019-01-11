@@ -13,7 +13,7 @@ export class SuiteDetailComponent implements OnInit {
   CONSOLE_LOG_EXTENSION: string;
   HTML_LOG_EXTENSION: string;
   executionId: number;
-  suiteExecution: any;
+  suiteExecution: any = null;
   testCaseExecutions: any;
   scriptExecutionsMap: any = {};
   attributes: any;
@@ -47,9 +47,9 @@ export class SuiteDetailComponent implements OnInit {
     this.testCaseExecutions = [];
     this.apiService.get("/regression/suite_execution/" + this.executionId).subscribe(function (result) {
       self.suiteExecution = result.data; // TODO: validate
-      let suiteExecutionJson = JSON.parse(self.suiteExecution);
-      let suiteFields = suiteExecutionJson.fields;
-      let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
+      //let suiteExecutionJson = JSON.parse(self.suiteExecution);
+      let suiteFields = self.suiteExecution.fields;
+      let testCaseExecutionIds = suiteFields.test_case_execution_ids;
 
       for(let testCaseExecutionId of testCaseExecutionIds) {
         self.apiService.get('/regression/test_case_execution/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {
