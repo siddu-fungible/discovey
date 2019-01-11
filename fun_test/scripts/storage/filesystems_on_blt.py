@@ -349,37 +349,9 @@ class XFSOnBLT(FSOnBLTTestcase):
         super(XFSOnBLT, self).cleanup()
 
 
-class NTFSOnBLT(FSOnBLTTestcase):
-    def describe(self):
-        self.set_test_details(id=5,
-                              summary="Building NTFS filesystem on BLT volume and creating file in it of the volume's "
-                                      "capacity size",
-                              steps="""
-        1. Create BLT volume
-        2. Attach BLT volume
-        3. Create NTFS filesystem on the BLT volume and mount it
-        4. Create a file using dd command
-        5. Check that the file is created successfully and find checksum of file 
-        6. Read the same file once again and find its checksum.
-        7. Compare the checksum obtained in previous two steps
-        8. Unmount the BLT volume
-        9. Detach the BLT volume from DUT
-        10. Unconfigure all the BLT volumes
-        """)
-
-    def setup(self):
-        super(NTFSOnBLT, self).setup()
-
-    def run(self):
-        super(NTFSOnBLT, self).run()
-
-    def cleanup(self):
-        super(NTFSOnBLT, self).cleanup()
-
-
 class BTRFSOnBLT(FSOnBLTTestcase):
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=5,
                               summary="Building BTRF filesystem on BLT volume and creating file in it of the volume's "
                                       "capacity size",
                               steps="""
@@ -408,7 +380,7 @@ class BTRFSOnBLT(FSOnBLTTestcase):
 
 class F2FSOnBLT(FSOnBLTTestcase):
     def describe(self):
-        self.set_test_details(id=7,
+        self.set_test_details(id=6,
                               summary="Building F2FS filesystem on BLT volume and creating file in it of the volume's "
                                       "capacity size",
                               steps="""
@@ -435,6 +407,34 @@ class F2FSOnBLT(FSOnBLTTestcase):
         super(F2FSOnBLT, self).cleanup()
 
 
+class NTFSOnBLT(FSOnBLTTestcase):
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Building NTFS filesystem on BLT volume and creating file in it of the volume's "
+                                      "capacity size",
+                              steps="""
+        1. Create BLT volume
+        2. Attach BLT volume
+        3. Create NTFS filesystem on the BLT volume and mount it
+        4. Create a file using dd command
+        5. Check that the file is created successfully and find checksum of file 
+        6. Read the same file once again and find its checksum.
+        7. Compare the checksum obtained in previous two steps
+        8. Unmount the BLT volume
+        9. Detach the BLT volume from DUT
+        10. Unconfigure all the BLT volumes
+        """)
+
+    def setup(self):
+        super(NTFSOnBLT, self).setup()
+
+    def run(self):
+        super(NTFSOnBLT, self).run()
+
+    def cleanup(self):
+        super(NTFSOnBLT, self).cleanup()
+
+
 if __name__ == "__main__":
 
     fsonblt_script = FSOnBLTScript()
@@ -442,7 +442,7 @@ if __name__ == "__main__":
     fsonblt_script.add_test_case(Ext3OnBLT())
     fsonblt_script.add_test_case(Ext4OnBLT())
     fsonblt_script.add_test_case(XFSOnBLT())
-    fsonblt_script.add_test_case(NTFSOnBLT())
     fsonblt_script.add_test_case(BTRFSOnBLT())
     fsonblt_script.add_test_case(F2FSOnBLT())
+    fsonblt_script.add_test_case(NTFSOnBLT())
     fsonblt_script.run()
