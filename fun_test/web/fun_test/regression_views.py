@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS
-from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR
+from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, get_test_case_details
@@ -24,10 +24,12 @@ from web.fun_test.models import TestCaseExecutionSerializer
 import logging
 import dateutil.parser
 import re
-from rest_framework.renderers import JSONRenderer
+from django.apps import apps
+
 
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 def index(request):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
@@ -300,7 +302,11 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
                                                         execution_id=test_case_execution_id)
     test_case_execution_obj.started_time = timezone.localtime(test_case_execution_obj.started_time)
     test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
+
+    lock = app_config.get_site_lock()
+    lock.acquire()
     details = get_test_case_details(script_path=test_case_execution_obj.script_path, test_case_id=test_case_execution_obj.test_case_id)
+    lock.release()
     # test_case_execution_obj.summary = details["summary"]
     # data = serializers.serialize('json', [test_case_execution_obj])
     serializer = TestCaseExecutionSerializer(test_case_execution_obj)

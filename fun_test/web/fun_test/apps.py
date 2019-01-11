@@ -3,7 +3,7 @@ from django.contrib import admin
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
 from apscheduler.schedulers.background import BackgroundScheduler
-
+from threading import Lock
 #from scheduler.scheduler import scheduler
 #from web.fun_test.django_scheduler.django_scheduler import SchedulerMainWorker
 
@@ -59,6 +59,11 @@ class FunTestConfig(AppConfig):
         if not hasattr(self, "jira_manager"):
             self.jira_manager = JiraManager()
         return self.jira_manager
+
+    def get_site_lock(self):
+        if not hasattr(self, "lock"):
+            self.lock = Lock()
+        return self.lock
 
     def get_git_manager(self):
         if not hasattr(self, "git_manager"):
