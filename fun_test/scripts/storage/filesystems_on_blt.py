@@ -239,8 +239,7 @@ class FSOnBLTTestcase(FunTestCase):
 class Ext2OnBLT(FSOnBLTTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Building EXT2 filesystem on BLT volume and creating file in it of the volume's "
-                                      "capacity size",
+                              summary="Building EXT2 filesystem on BLT volume and creating file in it",
                               steps="""
         1. Create BLT volume
         2. Attach BLT volume
@@ -267,8 +266,7 @@ class Ext2OnBLT(FSOnBLTTestcase):
 class Ext3OnBLT(FSOnBLTTestcase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Building EXT3 filesystem on BLT volume and creating file in it of the volume's "
-                                      "capacity size",
+                              summary="Building EXT3 filesystem on BLT volume and creating file in it",
                               steps="""
           1. Create BLT volume
           2. Attach BLT volume
@@ -295,8 +293,7 @@ class Ext3OnBLT(FSOnBLTTestcase):
 class Ext4OnBLT(FSOnBLTTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Building EXT4 filesystem on BLT volume and creating file in it of the volume's "
-                                      "capacity size",
+                              summary="Building EXT4 filesystem on BLT volume and creating file in it",
                               steps="""
           1. Create BLT volume
           2. Attach BLT volume
@@ -323,8 +320,7 @@ class Ext4OnBLT(FSOnBLTTestcase):
 class XFSOnBLT(FSOnBLTTestcase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Building XFS filesystem on BLT volume and creating file in it of the volume's "
-                                      "capacity size",
+                              summary="Building XFS filesystem on BLT volume and creating file in it",
                               steps="""
           1. Create BLT volume
           2. Attach BLT volume
@@ -352,8 +348,7 @@ class XFSOnBLT(FSOnBLTTestcase):
 class BTRFSOnBLT(FSOnBLTTestcase):
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Building BTRFS filesystem on BLT volume and creating file in it of the volume's "
-                                      "capacity size",
+                              summary="Building BTRFS filesystem on BLT volume and creating file in it",
                               steps="""
           1. Create BLT volume
           2. Attach BLT volume
@@ -381,8 +376,7 @@ class BTRFSOnBLT(FSOnBLTTestcase):
 class F2FSOnBLT(FSOnBLTTestcase):
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Building F2FS filesystem on BLT volume and creating file in it of the volume's "
-                                      "capacity size",
+                              summary="Building F2FS filesystem on BLT volume and creating file in it",
                               steps="""
           1. Create BLT volume
           2. Attach BLT volume
@@ -410,8 +404,7 @@ class F2FSOnBLT(FSOnBLTTestcase):
 class NTFSOnBLT(FSOnBLTTestcase):
     def describe(self):
         self.set_test_details(id=7,
-                              summary="Building NTFS filesystem on BLT volume and creating file in it of the volume's "
-                                      "capacity size",
+                              summary="Building NTFS filesystem on BLT volume and creating file in it",
                               steps="""
         1. Create BLT volume
         2. Attach BLT volume
