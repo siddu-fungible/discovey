@@ -275,11 +275,13 @@ class SuiteWorker(Thread):
                           to_addresses=to_addresses,
                           email_on_fail_only=email_on_fail_only,
                           extra_message=self.summary_extra_message)
-        remove_scheduled_job(self.job_id)
+
         del job_id_threads[self.job_id]
         if self.job_spec["scheduling_type"] == SchedulingType.PERIODIC:
+            remove_scheduled_job(self.job_id)
             queue_job2(job_spec=self.job_spec)
         if self.job_spec["scheduling_type"] == SchedulingType.TODAY or self.job_spec["scheduling_type"] == SchedulingType.REPEAT:
+            remove_scheduled_job(self.job_id)
             if "repeat_in_minutes" in self.job_spec:
                 new_spec = dict(self.job_spec)
                 new_spec["scheduling_type"] = SchedulingType.REPEAT
