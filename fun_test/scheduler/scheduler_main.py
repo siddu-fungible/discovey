@@ -61,11 +61,13 @@ class SuiteWorker(Thread):
         if self.current_script_process:
             try:
                 os.kill(self.current_script_process.pid, signal.SIGINT)
+                self.current_script_process.terminate()
                 time.sleep(5)
             except Exception as ex:
                 scheduler_logger.error(str(ex))
             if psutil.pid_exists(self.current_script_process.pid):
                 try:
+                    self.current_script_process.kill()
                     os.kill(self.current_script_process.pid, signal.SIGKILL)
                 except Exception as ex:
                     scheduler_logger.error(str(ex))
@@ -437,9 +439,11 @@ def remove_pid():
 
 
 def graceful_shutdown(max_wait_time=ONE_HOUR):
+    print "Trying graceful shutdown"
     run_to_completion(max_wait_time=max_wait_time)
     remove_pid()
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_STOPPED)
+    print "Exiting graceful shutdown"
 
 
 def revive_scheduled_jobs(job_ids=None):
@@ -468,11 +472,15 @@ if __name__ == "__main__":
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
 
     revive_scheduled_jobs()
-    while True:
+    run = True
+    while run:
+        time.sleep(1)
         scheduler_info = get_scheduler_info()
         if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPED:
             scheduler_logger.info("Scheduler Bye bye!")
-            sys.exit(0)
+            run = False
+            os.kill(os.getpid(), 9)
+            break
 
         process_killed_jobs()
         try:
