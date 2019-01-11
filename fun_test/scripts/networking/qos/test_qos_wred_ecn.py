@@ -423,6 +423,9 @@ class ECN_10(Wred_Q0):
 
             fun_test.sleep("Executing traffic", seconds=self.timer)
 
+            fun_test.log("Get psw nu stats before capturing ecn counts")
+            network_controller_obj.peek_psw_global_stats(hnu=hnu)
+
             fun_test.log("Taking 5 observations of q_depth and wred_drops for fps %s" % current_pps)
             # Take 5 observations of q_depth and wred_drops and do average
             observed_dict = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj, iterations=3,
@@ -430,6 +433,9 @@ class ECN_10(Wred_Q0):
                                                            queue_num=self.test_queue)
             fun_test.simple_assert(observed_dict['result'], "Get 5 observations")
             fun_test.log("5 observations captured for pps %s" % current_pps)
+
+            fun_test.log("Get psw nu stats after capturing ecn counter stats")
+            network_controller_obj.peek_psw_global_stats(hnu=hnu)
 
             # Check stats increase
             for stats in self.stats_list:
