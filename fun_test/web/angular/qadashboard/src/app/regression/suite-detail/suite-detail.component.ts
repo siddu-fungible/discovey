@@ -49,7 +49,7 @@ export class SuiteDetailComponent implements OnInit {
       self.suiteExecution = result.data; // TODO: validate
       //let suiteExecutionJson = JSON.parse(self.suiteExecution);
       let suiteFields = self.suiteExecution.fields;
-      let testCaseExecutionIds = suiteFields.test_case_execution_ids;
+      let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
 
       for(let testCaseExecutionId of testCaseExecutionIds) {
         self.apiService.get('/regression/test_case_execution/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {
