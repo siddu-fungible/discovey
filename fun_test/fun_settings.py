@@ -30,6 +30,8 @@ JOBS_DIR = WEB_STATIC_DIR + "/jobs"
 ARCHIVED_JOBS_DIR = JOBS_DIR + "/archived"
 KILLED_JOBS_DIR = JOBS_DIR + "/killed"
 SCRIPTS_DIR = FUN_TEST_DIR + "/scripts"
+SCHEDULED_JOBS_DIR = JOBS_DIR + "/scheduled"
+SCHEDULER_REQUESTS_DIR = JOBS_DIR + "/requests"
 
 TEST_CASE_SPEC_DIR = SCRIPTS_DIR + "/test_case_spec"
 SUITES_DIR = TEST_CASE_SPEC_DIR + "/suites"

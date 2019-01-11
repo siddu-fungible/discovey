@@ -6,9 +6,9 @@ from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
+from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2
 import scheduler.scheduler_helper
-from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
+from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, get_test_case_details
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import CatalogSuiteExecution, Module
@@ -101,6 +101,37 @@ def submit_job(request):
         if "email_on_fail_only" in request_json:
             email_on_fail_only = request_json["email_on_fail_only"]
 
+        scheduling_type = request_json["scheduling_type"]
+        tz = "PST"
+        if "timezone" in request_json:
+            tz = request_json["timezone"]
+        requested_days = []
+        requested_hour = None
+        requested_minute = None
+        repeat_in_minutes = -1
+
+        if "requested_days" in request_json:
+            requested_days = request_json["requested_days"]
+            requested_days = [x.lower() for x in requested_days]
+        if "requested_hour" in request_json:
+            requested_hour = request_json["requested_hour"]
+        if "requested_minute" in request_json:
+            requested_minute = request_json["requested_minute"]
+        if "repeat_in_minutes" in request_json:
+            repeat_in_minutes = request_json["repeat_in_minutes"]
+
+        job_id = queue_job2(suite_path=suite_path,
+                   build_url=build_url,
+                   tags=tags,
+                   email_list=email_list,
+                   email_on_fail_only=email_on_fail_only,
+                   environment=environment,
+                   scheduling_type=scheduling_type,
+                   tz_string=tz,
+                   requested_hour=requested_hour,
+                   requested_minute=requested_minute,
+                   requested_days=requested_days, repeat_in_minutes=repeat_in_minutes)
+        '''
         if "schedule_at" in request_json and request_json["schedule_at"]:
             schedule_at_value = request_json["schedule_at"]
             schedule_at_value = str(timezone.localtime(dateutil.parser.parse(schedule_at_value)))
@@ -134,6 +165,7 @@ def submit_job(request):
                                tags=tags,
                                email_list=email_list,
                                email_on_fail_only=email_on_fail_only, environment=environment)
+        '''
     return job_id
 
 def static_serve_log_directory(request, suite_execution_id):
@@ -165,17 +197,29 @@ def engineers(request):
     result["status"] = True
     return HttpResponse(json.dumps(result))
 
+def parse_suite(suite_file):
+    with open(suite_file, "r") as infile:
+        contents = infile.read()
+        items = json.loads(contents)
+        return items
+
 @csrf_exempt
 @api_safe_json_response
 def suites(request):
+
     suites_info = collections.OrderedDict()
     suite_files = glob.glob(SUITES_DIR + "/*.json")
     for suite_file in suite_files:
         try:
-            with open(suite_file, "r") as infile:
-                contents = infile.read()
-                result = json.loads(contents)
-                suites_info[os.path.basename(suite_file)] = result
+            if suite_file.endswith("container.json"):
+                suites_info[os.path.basename(suite_file)] = []
+                inner_suites = parse_suite(suite_file=suite_file)
+                for inner_suite in inner_suites:
+                    items = parse_suite(suite_file=SUITES_DIR + "/" + inner_suite)
+                    suites_info[os.path.basename(suite_file)].extend(items)
+            else:
+                items = parse_suite(suite_file=suite_file)
+                suites_info[os.path.basename(suite_file)] = items
 
         except Exception as ex:
             pass
@@ -254,9 +298,12 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
                                                         execution_id=test_case_execution_id)
     test_case_execution_obj.started_time = timezone.localtime(test_case_execution_obj.started_time)
     test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
-
-    data = serializers.serialize('json', [test_case_execution_obj])
-    return data
+    details = get_test_case_details(script_path=test_case_execution_obj.script_path, test_case_id=test_case_execution_obj.test_case_id)
+    # test_case_execution_obj.summary = details["summary"]
+    # data = serializers.serialize('json', [test_case_execution_obj])
+    serializer = TestCaseExecutionSerializer(test_case_execution_obj)
+    # setattr(serializer.data, "summary", details["summary"])
+    return {"execution_obj": serializer.data, "more_info": {"summary": details["summary"]}}
 
 def get_catalog_test_case_execution_summary_result_multiple_jiras(suite_execution_id, jira_ids):
     summary_result = {}

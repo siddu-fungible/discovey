@@ -35,8 +35,18 @@ if __name__ == "__main__":
 
 
     #queue_job(suite_path=suite_path, build_url=build_url)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
-    queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=0, repeat_in_minutes=60)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
+    # queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=0, repeat_in_minutes=2)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
     #queue_job(suite_path=suite_path, build_url=build_url, schedule_in_minutes=2)# , schedule_in_minutes=schedule_in_minutes, repeat=True)
 
 
     # process_killed_jobs()
+
+    queue_job2(suite_path=suite_path,
+               build_url=build_url,
+               scheduling_type="today",
+               requested_days=["wednesday"],
+               requested_hour=1,
+               requested_minute=16,
+               tz_string="PST",
+               repeat_in_minutes=3,
+               tags=["john"], email_list=["john.abraham@fungible.com"], email_on_fail_only=True, environment=None)

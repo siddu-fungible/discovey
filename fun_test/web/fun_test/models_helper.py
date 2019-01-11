@@ -2,6 +2,7 @@ import os, django, json, datetime
 from datetime import datetime
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_current_time, get_localized_time
+from fun_settings import SCRIPTS_DIR
 from django.utils import timezone
 import dateutil.parser
 from django.db.models import Q
@@ -9,6 +10,7 @@ from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
+
 
 from web.fun_test.models import (
     SuiteExecution,
@@ -24,6 +26,21 @@ SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
                            "ALL": "ALL"}
 
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
+
+
+
+def get_test_case_details(script_path, test_case_id):
+    from lib.system.fun_test import fun_test
+    result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+    summary = "unknown"
+    if result:
+        if "classes" in result:
+            for c in result["classes"]:
+                if c["id"] == test_case_id:
+                    summary = c["summary"]
+    return {"summary": summary}
+    i = 0
+
 
 def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None):
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
@@ -67,6 +84,14 @@ def add_suite_execution(submitted_time,
     s.save()
     return s
 
+def set_suite_execution_banner(suite_execution_id, banner):
+    suite_execution = get_suite_execution(suite_execution_id)
+    suite_execution.banner = banner
+    suite_execution.save()
+
+def get_suite_execution_banner(suite_execution_id, banner):
+    suite_execution = get_suite_execution(suite_execution_id)
+    return suite_execution.banner
 
 def get_suite_execution(suite_execution_id):
     result = None
@@ -99,13 +124,14 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
         raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
     return result
 
-def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULTS["NOT_RUN"]):
+def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULTS["NOT_RUN"], log_prefix=""):
     te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
                            test_case_id=test_case_id,
                            suite_execution_id=suite_execution_id,
                            result=result,
                            started_time=get_current_time(),  # timezone.now(), #get_current_time(),
-                            script_path=path)
+                           script_path=path,
+                           log_prefix=log_prefix)
     te.save()
     add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                test_case_execution_id=te.execution_id)

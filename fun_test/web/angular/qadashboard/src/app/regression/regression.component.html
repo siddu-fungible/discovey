@@ -74,14 +74,14 @@
           </td>
           <td>
             <button data-placement="top" data-toggle="tooltip" title="Re-run"
-                    (click)="rerunClick(suiteExecution.fields.execution_id)" class="btn btn-outline-warning btn-sm">
-              <i class="fa fa-refresh"></i></button>
+                    (click)="rerunClick(suiteExecution.fields.execution_id)" class="btn btn-outline-warning btn-sm btn-link">
+              Re-run</button>
             &nbsp;
             <button
               [hidden]="(suiteExecution.suite_result === 'KILLED') || ((suiteExecution.suite_result === 'PASSED') || (suiteExecution.suite_result === 'FAILED'))"
               data-placement="top" data-toggle="tooltip" title="Stop/Kill"
               (click)="killClick(suiteExecution.fields.execution_id)" class="btn btn-sm
-                                btn-outline-danger"><i class="fa fa-ban"></i></button>
+                                btn-outline-danger btn-link">Kill</button>
           </td>
           <td>
             <label *ngFor="let tag of getTagList(suiteExecution.fields.tags)" class="badge badge-primary">{{ tag

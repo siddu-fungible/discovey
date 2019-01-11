@@ -15,6 +15,8 @@ from rest_framework import serializers
 from datetime import datetime, timedelta
 from scheduler.scheduler_states import SchedulerStates
 import json
+from rest_framework.serializers import ModelSerializer
+
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -85,6 +87,7 @@ class SuiteExecution(models.Model):
     version = models.CharField(max_length=50, default="UNKNOWN")
     catalog_reference = models.TextField(null=True, blank=True, default=None)
     finalized = models.BooleanField(default=False)
+    banner = models.TextField(default="")
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
@@ -117,6 +120,7 @@ class TestCaseExecution(models.Model):
     overridden_result = models.BooleanField(default=False)
     bugs = models.TextField(default="[]")
     comments = models.TextField(default="")
+    log_prefix = models.TextField(default="")
 
     def __str__(self):
         s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,
@@ -126,17 +130,12 @@ class TestCaseExecution(models.Model):
                                                    self.script_path)
         return s
 
-class TestCaseExecutionSerializer(serializers.Serializer):
-    script_path = serializers.CharField(max_length=128)
-    execution_id = serializers.IntegerField()
-    test_case_id = serializers.IntegerField()
-    suite_execution_id = serializers.IntegerField()
+class TestCaseExecutionSerializer(ModelSerializer):
     started_time = serializers.DateTimeField()
-    result = serializers.CharField(max_length=20)
-
+    end_time = models.DateTimeField()
     class Meta:
         model = TestCaseExecution
-        fields = ('script_path', 'execution_id', 'test_case_id', 'suite_execution_id', 'started_time', 'result')
+        fields = "__all__"
 
 class Tag(models.Model):
     tag = models.CharField(max_length=TAG_LENGTH)

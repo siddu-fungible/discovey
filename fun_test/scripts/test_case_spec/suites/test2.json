@@ -1,5 +1,5 @@
 [
-  {"path": "examples/sanity.py", "abort_suite_on_failure": true},
-  {"path": "scratch/clean_sanity.py"}
+  {"path": "scratch/sanity.py"},
+  {"path": "examples/vanilla.py"}
 
 ]
