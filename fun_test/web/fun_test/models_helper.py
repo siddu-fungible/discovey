@@ -31,8 +31,6 @@ pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
 
 def get_test_case_details(script_path, test_case_id):
-    lock = Lock()
-    lock.acquire()
     from lib.system.fun_test import fun_test
     print "Script Path", script_path
     result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
@@ -44,9 +42,7 @@ def get_test_case_details(script_path, test_case_id):
                     summary = c["summary"]
                     print "Summary", summary
     this_summary = summary
-    lock.release()
     return {"summary": this_summary}
-    i = 0
 
 
 def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None):
