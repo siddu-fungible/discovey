@@ -8,6 +8,7 @@ import dateutil.parser
 from django.db.models import Q
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
+from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
@@ -30,7 +31,10 @@ pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
 
 def get_test_case_details(script_path, test_case_id):
+    lock = Lock()
+    lock.acquire()
     from lib.system.fun_test import fun_test
+    print "Script Path", script_path
     result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
     summary = "unknown"
     if result:
@@ -38,7 +42,10 @@ def get_test_case_details(script_path, test_case_id):
             for c in result["classes"]:
                 if c["id"] == test_case_id:
                     summary = c["summary"]
-    return {"summary": summary}
+                    print "Summary", summary
+    this_summary = summary
+    lock.release()
+    return {"summary": this_summary}
     i = 0
 
 
