@@ -112,6 +112,9 @@ export class PerformanceComponent implements OnInit {
   toolTipMessage: string = null;
   @ViewChild('copyUrlTooltip') copyUrlTooltip;
   chartReady: boolean = false;
+  lastScore: number;
+  penultimateScore: number;
+  deviation: any;
 
 
   constructor(
@@ -240,6 +243,14 @@ export class PerformanceComponent implements OnInit {
     let node = this.nodeMap.get(id);
     return node;
   };
+
+  calculateScores(node): void {
+    let [lastScore, penultimateScore] = node.last_two_scores;
+    this.lastScore = lastScore.toFixed(1);
+    this.penultimateScore = penultimateScore.toFixed(1);
+    let deviation = ((lastScore - penultimateScore)/(Math.min(lastScore, penultimateScore))) * 100;
+    this.deviation = deviation.toFixed(1);
+  }
 
   evaluateScores = (node) => {
     let [lastScore, penultimateScore] = node.last_two_scores;

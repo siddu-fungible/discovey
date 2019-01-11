@@ -1413,13 +1413,12 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
         current_file_name = None
         final_file_name = None
         try:
-            fun_test.test_assert(self.validate_job(validation_required=False), "validating job")
+            fun_test.test_assert(self.validate_job(), "validating job")
             teramark_begin = False
 
             for line in self.lines:
                 compression_ratio_found = False
                 if "Compression-ratio to 1" in line:
-                    line = line + "}"
                     compression_ratio_found = True
                 m = re.search(r'JPEG Compression/Decompression performance stats (?P<current_file_name>\S+?)(?=#)', line)
                 if m:
