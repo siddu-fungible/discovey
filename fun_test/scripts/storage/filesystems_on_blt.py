@@ -352,7 +352,7 @@ class XFSOnBLT(FSOnBLTTestcase):
 class BTRFSOnBLT(FSOnBLTTestcase):
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Building BTRF filesystem on BLT volume and creating file in it of the volume's "
+                              summary="Building BTRFS filesystem on BLT volume and creating file in it of the volume's "
                                       "capacity size",
                               steps="""
           1. Create BLT volume
