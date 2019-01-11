@@ -103,7 +103,9 @@ def submit_job(request):
         if "email_on_fail_only" in request_json:
             email_on_fail_only = request_json["email_on_fail_only"]
 
-        scheduling_type = request_json["scheduling_type"]
+        scheduling_type = "asap"
+        if "scheduling_type" in request_json:
+            scheduling_type = request_json["scheduling_type"]
         tz = "PST"
         if "timezone" in request_json:
             tz = request_json["timezone"]
