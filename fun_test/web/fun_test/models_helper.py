@@ -82,7 +82,7 @@ def inspect(module_name):
 
 def get_test_case_details(script_path, test_case_id):
     from lib.system.fun_test import fun_test
-    print "Script Path", script_path
+    # print "Script Path", script_path
     # result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
     result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
 
@@ -92,7 +92,7 @@ def get_test_case_details(script_path, test_case_id):
             for c in result["classes"]:
                 if c["id"] == test_case_id:
                     summary = c["summary"]
-                    print "Summary", summary
+                    # print "Summary", summary
     this_summary = summary
     return {"summary": this_summary}
 
