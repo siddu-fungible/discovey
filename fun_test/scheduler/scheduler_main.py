@@ -473,7 +473,7 @@ if __name__ == "__main__":
         if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPED:
             scheduler_logger.info("Scheduler Bye bye!")
             sys.exit(0)
-            
+
         process_killed_jobs()
         try:
             scheduler_info = get_scheduler_info()

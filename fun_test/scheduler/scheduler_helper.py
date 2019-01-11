@@ -129,8 +129,9 @@ def get_periodic_scheduling_time_in_seconds(days, requested_hour, requested_minu
             # Let's derive the time
             derived_time = now.replace(hour=requested_hour, minute=requested_minute)
             extra_seconds = (derived_time - now).total_seconds()
-            # print "Extra seconds", extra_seconds
-            break
+            if extra_seconds >= 0:
+                break
+
 
         if requested_day > current_day_of_week:
             # process something
@@ -139,8 +140,8 @@ def get_periodic_scheduling_time_in_seconds(days, requested_hour, requested_minu
             derived_time = derived_time + timedelta(number_of_days_between)
 
             extra_seconds = (derived_time - now).total_seconds()
-            # print "Extra seconds", extra_seconds
-            break
+            if extra_seconds >= 0:
+                break
 
     requested_day = requested_days[0]
     if extra_seconds < 0:
