@@ -472,12 +472,13 @@ if __name__ == "__main__":
         scheduler_info = get_scheduler_info()
         if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPED:
             scheduler_logger.info("Scheduler Bye bye!")
-            break
+            sys.exit(0)
+            
         process_killed_jobs()
         try:
             scheduler_info = get_scheduler_info()
             request = process_external_requests()
-            if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) or \
+            if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \
                     (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPED):
                 process_queue()
             if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPING:
