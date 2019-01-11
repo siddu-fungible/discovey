@@ -1335,13 +1335,13 @@ class TestVpFlows(FunTestCase):
             stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE]
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG or \
                     flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-                stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_NU_OUT_ETP, VP_FAE_REQUESTS_SENT,
+                stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_OUT_NU_ETP, VP_FAE_REQUESTS_SENT,
                               VP_FAE_RESPONSES_RECEIVED]
                 diff_stats_vppkts = get_diff_stats(old_stats=vp_pkts_stats_1, new_stats=vp_pkts_stats_2,
                                                    stats_list=stats_list)
 
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
-                                              actual=int(diff_stats_vppkts[VP_PACKETS_NU_OUT_ETP]),
+                                              actual=int(diff_stats_vppkts[VP_PACKETS_OUT_NU_ETP]),
                                               message="Ensure VP stats has correct etp out packets")
 
                 fun_test.test_assert_expected(expected=int(diff_stats_vppkts[VP_FAE_REQUESTS_SENT]),
@@ -1647,8 +1647,6 @@ class VpPathIpv4HnuNu(TestVpFlows):
 
 if __name__ == "__main__":
     ts = SpirentSetup()
-    ts.add_test_case(TransitV6Sweep())
-    '''
     # Transit NU --> NU Flow
     ts.add_test_case(TransitSweep())
     ts.add_test_case(TransitV6Sweep())
@@ -1671,5 +1669,4 @@ if __name__ == "__main__":
 
     # VP HNU --> NU Flow
     ts.add_test_case(VpPathIpv4HnuNu())
-    '''
     ts.run()
