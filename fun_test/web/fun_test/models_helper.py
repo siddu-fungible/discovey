@@ -82,7 +82,9 @@ def inspect(module_name):
 def get_test_case_details(script_path, test_case_id):
     from lib.system.fun_test import fun_test
     print "Script Path", script_path
-    result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+    # result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+    result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+
     summary = "unknown"
     if result:
         if "classes" in result:
