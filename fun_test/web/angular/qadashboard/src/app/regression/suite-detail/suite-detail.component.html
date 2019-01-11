@@ -24,14 +24,14 @@
       <table *ngIf="getKeys(scriptInfo.value).length > 0" class="table table-hover table-responsive table-bordered">
                 <thead>
                 <tr>
-                    <th>E Id</th>
-                    <th>T Id</th>
-                    <th>Summary</th>
-                    <th>Result</th>
-                    <th>Scheduled At</th>
-                    <th>HTML</th>
-                    <th>Flat</th>
-                    <th>Action</th>
+                    <th align="center">E Id</th>
+                    <th align="center">T Id</th>
+                    <th align="center">Summary</th>
+                    <th align="center">Result</th>
+                    <th align="center">Scheduled At</th>
+                    <th align="center">HTML</th>
+                    <th align="center">Flat</th>
+                    <th align="center">Action</th>
                 </tr>
                 </thead>
                 <tr *ngFor="let script of scriptInfo.value | keyvalue">
