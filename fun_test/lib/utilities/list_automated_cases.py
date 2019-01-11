@@ -8,7 +8,7 @@ import sys
 all_classses = []
 directories = ["storage", "networking", "security"]
 # directories = ["storage", "security"]
-# directories = ["storage"]
+directories = ["storage"]
 
 file_based_view = {}
 

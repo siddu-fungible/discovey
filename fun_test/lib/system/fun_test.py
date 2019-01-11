@@ -811,8 +811,11 @@ class FunTest:
                 if issubclass(klass, FunTestCase):
                     if len(mros) > 1 and self._is_sub_class(base_class="lib.system.fun_test.FunTestCase", mros=mros):
                         # print klass
-                        o = klass()
-                        o.describe()
+                        try:
+                            o = klass()
+                            o.describe()
+                        except:
+                            pass
                         # print o.id
                         # print o.summary
                         # print o.steps
