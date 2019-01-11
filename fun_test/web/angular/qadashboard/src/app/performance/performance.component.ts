@@ -248,7 +248,7 @@ export class PerformanceComponent implements OnInit {
     let [lastScore, penultimateScore] = node.last_two_scores;
     this.lastScore = lastScore.toFixed(1);
     this.penultimateScore = penultimateScore.toFixed(1);
-    let deviation = ((this.lastScore - this.penultimateScore)/(Math.min(this.lastScore, this.penultimateScore))) * 100;
+    let deviation = ((lastScore - penultimateScore)/(Math.min(lastScore, penultimateScore))) * 100;
     this.deviation = deviation.toFixed(1);
   }
 

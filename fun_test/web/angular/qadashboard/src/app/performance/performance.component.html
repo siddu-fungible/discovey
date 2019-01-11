@@ -83,12 +83,14 @@
                   <git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>
               </ng-template>
               <ng-template #TrendInfo>
-                  <div *ngIf="!flatNode.node.copiedScore" style="color: black">
-                    <b><u>Trend with respect to yesterday</u></b><br>
+                <div>
+                  <b><u>Trend Calculation:</u></b><br>
                     Deviation = ((Current Score - Previous Score)/(min(Current Score, Previous Score))) * 100<br>
                     Tolerance = <span>&#177;</span>3%<br>
-                    Up Trend = Deviation > +3% = Performance Improved<br>
-                    Down Trend = Deviation < -3% = Performance Degraded<br>
+                    Up Trend = Deviation > +3%<br>
+                    Down Trend = Deviation < -3%<br>
+                </div>
+                  <div *ngIf="!flatNode.node.copiedScore" style="color: black">
                     <b><u>Calculation:</u></b><br>
                     Current Score = {{ this.lastScore }}<br>
                     Previous Score = {{ this.penultimateScore }}<br>
@@ -96,11 +98,6 @@
                     Deviation = {{ this.deviation }}%
                   </div>
                 <div *ngIf="flatNode.node.copiedScore" style="color: black">
-                    <b><u>Trend with respect to yesterday</u></b><br>
-                    Deviation = ((Current Score - Previous Score)/(min(Current Score, Previous Score))) * 100<br>
-                    Tolerance = <span>&#177;</span>3%<br>
-                    Up Trend = Deviation > +3% = Performance Improved<br>
-                    Down Trend = Deviation < -3% = Performance Degraded<br>
                     <br>
                     The current score is a copied score from yesterday due to unavailability of data.<br>
                     The trend is copied from existing score's trend.
