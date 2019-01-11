@@ -293,6 +293,7 @@ def process_killed_jobs():
     job_files.sort(key=os.path.getmtime)
 
     for job_file in job_files:
+        suite_execution_status = None
         with open(job_file, "r") as f:
             contents = f.read()
             job_id = int(contents)
@@ -321,11 +322,16 @@ def process_killed_jobs():
                         del job_id_timers[job_id]
                     except:
                         pass
-                suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+            if suite_execution:
+                suite_execution_status = suite_execution.result
                 suite_execution.completed_time = get_current_time()
                 suite_execution.result = RESULTS["KILLED"]
                 suite_execution.save()
-            revive_scheduled_jobs(job_ids=[job_id])
+            if suite_execution_status and suite_execution_status in [RESULTS["ABORTED"], RESULTS["SCHEDULED"], RESULTS["KILLED"]]:
+                continue
+            else:
+                revive_scheduled_jobs(job_ids=[job_id])
         os.remove(job_file)
 
 
