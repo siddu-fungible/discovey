@@ -199,6 +199,8 @@ export class RegressionSummaryComponent implements OnInit {
         let scriptPath = script.script_path;
         let payload = {};
         payload["script_path"] = scriptPath;
+
+
         this.apiService.post("/regression/get_script_history", payload).subscribe((response) => {
           let history = response.data;
 

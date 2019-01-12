@@ -66,6 +66,8 @@ regression_urls = [
     url(r'^scripts$', regression_views.scripts),
     url(r'^unallocated_script$', regression_views.unallocated_script),
     url(r'^script$', regression_views.script),
+    url(r'^get_suite_executions_by_time$', regression_views.get_suite_executions_by_time),
+    url(r'^get_test_case_executions_by_time$', regression_views.get_test_case_executions_by_time),
     url(r'^\w+$', views.angular_home)
 
 ]
