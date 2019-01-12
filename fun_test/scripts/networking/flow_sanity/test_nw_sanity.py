@@ -1340,9 +1340,15 @@ class TestVpFlows(FunTestCase):
                 diff_stats_vppkts = get_diff_stats(old_stats=vp_pkts_stats_1, new_stats=vp_pkts_stats_2,
                                                    stats_list=stats_list)
 
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
-                                              actual=int(diff_stats_vppkts[VP_PACKETS_OUT_NU_ETP]),
-                                              message="Ensure VP stats has correct etp out packets")
+                # fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
+                #                               actual=int(diff_stats_vppkts[VP_PACKETS_OUT_NU_ETP]),
+                #                               message="Ensure VP stats has correct etp out packets")
+                # To avoid noise (stray traffic) change assert to actual >= expected count
+                fun_test.test_assert(int(diff_stats_vppkts[VP_PACKETS_OUT_NU_ETP]) >= int(tx_results_1['FrameCount']),
+                                     message="Validate NU ETP OUT counters in VP stats."
+                                             "Pass criteria: actual count >= expected count"
+                                             "Expected: %s Found: %s" % (tx_results_1['FrameCount'],
+                                                                         diff_stats_vppkts[VP_PACKETS_OUT_NU_ETP]))
 
                 fun_test.test_assert_expected(expected=int(diff_stats_vppkts[VP_FAE_REQUESTS_SENT]),
                                               actual=int(diff_stats_vppkts[VP_FAE_RESPONSES_RECEIVED]),
