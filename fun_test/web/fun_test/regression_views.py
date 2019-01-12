@@ -4,7 +4,7 @@ from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
-from fun_global import RESULTS, get_datetime_from_epoch_time
+from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2
 import scheduler.scheduler_helper
@@ -504,9 +504,13 @@ def get_suite_execution_properties(request):
 @csrf_exempt
 @api_safe_json_response
 def get_all_versions(request):
-    versions = SuiteExecution.objects.values('version', 'execution_id')
-    serializer = SuiteExecutionSerializer(versions, many=True)
-    return serializer.data
+    ses = SuiteExecution.objects.values('version', 'execution_id', 'scheduled_time')
+    result = []
+    for se in ses:
+        scheduled_time_in_epoch = get_epoch_time_from_datetime(se['scheduled_time'])
+        new_entry = {"version": se["version"], "execution_id": se["execution_id"], "scheduled_time": scheduled_time_in_epoch}
+        result.append(new_entry)
+    return result
 
 @csrf_exempt
 @api_safe_json_response

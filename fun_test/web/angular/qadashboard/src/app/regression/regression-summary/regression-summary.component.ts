@@ -11,6 +11,7 @@ import {CommonService} from "../../services/common/common.service";
 export class RegressionSummaryComponent implements OnInit {
   info = {};
   versionSet = new Set(); // The set of all software versions
+  versionMap = {};
   versionList = [];
   suiteExectionVersionMap = {};
   constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
@@ -52,12 +53,20 @@ export class RegressionSummaryComponent implements OnInit {
 
   }
 
+  epochMsToDate(epochTimeInMs) {
+    let d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+    d.setUTCSeconds(epochTimeInMs/ 1000);
+
+    return d.toLocaleString();
+  }
+
   fetchAllVersions() {
     this.apiService.get("/regression/get_all_versions").subscribe((response) => {
       let entries = response.data;
       entries.forEach((entry) => {
         let version = parseInt(entry.version);
         this.versionSet.add(version);
+        this.versionMap[version] = entry;
         this.suiteExectionVersionMap[entry.execution_id] = version;
 
       });

@@ -17,7 +17,7 @@ const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'performance', component: PerformanceComponent },
   { path: 'performance/atomic/:id', component: FunMetricChartComponent},
-  { path: 'regression/summary', component: RegressionAdminComponent},
+  { path: 'regression/summary', component: RegressionSummaryComponent},
   { path: 'regression/admin', component: RegressionAdminComponent },
   { path: 'regression', component: RegressionComponent },
   { path: 'regression/jenkins_jobs', component: RegressionComponent, data: {tags: '["jenkins-hourly", "jenkins-nightly"]'}},
