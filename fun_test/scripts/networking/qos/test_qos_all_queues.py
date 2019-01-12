@@ -36,7 +36,7 @@ class SpirentSetup(FunTestScript):
                 """)
 
     def setup(self):
-        global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
+        global template_obj, port_1, port_2, subscribe_results, network_controller_obj, dut_port_2, \
             dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list
 
         min_frame_length = 64
@@ -55,7 +55,7 @@ class SpirentSetup(FunTestScript):
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_ingress_qos",
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_all_queues_qos",
                                                       spirent_config=spirent_config,
                                                       chassis_type=chassis_type)
         fun_test.test_assert(template_obj, "Create template object")
@@ -386,8 +386,6 @@ class All_Queues_WRED(FunTestCase):
     max_thr = qos_test_json['wred_max_thr']
     wred_weight = qos_test_json['wred_weight']
     wred_enable = qos_test_json['wred_enable']
-    pfc_pps = qos_test_json['pfc_pps']
-    pfc_quanta = qos_test_json['pfc_quanta']
     prob_index = qos_test_json['wred_prob_index']
     prof_num = qos_test_json['wred_prof_num']
     non_wred_load_percent = qos_test_json['non_wred_load_percent']
@@ -415,14 +413,6 @@ class All_Queues_WRED(FunTestCase):
                                                                       scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
                                                                       strict_priority_enable=False, extra_bandwidth=0)
             fun_test.test_assert(disable, "Disbale sp and eb on queue %s" % queue, ignore_on_success=True)
-
-        fun_test.log("Enable qos pfc")
-        qos_pfc = network_controller_obj.enable_qos_pfc(hnu=hnu)
-        fun_test.simple_assert(qos_pfc, "Enabled qos pfc")
-
-        fun_test.log("Enable pfc on dut port %s" % dut_port_2)
-        dut_port_pfc = network_controller_obj.enable_priority_flow_control(port_num=dut_port_2, shape=shape)
-        fun_test.simple_assert(dut_port_pfc, "Enable pfc on dut port %s" % dut_port_2)
 
         set_avg_q_cfg = network_controller_obj.set_qos_wred_avg_queue_config(avg_en=1, avg_period=self.avg_period,
                                                                              cap_avg_sz=self.cap_avg_sz, q_avg_en=1)
@@ -568,8 +558,6 @@ class All_Queues_ECN(All_Queues_WRED):
     min_thr = qos_test_json['ecn_min_thr']
     max_thr = qos_test_json['ecn_max_thr']
     ecn_enable = qos_test_json['ecn_enable']
-    pfc_pps = qos_test_json['pfc_pps']
-    pfc_quanta = qos_test_json['pfc_quanta']
     prob_index = qos_test_json['ecn_prob_index']
     prof_num = qos_test_json['ecn_prof_num']
     avg_period = qos_test_json['avg_period']
@@ -583,10 +571,9 @@ class All_Queues_ECN(All_Queues_WRED):
                               summary="Test all queues work with ecn compatible bits and set to 11 "
                                       "when congestion occurs",
                               steps="""
-                                    1. Assign ecn profile id to all queues
-                                    2. Create pfc stream on port 2
-                                    3. Start traffic for all queues together
-                                    4. Verify that each queue has some frames sent out with ecn bits 11
+                                    1. Assign ecn profile id to all queue
+                                    2. Start traffic for all queues together
+                                    3. Verify that each queue has some frames sent out with ecn bits 11
                                     """)
 
     def run(self):
