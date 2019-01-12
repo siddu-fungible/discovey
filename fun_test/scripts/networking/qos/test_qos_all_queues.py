@@ -567,7 +567,7 @@ class All_Queues_ECN(All_Queues_WRED):
     current_ecn_bits = ECN_BITS_10
 
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=5,
                               summary="Test all queues work with ecn compatible bits and set to 11 "
                                       "when congestion occurs",
                               steps="""
