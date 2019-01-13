@@ -69,6 +69,10 @@ class QemuStorageTemplate(object):
         return self.host.dd(input_file, output_file, block_size, count, timeout=60, **kwargs)
 
     @fun_test.safe
+    def create_compressible_file(self, output_file, size, compression_pct, timeout=60, **kwargs):
+        return self.host.create_compressible_file(output_file, size, compression_pct, timeout=60, **kwargs)
+
+    @fun_test.safe
     def md5sum(self, file_name):
         return self.host.md5sum(file_name)
 
