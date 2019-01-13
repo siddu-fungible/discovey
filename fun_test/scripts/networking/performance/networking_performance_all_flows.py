@@ -472,7 +472,8 @@ class TestNuHnuFlowPerf(FunTestCase):
                 rx_subscribe_handle=rx_subscribe_handle,
                 stream_objects=[stream_obj], expected_performance_data=self.expected_perf_data,
                 tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=self.flow_direction,
-                tx_port=self.spirent_tx_port, rx_port=self.spirent_rx_port, spray_enabled=self.spray_enable)
+                dut_stats_success=dut_stats_success, tx_port=self.spirent_tx_port, rx_port=self.spirent_rx_port,
+                spray_enabled=self.spray_enable)
             fun_test.simple_assert(expression=jitter_result, message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[self.spirent_rx_port]
