@@ -19,8 +19,8 @@
     },
     "FCP_HNU_HNU": {
       "spray_ip_count": 1,
-      "spray_enable": {"64": 220, "1000": 130},
-      "spray_disable": {"64": 140, "1000": 110}
+      "spray_enable": {"64": 220, "1500": 130},
+      "spray_disable": {"64": 140, "1500": 110}
     },
     "HNU_HNU": {
       "spray_ip_count": 13,
