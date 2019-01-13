@@ -617,14 +617,14 @@ if __name__ == "__main__":
 
     ts.add_test_case(TestNuHnuFlowPerf())
     ts.add_test_case(TestHnuNuFlowPerf())
-    ts.add_test_case(TestHnuHnuFCPFlowPerf())
+    # ts.add_test_case(TestHnuHnuFCPFlowPerf())
     ts.add_test_case(TestHnuHnuFlowPerf())
     ts.add_test_case(TestTransitPerf())
 
     # All FLows With Spray
     ts.add_test_case(TestNuHnuFlowPerfWithSpray())
     ts.add_test_case(TestHnuNuFlowPerfWithSpray())
-    ts.add_test_case(TestHnuHnuFCPFlowPerfWithSpray())
+    # ts.add_test_case(TestHnuHnuFCPFlowPerfWithSpray())
     ts.add_test_case(TestHnuHnuFlowPerfWithSpray())
 
     ts.run()
