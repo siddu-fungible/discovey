@@ -580,7 +580,7 @@ class TestTransitPerf(TestNuHnuFlowPerf):
 
 class TestNuHnuFlowPerfWithSpray(TestNuHnuFlowPerf):
     tc_id = 6
-    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
+    flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
     streams = []
