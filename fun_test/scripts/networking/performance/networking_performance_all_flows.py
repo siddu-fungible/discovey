@@ -536,7 +536,7 @@ class TestNuHnuFlowPerf(FunTestCase):
                                                                             self.spirent_rx_port])
 
         fun_test.add_checkpoint("Populate performance stats in JSON")
-        if self.spray_enable:
+        if self.spray_enable or self.flow_direction == NuConfigManager.FLOW_DIRECTION_NU_NU:
             if self.perf_results:
                 mode = self.dut_config['interface_mode']
                 output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
