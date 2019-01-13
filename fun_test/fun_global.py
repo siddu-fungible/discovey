@@ -38,13 +38,15 @@ def get_localized_time(datetime_obj):
 epoch_obj = get_localized_time(datetime.datetime(1970, 1, 1, 0, 0, 0))  # Moving it here for efficiency
 
 def get_epoch_time_from_datetime(datetime_obj):
-    date_obj = get_localized_time(datetime_obj)
+    date_obj = datetime_obj
+    if datetime_obj.tzinfo is None:
+        date_obj = get_localized_time(datetime_obj)
     epoch_seconds = date_obj - epoch_obj
     epoch = (epoch_seconds.microseconds + (epoch_seconds.seconds + epoch_seconds.days * NUM_SECONDS_IN_DAY) * MICROSECONDS) / 1000
     return epoch
 
-def get_datetime_from_epoch_time(epoch):
-    date_time = datetime.datetime.utcfromtimestamp(epoch / 1000.0)
+def get_datetime_from_epoch_time(epoch_in_milliseconds):
+    date_time = datetime.datetime.utcfromtimestamp(epoch_in_milliseconds / 1000.0)
     return date_time
 
 def is_regression_server():
