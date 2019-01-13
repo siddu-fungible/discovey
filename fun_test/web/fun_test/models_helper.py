@@ -87,12 +87,15 @@ def get_test_case_details(script_path, test_case_id):
     result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
 
     summary = "unknown"
-    if result:
-        if "classes" in result:
-            for c in result["classes"]:
-                if c["id"] == test_case_id:
-                    summary = c["summary"]
-                    # print "Summary", summary
+    try:
+        if result:
+            if "classes" in result:
+                for c in result["classes"]:
+                    if c["id"] == test_case_id:
+                        summary = c["summary"]
+                        # print "Summary", summary
+    except Exception as ex:
+        print "Error: {}".format(str(ex))
     this_summary = summary
     return {"summary": this_summary}
 
