@@ -264,9 +264,8 @@ class QemuStorageTemplate(object):
         return result
 
     @fun_test.safe
-    def create_compressible_file(self, output_file, size, compression_pct, timeout=60, **kwargs):
+    def create_compressible_file(self, output_file, size, compression_pct, block_size=4096, timeout=60, **kwargs):
         result = 0
-        block_size = 4096
         total_count = int(math.floor(float(size / block_size)))
         remaining_bytes = size - (total_count * block_size)
         compressible_count = int(math.ceil(total_count * float((compression_pct / 100))))
