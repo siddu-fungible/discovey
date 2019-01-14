@@ -1169,12 +1169,12 @@ class FunTestScript(object):
 class FunTestCase:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, abort_on_failure=False):
+    def __init__(self, **kwargs):
         self.id = None
         self.summary = None
         self.steps = None
         self._added_to_script = None
-        self.abort_on_failure = abort_on_failure
+        self.abort_on_failure = kwargs.get("abort_on_failure", False)
 
     def __str__(self):
         s = "{}: {}".format(self.id, self.summary)
