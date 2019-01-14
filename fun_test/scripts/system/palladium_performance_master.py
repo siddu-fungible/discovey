@@ -28,7 +28,11 @@ FLOW_TEST_TAG = "qa_storage2_endpoint"
 TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
-
+jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
+                   "Decompression throughput": "JPEG Decompress",
+                   "Accelerator Compression throughput": "Compression Accelerator throughput",
+                   "Accelerator Decompression throughput": "Decompression Accelerator throughput",
+                   "JPEG Compression": "JPEG Compression"}
 
 def get_rounded_time():
     dt = get_current_time()
@@ -1447,8 +1451,10 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                         try:
                             metrics = {}
                             if not compression_ratio_found:
-
-                                metrics["input_operation"] = d["Operation"]
+                                if d["Operation"] in jpeg_operations:
+                                    metrics["input_operation"] = jpeg_operations[d["Operation"]]
+                                else:
+                                    metrics["input_operation"] = d["Operation"]
                                 metrics["input_count"] = d['Stats']['_count']
                                 metrics["input_image"] = final_file_name
                                 metrics["output_iops"] = d['Stats']['_iops']
@@ -1458,7 +1464,10 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                                 metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_kbps']
                                 metrics["output_total_bandwidth"] = d['Stats']['_total_bw_kbps']
                             else:
-                                metrics["input_operation"] = d["Operation"]
+                                if d["Operation"] in jpeg_operations:
+                                    metrics["input_operation"] = jpeg_operations[d["Operation"]]
+                                else:
+                                    metrics["input_operation"] = d["Operation"]
                                 metrics["input_image"] = final_file_name
                                 metrics["output_compression_ratio"] = d['Stats']["Compression-ratio to 1"]
                                 metrics["output_percentage_savings"] = d['Stats']["PercentageSpaceSaving"]
