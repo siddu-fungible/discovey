@@ -1,0 +1,28 @@
+::ng-deep .accordion > .card > .card-header {
+  padding: unset;
+  background-color: white;
+}
+
+.failed {
+  color: red;
+  font-weight: bold;
+}
+
+.passed {
+  color: green;
+}
+.blue-header {
+  background-color: #337ab7;
+  color: white;
+  text-align: center !important;
+}
+.grey-row {
+  background-color: lightgrey;
+  text-align: center;
+}
+.fixed-layout {
+  table-layout: fixed;
+}
+.middle-align {
+  vertical-align: middle !important;
+}

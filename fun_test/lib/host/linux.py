@@ -1912,7 +1912,7 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def create_directory(self, dir_name):
+    def create_directory(self, dir_name, sudo=True):
         result = True
         # Check if the directory already exists. If so return True
         dir_status = self.check_file_directory_exists(path=dir_name)
@@ -1920,7 +1920,10 @@ class Linux(object, ToDictMixin):
             return result
 
         mkdir_cmd = "mkdir -p {}".format(dir_name)
-        self.sudo_command(mkdir_cmd)
+        if sudo:
+            self.sudo_command(mkdir_cmd)
+        else:
+            self.command(mkdir_cmd)
 
         dir_status = self.check_file_directory_exists(path=dir_name)
         if not dir_status:

@@ -10,11 +10,12 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-
+'''
 print "my remote Script"
 print json.dumps(os.environ.__dict__, indent=4)
 print "sys.argv: {}".format(sys.argv)
 print "End my remote script"
+'''
 
 LOG_FILE = "fun_test_client.log.html"
 default_to_addresses = ["john.abraham@fungible.com"]

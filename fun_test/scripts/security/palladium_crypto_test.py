@@ -29,7 +29,7 @@ class GeneratedTc(FunTestCase):
 
 if __name__ == "__main__":
     script = PalladiumAppParserScript(tag=TERAMARK_CRYPTO_TAG)
-    script.add_test_case(RetrieveLogLinesCase(tag=TERAMARK_CRYPTO_TAG, abort_on_failure=True))
+    script.add_test_case(RetrieveLogLinesCase(tag=TERAMARK_CRYPTO_TAG))
     for i in xrange(2, TOTAL_NUMBER_OF_TEST_CASES + 2):
         generated_test_case = GeneratedTc()
         generated_test_case.id = i

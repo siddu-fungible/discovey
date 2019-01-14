@@ -472,7 +472,8 @@ class TestNuHnuFlowPerf(FunTestCase):
                 rx_subscribe_handle=rx_subscribe_handle,
                 stream_objects=[stream_obj], expected_performance_data=self.expected_perf_data,
                 tolerance_percent=TOLERANCE_PERCENT, jitter=True, flow_type=self.flow_direction,
-                tx_port=self.spirent_tx_port, rx_port=self.spirent_rx_port, spray_enabled=self.spray_enable)
+                dut_stats_success=dut_stats_success, tx_port=self.spirent_tx_port, rx_port=self.spirent_rx_port,
+                spray_enabled=self.spray_enable)
             fun_test.simple_assert(expression=jitter_result, message=checkpoint)
 
             checkpoint = "Ensure no errors are seen for port %s" % analyzer_port_obj_dict[self.spirent_rx_port]
@@ -536,7 +537,7 @@ class TestNuHnuFlowPerf(FunTestCase):
                                                                             self.spirent_rx_port])
 
         fun_test.add_checkpoint("Populate performance stats in JSON")
-        if self.spray_enable:
+        if self.spray_enable or self.flow_direction == NuConfigManager.FLOW_DIRECTION_NU_NU:
             if self.perf_results:
                 mode = self.dut_config['interface_mode']
                 output_file_path = LOGS_DIR + "/nu_transit_performance_data.json"
@@ -580,7 +581,7 @@ class TestTransitPerf(TestNuHnuFlowPerf):
 
 class TestNuHnuFlowPerfWithSpray(TestNuHnuFlowPerf):
     tc_id = 6
-    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
+    flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
     flow_type = NuConfigManager.VP_FLOW_TYPE
     spray_enable = True
     streams = []
@@ -617,14 +618,14 @@ if __name__ == "__main__":
 
     ts.add_test_case(TestNuHnuFlowPerf())
     ts.add_test_case(TestHnuNuFlowPerf())
-    ts.add_test_case(TestHnuHnuFCPFlowPerf())
+    # ts.add_test_case(TestHnuHnuFCPFlowPerf())
     ts.add_test_case(TestHnuHnuFlowPerf())
     ts.add_test_case(TestTransitPerf())
 
     # All FLows With Spray
     ts.add_test_case(TestNuHnuFlowPerfWithSpray())
     ts.add_test_case(TestHnuNuFlowPerfWithSpray())
-    ts.add_test_case(TestHnuHnuFCPFlowPerfWithSpray())
+    # ts.add_test_case(TestHnuHnuFCPFlowPerfWithSpray())
     ts.add_test_case(TestHnuHnuFlowPerfWithSpray())
 
     ts.run()
