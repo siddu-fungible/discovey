@@ -4,6 +4,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
 from scripts.networking.nu_config_manager import *
+from itertools import chain
 
 loads_file = "interface_loads.json"
 min_frame_length_ipv4 = 78
@@ -31,7 +32,32 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config
+            dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2
+
+        shape_1 = 0
+        shape_2 = 0
+        hnu_1 = False
+        hnu_2 = False
+        if flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_HNU:
+            shape_1 = 1
+            shape_2 = 1
+            hnu_1 = True
+            hnu_2 = True
+        elif flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            shape_1 = 0
+            shape_2 = 1
+            hnu_1 = False
+            hnu_2 = True
+        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+            shape_1 = 1
+            shape_2 = 0
+            hnu_1 = True
+            hnu_2 = False
+        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
+            shape_1 = 1
+            shape_2 = 0
+            hnu_1 = True
+            hnu_2 = False
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type,
@@ -76,21 +102,30 @@ class SpirentSetup(FunTestScript):
             # Enable qos pfc
             set_pfc = network_controller_obj.enable_qos_pfc()
             fun_test.test_assert(set_pfc, message="Enable qos pfc")
+
+            # Enable qos pfc
+            set_pfc = network_controller_obj.enable_qos_pfc(hnu=True)
+            fun_test.test_assert(set_pfc, message="Enable qos pfc")
+
             buffer = network_controller_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=max_frame_length,
                                                                        fcp_xoff_thr=max_frame_length)
-            fun_test.test_assert(buffer, message="Set non fcp xoff threshold")
+            fun_test.test_assert(buffer, message="Set non fcp xoff threshold on nu")
+
+            buffer = network_controller_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=max_frame_length,
+                                                                       fcp_xoff_thr=max_frame_length, mode='hnu')
+            fun_test.test_assert(buffer, message="Set non fcp xoff thresholdon hnu")
 
             # Set mtu on DUT
-            mtu_1 = network_controller_obj.set_port_mtu(port_num=dut_port_1, mtu_value=mtu)
+            mtu_1 = network_controller_obj.set_port_mtu(port_num=dut_port_1, mtu_value=mtu, shape=shape_1)
             fun_test.test_assert(mtu_1, " Set mtu on DUT port %s" % dut_port_1)
-            mtu_2 = network_controller_obj.set_port_mtu(port_num=dut_port_2, mtu_value=mtu)
+            mtu_2 = network_controller_obj.set_port_mtu(port_num=dut_port_2, mtu_value=mtu, shape=shape_2)
             fun_test.test_assert(mtu_2, " Set mtu on DUT port %s" % dut_port_2)
 
         # Configure Generator
         gen_config_obj = GeneratorConfig()
         gen_config_obj.SchedulingMode = gen_config_obj.SCHEDULING_MODE_RATE_BASED
         gen_config_obj.DurationMode = gen_config_obj.DURATION_MODE_SECONDS
-        gen_config_obj.Duration = sleep_duration_seconds
+        gen_config_obj.Duration = 100
         gen_config_obj.AdvancedInterleaving = True
 
         # Apply generator config on port 1
@@ -156,10 +191,10 @@ class VPPathIPv4TCP(FunTestCase):
     def setup(self):
         # Clear port results on DUT
         if dut_config['enable_dpcsh']:
-            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
@@ -193,11 +228,13 @@ class VPPathIPv4TCP(FunTestCase):
         # Adding Ip address and gateway
         destination = l3_config['hu_destination_ip1']
         if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+            destination = l3_config['destination_ip1']
+        elif flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
+            destination = l3_config['destination_ip1']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
             destination = l3_config['cc_destination_ip1']
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
@@ -219,15 +256,26 @@ class VPPathIPv4TCP(FunTestCase):
         fun_test.add_checkpoint("Adding l4 header")
         self.l4_setup()
 
+        is_trafffic_from_hnu = False
+        if hnu_1:
+            is_trafffic_from_hnu = True
+
+        psw_stats_nu_1 = None
+        psw_stats_hnu_1 = None
+        psw_stats_nu_2 = None
+        psw_stats_hnu_2 = None
+
         if dut_config['enable_dpcsh']:
             # Get stats before starting traffic
             fun_test.log("Get stats before starting traffic")
             fun_test.sleep("Sleeping to clear bam stats", seconds=5)
             bam_stats_1 = get_bam_stats_values(network_controller_obj=network_controller_obj)
-            parser_stats_1 = network_controller_obj.peek_parser_stats()
+            parser_stats_1 = network_controller_obj.peek_parser_stats(hnu=is_trafffic_from_hnu)
             vp_pkts_stats_1 = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
-            erp_stats_1 = get_erp_stats_values(network_controller_obj=network_controller_obj)
-            psw_stats_1 = network_controller_obj.peek_psw_global_stats()
+            erp_stats_1 = get_erp_stats_values(network_controller_obj=network_controller_obj, hnu=is_trafffic_from_hnu)
+            psw_stats_nu_1 = network_controller_obj.peek_psw_global_stats()
+            if hnu_1 or hnu_2:
+                psw_stats_hnu_1 = network_controller_obj.peek_psw_global_stats(hnu=True)
             wro_stats_1 = network_controller_obj.peek_wro_global_stats()
 
         # Execute traffic
@@ -237,6 +285,7 @@ class VPPathIPv4TCP(FunTestCase):
         stream_handle_1 = self.streamblock_obj_1.spirent_handle
 
         # Sleep until traffic is executed
+        sleep_duration_seconds = int(self.generator_step_size / fps) + cushion_sleep
         fun_test.sleep("Sleeping for executing traffic for %s seconds" % sleep_duration_seconds,
                        seconds=sleep_duration_seconds)
 
@@ -263,9 +312,9 @@ class VPPathIPv4TCP(FunTestCase):
         fun_test.log(port_2_analyzer_result)
 
         if dut_config['enable_dpcsh']:
-            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu_1)
             fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu_2)
             fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
             dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -274,22 +323,28 @@ class VPPathIPv4TCP(FunTestCase):
             fun_test.log("Get system stats after traffic execution")
             fun_test.sleep("Sleeping to clear bam stats", seconds=5)
             bam_stats_2 = get_bam_stats_values(network_controller_obj=network_controller_obj)
-            parser_stats_2 = network_controller_obj.peek_parser_stats()
+            parser_stats_2 = network_controller_obj.peek_parser_stats(hnu=is_trafffic_from_hnu)
             vp_pkts_stats_2 = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
-            erp_stats_2 = get_erp_stats_values(network_controller_obj=network_controller_obj)
-            psw_stats_2 = network_controller_obj.peek_psw_global_stats()
+            erp_stats_2 = get_erp_stats_values(network_controller_obj=network_controller_obj, hnu=is_trafffic_from_hnu)
+            psw_stats_nu_2 = network_controller_obj.peek_psw_global_stats()
+            if hnu_1 or hnu_2:
+                psw_stats_hnu_2 = network_controller_obj.peek_psw_global_stats(hnu=True)
             wro_stats_2 = network_controller_obj.peek_wro_global_stats()
 
             dut_port_2_fpg_value = get_fpg_port_value(dut_port_2)
             dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
             frv_error = 'frv_error'
             main_pkt_drop_eop = 'main_pkt_drop_eop'
-            epg0_pkt = 'epg0_pkt'
             ifpg2 = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
             fpg1 = 'fpg' + str(dut_port_2_fpg_value) + '_pkt'
-            input_list = [frv_error, main_pkt_drop_eop, epg0_pkt, ifpg2]
-            output_list = [epg0_pkt, fpg1]
+            input_list = [frv_error, main_pkt_drop_eop, ifpg2]
+            output_list = [fpg1]
 
+            counter_diffs = get_psw_diff_counters(hnu_1, hnu_2, input_list, output_list,
+                                                  psw_stats_nu_1=psw_stats_nu_1, psw_stats_nu_2=psw_stats_nu_2,
+                                                  psw_stats_hnu_1=psw_stats_hnu_1,
+                                                  psw_stats_hnu_2=psw_stats_hnu_2)
+            '''
             parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_1, input=True,
                                                              input_key_list=input_list, output=True,
                                                              output_key_list=output_list)
@@ -300,40 +355,33 @@ class VPPathIPv4TCP(FunTestCase):
             parsed_output_1 = parsed_psw_stats_1['output']
             parsed_input_2 = parsed_psw_stats_2['input']
             parsed_output_2 = parsed_psw_stats_2['output']
-
+            '''
             fun_test.test_assert_expected(expected=int(dut_port_1_receive), actual=int(dut_port_2_transmit),
                                           message="Ensure frames received on DUT port %s are transmitted from DUT port %s"
                                                   % (dut_port_2, dut_port_1))
 
-            fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1['FrameCount']),
-                                          message="Ensure frames transmitted from DUT and counter on spirent match")
+            if int(rx_results_1['FrameCount']) == int(dut_port_2_transmit):
+                fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1['FrameCount']),
+                                              message="Ensure frames transmitted from DUT and counter on spirent match")
 
             # Check system stats
-            # Check bam stats
-            del bam_stats_2['durations_histogram']
-            del bam_stats_1['durations_histogram']
-            del bam_stats_2['num_bytes_in_use']
-            del bam_stats_1['num_bytes_in_use']
-            del bam_stats_2['num_in_use']
-            del bam_stats_1['num_in_use']
-            fun_test.test_assert(bam_stats_1 == bam_stats_2, message="Check BAM stats before and after match")
 
             # Check ERP stats
             diff_stats_erp = get_diff_stats(old_stats=erp_stats_1, new_stats=erp_stats_2,
                                             stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
-            fun_test.test_assert_expected(expected=(int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])),
-                                          actual=(int(tx_results_1['FrameCount'])),
+            fun_test.test_assert(actual=(int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])),
+                                          expected=(int(tx_results_1['FrameCount'])),
                                           message="Check non fcp packets counter from erp stats")
 
             stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE]
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-                stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_OUT_ETP, VP_FAE_REQUESTS_SENT,
+                stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_OUT_NU_ETP, VP_FAE_REQUESTS_SENT,
                               VP_FAE_RESPONSES_RECEIVED]
                 diff_stats_vppkts = get_diff_stats(old_stats=vp_pkts_stats_1, new_stats=vp_pkts_stats_2,
                                                    stats_list=stats_list)
 
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
-                                              actual=int(diff_stats_vppkts[VP_PACKETS_OUT_ETP]),
+                                              actual=int(diff_stats_vppkts[VP_PACKETS_OUT_NU_ETP]),
                                               message="Ensure VP stats has correct etp out packets")
 
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
@@ -359,6 +407,16 @@ class VPPathIPv4TCP(FunTestCase):
                                           message="Ensure VP stats has correct total out packets")
 
             # Check psw nu stats
+            for key in chain(input_list, output_list):
+                if key == main_pkt_drop_eop or key == frv_error:
+                    fun_test.test_assert_expected(expected=0, actual=counter_diffs[key],
+                                                  message="Errors for %s must be 0 in psw" % key)
+                else:
+                    fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
+                                                  actual=counter_diffs[key],
+                                                  message="Check %s counter in psw stats in input and output" % key)
+
+            '''
             for key in input_list:
                 if key in parsed_input_1:
                     actual = int(parsed_input_2[key]) - int(parsed_input_1[key])
@@ -379,20 +437,18 @@ class VPPathIPv4TCP(FunTestCase):
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
                                               actual=actual,
                                               message="Check %s counter in psw nu stats in output" % key)
-
+            '''
             # Check parser stats
-            out = validate_parser_stats(parser_result=parser_stats_2, compare_value=int(tx_results_1['FrameCount']),
-                                        check_list_keys=['erp', 'etp', 'fpg' + str(dut_port_1_fpg_value)],
-                                        parser_old_result=parser_stats_1)
-            if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
+
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG or flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG or flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
                 out = validate_parser_stats(parser_result=parser_stats_2, compare_value=int(tx_results_1['FrameCount']),
                                             check_list_keys=['erp', 'etp', 'fpg' + str(dut_port_2_fpg_value), 'fae'],
                                             parser_old_result=parser_stats_1)
+            else:
+                out = validate_parser_stats(parser_result=parser_stats_2, compare_value=int(tx_results_1['FrameCount']),
+                                            check_list_keys=['erp', 'fpg' + str(dut_port_1_fpg_value)],
+                                            parser_old_result=parser_stats_1)
             fun_test.test_assert(out, message="Check parser nu stats")
-
-        # SPIRENT ASSERTS
-        fun_test.test_assert_expected(int(tx_results_1['FrameCount']), actual=rx_results_1['FrameCount'],
-                                      message="Ensure frames transmitted and received on spirent match from %s" % flow_direction)
 
         zero_counter_seen = template_obj.check_non_zero_error_count(port_2_analyzer_result)
         if "PrbsErrorFrameCount" in zero_counter_seen.keys():
@@ -471,10 +527,10 @@ class VPPathIPv6TCP(VPPathIPv4TCP):
     def setup(self):
         # Clear port results on DUT
         if dut_config['enable_dpcsh']:
-            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
@@ -510,10 +566,12 @@ class VPPathIPv6TCP(VPPathIPv4TCP):
         ipv6.destAddr = l3_config['hu_destination_ip1']
         if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
             ipv6.destAddr = l3_config['destination_ip2']
+        elif flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            ipv6.destAddr = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
             ipv6.destAddr = l3_config['destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            ipv6.destAddr = l3_config['hnu_destination_ip1']
+            ipv6.destAddr = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
             ipv6.destAddr = l3_config['cc_destination_ip1']
         ipv6.sourceAddr = l3_config['source_ip1']
@@ -569,10 +627,10 @@ class VPPathIPv6UDP(VPPathIPv6TCP):
 
     def setup(self):
         if dut_config['enable_dpcsh']:
-            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
@@ -609,10 +667,12 @@ class VPPathIPv6UDP(VPPathIPv6TCP):
         ipv6.destAddr = l3_config['hu_destination_ip1']
         if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
             ipv6.destAddr = l3_config['destination_ip2']
+        elif flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            ipv6.destAddr = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
             ipv6.destAddr = l3_config['destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            ipv6.destAddr = l3_config['hnu_destination_ip1']
+            ipv6.destAddr = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
             ipv6.destAddr = l3_config['cc_destination_ip1']
         ipv6.sourceAddr = l3_config['source_ip1']
@@ -662,10 +722,10 @@ class OverlayIpv4TCP(VPPathIPv4TCP):
     def setup(self):
         # Clear port results on DUT
         if dut_config['enable_dpcsh']:
-            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         configure_overlay = template_obj.configure_overlay_frame_stack(
@@ -679,10 +739,12 @@ class OverlayIpv4TCP(VPPathIPv4TCP):
         destination = l3_config['hu_destination_ip1']
         if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
             destination = l3_config['destination_ip2']
+        elif flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
             destination = l3_config['destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
             destination = l3_config['cc_destination_ip1']
         update = template_obj.update_overlay_frame_header(streamblock_obj=self.streamblock_obj_1,
@@ -798,10 +860,10 @@ class OverlayMPLSTCP(OverlayIpv4TCP):
     def setup(self):
         # Clear port results on DUT
         if dut_config['enable_dpcsh']:
-            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         configure_overlay = template_obj.configure_overlay_frame_stack(
@@ -814,10 +876,12 @@ class OverlayMPLSTCP(OverlayIpv4TCP):
         destination = l3_config['hu_destination_ip1']
         if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
             destination = l3_config['destination_ip2']
+        elif flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
             destination = l3_config['destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
             destination = l3_config['cc_destination_ip1']
         update_header = Ipv4Header()
@@ -904,34 +968,14 @@ class OverlayMPLSUDP(OverlayMPLSTCP):
 
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HU
+    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
     ip_version = local_settings[nu_config_obj.IP_VERSION]
-    fps = 150
-    if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-        fps = 50
-    elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-        fps = 50
-    elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-        fps = 50
-    elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-        fps = 50
-    sleep_duration_seconds = (generator_step / fps) + cushion_sleep
-    ts = SpirentSetup()
-    if ip_version == '6':
-        ts.add_test_case(VPPathIPv6TCP())
-        ts.add_test_case(VPPathIPv6UDP())
-    elif ip_version == '4':
-        ts.add_test_case(VPPathIPv4TCP())
-        ts.add_test_case(VPPathIPv4UDP())
-        ts.add_test_case(OverlayIpv4TCP())
-        ts.add_test_case(OverlayIpv4UDP())
-        ts.add_test_case(OverlayMPLSTCP())
-        ts.add_test_case(OverlayMPLSUDP())
-    else:
-        ts.add_test_case(VPPathIPv4TCP())
-        ts.add_test_case(VPPathIPv4UDP())
-        ts.add_test_case(OverlayMPLSTCP())
-        ts.add_test_case(OverlayMPLSUDP())
-        ts.add_test_case(VPPathIPv6TCP())
-        ts.add_test_case(VPPathIPv6UDP())
+    fps = 100
+    ts=SpirentSetup()
+    ts.add_test_case(VPPathIPv4TCP())
+    ts.add_test_case(VPPathIPv4UDP())
+    ts.add_test_case(OverlayMPLSTCP())
+    ts.add_test_case(OverlayMPLSUDP())
+    ts.add_test_case(VPPathIPv6TCP())
+    ts.add_test_case(VPPathIPv6UDP())
     ts.run()

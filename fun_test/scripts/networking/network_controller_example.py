@@ -32,8 +32,8 @@ class FunTestCase1(FunTestCase):
         self.job_environment = fun_test.get_job_environment()
         fun_test.test_assert(self.job_environment, "Job environment provided")
         fun_test.print_key_value(title=None, data=self.job_environment)
-        self.dpc_proxy_ip = self.job_environment['UART_HOST']
-        self.dpc_proxy_port = self.job_environment['UART_TCP_PORT_0']
+        self.dpc_proxy_ip = str(self.job_environment['UART_HOST'])
+        self.dpc_proxy_port = int(self.job_environment['UART_TCP_PORT_0'])
 
     def cleanup(self):
         fun_test.log("Testcase cleanup")
@@ -44,12 +44,41 @@ class FunTestCase1(FunTestCase):
         network_controller_obj = NetworkController(dpc_server_ip=self.dpc_proxy_ip, dpc_server_port=self.dpc_proxy_port,
                                            verbose=True)
 
-        psw_stats = network_controller_obj.peek_psw_global_stats()
-        fun_test.log("PSW Stats: %s \n" % psw_stats)
+        #hello_output = network_controller_obj.json_execute(verb="echo", data=['frst hello'], command_duration=120)
+        hello_output=str(network_controller_obj.echo_hello())
+        fun_test.log(hello_output)
 
-        network_controller_obj.echo_hello()
-        network_controller_obj.dpc_shutdown()
+        #parser_stats = network_controller_obj.json_execute(verb='peek', data="stats/prsr/nu", command_duration=120)
+        parser_stats = network_controller_obj.peek_parser_stats()
+        fun_test.log("PSW Stats: %s \n" % parser_stats)
 
+        #hello_output = network_controller_obj.json_execute(verb="echo", data=['2nd hello'], command_duration=120)
+        hello_output=str(network_controller_obj.echo_hello())
+        fun_test.log(hello_output)
+
+        #network_controller_obj.dpc_shutdown()
+        network_controller_obj.disconnect()
+        del network_controller_obj
+
+        network_controller_obj = NetworkController(dpc_server_ip=self.dpc_proxy_ip, dpc_server_port=self.dpc_proxy_port,
+                                           verbose=True)
+        #hello_output = network_controller_obj.json_execute(verb="echo", data=['last hello'], command_duration=120)
+        hello_output=str(network_controller_obj.echo_hello())
+        fun_test.log(hello_output)
+
+        #del network_controller_obj
+
+        #fun_test.log("sleeping 2 mins...\n")
+        #time.sleep(120)
+        #network_controller_obj = NetworkController(dpc_server_ip=self.dpc_proxy_ip, dpc_server_port=self.dpc_proxy_port, verbose=True)
+
+        #hello_output=str(network_controller_obj.echo_hello())
+        #fun_test.log(hello_output)
+        #parser_stats = network_controller_obj.peek_parser_stats()
+        #fun_test.log("PSW Stats: %s \n" % parser_stats)
+
+
+        #network_controller_obj.dpc_shutdown()
         fun_test.test_assert_expected(expected=2, actual=2, message="Some message2")
 
 

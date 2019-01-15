@@ -1,7 +1,7 @@
 [
-  {"path": "networking/qos/test_pfc_multi_streams.py"},
   {"path": "networking/qos/test_pfc_on_3ports.py"},
   {"path": "networking/qos/test_pfc_on_2ports.py", "test_case_ids": [1, 2, 3, 5]},
   {"path": "networking/qos/test_pfc_ingress_qos_profile.py"},
-  {"path": "networking/qos/test_pfc_egress_qos_profile.py"}
+  {"path": "networking/qos/test_pfc_egress_qos_profile.py"},
+  {"path": "networking/qos/test_pfc_multi_streams.py"}
 ]

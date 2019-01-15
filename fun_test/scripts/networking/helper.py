@@ -36,7 +36,7 @@ VP_PACKETS_TOTAL_OUT = "vp_packets_total_out"
 VP_PACKETS_OUT_HU = "vp_packets_out_hu"
 VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
 VP_PACKETS_FORWARDING_NU_DIRECT = "vp_packets_forwarding_nu_direct"
-VP_PACKETS_NU_OUT_ETP = "vp_packets_out_nu_etp"
+VP_PACKETS_OUT_NU_ETP = "vp_packets_out_nu_etp"
 VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
 VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
 VP_PACKETS_CONTROL_T2C_COUNT = "vp_packets_control_t2c"
@@ -557,3 +557,92 @@ def remove_strict_priority_from_queue(network_controller_obj, dut_port):
 def convert_bps_to_mbps(count_in_bps):
     count_in_mbps = count_in_bps / float(1000000)
     return count_in_mbps
+
+
+def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
+                          psw_stats_nu_1=None, psw_stats_nu_2=None, psw_stats_hnu_1=None,
+                          psw_stats_hnu_2=None):
+    result = {}
+    parsed_psw_stats_1 = None
+    parsed_psw_stats_2 = None
+    parsed_psw_stats_3 = None
+    parsed_psw_stats_4 = None
+    for key in input_list:
+        result[key] = 0
+    for key in output_list:
+        result[key] = 0
+    try:
+        if hnu_1 and hnu_2:
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+        elif not hnu_1 and not hnu_2:
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+        elif not hnu_1 and hnu_2:
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2,output=True,
+                                                             output_key_list=output_list)
+        else:
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2, output=True,
+                                                             output_key_list=output_list)
+
+        if parsed_psw_stats_3 and parsed_psw_stats_4:
+            for key in output_list:
+                new_val = parsed_psw_stats_4['output'][key]
+                old_val = parsed_psw_stats_3['output'][key]
+                if not new_val:
+                    new_val = 0
+                if not old_val:
+                    old_val = 0
+                result[key] =  int(new_val) - int(old_val)
+
+            for key in input_list:
+                new_val = parsed_psw_stats_2['input'][key]
+                old_val = parsed_psw_stats_1['input'][key]
+                if not new_val:
+                    new_val = 0
+                if not old_val:
+                    old_val = 0
+                result[key] = int(new_val) - int(old_val)
+
+        else:
+            for key in output_list:
+                new_val = parsed_psw_stats_2['output'][key]
+                old_val = parsed_psw_stats_1['output'][key]
+                if not new_val:
+                    new_val = 0
+                if not old_val:
+                    old_val = 0
+                result[key] = int(new_val) - int(old_val)
+
+            for key in input_list:
+                new_val = int(parsed_psw_stats_2['input'][key])
+                old_val = int(parsed_psw_stats_1['input'][key])
+                if not new_val:
+                    new_val = 0
+                if not old_val:
+                    old_val = 0
+                result[key] = int(new_val) - int(old_val)
+        fun_test.log("Counters diff is %s" % result)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result

@@ -4,7 +4,7 @@ from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
-from fun_global import RESULTS
+from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2
 import scheduler.scheduler_helper
@@ -25,6 +25,8 @@ import logging
 import dateutil.parser
 import re
 from django.apps import apps
+import time
+from django.db import transaction
 
 
 
@@ -103,7 +105,9 @@ def submit_job(request):
         if "email_on_fail_only" in request_json:
             email_on_fail_only = request_json["email_on_fail_only"]
 
-        scheduling_type = request_json["scheduling_type"]
+        scheduling_type = "asap"
+        if "scheduling_type" in request_json:
+            scheduling_type = request_json["scheduling_type"]
         tz = "PST"
         if "timezone" in request_json:
             tz = request_json["timezone"]
@@ -305,7 +309,9 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
 
     lock = app_config.get_site_lock()
     lock.acquire()
+    print "Ac"
     details = get_test_case_details(script_path=test_case_execution_obj.script_path, test_case_id=test_case_execution_obj.test_case_id)
+    print "Rel"
     lock.release()
     # test_case_execution_obj.summary = details["summary"]
     # data = serializers.serialize('json', [test_case_execution_obj])
@@ -498,9 +504,13 @@ def get_suite_execution_properties(request):
 @csrf_exempt
 @api_safe_json_response
 def get_all_versions(request):
-    versions = SuiteExecution.objects.values('version', 'execution_id')
-    serializer = SuiteExecutionSerializer(versions, many=True)
-    return serializer.data
+    ses = SuiteExecution.objects.values('version', 'execution_id', 'scheduled_time')
+    result = []
+    for se in ses:
+        scheduled_time_in_epoch = get_epoch_time_from_datetime(se['scheduled_time'])
+        new_entry = {"version": se["version"], "execution_id": se["execution_id"], "scheduled_time": scheduled_time_in_epoch}
+        result.append(new_entry)
+    return result
 
 @csrf_exempt
 @api_safe_json_response
@@ -509,11 +519,50 @@ def get_script_history(request):
     request_json = json.loads(request.body)
     script_path = request_json["script_path"]
     tes = TestCaseExecution.objects.filter(script_path=script_path).order_by("-suite_execution_id")[:100]
+    start = time.time()
+
     for te in tes:
         # version = suite_execution_properties(te.suite_execution_id, "version")
-        serializer = TestCaseExecutionSerializer(te)
-        history.append(serializer.data)
+        new_entry = {"suite_execution_id": te.suite_execution_id,
+                     "execution_id": te.execution_id,
+                     "result": te.result}
+        #serializer = TestCaseExecutionSerializer(te)
+        #history.append(serializer.data)
+        history.append(new_entry)
     return history
+
+@csrf_exempt
+@api_safe_json_response
+def get_suite_executions_by_time(request):
+    request_json = json.loads(request.body)
+    from_time = int(request_json["from_time"])
+    to_time = request_json["to_time"]
+    from_time = get_datetime_from_epoch_time(from_time)
+    to_time = get_datetime_from_epoch_time(to_time)
+    suite_executions = SuiteExecution.objects.filter(scheduled_time__gte=from_time, scheduled_time__lte=to_time)
+    suite_executions = SuiteExecutionSerializer(suite_executions, many=True)
+    return suite_executions.data
+
+@csrf_exempt
+@api_safe_json_response
+def get_test_case_executions_by_time(request):
+    request_json = json.loads(request.body)
+    from_time = int(request_json["from_time"])
+    to_time = request_json["to_time"]
+    from_time = get_datetime_from_epoch_time(from_time)
+    to_time = get_datetime_from_epoch_time(to_time)
+    tes = []
+    test_case_executions = TestCaseExecution.objects.filter(started_time__gte=from_time, started_time__lte=to_time)
+
+    for te in test_case_executions:
+        one_entry = {"execution_id": te.execution_id,
+                     "suite_execution_id": te.suite_execution_id,
+                     "script_path": te.script_path,
+                     "test_case_id": te.test_case_id,
+                     "result": te.result}
+        tes.append(one_entry)
+    return tes
+
 
 @csrf_exempt
 @api_safe_json_response

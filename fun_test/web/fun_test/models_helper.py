@@ -12,6 +12,7 @@ from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
+import sys
 
 from web.fun_test.models import (
     SuiteExecution,
@@ -29,18 +30,72 @@ SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
 
+def _is_sub_class(base_class, mros):
+    result = None
+    for mro in mros[1:]:
+        if base_class in str(mro):
+            result = True
+            break
+    return result
+
+
+def inspect(module_name):
+    result = {}
+    result["classes"] = []
+    sys.argv.append("--disable_fun_test")
+    test_cases = []
+
+    import imp
+    import inspect
+    f, filename, description = imp.find_module(os.path.basename(module_name).replace(".py", ""),
+                                               [os.path.dirname(module_name)])
+    flat_base_name = os.path.basename(module_name).replace(".", "_")
+    loaded_module_name = "dynamic_load" + flat_base_name
+    imp.load_module(loaded_module_name, f, filename, description)
+    members = inspect.getmembers(sys.modules[loaded_module_name], inspect.isclass)
+    for m in members:
+        if len(m) > 1:
+            klass = m[1]
+            mros = inspect.getmro(klass)
+            if len(mros) > 1 and _is_sub_class(base_class="lib.system.fun_test.FunTestCase", mros=mros):
+                # print klass
+                try:
+                    o = klass()
+                    o.describe()
+                    result["classes"].append({"name": o.__class__.__name__, "summary": o.summary, "id": o.id})
+                    test_cases.append(klass)
+                except:
+                    pass
+                # print o.id
+                # print o.summary
+                # print o.steps
+
+            if len(mros) > 1 and _is_sub_class(base_class="lib.system.fun_test.FunTestScript", mros=mros):
+                test_script = klass
+    # test_script_obj = test_script()
+    # test_case_order = test_script().test_case_order
+    '''
+    for entry in test_script().test_case_order:
+        print entry["tc"]
+    '''
+    return result
 
 def get_test_case_details(script_path, test_case_id):
     from lib.system.fun_test import fun_test
-    print "Script Path", script_path
-    result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+    # print "Script Path", script_path
+    # result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+    result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+
     summary = "unknown"
-    if result:
-        if "classes" in result:
-            for c in result["classes"]:
-                if c["id"] == test_case_id:
-                    summary = c["summary"]
-                    print "Summary", summary
+    try:
+        if result:
+            if "classes" in result:
+                for c in result["classes"]:
+                    if c["id"] == test_case_id:
+                        summary = c["summary"]
+                        # print "Summary", summary
+    except Exception as ex:
+        print "Error: {}".format(str(ex))
     this_summary = summary
     return {"summary": this_summary}
 

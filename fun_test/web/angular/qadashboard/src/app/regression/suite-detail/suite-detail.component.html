@@ -24,20 +24,20 @@
       <table *ngIf="getKeys(scriptInfo.value).length > 0" class="table table-hover table-responsive table-bordered">
                 <thead>
                 <tr>
-                    <th>E Id</th>
-                    <th>T Id</th>
-                    <th>Summary</th>
-                    <th>Result</th>
-                    <th>Scheduled At</th>
-                    <th>HTML</th>
-                    <th>Flat</th>
-                    <th>Action</th>
+                    <th class="text-center">E Id</th>
+                    <th class="text-center">T Id</th>
+                    <th class="text-center">Summary</th>
+                    <th class="text-center">Result</th>
+                    <th class="text-center">Scheduled At</th>
+                    <th class="text-center">HTML</th>
+                    <th class="text-center">Flat</th>
+                    <th class="text-center">Action</th>
                 </tr>
                 </thead>
                 <tr *ngFor="let script of scriptInfo.value | keyvalue">
                     <td>{{ script.value.execution_id }}</td>
                     <td>{{ script.value.test_case_id }}</td>
-                    <td>{{ script.value.test_case_id === 0? 'Script setup': script.value.summary }}</td>
+                    <td class="text-left">{{ script.value.test_case_id === 0? 'Script setup': script.value.summary }}</td>
                     <td [ngClass]="{'table-danger': script.value.result === 'FAILED'}">
                         <a [ngClass]="'text-'+ resultToClass(script.value.result)">{{ script.value.result }}</a>
                     </td>

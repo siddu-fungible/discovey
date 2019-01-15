@@ -1,3 +1,11 @@
 [
-  {"path": "storage/filesystem_on_ec.py"}
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [1]},
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [2]},
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [3]},
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [4]},
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [5]},
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [6]},
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [7]},
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [8]},
+  {"path": "storage/filesystem_on_ec.py", "test_case_ids": [9]}
 ]
