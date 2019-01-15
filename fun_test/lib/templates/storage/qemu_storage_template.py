@@ -265,35 +265,39 @@ class QemuStorageTemplate(object):
 
     @fun_test.safe
     def create_compressible_file(self, output_file, size, compression_pct, block_size=4096, timeout=60, **kwargs):
-        result = 0
         total_count = int(math.floor(float(size / block_size)))
         remaining_bytes = size - (total_count * block_size)
         compressible_count = int(math.ceil(total_count * float((compression_pct / 100))))
         uncompressible_count = total_count - compressible_count
+        done = 0
 
-        # populate the file with random uncompressible bytes
-        result += (int)(self.dd(input_file="/dev/urandom", output_file=output_file, block_size=block_size,
-                                count=uncompressible_count))
+        while not done:
+            if uncompressible_count:
+                # populate the file with random uncompressible bytes
+                dd_cmd = "dd if=/dev/urandom bs={} count={} iflag=fullblock >> {}".format(block_size,
+                                                                                          1, output_file)
+                output = self.host.command(command=dd_cmd, timeout=timeout)
+                uncompressible_count -= 1
 
-        # create a temporary file with compressible content
-        result += (int)(self.dd(input_file="/dev/zero", output_file="/tmp/zerofile", block_size=block_size,
-                                count=compressible_count))
+            if compressible_count:
+                # populate the file with compressible content
+                dd_cmd = "dd if=/dev/zero bs={} count={} iflag=fullblock >> {}".format(block_size,
+                                                                                       1, output_file)
+                output = self.host.command(command=dd_cmd, timeout=timeout)
+                compressible_count -= 1
 
-        # concatenate the above two files into one
-        cmd = "cat /tmp/zerofile >> {}".format(output_file)
-        output = self.host.command(command=cmd, timeout=timeout)
+            if not compressible_count and not uncompressible_count:
+                done = 1
 
         # take care of the remaining bytes if the size supplied is not divisible by block size
         if remaining_bytes == 1:
             cmd = "echo -n 0 >> {}".format(output_file)
             output = self.host.command(command=cmd, timeout=timeout)
         elif remaining_bytes > 1:
-            cmd = "xxd -ps -l 20 /tmp/zerofile | cut -c 1-{}".format(remaining_bytes - 1)
+            cmd = "xxd -ps -l 20 {} | cut -c 1-{}".format(output_file, remaining_bytes - 1)
             cmd = cmd + " >> {}".format(output_file)
             output = self.host.command(command=cmd, timeout=timeout)
 
-        # remove the temporary file
-        self.host.remove_file(file_name="/tmp/zerofile")
-
+        output = self.host.list_files(output_file)
         # return the size of newly created custom compressible file
-        return result + remaining_bytes
+        return size
