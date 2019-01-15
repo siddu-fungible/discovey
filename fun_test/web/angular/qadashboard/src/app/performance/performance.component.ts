@@ -380,6 +380,11 @@ export class PerformanceComponent implements OnInit {
               thisFlatNode.node.failures.add(childMetricId);
             });
           }
+          if (childNode.bugs.size != 0) {
+            childNode.bugs.forEach(childMetricId => {
+              thisFlatNode.node.bugs.add(childMetricId);
+            });
+          }
           thisFlatNode.addChild(childFlatNode);
         })
 
@@ -401,6 +406,9 @@ export class PerformanceComponent implements OnInit {
         }
         if (leafNode.lastNumBuildFailed == 1) {
           leafNode.failures.add(leafNode.metricId);
+        }
+        if (leafNode.numBugs > 0) {
+          leafNode.bugs.add(leafNode.metricId);
         }
       }
     }
@@ -538,9 +546,15 @@ export class PerformanceComponent implements OnInit {
     }
     if (node.failures.size != 0) {
       if (node.degrades.size != 0) {
-        s += ",&nbsp";
+        s += "&nbsp";
       }
       s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + node.failures.size + "</span>";
+    }
+    if (node.bugs.size != 0) {
+      if (node.failures.size != 0 || node.degrades.size != 0) {
+        s += "&nbsp";
+      }
+        s += "<span style='color: red'><i class='fa fa-bug'></i>:</span>" + "<span style='color: black'>" + node.bugs.size + "</span>";
     }
     return s;
   };
