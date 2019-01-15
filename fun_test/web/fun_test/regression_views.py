@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2
+from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2, queue_suite_container
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, get_test_case_details
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
@@ -127,17 +127,32 @@ def submit_job(request):
         if "repeat_in_minutes" in request_json:
             repeat_in_minutes = request_json["repeat_in_minutes"]
 
-        job_id = queue_job2(suite_path=suite_path,
-                   build_url=build_url,
-                   tags=tags,
-                   email_list=email_list,
-                   email_on_fail_only=email_on_fail_only,
-                   environment=environment,
-                   scheduling_type=scheduling_type,
-                   tz_string=tz,
-                   requested_hour=requested_hour,
-                   requested_minute=requested_minute,
-                   requested_days=requested_days, repeat_in_minutes=repeat_in_minutes)
+        if suite_path.replace(".json", "").endswith("_container"):
+            job_id = queue_suite_container(suite_path=suite_path,
+                       build_url=build_url,
+                       tags=tags,
+                       email_list=email_list,
+                       email_on_fail_only=email_on_fail_only,
+                       environment=environment,
+                       scheduling_type=scheduling_type,
+                       tz_string=tz,
+                       requested_hour=requested_hour,
+                       requested_minute=requested_minute,
+                       requested_days=requested_days,
+                                repeat_in_minutes=repeat_in_minutes)
+        else:
+            job_id = queue_job2(suite_path=suite_path,
+                       build_url=build_url,
+                       tags=tags,
+                       email_list=email_list,
+                       email_on_fail_only=email_on_fail_only,
+                       environment=environment,
+                       scheduling_type=scheduling_type,
+                       tz_string=tz,
+                       requested_hour=requested_hour,
+                       requested_minute=requested_minute,
+                       requested_days=requested_days,
+                                repeat_in_minutes=repeat_in_minutes)
         '''
         if "schedule_at" in request_json and request_json["schedule_at"]:
             schedule_at_value = request_json["schedule_at"]
@@ -223,10 +238,12 @@ def suites(request):
                 inner_suites = parse_suite(suite_file=suite_file)
                 for inner_suite in inner_suites:
                     items = parse_suite(suite_file=SUITES_DIR + "/" + inner_suite)
+                    # suites_info.extend(items)
                     suites_info[os.path.basename(suite_file)].extend(items)
             else:
                 items = parse_suite(suite_file=suite_file)
                 suites_info[os.path.basename(suite_file)] = items
+                # suites_info.extend(items)
 
         except Exception as ex:
             pass

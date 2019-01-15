@@ -3,6 +3,7 @@ import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
+import {Sort} from "@angular/material";
 
 @Component({
   selector: 'app-submit-job',
@@ -66,9 +67,12 @@ export class SubmitJobComponent implements OnInit {
     this.apiService.get("/regression/suites").subscribe((result) => {
       let suitesInfo = result.data;
       self.suitesInfo = suitesInfo;
+
       for (let suites of Object.keys(suitesInfo)) {
         self.suitesInfoKeys.push(suites);
       }
+      self.suitesInfoKeys.sort();
+
     });
     this.selectedTags = [];
     this.tags = [];
@@ -131,6 +135,7 @@ export class SubmitJobComponent implements OnInit {
           return null;
         } else {
           payload["requested_days"] = this.selectedDays;
+          payload["build_url"] = null;
         }
       }
     }
@@ -172,7 +177,9 @@ export class SubmitJobComponent implements OnInit {
 
     this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
       self.jobId = parseInt(result.data);
-      window.location.href = "/regression/suite_detail/" + self.jobId;
+      //window.location.href = "/regression/suite_detail/" + self.jobId;
+      window.location.href = "/regression";
+
       console.log("Job " + self.jobId + " Submitted");
     }, error => {
       self.logger.error("Unable to submit job");

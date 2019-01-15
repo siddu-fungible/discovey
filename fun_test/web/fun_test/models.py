@@ -75,6 +75,18 @@ class CatalogSuite(models.Model):
         s = "{} {}".format(self.category, self.name)
         return s
 
+class SuiteContainerExecution(models.Model):
+    suite_path = models.CharField(max_length=200, default="")
+    execution_id = models.IntegerField(unique=True)
+    tags = models.TextField(default="[]")
+    version = models.TextField(default=-1)
+    suite_item_execution_ids = models.TextField(default="[]")
+
+    def __str__(self):
+        s = "E: {} Tags: {} I: {}".format(self.execution_id, str(self.tags), str(self.suite_item_execution_ids))
+        return s
+
+
 class SuiteExecution(models.Model):
     execution_id = models.IntegerField(unique=True)
     suite_path = models.CharField(max_length=100)
@@ -88,6 +100,7 @@ class SuiteExecution(models.Model):
     catalog_reference = models.TextField(null=True, blank=True, default=None)
     finalized = models.BooleanField(default=False)
     banner = models.TextField(default="")
+    suite_container_execution_id = models.IntegerField(default=-1)
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)

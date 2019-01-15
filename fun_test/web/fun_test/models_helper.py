@@ -20,7 +20,8 @@ from web.fun_test.models import (
     LastTestCaseExecution,
     RESULT_CHOICES,
     TestCaseExecution,
-    JenkinsJobIdMap
+    JenkinsJobIdMap,
+    SuiteContainerExecution
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -100,6 +101,17 @@ def get_test_case_details(script_path, test_case_id):
     return {"summary": this_summary}
 
 
+def get_suite_container_execution(suite_container_execution_id):
+    s = SuiteContainerExecution.objects.get(execution_id=suite_container_execution_id)
+    return s
+
+def update_suite_container_execution(suite_container_execution_id, version=None):
+    s = get_suite_container_execution(suite_container_execution_id=suite_container_execution_id)
+    if s:
+        if version:
+            s.version = version
+    s.save()
+
 def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None, tags=None):
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
@@ -111,36 +123,50 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
     if tags:
         te.tags = json.dumps(tags)
     te.save()
+    print te.version
     return te
 
 def finalize_suite_execution(suite_execution_id):
     _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
 
-def add_suite_execution(submitted_time,
-                        scheduled_time,
-                        completed_time,
-                        suite_path="unknown",
-                        tags=None,
-                        catalog_reference=""):
-
-    if tags:
-        tags = json.dumps(tags)
-    else:
-        tags = "[]"
+def get_new_suite_execution_id():
     last_suite_execution_id = LastSuiteExecution.objects.all()
     if not last_suite_execution_id:
         LastSuiteExecution().save()
     last_suite_execution_id = LastSuiteExecution.objects.last()
     last_suite_execution_id.last_suite_execution_id += 1
     last_suite_execution_id.save()
+    return last_suite_execution_id
 
+def add_suite_container_execution(suite_path, tags):
+    last_suite_execution_id = get_new_suite_execution_id()
+    s = SuiteContainerExecution(suite_path=suite_path, execution_id=last_suite_execution_id.last_suite_execution_id, tags=json.dumps(tags))
+    s.save()
+    return s
+
+
+def add_suite_execution(submitted_time,
+                        scheduled_time,
+                        completed_time,
+                        suite_path="unknown",
+                        tags=None,
+                        catalog_reference="",
+                        suite_container_execution_id=-1):
+
+    if tags:
+        tags = json.dumps(tags)
+    else:
+        tags = "[]"
+
+    last_suite_execution_id = get_new_suite_execution_id()
     s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
                        submitted_time=submitted_time,
                        scheduled_time=scheduled_time,
                        completed_time=completed_time,
                        result="QUEUED",
                        tags=tags,
-                       catalog_reference=catalog_reference)
+                       catalog_reference=catalog_reference,
+                       suite_container_execution_id=suite_container_execution_id)
     s.save()
     return s
 
