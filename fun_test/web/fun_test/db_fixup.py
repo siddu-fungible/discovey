@@ -404,7 +404,7 @@ def prepare_status(chart, purge_old_status=False):
 
 if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
-    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="Networking_Teramarks")
+    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
 
     # total_chart = MetricChart.objects.get(metric_model_name="WuSendSpeedTestPerformance", chart_name="Average WU send ungated cycles")
     prepare_status(chart=total_chart, purge_old_status=False)
