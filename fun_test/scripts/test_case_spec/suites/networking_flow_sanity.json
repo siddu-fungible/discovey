@@ -1,3 +1,4 @@
 [
+  {"info": {"tags": ["networking-sanity", "networking-flow-sanity", "networking-flow"]}},
   {"path": "networking/flow_sanity/test_nw_sanity.py"}
 ]
