@@ -120,6 +120,8 @@ export class PerformanceComponent implements OnInit {
   penultimateScore: number;
   deviation: any;
 
+  upgradeFlatNode: FlatNode[] = [];
+  degradeFlatNode: FlatNode[] = [];
 
   constructor(
     private apiService: ApiService,
@@ -384,9 +386,18 @@ export class PerformanceComponent implements OnInit {
       } else {
         let leafNode = thisFlatNode.node;
         if (leafNode.trend > 0) {
-          leafNode.upgrades.add(leafNode.metricId);
+          if (!leafNode.upgrades.has(leafNode.metricId)) {
+            leafNode.upgrades.add(leafNode.metricId);
+          let flatNode = this.getNewFlatNode(leafNode, 1);
+          this.upgradeFlatNode.push(flatNode);
+          }
+
         } else if (leafNode.trend < 0) {
-          leafNode.degrades.add(leafNode.metricId);
+          if (!leafNode.degrades.has(leafNode.metricId)) {
+            leafNode.degrades.add(leafNode.metricId);
+          let flatNode = this.getNewFlatNode(leafNode, 1);
+          this.degradeFlatNode.push(flatNode);
+          }
         }
         if (leafNode.lastNumBuildFailed == 1) {
           leafNode.failures.add(leafNode.metricId);
@@ -656,6 +667,14 @@ export class PerformanceComponent implements OnInit {
       child.hide = false;
     })
   };
+
+  expandUpgrades(): void{
+
+  }
+
+  expandDegrades(): void {
+
+  }
 
   showAtomicMetric = (flatNode) => {
     this.chartReady = false;
