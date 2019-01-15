@@ -308,12 +308,12 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj.started_time = timezone.localtime(test_case_execution_obj.started_time)
     test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
 
-    lock = app_config.get_site_lock()
-    lock.acquire()
-    print "Ac"
+    # lock = app_config.get_site_lock()
+    # lock.acquire()
+    # print "Ac"
     details = get_test_case_details(script_path=test_case_execution_obj.script_path, test_case_id=test_case_execution_obj.test_case_id)
-    print "Rel"
-    lock.release()
+    # print "Rel"
+    # lock.release()
     # test_case_execution_obj.summary = details["summary"]
     # data = serializers.serialize('json', [test_case_execution_obj])
     serializer = TestCaseExecutionSerializer(test_case_execution_obj)
