@@ -25,8 +25,12 @@ if __name__ == "__main__":
     data = {"script_path": "/networking/qos/test_pir.py"}
     data = {"script_path": "/storage/thin_block_volume_performance.py"}
     from_time = 1541030400 * 1000
-    to_time = 1547318269 * 1000
-    data = {"from_time": from_time, "to_time": to_time}
+    to_time = 1547501328 * 1000
+    test_case_execution_tags = ["tagn1"]
+    data = {"from_time": from_time,
+            "to_time": to_time,
+            "module": "networking",
+            "test_case_execution_tags": test_case_execution_tags}
 
     '''threads = []
     for i in range(50):

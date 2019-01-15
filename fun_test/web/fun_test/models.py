@@ -121,6 +121,7 @@ class TestCaseExecution(models.Model):
     bugs = models.TextField(default="[]")
     comments = models.TextField(default="")
     log_prefix = models.TextField(default="")
+    tags = models.TextField(default="[]")
 
     def __str__(self):
         s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,
@@ -236,6 +237,7 @@ class SchedulerInfo(models.Model):
     state = models.CharField(max_length=30, default=SchedulerStates.SCHEDULER_STATE_UNKNOWN)
     last_start_time = models.DateTimeField(default=datetime.now)
     last_restart_request_time = models.DateTimeField(default=datetime.now)
+    main_loop_heartbeat = models.IntegerField(default=0)
 
 
 if is_performance_server():

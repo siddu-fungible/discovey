@@ -64,7 +64,7 @@ export class SubmitJobComponent implements OnInit {
     this.jobId = null;
     let self = this;
     this.apiService.get("/regression/suites").subscribe((result) => {
-      let suitesInfo = JSON.parse(result.data);
+      let suitesInfo = result.data;
       self.suitesInfo = suitesInfo;
       for (let suites of Object.keys(suitesInfo)) {
         self.suitesInfoKeys.push(suites);
@@ -101,6 +101,14 @@ export class SubmitJobComponent implements OnInit {
 
   changedValue(selectedSuite) {
     this.selectedInfo = this.suitesInfo[selectedSuite];
+  }
+
+  parseScriptInfo(scriptInfo) {
+    if (scriptInfo.hasOwnProperty('path')) {
+      return scriptInfo.path;
+    } else if (scriptInfo.hasOwnProperty('info')) {
+      return scriptInfo.info.tags;
+    }
   }
 
   getSchedulingOptions(payload) {

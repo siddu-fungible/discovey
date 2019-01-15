@@ -244,10 +244,6 @@ export class RegressionAdminComponent implements OnInit {
     if (bySoftwareVersion.hasOwnProperty(softwareVersion)) {
       let softwareVersionEntry = bySoftwareVersion[softwareVersion];
       let scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
-      /*if (!scriptDetailedInfo) {
-        softwareVersionEntry.scriptDetailedInfo = {};
-        scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
-      }*/
       if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
         scriptDetailedInfo[scriptPath] = {history: [], historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
       }

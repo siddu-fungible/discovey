@@ -27,6 +27,7 @@ import re
 from django.apps import apps
 import time
 from django.db import transaction
+from django.db.models import Q
 
 
 
@@ -229,7 +230,7 @@ def suites(request):
 
         except Exception as ex:
             pass
-    return json.dumps(suites_info)
+    return suites_info
 
 @csrf_exempt
 @api_safe_json_response
@@ -551,16 +552,37 @@ def get_test_case_executions_by_time(request):
     to_time = request_json["to_time"]
     from_time = get_datetime_from_epoch_time(from_time)
     to_time = get_datetime_from_epoch_time(to_time)
+    test_case_execution_tags = None
+    if "test_case_execution_tags" in request_json:
+        test_case_execution_tags = request_json["test_case_execution_tags"]
+    module = None
+    scripts_for_module = None
+    q = None
+    if "module" in request_json:
+        module = request_json["module"]
+        module_str = '"{}"'.format(module)
+        q = Q(modules__contains=module_str)
+        scripts_for_module = RegresssionScripts.objects.filter(q)
+        scripts_for_module = [x.script_path for x in scripts_for_module]
+
     tes = []
-    test_case_executions = TestCaseExecution.objects.filter(started_time__gte=from_time, started_time__lte=to_time)
+    q = Q(started_time__gte=from_time)
+
+    if test_case_execution_tags:
+        for tag in test_case_execution_tags:
+            tag_str = '"{}"'.format(tag)
+            q = q & Q(tags__contains=tag_str)
+
+    test_case_executions = TestCaseExecution.objects.filter(q)
 
     for te in test_case_executions:
-        one_entry = {"execution_id": te.execution_id,
-                     "suite_execution_id": te.suite_execution_id,
-                     "script_path": te.script_path,
-                     "test_case_id": te.test_case_id,
-                     "result": te.result}
-        tes.append(one_entry)
+        if te.script_path in scripts_for_module:
+            one_entry = {"execution_id": te.execution_id,
+                         "suite_execution_id": te.suite_execution_id,
+                         "script_path": te.script_path,
+                         "test_case_id": te.test_case_id,
+                         "result": te.result}
+            tes.append(one_entry)
     return tes
 
 

@@ -431,6 +431,12 @@ def set_scheduler_state(state):
     o.save()
     scheduler_logger.info("Scheduler state: {}".format(state))
 
+def set_main_loop_heartbeat():
+    o = SchedulerInfo.objects.first()
+    o.main_loop_heartbeat = o.main_loop_heartbeat + 1
+    if o.main_loop_heartbeat > 100000:
+        o.main_loop_heartbeat = 0
+    o.save()
 
 def get_scheduler_info():
     o = SchedulerInfo.objects.first()

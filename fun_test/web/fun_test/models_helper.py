@@ -84,10 +84,10 @@ def get_test_case_details(script_path, test_case_id):
     from lib.system.fun_test import fun_test
     # print "Script Path", script_path
     # result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
-    result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
 
     summary = "unknown"
     try:
+        result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
         if result:
             if "classes" in result:
                 for c in result["classes"]:
@@ -100,7 +100,7 @@ def get_test_case_details(script_path, test_case_id):
     return {"summary": this_summary}
 
 
-def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None):
+def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None, tags=None):
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
         te.result = result
@@ -108,6 +108,8 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
         te.scheduled_time = scheduled_time
     if version:
         te.version = version
+    if tags:
+        te.tags = json.dumps(tags)
     te.save()
     return te
 
@@ -182,14 +184,17 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
         raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
     return result
 
-def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULTS["NOT_RUN"], log_prefix=""):
+def add_test_case_execution(test_case_id,
+                            suite_execution_id,
+                            path,
+                            result=RESULTS["NOT_RUN"], log_prefix="", tags=[]):
     te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
                            test_case_id=test_case_id,
                            suite_execution_id=suite_execution_id,
                            result=result,
                            started_time=get_current_time(),  # timezone.now(), #get_current_time(),
                            script_path=path,
-                           log_prefix=log_prefix)
+                           log_prefix=log_prefix, tags=json.dumps(tags))
     te.save()
     add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                test_case_execution_id=te.execution_id)
