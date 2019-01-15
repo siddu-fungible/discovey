@@ -265,7 +265,7 @@ def prepare_status(chart, purge_old_status=False):
                                 print ("Fixing expected values")
                                 data_set_mofified = data_set_mofified or chart.fixup_expected_values(
                                     data_set=data_set)
-                                expected_value = data_set["output"]["expected"] # expected is set in fixup_expected_values
+                                expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else None # expected is set in fixup_expected_values
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
 
@@ -273,7 +273,7 @@ def prepare_status(chart, purge_old_status=False):
                             if expected_value is not None:
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
-                                        output_value) / expected_value) * 100 if output_value >= 0 else 0
+                                        output_value) / expected_value) * 100 if output_value >= 0 and expected_value > 0 else 0
                                 else:
                                     if output_value:
                                         data_set_combined_goodness += (float(
