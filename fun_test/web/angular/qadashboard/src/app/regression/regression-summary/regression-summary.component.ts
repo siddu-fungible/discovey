@@ -108,7 +108,7 @@ export class RegressionSummaryComponent implements OnInit {
 
   fetchModules () {
     this.apiService.get("/regression/modules").subscribe((response) => {
-      console.log(response);
+      //console.log(response);
       this.availableModules = response.data;
       this.availableModules.forEach((module) => {
         this.info[module.name] = {name: module.name, verboseName: module.verbose_name};
@@ -179,10 +179,6 @@ export class RegressionSummaryComponent implements OnInit {
     if (bySoftwareVersion.hasOwnProperty(softwareVersion)) {
       let softwareVersionEntry = bySoftwareVersion[softwareVersion];
       let scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
-      /*if (!scriptDetailedInfo) {
-        softwareVersionEntry.scriptDetailedInfo = {};
-        scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
-      }*/
       if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
         scriptDetailedInfo[scriptPath] = {history: [], historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
       }
@@ -196,6 +192,18 @@ export class RegressionSummaryComponent implements OnInit {
       softwareVersionEntry.numFailed += historyResults.numFailed;
       softwareVersionEntry.numNotRun += historyResults.numNotRun;
     }
+  }
+
+  fetchScriptInfo2() {
+    let payload = {module: "networking"};
+    this.apiService.post("/regression/get_test_case_executions_by_time", payload).subscribe((response) => {
+      let allScripts = response.data;
+      let i = 0;
+
+    }, error => {
+
+    })
+
   }
 
   fetchScriptInfo(moduleName, moduleInfo) {
@@ -214,7 +222,7 @@ export class RegressionSummaryComponent implements OnInit {
           let history = response.data;
 
           history.forEach((historyElement) => {
-            console.log(historyElement);
+            //console.log(historyElement);
             let elementSuiteExecutionId = historyElement.suite_execution_id;
             let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
             this.parseHistory(moduleInfo, historyElement, scriptPath, matchingSoftwareVersion);
@@ -316,6 +324,8 @@ export class RegressionSummaryComponent implements OnInit {
 
     });
     //console.log(this.xValues);
+
+    this.fetchScriptInfo2();
 
   }
 

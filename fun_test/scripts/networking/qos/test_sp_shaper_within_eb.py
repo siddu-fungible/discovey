@@ -4,7 +4,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
 from lib.host.network_controller import NetworkController
 from scripts.networking.nu_config_manager import nu_config_obj
 from scripts.networking.helper import *
-from qos_helper import *
+from scripts.networking.qos.qos_helper import *
 from itertools import chain
 
 num_ports = 3

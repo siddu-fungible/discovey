@@ -3,7 +3,7 @@ import time, datetime, json, glob, shutil
 import psutil, logging.handlers, sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR, SUITES_DIR
 from fun_global import RESULTS, is_regression_server, is_performance_server, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
@@ -219,6 +219,39 @@ def validate_spec(spec):
         valid = True
     return valid, error_message
 
+def parse_suite(suite_name):
+    suite_file_name = SUITES_DIR + "/" + suite_name + JSON_EXTENSION
+    suite_spec = parse_file_to_json(file_name=suite_file_name)
+    if not suite_spec:
+        raise SchedulerException("Unable to parse suite-spec: {}".format(suite_file_name))
+    return suite_spec
+
+def get_suite_level_tags(suite_spec):
+    tags = []
+    for item in suite_spec:
+        if "info" in item:
+            info = item["info"]
+            if "tags" in info:
+                tags = info["tags"]
+            break
+    return tags
+
+def queue_suite_container(suite_path,
+                          build_url=None, tags=None, **kwargs):
+    job_id = -1
+    container_execution = models_helper.add_suite_container_execution(suite_path=suite_path, tags=tags)
+    if container_execution:
+        job_id = container_execution.execution_id
+        container_spec = parse_suite(suite_name=suite_path.replace(".json", ""))
+        container_tags = get_suite_level_tags(suite_spec=container_spec)
+        container_tags.extend(tags)
+
+        for item_suite_path in container_spec:
+            item_spec = parse_suite(suite_name=item_suite_path.replace(".json", ""))
+            suite_level_tags = get_suite_level_tags(suite_spec=item_spec)
+            suite_level_tags.extend(container_tags)
+            queue_job2(suite_path=item_suite_path, tags=suite_level_tags, build_url=build_url, suite_container_execution_id=container_execution.execution_id, **kwargs)
+    return job_id
 
 def queue_job2(suite_path="unknown",
                build_url=None,
@@ -232,6 +265,7 @@ def queue_job2(suite_path="unknown",
                email_on_fail_only=None,
                environment=None,
                repeat_in_minutes=None,
+               suite_container_execution_id=-1,
                job_spec=None):
     time.sleep(0.1)
     print "Environment: {}".format(environment)
@@ -243,7 +277,8 @@ def queue_job2(suite_path="unknown",
                                                         scheduled_time=get_current_time(),
                                                         completed_time=get_current_time(),
                                                         suite_path=suite_path,
-                                                        tags=tags)
+                                                        tags=tags,
+                                                        suite_container_execution_id=suite_container_execution_id)
     # if tags and "jenkins-hourly" in tags:
     #    set_jenkins_hourly_execution_status(status=RESULTS["QUEUED"])
     if not job_spec:
@@ -431,6 +466,12 @@ def set_scheduler_state(state):
     o.save()
     scheduler_logger.info("Scheduler state: {}".format(state))
 
+def set_main_loop_heartbeat():
+    o = SchedulerInfo.objects.first()
+    o.main_loop_heartbeat = o.main_loop_heartbeat + 1
+    if o.main_loop_heartbeat > 100000:
+        o.main_loop_heartbeat = 0
+    o.save()
 
 def get_scheduler_info():
     o = SchedulerInfo.objects.first()
@@ -492,7 +533,7 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
 
         try:
             result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
-            print html
+            # print html
             scheduler_logger.info("Sent mail")
             if not result["status"]:
                 scheduler_logger.error("Send Mail: {}".format(result["error_message"]))

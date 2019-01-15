@@ -24,13 +24,6 @@ def timed_dispatcher(suite_worker_obj):
         del job_id_timers[suite_worker_obj.job_id]
 
 
-def parse_suite(suite_name):
-    suite_file_name = SUITES_DIR + "/" + suite_name + JSON_EXTENSION
-    suite_spec = parse_file_to_json(file_name=suite_file_name)
-    if not suite_spec:
-        raise SchedulerException("Unable to parse suite-spec: {}".format(suite_file_name))
-    return suite_spec
-
 
 class SuiteWorker(Thread):
     def __init__(self, job_spec):
@@ -47,6 +40,8 @@ class SuiteWorker(Thread):
             self.job_test_case_ids = job_spec["test_case_ids"]
         if "build_url" in job_spec:
             self.job_build_url = job_spec["build_url"]
+        if self.job_spec["scheduling_type"] == SchedulingType.TODAY or self.job_spec["scheduling_type"] == SchedulingType.REPEAT:
+            self.job_build_url = None
         if "environment" in job_spec:
             self.job_environment = job_spec["environment"] 
         self.current_script_process = None
@@ -90,16 +85,40 @@ class SuiteWorker(Thread):
                 break
         return result, error_message
 
-    def get_scripts(self, suite_file):
+
+
+    def apply_tags_to_items(self, items, tags):
+        for item in items:
+            if "info" in item:
+                continue
+            else:
+                item["tags"] = tags
+
+    def get_scripts(self, suite_execution_id, suite_file):
+        all_tags = []
         items = []
         if suite_file.endswith("container"):
             container_spec = parse_suite(suite_name=suite_file)
+            suite_level_tags = get_suite_level_tags(suite_spec=container_spec)
+            all_tags.extend(suite_level_tags)
             for item in container_spec:
                 item_suite = parse_suite(suite_name=item.replace(".json", ""))
+                item_suite_level_tags = get_suite_level_tags(suite_spec=item_suite)
+                all_tags.extend(item_suite_level_tags)
                 items.extend(item_suite)
         else:
             suite_spec = parse_suite(suite_name=suite_file)
+            suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
+            all_tags.extend(suite_level_tags)
             items = suite_spec
+        all_tags = list(set(all_tags))
+        self.apply_tags_to_items(items=items, tags=all_tags)
+        # use job submission tags as well
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
+        if suite_execution:
+            suite_execution_tags = json.loads(suite_execution.tags)
+            all_tags.extend(suite_execution_tags)
+        models_helper.update_suite_execution(suite_execution_id=suite_execution_id, tags=all_tags)
         return items
 
     def run(self):
@@ -110,9 +129,12 @@ class SuiteWorker(Thread):
             set_jenkins_hourly_execution_status(status=RESULTS["IN_PROGRESS"])
 
         suite_execution_id = self.job_id
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
+        if not suite_execution:
+            raise SchedulerException("Unable to retrieve suite execution id: {}".format(suite_execution_id))
         job_environment = self.job_environment
         self.prepare_job_directory()
-        build_url = self.job_build_url
+
 
         # Setup the suites own logger
         local_scheduler_logger = logging.getLogger("scheduler_log_{}.txt".format(self.job_id))
@@ -124,8 +146,12 @@ class SuiteWorker(Thread):
         local_scheduler_logger.addHandler(hdlr=handler)
         self.local_scheduler_logger = local_scheduler_logger
 
+        build_url = self.job_build_url
+        if not build_url:
+            build_url = DEFAULT_BUILD_URL
         if build_url:
             version = determine_version(build_url=build_url)
+
             if not version:
                 models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"])
                 error_message = "Unable to determine version from build url: {}".format(build_url)
@@ -133,14 +159,21 @@ class SuiteWorker(Thread):
                 local_scheduler_logger.exception(error_message)
                 self.suite_shutdown = True
             else:
+                if suite_execution and suite_execution.suite_container_execution_id > 0:
+                    container_execution = models_helper.get_suite_container_execution(suite_execution.suite_container_execution_id)
+                    if int(container_execution.version) <= 0:
+                        models_helper.update_suite_container_execution(suite_container_execution_id=container_execution.execution_id, version=version)
+                        container_execution = models_helper.get_suite_container_execution(
+                            suite_execution.suite_container_execution_id)
+                    version = int(container_execution.version)
                 build_url = build_url.replace("latest", str(version))
                 self.job_build_url = build_url
                 models_helper.update_suite_execution(suite_execution_id=self.job_id, version=version)
 
         suite_summary = {}
 
-        script_items = self.get_scripts(suite_file=self.job_spec["suite_name"])
-        script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["path"], script_items)
+        script_items = self.get_scripts(suite_execution_id=suite_execution_id, suite_file=self.job_spec["suite_name"])
+        script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["path"], filter(lambda f: "info" not in f, script_items))
         scripts_exist, error_message = self.ensure_scripts_exists(script_paths)
         if not scripts_exist:
             scheduler_logger.exception(error_message)
@@ -153,8 +186,6 @@ class SuiteWorker(Thread):
         self.local_scheduler_logger.info("Starting Job-id: {}".format(self.job_id))
 
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
-        if not suite_execution:
-            raise SchedulerException("Unable to retrieve suite execution id: {}".format(suite_execution_id))
         suite_execution.scheduled_time = get_current_time()
         suite_execution.suite_path = self.job_spec["suite_name"]
         suite_execution.save()
@@ -164,6 +195,8 @@ class SuiteWorker(Thread):
         script_index = 0
         for script_item in script_items:
             script_index += 1
+            if "info" in script_item:
+                continue
             script_path = SCRIPTS_DIR + "/" + script_item["path"]
             last_script_path = script_path
             if self.abort_on_failure_requested:
@@ -250,17 +283,6 @@ class SuiteWorker(Thread):
                                                         str(script_metrics["crashed"])))
 
         handler.close()
-        '''
-        if "repeat" in self.job_spec and self.job_spec["repeat"]:
-            queue_job(job_spec=self.job_spec)
-
-        elif "repeat_in_minutes" in self.job_spec and self.job_spec["repeat_in_minutes"]:
-            repeat_in_minutes_value = self.job_spec["repeat_in_minutes"]
-            new_job_spec = self.job_spec
-            new_job_spec["schedule_in_minutes"] = repeat_in_minutes_value
-            queue_job(job_spec=new_job_spec)
-
-        '''
         models_helper.finalize_suite_execution(suite_execution_id=self.job_id)
 
         to_addresses = []
@@ -330,10 +352,9 @@ def process_killed_jobs():
                 suite_execution.completed_time = get_current_time()
                 suite_execution.result = RESULTS["KILLED"]
                 suite_execution.save()
-            if suite_execution_status and suite_execution_status in [RESULTS["ABORTED"], RESULTS["SCHEDULED"], RESULTS["KILLED"]]:
-                continue
-            else:
+            if suite_execution_status and suite_execution_status not in [RESULTS["ABORTED"], RESULTS["SCHEDULED"], RESULTS["KILLED"]]:
                 revive_scheduled_jobs(job_ids=[job_id])
+            remove_scheduled_job(job_id=job_id)
         os.remove(job_file)
 
 
@@ -475,6 +496,7 @@ if __name__ == "__main__":
     run = True
     while run:
         time.sleep(1)
+        set_main_loop_heartbeat()
         scheduler_info = get_scheduler_info()
         if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPED:
             scheduler_logger.info("Scheduler Bye bye!")
