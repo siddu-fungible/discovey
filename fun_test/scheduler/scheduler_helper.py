@@ -489,7 +489,7 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
     header_list = ["TC-ID", "Summary", "Path", "Result"]
-    list_of_rows = [[x["test_case_id"], models_helper.get_test_case_details(x["script_path"], x["test_case_id"]), x["script_path"], x["result"]] for x in
+    list_of_rows = [[x["test_case_id"], models_helper.get_test_case_details(x["script_path"], x["test_case_id"])['summary'], x["script_path"], x["result"]] for x in
                     suite_execution["test_case_info"]]
     table2 = _get_table(header_list=header_list, list_of_rows=list_of_rows)
 
