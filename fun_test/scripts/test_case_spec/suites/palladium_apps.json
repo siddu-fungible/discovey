@@ -1,4 +1,5 @@
 [
+  {"info": {"tags": ["palladium-apps"}},
   {"path": "security/palladium_crypto_test.py"},
   {"path": "accelerators/jpeg/palladium_jpeg_teramark.py"},
   {"path": "accelerators/lookup_engine/palladium_le_teramark.py"},
