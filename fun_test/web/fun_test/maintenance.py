@@ -546,7 +546,9 @@ if __name__ == "__main__":
                 print data_sets
                 if "latency" in output_choice.lower():
                     positive = False
-                MetricChart(chart_name=chart_display_name,
+                mcs = MetricChart.objects.get(internal_chart_name=chart_internal_name)
+                if not mcs:
+                    MetricChart(chart_name=chart_display_name,
                             metric_id=LastMetricId.get_next_id(),
                             internal_chart_name=chart_internal_name,
                             data_sets=json.dumps(data_sets),
