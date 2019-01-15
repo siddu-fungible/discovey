@@ -391,7 +391,7 @@ if __name__ == "__mainappend_internal_chart_name__":
         chart.internal_chart_name = chart.chart_name
         chart.save()
 
-if __name__ == "__main__":
+if __name__ == "__jpegmain__":
     display_name_map = {"output_average_bandwidth": "Bandwidth",
                         "output_iops": "IOPS",
                         "output_average_latency": "Latency"}
@@ -478,3 +478,88 @@ if __name__ == "__main__":
          "output": {"expected": 182179, "max": 99999, "name": "output_latency_avg", "min": 0}}
     ]
     '''
+
+if __name__ == "__main__":
+    display_name_map = {"output_throughput": "Bandwidth",
+                        "output_latency_avg": "Latency",
+                        "output_jitter_avg": "Jitter",
+                        "output_pps": "PPS"}
+    yaxis_title_map = {"output_throughput": "Mbps",
+                        "output_latency_avg": "us",
+                        "output_jitter_avg": "us",
+                        "output_pps": "packets per second"}
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+
+    outputs = ["output_throughput", "output_latency_avg", "output_jitter_avg", "output_pps"]
+    # for operation in operations:
+    #    for input_image in input_images:
+    #        one_data_set = [operation, image, ]
+    model_name = "NuTransitPerformance"
+    input_choices = get_possible_values(model_name=model_name)
+    for key, value in input_choices.iteritems():
+        print key, value
+
+    d = {"info": "Networking",
+         "metric_model_name": "MetricContainer",
+         "leaf": False,
+         "name": "Networking_Teramarks",
+         "label": "Networking",
+         "weight": 1, "children": []}
+    networking_children = d["children"]
+    for input_flow_type in input_choices["input_flow_type"]:
+        if input_flow_type:
+            if "FCP_" in input_flow_type:
+                input_flow_type = input_flow_type.replace("FCP_", "")
+                input_flow_type = input_flow_type + "_FCP"
+            new_operation_entry = {"info": input_flow_type,
+                               "metric_model_name": "MetricContainer",
+                               "leaf": False,
+                               "name": input_flow_type,
+                               "label": input_flow_type,
+                               "weight": 1, "children": []}
+            networking_children.append(new_operation_entry)
+            operation_children = new_operation_entry["children"]
+            for output_choice in outputs:
+                data_sets = []
+                positive = True
+
+                chart_internal_name = "{}_{}".format(input_flow_type, output_choice)
+                chart_display_name = display_name_map[output_choice]
+                new_output_entry = {"info": chart_internal_name,
+                                   "metric_model_name": model_name,
+                                   "leaf": True,
+                                   "name": chart_internal_name,
+                                   "label": chart_internal_name,
+                                   "weight": 1}
+                operation_children.append(new_output_entry)
+                print "This chart: {}, {}".format(chart_display_name, chart_internal_name)
+                for input_frame_size in input_choices["input_frame_size"]:
+                    for input_mode in input_choices["input_mode"]:
+                        one_data_set = {}
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_flow_type"] = input_flow_type
+                        one_data_set["inputs"]["input_frame_size"] = input_frame_size
+                        one_data_set["inputs"]["input_mode"] = input_mode
+                        one_data_set["output"] = {"name": output_choice, 'min': 0, "max": 9999999}
+                        one_data_set["name"] = input_frame_size
+                        data_sets.append(one_data_set)
+                print data_sets
+                if "latency" in output_choice.lower():
+                    positive = False
+                MetricChart(chart_name=chart_display_name,
+                            metric_id=LastMetricId.get_next_id(),
+                            internal_chart_name=chart_internal_name,
+                            data_sets=json.dumps(data_sets),
+                            leaf=True,
+                            description="TBD",
+                            owner_info='amit.surana@fungible.com',
+                            positive=positive,
+                            y1_axis_title=yaxis_title_map[output_choice],
+                            metric_model_name=model_name).save()
+
+
+
+    # for input_operation_choice in input_choices["input_operation"]:
+
+    print json.dumps(d)
+
