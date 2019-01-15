@@ -287,7 +287,7 @@ def get_wro_global_stats_values(network_controller_obj):
     return result
 
 
-def validate_parser_stats(parser_result, compare_value, check_list_keys=[], parser_old_result=None):
+def validate_parser_stats(parser_result, compare_value, check_list_keys=[], parser_old_result=None, match_values=True):
     result = False
     try:
         stat_counter_list = ['prv_sent', 'eop_cnt', 'sop_cnt']
@@ -301,8 +301,13 @@ def validate_parser_stats(parser_result, compare_value, check_list_keys=[], pars
                         actual = int(current_dict[counter]) - int(old_dict[counter])
                     else:
                         actual = int(current_dict[counter])
-                fun_test.test_assert_expected(expected=compare_value, actual=actual,
-                                              message="Check %s stats for %s in parser nu stats" % (counter, key))
+
+                if match_values:
+                    fun_test.test_assert_expected(expected=compare_value, actual=actual,
+                                                  message="Check %s stats for %s in parser nu stats" % (counter, key))
+                else:
+                    fun_test.test_assert(compare_value >= actual,
+                                         message="Check %s stats for %s in parser nu stats" % (counter, key))
         result = True
     except Exception as ex:
         fun_test.critical(str(ex))
