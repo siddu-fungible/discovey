@@ -101,7 +101,7 @@ export class RegressionSummaryComponent implements OnInit {
     let category = pointInfo.category;
 
     this.detailedInfo = this.filters[index].bySoftwareVersion[category];
-    //this.detailedInfo["softwareVersion"] = softwareVersion;
+    this.detailedInfo.softwareVersion = category;
     this.showDetailedInfo = true;
     this.commonService.scrollTo('detailed-info');
     let i = 0;
@@ -118,48 +118,13 @@ export class RegressionSummaryComponent implements OnInit {
       //console.log(response);
       this.availableModules = response.data;
       this.availableModules.forEach((module) => {
-        this.info[module.name] = {name: module.name, verboseName: module.verbose_name};
-        this.preparePlaceHolders(module.name, this.info[module.name]);
-        this.fetchScriptInfo(module.name, this.info[module.name]);
+        for (let index = 0; index < this.filters.length; index++) {
+          this.fetchScriptInfo2(index);
+        }
+
       });
     }, error => {
       this.loggerService.error("Error fetching modules");
-    })
-  }
-
-  preparePlaceHolders (moduleName, moduleInfo) {
-    // create a bySoftwareVersion key under each module
-    // byVersion is an array of software versions
-    moduleInfo["y1Values"] = [{
-        name: 'Passed',
-        data: [],
-        color: 'green',
-        metadata: {module: moduleName}
-    }, {
-        name: 'Failed',
-        data: [],
-        color: 'red',
-        metadata: {module: moduleName}
-
-    }, {
-        name: 'Not-run',
-        data: [],
-        color: 'grey',
-        metadata: {module: moduleName}
-
-    }];
-
-    moduleInfo["modifyingScriptAllocation"] = false;
-    moduleInfo["xValues"] = [];
-    moduleInfo["bySoftwareVersion"] = {};
-    moduleInfo["showDetailedInfo"] = false;
-    moduleInfo["detailedInfo"] = {};
-    this.versionList.forEach((softwareVersion) => {
-      moduleInfo.bySoftwareVersion[softwareVersion] = {scriptDetailedInfo: {},
-        numPassed: 0,
-        numFailed: 0,
-        numNotRun: 0};
-
     })
   }
 
@@ -167,14 +132,23 @@ export class RegressionSummaryComponent implements OnInit {
     this.versionList.forEach((softwareVersion) => {
 
       for (let index = 0; index < this.filters.length; index++) {
+        if (Number.isNaN(softwareVersion)) {
+          //console.log(softwareVersion);
+          continue;
+        }
+
         this.filters[index].bySoftwareVersion[softwareVersion] = {
-          scriptDetailedInfo: {},
+          scriptDetailedInfo: {showingDetails: false},
           numPassed: 0,
           numFailed: 0,
           numNotRun: 0
         };
       }
     })
+  }
+
+  moreInfo(scriptInfo) {
+    console.log(scriptInfo.key);
   }
 
   modifyScriptAllocationClick (moduleInfo) {
@@ -198,6 +172,11 @@ export class RegressionSummaryComponent implements OnInit {
 
   parseHistory2(index, history, softwareVersion) {
     let bySoftwareVersion = this.filters[index].bySoftwareVersion;
+    if (softwareVersion.toString() === "NaN") {
+      console.log(softwareVersion);
+      return;
+    }
+    //console.log(softwareVersion);
     //let bySoftwareVersion = this.bySoftwareVersion;
     let scriptPath = history.script_path;
     if (bySoftwareVersion.hasOwnProperty(softwareVersion)) {
@@ -215,34 +194,12 @@ export class RegressionSummaryComponent implements OnInit {
       softwareVersionEntry.numPassed += historyResults.numPassed;
       softwareVersionEntry.numFailed += historyResults.numFailed;
       softwareVersionEntry.numNotRun += historyResults.numNotRun;
-    }
-  }
-
-
-  parseHistory(moduleInfo, history, scriptPath, softwareVersion) {
-    let bySoftwareVersion = moduleInfo.bySoftwareVersion;
-    //let bySoftwareVersion = this.bySoftwareVersion;
-
-    if (bySoftwareVersion.hasOwnProperty(softwareVersion)) {
-      let softwareVersionEntry = bySoftwareVersion[softwareVersion];
-      let scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
-      if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
-        scriptDetailedInfo[scriptPath] = {history: [], historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
-      }
-      scriptDetailedInfo[scriptPath].history.push(history);
-      let historyResults = this.aggregateHistoryResults(history);
-      scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
-      scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
-      scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
-
-      softwareVersionEntry.numPassed += historyResults.numPassed;
-      softwareVersionEntry.numFailed += historyResults.numFailed;
-      softwareVersionEntry.numNotRun += historyResults.numNotRun;
+    } else {
+      let i = 0;
     }
   }
 
   fetchScriptInfo2(index) {
-
     this.apiService.post("/regression/get_test_case_executions_by_time", this.filters[index].payload).subscribe((response) => {
       this.filters[index].testCaseExecutions = response.data;
       this.filters[index].testCaseExecutions.forEach((historyElement) => {
@@ -252,49 +209,7 @@ export class RegressionSummaryComponent implements OnInit {
         this.parseHistory2(index, historyElement, matchingSoftwareVersion);
       });
       let i = 0;
-      //this.prepareValuesForChart(moduleInfo);
-
-
     }, error => {
-
-    })
-
-  }
-
-  fetchScriptInfo(moduleName, moduleInfo) {
-    this.apiService.get("/regression/scripts_by_module/" + moduleName).subscribe((response) => {
-      let scripts = response.data;
-      let numScripts = scripts.length;
-      let scriptsFetched = 0;
-      scripts.forEach((script) => {
-        //console.log(script);
-        let scriptPath = script.script_path;
-        let payload = {};
-        payload["script_path"] = scriptPath;
-
-
-        this.apiService.post("/regression/get_script_history", payload).subscribe((response) => {
-          let history = response.data;
-
-          history.forEach((historyElement) => {
-            //console.log(historyElement);
-            let elementSuiteExecutionId = historyElement.suite_execution_id;
-            let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
-            this.parseHistory(moduleInfo, historyElement, scriptPath, matchingSoftwareVersion);
-          });
-          scriptsFetched += 1;
-          if (scriptsFetched === numScripts) {
-            this.prepareValuesForChart(moduleInfo);
-          }
-
-
-        }, error => {
-          scriptsFetched += 1;
-          this.loggerService.error("/regression/script_history");
-        })
-      })
-    }, error => {
-      this.loggerService.error("Fetching scripts by module");
     })
   }
 

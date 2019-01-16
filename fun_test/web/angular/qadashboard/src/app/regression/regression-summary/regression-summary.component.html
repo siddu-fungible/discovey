@@ -20,8 +20,7 @@
     <div class="card-body" *ngIf="showDetailedInfo && detailedInfo">
       <table class="table">
         <tr>
-          <th>Software version: {{ detailedInfo.softwareVersion }} : Schduled at:
-            {{ epochMsToDate(versionMap[detailedInfo.softwareVersion].scheduled_time) }}</th>
+          <th>Software version: {{ detailedInfo.softwareVersion }} </th>
           <th><label class="badge badge-success">Passed</label></th>
           <th><label class="badge badge-danger">Failed</label></th>
           <th><label class="badge badge-secondary">Not-run</label></th>
@@ -33,47 +32,40 @@
           <td>{{ detailedInfo.numNotRun }}</td>
 
         </tr>
-        <tr *ngFor="let scriptInfo of detailedInfo.scriptDetailedInfo | keyvalue">
-          <td>
-            <ngb-accordion #acc="ngbAccordion">
-              <ngb-panel>
-                <ng-template ngbPanelTitle>
-                  <div class="container">
-                    <div class="row">
-                      <div class="col-xxl-6 col-lg-6 col-md-6 col-xl-6">
-                        {{ scriptInfo.key }}
-                      </div>
-                    </div>
-                  </div>
-                </ng-template>
-                <ng-template ngbPanelContent>
-                  <table class="table">
-                    <tr>
-                      <th>Result</th>
-                      <th>Suite execution ID</th>
-                      <th>TC-ID</th>
-                      <th>Start-time</th>
-                    </tr>
-                    <tr *ngFor="let executionEntry of scriptInfo.value.history">
-                      <td><span
-                        [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span>
-                      </td>
-                      <td><a target="_blank"
-                             href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
-                      </td>
-                      <td>{{ executionEntry.test_case_id }}</td>
-                      <td>{{ executionEntry.started_time }}</td>
-                    </tr>
-                  </table>
-                </ng-template>
-              </ngb-panel>
-            </ngb-accordion>
-          </td>
-          <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
-          <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
-          <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
+        <ng-container *ngFor="let scriptInfo of detailedInfo.scriptDetailedInfo | keyvalue">
+          <tr *ngIf="scriptInfo.value.historyResults">
+            <td>
+              {{ scriptInfo.key }}
+              <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails" class="anchor-button pseudo-anchor">details</u>
+            </td>
+            <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
+            <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
+            <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
 
-        </tr>
+          </tr>
+          <tr *ngIf="scriptInfo.value.showingDetails">
+            <td colspan="4">
+              <table class="table">
+                <tr>
+                  <th>Result</th>
+                  <th>Suite execution ID</th>
+                  <th>TC-ID</th>
+                  <th>Summary</th>
+                </tr>
+                <tr *ngFor="let executionEntry of scriptInfo.value.history">
+                  <td><span
+                    [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span>
+                  </td>
+                  <td><a target="_blank"
+                         href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
+                  </td>
+                  <td>{{ executionEntry.test_case_id }}</td>
+                  <td>{{ executionEntry.summary }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </ng-container>
 
       </table>
 

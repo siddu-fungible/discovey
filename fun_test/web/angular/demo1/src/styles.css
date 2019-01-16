@@ -370,6 +370,7 @@ tr.mat-table-element-row:not(.mat-table-expanded-row):active {
 }
 
 .anchor-button {
+  text-decoration-color: #007bff;
   color: #007bff;
   font-family: Roboto,"Helvetica Neue",sans-serif;
 
