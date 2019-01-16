@@ -1,3 +1,11 @@
 [
-  {"path": "security/palladium_crypto_test.py"}
+  {"info": {"tags": ["palladium-apps"]}},
+  {"path": "security/palladium_crypto_test.py"},
+  {"path": "accelerators/jpeg/palladium_jpeg_teramark.py"},
+  {"path": "accelerators/lookup_engine/palladium_le_teramark.py"},
+  {"path": "accelerators/pke/palladium_pke_teramark.py"},
+  {"path": "accelerators/pke/palladium_qa_pke_functionality_p0.py"},
+  {"path": "accelerators/regex/palladium_dfa_teramark.py"},
+  {"path": "accelerators/zip/palladium_zip_sanity.py"},
+  {"path": "accelerators/zip/palladium_zip_teramark.py"}
 ]

@@ -1,0 +1,9 @@
+[
+  "networking_sanity.json",
+  "networking_qos_sanity.json",
+  "networking_vp_sanity.json",
+  "networking_sampling_sanity.json",
+  "networking_copp_sanity.json",
+  "networking_flow_sanity.json",
+  "networking_parser_sanity.json"
+]

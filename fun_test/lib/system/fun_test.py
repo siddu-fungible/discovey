@@ -368,7 +368,10 @@ class FunTest:
         return os.path.basename(artifact_file)
 
     def get_test_case_artifact_file_name(self, post_fix_name):
-        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        log_prefix = ""
+        if self.log_prefix:
+            log_prefix = "_{}".format(self.log_prefix)
+        artifact_file = self.logs_dir + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
         return artifact_file
 
     def enable_pause_on_failure(self):
@@ -941,6 +944,12 @@ class FunTest:
     def get_helper_dir_path(self):
         return self.get_script_parent_directory() + "/helper"
 
+    def get_suite_execution_tags(self):
+        tags = []
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+        if suite_execution:
+            tags = json.loads(suite_execution.tags)
+        return tags
 
 fun_test = FunTest()
 
@@ -986,11 +995,12 @@ class FunTestScript(object):
         setup_te = None
         try:
             if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
+                suite_execution_tags = fun_test.get_suite_execution_tags()
                 setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
                                                                  suite_execution_id=fun_test.suite_execution_id,
                                                                  result=fun_test.IN_PROGRESS,
                                                                  path=fun_test.relative_path,
-                                                                 log_prefix=fun_test.log_prefix)
+                                                                 log_prefix=fun_test.log_prefix, tags=suite_execution_tags)
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
                 new_order = []
@@ -1029,11 +1039,13 @@ class FunTestScript(object):
                     if test_case.id not in fun_test.selected_test_case_ids:
                         continue
                 if fun_test.suite_execution_id:
+                    suite_execution_tags = fun_test.get_suite_execution_tags()
                     te = models_helper.add_test_case_execution(test_case_id=test_case.id,
                                                                suite_execution_id=fun_test.suite_execution_id,
                                                                result=fun_test.NOT_RUN,
                                                                path=fun_test.relative_path,
-                                                               log_prefix=fun_test.log_prefix)
+                                                               log_prefix=fun_test.log_prefix,
+                                                               tags=suite_execution_tags)
                     test_case.execution_id = te.execution_id
 
             self.setup()

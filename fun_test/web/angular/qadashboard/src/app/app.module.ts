@@ -40,6 +40,7 @@ import { JiraInfoComponent } from './jira-info/jira-info.component';
 import { RegressionSummaryComponent } from './regression/regression-summary/regression-summary.component';
 import { GitHistoryComponent } from './git-history/git-history.component';
 import { ClipboardModule } from 'ngx-clipboard';
+import { RegressionSummaryChartComponent } from './regression/regression-summary/regression-summary-chart/regression-summary-chart.component';
 
 
 @NgModule({
@@ -66,7 +67,8 @@ import { ClipboardModule } from 'ngx-clipboard';
     RegressionAdminComponent,
     JiraInfoComponent,
     RegressionSummaryComponent,
-    GitHistoryComponent
+    GitHistoryComponent,
+    RegressionSummaryChartComponent
   ],
   imports: [
     BsDropdownModule,

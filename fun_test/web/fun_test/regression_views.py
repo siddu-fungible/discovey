@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2
+from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2, queue_suite_container
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, get_test_case_details
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
@@ -27,6 +27,7 @@ import re
 from django.apps import apps
 import time
 from django.db import transaction
+from django.db.models import Q
 
 
 
@@ -126,17 +127,32 @@ def submit_job(request):
         if "repeat_in_minutes" in request_json:
             repeat_in_minutes = request_json["repeat_in_minutes"]
 
-        job_id = queue_job2(suite_path=suite_path,
-                   build_url=build_url,
-                   tags=tags,
-                   email_list=email_list,
-                   email_on_fail_only=email_on_fail_only,
-                   environment=environment,
-                   scheduling_type=scheduling_type,
-                   tz_string=tz,
-                   requested_hour=requested_hour,
-                   requested_minute=requested_minute,
-                   requested_days=requested_days, repeat_in_minutes=repeat_in_minutes)
+        if suite_path.replace(".json", "").endswith("_container"):
+            job_id = queue_suite_container(suite_path=suite_path,
+                       build_url=build_url,
+                       tags=tags,
+                       email_list=email_list,
+                       email_on_fail_only=email_on_fail_only,
+                       environment=environment,
+                       scheduling_type=scheduling_type,
+                       tz_string=tz,
+                       requested_hour=requested_hour,
+                       requested_minute=requested_minute,
+                       requested_days=requested_days,
+                                repeat_in_minutes=repeat_in_minutes)
+        else:
+            job_id = queue_job2(suite_path=suite_path,
+                       build_url=build_url,
+                       tags=tags,
+                       email_list=email_list,
+                       email_on_fail_only=email_on_fail_only,
+                       environment=environment,
+                       scheduling_type=scheduling_type,
+                       tz_string=tz,
+                       requested_hour=requested_hour,
+                       requested_minute=requested_minute,
+                       requested_days=requested_days,
+                                repeat_in_minutes=repeat_in_minutes)
         '''
         if "schedule_at" in request_json and request_json["schedule_at"]:
             schedule_at_value = request_json["schedule_at"]
@@ -222,14 +238,16 @@ def suites(request):
                 inner_suites = parse_suite(suite_file=suite_file)
                 for inner_suite in inner_suites:
                     items = parse_suite(suite_file=SUITES_DIR + "/" + inner_suite)
+                    # suites_info.extend(items)
                     suites_info[os.path.basename(suite_file)].extend(items)
             else:
                 items = parse_suite(suite_file=suite_file)
                 suites_info[os.path.basename(suite_file)] = items
+                # suites_info.extend(items)
 
         except Exception as ex:
             pass
-    return json.dumps(suites_info)
+    return suites_info
 
 @csrf_exempt
 @api_safe_json_response
@@ -307,12 +325,12 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj.started_time = timezone.localtime(test_case_execution_obj.started_time)
     test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
 
-    lock = app_config.get_site_lock()
-    lock.acquire()
-    print "Ac"
+    # lock = app_config.get_site_lock()
+    # lock.acquire()
+    # print "Ac"
     details = get_test_case_details(script_path=test_case_execution_obj.script_path, test_case_id=test_case_execution_obj.test_case_id)
-    print "Rel"
-    lock.release()
+    # print "Rel"
+    # lock.release()
     # test_case_execution_obj.summary = details["summary"]
     # data = serializers.serialize('json', [test_case_execution_obj])
     serializer = TestCaseExecutionSerializer(test_case_execution_obj)
@@ -547,20 +565,42 @@ def get_suite_executions_by_time(request):
 @api_safe_json_response
 def get_test_case_executions_by_time(request):
     request_json = json.loads(request.body)
-    from_time = int(request_json["from_time"])
-    to_time = request_json["to_time"]
+    from_time = 1541030400 * 1000
+    # from_time = int(request_json["from_time"])
+    # to_time = request_json["to_time"]
     from_time = get_datetime_from_epoch_time(from_time)
-    to_time = get_datetime_from_epoch_time(to_time)
+    # to_time = get_datetime_from_epoch_time(to_time)
+    test_case_execution_tags = None
+    if "test_case_execution_tags" in request_json:
+        test_case_execution_tags = request_json["test_case_execution_tags"]
+    module = None
+    scripts_for_module = None
+    q = None
+    if "module" in request_json:
+        module = request_json["module"]
+        module_str = '"{}"'.format(module)
+        q = Q(modules__contains=module_str)
+        scripts_for_module = RegresssionScripts.objects.filter(q)
+        scripts_for_module = [x.script_path for x in scripts_for_module]
+
     tes = []
-    test_case_executions = TestCaseExecution.objects.filter(started_time__gte=from_time, started_time__lte=to_time)
+    q = Q(started_time__gte=from_time)
+
+    if test_case_execution_tags:
+        for tag in test_case_execution_tags:
+            tag_str = '"{}"'.format(tag)
+            q = q & Q(tags__contains=tag_str)
+
+    test_case_executions = TestCaseExecution.objects.filter(q)
 
     for te in test_case_executions:
-        one_entry = {"execution_id": te.execution_id,
-                     "suite_execution_id": te.suite_execution_id,
-                     "script_path": te.script_path,
-                     "test_case_id": te.test_case_id,
-                     "result": te.result}
-        tes.append(one_entry)
+        if te.script_path in scripts_for_module:
+            one_entry = {"execution_id": te.execution_id,
+                         "suite_execution_id": te.suite_execution_id,
+                         "script_path": te.script_path,
+                         "test_case_id": te.test_case_id,
+                         "result": te.result}
+            tes.append(one_entry)
     return tes
 
 

@@ -4,7 +4,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
 from lib.host.network_controller import NetworkController
 from scripts.networking.nu_config_manager import nu_config_obj
 from scripts.networking.helper import *
-from qos_helper import *
+from scripts.networking.qos.qos_helper import *
 import copy
 
 num_ports = 3
@@ -21,6 +21,8 @@ max_egress_load = qos_json_output['max_egress_load']
 json_load_unit = qos_json_output['load_unit']
 q_depth = 'avg_q_integ'
 wred_q_drop = 'wred_q_drop'
+min_frame_length = 64
+max_frame_length = 1500
 
 
 class SpirentSetup(FunTestScript):
@@ -38,9 +40,6 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, subscribe_results, network_controller_obj, dut_port_2, \
             dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list
-
-        min_frame_length = 64
-        max_frame_length = 1500
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
@@ -150,7 +149,7 @@ class SpirentSetup(FunTestScript):
 
         # Subscribe to results
         project = template_obj.stc_manager.get_project_handle()
-        subscribe_results = template_obj.subscribe_to_all_results(parent=project, diff_serv=True)
+        subscribe_results = template_obj.subscribe_to_all_results(parent=project, diff_serv=True, port=port_2)
         fun_test.test_assert(subscribe_results['result'], "Subscribing to results")
         del subscribe_results['result']
 
@@ -260,7 +259,7 @@ class All_Queues_Share_BW(FunTestCase):
     def validate_stats(self, result_dict):
         for dscp, values in result_dict.iteritems():
             load_check = verify_load_output(actual_value=values['actual'],
-                                            expected_value=values['expected'], accept_range=self.difference_accept_range, compare=True)
+                                            expected_value=values['expected'], accept_range=self.difference_accept_range)
             fun_test.test_assert(load_check, "Ensure rate %s is seen for dscp %s. Actual seen %s" %
                                  (values['expected'], dscp, values['actual']))
 
@@ -302,7 +301,10 @@ class All_Queues_Pir(All_Queues_Share_BW):
                                                                       shaper_enable=False,
                                                                       max_rate=0,
                                                                       shaper_threshold=0)
-            fun_test.add_checkpoint("Remove pir on queue %s" % queue, ignore_on_success=True)
+            fun_test.add_checkpoint("Remove pir on queue %s" % queue)
+
+        for key in subscribe_results.iterkeys():
+            template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
 
 class All_Queues_DWRR(All_Queues_Share_BW):
@@ -360,6 +362,8 @@ class All_Queues_DWRR(All_Queues_Share_BW):
             fun_test.test_assert(rate, "Set rate 1 on queue %s" % queue, ignore_on_success=True)
 
     def cleanup(self):
+        super(All_Queues_DWRR, self).cleanup()
+
         for queue in queue_list:
             weight = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
                                                                      scheduler_type=network_controller_obj.SCHEDULER_TYPE_WEIGHTED_ROUND_ROBIN,
@@ -374,6 +378,9 @@ class All_Queues_DWRR(All_Queues_Share_BW):
             fun_test.add_checkpoint("Set default rate 2000 on queue %s" % queue)
         fun_test.log("Resetted dwrr and shaper values to default")
 
+        for key in subscribe_results.iterkeys():
+            template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
+
 class All_Queues_WRED(FunTestCase):
     """
     For WRED we are using the same key from qos.json that is used in other testcases
@@ -381,7 +388,8 @@ class All_Queues_WRED(FunTestCase):
     test_type = "all_queue_wred"
     qos_test_json = qos_json_output[test_type]
     sleep_timer = qos_test_json['wred_timer']
-    normal_stream_pps_list = qos_test_json['stream_pps_percent']
+    normal_stream_pps = qos_test_json['stream_pps_percent']
+    normal_stream_pps_list = normal_stream_pps.keys()
     min_thr = qos_test_json['wred_min_thr']
     max_thr = qos_test_json['wred_max_thr']
     wred_weight = qos_test_json['wred_weight']
@@ -392,10 +400,9 @@ class All_Queues_WRED(FunTestCase):
     avg_period = qos_test_json['avg_period']
     cap_avg_sz = qos_test_json['cap_avg_sz']
     stats_list = [q_depth, wred_q_drop]
-    reserved_val = '0064' * 13
     cushion_drops = 30
     cushion_depth = 5
-    queue_monitor_iteration = 5
+    queue_monitor_iteration = 4
     packet_size = 128
 
     def describe(self):
@@ -460,7 +467,7 @@ class All_Queues_WRED(FunTestCase):
                                                          packet_size=self.packet_size, total_queues=len(queue_list))
         packet_num_list = []
         for percent_load in self.normal_stream_pps_list:
-            packet_num_list.append(int((percent_load / 100.0) * max_egress_packets))
+            packet_num_list.append(int((int(percent_load) / 100.0) * max_egress_packets))
 
         for pps in packet_num_list:
             result_dict[str(pps)] = {}
@@ -474,23 +481,10 @@ class All_Queues_WRED(FunTestCase):
                 else:
                     current_streamblock = port_3_stream_obj[str(queue)]
 
-                if QOS_PROFILE_ECN in self.test_type:
-                    dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
-                        decimal_value_list=[queue], dscp_high=True, dscp_low=True)
-                    dscp_high = dscp_values[queue]['dscp_high']
-                    dscp_low = dscp_values[queue]['dscp_low']
-
-                    # Update dscp value
-                    dscp_set = template_obj.configure_diffserv(streamblock_obj=current_streamblock,
-                                                               dscp_high=dscp_high,
-                                                               dscp_low=dscp_low,
-                                                               update=True)
-                    fun_test.simple_assert(dscp_set, "Ensure dscp value of %s is updated on ip header for stream %s"
-                                           % (queue, current_streamblock.spirent_handle))
-
                 current_streamblock.FrameLengthMode = current_streamblock.FRAME_LENGTH_MODE_FIXED
                 current_streamblock.FixedFrameLength = self.packet_size
                 current_streamblock.LoadUnit = current_streamblock.LOAD_UNIT_FRAMES_PER_SECOND
+                current_streamblock.Load = pps
 
                 update = template_obj.configure_stream_block(current_streamblock, update=True)
                 fun_test.simple_assert(update, "Update stream load pps and unit to fps for stream %s" %
@@ -519,6 +513,27 @@ class All_Queues_WRED(FunTestCase):
                 stream_blocks_list=streamblock_handle_list)
             fun_test.test_assert(stop_streams, "Ensure all streams are stopped")
 
+            fun_test.sleep("Letting streams to stop traffic")
+
+        for key, pps in zip(self.normal_stream_pps_list, packet_num_list):
+            fun_test.log("Checking q depth and wred q drops for fps %s on each queue" % pps)
+            q_depth_lower_limit = int(self.normal_stream_pps[key][q_depth]['lower_limit'])
+            q_depth_upper_limit = int(self.normal_stream_pps[key][q_depth]['upper_limit'])
+
+            wred_q_drop_lower_limit = int(self.normal_stream_pps[key][wred_q_drop]['lower_limit'])
+            wred_q_drop_upper_limit = int(self.normal_stream_pps[key][wred_q_drop]['upper_limit'])
+
+            for queue in queue_list:
+                fun_test.test_assert(q_depth_lower_limit <= int(result_dict[str(pps)][str(queue)][q_depth]) <=
+                                     q_depth_upper_limit, "Ensure q depth for queue %s is in range between %s and %s"
+                                      % (queue, q_depth_lower_limit, q_depth_upper_limit))
+
+                fun_test.test_assert(wred_q_drop_lower_limit <= int(result_dict[str(pps)][str(queue)][wred_q_drop]) <=
+                                     wred_q_drop_upper_limit, "Ensure q depth for queue %s is in range between "
+                                                              "%s and %s"
+                                     % (queue, wred_q_drop_lower_limit, wred_q_drop_upper_limit))
+
+        '''
         # Taking q0 values as reference and will compare with others
         queue_0 = queue_list[0]
         reference_wred_q_drops = result_dict[str(queue_0)][wred_q_drop]
@@ -539,6 +554,7 @@ class All_Queues_WRED(FunTestCase):
                     "Ensure stat %s for queue %s is in range between %s and %s" %
                     (q_depth, queue, lower_q_depth_limit, higher_q_depth_limit))
             fun_test.log("=========x===========x===========x==========")
+        '''
 
     def cleanup(self):
         for queue in queue_list:
@@ -548,6 +564,13 @@ class All_Queues_WRED(FunTestCase):
                                                                              wred_weight=self.wred_weight,
                                                                              wred_prof_num=self.prof_num)
             fun_test.add_checkpoint("Ensure queue config is set for %s" % queue)
+
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=streamblock_handle_list)
+        fun_test.test_assert(stop_streams, "Ensure all streams are stop")
+
+        for key in subscribe_results.iterkeys():
+            template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
 
 class All_Queues_ECN(All_Queues_WRED):
@@ -563,8 +586,11 @@ class All_Queues_ECN(All_Queues_WRED):
     avg_period = qos_test_json['avg_period']
     cap_avg_sz = qos_test_json['cap_avg_sz']
     stats_list = [q_depth, ecn_count]
-    reserved_val = '0064' * 13
     current_ecn_bits = ECN_BITS_10
+    dut_ecn_count = 'dut_ecn_count'
+    dut_ecn_count_before = 'dut_ecn_count_before'
+    dut_ecn_count_after = 'dut_ecn_count_after'
+    spirent_ecn_count = 'spirent_ecn_count'
 
     def describe(self):
         self.set_test_details(id=5,
@@ -577,27 +603,112 @@ class All_Queues_ECN(All_Queues_WRED):
                                     """)
 
     def run(self):
-        super(All_Queues_ECN).run()
+        result_dict = {}
 
-        result = {}
+        max_egress_packets_per_queue = get_load_pps_for_each_queue(max_egress_load_mbps=max_egress_load,
+                                                         packet_size=self.packet_size, total_queues=len(queue_list))
+
+
+        # Update load on all streams
+        port_1_stream_obj = streamblock_objs[str(port_1)]
+        port_3_stream_obj = streamblock_objs[str(port_3)]
+        for queue in queue_list:
+            result_dict[str(queue)] = {}
+            if str(queue) in port_1_stream_obj.keys():
+                current_streamblock = port_1_stream_obj[str(queue)]
+            else:
+                current_streamblock = port_3_stream_obj[str(queue)]
+
+            current_ecn_count = network_controller_obj.get_qos_wred_ecn_stats(port_num=dut_port_2, queue_num=queue)[ecn_count]
+            if not current_ecn_count:
+                current_ecn_count = 0
+            result_dict[str(queue)][self.dut_ecn_count_before] = int(current_ecn_count)
+
+            dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
+                decimal_value_list=[queue], dscp_high=True, dscp_low=True)
+            dscp_high = dscp_values[queue]['dscp_high']
+            dscp_low = dscp_values[queue]['dscp_low']
+
+            # Update dscp value
+            dscp_set = template_obj.configure_diffserv(streamblock_obj=current_streamblock,
+                                                       dscp_high=dscp_high,
+                                                       dscp_low=dscp_low,
+                                                       reserved=self.current_ecn_bits,
+                                                       update=True)
+            fun_test.simple_assert(dscp_set, "Ensure dscp value of %s is updated on ip header for stream %s"
+                                   % (queue, current_streamblock.spirent_handle))
+
+            current_streamblock.FrameLengthMode = current_streamblock.FRAME_LENGTH_MODE_RANDOM
+            current_streamblock.MinFrameLength = min_frame_length
+            current_streamblock.MaxFrameLength = max_frame_length
+            current_streamblock.LoadUnit = current_streamblock.LOAD_UNIT_FRAMES_PER_SECOND
+            current_streamblock.Load = max_egress_packets_per_queue
+
+            update = template_obj.configure_stream_block(current_streamblock, update=True)
+            fun_test.simple_assert(update, "Update stream load pps and unit to fps for stream %s" %
+                                   current_streamblock.spirent_handle)
+
+        start_streams = template_obj.stc_manager.start_traffic_stream(
+            stream_blocks_list=streamblock_handle_list)
+        fun_test.test_assert(start_streams, "Ensure all streams are started")
+
+        fun_test.sleep(message="Letting traffic to be executed", seconds=self.sleep_timer)
+
+        stop_streams = template_obj.stc_manager.stop_traffic_stream(
+            stream_blocks_list=streamblock_handle_list)
+        fun_test.test_assert(stop_streams, "Ensure all streams are stop")
+
+        fun_test.sleep("Letting traffic be stopped", seconds=10)
+
+        for queue in queue_list:
+            current_ecn_count = network_controller_obj.get_qos_wred_ecn_stats(port_num=dut_port_2, queue_num=queue)[ecn_count]
+            if not current_ecn_count:
+                current_ecn_count = 0
+            result_dict[str(queue)][self.dut_ecn_count_after] = int(current_ecn_count)
+
+            fun_test.log("ECN COUNT for queue %s on dut before running traffic was %s and after running traffic is %s"
+                         % (queue, result_dict[str(queue)][self.dut_ecn_count_before], result_dict[str(queue)][self.dut_ecn_count_after]))
+
+            result_dict[str(queue)][self.dut_ecn_count] = result_dict[str(queue)][self.dut_ecn_count_after] - \
+                                                          result_dict[str(queue)][self.dut_ecn_count_before]
+
+
         out = template_obj.stc_manager.get_port_diffserv_results(port_handle=port_2,
                                                                  subscribe_handle=subscribe_results[
                                                                      'diff_serv_subscribe'])
 
         for queue in queue_list:
-            result[str(queue)] = False
             ecn_qos_val = template_obj.get_diff_serv_dscp_value_from_decimal_value(decimal_value_list=[queue],
                                                                                    dscp_value=True)
             qos_binary_value = get_ecn_qos_binary(qos_binary=ecn_qos_val[queue]['dscp_value'])
             for key in out.keys():
                 if key == str(qos_binary_value):
-                    if int(out[key]['Ipv4FrameCount']) > 0:
-                        result[str(queue)] = True
+                    result_dict[str(queue)][self.spirent_ecn_count] =  int(out[key]['Ipv4FrameCount'])
+                    fun_test.log("ECN COUNT seen for queue %s on dut is %s and on spirent is %s" %
+                                 (queue, result_dict[str(queue)][self.dut_ecn_count],
+                                  result_dict[str(queue)][self.spirent_ecn_count]))
+
+        reference_queue = 0
+        reference_count = result_dict[str(reference_queue)][self.dut_ecn_count]
+        lower_limit = int(0.98 * reference_count)
+        upper_limit = int(1.02 * reference_count)
 
         for queue in queue_list:
-            fun_test.test_assert(result[str(queue)], message="Check ECN set counters on spirent are seen for queue %s" % queue)
+            fun_test.test_assert_expected(expected=result_dict[str(queue)][self.dut_ecn_count],
+                                          actual=result_dict[str(queue)][self.spirent_ecn_count],
+                                          message="Ensure spirent ecn count for queue %s matches with ecn count "
+                                                  "from wred ecn stats in DUT" % queue)
+            '''
+            fun_test.test_assert(lower_limit < result_dict[str(queue)][self.dut_ecn_count] < upper_limit,
+                                 message="Ensure queue %s has ecn count in range between %s and %s" %
+                                         (queue, lower_limit, upper_limit))
+            '''
 
     def cleanup(self):
+        start_streams = template_obj.stc_manager.start_traffic_stream(
+            stream_blocks_list=streamblock_handle_list)
+        fun_test.test_assert(start_streams, "Ensure all streams are started")
+
         for queue in queue_list:
             set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
                                                                              queue_num=queue,
@@ -611,9 +722,9 @@ if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
     flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
-    ts.add_test_case(All_Queues_Share_BW())
-    ts.add_test_case(All_Queues_Pir())
-    ts.add_test_case(All_Queues_DWRR())
+    #ts.add_test_case(All_Queues_Share_BW())
+    #ts.add_test_case(All_Queues_Pir())
+    #ts.add_test_case(All_Queues_DWRR())
     ts.add_test_case(All_Queues_WRED())
     ts.add_test_case(All_Queues_ECN())
     ts.run()

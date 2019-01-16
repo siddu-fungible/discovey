@@ -155,7 +155,7 @@
             </tr>
             <tr *ngFor="let scriptInfo of selectedInfo; index as i">
               <td>{{ i }}</td>
-              <td>{{ scriptInfo.path }}</td>
+              <td>{{ parseScriptInfo(scriptInfo) }}</td>
             </tr>
           </table>
         </div>

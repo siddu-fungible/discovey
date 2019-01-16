@@ -78,7 +78,7 @@
       }
     },
     "all_queues": {
-      "all_queues_traffic_time": 15,
+      "all_queues_traffic_time": 30,
       "ingress_port1": [
               {"load_percent": 10, "expected_load_percent": 6.25}],
           "ingress_port2": [
@@ -196,7 +196,7 @@
       ]
     },
     "all_queues_pir": {
-      "all_queues_traffic_time": 15,
+      "all_queues_traffic_time": 30,
       "ingress_port1": [
         {
           "load_percent": 10,
@@ -575,7 +575,7 @@
               {"load_percent": 50, "expected_load_percent": 40, "weight": 4, "rate": 1, "threshold": 282000}]
     },
   "all_queues_dwrr": {
-    "all_queues_traffic_time": 15,
+    "all_queues_traffic_time": 30,
     "default_weight": 1,
     "ingress_port1": [
               {"dscp": 0, "load_percent": 3.5, "expected_load_percent": 1.5, "weight": 3, "rate": 1, "threshold": 282000},
@@ -623,14 +623,15 @@
     "cap_avg_sz": 1
   },
   "all_queue_wred": {
-    "wred_timer": 15,
+    "wred_timer": 60,
     "wred_prob_index": 0,
     "wred_prof_num": 0,
     "wred_enable": 1,
     "wred_weight": 2,
     "wred_min_thr": 10,
     "wred_max_thr": 90,
-    "stream_pps_percent": [90, 95, 120],
+    "stream_pps_percent": {"110": {"avg_q_integ": {"lower_limit": 55, "upper_limit": 65}, "wred_q_drop": {"lower_limit": 600, "upper_limit": 650}},
+      "140": {"avg_q_integ": {"lower_limit": 65, "upper_limit": 75}, "wred_q_drop": {"lower_limit": 1400, "upper_limit": 1550}}},
     "avg_period": 1024,
     "cap_avg_sz": 1,
     "cap_avg_enable": 1,

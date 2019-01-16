@@ -123,7 +123,7 @@ class PalladiumPerformanceTc(FunTestCase):
         return d
 
     def validate_json_file(self, validation_required=True):
-        log_dir = fun_test.logs_dir
+        log_dir = LOGS_DIR
         file_path = log_dir + "/nu_transit_performance_data.json"
         data = {}
         fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
