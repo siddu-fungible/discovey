@@ -1,35 +1,27 @@
 <!--<p class="component">-->
-  <!--<button (click)="test()">Test</button>-->
+<!--<button (click)="test()">Test</button>-->
 <!--</p>-->
 
 <div class="row component">
   <div class="col">
-    <div class="card" *ngFor="let moduleInfo of info | keyvalue">
-      <div class="card card-primary">
-        <div class="card-header"><b>{{ moduleInfo.value.verboseName }}</b></div>
-        <div class="card-body">
-          <fun-chart [pointClickCallback]="pointClickCallback"
-                     (pointInfo)="showPointDetails($event)"
-                     [title]="moduleInfo.value.verboseName"
-                     [y1AxisLabel]="'Results'"
-                     [y1Values]="moduleInfo.value.y1Values"
-                     [xValues]="moduleInfo.value.xValues"
-                     [chartType]="'vertical_colored_bar_chart'">
-          </fun-chart>
-        </div>
-      </div>
-      <!--div>
-        <button style="float: right" class="btn btn-link" (click)="modifyScriptAllocationClick(moduleInfo)">Script allocation</button>
-      </div-->
+    <ng-container *ngFor="let filter of filters">
 
-    </div>
+      <app-regression-summary-chart [title]="filter.info" [metadata]="filter.metadata"
+                                    (pointInfo)="showPointDetails($event)" [pointClickCallback]="pointClickCallback"
+                                    [testCaseExecutions]="filter.testCaseExecutions" [versionSet]="versionSet"
+                                    [suiteExectionVersionMap]="suiteExectionVersionMap"></app-regression-summary-chart>
+
+    </ng-container>
+
+
   </div>
   <div class="col">
     <span id="detailed-info"></span>
     <div class="card-body" *ngIf="showDetailedInfo && detailedInfo">
       <table class="table">
         <tr>
-          <th>Software version: {{ detailedInfo.softwareVersion }} : Schduled at: {{ epochMsToDate(versionMap[detailedInfo.softwareVersion].scheduled_time) }}</th>
+          <th>Software version: {{ detailedInfo.softwareVersion }} : Schduled at:
+            {{ epochMsToDate(versionMap[detailedInfo.softwareVersion].scheduled_time) }}</th>
           <th><label class="badge badge-success">Passed</label></th>
           <th><label class="badge badge-danger">Failed</label></th>
           <th><label class="badge badge-secondary">Not-run</label></th>
@@ -89,83 +81,3 @@
   </div>
 </div>
 
-
-<div class="card card-primary">
-  <div class="card-header"><b>Adding scripts ...</b></div>
-  <div class="card-body">
-    <table class="table">
-      <tr>
-        <th>
-          Script
-        </th>
-        <th>
-          Modules
-        </th>
-      </tr>
-      <tr *ngFor="let regressionScript of allRegressionScripts">
-        <td>
-          {{ regressionScript.script_path }}
-        </td>
-        <td>
-          <ng-multiselect-dropdown
-            [placeholder]="'Select'"
-            [data]="availableModules"
-            [(ngModel)]="regressionScript.selectedModules"
-            [settings]="dropdownSettings"
-            (onSelect)="regressionScript.dirty = true"
-            (onDeSelect)="regressionScript.dirty = true"
-            (onSelectAll)="regressionScript.dirty = true"
-            (onDeSelectAll)="regressionScript.dirty = true">
-          </ng-multiselect-dropdown>
-        </td>
-        <td *ngIf="regressionScript.dirty">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submitSelectModuleClick(regressionScript)"></i></span>
-          <span><i class="fa fa-times fa-fw close-color"
-                   (click)="dismissSelectModuleClick(regressionScript)"></i></span>
-        </td>
-      </tr>
-    </table>
-  </div>
-</div>
-
-
-<div class="card card-primary">
-  <div class="card-header"><b>Unallocated scripts ...</b></div>
-  <div class="card-body">
-    <table class="table">
-      <tr>
-        <th>
-          Script
-        </th>
-        <th>
-          Modules
-        </th>
-      </tr>
-      <tr *ngFor="let regressionScript of unallocatedRegressionScripts">
-        <td>
-          {{ regressionScript.script_path }}
-        </td>
-        <td>
-          <ng-multiselect-dropdown
-            [placeholder]="'Select'"
-            [data]="availableModules"
-            [(ngModel)]="regressionScript.selectedModules"
-            [settings]="dropdownSettings"
-            (onSelect)="regressionScript.dirty = true"
-            (onDeSelect)="regressionScript.dirty = true"
-            (onSelectAll)="regressionScript.dirty = true"
-            (onDeSelectAll)="regressionScript.dirty = true">
-          </ng-multiselect-dropdown>
-        </td>
-        <td *ngIf="regressionScript.dirty">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submitSelectModuleClick(regressionScript)"></i></span>
-          <span><i class="fa fa-times fa-fw close-color"
-                   (click)="dismissSelectModuleClick(regressionScript)"></i></span>
-        </td>
-      </tr>
-    </table>
-  </div>
-</div>
-
-
-<app-regression-summary-chart></app-regression-summary-chart>

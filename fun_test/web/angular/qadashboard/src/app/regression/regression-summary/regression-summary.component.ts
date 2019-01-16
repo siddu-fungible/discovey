@@ -24,7 +24,13 @@ export class RegressionSummaryComponent implements OnInit {
   dropdownSettings = {};
   selectedModules: any[] = [];
   availableModules = [];
+  testCaseExecutions: any = null;
+  //bySoftwareVersion: any = {};
 
+  filters = [
+    {info: "Networking", payload: {module: "networking"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 0}},
+    {info: "Storage", payload: {module: "storage"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 1}}
+  ];
 
 
   ngOnInit() {
@@ -70,12 +76,13 @@ export class RegressionSummaryComponent implements OnInit {
         this.suiteExectionVersionMap[entry.execution_id] = version;
 
       });
-      console.log(this.versionSet);
+      //console.log(this.versionSet);
       if (this.versionSet.size > 0) {
         this.versionSet.forEach((element) => {
           this.versionList.push(element);
         });
         this.versionList.sort();
+        this.prepareBySoftwareVersion();
         //this.xValues = this.versionList;
         this.fetchModules();
       }
@@ -88,13 +95,13 @@ export class RegressionSummaryComponent implements OnInit {
 
   showPointDetails(pointInfo): void {
     //let moduleInfo = this.infobySoftwareVersion[pointInfo.category];
-    let moduleName = pointInfo.metadata.module;
+    let metadata = pointInfo.metadata;
+    let index = metadata.index;
     let resultType = pointInfo.name;
-    let softwareVersion = pointInfo.category;
-    let moduleInfo = this.info[moduleName];
-    this.detailedInfo = moduleInfo.bySoftwareVersion[softwareVersion];
-    this.detailedInfo["softwareVersion"] = softwareVersion;
-    //console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
+    let category = pointInfo.category;
+
+    this.detailedInfo = this.filters[index].bySoftwareVersion[category];
+    //this.detailedInfo["softwareVersion"] = softwareVersion;
     this.showDetailedInfo = true;
     this.commonService.scrollTo('detailed-info');
     let i = 0;
@@ -141,6 +148,7 @@ export class RegressionSummaryComponent implements OnInit {
         metadata: {module: moduleName}
 
     }];
+
     moduleInfo["modifyingScriptAllocation"] = false;
     moduleInfo["xValues"] = [];
     moduleInfo["bySoftwareVersion"] = {};
@@ -152,6 +160,20 @@ export class RegressionSummaryComponent implements OnInit {
         numFailed: 0,
         numNotRun: 0};
 
+    })
+  }
+
+  prepareBySoftwareVersion() {
+    this.versionList.forEach((softwareVersion) => {
+
+      for (let index = 0; index < this.filters.length; index++) {
+        this.filters[index].bySoftwareVersion[softwareVersion] = {
+          scriptDetailedInfo: {},
+          numPassed: 0,
+          numFailed: 0,
+          numNotRun: 0
+        };
+      }
     })
   }
 
@@ -174,8 +196,10 @@ export class RegressionSummaryComponent implements OnInit {
     return result;
   }
 
-  parseHistory(moduleInfo, history, scriptPath, softwareVersion) {
-    let bySoftwareVersion = moduleInfo.bySoftwareVersion;
+  parseHistory2(index, history, softwareVersion) {
+    let bySoftwareVersion = this.filters[index].bySoftwareVersion;
+    //let bySoftwareVersion = this.bySoftwareVersion;
+    let scriptPath = history.script_path;
     if (bySoftwareVersion.hasOwnProperty(softwareVersion)) {
       let softwareVersionEntry = bySoftwareVersion[softwareVersion];
       let scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
@@ -194,11 +218,42 @@ export class RegressionSummaryComponent implements OnInit {
     }
   }
 
-  fetchScriptInfo2() {
-    let payload = {module: "networking"};
-    this.apiService.post("/regression/get_test_case_executions_by_time", payload).subscribe((response) => {
-      let allScripts = response.data;
+
+  parseHistory(moduleInfo, history, scriptPath, softwareVersion) {
+    let bySoftwareVersion = moduleInfo.bySoftwareVersion;
+    //let bySoftwareVersion = this.bySoftwareVersion;
+
+    if (bySoftwareVersion.hasOwnProperty(softwareVersion)) {
+      let softwareVersionEntry = bySoftwareVersion[softwareVersion];
+      let scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
+      if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
+        scriptDetailedInfo[scriptPath] = {history: [], historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
+      }
+      scriptDetailedInfo[scriptPath].history.push(history);
+      let historyResults = this.aggregateHistoryResults(history);
+      scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
+      scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
+      scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
+
+      softwareVersionEntry.numPassed += historyResults.numPassed;
+      softwareVersionEntry.numFailed += historyResults.numFailed;
+      softwareVersionEntry.numNotRun += historyResults.numNotRun;
+    }
+  }
+
+  fetchScriptInfo2(index) {
+
+    this.apiService.post("/regression/get_test_case_executions_by_time", this.filters[index].payload).subscribe((response) => {
+      this.filters[index].testCaseExecutions = response.data;
+      this.filters[index].testCaseExecutions.forEach((historyElement) => {
+        //console.log(historyElement);
+        let elementSuiteExecutionId = historyElement.suite_execution_id;
+        let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
+        this.parseHistory2(index, historyElement, matchingSoftwareVersion);
+      });
       let i = 0;
+      //this.prepareValuesForChart(moduleInfo);
+
 
     }, error => {
 
@@ -212,7 +267,7 @@ export class RegressionSummaryComponent implements OnInit {
       let numScripts = scripts.length;
       let scriptsFetched = 0;
       scripts.forEach((script) => {
-        console.log(script);
+        //console.log(script);
         let scriptPath = script.script_path;
         let payload = {};
         payload["script_path"] = scriptPath;
@@ -324,8 +379,11 @@ export class RegressionSummaryComponent implements OnInit {
 
     });
     //console.log(this.xValues);
+    for (let index = 0; index < this.filters.length; index++) {
+      this.fetchScriptInfo2(index);
+    };
+    this.filters = [...this.filters];
 
-    this.fetchScriptInfo2();
 
   }
 
@@ -342,6 +400,10 @@ export class RegressionSummaryComponent implements OnInit {
     debugger;
     console.log('trackByFn', index, item);
     return item;
+  }
+
+  getTestCaseExecutions(index) {
+    return this.filters[index].testCaseExecutions;
   }
 
 }
