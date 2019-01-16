@@ -1,3 +1,4 @@
 [
+  {"info": {"tags": ["networking-sanity"]}},
   {"path": "networking/parser/nw_sanity.py"}
 ]
