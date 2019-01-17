@@ -25,13 +25,19 @@ export class RegressionSummaryComponent implements OnInit {
   selectedModules: any[] = [];
   availableModules = [];
   testCaseExecutions: any = null;
+  startDate = null;
+  currentDate = null;
   //bySoftwareVersion: any = {};
 
+  /*
   filters = [
-    {info: "Networking", payload: {module: "networking"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 0}},
-    {info: "Storage", payload: {module: "storage"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 1}}
-  ];
+    {info: "Networking", payload: {module: "networking"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 0}, byDateTime: {}},
+    {info: "Storage", payload: {module: "storage"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 1}, byDateTime: {}}
+  ];*/
 
+  filters = [
+    {info: "Networking", payload: {module: "networking"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 0}, byDateTime: {}}
+  ];
 
   ngOnInit() {
     this.dropdownSettings = {
@@ -44,18 +50,10 @@ export class RegressionSummaryComponent implements OnInit {
       allowSearchFilter: true
     };
     this.fetchAllVersions();
-    /*
-    this.y1Values = [{
-        name: 'Passed',
-        data: []
-    }, {
-        name: 'Failed',
-        data: []
-    }, {
-        name: 'Not-run',
-        data: []
-    }]*/
     this.pointClickCallback = this.pointDetail.bind(this);
+    this.startDate = new Date(2018, 11, 1, 0, 1);
+    this.currentDate = new Date(this.startDate);
+    let i = 0;
 
   }
 
@@ -199,6 +197,37 @@ export class RegressionSummaryComponent implements OnInit {
     }
   }
 
+  isSameDay(d1, d2) {
+    return d1.getUTCFullYear() === d2.getUTCFullYear() &&
+      d1.getUTCMonth() === d2.getUTCMonth() &&
+      d1.getUTCDate() === d2.getUTCDate();
+  }
+
+
+  dateTimeToBucket(d) {
+
+  }
+
+  addToTimeBucket(index, d) {
+    let timeBucket = this.dateTimeToBucket(d);
+    console.log("Time bucket:" + "," + d + "," + timeBucket);
+  }
+
+  parseDateTimeHistory(index, history) {
+    let today = new Date();
+    //console.log(today);
+    let historyTime = new Date(history.started_time);
+    //console.log(historyTime);
+    while (this.currentDate <= today) {
+      console.log("comparing: " + this.currentDate + "," + historyTime);
+      if (this.isSameDay(this.currentDate, historyTime)) {
+        //console.log("Found match, " + this.currentDate + "," + historyTime);
+        this.addToTimeBucket(index, this.currentDate);
+      }
+      this.currentDate.setDate(this.currentDate.getDate() + 1);
+    }
+  }
+
   fetchScriptInfo2(index) {
     this.apiService.post("/regression/get_test_case_executions_by_time", this.filters[index].payload).subscribe((response) => {
       this.filters[index].testCaseExecutions = response.data;
@@ -207,6 +236,7 @@ export class RegressionSummaryComponent implements OnInit {
         let elementSuiteExecutionId = historyElement.suite_execution_id;
         let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
         this.parseHistory2(index, historyElement, matchingSoftwareVersion);
+        this.parseDateTimeHistory(index, historyElement);
       });
       let i = 0;
     }, error => {
