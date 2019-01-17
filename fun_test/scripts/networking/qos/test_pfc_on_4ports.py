@@ -3,6 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, Ethernet2Header, Ipv4Header, Capture, GeneratorConfig
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
+from scripts.networking.qos.qos_helper import *
 from scripts.networking.nu_config_manager import nu_config_obj
 from lib.utilities.pcap_parser import PcapParser
 

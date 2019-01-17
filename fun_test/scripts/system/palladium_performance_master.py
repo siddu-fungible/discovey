@@ -6,7 +6,7 @@ from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, Voltest
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
     SoakClassicMallocPerformance
-from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance
+from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
     TeraMarkCryptoPerformance
@@ -17,6 +17,7 @@ from web.fun_test.analytics_models_helper import prepare_status_db
 from web.fun_test.models import TimeKeeper
 import re
 from datetime import datetime
+from dateutil.parser import parse
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
@@ -28,7 +29,12 @@ FLOW_TEST_TAG = "qa_storage2_endpoint"
 TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
-
+jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
+                   "Decompression throughput": "JPEG Decompress",
+                   "Accelerator Compression throughput": "Compression Accelerator throughput",
+                   "Accelerator Decompression throughput": "Decompression Accelerator throughput",
+                   "JPEG Compression": "JPEG Compression"}
+nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 
 def get_rounded_time():
     dt = get_current_time()
@@ -36,6 +42,9 @@ def get_rounded_time():
     dt = get_localized_time(dt)
     return dt
 
+def get_time_from_timestamp(timestamp):
+    time_obj = parse(timestamp)
+    return time_obj
 
 def is_job_from_today(job_dt):
     today = get_rounded_time()
@@ -112,6 +121,17 @@ class PalladiumPerformanceTc(FunTestCase):
         for key, value in metrics.iteritems():
             d[key] = value
         return d
+
+    def validate_json_file(self, validation_required=True):
+        log_dir = LOGS_DIR
+        file_path = log_dir + "/nu_transit_performance_data.json"
+        data = {}
+        fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
+        fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
+        with open(file_path) as fp:
+           data = json.loads(fp.read())
+        self.lines = data
+        return True
 
 
 class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
@@ -1413,13 +1433,12 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
         current_file_name = None
         final_file_name = None
         try:
-            fun_test.test_assert(self.validate_job(validation_required=False), "validating job")
+            fun_test.test_assert(self.validate_job(), "validating job")
             teramark_begin = False
 
             for line in self.lines:
                 compression_ratio_found = False
                 if "Compression-ratio to 1" in line:
-                    line = line + "}"
                     compression_ratio_found = True
                 m = re.search(r'JPEG Compression/Decompression performance stats (?P<current_file_name>\S+?)(?=#)', line)
                 if m:
@@ -1448,8 +1467,10 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                         try:
                             metrics = {}
                             if not compression_ratio_found:
-
-                                metrics["input_operation"] = d["Operation"]
+                                if d["Operation"] in jpeg_operations:
+                                    metrics["input_operation"] = jpeg_operations[d["Operation"]]
+                                else:
+                                    metrics["input_operation"] = d["Operation"]
                                 metrics["input_count"] = d['Stats']['_count']
                                 metrics["input_image"] = final_file_name
                                 metrics["output_iops"] = d['Stats']['_iops']
@@ -1459,7 +1480,10 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                                 metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_kbps']
                                 metrics["output_total_bandwidth"] = d['Stats']['_total_bw_kbps']
                             else:
-                                metrics["input_operation"] = d["Operation"]
+                                if d["Operation"] in jpeg_operations:
+                                    metrics["input_operation"] = jpeg_operations[d["Operation"]]
+                                else:
+                                    metrics["input_operation"] = d["Operation"]
                                 metrics["input_image"] = final_file_name
                                 metrics["output_compression_ratio"] = d['Stats']["Compression-ratio to 1"]
                                 metrics["output_percentage_savings"] = d['Stats']["PercentageSpaceSaving"]
@@ -1481,7 +1505,47 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name="TeraMarkJpegPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
+    def describe(self):
+        self.set_test_details(id=24,
+                              summary="TeraMark NU Transit Performance Test",
+                              steps="Steps 1")
 
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+
+            fun_test.test_assert(self.validate_json_file(), "validate json file and output")
+            for line in self.lines:
+                if "flow_type" in line:
+                    if line["flow_type"] in nu_transit_flow_types:
+                        line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
+                    metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
+                    metrics["input_mode"] = line["mode"]
+                    metrics["input_version"] = line["version"]
+                    metrics["input_frame_size"] = line["frame_size"]
+                    date_time = get_time_from_timestamp(line["timestamp"])
+                    metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
+                    metrics["output_pps"] = line["pps"] if "pps" in line else -1
+                    metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
+                    metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
+                    metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
+                    metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
+                    metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
+                    metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
+                    fun_test.log("flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"], metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    d["input_date_time"] = date_time
+                    MetricHelper(model=NuTransitPerformance).add_entry(**d)
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                     git_commit="", model_name="NuTransitPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1526,6 +1590,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkZipPerformanceTC())
     # myscript.add_test_case(TeraMarkDfaPerformanceTC())
     myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

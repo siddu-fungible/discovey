@@ -1068,6 +1068,7 @@ class NetworkController(DpcshClient):
                 stats_cmd = "stats/psw/%s/port/[%d]" % (type, port_num)
                 fun_test.debug("Getting PSW stats for port %d" % port_num)
             while current_retry < max_retry:
+                fun_test.log("Executing command for %s time " % (current_retry + 1))
                 result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION,
                                            sleep_duration=sleep_duration, chunk=chunk)
                 fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %

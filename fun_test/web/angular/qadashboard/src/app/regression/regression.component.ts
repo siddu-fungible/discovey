@@ -131,7 +131,9 @@ export class RegressionComponent implements OnInit {
   }
 
   getTagList = function (tagsString) {
-    return JSON.parse(tagsString);
+    let tags = JSON.parse(tagsString);
+    tags = new Set(tags);
+    return tags;
   };
 
   resultToClass(result): any {

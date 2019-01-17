@@ -3,8 +3,8 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
-import { ClipboardService } from 'ngx-clipboard';
-import { Location }   from '@angular/common';
+import {ClipboardService} from 'ngx-clipboard';
+import {Location} from '@angular/common';
 
 
 class ChildInfo {
@@ -36,6 +36,10 @@ class Node {
   copiedScoreDisposition: number = null;
   numBugs: number = 0;
   showAddJira: boolean = false;
+  degrades: any = new Set();
+  upgrades: any = new Set();
+  failures: any = new Set();
+  bugs: any = new Set();
 }
 
 class FlatNode {
@@ -113,6 +117,9 @@ export class PerformanceComponent implements OnInit {
   toolTipMessage: string = null;
   @ViewChild('copyUrlTooltip') copyUrlTooltip;
   chartReady: boolean = false;
+  lastScore: number;
+  penultimateScore: number;
+  deviation: any;
 
 
   constructor(
@@ -121,7 +128,6 @@ export class PerformanceComponent implements OnInit {
     private title: Title,
     private commonService: CommonService,
     private clipboardService: ClipboardService
-
   ) {
   }
 
@@ -242,6 +248,14 @@ export class PerformanceComponent implements OnInit {
     return node;
   };
 
+  calculateScores(node): void {
+    let [lastScore, penultimateScore] = node.last_two_scores;
+    this.lastScore = lastScore.toFixed(1);
+    this.penultimateScore = penultimateScore.toFixed(1);
+    let deviation = ((lastScore - penultimateScore) / (Math.min(lastScore, penultimateScore))) * 100;
+    this.deviation = deviation.toFixed(1);
+  }
+
   evaluateScores = (node) => {
     let [lastScore, penultimateScore] = node.last_two_scores;
     //lastScore = lastScore;
@@ -251,7 +265,7 @@ export class PerformanceComponent implements OnInit {
       node.trend = 0;
       let tolerancePercentage = 0;
       if (this.globalSettings) {
-        tolerancePercentage = this.globalSettings.tolerance_percentage/100;
+        tolerancePercentage = this.globalSettings.tolerance_percentage / 100;
       }
       if (lastScore < (penultimateScore * (1 - tolerancePercentage))) {
         node.trend = -1;
@@ -350,8 +364,43 @@ export class PerformanceComponent implements OnInit {
           //let childEntry: {[childId: number]: object} = {cId: nodeInfo.children_info[Number(childId)]};
           let childEntry = {[cId]: nodeInfo.children_info[Number(cId)]};
           let childFlatNode = this.walkDag(childEntry, indent + 1);
+          let childNode = childFlatNode["node"];
+          if (childNode.upgrades.size != 0) {
+            childNode.upgrades.forEach(childMetricId => {
+              thisFlatNode.node.upgrades.add(childMetricId);
+            });
+          }
+          if (childNode.degrades.size != 0) {
+            childNode.degrades.forEach(childMetricId => {
+              thisFlatNode.node.degrades.add(childMetricId);
+            });
+          }
+          if (childNode.failures.size != 0) {
+            childNode.failures.forEach(childMetricId => {
+              thisFlatNode.node.failures.add(childMetricId);
+            });
+          }
+          if (childNode.bugs.size != 0) {
+            childNode.bugs.forEach(childMetricId => {
+              thisFlatNode.node.bugs.add(childMetricId);
+            });
+          }
           thisFlatNode.addChild(childFlatNode);
         })
+
+      } else {
+        let leafNode = thisFlatNode.node;
+        if (leafNode.trend > 0) {
+          leafNode.upgrades.add(leafNode.metricId);
+        } else if (leafNode.trend < 0) {
+          leafNode.degrades.add(leafNode.metricId);
+        }
+        if (leafNode.lastNumBuildFailed == 1) {
+          leafNode.failures.add(leafNode.metricId);
+        }
+        if (leafNode.numBugs > 0) {
+          leafNode.bugs.add(leafNode.metricId);
+        }
       }
     }
     return thisFlatNode;
@@ -483,15 +532,21 @@ export class PerformanceComponent implements OnInit {
 
   getStatusHtml = (node) => {
     let s = "";
-    if (node.numChildrenDegrades) {
-      s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.numChildrenDegrades + "";
+    if (node.degrades.size != 0) {
+      s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.degrades.size + "";
     }
-    if (node.lastNumBuildFailed) {
-      if (node.numChildrenDegrades) {
-        s += ",&nbsp";
+    if (node.failures.size != 0) {
+      if (node.degrades.size != 0) {
+        s += "&nbsp";
       }
-      s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + node.lastNumBuildFailed + "</span>";
+      s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + node.failures.size + "</span>";
     }
+    // if (node.bugs.size != 0) {
+    //   if (node.failures.size != 0 || node.degrades.size != 0) {
+    //     s += "&nbsp";
+    //   }
+    //     s += "<span style='color: red'><i class='fa fa-bug'></i>:</span>" + "<span style='color: black'>" + node.bugs.size + "</span>";
+    // }
     return s;
   };
 
@@ -681,7 +736,7 @@ export class PerformanceComponent implements OnInit {
     info.weightEditing = false;
   };
 
-  updateNumBug(numBugs, node): void{
+  updateNumBug(numBugs, node): void {
     node.numBugs = numBugs;
   }
 

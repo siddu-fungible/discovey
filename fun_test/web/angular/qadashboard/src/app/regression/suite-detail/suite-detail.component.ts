@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService}  from "../../services/api/api.service";
 import { ActivatedRoute } from "@angular/router";
+import {hasOwnProperty} from "tslint/lib/utils";
 
 @Component({
   selector: 'app-suite-detail',
@@ -12,8 +13,9 @@ export class SuiteDetailComponent implements OnInit {
   CONSOLE_LOG_EXTENSION: string;
   HTML_LOG_EXTENSION: string;
   executionId: number;
-  suiteExecution: any;
+  suiteExecution: any = null;
   testCaseExecutions: any;
+  scriptExecutionsMap: any = {};
   attributes: any;
 
   constructor(private apiService: ApiService, private route: ActivatedRoute) {
@@ -24,8 +26,10 @@ export class SuiteDetailComponent implements OnInit {
     this.route.params.subscribe(params => {
       if (params['suiteId']) {
         this.executionId = params['suiteId'];
+        let ctrl = this;
         this.apiService.get("/regression/suite_execution_attributes/" + this.executionId).subscribe(result => {
           self.attributes = result.data;
+          self.attributes.unshift({"name": "Suite execution Id", "value": ctrl.executionId});
         });
       }
     });
@@ -39,19 +43,39 @@ export class SuiteDetailComponent implements OnInit {
         self.logDir = "/static/logs/s_";
       });
     }
+    let ctrl = this;
     this.testCaseExecutions = [];
     this.apiService.get("/regression/suite_execution/" + this.executionId).subscribe(function (result) {
       self.suiteExecution = result.data; // TODO: validate
-      let suiteExecutionJson = JSON.parse(self.suiteExecution);
-      let suiteFields = suiteExecutionJson.fields;
+      //let suiteExecutionJson = JSON.parse(self.suiteExecution);
+      let suiteFields = self.suiteExecution.fields;
       let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
 
       for(let testCaseExecutionId of testCaseExecutionIds) {
         self.apiService.get('/regression/test_case_execution/' + self.executionId + "/" + testCaseExecutionId).subscribe(function (result) {
-          self.testCaseExecutions.push(JSON.parse(result.data)[0]);
+          //self.testCaseExecutions.push(JSON.parse(result.data)[0]);
+          let data = result.data.execution_obj;
+          let moreInfo = result.data.more_info;
+          data.summary = moreInfo.summary;
+          self.testCaseExecutions.push(data);
+          if (!ctrl.scriptExecutionsMap.hasOwnProperty(data.script_path)) {
+            ctrl.scriptExecutionsMap[data.script_path] = {};
+          }
+          ctrl.scriptExecutionsMap[data.script_path][data.execution_id] = data;
+          let i = 0;
         });
       }
     });
+  }
+
+  getKeys(map) {
+    //console.log(map.keys());
+    try {
+      let a = Array.from(Object.keys(map));
+      return a;
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   trimTime(t) {
@@ -77,7 +101,7 @@ export class SuiteDetailComponent implements OnInit {
     return klass;
   }
 
-  _getFlatPath(path) {
+  _getFlatPath(path, logPrefix) {
     let httpPath = this.logDir + this.executionId;
     let parts = path.split("/");
     let flat = path;
@@ -85,15 +109,19 @@ export class SuiteDetailComponent implements OnInit {
     if (numParts > 2) {
       flat = parts[numParts - 2] + "_" + parts[numParts - 1];
     }
-    return httpPath + "/" + flat.replace(/^\//g, '');
+    let s = "";
+    if (logPrefix !== "") {
+      s = logPrefix + "_"
+    }
+    return httpPath + "/" + s + flat.replace(/^\//g, '');
   }
 
-  getHtmlLogPath(path) {
-    window.open(this._getFlatPath(path) + this.HTML_LOG_EXTENSION);
+  getHtmlLogPath(path, logPrefix) {
+    window.open(this._getFlatPath(path, logPrefix) + this.HTML_LOG_EXTENSION);
   }
 
-  getConsoleLogPath(path) {
-    window.open(this._getFlatPath(path) + this.CONSOLE_LOG_EXTENSION);
+  getConsoleLogPath(path, logPrefix) {
+    window.open(this._getFlatPath(path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
   }
 
   rerunClick(suiteExecutionId, testCaseExecutionId, scriptPath) {

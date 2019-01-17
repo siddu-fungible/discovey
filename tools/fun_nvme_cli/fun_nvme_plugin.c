@@ -634,7 +634,7 @@ static int fun_show_registers(int argc, char **argv, struct command *cmd, struct
 	}
 //	if(!err) sem_wait(&sem_fun1);
 
-	show_ctrl_registers(bar, cfg.human_readable ? HUMAN : 0);
+	show_ctrl_registers(bar, cfg.human_readable ? HUMAN : 0, 1);
 	return 0;
 }
 

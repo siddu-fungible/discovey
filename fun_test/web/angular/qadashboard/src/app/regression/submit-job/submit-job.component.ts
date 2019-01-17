@@ -1,7 +1,9 @@
+
 import {Component, OnInit} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
+import {Sort} from "@angular/material";
 
 @Component({
   selector: 'app-submit-job',
@@ -27,7 +29,14 @@ export class SubmitJobComponent implements OnInit {
   suitesInfoKeys: any = [];
   selectTags: any[] = [];
   dropdownSettings = {};
-
+  schedulingType:number = 1; //{ options: 'periodic' };
+  schedulingTime = {hour: 0, minute: 1};
+  todaySchedulingTimeRepeatInMinutesOption: boolean = false;
+  todaySchedulingTimeRepeatInMinutesValue = 60;
+  schedulingTimeTimezone = "IST";
+  daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  selectedDays: string[] = [];
+  submitting: string = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title) {
@@ -57,11 +66,14 @@ export class SubmitJobComponent implements OnInit {
     this.jobId = null;
     let self = this;
     this.apiService.get("/regression/suites").subscribe((result) => {
-      let suitesInfo = JSON.parse(result.data);
+      let suitesInfo = result.data;
       self.suitesInfo = suitesInfo;
+
       for (let suites of Object.keys(suitesInfo)) {
         self.suitesInfoKeys.push(suites);
       }
+      self.suitesInfoKeys.sort();
+
     });
     this.selectedTags = [];
     this.tags = [];
@@ -96,27 +108,41 @@ export class SubmitJobComponent implements OnInit {
     this.selectedInfo = this.suitesInfo[selectedSuite];
   }
 
+  parseScriptInfo(scriptInfo) {
+    if (scriptInfo.hasOwnProperty('path')) {
+      return scriptInfo.path;
+    } else if (scriptInfo.hasOwnProperty('info')) {
+      return scriptInfo.info.tags;
+    }
+  }
+
   getSchedulingOptions(payload) {
     if (this.schedulingOptions) {
-      if (this.scheduleInMinutesRadio) {
-        if (!this.scheduleInMinutes) {
-          this.logger.error("Please enter the schedule in minutes value");
-        } else {
-          payload["schedule_in_minutes"] = this.scheduleInMinutes;
-          payload["schedule_in_minutes_repeat"] = this.scheduleInMinutesRepeat;
+      if (this.schedulingType === 2) {
+        payload["scheduling_type"] = "today";
+        if (this.todaySchedulingTimeRepeatInMinutesOption) {
+          if (!this.todaySchedulingTimeRepeatInMinutesValue) {
+            this.logger.error("Please enter the repeat in minutes value");
+            return null;
+          } else {
+            payload["repeat_in_minutes"] = this.todaySchedulingTimeRepeatInMinutesValue;
+          }
         }
 
-      } else {
-        if (!this.scheduleAt) {
-          this.logger.error("Please enter the schedule at value");
-          return;
+      } else if (this.schedulingType === 3) {
+        payload["scheduling_type"] = "periodic";
+        if (this.selectedDays.length === 0) {
+          this.logger.error("Please select at least one day");
+          return null;
         } else {
-          payload["schedule_at"] = this.scheduleAt;
-          payload["schedule_at_repeat"] = this.scheduleAtRepeat;
+          payload["requested_days"] = this.selectedDays;
+          payload["build_url"] = null;
         }
-
       }
     }
+    payload["requested_hour"] = this.schedulingTime.hour;
+    payload["requested_minute"] = this.schedulingTime.minute;
+    payload["timezone"] = this.schedulingTimeTimezone;
     return payload;
   }
 
@@ -127,6 +153,7 @@ export class SubmitJobComponent implements OnInit {
     });
     return tags;
   }
+
 
   submitClick() {
     let self = this;
@@ -140,16 +167,25 @@ export class SubmitJobComponent implements OnInit {
       this.emails = this.emails.split(",");
       payload["email_list"] = this.emails
     }
-
+    payload["scheduling_type"] = "asap";
     if (this.schedulingOptions) {
       payload = this.getSchedulingOptions(payload);
+      if (!payload) {
+        return;
+      }
     }
+
+    this.submitting = "Submitting job";
+    let ctrl = this;
     this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
       self.jobId = parseInt(result.data);
-      window.location.href = "/regression/suite_detail/" + self.jobId;
+      window.location.href = "/regression";
+
       console.log("Job " + self.jobId + " Submitted");
+      ctrl.submitting = null;
     }, error => {
       self.logger.error("Unable to submit job");
+      ctrl.submitting = null;
     });
   }
 

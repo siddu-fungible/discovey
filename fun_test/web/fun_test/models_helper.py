@@ -1,14 +1,21 @@
 import os, django, json, datetime
+import sys
+import random
+import time
 from datetime import datetime
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_current_time, get_localized_time
+from fun_settings import SCRIPTS_DIR
 from django.utils import timezone
 import dateutil.parser
 from django.db.models import Q
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
+from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
+
+
 
 from web.fun_test.models import (
     SuiteExecution,
@@ -16,7 +23,8 @@ from web.fun_test.models import (
     LastTestCaseExecution,
     RESULT_CHOICES,
     TestCaseExecution,
-    JenkinsJobIdMap
+    JenkinsJobIdMap,
+    SuiteContainerExecution
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -25,7 +33,95 @@ SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
 
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
-def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None):
+
+def _is_sub_class(base_class, mros):
+    result = None
+    for mro in mros[1:]:
+        if base_class in str(mro):
+            result = True
+            break
+    return result
+
+
+def inspect(module_name):
+    result = {}
+    result["classes"] = []
+    sys.argv.append("--disable_fun_test")
+    test_cases = []
+
+    import imp
+    import inspect
+    f, filename, description = imp.find_module(os.path.basename(module_name).replace(".py", ""),
+                                               [os.path.dirname(module_name)])
+    flat_base_name = os.path.basename(module_name).replace(".", "_")
+    loaded_module_name = "dynamic_load" + flat_base_name
+    imp.load_module(loaded_module_name, f, filename, description)
+    members = inspect.getmembers(sys.modules[loaded_module_name], inspect.isclass)
+    for m in members:
+        if len(m) > 1:
+            klass = m[1]
+            mros = inspect.getmro(klass)
+            if len(mros) > 1 and _is_sub_class(base_class="lib.system.fun_test.FunTestCase", mros=mros):
+                # print klass
+                try:
+                    o = klass()
+                    o.describe()
+                    result["classes"].append({"name": o.__class__.__name__, "summary": o.summary, "id": o.id})
+                    test_cases.append(klass)
+                except:
+                    pass
+                # print o.id
+                # print o.summary
+                # print o.steps
+
+            if len(mros) > 1 and _is_sub_class(base_class="lib.system.fun_test.FunTestScript", mros=mros):
+                test_script = klass
+    # test_script_obj = test_script()
+    # test_case_order = test_script().test_case_order
+    '''
+    for entry in test_script().test_case_order:
+        print entry["tc"]
+    '''
+    return result
+
+def get_test_case_details(script_path, test_case_id):
+    from lib.system.fun_test import fun_test
+    # print "Script Path", script_path
+    # result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+
+    summary = "unknown"
+
+    try:
+        if test_case_id:
+            result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+            if result:
+                if "classes" in result:
+                    for c in result["classes"]:
+                        if c["id"] == test_case_id:
+                            summary = c["summary"]
+                            # print "Summary", summary
+        else:
+            summary = "Script setup"
+    except Exception as ex:
+        print "Error: {}".format(str(ex))
+
+    this_summary = summary
+    return {"summary": this_summary}
+
+
+def get_suite_container_execution(suite_container_execution_id):
+    s = SuiteContainerExecution.objects.get(execution_id=suite_container_execution_id)
+    return s
+
+def update_suite_container_execution(suite_container_execution_id, version=None):
+    s = get_suite_container_execution(suite_container_execution_id=suite_container_execution_id)
+    if s:
+        if version:
+            s.version = version
+    s.save()
+
+def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None, tags=None):
+    # print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
         te.result = result
@@ -33,40 +129,66 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
         te.scheduled_time = scheduled_time
     if version:
         te.version = version
+    if tags:
+        te.tags = json.dumps(tags)
     te.save()
+    # print te.version
     return te
 
 def finalize_suite_execution(suite_execution_id):
     _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
+
+def get_new_suite_execution_id():
+    last_suite_execution_id = LastSuiteExecution.objects.all()
+    if not last_suite_execution_id:
+        LastSuiteExecution().save()
+    with transaction.atomic():
+        time.sleep(random.uniform(0.1, 1.5))
+        last_suite_execution_id = LastSuiteExecution.objects.last()
+        last_suite_execution_id.last_suite_execution_id += 1
+        last_suite_execution_id.save()
+    return last_suite_execution_id
+
+def add_suite_container_execution(suite_path, tags):
+    last_suite_execution_id = get_new_suite_execution_id()
+    s = SuiteContainerExecution(suite_path=suite_path, execution_id=last_suite_execution_id.last_suite_execution_id, tags=json.dumps(tags))
+    s.save()
+    return s
+
 
 def add_suite_execution(submitted_time,
                         scheduled_time,
                         completed_time,
                         suite_path="unknown",
                         tags=None,
-                        catalog_reference=""):
+                        catalog_reference="",
+                        suite_container_execution_id=-1):
 
     if tags:
         tags = json.dumps(tags)
     else:
         tags = "[]"
-    last_suite_execution_id = LastSuiteExecution.objects.all()
-    if not last_suite_execution_id:
-        LastSuiteExecution().save()
-    last_suite_execution_id = LastSuiteExecution.objects.last()
-    last_suite_execution_id.last_suite_execution_id += 1
-    last_suite_execution_id.save()
 
+    last_suite_execution_id = get_new_suite_execution_id()
     s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
                        submitted_time=submitted_time,
                        scheduled_time=scheduled_time,
                        completed_time=completed_time,
                        result="QUEUED",
                        tags=tags,
-                       catalog_reference=catalog_reference)
+                       catalog_reference=catalog_reference,
+                       suite_container_execution_id=suite_container_execution_id)
     s.save()
     return s
 
+def set_suite_execution_banner(suite_execution_id, banner):
+    suite_execution = get_suite_execution(suite_execution_id)
+    suite_execution.banner = banner
+    suite_execution.save()
+
+def get_suite_execution_banner(suite_execution_id, banner):
+    suite_execution = get_suite_execution(suite_execution_id)
+    return suite_execution.banner
 
 def get_suite_execution(suite_execution_id):
     result = None
@@ -80,35 +202,51 @@ def get_next_test_case_execution_id():
     last_test_case_execution_id = LastTestCaseExecution.objects.all()
     if not last_test_case_execution_id:
         LastTestCaseExecution().save()
-    last_test_case_execution_id = LastTestCaseExecution.objects.last()
-    last_test_case_execution_id.last_test_case_execution_id += 1
-    last_test_case_execution_id.save()
+    with transaction.atomic():
+        time.sleep(random.uniform(0.1, 2.0))
+        last_test_case_execution_id = LastTestCaseExecution.objects.last()
+        last_test_case_execution_id.last_test_case_execution_id += 1
+        last_test_case_execution_id.save()
     return last_test_case_execution_id.last_test_case_execution_id
 
 def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
     result = None
-    s = SuiteExecution.objects.get(execution_id=suite_execution_id)
-    if s:
-        current_list = json.loads(s.test_case_execution_ids)
-        current_list.append(test_case_execution_id)
-        s.test_case_execution_ids = json.dumps(current_list)
-        s.save()
+    with transaction.atomic():
+        s = SuiteExecution.objects.get(execution_id=suite_execution_id)
+        if s:
+            current_list = json.loads(s.test_case_execution_ids)
+            current_list.append(test_case_execution_id)
+            s.test_case_execution_ids = json.dumps(current_list)
+            s.save()
 
-        result = True
-    else:
-        raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
+            result = True
+        else:
+            raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
     return result
 
-def add_test_case_execution(test_case_id, suite_execution_id, path, result=RESULTS["NOT_RUN"]):
-    te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
-                           test_case_id=test_case_id,
-                           suite_execution_id=suite_execution_id,
-                           result=result,
-                           started_time=get_current_time(),  # timezone.now(), #get_current_time(),
-                            script_path=path)
-    te.save()
-    add_test_case_execution_id(suite_execution_id=suite_execution_id,
-                               test_case_execution_id=te.execution_id)
+def add_test_case_execution(test_case_id,
+                            suite_execution_id,
+                            path,
+                            result=RESULTS["NOT_RUN"], log_prefix="", tags=[]):
+    max_retries = 4
+    te = None
+    with transaction.atomic():
+        try:
+            for index in xrange(max_retries):
+                te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
+                                       test_case_id=test_case_id,
+                                       suite_execution_id=suite_execution_id,
+                                       result=result,
+                                       started_time=get_current_time(),  # timezone.now(), #get_current_time(),
+                                       script_path=path,
+                                       log_prefix=log_prefix, tags=json.dumps(tags))
+                te.save()
+                add_test_case_execution_id(suite_execution_id=suite_execution_id,
+                                           test_case_execution_id=te.execution_id)
+                break
+        except Exception as ex:
+            print "Error: add_test_case_execution: {}".format(str(ex))
+
     return te
 
 def update_test_case_execution(test_case_execution_id, suite_execution_id, result):

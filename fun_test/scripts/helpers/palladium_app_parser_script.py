@@ -33,7 +33,7 @@ class RetrieveLogLinesCase(FunTestCase):
     result = fun_test.FAILED
 
     def __init__(self, **kwargs):
-        super(RetrieveLogLinesCase, self).__init__(kwargs)
+        super(RetrieveLogLinesCase, self).__init__(**kwargs)
         self.tag = kwargs.get("tag")
 
     def describe(self):

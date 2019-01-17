@@ -8,7 +8,7 @@
   },
   "vp_performance": {
     "FPG_HNU": {
-      "spray_ip_count": 13,
+      "spray_ip_count": 10,
       "spray_enable": {"64": 460, "1500": 450},
       "spray_disable": {"64": 210, "1500": 190}
     },
@@ -19,12 +19,12 @@
     },
     "FCP_HNU_HNU": {
       "spray_ip_count": 1,
-      "spray_enable": {"64": 220, "1000": 130},
-      "spray_disable": {"64": 140, "1000": 110}
+      "spray_enable": {"64": 220, "1500": 130},
+      "spray_disable": {"64": 140, "1500": 110}
     },
     "HNU_HNU": {
-      "spray_ip_count": 13,
-      "spray_enable": {"64": 230, "1500": 200},
+      "spray_ip_count": 10,
+      "spray_enable": {"64": 120, "1500": 100},
       "spray_disable": {"64": 115, "1500": 110}
     },
     "NU_NU": {

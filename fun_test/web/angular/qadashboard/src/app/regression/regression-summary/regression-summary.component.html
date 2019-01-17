@@ -1,71 +1,26 @@
-<!--p class="component">
-  <button (click)="test()">Test</button>
-</p-->
+<!--<p class="component">-->
+<!--<button (click)="test()">Test</button>-->
+<!--</p>-->
 
-<div class="row">
+<div class="row component">
   <div class="col">
-    <div class="card" *ngFor="let moduleInfo of info | keyvalue">
-      <div class="card card-primary">
-        <div class="card-header"><b>{{ moduleInfo.value.verboseName }}</b></div>
-        <div class="card-body">
-          <fun-chart [pointClickCallback]="pointClickCallback"
-                     (pointInfo)="showPointDetails($event)"
-                     [title]="moduleInfo.value.verboseName"
-                     [y1AxisLabel]="'Results'"
-                     [y1Values]="moduleInfo.value.y1Values"
-                     [xValues]="moduleInfo.value.xValues"
-                     [chartType]="'vertical_colored_bar_chart'">
-          </fun-chart>
-        </div>
-      </div>
-      <div>
-        <button style="float: right" class="btn btn-link" (click)="modifyScriptAllocationClick(moduleInfo)">Script allocation</button>
-      </div>
+    <ng-container *ngFor="let filter of filters">
 
-      <div *ngIf="moduleInfo.modifyingScriptAllocation" class="card card-primary">
-        <div class="card-header"><b>Allocated scripts ...</b></div>
-        <div class="card-body">
-          <table class="table">
-            <tr>
-              <th>
-                Script
-              </th>
-              <th>
-                Modules
-              </th>
-            </tr>
-            <tr *ngFor="let regressionScript of allRegressionScripts">
-              <td>
-                {{ regressionScript.script_path }}
-              </td>
-              <td>
-                <ng-multiselect-dropdown
-                  [placeholder]="'Select'"
-                  [data]="availableModules"
-                  [(ngModel)]="regressionScript.selectedModules"
-                  [settings]="dropdownSettings"
-                  (onSelect)="regressionScript.dirty = true"
-                  (onDeSelect)="regressionScript.dirty = true"
-                  (onSelectAll)="regressionScript.dirty = true"
-                  (onDeSelectAll)="regressionScript.dirty = true">
-                </ng-multiselect-dropdown>
-              </td>
-              <td *ngIf="regressionScript.dirty">
-                <span><i class="fa fa-check fa-fw tick-color" (click)="submitSelectModuleClick(regressionScript)"></i></span>
-                <span><i class="fa fa-times fa-fw close-color" (click)="dismissSelectModuleClick(regressionScript)"></i></span>
-              </td>
-            </tr>
-          </table>
-        </div>
-      </div>
-    </div>
+      <app-regression-summary-chart [title]="filter.info" [metadata]="filter.metadata"
+                                    (pointInfo)="showPointDetails($event)" [pointClickCallback]="pointClickCallback"
+                                    [testCaseExecutions]="filter.testCaseExecutions" [versionSet]="versionSet"
+                                    [suiteExectionVersionMap]="suiteExectionVersionMap"></app-regression-summary-chart>
+
+    </ng-container>
+
+
   </div>
   <div class="col">
     <span id="detailed-info"></span>
     <div class="card-body" *ngIf="showDetailedInfo && detailedInfo">
       <table class="table">
         <tr>
-          <th>Software version: {{ detailedInfo.softwareVersion }}</th>
+          <th>Software version: {{ detailedInfo.softwareVersion }} </th>
           <th><label class="badge badge-success">Passed</label></th>
           <th><label class="badge badge-danger">Failed</label></th>
           <th><label class="badge badge-secondary">Not-run</label></th>
@@ -77,48 +32,44 @@
           <td>{{ detailedInfo.numNotRun }}</td>
 
         </tr>
-        <tr *ngFor="let scriptInfo of detailedInfo.scriptDetailedInfo | keyvalue">
-          <td>
-          <ngb-accordion #acc="ngbAccordion">
-            <ngb-panel>
-              <ng-template ngbPanelTitle>
-                <div class="container">
-                  <div class="row">
-                    <div class="col-xxl-6 col-lg-6 col-md-6 col-xl-6">
-                      {{ scriptInfo.key }}
-                    </div>
-                  </div>
-                </div>
-              </ng-template>
-              <ng-template ngbPanelContent>
-                <table class="table">
-                  <tr>
-                    <th>Result</th>
-                    <th>Suite execution ID</th>
-                    <th>TC-ID</th>
-                    <th>Start-time</th>
-                  </tr>
-                  <tr *ngFor="let executionEntry of scriptInfo.value.history">
-                    <td><span [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span></td>
-                    <td><a target="_blank"
-                           href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
-                    </td>
-                    <td>{{ executionEntry.test_case_id }}</td>
-                    <td>{{ executionEntry.started_time }}</td>
-                  </tr>
-                </table>
-              </ng-template>
-            </ngb-panel>
-          </ngb-accordion>
-          </td>
-          <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
-          <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
-          <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
+        <ng-container *ngFor="let scriptInfo of detailedInfo.scriptDetailedInfo | keyvalue">
+          <tr *ngIf="scriptInfo.value.historyResults">
+            <td>
+              {{ scriptInfo.key }}
+              <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails" class="anchor-button pseudo-anchor">details</u>
+            </td>
+            <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
+            <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
+            <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
 
-        </tr>
+          </tr>
+          <tr *ngIf="scriptInfo.value.showingDetails">
+            <td colspan="4">
+              <table class="table">
+                <tr>
+                  <th>Result</th>
+                  <th>Suite execution ID</th>
+                  <th>TC-ID</th>
+                  <th>Summary</th>
+                </tr>
+                <tr *ngFor="let executionEntry of scriptInfo.value.history">
+                  <td><span
+                    [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span>
+                  </td>
+                  <td><a target="_blank"
+                         href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
+                  </td>
+                  <td>{{ executionEntry.test_case_id }}</td>
+                  <td>{{ executionEntry.summary }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </ng-container>
 
       </table>
 
     </div>
   </div>
 </div>
+

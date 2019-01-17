@@ -4,11 +4,11 @@ from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
-from fun_global import RESULTS
-from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job
+from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
+from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP
+from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2, queue_suite_container
 import scheduler.scheduler_helper
-from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS
+from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, get_test_case_details
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import CatalogSuiteExecution, Module
@@ -24,10 +24,15 @@ from web.fun_test.models import TestCaseExecutionSerializer
 import logging
 import dateutil.parser
 import re
-from rest_framework.renderers import JSONRenderer
+from django.apps import apps
+import time
+from django.db import transaction
+from django.db.models import Q
+
 
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 def index(request):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
@@ -101,6 +106,54 @@ def submit_job(request):
         if "email_on_fail_only" in request_json:
             email_on_fail_only = request_json["email_on_fail_only"]
 
+        scheduling_type = "asap"
+        if "scheduling_type" in request_json:
+            scheduling_type = request_json["scheduling_type"]
+        tz = "PST"
+        if "timezone" in request_json:
+            tz = request_json["timezone"]
+        requested_days = []
+        requested_hour = None
+        requested_minute = None
+        repeat_in_minutes = -1
+
+        if "requested_days" in request_json:
+            requested_days = request_json["requested_days"]
+            requested_days = [x.lower() for x in requested_days]
+        if "requested_hour" in request_json:
+            requested_hour = request_json["requested_hour"]
+        if "requested_minute" in request_json:
+            requested_minute = request_json["requested_minute"]
+        if "repeat_in_minutes" in request_json:
+            repeat_in_minutes = request_json["repeat_in_minutes"]
+
+        if suite_path.replace(".json", "").endswith("_container"):
+            job_id = queue_suite_container(suite_path=suite_path,
+                       build_url=build_url,
+                       tags=tags,
+                       email_list=email_list,
+                       email_on_fail_only=email_on_fail_only,
+                       environment=environment,
+                       scheduling_type=scheduling_type,
+                       tz_string=tz,
+                       requested_hour=requested_hour,
+                       requested_minute=requested_minute,
+                       requested_days=requested_days,
+                                repeat_in_minutes=repeat_in_minutes)
+        else:
+            job_id = queue_job2(suite_path=suite_path,
+                       build_url=build_url,
+                       tags=tags,
+                       email_list=email_list,
+                       email_on_fail_only=email_on_fail_only,
+                       environment=environment,
+                       scheduling_type=scheduling_type,
+                       tz_string=tz,
+                       requested_hour=requested_hour,
+                       requested_minute=requested_minute,
+                       requested_days=requested_days,
+                                repeat_in_minutes=repeat_in_minutes)
+        '''
         if "schedule_at" in request_json and request_json["schedule_at"]:
             schedule_at_value = request_json["schedule_at"]
             schedule_at_value = str(timezone.localtime(dateutil.parser.parse(schedule_at_value)))
@@ -134,6 +187,7 @@ def submit_job(request):
                                tags=tags,
                                email_list=email_list,
                                email_on_fail_only=email_on_fail_only, environment=environment)
+        '''
     return job_id
 
 def static_serve_log_directory(request, suite_execution_id):
@@ -165,21 +219,35 @@ def engineers(request):
     result["status"] = True
     return HttpResponse(json.dumps(result))
 
+def parse_suite(suite_file):
+    with open(suite_file, "r") as infile:
+        contents = infile.read()
+        items = json.loads(contents)
+        return items
+
 @csrf_exempt
 @api_safe_json_response
 def suites(request):
+
     suites_info = collections.OrderedDict()
     suite_files = glob.glob(SUITES_DIR + "/*.json")
     for suite_file in suite_files:
         try:
-            with open(suite_file, "r") as infile:
-                contents = infile.read()
-                result = json.loads(contents)
-                suites_info[os.path.basename(suite_file)] = result
+            if suite_file.endswith("container.json"):
+                suites_info[os.path.basename(suite_file)] = []
+                inner_suites = parse_suite(suite_file=suite_file)
+                for inner_suite in inner_suites:
+                    items = parse_suite(suite_file=SUITES_DIR + "/" + inner_suite)
+                    # suites_info.extend(items)
+                    suites_info[os.path.basename(suite_file)].extend(items)
+            else:
+                items = parse_suite(suite_file=suite_file)
+                suites_info[os.path.basename(suite_file)] = items
+                # suites_info.extend(items)
 
         except Exception as ex:
             pass
-    return json.dumps(suites_info)
+    return suites_info
 
 @csrf_exempt
 @api_safe_json_response
@@ -210,12 +278,14 @@ def suite_executions(request, records_per_page=10, page=None, filter_string="ALL
                                              filter_string=filter_string,
                                              tags=tags)
     return json.dumps(all_objects_dict)
+    # return all_objects_dict
 
 @csrf_exempt
 @api_safe_json_response
 def suite_execution(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
-    return json.dumps(all_objects_dict[0]) #TODO: Validate
+    # return json.dumps(all_objects_dict[0]) #TODO: Validate
+    return all_objects_dict[0]
 
 @csrf_exempt
 @api_safe_json_response
@@ -255,8 +325,17 @@ def test_case_execution(request, suite_execution_id, test_case_execution_id):
     test_case_execution_obj.started_time = timezone.localtime(test_case_execution_obj.started_time)
     test_case_execution_obj.end_time = timezone.localtime(test_case_execution_obj.end_time)
 
-    data = serializers.serialize('json', [test_case_execution_obj])
-    return data
+    # lock = app_config.get_site_lock()
+    # lock.acquire()
+    # print "Ac"
+    details = get_test_case_details(script_path=test_case_execution_obj.script_path, test_case_id=test_case_execution_obj.test_case_id)
+    # print "Rel"
+    # lock.release()
+    # test_case_execution_obj.summary = details["summary"]
+    # data = serializers.serialize('json', [test_case_execution_obj])
+    serializer = TestCaseExecutionSerializer(test_case_execution_obj)
+    # setattr(serializer.data, "summary", details["summary"])
+    return {"execution_obj": serializer.data, "more_info": {"summary": details["summary"]}}
 
 def get_catalog_test_case_execution_summary_result_multiple_jiras(suite_execution_id, jira_ids):
     summary_result = {}
@@ -443,9 +522,13 @@ def get_suite_execution_properties(request):
 @csrf_exempt
 @api_safe_json_response
 def get_all_versions(request):
-    versions = SuiteExecution.objects.values('version', 'execution_id')
-    serializer = SuiteExecutionSerializer(versions, many=True)
-    return serializer.data
+    ses = SuiteExecution.objects.values('version', 'execution_id', 'scheduled_time')
+    result = []
+    for se in ses:
+        scheduled_time_in_epoch = get_epoch_time_from_datetime(se['scheduled_time'])
+        new_entry = {"version": se["version"], "execution_id": se["execution_id"], "scheduled_time": scheduled_time_in_epoch}
+        result.append(new_entry)
+    return result
 
 @csrf_exempt
 @api_safe_json_response
@@ -454,11 +537,73 @@ def get_script_history(request):
     request_json = json.loads(request.body)
     script_path = request_json["script_path"]
     tes = TestCaseExecution.objects.filter(script_path=script_path).order_by("-suite_execution_id")[:100]
+    start = time.time()
+
     for te in tes:
         # version = suite_execution_properties(te.suite_execution_id, "version")
-        serializer = TestCaseExecutionSerializer(te)
-        history.append(serializer.data)
+        new_entry = {"suite_execution_id": te.suite_execution_id,
+                     "execution_id": te.execution_id,
+                     "result": te.result}
+        #serializer = TestCaseExecutionSerializer(te)
+        #history.append(serializer.data)
+        history.append(new_entry)
     return history
+
+@csrf_exempt
+@api_safe_json_response
+def get_suite_executions_by_time(request):
+    request_json = json.loads(request.body)
+    from_time = int(request_json["from_time"])
+    to_time = request_json["to_time"]
+    from_time = get_datetime_from_epoch_time(from_time)
+    to_time = get_datetime_from_epoch_time(to_time)
+    suite_executions = SuiteExecution.objects.filter(scheduled_time__gte=from_time, scheduled_time__lte=to_time)
+    suite_executions = SuiteExecutionSerializer(suite_executions, many=True)
+    return suite_executions.data
+
+@csrf_exempt
+@api_safe_json_response
+def get_test_case_executions_by_time(request):
+    request_json = json.loads(request.body)
+    from_time = 1541030400 * 1000
+    # from_time = int(request_json["from_time"])
+    # to_time = request_json["to_time"]
+    from_time = get_datetime_from_epoch_time(from_time)
+    # to_time = get_datetime_from_epoch_time(to_time)
+    test_case_execution_tags = None
+    if "test_case_execution_tags" in request_json:
+        test_case_execution_tags = request_json["test_case_execution_tags"]
+    module = None
+    scripts_for_module = None
+    q = None
+    if "module" in request_json:
+        module = request_json["module"]
+        module_str = '"{}"'.format(module)
+        q = Q(modules__contains=module_str)
+        scripts_for_module = RegresssionScripts.objects.filter(q)
+        scripts_for_module = [x.script_path for x in scripts_for_module]
+
+    tes = []
+    q = Q(started_time__gte=from_time)
+
+    if test_case_execution_tags:
+        for tag in test_case_execution_tags:
+            tag_str = '"{}"'.format(tag)
+            q = q & Q(tags__contains=tag_str)
+
+    test_case_executions = TestCaseExecution.objects.filter(q)
+
+    for te in test_case_executions:
+        if te.script_path in scripts_for_module:
+            one_entry = {"execution_id": te.execution_id,
+                         "suite_execution_id": te.suite_execution_id,
+                         "script_path": te.script_path,
+                         "test_case_id": te.test_case_id,
+                         "result": te.result,
+                         "started_time": te.started_time}
+            tes.append(one_entry)
+    return tes
+
 
 @csrf_exempt
 @api_safe_json_response

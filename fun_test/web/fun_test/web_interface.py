@@ -4,6 +4,10 @@ import socket
 
 def get_homepage_url():
     hostname = "localhost"
+    try:
+        hostname = socket.gethostname()
+    except:
+        pass
     if is_regression_server() or is_performance_server():
         hostname = socket.gethostname()
     s = "http://{}:{}".format(hostname, WEB_SERVER_PORT)

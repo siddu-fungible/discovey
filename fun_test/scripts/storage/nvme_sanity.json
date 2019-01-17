@@ -1,0 +1,45 @@
+{
+  "TestInitialization": {
+    "num_namespace": 1,
+    "num_host" : 1,
+    "namespace_params": {
+      "capacity": 1073741824,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_params": {
+      "rw": "randwrite",
+      "bs": "4k",
+      "iodepth": 8,
+      "size": "128k",
+      "do_verify": 1,
+      "verify": "md5",
+      "verify_fatal": 1,
+      "timeout": 60
+    }
+  },
+  "TestMultipleNS": {
+    "num_namespace": 5,
+    "num_host" : 1,
+    "namespace_params": {
+      "capacity": 32768,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_params": {
+      "rw": "randwrite",
+      "bs": "4k",
+      "iodepth": 8,
+      "size": "32k",
+      "do_verify": 1,
+      "verify": "md5",
+      "verify_fatal": 1,
+      "timeout": 60
+    }
+  }
+}
+

@@ -1,48 +1,33 @@
 diff --git a/Makefile b/Makefile
-index cc74bdd..1e006ca 100644
+index 70541cb..a5bb801 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -1,4 +1,4 @@
--CFLAGS ?= -O2 -g -Wall -Werror
-+CFLAGS ?= -O2 -g -Wall -Werror -Wno-error=unused-function -Wno-error=implicit-function-declaration
- CFLAGS += -std=gnu99
- CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
- LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
-@@ -33,10 +33,18 @@ NVME_DPKG_VERSION=1~`lsb_release -sc`
+@@ -32,7 +32,10 @@ override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
+ NVME_DPKG_VERSION=1~`lsb_release -sc`
  
  OBJS := argconfig.o suffix.o parser.o nvme-print.o nvme-ioctl.o \
- 	nvme-lightnvm.o fabrics.o json.o plugin.o intel-nvme.o \
--	lnvm-nvme.o memblaze-nvme.o wdc-nvme.o nvme-models.o huawei-nvme.o
-+	lnvm-nvme.o memblaze-nvme.o wdc-nvme.o nvme-models.o huawei-nvme.o \
+-	nvme-lightnvm.o fabrics.o json.o nvme-models.o plugin.o
++	nvme-lightnvm.o fabrics.o json.o nvme-models.o plugin.o \
 +	Integration/tools/fun_nvme_cli/fun_nvme_plugin.o \
-+   	Integration/tools/fun_nvme_cli/fun_nvme.o Integration/tools/fun_nvme_cli/fun_bitmap.o\
++   	Integration/tools/fun_nvme_cli/fun_nvme.o Integration/tools/fun_nvme_cli/fun_bitmap.o \
 +	Integration/tools/fun_nvme_cli/fun_nvmeof_client.o Integration/tools/fun_nvme_cli/fun_rdsock.o 
-+
-+BLT_OBJS := argconfig.o suffix.o parser.o nvme-print.o nvme-ioctl.o \
-+	nvme-lightnvm.o fabrics.o json.o plugin.o intel-nvme.o \
-+	lnvm-nvme.o memblaze-nvme.o wdc-nvme.o nvme-models.o huawei-nvme.o fun_nvme_plugin.o \
-+   	fun_nvme.o fun_bitmap.o Integration/tools/fun_nvme_cli/fun_nvmeof_client.o fun_rdsock.o 
  
- nvme: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
--	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(LDFLAGS)
-+	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(BLT_OBJS) $(LDFLAGS) -lpthread
+ PLUGIN_OBJS :=					\
+ 	plugins/intel/intel-nvme.o		\
+@@ -47,7 +50,7 @@ PLUGIN_OBJS :=					\
+ 	plugins/seagate/seagate-nvme.o
  
- nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h argconfig.h suffix.h nvme-lightnvm.h fabrics.h
- 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
-@@ -53,7 +61,7 @@ test:
- all: doc
+ nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) NVME-VERSION-FILE
+-	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(LDFLAGS)
++	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(LDFLAGS) -lpthread
  
- clean:
--	$(RM) $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
-+	$(RM) $(NVME) Integration/tools/fun_nvme_cli/*.o *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
- 	$(MAKE) -C Documentation clean
- 	$(RM) tests/*.pyc
- 
+ verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
+ 	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $@ $(OBJS) $(LDFLAGS)
 diff --git a/fabrics.c b/fabrics.c
-index 4871e17..2130aef 100644
+index 394cba4..1ec1fa1 100644
 --- a/fabrics.c
 +++ b/fabrics.c
-@@ -856,7 +856,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
+@@ -971,7 +971,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
  	}
  }
  
@@ -52,7 +37,7 @@ index 4871e17..2130aef 100644
  	char argstr[BUF_SIZE];
  	int instance, ret;
 diff --git a/fabrics.h b/fabrics.h
-index 91aec90..ac0e106 100644
+index 988f3ef..085c059 100644
 --- a/fabrics.h
 +++ b/fabrics.h
 @@ -2,7 +2,7 @@
@@ -62,13 +47,13 @@ index 91aec90..ac0e106 100644
 -extern int connect(const char *desc, int argc, char **argv);
 +extern int connect_builtin(const char *desc, int argc, char **argv);
  extern int disconnect(const char *desc, int argc, char **argv);
+ extern int disconnect_all(const char *desc, int argc, char **argv);
  
- #endif
 diff --git a/nvme.c b/nvme.c
-index 676e8bf..072d693 100644
+index 0e53472..db058d8 100644
 --- a/nvme.c
 +++ b/nvme.c
-@@ -3244,7 +3244,7 @@ static int connect_all_cmd(int argc, char **argv, struct command *command, struc
+@@ -4748,7 +4748,7 @@ static int connect_all_cmd(int argc, char **argv, struct command *command, struc
  static int connect_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
  {
  	const char *desc = "Connect to NVMeoF subsystem";

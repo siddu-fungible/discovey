@@ -114,6 +114,10 @@ class FunTest:
                             dest="logs_dir",
                             default=None,
                             help="To be used only by the scheduler")
+        parser.add_argument('--log_prefix',
+                            dest="log_prefix",
+                            default=None,
+                            help="To be used only by the scheduler")
         parser.add_argument('--suite_execution_id',
                             dest="suite_execution_id",
                             default=None,
@@ -144,6 +148,7 @@ class FunTest:
         else:
             self.fun_test_disabled = False
         self.logs_dir = args.logs_dir
+        self.log_prefix = args.log_prefix
         self.suite_execution_id = args.suite_execution_id
         self.relative_path = args.relative_path
         self.selected_test_case_ids = None
@@ -186,7 +191,11 @@ class FunTest:
 
         html_log_file = "{}.html".format(script_file_name_without_extension)
         if self.relative_path:
-            html_log_file = get_flat_html_log_file_name(self.relative_path)
+            html_log_file = get_flat_html_log_file_name(self.relative_path, self.log_prefix)
+            # if self.log_prefix:
+            #    html_log_file = "{}_{}".format(self.log_prefix, html_log_file)
+        self.html_log_file = html_log_file
+
         self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
                                           log_directory=self.logs_dir,
                                           log_file=html_log_file,
@@ -359,7 +368,10 @@ class FunTest:
         return os.path.basename(artifact_file)
 
     def get_test_case_artifact_file_name(self, post_fix_name):
-        artifact_file = self.logs_dir + "/" + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        log_prefix = ""
+        if self.log_prefix:
+            log_prefix = "_{}".format(self.log_prefix)
+        artifact_file = self.logs_dir + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
         return artifact_file
 
     def enable_pause_on_failure(self):
@@ -686,6 +698,12 @@ class FunTest:
             self.traces[self.current_test_case_id][id] = log
         self.traces[self.current_test_case_id][id] += log
 
+    def set_suite_execution_banner(self, banner):
+        models_helper.set_suite_execution_banner(suite_execution_id=self.suite_execution_id, banner=banner)
+
+    def get_suite_execution_banner(self):
+        return models_helper.get_suite_execution_banner(suite_execution_id=self.suite_execution_id)
+
     def _start_test(self, id, summary, steps):
         self.fun_xml_obj.start_test(id=id, summary=summary, steps=steps)
         self.fun_xml_obj.set_long_summary(long_summary=self._get_test_case_text(id=id,
@@ -796,12 +814,15 @@ class FunTest:
                 if issubclass(klass, FunTestCase):
                     if len(mros) > 1 and self._is_sub_class(base_class="lib.system.fun_test.FunTestCase", mros=mros):
                         # print klass
-                        o = klass()
-                        o.describe()
+                        try:
+                            o = klass()
+                            o.describe()
+                        except:
+                            pass
                         # print o.id
                         # print o.summary
                         # print o.steps
-                        result["classes"].append({"name": o.__class__.__name__, "summary": o.summary})
+                        result["classes"].append({"name": o.__class__.__name__, "summary": o.summary, "id": o.id})
                         test_cases.append(klass)
 
                 if issubclass(klass, FunTestScript):
@@ -923,6 +944,12 @@ class FunTest:
     def get_helper_dir_path(self):
         return self.get_script_parent_directory() + "/helper"
 
+    def get_suite_execution_tags(self):
+        tags = []
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+        if suite_execution:
+            tags = json.loads(suite_execution.tags)
+        return tags
 
 fun_test = FunTest()
 
@@ -968,10 +995,12 @@ class FunTestScript(object):
         setup_te = None
         try:
             if fun_test.suite_execution_id:  # This can happen only if it came thru the scheduler
+                suite_execution_tags = fun_test.get_suite_execution_tags()
                 setup_te = models_helper.add_test_case_execution(test_case_id=FunTest.SETUP_TC_ID,
                                                                  suite_execution_id=fun_test.suite_execution_id,
                                                                  result=fun_test.IN_PROGRESS,
-                                                                 path=fun_test.relative_path)
+                                                                 path=fun_test.relative_path,
+                                                                 log_prefix=fun_test.log_prefix, tags=suite_execution_tags)
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
                 new_order = []
@@ -1010,10 +1039,13 @@ class FunTestScript(object):
                     if test_case.id not in fun_test.selected_test_case_ids:
                         continue
                 if fun_test.suite_execution_id:
+                    suite_execution_tags = fun_test.get_suite_execution_tags()
                     te = models_helper.add_test_case_execution(test_case_id=test_case.id,
                                                                suite_execution_id=fun_test.suite_execution_id,
                                                                result=fun_test.NOT_RUN,
-                                                               path=fun_test.relative_path)
+                                                               path=fun_test.relative_path,
+                                                               log_prefix=fun_test.log_prefix,
+                                                               tags=suite_execution_tags)
                     test_case.execution_id = te.execution_id
 
             self.setup()
@@ -1149,12 +1181,12 @@ class FunTestScript(object):
 class FunTestCase:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, abort_on_failure=False):
+    def __init__(self, **kwargs):
         self.id = None
         self.summary = None
         self.steps = None
         self._added_to_script = None
-        self.abort_on_failure = abort_on_failure
+        self.abort_on_failure = kwargs.get("abort_on_failure", False)
 
     def __str__(self):
         s = "{}: {}".format(self.id, self.summary)

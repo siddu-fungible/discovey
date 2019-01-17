@@ -1,3 +1,4 @@
 [
+  {"info": {"tags": ["networking-sanity"]}},
   {"path": "networking/sample/test_sample.py"}
 ]

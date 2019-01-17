@@ -1,0 +1,8 @@
+[
+  "storage_sanity.json",
+  "ec_crypto_sanity.json",
+  "nvme_sanity.json",
+  "ec_sanity.json",
+  "storage_compression_sanity.json",
+  "ikv_sanity.json"
+]

@@ -4,7 +4,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
 from lib.host.network_controller import NetworkController
 from scripts.networking.nu_config_manager import nu_config_obj
 from scripts.networking.helper import *
-from qos_helper import *
+from scripts.networking.qos.qos_helper import *
 import itertools
 
 num_ports = 3
@@ -330,11 +330,9 @@ class Q0_SP_Channel0(FunTestCase):
                                                                                     expected_load_value))
                 '''
 
-        sp_output_dict = self.validate_sp_output(result_dict=result_dict[sp], sp_list=self.sp_dscp_list,
-                                                 multi_split_sp=self.multi_split_sp)
+        sp_output_dict = self.validate_sp_output(result_dict=result_dict[sp])
         if result_dict[non_sp]:
-            non_sp_output_dict = self.validate_non_sp_output(result_dict=result_dict[non_sp],
-                                                             non_sp_list=self.non_sp_dscp_list)
+            non_sp_output_dict = self.validate_non_sp_output(result_dict=result_dict[non_sp])
 
         for dscp, stream_results in sp_output_dict.iteritems():
             fun_test.test_assert(stream_results['result'], "Actual value seen for dscp %s with strict priority is %s. "
@@ -347,33 +345,16 @@ class Q0_SP_Channel0(FunTestCase):
                                                                " %s. Expected is %s" % (dscp, stream_results['actual'],
                                                                                         stream_results['expected']))
 
-    def validate_sp_output(self, result_dict, sp_list, multi_split_sp):
-        if len(sp_list) == 1 or multi_split_sp:
-            for dscp_val, stream_details in result_dict.iteritems():
-                stream_details['result'] = verify_load_output(actual_value=stream_details['actual'],
-                                                              expected_value=stream_details['expected'])
-        else:
-            dscp_keys = result_dict.keys()
-            equality_check = verify_load_output(actual_value=result_dict[dscp_keys[0]]['actual'],
-                                                expected_value=result_dict[dscp_keys[1]]['actual'], compare=True)
-            for dscp_val, stream_details in result_dict.iteritems():
-                load_check = verify_load_output(actual_value=stream_details['actual'],
-                                                expected_value=stream_details['expected'])
-                stream_details['result'] = load_check and equality_check
+    def validate_sp_output(self, result_dict):
+        for dscp_val, stream_details in result_dict.iteritems():
+            stream_details['result'] = verify_load_output(actual_value=stream_details['actual'],
+                                                          expected_value=stream_details['expected'])
         return result_dict
 
-    def validate_non_sp_output(self, result_dict, non_sp_list):
-        if len(non_sp_list) == 1:
-            for dscp_val, stream_details in result_dict.iteritems():
-                stream_details['result'] = verify_load_output(actual_value=stream_details['actual'],
-                                                              expected_value=stream_details['expected'])
-
-        else:
-            dscp_keys = result_dict.keys()
-            equality_check = verify_load_output(actual_value=result_dict[dscp_keys[0]]['actual'],
-                                                expected_value=result_dict[dscp_keys[1]]['actual'], compare=True)
-            for dscp_val, stream_details in result_dict.iteritems():
-                stream_details['result'] = equality_check
+    def validate_non_sp_output(self, result_dict):
+        for dscp_val, stream_details in result_dict.iteritems():
+            stream_details['result'] = verify_load_output(actual_value=stream_details['actual'],
+                                                          expected_value=stream_details['expected'])
         return result_dict
 
 

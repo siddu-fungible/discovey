@@ -1,0 +1,1030 @@
+{
+  // WITHOUT ENCRYPTION
+  "LSVFioSeqWriteSeqRead": {
+    "CRC_BLT":0,
+    "CRC_JVOL":0,
+    "CRC_LSV": 0,
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    // FIO commandline arguments //"do_verify": 1, "verify":"sha1",
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipinflate_filter":256,// tells how many times we got the request to decompress
+      "zipdeflate_filter":128,// tells how many times we got the request to compress
+      "zipfilter_compress_done":128,// tells how many times zipdeflte_filter (above) called this wu to compress
+      "zipfilter_decompress_done":256,// tells how many times zipinflate_filter (above) called this wu to decompress
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
+      "compress_fails":0,
+      "uncompress_reqs":0,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+    // Block size, IO Depth combo
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioRandWriteRandRead": {
+    "CRC_BLT" : 0,
+    "CRC_JVOL":0,
+    "CRC_LSV" : 0,
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify":"sha1",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["randwrite", "randread"],
+
+    "expected_compressed_bytes": 0,
+    "zip_params_to_monitor": {
+      "zipinflate_filter":256,
+      "zipdeflate_filter":128,
+      "zipfilter_compress_done":128, // random data cannot be compressed
+      "zipfilter_decompress_done":0, // random data
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":0,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":128 // random data
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+   "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioRW": {
+    "CRC_BLT" : 0,
+    "CRC_JVOL":0,
+    "CRC_LSV" : 0,
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioRandRW": {
+    "CRC_BLT" : 0,
+    "CRC_JVOL":0,
+    "CRC_LSV" : 0,
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioSeqWriteSeqReadWithCRCOnBLT": {
+    "CRC_BLT": 1,
+    "CRC_JVOL":0,
+    "CRC_LSV" : 0,
+    "CRC_ALG_BLT": "crc32",
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioSeqWriteSeqReadWithCRCOnJVOL": {
+    "CRC_BLT" : 0,
+    "CRC_JVOL": 1,
+    "CRC_LSV": 0,
+    "CRC_ALG_JVOL": "crc32",
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioSeqWriteSeqReadWithCRCOnLSV": {
+    "CRC_BLT" : 0,
+    "CRC_JVOL":0,
+    "CRC_LSV": 1,
+    "CRC_ALG_LSV": "crc32",
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVStressPlain": {
+    "CRC_BLT":0,
+    "CRC_LSV": 0,
+    "CRC_JVOL" : 0,
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "4m", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+    //0.005 times of input ie 4 x 4m x 0.005 = 81920
+    "expected_compressed_bytes": 81920,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":4096,
+      "zipinflate_filter":8192,
+      "zipfilter_compress_done":4096,
+      "zipfilter_decompress_done":8192,
+      "accumulated_out_bytes":0,
+      "compress_reqs":4096,
+      "compress_done":4096,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+    "fio_bs_iodepth": ["(4, 4)", "(8, 4)", "(16, 4)", "(32, 4)"]
+  },
+  "LSVStressPlainCRC": {
+    "CRC_BLT":1,
+    "CRC_LSV": 1,
+    "CRC_JVOL" :1,
+    "CRC_ALG_BLT": "crc32",
+    "CRC_ALG_JVOL": "crc32",
+    "CRC_ALG_LSV": "crc32",
+    "encrypt": false,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "4m", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 81920,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":4096,
+      "zipinflate_filter":8192,
+      "zipfilter_compress_done":4096,
+      "zipfilter_decompress_done":8192,
+      "accumulated_out_bytes":0,
+      "compress_reqs":4096,
+      "compress_done":4096,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    },
+    "fio_bs_iodepth": ["(4, 4)", "(8, 4)", "(16, 4)", "(32, 4)"]
+  },
+
+
+  //WITH ENCRYPTION
+  "LSVFioSeqWriteSeqReadWthEnc": {
+    "CRC_BLT":0,
+    "CRC_JVOL":0,
+    "CRC_LSV": 0,
+    "encrypt": true,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+    "expected_compressed_bytes": 2500,
+
+     "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+       "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+       "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":4,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":1,
+      "vol_encrypt_filter_added":1,
+      "fun_crypto_aes_setkey":2,
+      "cryptofilter_xform_flow_alloc_done":2,
+      "hw_crypto_passthrough_done":2,
+      "hw_crypto_aes_keyx_hw_done":2,
+      "cryptofilter_create":2,
+      "fun_crypto_setkey":2
+    },
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":384,
+      "cryptofilter_done":384,
+      "fun_crypto_aes_wu":384,
+      "hw_crypto_aes_hw_done":384
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+
+  "LSVFioRandWriteRandReadWthEnc": {
+    "CRC_BLT" : 0,
+    "CRC_JVOL":0,
+    "CRC_LSV" : 0,
+    "encrypt": true,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":4,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":1,
+      "vol_encrypt_filter_added":1,
+      "fun_crypto_aes_setkey":2,
+      "cryptofilter_xform_flow_alloc_done":2,
+      "hw_crypto_passthrough_done":2,
+      "hw_crypto_aes_keyx_hw_done":2,
+      "cryptofilter_create":2,
+      "fun_crypto_setkey":2
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":384,
+      "cryptofilter_done":384,
+      "fun_crypto_aes_wu":384,
+      "hw_crypto_aes_hw_done":384
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc": {
+    "CRC_BLT": 1,
+    "CRC_JVOL":0,
+    "CRC_LSV" : 0,
+    "CRC_ALG_BLT": "crc32",
+    "encrypt": true,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":4,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":1,
+      "vol_encrypt_filter_added":1,
+      "fun_crypto_aes_setkey":2,
+      "cryptofilter_xform_flow_alloc_done":2,
+      "hw_crypto_passthrough_done":2,
+      "hw_crypto_aes_keyx_hw_done":2,
+      "cryptofilter_create":2,
+      "fun_crypto_setkey":2
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":384,
+      "cryptofilter_done":384,
+      "fun_crypto_aes_wu":384,
+      "hw_crypto_aes_hw_done":384
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc": {
+    "CRC_BLT" : 0,
+    "CRC_JVOL": 1,
+    "CRC_LSV": 0,
+    "CRC_ALG_JVOL": "crc32",
+    "encrypt": true,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":4,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":1,
+      "vol_encrypt_filter_added":1,
+      "fun_crypto_aes_setkey":2,
+      "cryptofilter_xform_flow_alloc_done":2,
+      "hw_crypto_passthrough_done":2,
+      "hw_crypto_aes_keyx_hw_done":2,
+      "cryptofilter_create":2,
+      "fun_crypto_setkey":2
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":384,
+      "cryptofilter_done":384,
+      "fun_crypto_aes_wu":384,
+      "hw_crypto_aes_hw_done":384
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc": {
+    "CRC_BLT" : 0,
+    "CRC_JVOL":0,
+    "CRC_LSV": 1,
+    "CRC_ALG_LSV": "crc32",
+    "encrypt": true,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 2500,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":128,
+      "zipinflate_filter":256,
+      "zipfilter_compress_done":128,
+      "zipfilter_decompress_done":256,
+      "accumulated_out_bytes":0,
+      "compress_reqs":128,
+      "compress_done":128,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":4,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":1,
+      "vol_encrypt_filter_added":1,
+      "fun_crypto_aes_setkey":2,
+      "cryptofilter_xform_flow_alloc_done":2,
+      "hw_crypto_passthrough_done":2,
+      "hw_crypto_aes_keyx_hw_done":2,
+      "cryptofilter_create":2,
+      "fun_crypto_setkey":2
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":384,
+      "cryptofilter_done":384,
+      "fun_crypto_aes_wu":384,
+      "hw_crypto_aes_hw_done":384
+    },
+    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+  },
+  "LSVStressEnc": {
+    "CRC_BLT":0,
+    "CRC_JVOL":0,
+    "CRC_LSV": 0,
+    "encrypt": true,
+    "key_sz" : 32,
+    "tweak_sz" : 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"blt": 268435456, "jvol": 524288, "lsv": 187904000},
+    "volume_block": {"blt": 4096, "lsv": 4096, "jvol": 512},
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {"io_queues": 1, "size": "4m", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 100},
+    "fio_modes": ["write", "read"],
+
+    "expected_compressed_bytes": 81920,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter":4096,
+      "zipinflate_filter":8192,
+      "zipfilter_compress_done":4096,
+      "zipfilter_decompress_done":8192,
+      "accumulated_out_bytes":0,
+      "compress_reqs":4096,
+      "compress_done":4096,
+      "compress_fails":0,
+      "uncompress_reqs":0,
+      "uncompress_done":0,
+      "uncompress_fails":0,
+      "uncompressible":0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":4,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":1,
+      "vol_encrypt_filter_added":1,
+      "fun_crypto_aes_setkey":2,
+      "cryptofilter_xform_flow_alloc_done":2,
+      "hw_crypto_passthrough_done":2,
+      "hw_crypto_aes_keyx_hw_done":2,
+      "cryptofilter_create":2,
+      "fun_crypto_setkey":2
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":12288,
+      "cryptofilter_done":12288,
+      "fun_crypto_aes_wu":12288,
+      "hw_crypto_aes_hw_done":12288
+    },
+    "fio_bs_iodepth": ["(4, 4)", "(8, 4)", "(16, 4)", "(32, 4)"]
+  },
+  "LSVStressEncCRC": {
+    "CRC_BLT": 1,
+    "CRC_LSV": 1,
+    "CRC_JVOL": 1,
+    "CRC_ALG_BLT": "crc32",
+    "CRC_ALG_JVOL": "crc32",
+    "CRC_ALG_LSV": "crc32",
+    "encrypt": true,
+    "key_sz": 32,
+    "tweak_sz": 8,
+    "compress": true,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter": "FILTER_TYPE_DEFLATE",
+    "volume_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "lsv": "VOL_TYPE_BLK_LSV",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+    },
+    "volume_capacity": {
+      "blt": 268435456,
+      "jvol": 524288,
+      "lsv": 187904000
+    },
+    "volume_block": {
+      "blt": 4096,
+      "lsv": 4096,
+      "jvol": 512
+    },
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "ns_id": 1,
+    "fio_cmd_args": {
+      "io_queues": 1,
+      "size": "4m",
+      "timeout": 280,
+      "do_verify": 1,
+      "verify_fatal": 1,
+      "verify": "pattern",
+      "verify_pattern": "0x000000000",
+      "buffer_pattern": "0xffffffffffffffff",
+      "buffer_compress_percentage": 100
+    },
+    "fio_modes": [
+      "write",
+      "read"
+    ],
+    "expected_volume_stats": {
+      "write": {
+        "fault_injection": 0,
+        "num_reads": 0,
+        "num_writes": 16
+      },
+      "read": {
+        "fault_injection": 0,
+        "num_reads": 16,
+        "num_writes": 0
+      }
+    },
+    "expected_compressed_bytes": 81920,
+    "zip_params_to_monitor": {
+      "zipdeflate_filter": 4096,
+      "zipinflate_filter":8192,
+      "zipfilter_compress_done": 4096,
+      "zipfilter_decompress_done":8192,
+      "accumulated_out_bytes": 0,
+      "compress_reqs": 4096,
+      "compress_done": 4096,
+      "compress_fails": 0,
+      "uncompress_reqs": 0,
+      "uncompress_done": 0,
+      "uncompress_fails": 0,
+      "uncompressible": 0
+      //"zipfilter_uncompress_done":32
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":4,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":1,
+      "vol_encrypt_filter_added":1,
+      "fun_crypto_aes_setkey":2,
+      "cryptofilter_xform_flow_alloc_done":2,
+      "hw_crypto_passthrough_done":2,
+      "hw_crypto_aes_keyx_hw_done":2,
+      "cryptofilter_create":2,
+      "fun_crypto_setkey":2
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":12288,
+      "cryptofilter_done":12288,
+      "fun_crypto_aes_wu":12288,
+      "hw_crypto_aes_hw_done":12288
+    },
+    "fio_bs_iodepth": [
+      "(4, 4)",
+      "(8, 4)",
+      "(16, 4)",
+      "(32, 4)"
+    ]
+  }
+}

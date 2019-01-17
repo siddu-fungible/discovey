@@ -36,7 +36,7 @@ VP_PACKETS_TOTAL_OUT = "vp_packets_total_out"
 VP_PACKETS_OUT_HU = "vp_packets_out_hu"
 VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
 VP_PACKETS_FORWARDING_NU_DIRECT = "vp_packets_forwarding_nu_direct"
-VP_PACKETS_NU_OUT_ETP = "vp_packets_out_nu_etp"
+VP_PACKETS_OUT_NU_ETP = "vp_packets_out_nu_etp"
 VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
 VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
 VP_PACKETS_CONTROL_T2C_COUNT = "vp_packets_control_t2c"
@@ -287,7 +287,7 @@ def get_wro_global_stats_values(network_controller_obj):
     return result
 
 
-def validate_parser_stats(parser_result, compare_value, check_list_keys=[], parser_old_result=None):
+def validate_parser_stats(parser_result, compare_value, check_list_keys=[], parser_old_result=None, match_values=True):
     result = False
     try:
         stat_counter_list = ['prv_sent', 'eop_cnt', 'sop_cnt']
@@ -301,8 +301,13 @@ def validate_parser_stats(parser_result, compare_value, check_list_keys=[], pars
                         actual = int(current_dict[counter]) - int(old_dict[counter])
                     else:
                         actual = int(current_dict[counter])
-                fun_test.test_assert_expected(expected=compare_value, actual=actual,
-                                              message="Check %s stats for %s in parser nu stats" % (counter, key))
+
+                if match_values:
+                    fun_test.test_assert_expected(expected=compare_value, actual=actual,
+                                                  message="Check %s stats for %s in parser nu stats" % (counter, key))
+                else:
+                    fun_test.test_assert(compare_value >= actual,
+                                         message="Check %s stats for %s in parser nu stats" % (counter, key))
         result = True
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -559,46 +564,90 @@ def convert_bps_to_mbps(count_in_bps):
     return count_in_mbps
 
 
-def reset_pfc_configs(network_controller_obj, dut_port_list, queue_list=[], quanta=False, threshold=False, shared_configs=False, shared_config_port_list=[]):
-    result = False
-    default_quanta = 0
-    default_threshold = 0
-    default_min_thr = 16383
-    default_shr_thr = 16383
-    default_hdr_thr = 16383
-    default_xoff_enable = 0
-    default_shared_xon_thr = 100
+def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
+                          psw_stats_nu_1=None, psw_stats_nu_2=None, psw_stats_hnu_1=None,
+                          psw_stats_hnu_2=None):
+    result = {}
+    parsed_psw_stats_1 = None
+    parsed_psw_stats_2 = None
+    parsed_psw_stats_3 = None
+    parsed_psw_stats_4 = None
+    for key in input_list:
+        result[key] = 0
+    for key in output_list:
+        result[key] = 0
     try:
-        fun_test.simple_assert(network_controller_obj.disable_qos_pfc(), "Disable QOS pfc")
+        if hnu_1 and hnu_2:
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+        elif not hnu_1 and not hnu_2:
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+        elif not hnu_1 and hnu_2:
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2,output=True,
+                                                             output_key_list=output_list)
+        else:
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2, output=True,
+                                                             output_key_list=output_list)
 
-        for dut_port in dut_port_list:
-            fun_test.simple_assert(network_controller_obj.disable_priority_flow_control(port_num=dut_port),
-                                   "Disable PFC on %s" % dut_port)
+        if parsed_psw_stats_3 and parsed_psw_stats_4:
+            for key in output_list:
+                new_val = parsed_psw_stats_4['output'][key]
+                old_val = parsed_psw_stats_3['output'][key]
+                if not new_val:
+                    new_val = 0
+                if not old_val:
+                    old_val = 0
+                result[key] =  int(new_val) - int(old_val)
 
-            if quanta or threshold:
-                for queue in queue_list:
-                    if quanta:
-                        fun_test.simple_assert(network_controller_obj.set_priority_flow_control_quanta(
-                            port_num=dut_port, quanta=default_quanta, class_num=queue),
-                            "Reset default quanta of %s on queue %s" % (default_quanta, dut_port))
-                    if threshold:
-                        fun_test.simple_assert(network_controller_obj.set_priority_flow_control_threshold(
-                            port_num=dut_port, threshold=default_threshold, class_num=queue),
-                            "Reset default threshold of %s on queue %s" % (default_threshold, dut_port))
+            for key in input_list:
+                new_val = parsed_psw_stats_2['input'][key]
+                old_val = parsed_psw_stats_1['input'][key]
+                if not new_val:
+                    new_val = 0
+                if not old_val:
+                    old_val = 0
+                result[key] = int(new_val) - int(old_val)
 
-        if shared_configs:
-            for dut_port in shared_config_port_list:
-                for queue in queue_list:
-                    fun_test.simple_assert(network_controller_obj.
-                                           set_qos_ingress_priority_group(port_num=dut_port,
-                                                                          priority_group_num=queue,
-                                                                          min_threshold=default_min_thr,
-                                                                          shared_threshold=default_shr_thr,
-                                                                          headroom_threshold=default_hdr_thr,
-                                                                          xoff_enable=default_xoff_enable,
-                                                                          shared_xon_threshold=default_shared_xon_thr),
-                                           "Ensure shared configs are reset on queue %s of port %s" % (queue, dut_port))
-        result = True
+        else:
+            for key in output_list:
+                new_val = parsed_psw_stats_2['output'][key]
+                old_val = parsed_psw_stats_1['output'][key]
+                if not new_val:
+                    new_val = 0
+                if not old_val:
+                    old_val = 0
+                result[key] = int(new_val) - int(old_val)
+
+            for key in input_list:
+                new_val = int(parsed_psw_stats_2['input'][key])
+                old_val = int(parsed_psw_stats_1['input'][key])
+                if not new_val:
+                    new_val = 0
+                if not old_val:
+                    old_val = 0
+                result[key] = int(new_val) - int(old_val)
+        fun_test.log("Counters diff is %s" % result)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
