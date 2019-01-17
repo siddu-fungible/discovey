@@ -6,13 +6,10 @@ from lib.fun.f1 import F1
 from lib.host.storage_controller import StorageController
 from lib.orchestration.simulation_orchestrator import DockerContainerOrchestrator
 import re
-import copy
 
 '''
 Script to do functional verification of for different file systems mounted on BLT volume
 '''
-import os
-os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/../scratch/remote_docker_host_with_storage.json"
 
 topology_dict = {
     "name": "Basic Storage",
@@ -65,7 +62,7 @@ class FSOnBLTScript(FunTestScript):
 
     def cleanup(self):
         self.storage_controller.disconnect()
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
 
 
 class FSOnBLTTestcase(FunTestCase):
@@ -80,50 +77,66 @@ class FSOnBLTTestcase(FunTestCase):
         self.dd_write_args["count"] = self.input_file_size_in_bytes / self.dd_write_args["block_size"]
         cmd_timeout = self.dd_write_args["count"] / self.test_timeout_ratio
 
-        # Write a file into the EC volume of size self.input_file_size bytes
+        # Write a file into the BLT volume of size self.input_file_size bytes
         return_size = self.host.dd(timeout=cmd_timeout, **self.dd_write_args)
-        fun_test.test_assert_expected(self.input_file_size_in_bytes, return_size,
-                                      "Writing {} bytes file into the EC volume".format(self.input_file_size))
-        self.input_md5sum = self.host.md5sum(file_name=self.dd_write_args["output_file"])
-        fun_test.test_assert(self.input_md5sum, "Finding md5sum of input file {}".
-                             format(self.dd_write_args["output_file"]))
+        if not self.readonly_filesystem:
+            fun_test.test_assert_expected(self.input_file_size_in_bytes, return_size,
+                                          "Writing {} bytes file into the BLT volume".format(self.input_file_size))
+            self.input_md5sum = self.host.md5sum(file_name=self.dd_write_args["output_file"])
+            fun_test.test_assert(self.input_md5sum, "Finding md5sum of input file {}".
+                                 format(self.dd_write_args["output_file"]))
+        else:
+            # If filesystem is mounted as Read-only filesystem, write will fail
+            fun_test.test_assert(not return_size, "Expected failure, write can't be performed on Read-only file system")
 
     def do_read_test(self):
 
         self.dd_read_args["count"] = self.input_file_size_in_bytes / self.dd_read_args["block_size"]
         cmd_timeout = self.dd_read_args["count"] / self.test_timeout_ratio
 
-        # Read the previously written file from the EC volume and calculate the md5sum of the same
+        # Read the previously written file from the BLT volume and calculate the md5sum of the same
         return_size = self.host.dd(timeout=cmd_timeout, **self.dd_read_args)
-        fun_test.test_assert_expected(self.input_file_size_in_bytes, return_size, "Reading {} bytes file into the EC volume".
-                                      format(self.input_file_size_in_bytes))
-        self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
-        fun_test.test_assert(self.output_md5sum, "Finding md5sum of ouptut file {}".
-                             format(self.dd_read_args["output_file"]))
-        fun_test.test_assert_expected(self.input_md5sum, self.output_md5sum, "Comparing md5sum of input & output file")
+        if not self.readonly_filesystem:
+            fun_test.test_assert_expected(
+                self.input_file_size_in_bytes, return_size,
+                "Reading {} bytes file into the BLT volume".format(self.input_file_size_in_bytes))
+            self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
+            fun_test.test_assert(self.output_md5sum, "Finding md5sum of ouptut file {}".
+                                 format(self.dd_read_args["output_file"]))
+            fun_test.test_assert_expected(self.input_md5sum, self.output_md5sum,
+                                          "Comparing md5sum of input & output file")
+        else:
+            fun_test.test_assert(not return_size, "Expected failure, write can't be performed on Read-only file system")
 
     def setup(self):
 
         testcase = self.__class__.__name__
 
-        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        # Start of config json file parsing and initializing various variables to run this testcase
         config_parsing = True
         config_file = ""
         config_file = fun_test.get_script_name_without_ext() + ".json"
-        fun_test.log("Benchmark file being used: {}".format(config_file))
+        fun_test.log("Config file being used: {}".format(config_file))
 
-        benchmark_dict = {}
-        benchmark_dict = utils.parse_file_to_json(config_file)
+        config_dict = {}
+        config_dict = utils.parse_file_to_json(config_file)
 
-        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+        if testcase not in config_dict or not config_dict[testcase]:
             config_parsing = False
-            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+            fun_test.critical("Config is not available for the current testcase {} in {} file".
                               format(testcase, config_file))
-            fun_test.test_assert(config_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+            fun_test.test_assert(config_parsing, "Parsing Config json file for this {} testcase".format(testcase))
 
-        for k, v in benchmark_dict[testcase].iteritems():
+        for k, v in config_dict[testcase].iteritems():
             setattr(self, k, v)
-        # End of benchmarking json file parsing
+        # End of config json file parsing
+
+        if not hasattr(self, "remount_filesystem"):
+            self.remount_filesystem = False
+        if not hasattr(self, "readonly_filesystem"):
+            self.readonly_filesystem = False
+        if not hasattr(self, "remount_as_readonly"):
+            self.remount_as_readonly = False
 
         self.topology = fun_test.shared_variables["topology"]
         self.dut = self.topology.get_dut_instance(index=0)
@@ -143,12 +156,6 @@ class FSOnBLTTestcase(FunTestCase):
         self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
         self.volume_attached = False
-
-        # TODO: Should we add check for minimum volume capacity for filetypes? for eg. btrfs requires min 40 MB
-
-        '''if self.fs_type == "btrfs":
-            fun_test.test_assert(utils.convert_to_bytes(self.volume_params["volume_capacity"]["blt"]) < 41943040,
-                                 "Volume /NVME device capacity Size should be minimum 40MB")'''
 
         # Creating BLT volumes
         self.this_uuid = utils.generate_uuid()
@@ -205,7 +212,8 @@ class FSOnBLTTestcase(FunTestCase):
                                                                                         self.volume_name))
         command_result = self.host.create_directory(self.mount_point)
         fun_test.test_assert(command_result, "Creating mount point directory {}".format(self.mount_point))
-        command_result = self.host.mount_volume(self.nvme_block_device, self.mount_point)
+        command_result = self.host.mount_volume(self.nvme_block_device, self.mount_point,
+                                                readonly=self.readonly_filesystem)
         fun_test.simple_assert(command_result, "Mounting BLT volume {} on {}".format(self.nvme_block_device,
                                                                                     self.mount_point))
         lsblk_output = self.host.lsblk("-b")
@@ -213,7 +221,10 @@ class FSOnBLTTestcase(FunTestCase):
                                       actual=lsblk_output[self.volume_name]["mount_point"],
                                       message="Mounting BLT volume {} on {}".format(self.nvme_block_device,
                                                                                    self.mount_point))
-        # Write and read a file into the newly mounted EC volume
+        if self.readonly_filesystem:
+            check_fs_ro = self.host.is_mount_ro(self.mount_point)
+            fun_test.test_assert_expected(True, check_fs_ro, "File system is mounted as read only")
+        # Write and read a file into the newly mounted BLT volume
         self.do_write_test()
         self.do_read_test()
 
@@ -226,6 +237,47 @@ class FSOnBLTTestcase(FunTestCase):
                                       actual=lsblk_output[self.volume_name]["mount_point"],
                                       message="Unmounting BLT volume {} from {}".format(self.nvme_block_device,
                                                                                        self.mount_point))
+        # Remount file system on host and verify file contents
+        if self.remount_filesystem:
+            fun_test.log("\n===== Remounting file system: {} =====".format(self.fs_type))
+            command_result = self.host.mount_volume(self.nvme_block_device, self.mount_point,
+                                                    readonly=self.readonly_filesystem)
+            fun_test.simple_assert(command_result, "Mounting BLT volume {} on {}".format(self.nvme_block_device,
+                                                                                         self.mount_point))
+            lsblk_output = self.host.lsblk("-b")
+            fun_test.test_assert_expected(expected=self.mount_point,
+                                          actual=lsblk_output[self.volume_name]["mount_point"],
+                                          message="Mounting BLT volume {} on {}".format(self.nvme_block_device,
+                                                                                            self.mount_point))
+            if not self.readonly_filesystem:
+                # Check if existing file retains the file contents
+                self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
+                fun_test.test_assert(self.output_md5sum, "Finding md5sum of existing ouptut file {} after remount".
+                                     format(self.dd_read_args["output_file"]))
+                fun_test.test_assert_expected(self.input_md5sum, self.output_md5sum,
+                                              "md5sum of input & output file matches after remount")
+
+                if not self.remount_as_readonly:
+                    # Cleaning up files
+                    del_input_file = self.host.remove_file(self.dd_read_args["input_file"])
+                    fun_test.test_assert_expected(True, del_input_file, "Input file is deleted")
+                    del_output_file = self.host.remove_file(self.dd_read_args["output_file"])
+                    fun_test.test_assert_expected(True, del_output_file, "Output file is deleted")
+
+                    # Write new data in files and re-verify
+                    self.do_write_test()
+                    self.do_read_test()
+
+            # unmounting the BLT volume
+            command_result = self.host.unmount_volume(volume=self.nvme_block_device)
+            fun_test.simple_assert(command_result, "Unmounting BLT volume {} from {}".format(self.nvme_block_device,
+                                                                                             self.mount_point))
+            lsblk_output = self.host.lsblk("-b")
+            fun_test.test_assert_expected(expected=None,
+                                          actual=lsblk_output[self.volume_name]["mount_point"],
+                                          message="Unmounting BLT volume {} from {}".format(self.nvme_block_device,
+                                                                                            self.mount_point))
+
         # Detaching and Unconfiguring volumes
         command_result = self.storage_controller.volume_detach_pcie(
             ns_id=self.ns_id, uuid=self.this_uuid, command_duration=self.command_timeout)
@@ -248,7 +300,7 @@ class Ext2OnBLT(FSOnBLTTestcase):
         5. Check that the file is created successfully and find checksum of file 
         6. Read the same file once again and find its checksum.
         7. Compare the checksum obtained in previous two steps
-        8. Unmount the BLT volume
+        8. Unmount the file system
         9. Detach the BLT volume from DUT
         10. Unconfigure all the BLT volumes
         """)
@@ -275,7 +327,7 @@ class Ext3OnBLT(FSOnBLTTestcase):
           5. Check that the file is created successfully and find checksum of file 
           6. Read the same file once again and find its checksum.
           7. Compare the checksum obtained in previous two steps
-          8. Unmount the BLT volume
+          8. Unmount the file system
           9. Detach the BLT volume from DUT
           10. Unconfigure all the BLT volumes
         """)
@@ -302,7 +354,7 @@ class Ext4OnBLT(FSOnBLTTestcase):
           5. Check that the file is created successfully and find checksum of file 
           6. Read the same file once again and find its checksum.
           7. Compare the checksum obtained in previous two steps
-          8. Unmount the BLT volume
+          8. Unmount the file system
           9. Detach the BLT volume from DUT
           10. Unconfigure all the BLT volumes
         """)
@@ -330,7 +382,7 @@ class XFSOnBLT(FSOnBLTTestcase):
           6. Check that the file is created successfully and find checksum of file 
           7. Read the same file once again and find its checksum.
           8. Compare the checksum obtained in previous two steps
-          9. Unmount the BLT volume
+          9. Unmount the file system
           10. Detach the BLT volume from DUT
           11. Unconfigure all the BLT volumes
         """)
@@ -358,7 +410,7 @@ class BTRFSOnBLT(FSOnBLTTestcase):
           6. Check that the file is created successfully and find checksum of file 
           7. Read the same file once again and find its checksum.
           8. Compare the checksum obtained in previous two steps
-          9. Unmount the BLT volume
+          9. Unmount the file system
           10. Detach the BLT volume from DUT
           11. Unconfigure all the BLT volumes
         """)
@@ -386,7 +438,7 @@ class F2FSOnBLT(FSOnBLTTestcase):
           6. Check that the file is created successfully and find checksum of file 
           7. Read the same file once again and find its checksum.
           8. Compare the checksum obtained in previous two steps
-          9. Unmount the BLT volume
+          9. Unmount the file system
           10. Detach the BLT volume from DUT
           11. Unconfigure all the BLT volumes
         """)
@@ -413,7 +465,7 @@ class NTFSOnBLT(FSOnBLTTestcase):
         5. Check that the file is created successfully and find checksum of file 
         6. Read the same file once again and find its checksum.
         7. Compare the checksum obtained in previous two steps
-        8. Unmount the BLT volume
+        8. Unmount the file system
         9. Detach the BLT volume from DUT
         10. Unconfigure all the BLT volumes
         """)
@@ -428,6 +480,93 @@ class NTFSOnBLT(FSOnBLTTestcase):
         super(NTFSOnBLT, self).cleanup()
 
 
+class Ext4OnBLTWithRemount(FSOnBLTTestcase):
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="Building EXT4 filesystem on BLT volume, Create File in it and verifying md5sum "
+                                      "of write and read file, remount filesystem and verify contents after remount",
+                              steps="""
+          1. Create BLT volume
+          2. Attach BLT volume
+          3. Create EXT4 filesystem on the BLT volume and mount it
+          4. Create a file using dd command
+          5. Check that the file is created successfully and find checksum of file 
+          6. Read the same file once again and find its checksum.
+          7. Compare the checksum obtained in previous two steps
+          8. Unmount the File system
+          9. Remount the File system
+          10. Check the existing output file contents
+          11. Clean up existing files
+          12. Write file with new content and verify
+          13. Detach the BLT volume from DUT
+          14. Unconfigure all the BLT volumes
+        """)
+
+    def setup(self):
+        super(Ext4OnBLTWithRemount, self).setup()
+
+    def run(self):
+        super(Ext4OnBLTWithRemount, self).run()
+
+    def cleanup(self):
+        super(Ext4OnBLTWithRemount, self).cleanup()
+
+
+class Ext4OnBLTWithReadOnlyFS(FSOnBLTTestcase):
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="Building EXT4 filesystem as Read-only filesystem on BLT volume, Verifying "
+                                      "Write on Read-only filesystem fails",
+                              steps="""
+          1. Create BLT volume
+          2. Attach BLT volume
+          3. Create Read only EXT4 filesystem on the BLT volume and mount it
+          4. Try to create a file using dd command
+          5. Check that the file creation fails on Read-only filesystem 
+          6. Detach the BLT volume from DUT
+          7. Unconfigure all the BLT volumes
+        """)
+
+    def setup(self):
+        super(Ext4OnBLTWithReadOnlyFS, self).setup()
+
+    def run(self):
+        super(Ext4OnBLTWithReadOnlyFS, self).run()
+
+    def cleanup(self):
+        super(Ext4OnBLTWithReadOnlyFS, self).cleanup()
+
+class XFSOnBLTWithRemountAsReadOnlyFS(FSOnBLTTestcase):
+    def describe(self):
+        self.set_test_details(id=10,
+                              summary="Building XFS filesystem on BLT volume, Create a file and verify write and read,"
+                                      " Remount XFS file system as Read-only filesystem. File read should succeed",
+                              steps="""
+          1. Create BLT volume
+          2. Attach BLT volume
+          3. Create XFS filesystem on the BLT volume and mount it
+          4. Create a file using dd command
+          5. Check that the file is created successfully and find checksum of file 
+          6. Read the same file once again and find its checksum.
+          7. Compare the checksum obtained in previous two steps
+          8. Unmount the File system
+          9. Remount the File system as Read-only Filesystem
+          10. Check the existing output file contents
+          11. Clean up existing files
+          13. Detach the BLT volume from DUT
+          14. Unconfigure all the BLT volumes
+        """)
+
+    def setup(self):
+        super(XFSOnBLTWithRemountAsReadOnlyFS, self).setup()
+
+    def run(self):
+        super(XFSOnBLTWithRemountAsReadOnlyFS, self).run()
+
+    def cleanup(self):
+        super(XFSOnBLTWithRemountAsReadOnlyFS, self).cleanup()
+
+
 if __name__ == "__main__":
 
     fsonblt_script = FSOnBLTScript()
@@ -438,4 +577,7 @@ if __name__ == "__main__":
     fsonblt_script.add_test_case(BTRFSOnBLT())
     fsonblt_script.add_test_case(F2FSOnBLT())
     fsonblt_script.add_test_case(NTFSOnBLT())
+    fsonblt_script.add_test_case(Ext4OnBLTWithRemount())
+    fsonblt_script.add_test_case(Ext4OnBLTWithReadOnlyFS())
+    fsonblt_script.add_test_case(XFSOnBLTWithRemountAsReadOnlyFS())
     fsonblt_script.run()
