@@ -121,6 +121,7 @@ def update_suite_container_execution(suite_container_execution_id, version=None)
     s.save()
 
 def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None, tags=None):
+    # print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
         te.result = result

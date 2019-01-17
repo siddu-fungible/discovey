@@ -53,6 +53,7 @@ class SuiteWorker(Thread):
     def shutdown_suite(self):
         job_id = self.job_spec["job_id"]
         scheduler_logger.info("Job Id: {} Shutdown_suite".format(job_id))
+        self.suite_shutdown = True
         if self.current_script_process:
             try:
                 os.kill(self.current_script_process.pid, signal.SIGINT)
@@ -62,8 +63,10 @@ class SuiteWorker(Thread):
                 scheduler_logger.error(str(ex))
             if psutil.pid_exists(self.current_script_process.pid):
                 try:
-                    self.current_script_process.kill()
-                    os.kill(self.current_script_process.pid, signal.SIGKILL)
+                    for i in xrange(100):
+                        time.sleep(0.5)
+                        self.current_script_process.kill()
+                        os.kill(self.current_script_process.pid, signal.SIGKILL)
                 except Exception as ex:
                     scheduler_logger.error(str(ex))
 
