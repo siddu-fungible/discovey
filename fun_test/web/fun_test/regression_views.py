@@ -565,10 +565,11 @@ def get_suite_executions_by_time(request):
 @api_safe_json_response
 def get_test_case_executions_by_time(request):
     request_json = json.loads(request.body)
-    from_time = int(request_json["from_time"])
-    to_time = request_json["to_time"]
+    from_time = 1541030400 * 1000
+    # from_time = int(request_json["from_time"])
+    # to_time = request_json["to_time"]
     from_time = get_datetime_from_epoch_time(from_time)
-    to_time = get_datetime_from_epoch_time(to_time)
+    # to_time = get_datetime_from_epoch_time(to_time)
     test_case_execution_tags = None
     if "test_case_execution_tags" in request_json:
         test_case_execution_tags = request_json["test_case_execution_tags"]
@@ -598,7 +599,8 @@ def get_test_case_executions_by_time(request):
                          "suite_execution_id": te.suite_execution_id,
                          "script_path": te.script_path,
                          "test_case_id": te.test_case_id,
-                         "result": te.result}
+                         "result": te.result,
+                         "started_time": te.started_time}
             tes.append(one_entry)
     return tes
 

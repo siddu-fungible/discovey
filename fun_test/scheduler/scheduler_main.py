@@ -22,8 +22,8 @@ def timed_dispatcher(suite_worker_obj):
     suite_worker_obj.start()
     if suite_worker_obj.job_id in job_id_timers:
         del job_id_timers[suite_worker_obj.job_id]
-
-
+    suite_worker_obj.join()
+    scheduler_logger.debug("Job Id: {} join complete".format(suite_worker_obj.job_id))
 
 class SuiteWorker(Thread):
     def __init__(self, job_spec):
@@ -53,6 +53,7 @@ class SuiteWorker(Thread):
     def shutdown_suite(self):
         job_id = self.job_spec["job_id"]
         scheduler_logger.info("Job Id: {} Shutdown_suite".format(job_id))
+        self.suite_shutdown = True
         if self.current_script_process:
             try:
                 os.kill(self.current_script_process.pid, signal.SIGINT)
@@ -62,8 +63,10 @@ class SuiteWorker(Thread):
                 scheduler_logger.error(str(ex))
             if psutil.pid_exists(self.current_script_process.pid):
                 try:
-                    self.current_script_process.kill()
-                    os.kill(self.current_script_process.pid, signal.SIGKILL)
+                    for i in xrange(100):
+                        time.sleep(0.5)
+                        self.current_script_process.kill()
+                        os.kill(self.current_script_process.pid, signal.SIGKILL)
                 except Exception as ex:
                     scheduler_logger.error(str(ex))
 
@@ -195,7 +198,7 @@ class SuiteWorker(Thread):
         script_index = 0
         for script_item in script_items:
             script_index += 1
-            if "info" in script_item:
+            if "info" in script_item or ("disabled" in script_item and script_item["disabled"]):
                 continue
             script_path = SCRIPTS_DIR + "/" + script_item["path"]
             last_script_path = script_path
@@ -213,27 +216,36 @@ class SuiteWorker(Thread):
                 if self.job_script_path not in relative_path:
                     continue
             crashed = False
-            console_log_file_name = self.job_dir + "/" + get_flat_console_log_file_name("/{}".format(script_path), script_index)
-            with open(console_log_file_name, "w") as console_log:
-                self.local_scheduler_logger.info("Executing: {}".format(script_path))
-                popens = ["python",
-                          script_path,
-                          "--" + "logs_dir={}".format(self.job_dir),
-                          "--" + "suite_execution_id={}".format(suite_execution_id),
-                          "--" + "relative_path={}".format(relative_path),
-                          "--" + "build_url={}".format(self.job_build_url),
-                          "--" + "log_prefix={}".format(script_index)]
+            scheduler_logger.debug("Job Id: {} before running script: {}".format(self.job_id, script_path))
 
-                if self.job_test_case_ids:
-                    popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
-                if "test_case_ids" in script_item:
-                    popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
-                if self.job_environment:
-                    popens.append("--environment={}".format(json.dumps(self.job_environment)))
-                self.current_script_process = subprocess.Popen(popens,
-                                                               close_fds=True,
-                                                               stdout=console_log,
-                                                               stderr=console_log)
+            console_log_file_name = self.job_dir + "/" + get_flat_console_log_file_name("/{}".format(script_path), script_index)
+            try:
+                with open(console_log_file_name, "w") as console_log:
+                    self.local_scheduler_logger.info("Executing: {}".format(script_path))
+                    popens = ["python",
+                              script_path,
+                              "--" + "logs_dir={}".format(self.job_dir),
+                              "--" + "suite_execution_id={}".format(suite_execution_id),
+                              "--" + "relative_path={}".format(relative_path),
+                              "--" + "build_url={}".format(self.job_build_url),
+                              "--" + "log_prefix={}".format(script_index)]
+
+                    if self.job_test_case_ids:
+                        popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
+                    if "test_case_ids" in script_item:
+                        popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
+                    if self.job_environment:
+                        popens.append("--environment={}".format(json.dumps(self.job_environment)))
+                    scheduler_logger.debug("Job Id: {} before subprocess Script: {}".format(self.job_id, script_path))
+                    self.current_script_process = subprocess.Popen(popens,
+                                                                   close_fds=True,
+                                                                   stdout=console_log,
+                                                                   stderr=console_log)
+                    self.current_script_process.wait()
+                    scheduler_logger.debug("Job Id: {} after subprocess Script: {}".format(self.job_id, script_path))
+            except Exception as ex:
+                scheduler_logger.error(str(ex))
+            scheduler_logger.debug("Job Id: {} begin polling Script: {}".format(self.job_id, script_path))
             poll_status = None
             while poll_status is None:
                 # print("Still working...")
@@ -243,6 +255,8 @@ class SuiteWorker(Thread):
                 self.local_scheduler_logger.info("FAILED: {}".format(script_path))
                 local_scheduler_logger.exception("FAILED")
                 crashed = True  # TODO: Need to re-check this based on exit code
+            scheduler_logger.debug("Job Id: {} Done polling Script: {}".format(self.job_id, script_path))
+
             script_result = False
             if self.current_script_process.returncode == 0:
                 script_result = True

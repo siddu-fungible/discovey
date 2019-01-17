@@ -572,12 +572,12 @@ export class PerformanceComponent implements OnInit {
       }
       s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + node.failures.size + "</span>";
     }
-    if (node.bugs.size != 0) {
-      if (node.failures.size != 0 || node.degrades.size != 0) {
-        s += "&nbsp";
-      }
-        s += "<span style='color: red'><i class='fa fa-bug'></i>:</span>" + "<span style='color: black'>" + node.bugs.size + "</span>";
-    }
+    // if (node.bugs.size != 0) {
+    //   if (node.failures.size != 0 || node.degrades.size != 0) {
+    //     s += "&nbsp";
+    //   }
+    //     s += "<span style='color: red'><i class='fa fa-bug'></i>:</span>" + "<span style='color: black'>" + node.bugs.size + "</span>";
+    // }
     return s;
   };
 

@@ -353,20 +353,20 @@ class LSVVolumeLevelTestcase(FunTestCase):
             if command_result["data"]:
                 final_value = command_result["data"]
             if key == "accumulated_out_bytes":
-                if final_value - self.expected_compressed_bytes < 200:
+		if (final_value - self.my_shared_variables["initial_" + str(key)]) - self.expected_compressed_bytes < 200:
                     fun_test.add_checkpoint("zip RATIO: " + str(key) + " :0.005 x input: " + str(len(self.fio_bs_iodepth))
                                             + "x " +
                                             self.fio_cmd_args["size"].format(self),
                                             "PASSED",
                                             self.expected_compressed_bytes,
-                                            final_value)
+                                            final_value - self.my_shared_variables["initial_" + str(key)])
                 else:
                     fun_test.add_checkpoint("zip ratio " + str(key) + " not 0.005 x input " + str(len(self.fio_bs_iodepth)) +
                                             "x " +
                                             self.fio_cmd_args["size"].format(self),
                                             "Failed",
                                             self.expected_compressed_bytes,
-                                            final_value)
+                                            final_value - self.my_shared_variables["initial_" + str(key)])
                     test_result = False
             elif command_result["data"] - self.my_shared_variables["initial_" + str(key)] == value:
                 fun_test.add_checkpoint("zip stats match: " + str(key).format(self),

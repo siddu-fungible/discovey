@@ -126,7 +126,6 @@
                   </table>
                 </div>
               </ng-container>
-
               <label for="scheduling-time-timezone">Timezone:
                 <div id="scheduling-time-timezone" style="display:inline-flex;" ngbDropdown>
                   <button class="btn btn-sm" ngbDropdownToggle>{{ schedulingTimeTimezone }}</button>
@@ -138,9 +137,20 @@
               </label>
 
             </div>
-
           </div>
         </div>
+      </div>
+      <div style="padding: 5px;">
+        <ng-container *ngIf="!submitting">
+          <button *ngIf="selectedInfo" (click)="submitClick()"
+                class="btn btn-primary">Submit
+          </button>
+          <button *ngIf="selectedInfo" (click)="ngOnInit()"
+                  class="btn">Clear
+          </button>
+        </ng-container>
+        <fun-spinner [status]="submitting"></fun-spinner>
+
       </div>
     </div>
     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
@@ -163,12 +173,5 @@
     </div>
   </div>
 
-  <div style="padding: 5px;">
-    <button *ngIf="selectedInfo" (click)="submitClick()"
-            class="btn btn-primary">Submit
-    </button>
-    <button *ngIf="selectedInfo" (click)="ngOnInit()"
-            class="btn">Clear
-    </button>
-  </div>
+
 </div>

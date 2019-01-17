@@ -1,3 +1,4 @@
 [
+  {"info": {"tags": ["storage-sanity"]}},
   {"path": "storage/nvme_sanity.py"}
 ]
