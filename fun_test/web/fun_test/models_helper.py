@@ -243,6 +243,7 @@ def add_test_case_execution(test_case_id,
                 te.save()
                 add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                            test_case_execution_id=te.execution_id)
+                break
         except Exception as ex:
             print "Error: add_test_case_execution: {}".format(str(ex))
 
