@@ -203,7 +203,7 @@ def get_next_test_case_execution_id():
     if not last_test_case_execution_id:
         LastTestCaseExecution().save()
     with transaction.atomic():
-        time.sleep(random.uniform(0.1, 1.5))
+        time.sleep(random.uniform(0.1, 2.0))
         last_test_case_execution_id = LastTestCaseExecution.objects.last()
         last_test_case_execution_id.last_test_case_execution_id += 1
         last_test_case_execution_id.save()
@@ -228,17 +228,25 @@ def add_test_case_execution(test_case_id,
                             suite_execution_id,
                             path,
                             result=RESULTS["NOT_RUN"], log_prefix="", tags=[]):
+    max_retries = 4
+    te = None
     with transaction.atomic():
-        te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
-                               test_case_id=test_case_id,
-                               suite_execution_id=suite_execution_id,
-                               result=result,
-                               started_time=get_current_time(),  # timezone.now(), #get_current_time(),
-                               script_path=path,
-                               log_prefix=log_prefix, tags=json.dumps(tags))
-        te.save()
-        add_test_case_execution_id(suite_execution_id=suite_execution_id,
-                                   test_case_execution_id=te.execution_id)
+        try:
+            for index in xrange(max_retries):
+                te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
+                                       test_case_id=test_case_id,
+                                       suite_execution_id=suite_execution_id,
+                                       result=result,
+                                       started_time=get_current_time(),  # timezone.now(), #get_current_time(),
+                                       script_path=path,
+                                       log_prefix=log_prefix, tags=json.dumps(tags))
+                te.save()
+                add_test_case_execution_id(suite_execution_id=suite_execution_id,
+                                           test_case_execution_id=te.execution_id)
+                break
+        except Exception as ex:
+            print "Error: add_test_case_execution: {}".format(str(ex))
+
     return te
 
 def update_test_case_execution(test_case_execution_id, suite_execution_id, result):
