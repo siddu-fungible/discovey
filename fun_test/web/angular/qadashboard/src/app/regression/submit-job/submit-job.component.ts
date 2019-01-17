@@ -36,6 +36,7 @@ export class SubmitJobComponent implements OnInit {
   schedulingTimeTimezone = "IST";
   daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   selectedDays: string[] = [];
+  submitting: string = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title) {
@@ -173,16 +174,18 @@ export class SubmitJobComponent implements OnInit {
         return;
       }
     }
-    let i = 0;
 
+    this.submitting = "Submitting job";
+    let ctrl = this;
     this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
       self.jobId = parseInt(result.data);
-      //window.location.href = "/regression/suite_detail/" + self.jobId;
       window.location.href = "/regression";
 
       console.log("Job " + self.jobId + " Submitted");
+      ctrl.submitting = null;
     }, error => {
       self.logger.error("Unable to submit job");
+      ctrl.submitting = null;
     });
   }
 
