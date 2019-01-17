@@ -174,6 +174,27 @@ export class PerformanceComponent implements OnInit {
     this.apiService.post("/metrics/dag", payload).subscribe(response => {
       this.dag = response.data;
       this.walkDag(this.dag);
+      let upgradeNode = null;
+      let node = new Node();
+      node.chartName = "Up Since Previous";
+      upgradeNode = this.getNewFlatNode(node, 0);
+      upgradeNode.hide = false;
+      this.flatNodes.push(upgradeNode);
+      for (let upgradedChild of this.upgradeFlatNode) {
+        upgradedChild.indent = 1;
+        upgradeNode.addChild(upgradedChild);
+      }
+      let degradeNode = null;
+      let node1 = new Node();
+      node1.chartName = "Down Since Previous";
+      degradeNode = this.getNewFlatNode(node1, 0);
+      degradeNode.hide = false;
+      degradeNode.node.chartName = "Down Since Previous";
+      this.flatNodes.push(degradeNode);
+      for (let degradeChild of this.degradeFlatNode) {
+        degradeChild.indent = 1;
+        degradeNode.addChild(degradeChild);
+      }
       //total container should always appear
       this.flatNodes[0].hide = false;
       this.expandNode(this.flatNodes[0]);//expand total container on page load
@@ -481,6 +502,7 @@ export class PerformanceComponent implements OnInit {
   }
 
   getIndentHtml = (node) => {
+    let tempNodes = this.getVisibleNodes();
     let s = "";
     if (node.hasOwnProperty("indent")) {
       for (let i = 0; i < node.indent - 1; i++) {
@@ -709,7 +731,8 @@ export class PerformanceComponent implements OnInit {
   };
 
   showNonAtomicMetric = (flatNode) => {
-    this.chartReady = false;
+    if(flatNode.node.metricModelName) {
+      this.chartReady = false;
     if (this.currentNode && this.currentNode.showAddJira) {
       this.currentNode.showAddJira = false;
     }
@@ -723,6 +746,11 @@ export class PerformanceComponent implements OnInit {
     this.prepareGridNodes(flatNode.node);
     this.commonService.scrollTo("chart-info");
     this.chartReady = true;
+    } else {
+      this.chartReady = false;
+      this.expandNode(flatNode);
+      this.chartReady = true;
+    }
 
   };
 
