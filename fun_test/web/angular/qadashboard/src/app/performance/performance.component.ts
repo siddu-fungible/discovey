@@ -120,8 +120,8 @@ export class PerformanceComponent implements OnInit {
   penultimateScore: number;
   deviation: any;
 
-  upgradeFlatNode: FlatNode[] = [];
-  degradeFlatNode: FlatNode[] = [];
+  upgradeFlatNode: any = {};
+  degradeFlatNode: any = {};
 
   constructor(
     private apiService: ApiService,
@@ -180,20 +180,23 @@ export class PerformanceComponent implements OnInit {
       upgradeNode = this.getNewFlatNode(node, 0);
       upgradeNode.hide = false;
       this.flatNodes.push(upgradeNode);
-      for (let upgradedChild of this.upgradeFlatNode) {
+      for (let child in this.upgradeFlatNode) {
+        let upgradedChild = this.upgradeFlatNode[child];
         upgradedChild.indent = 1;
         upgradeNode.addChild(upgradedChild);
+        this.flatNodes.push(upgradedChild);
       }
       let degradeNode = null;
       let node1 = new Node();
       node1.chartName = "Down Since Previous";
       degradeNode = this.getNewFlatNode(node1, 0);
       degradeNode.hide = false;
-      degradeNode.node.chartName = "Down Since Previous";
       this.flatNodes.push(degradeNode);
-      for (let degradeChild of this.degradeFlatNode) {
-        degradeChild.indent = 1;
-        degradeNode.addChild(degradeChild);
+      for (let child in this.degradeFlatNode) {
+        let degradedChild = this.degradeFlatNode[child];
+        degradedChild.indent = 1;
+        degradeNode.addChild(degradedChild);
+        this.flatNodes.push(degradedChild);
       }
       //total container should always appear
       this.flatNodes[0].hide = false;
@@ -412,18 +415,14 @@ export class PerformanceComponent implements OnInit {
       } else {
         let leafNode = thisFlatNode.node;
         if (leafNode.trend > 0) {
-          if (!leafNode.upgrades.has(leafNode.metricId)) {
             leafNode.upgrades.add(leafNode.metricId);
           let flatNode = this.getNewFlatNode(leafNode, 1);
-          this.upgradeFlatNode.push(flatNode);
-          }
+          this.upgradeFlatNode[leafNode.metricId] = flatNode;
 
         } else if (leafNode.trend < 0) {
-          if (!leafNode.degrades.has(leafNode.metricId)) {
             leafNode.degrades.add(leafNode.metricId);
           let flatNode = this.getNewFlatNode(leafNode, 1);
-          this.degradeFlatNode.push(flatNode);
-          }
+          this.degradeFlatNode[leafNode.metricId] = flatNode;
         }
         if (leafNode.lastNumBuildFailed == 1) {
           leafNode.failures.add(leafNode.metricId);
@@ -502,7 +501,6 @@ export class PerformanceComponent implements OnInit {
   }
 
   getIndentHtml = (node) => {
-    let tempNodes = this.getVisibleNodes();
     let s = "";
     if (node.hasOwnProperty("indent")) {
       for (let i = 0; i < node.indent - 1; i++) {
@@ -701,7 +699,7 @@ export class PerformanceComponent implements OnInit {
     flatNode.hide = false;
     flatNode.children.forEach((child) => {
       child.hide = false;
-    })
+    });
   };
 
   expandUpgrades(): void{
