@@ -270,40 +270,6 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def validate_performance_result(self, summary_result):
-        result = False
-        try:
-            checkpoint = "Verify RFC-2544 Result for each trial"
-            for record in summary_result:
-                data_dict = dict(record)
-                trial_num = data_dict['TrialNumber']
-                frame_size = data_dict['AvgFrameSize']
-                fun_test.test_assert_expected(expected=self.PASSED, actual=data_dict['Result'],
-                                              message="Ensure test result PASSED for trial %d and "
-                                                      "frame size %s B" % (trial_num, frame_size))
-            fun_test.add_checkpoint(checkpoint)
-            '''
-            checkpoint = "Verify TxFrameCount == RxFrameCount and FrameLoss is 0 for each trial"
-            for record in records:
-                data_dict = dict(record)
-                trial_num = data_dict['TrialNumber']
-                frame_size = data_dict['AvgFrameSize']
-                frame_loss = data_dict['FrameLoss']
-                tx_frame_count = data_dict['TxFrameCount']
-                rx_frame_count = data_dict['RxFrameCount']
-                fun_test.test_assert_expected(expected=tx_frame_count, actual=rx_frame_count,
-                                              message="Ensure TxFrameCount == RxFrameCount for trial %d and"
-                                                      "frame size %s B" % (trial_num, frame_size))
-                fun_test.test_assert_expected(expected=0, actual=frame_loss,
-                                              message="Ensure FrameLoss is 0 for trial %d and frame size %s B" % (
-                                                  trial_num, frame_size))
-            fun_test.add_checkpoint(checkpoint)
-            '''
-            result = True
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return result
-
     def _get_list_of_records(self, summary_result):
         records = []
         try:
