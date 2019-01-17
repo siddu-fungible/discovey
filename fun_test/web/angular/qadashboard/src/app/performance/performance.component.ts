@@ -702,14 +702,6 @@ export class PerformanceComponent implements OnInit {
     });
   };
 
-  expandUpgrades(): void{
-
-  }
-
-  expandDegrades(): void {
-
-  }
-
   showAtomicMetric = (flatNode) => {
     this.chartReady = false;
     if (this.currentNode && this.currentNode.showAddJira) {
