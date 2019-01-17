@@ -7,19 +7,39 @@
           <div class="card-header min-padding"><b>Commit History</b></div>
           <div class="card-body min-padding">
             <div class="min-padding">
-              <p class="no-margin" style="color: red">
-                {{ faultyCommit }}
+              <p class="no-margin">
+                <span>
+                  Failed Git Commit:
+                </span>
+                <span style="color: red">
+                {{ faultyCommit }}</span>
               </p>
-              <p class="no-margin" *ngFor="let commit of commits">
-                <a [routerLink]="" style="color: black" (click)="showFilesChanged()">{{ commit.name }} {{ commit.date }}</a>
-              </p>
-              <p class="no-margin" *ngFor="let date of commitDates">
-                {{ date }}
-              </p>
-              <p class="no-margin" style="color: green">
-                {{ successCommit }}
+              <table class="table table-bordered">
+                <tr>
+                  <th>
+                    <b>FunOS Git Commit</b>
+                  </th>
+                  <th>
+                    <b>Committed Date Time</b>
+                  </th>
+                </tr>
+                <tr class="no-margin" *ngFor="let commit of commits">
+                  <td class="table-padding">
+                    <a [routerLink]="" style="color: black" (click)="showFilesChanged(commit)">{{ commit.name }}</a>
+                  </td>
+                  <td class="table-padding">
+                    {{ commit.date }}
+                  </td>
+                </tr>
+              </table>
+              <p class="no-margin">
+                <span>
+                  Last Passed Git Commit:
+                </span>
+                <span style="color: green">
+                {{ successCommit }}</span>
               </p><br>
-              <a [routerLink]="" (click)="fetchGitCommits()">Total Files Changed</a>
+              <a [routerLink]="" (click)="showTotalFilesCHanged()">Total Files Changed</a>
             </div>
           </div>
         </div>

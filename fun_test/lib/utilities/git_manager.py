@@ -42,19 +42,20 @@ class GitManager:
                     result["commits"].append(commit_detail)
                     break
                 if start:
-                    commit_detail = {}
-                    commit_detail["name"] = commit
-                    if commit.authored_datetime:
-                        commit_detail["date"] = commit.authored_datetime
-                    else:
-                        commit_detail["date"] = None
-                    commit_detail["changed_files"] = []
-                    diff = faulty.diff(commit)
-                    for file in diff:
-                        if file.a_rawpath not in commit_detail["changed_files"]:
-                            commit_detail["changed_files"].append(file.a_rawpath)
-                    result["commits"].append(commit_detail)
-                    faulty = commit
+                    if "Merge pull" in commit.message:
+                        commit_detail = {}
+                        commit_detail["name"] = commit
+                        if commit.authored_datetime:
+                            commit_detail["date"] = commit.authored_datetime
+                        else:
+                            commit_detail["date"] = None
+                        commit_detail["changed_files"] = []
+                        diff = faulty.diff(commit)
+                        for file in diff:
+                            if file.a_rawpath not in commit_detail["changed_files"]:
+                                commit_detail["changed_files"].append(file.a_rawpath)
+                        result["commits"].append(commit_detail)
+                        faulty = commit
                 if faulty_commit in commit.hexsha:
                     faulty = commit
                     start = True

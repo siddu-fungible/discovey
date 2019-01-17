@@ -78,7 +78,20 @@ export class GitHistoryComponent implements OnInit {
     // }
   }
 
-  showFilesChanged(): void {
+  showFilesChanged(commit): void {
+    this.showChanged = true;
+    this.changedFiles = commit.changed_files;
 
+  }
+
+  showTotalFilesCHanged(): void {
+    this.showChanged = true;
+    let changedFiles = new Set();
+    for (let commit of this.commits) {
+      for (let file of commit.changed_files) {
+        changedFiles.add(file);
+      }
+    }
+    this.changedFiles = changedFiles;
   }
 }
