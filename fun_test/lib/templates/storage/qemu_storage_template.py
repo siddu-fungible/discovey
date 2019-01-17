@@ -269,9 +269,8 @@ class QemuStorageTemplate(object):
         remaining_bytes = size - (total_count * block_size)
         compressible_count = int(math.ceil(total_count * float((compression_pct / 100))))
         uncompressible_count = total_count - compressible_count
-        done = 0
-
-        while not done:
+        loop = max(compressible_count, uncompressible_count)
+        for i in range(0, loop):
             if uncompressible_count:
                 # populate the file with random uncompressible bytes
                 dd_cmd = "dd if=/dev/urandom bs={} count={} iflag=fullblock >> {}".format(block_size,
@@ -287,7 +286,7 @@ class QemuStorageTemplate(object):
                 compressible_count -= 1
 
             if not compressible_count and not uncompressible_count:
-                done = 1
+                break
 
         # take care of the remaining bytes if the size supplied is not divisible by block size
         if remaining_bytes == 1:
