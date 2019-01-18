@@ -5,7 +5,12 @@
         <div class="col">
           <div class="row">
             <div class="col">
-              <table id="summary-table" class="table table-responsive">
+              <div class="card">
+                <div class="card-header">
+                  Regression summary
+                </div>
+                <div class="card-body">
+                  <table id="summary-table" class="table table-responsive">
                 <tr>
                   <th rowspan="3" class="fun-center text-center" style="background-color: #fff2cc">Module/Tag</th>
                   <th colspan="6" class="text-center blue-header">By date</th>
@@ -49,6 +54,8 @@
                   <td class="text-center">{{ filter.currentResultsByVersion.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
                 </tr>
               </table>
+                </div>
+              </div>
             </div>
           </div>
           <div class="row">
