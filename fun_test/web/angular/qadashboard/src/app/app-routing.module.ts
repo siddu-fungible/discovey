@@ -14,6 +14,7 @@ import {RegressionSummaryComponent} from "./regression/regression-summary/regres
 import {GitHistoryComponent} from "./git-history/git-history.component";
 
 const routes: Routes = [
+  { path: '', component: RegressionSummaryComponent},
   { path: 'upgrade', component: DashboardComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'performance', component: PerformanceComponent },

@@ -847,8 +847,8 @@ class TestCcFlows(FunTestCase):
                                                          stat_type=FRAMES_TRANSMITTED_OK)
             fun_test.log("DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted),
                                                                           str(frames_received)))
-            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
-                                 checkpoint)
+            # fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
+            #                      checkpoint)
             # VP stats validation
             checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
             vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
@@ -1414,8 +1414,10 @@ class TestVpFlows(FunTestCase):
             psw_diff_stats = get_diff_stats(old_stats=parsed_input_1, new_stats=parsed_input_2)
 
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[epg0_pkt],
-                                              message="Check EPG 0 counter in psw nu stats in input")
+                fun_test.test_assert(int(psw_diff_stats[epg0_pkt]) >= int(tx_results_1['FrameCount']),
+                                     message="Check EPG 0 counter in psw nu stats in input "
+                                             "Pass criteria actual > expected Expected: %s Found: %s" % (
+                                         tx_results_1['FrameCount'], psw_diff_stats[epg0_pkt]))
             else:
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[ifpg],
                                               message="Check ifpg counter in psw nu stats in input")

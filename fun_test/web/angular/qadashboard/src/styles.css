@@ -407,3 +407,18 @@ input:checked + .slider:before {
 .text-color-red {
   color: red;
 }
+
+.passed-table-cell {
+  background-color: #9ACD32;
+  color: black;
+}
+
+.failed-table-cell {
+  background-color: #ff9999;
+  color: black;
+}
+
+.not-run-table-cell {
+  background-color: lightgrey;
+  color: black;
+}
