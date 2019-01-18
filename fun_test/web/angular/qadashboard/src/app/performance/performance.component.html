@@ -73,7 +73,10 @@
                   {{ flatNode.node.lastScore | number: '1.1-1' }}
                 </div>
               </td>
-              <td *ngIf="flatNode.node.metricModelName" class="text-center">
+              <td *ngIf="!flatNode.node.metricModelName">
+                &nbsp;
+              </td>
+              <td class="text-center">
                 <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
               </td>
 
@@ -84,12 +87,18 @@
                            class="badge failed-label no-margin badge-danger">FAILED
               </label>
               </td>
+              <td *ngIf="!flatNode.node.metricModelName">
+                &nbsp;
+              </td>
               <td *ngIf="flatNode.node.leaf && flatNode.node.metricModelName">
                 <span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
                 <span *ngIf="flatNode.node.numBugs==0 && flatNode.node.showAddJira" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
                 <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
+              </td>
+              <td *ngIf="!flatNode.node.metricModelName">
+                &nbsp;
               </td>
               <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
               <ng-template #GitCommitInfo>
@@ -273,6 +282,12 @@
           </div>
         </div>
         <br>
+        <div>
+          <span *ngFor="let parent of currentNode.parents">
+            {{ getNameForParent(parent) }} >
+          </span>
+          <span>{{ currentNode.chartName }}</span>
+        </div>
         <div class="closed-section"></div>
         <!-- Fun Metric Chart component -->
         <fun-metric-chart [id]="currentNode.metricId"></fun-metric-chart>

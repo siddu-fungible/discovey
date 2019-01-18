@@ -36,6 +36,7 @@ class Node {
   copiedScoreDisposition: number = null;
   numBugs: number = 0;
   showAddJira: boolean = false;
+  parents: any = [];
   degrades: any = new Set();
   upgrades: any = new Set();
   failures: any = new Set();
@@ -177,6 +178,7 @@ export class PerformanceComponent implements OnInit {
       let upgradeNode = null;
       let node = new Node();
       node.chartName = "Up Since Previous";
+      node.numLeaves = Object.keys(this.upgradeFlatNode).length;
       upgradeNode = this.getNewFlatNode(node, 0);
       upgradeNode.hide = false;
       this.flatNodes.push(upgradeNode);
@@ -189,6 +191,7 @@ export class PerformanceComponent implements OnInit {
       let degradeNode = null;
       let node1 = new Node();
       node1.chartName = "Down Since Previous";
+      node1.numLeaves = Object.keys(this.degradeFlatNode).length;
       degradeNode = this.getNewFlatNode(node1, 0);
       degradeNode.hide = false;
       this.flatNodes.push(degradeNode);
@@ -222,6 +225,9 @@ export class PerformanceComponent implements OnInit {
     node.copiedScoreDisposition = dagEntry.copied_score_disposition;
     node.numBugs = dagEntry.jira_ids.length;
     node.showAddJira = false;
+    Object.keys(dagEntry.parent).forEach(key => {
+      node.parents.push(dagEntry.parent[key]);
+    });
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
@@ -233,6 +239,13 @@ export class PerformanceComponent implements OnInit {
     this.fetchScores(node);
     let keys = Array.from(node.childrenInfo.keys());
     return node;
+  }
+
+  getNameForParent(parent): string {
+    for (let key in parent) {
+      return parent[key];
+    }
+
   }
 
   getKeys(map) {
