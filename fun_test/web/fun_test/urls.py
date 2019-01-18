@@ -174,7 +174,7 @@ urlpatterns = [
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
     url(r'^common/', include(common_urls)),
-    url(r'^$', common_views.home),
+    url(r'^$', views.angular_home),
     url(r'^initialize$', metrics_views.initialize),
     url(r'^test/', include(test_urls)),
     url(r'^upgrade/', include(upgrade_urls)),

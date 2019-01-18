@@ -13,6 +13,7 @@ import {RegressionAdminComponent} from "./regression/regression-admin/regression
 import {RegressionSummaryComponent} from "./regression/regression-summary/regression-summary.component";
 
 const routes: Routes = [
+  { path: '', component: RegressionSummaryComponent},
   { path: 'upgrade', component: DashboardComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'performance', component: PerformanceComponent },
