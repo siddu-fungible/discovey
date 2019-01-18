@@ -1,15 +1,24 @@
-<!--<p class="component">-->
-<!--<button (click)="test()">Test</button>-->
-<!--</p>-->
-
 <div class="row component">
   <div class="col">
     <ng-container *ngFor="let filter of filters">
 
-      <app-regression-summary-chart [title]="filter.info" [metadata]="filter.metadata"
-                                    (pointInfo)="showPointDetails($event)" [pointClickCallback]="pointClickCallback"
-                                    [testCaseExecutions]="filter.testCaseExecutions" [versionSet]="versionSet"
-                                    [suiteExectionVersionMap]="suiteExectionVersionMap"></app-regression-summary-chart>
+      <app-regression-summary-chart [title]="filter.info"
+                                    (pointInfo)="showPointDetails($event)"
+                                    [pointClickCallback]="pointClickCallback"
+                                    [versionList]="versionList"
+                                    [timeBucketList]="timeBucketList"
+                                    [filterEntry]="filter"
+                                    [mode]="'version'">
+      </app-regression-summary-chart>
+
+      <app-regression-summary-chart [title]="filter.info"
+                                    (pointInfo)="showPointDetails($event)"
+                                    [pointClickCallback]="pointClickCallback"
+                                    [versionList]="versionList"
+                                    [timeBucketList]="timeBucketList"
+                                    [filterEntry]="filter"
+                                    [mode]="'date'">
+      </app-regression-summary-chart>
 
     </ng-container>
 
@@ -20,7 +29,9 @@
     <div class="card-body" *ngIf="showDetailedInfo && detailedInfo">
       <table class="table">
         <tr>
-          <th>Software version: {{ detailedInfo.softwareVersion }} </th>
+          <th *ngIf="detailedInfo.mode === 'version'">Software version: {{ detailedInfo.category }} </th>
+          <th *ngIf="detailedInfo.mode === 'date'">Date: {{ detailedInfo.category }} </th>
+
           <th><label class="badge badge-success">Passed</label></th>
           <th><label class="badge badge-danger">Failed</label></th>
           <th><label class="badge badge-secondary">Not-run</label></th>
