@@ -103,8 +103,8 @@ export class RegressionSummaryComponent implements OnInit {
     currentResultsByDate.numNotRun = byDateTime.numNotRun;
 
     let previousResultsByDate = this.filters[index].previousResultsByDate;
-    currentResultsByDate.date = timeBucketList[timeBucketList.length - 2];
-    byDateTime = this.filters[index].byDateTime[currentResultsByDate.date];
+    previousResultsByDate.date = timeBucketList[timeBucketList.length - 2];
+    byDateTime = this.filters[index].byDateTime[previousResultsByDate.date];
     previousResultsByDate.numPassed = byDateTime.numPassed;
     previousResultsByDate.numFailed = byDateTime.numPassed;
     previousResultsByDate.numNotRun = byDateTime.numNotRun;
