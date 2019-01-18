@@ -36,7 +36,6 @@ class Node {
   copiedScoreDisposition: number = null;
   numBugs: number = 0;
   showAddJira: boolean = false;
-  parents: any = [];
   degrades: any = new Set();
   upgrades: any = new Set();
   failures: any = new Set();
@@ -51,6 +50,7 @@ class FlatNode {
   indent: number;
   showJiraInfo: boolean = false;
   children: FlatNode[] = [];
+  lineage: any = [];
 
   addChild(flatNode: FlatNode) {
     this.children.push(flatNode);
@@ -174,33 +174,10 @@ export class PerformanceComponent implements OnInit {
     let payload: { [i: string]: string } = {metric_model_name: "MetricContainer", chart_name: "Total"};
     this.apiService.post("/metrics/dag", payload).subscribe(response => {
       this.dag = response.data;
-      this.walkDag(this.dag);
-      let upgradeNode = null;
-      let node = new Node();
-      node.chartName = "Up Since Previous";
-      node.numLeaves = Object.keys(this.upgradeFlatNode).length;
-      upgradeNode = this.getNewFlatNode(node, 0);
-      upgradeNode.hide = false;
-      this.flatNodes.push(upgradeNode);
-      for (let child in this.upgradeFlatNode) {
-        let upgradedChild = this.upgradeFlatNode[child];
-        upgradedChild.indent = 1;
-        upgradeNode.addChild(upgradedChild);
-        this.flatNodes.push(upgradedChild);
-      }
-      let degradeNode = null;
-      let node1 = new Node();
-      node1.chartName = "Down Since Previous";
-      node1.numLeaves = Object.keys(this.degradeFlatNode).length;
-      degradeNode = this.getNewFlatNode(node1, 0);
-      degradeNode.hide = false;
-      this.flatNodes.push(degradeNode);
-      for (let child in this.degradeFlatNode) {
-        let degradedChild = this.degradeFlatNode[child];
-        degradedChild.indent = 1;
-        degradeNode.addChild(degradedChild);
-        this.flatNodes.push(degradedChild);
-      }
+      let lineage = [];
+      this.walkDag(this.dag, lineage);
+      this.updateUpSincePrevious();
+      this.updateDownSincePrevious();
       //total container should always appear
       this.flatNodes[0].hide = false;
       this.expandNode(this.flatNodes[0]);//expand total container on page load
@@ -208,6 +185,38 @@ export class PerformanceComponent implements OnInit {
     }, error => {
       this.loggerService.error("fetchDag");
     });
+  }
+
+  updateUpSincePrevious(): void {
+    let upgradeNode = null;
+    let node = new Node();
+    node.chartName = "Up Since Previous";
+    node.numLeaves = Object.keys(this.upgradeFlatNode).length;
+    upgradeNode = this.getNewFlatNode(node, 0);
+    upgradeNode.hide = false;
+    this.flatNodes.push(upgradeNode);
+    for (let child in this.upgradeFlatNode) {
+      let upgradedChild = this.upgradeFlatNode[child];
+      upgradedChild.indent = 1;
+      upgradeNode.addChild(upgradedChild);
+      this.flatNodes.push(upgradedChild);
+    }
+  }
+
+  updateDownSincePrevious(): void {
+    let degradeNode = null;
+    let node1 = new Node();
+    node1.chartName = "Down Since Previous";
+    node1.numLeaves = Object.keys(this.degradeFlatNode).length;
+    degradeNode = this.getNewFlatNode(node1, 0);
+    degradeNode.hide = false;
+    this.flatNodes.push(degradeNode);
+    for (let child in this.degradeFlatNode) {
+      let degradedChild = this.degradeFlatNode[child];
+      degradedChild.indent = 1;
+      degradeNode.addChild(degradedChild);
+      this.flatNodes.push(degradedChild);
+    }
   }
 
   getNodeFromEntry(metricId: number, dagEntry: any): Node {
@@ -225,9 +234,6 @@ export class PerformanceComponent implements OnInit {
     node.copiedScoreDisposition = dagEntry.copied_score_disposition;
     node.numBugs = dagEntry.jira_ids.length;
     node.showAddJira = false;
-    Object.keys(dagEntry.parent).forEach(key => {
-      node.parents.push(dagEntry.parent[key]);
-    });
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
@@ -248,22 +254,24 @@ export class PerformanceComponent implements OnInit {
 
   }
 
-  expandFromLineage(parent): void{
+  expandFromLineage(parent): void {
+    this.chartReady = false;
     for (let id in parent) {
       for (let flatNode of this.flatNodes) {
         let node = flatNode.node;
-        if (Number(id) === node.metricId) {
-          this.chartReady = false;
+        if (Number(id) === flatNode.gUid) {
           this.expandNode(flatNode);
           if (node.metricModelName === 'MetricContainer') {
             this.showNonAtomicMetric(flatNode);
+            break;
           } else {
             this.showAtomicMetric(flatNode);
+            break;
           }
-          this.chartReady = true;
         }
       }
     }
+    this.chartReady = true;
   }
 
   getKeys(map) {
@@ -402,7 +410,7 @@ export class PerformanceComponent implements OnInit {
     return newFlatNode;
   }
 
-  walkDag(dagEntry: object, indent: number = 0): void {
+  walkDag(dagEntry: object, lineage: any, indent: number = 0): void {
     let thisFlatNode = null;
     //this.loggerService.log(dagEntry);
     for (let metricId in dagEntry) {
@@ -413,13 +421,30 @@ export class PerformanceComponent implements OnInit {
       thisFlatNode = this.getNewFlatNode(newNode, indent);
       this.flatNodes.push(thisFlatNode);
       //this.loggerService.log('Node:' + nodeInfo.chart_name);
+      let parentsGuid = {};
       if (!nodeInfo.leaf) {
         let children = nodeInfo.children;
+        parentsGuid[thisFlatNode.gUid] = newNode.chartName;
+        lineage.push(parentsGuid);
         children.forEach((cId) => {
           //let childEntry: {[childId: number]: object} = {cId: nodeInfo.children_info[Number(childId)]};
           let childEntry = {[cId]: nodeInfo.children_info[Number(cId)]};
-          let childFlatNode = this.walkDag(childEntry, indent + 1);
-          let childNode = childFlatNode["node"];
+          let childFlatNode = this.walkDag(childEntry, lineage, indent + 1);
+          this.addUpDownStatusNumbers(childFlatNode, thisFlatNode);
+          thisFlatNode.addChild(childFlatNode);
+        });
+        this.removeCurrentGuidFromLineage(lineage, thisFlatNode);
+        thisFlatNode.lineage = [lineage.slice()];
+      } else {
+        thisFlatNode.lineage = [lineage.slice()];
+        this.addUpgradeDegradeNodes(thisFlatNode, dagEntry);
+      }
+    }
+    return thisFlatNode;
+  }
+
+  addUpDownStatusNumbers(childFlatNode, thisFlatNode): void {
+    let childNode = childFlatNode["node"];
           if (childNode.upgrades.size != 0) {
             childNode.upgrades.forEach(childMetricId => {
               thisFlatNode.node.upgrades.add(childMetricId);
@@ -440,20 +465,52 @@ export class PerformanceComponent implements OnInit {
               thisFlatNode.node.bugs.add(childMetricId);
             });
           }
-          thisFlatNode.addChild(childFlatNode);
-        })
+  }
 
-      } else {
-        let leafNode = thisFlatNode.node;
+  removeCurrentGuidFromLineage(lineage, thisFlatNode): void {
+    for (let i = 0; i < lineage.length; i++) {
+          Object.keys(lineage[i])
+            .forEach(key => {
+               if (Number(key) === thisFlatNode.gUid) {
+                  lineage.splice(i, 1);
+                }
+            });
+        }
+  }
+
+  addUpgradeDegradeNodes(thisFlatNode, dagEntry): void {
+    let leafNode = thisFlatNode.node;
         if (leafNode.trend > 0) {
-            leafNode.upgrades.add(leafNode.metricId);
-          let flatNode = this.getNewFlatNode(leafNode, 1);
-          this.upgradeFlatNode[leafNode.metricId] = flatNode;
-
+          leafNode.upgrades.add(leafNode.metricId);
+          let newLeafNode = this.getNodeFromEntry(leafNode.metricId, dagEntry[leafNode.metricId]);
+          let flatNode = this.getNewFlatNode(newLeafNode, 1);
+          for (let p of thisFlatNode.lineage) {
+              flatNode.lineage.push(p);
+            }
+          if (this.upgradeFlatNode[newLeafNode.metricId]) {
+            let tempNode = this.upgradeFlatNode[newLeafNode.metricId];
+            for (let p of thisFlatNode.lineage) {
+              tempNode.lineage.push(p);
+            }
+          } else {
+            this.upgradeFlatNode[newLeafNode.metricId] = flatNode;
+          }
         } else if (leafNode.trend < 0) {
-            leafNode.degrades.add(leafNode.metricId);
-          let flatNode = this.getNewFlatNode(leafNode, 1);
-          this.degradeFlatNode[leafNode.metricId] = flatNode;
+          leafNode.degrades.add(leafNode.metricId);
+          let newLeafNode = this.getNodeFromEntry(leafNode.metricId, dagEntry[leafNode.metricId]);
+          let flatNode = this.getNewFlatNode(newLeafNode, 1);
+          for (let p of thisFlatNode.lineage) {
+              flatNode.lineage.push(p);
+            }
+          if (this.degradeFlatNode[newLeafNode.metricId]) {
+            let tempNode = this.degradeFlatNode[newLeafNode.metricId];
+            for (let p of thisFlatNode.lineage) {
+              tempNode.lineage.push(p);
+            }
+          } else {
+            this.degradeFlatNode[newLeafNode.metricId] = flatNode;
+          }
+
         }
         if (leafNode.lastNumBuildFailed == 1) {
           leafNode.failures.add(leafNode.metricId);
@@ -461,11 +518,7 @@ export class PerformanceComponent implements OnInit {
         if (leafNode.numBugs > 0) {
           leafNode.bugs.add(leafNode.metricId);
         }
-      }
-    }
-    return thisFlatNode;
   }
-
 
   collapseBranch = (flatNode) => {
     flatNode.children.forEach((child) => {
@@ -752,21 +805,21 @@ export class PerformanceComponent implements OnInit {
   };
 
   showNonAtomicMetric = (flatNode) => {
-    if(flatNode.node.metricModelName) {
+    if (flatNode.node.metricModelName && flatNode.node.chartName != "All metrics") {
       this.chartReady = false;
-    if (this.currentNode && this.currentNode.showAddJira) {
-      this.currentNode.showAddJira = false;
-    }
-    if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
-      this.currentFlatNode.showJiraInfo = false;
-    }
-    this.currentNode = flatNode.node;
-    this.currentFlatNode = flatNode;
-    this.mode = Mode.ShowingNonAtomicMetric;
-    this.expandNode(flatNode);
-    this.prepareGridNodes(flatNode.node);
-    this.commonService.scrollTo("chart-info");
-    this.chartReady = true;
+      if (this.currentNode && this.currentNode.showAddJira) {
+        this.currentNode.showAddJira = false;
+      }
+      if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
+        this.currentFlatNode.showJiraInfo = false;
+      }
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+      this.mode = Mode.ShowingNonAtomicMetric;
+      this.expandNode(flatNode);
+      this.prepareGridNodes(flatNode.node);
+      this.commonService.scrollTo("chart-info");
+      this.chartReady = true;
     } else {
       this.chartReady = false;
       this.expandNode(flatNode);

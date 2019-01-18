@@ -283,10 +283,10 @@
         </div>
         <br>
         <div>
-          <span *ngFor="let parent of currentNode.parents">
-            <a [routerLink]="" (click)="expandFromLineage(parent)">{{ getNameForParent(parent) }}</a> >
-          </span>
-          <span>{{ currentNode.chartName }}</span>
+          <span *ngFor="let parents of currentFlatNode.lineage">
+            <span *ngFor="let parent of parents">
+              <a [routerLink]="" (click)="expandFromLineage(parent)"> {{ getNameForParent(parent) }}</a> ></span>
+            <span> {{ currentNode.chartName }}</span><br></span>
         </div>
         <div class="closed-section"></div>
         <!-- Fun Metric Chart component -->

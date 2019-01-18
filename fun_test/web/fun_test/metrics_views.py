@@ -580,7 +580,7 @@ def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
 
 
-def traverse_dag(metric_id,  parent_info, sort_by_name=True):
+def traverse_dag(metric_id, sort_by_name=True):
     result = {}
     chart = MetricChart.objects.get(metric_id=metric_id)
 
@@ -595,21 +595,6 @@ def traverse_dag(metric_id,  parent_info, sort_by_name=True):
     result["last_num_build_failed"] = chart.last_num_build_failed
     result["positive"] = chart.positive
     result["jira_ids"] = json.loads(chart.jira_ids)
-    result["parent"] = []
-    parents = {}
-
-    # chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
-    # # only get the first two entries
-    # # print "Chart status entry for {}".format(chart.chart_name)
-    # # for chart_status_entry in chart_status_entries:
-    # #    print chart_status_entry.date_time
-    # result["last_two_scores"] = [x.score for x in chart_status_entries]
-    # last_entry = chart_status_entries.last()
-    # if last_entry:
-    #     result["copied_score"] = chart_status_entries.last().copied_score
-    #     result["copied_score_disposition"] = chart_status_entries.last().copied_score_disposition
-    # else:
-    #     result["copied_score"] = False
 
     result["copied_score"] = chart.copied_score
     result["copied_score_disposition"] = chart.copied_score_disposition
@@ -619,23 +604,11 @@ def traverse_dag(metric_id,  parent_info, sort_by_name=True):
         result["last_two_scores"] = [0, 0]
     if not chart.leaf or chart.chart_name == "All metrics":
         children_info = result["children_info"]
-        parents[metric_id] = chart.chart_name
-        parent_info.append(parents)
         for child_id in result["children"]:
             child_chart = MetricChart.objects.get(metric_id=child_id)
-            children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id, parent_info=parent_info)
-            # if metric_id in parent_info:
-            #     for parent in parent_info[metric_id]["parent"]:
-            #         children_info[child_chart.metric_id]["parent"][parent] = parent.chart_name
-            # children_info[child_chart.metric_id]["parent"][metric_id] = chart.chart_name
-        for items in parent_info:
-            if metric_id in items:
-                parent_info.remove(items)
-        result["parent"] = list(parent_info)
+            children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
         if sort_by_name:
             result["children"] = map(lambda item: item[0], sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
-    else:
-        result["parent"] = list(parent_info)
     return result
 
 
@@ -648,7 +621,7 @@ def dag(request):
     chart_name = request_json["chart_name"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     parent_info = []
-    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False, parent_info=parent_info)
+    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False)
     return result
 
 @csrf_exempt
