@@ -190,8 +190,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         result[self.FRAME_SIZE_1500] = []
         result[self.FRAME_SIZE_IMIX] = []
         try:
-            spirent_path = self.retrieve_database_file_name()
-            # spirent_path = "/home/rushikesh/Spirent/TestCenter 4.81/Results/transit_bidirectional_palladium_2019-01-15_04-24-47/2544-Tput_2019-01-15_04-30-41/2544-Tput-Summary-2_2019-01-15_04-30-41.db"
+            # spirent_path = self.retrieve_database_file_name()
+            spirent_path = "/home/rushikesh/Spirent/TestCenter 4.81/Results/transit_bidirectional_palladium_2019-01-15_04-24-47/2544-Tput_2019-01-15_04-30-41/2544-Tput-Summary-2_2019-01-15_04-30-41.db"
             base_path = self._get_base_db_path(db_path=spirent_path)
             dbs = self._get_throughput_summary_db_list(base_path=base_path)
             for db in dbs:
@@ -286,7 +286,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     def _calculate_throughput_in_mbps(self, forwarding_rate, frame_size):
         throughput = None
         try:
-            throughput = float((forwarding_rate * frame_size) * 8 / 100000)
+            throughput = float(forwarding_rate * (frame_size + 8) / 100000)
         except Exception as ex:
             fun_test.critical(str(ex))
         return throughput
@@ -307,6 +307,16 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return max_rate_record
 
+    def _parse_file_to_json_in_order(self, file_name):
+        result = None
+        try:
+            with open(file_name, "r") as infile:
+                contents = infile.read()
+                result = json.loads(contents, object_pairs_hook=OrderedDict)
+        except Exception as ex:
+            scheduler_logger.critical(str(ex))
+        return result
+
     def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
                                        bidirectional=False):
         results = []
@@ -326,22 +336,20 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
                     throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
                                                                     frame_size=frame_size)
-                    if bidirectional:
-                        throughput = throughput / 2
-                    data_dict['throughput'] = throughput
-                    data_dict['latency_min'] = max_rate_record['MinimumLatency(us)']
-                    data_dict['latency_max'] = max_rate_record['MaximumLatency(us)']
-                    data_dict['latency_avg'] = max_rate_record['AverageLatency(us)']
+                    data_dict['throughput'] = round(throughput, 2)
+                    data_dict['latency_min'] = round(float(max_rate_record['MinimumLatency(us)']), 2)
+                    data_dict['latency_max'] = round(float(max_rate_record['MaximumLatency(us)']), 2)
+                    data_dict['latency_avg'] = round(float(max_rate_record['AverageLatency(us)']), 2)
 
-                    data_dict['jitter_min'] = max_rate_record['MinimumJitter(us)']
-                    data_dict['jitter_max'] = max_rate_record['MaximumJitter(us)']
-                    data_dict['jitter_avg'] = max_rate_record['AverageJitter(us)']
+                    data_dict['jitter_min'] = round(float(max_rate_record['MinimumJitter(us)']), 2)
+                    data_dict['jitter_max'] = round(float(max_rate_record['MaximumJitter(us)']), 2)
+                    data_dict['jitter_avg'] = round(float(max_rate_record['AverageJitter(us)']), 2)
 
                     results.append(data_dict)
                     fun_test.debug(results)
 
             file_path = LOGS_DIR + "/%s" % self.OUTPUT_JSON_FILE_NAME
-            contents = self.read_json_file_contents(file_path=file_path)
+            contents = self._parse_file_to_json_in_order(file_name=file_path)
             if contents:
                 append_new_results = contents + results
                 file_created = self.create_counters_file(json_file_name=file_path,
