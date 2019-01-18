@@ -248,6 +248,24 @@ export class PerformanceComponent implements OnInit {
 
   }
 
+  expandFromLineage(parent): void{
+    for (let id in parent) {
+      for (let flatNode of this.flatNodes) {
+        let node = flatNode.node;
+        if (Number(id) === node.metricId) {
+          this.chartReady = false;
+          this.expandNode(flatNode);
+          if (node.metricModelName === 'MetricContainer') {
+            this.showNonAtomicMetric(flatNode);
+          } else {
+            this.showAtomicMetric(flatNode);
+          }
+          this.chartReady = true;
+        }
+      }
+    }
+  }
+
   getKeys(map) {
     //console.log(map.keys());
     let a = Array.from(map.keys());
