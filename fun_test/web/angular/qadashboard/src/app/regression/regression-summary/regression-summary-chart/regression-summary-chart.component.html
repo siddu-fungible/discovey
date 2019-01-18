@@ -1,11 +1,24 @@
-<p>
+<div class="container">
+
+
+  <div>
+    <label for="mode">
+      <input type="checkbox" [id]="baseId + 1" name="mode-{{ baseId + 1 }}" (click)="mode = 'date'; modeChangedEvent()" [value]="'date'" [checked]="mode === 'date'"> By date
+    </label>
+    &nbsp;
+    <label for="mode">
+      <input type="checkbox" [id]="baseId + 2" name="mode-{{ baseId + 1 }}" (click)="mode = 'version'; modeChangedEvent()"  [value]="'version'" [checked]="mode === 'version'"> By software version
+    </label>
+
+  </div>
+
   <fun-chart
-           [pointClickCallback]="pointClickCallback"
-           (pointInfo)="showPointDetails($event)"
-           [title]="title"
-           [y1AxisLabel]="'Results'"
-           [y1Values]="y1Values"
-           [xValues]="x1Values"
-           [chartType]="'vertical_colored_bar_chart'">
+    [pointClickCallback]="pointClickCallback"
+    (pointInfo)="showPointDetails($event)"
+    [title]="title"
+    [y1AxisLabel]="'Results'"
+    [y1Values]="y1Values"
+    [xValues]="x1Values"
+    [chartType]="'vertical_colored_bar_chart'">
   </fun-chart>
-</p>
+</div>

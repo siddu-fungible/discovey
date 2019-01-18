@@ -1,25 +1,16 @@
 <div class="row component">
   <div class="col">
-    <ng-container *ngFor="let filter of filters">
+    <ng-container *ngIf="filters.length > 0">
+      <ng-container *ngFor="let filter of filters">
 
-      <app-regression-summary-chart [title]="filter.info"
-                                    (pointInfo)="showPointDetails($event)"
-                                    [pointClickCallback]="pointClickCallback"
-                                    [versionList]="versionList"
-                                    [timeBucketList]="timeBucketList"
-                                    [filterEntry]="filter"
-                                    [mode]="'version'">
-      </app-regression-summary-chart>
+        <app-regression-summary-chart [title]="filter.info"
+                                      (pointInfo)="showPointDetails($event)"
+                                      (modeChanged)="modeChanged()"
+                                      [pointClickCallback]="pointClickCallback"
+                                      [filterEntry]="filter">
+        </app-regression-summary-chart>
 
-      <app-regression-summary-chart [title]="filter.info"
-                                    (pointInfo)="showPointDetails($event)"
-                                    [pointClickCallback]="pointClickCallback"
-                                    [versionList]="versionList"
-                                    [timeBucketList]="timeBucketList"
-                                    [filterEntry]="filter"
-                                    [mode]="'date'">
-      </app-regression-summary-chart>
-
+      </ng-container>
     </ng-container>
 
 
@@ -47,7 +38,8 @@
           <tr *ngIf="scriptInfo.value.historyResults">
             <td>
               {{ scriptInfo.key }}
-              <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails" class="anchor-button pseudo-anchor">details</u>
+              <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
+                 class="anchor-button pseudo-anchor">details</u>
             </td>
             <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
             <td>{{ scriptInfo.value.historyResults.numFailed }}</td>

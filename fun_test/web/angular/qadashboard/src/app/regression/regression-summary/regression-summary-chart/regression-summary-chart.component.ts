@@ -6,26 +6,28 @@ import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angula
   styleUrls: ['./regression-summary-chart.component.css']
 })
 export class RegressionSummaryChartComponent implements OnInit, OnChanges {
-  @Input() versionList = [];
-  @Input() timeBucketList = [];
   @Input() filterEntry: any = null;
   @Input() public pointClickCallback: Function;
   @Input() title: string = null;
-  @Input() mode: string = "version";
+
   @Output() pointInfo: EventEmitter<any> = new EventEmitter();
+  @Output() modeChanged: EventEmitter<any> = new EventEmitter();
 
   y1Values: any = [];
   x1Values: any = [];
+  mode: string = "version";
+  baseId: number = null;
 
   constructor() { }
 
   ngOnInit() {
-    this.initializeY1Values();
+    //this.initializeY1Values();
     this.parseTestCaseInfo();
+    this.baseId = this.getUid();
   }
 
   ngOnChanges() {
-    this.initializeY1Values();
+    //this.initializeY1Values();
     this.parseTestCaseInfo();
   }
 
@@ -35,21 +37,21 @@ export class RegressionSummaryChartComponent implements OnInit, OnChanges {
         name: 'Passed',
         data: [],
         color: 'green',
-        metadata: {index: this.filterEntry.index, mode: this.mode},
+        metadata: {index: this.filterEntry.metadata.index, mode: this.mode},
         mode: this.mode
     }
     ,  {
         name: 'Failed',
         data: [],
         color: 'red',
-        metadata: {index: this.filterEntry.index, mode: this.mode},
+        metadata: {index: this.filterEntry.metadata.index, mode: this.mode},
         mode: this.mode
 
     }, {
         name: 'Not-run',
         data: [],
         color: 'grey',
-        metadata: {index: this.filterEntry.index, mode: this.mode},
+        metadata: {index: this.filterEntry.metadata.index, mode: this.mode},
         mode: this.mode
 
     }];
@@ -70,24 +72,29 @@ export class RegressionSummaryChartComponent implements OnInit, OnChanges {
     }
   }
 
+  modeChangedEvent() {
+    this.ngOnChanges();
+    this.modeChanged.emit();
+  }
+
   prepareValues() {
     this.y1Values = [];
     this.initializeY1Values();
     let infoSection = null;
-    if (this.mode === "version") {
-      this.versionList.forEach(version => {
+    if (this.mode === 'version') {
+      this.filterEntry.versionList.forEach(version => {
       if (!Number.isNaN(version)) {
           infoSection = this.filterEntry.bySoftwareVersion[version];
           this.populateResults(infoSection);
         }
       });
-      this.x1Values = this.versionList;
-    } else {
-      this.timeBucketList.forEach(timeBucket => {
+      this.x1Values = this.filterEntry.versionList;
+    } else if (this.mode === 'date') {
+      this.filterEntry.timeBucketList.forEach(timeBucket => {
         infoSection = this.filterEntry.byDateTime[timeBucket];
         this.populateResults(infoSection);
       });
-      this.x1Values = this.timeBucketList;
+      this.x1Values = this.filterEntry.timeBucketList;
     }
 
   }
@@ -96,4 +103,8 @@ export class RegressionSummaryChartComponent implements OnInit, OnChanges {
     this.prepareValues();
   }
 
+  getUid() {
+    return Math.floor(Math.random() * Math.floor(1000));
+
+  }
 }
