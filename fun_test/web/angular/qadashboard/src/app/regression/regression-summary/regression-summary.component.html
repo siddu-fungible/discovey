@@ -1,74 +1,142 @@
-<!--<p class="component">-->
-<!--<button (click)="test()">Test</button>-->
-<!--</p>-->
-
-<div class="row component">
-  <div class="col">
-    <ng-container *ngFor="let filter of filters">
-
-      <app-regression-summary-chart [title]="filter.info" [metadata]="filter.metadata"
-                                    (pointInfo)="showPointDetails($event)" [pointClickCallback]="pointClickCallback"
-                                    [testCaseExecutions]="filter.testCaseExecutions" [versionSet]="versionSet"
-                                    [suiteExectionVersionMap]="suiteExectionVersionMap"></app-regression-summary-chart>
-
-    </ng-container>
-
-
-  </div>
-  <div class="col">
-    <span id="detailed-info"></span>
-    <div class="card-body" *ngIf="showDetailedInfo && detailedInfo">
-      <table class="table">
-        <tr>
-          <th>Software version: {{ detailedInfo.softwareVersion }} </th>
-          <th><label class="badge badge-success">Passed</label></th>
-          <th><label class="badge badge-danger">Failed</label></th>
-          <th><label class="badge badge-secondary">Not-run</label></th>
-        </tr>
-        <tr>
-          <td>Total</td>
-          <td>{{ detailedInfo.numPassed }}</td>
-          <td>{{ detailedInfo.numFailed }}</td>
-          <td>{{ detailedInfo.numNotRun }}</td>
-
-        </tr>
-        <ng-container *ngFor="let scriptInfo of detailedInfo.scriptDetailedInfo | keyvalue">
-          <tr *ngIf="scriptInfo.value.historyResults">
-            <td>
-              {{ scriptInfo.key }}
-              <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails" class="anchor-button pseudo-anchor">details</u>
-            </td>
-            <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
-            <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
-            <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
-
-          </tr>
-          <tr *ngIf="scriptInfo.value.showingDetails">
-            <td colspan="4">
-              <table class="table">
+<div class="component container-fluid">
+  <div class="row">
+    <div class="col col-lg-6 col-md-6 col-xl-6 col-xxl-6">
+      <div class="row">
+        <div class="col">
+          <div class="row">
+            <div class="col">
+              <div class="card">
+                <div class="card-header">
+                  Regression summary
+                </div>
+                <div class="card-body">
+                  <table id="summary-table" class="table table-responsive">
                 <tr>
-                  <th>Result</th>
-                  <th>Suite execution ID</th>
-                  <th>TC-ID</th>
-                  <th>Summary</th>
+                  <th rowspan="3" class="fun-center text-center" style="background-color: #fff2cc">Module/Tag</th>
+                  <th colspan="6" class="text-center blue-header">By date</th>
+                  <th colspan="6" class="text-center blue-header">By version</th>
                 </tr>
-                <tr *ngFor="let executionEntry of scriptInfo.value.history">
-                  <td><span
-                    [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span>
-                  </td>
-                  <td><a target="_blank"
-                         href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
-                  </td>
-                  <td>{{ executionEntry.test_case_id }}</td>
-                  <td>{{ executionEntry.summary }}</td>
+                <tr>
+                  <th colspan="2" class="text-center passed-table-cell">Passed</th>
+                  <th colspan="2" class="text-center failed-table-cell">Failed</th>
+                  <th colspan="2" class="text-center not-run-table-cell">Not run</th>
+                  <th colspan="2" class="text-center passed-table-cell">Passed</th>
+                  <th colspan="2" class="text-center failed-table-cell">Failed</th>
+                  <th colspan="2" class="text-center not-run-table-cell">Not run</th>
+                </tr>
+                <tr>
+                  <th class="text-center second-header">Previous</th>
+                  <th class="text-center second-header">Current</th>
+                  <th class="text-center second-header">Previous</th>
+                  <th class="text-center second-header">Current</th>
+                  <th class="text-center second-header">Previous</th>
+                  <th class="text-center second-header">Current</th>
+                  <th class="text-center second-header">Previous</th>
+                  <th class="text-center second-header">Current</th>
+                  <th class="text-center second-header">Previous</th>
+                  <th class="text-center second-header">Current</th>
+                  <th class="text-center second-header">Previous</th>
+                  <th class="text-center second-header">Current</th>
+                </tr>
+                <tr *ngFor="let filter of filters">
+                  <td class="text-center">{{ filter.info }}</td>
+                  <td class="text-center">{{ filter.previousResultsByDate.numPassed }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
+                  <td class="text-center">{{ filter.currentResultsByDate.numPassed }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByDate.date }}/2018)</span></td>
+                  <td class="text-center">{{ filter.previousResultsByDate.numFailed }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
+                  <td class="text-center">{{ filter.currentResultsByDate.numFailed }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByDate.date }}/2018)</span></td>
+                  <td class="text-center">{{ filter.previousResultsByDate.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
+                  <td class="text-center">{{ filter.currentResultsByDate.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByDate.date }})</span></td>
+                  <td class="text-center">{{ filter.previousResultsByVersion.numPassed }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
+                  <td class="text-center">{{ filter.currentResultsByVersion.numPassed }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
+                  <td class="text-center">{{ filter.previousResultsByVersion.numFailed }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
+                  <td class="text-center">{{ filter.currentResultsByVersion.numFailed }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
+                  <td class="text-center">{{ filter.previousResultsByVersion.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
+                  <td class="text-center">{{ filter.currentResultsByVersion.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
                 </tr>
               </table>
-            </td>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <ng-container *ngIf="filters.length > 0">
+                <ng-container *ngFor="let filter of filters">
+
+                  <app-regression-summary-chart [title]="filter.info"
+                                                (pointInfo)="showPointDetails($event)"
+                                                (modeChanged)="modeChanged()"
+                                                [pointClickCallback]="pointClickCallback"
+                                                [filterEntry]="filter">
+                  </app-regression-summary-chart>
+
+                </ng-container>
+              </ng-container>
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+    <div class="col col-lg-6 col-md-6 col-xl-6 col-xxl-6">
+      <span id="detailed-info"></span>
+      <div class="card-body" *ngIf="showDetailedInfo && detailedInfo">
+        <table class="table">
+          <tr>
+            <th *ngIf="detailedInfo.mode === 'version'">Software version: {{ detailedInfo.category }} </th>
+            <th *ngIf="detailedInfo.mode === 'date'">Date: {{ detailedInfo.category }} </th>
+
+            <th><label class="badge badge-success">Passed</label></th>
+            <th><label class="badge badge-danger">Failed</label></th>
+            <th><label class="badge badge-secondary">Not-run</label></th>
           </tr>
-        </ng-container>
+          <tr>
+            <td>Total</td>
+            <td>{{ detailedInfo.numPassed }}</td>
+            <td>{{ detailedInfo.numFailed }}</td>
+            <td>{{ detailedInfo.numNotRun }}</td>
 
-      </table>
+          </tr>
+          <ng-container *ngFor="let scriptInfo of detailedInfo.scriptDetailedInfo | keyvalue">
+            <tr *ngIf="scriptInfo.value.historyResults">
+              <td>
+                {{ scriptInfo.key }}
+                <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
+                   class="anchor-button pseudo-anchor">details</u>
+              </td>
+              <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
+              <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
+              <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
 
+            </tr>
+            <tr *ngIf="scriptInfo.value.showingDetails">
+              <td colspan="4">
+                <table class="table">
+                  <tr>
+                    <th>Result</th>
+                    <th>Suite execution ID</th>
+                    <th>TC-ID</th>
+                    <th>Summary</th>
+                  </tr>
+                  <tr *ngFor="let executionEntry of scriptInfo.value.history">
+                    <td><span
+                      [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span>
+                    </td>
+                    <td><a target="_blank"
+                           href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
+                    </td>
+                    <td>{{ executionEntry.test_case_id }}</td>
+                    <td>{{ executionEntry.summary }}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </ng-container>
+
+        </table>
+
+      </div>
     </div>
   </div>
 </div>
