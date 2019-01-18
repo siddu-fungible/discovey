@@ -618,19 +618,29 @@ def scripts(request):
 @csrf_exempt
 @api_safe_json_response
 def script(request):
+    result = None
     request_json = json.loads(request.body)
     script_path = request_json["script_path"]
-    modules = request_json["modules"]
-    module_names = [x["name"] for x in modules]
-    try:
-        r = RegresssionScripts.objects.get(script_path=script_path)
-        r.modules = json.dumps(module_names)
-        r.save()
-    except ObjectDoesNotExist:
-        r = RegresssionScripts(script_path=script_path, modules=json.dumps(module_names))
-        r.save()
+    module_names = None
 
-    return True
+    if "modules" in request_json:
+        modules = request_json["modules"]
+        module_names = [x["name"] for x in modules]
+    if module_names:
+        try:
+            r = RegresssionScripts.objects.get(script_path=script_path)
+            r.modules = json.dumps(module_names)
+            r.save()
+        except ObjectDoesNotExist:
+            r = RegresssionScripts(script_path=script_path, modules=json.dumps(module_names))
+            r.save()
+    else:
+        try:
+            r = RegresssionScripts.objects.get(script_path=script_path)
+            result = {"pk": r.pk}
+        except ObjectDoesNotExist as ex:
+            logging.error("Script: {} does not exist. {}".format(script_path, str(ex)))
+    return result
 
 @csrf_exempt
 @api_safe_json_response

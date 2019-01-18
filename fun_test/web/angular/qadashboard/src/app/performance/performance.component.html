@@ -139,7 +139,7 @@
             <tr *ngIf="flatNode.showJiraInfo">
               <td colspan="6">
                 <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
-                <jira-info [apiUrl]="'/metrics/' + flatNode.node.metricId + '/jiras'" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
+                <jira-info [apiUrl]="'/metrics/jiras/' + flatNode.node.metricId" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
               </td>
             </tr>
 

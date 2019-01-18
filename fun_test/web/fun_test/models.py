@@ -243,6 +243,12 @@ class RegresssionScriptsSerializer(serializers.Serializer):
         model = RegresssionScripts
         fields = ('script_path', 'modules', 'components', 'tags')
 
+class ScriptInfo(models.Model):
+    script_id = models.IntegerField()
+    created_time = models.DateTimeField(default=datetime.now)
+    status = models.TextField(default="ACTIVE")
+    bug = models.TextField(default="")
+
 class SchedulerInfo(models.Model):
     """
     A place to store scheduler state such as time started, time restarted, current state

@@ -44,7 +44,8 @@ export class JiraInfoComponent implements OnInit {
     if (this.jiraId === null) {
       alert("Enter some ID");
     } else {
-      this.apiService.get(this.apiUrl + '/' + this.jiraId).subscribe((response) => {
+      let payload = {jira_id: this.jiraId};
+      this.apiService.post(this.apiUrl, payload).subscribe((response) => {
         alert("Submitted Successfully");
         this.editingJira = false;
         this.showJiraInfo = false;
@@ -57,7 +58,7 @@ export class JiraInfoComponent implements OnInit {
   }
 
   removeId(id): void {
-    this.apiService.get(this.apiUrl + '/delete/' + id).subscribe((response) => {
+    this.apiService.delete(this.apiUrl + "/" + id).subscribe((response) => {
       alert("Deleted Successfully");
       this.fetchJiraIds();
     }, error => {
