@@ -35,8 +35,8 @@ export class RegressionSummaryComponent implements OnInit {
   ngOnInit() {
     this.fetchAllVersions();
     this.pointClickCallback = this.pointDetail.bind(this);
-    this.initializeFilter("Networking", {module: "networking"}, 0);
-    this.initializeFilter("Storage", {module: "storage"}, 1);
+    this.initializeFilter("Networking overall", {module: "networking"}, 0);
+    this.initializeFilter("Storage overall", {module: "storage"}, 1);
     this.initializeFilter("Networking sanity", {module: "networking", test_case_execution_tags: ["networking-sanity"]}, 2);
     this.initializeFilter("Storage sanity", {module: "storage", test_case_execution_tags: ["storage-sanity"]}, 3);
 
@@ -58,6 +58,10 @@ export class RegressionSummaryComponent implements OnInit {
     newFilter["timeBucketSet"] = new Set();
     newFilter["currentDate"] = new Date(2018, 11, 1, 0, 1);
     newFilter["startDate"] =  new Date(newFilter["currentDate"]);
+    newFilter["currentResultsByVersion"] = {version: 0, numPassed: 0, numFailed: 0, numNotRun: 0};
+    newFilter["previousResultsByVersion"] = {version: 0, numPassed: 0, numFailed: 0, numNotRun: 0};
+    newFilter["currentResultsByDate"] = {date: 0, numPassed: 0, numFailed: 0, numNotRun: 0};
+    newFilter["previousResultsByDate"] = {date: 0, numPassed: 0, numFailed: 0, numNotRun: 0};
     this.filters.push(newFilter);
   }
 
@@ -91,6 +95,21 @@ export class RegressionSummaryComponent implements OnInit {
       timeBucketList.push(element);
     });
     //this.timeBucketList.sort();
+    let currentResultsByDate = this.filters[index].currentResultsByDate;
+    currentResultsByDate.date = timeBucketList[timeBucketList.length - 1];
+    let byDateTime = this.filters[index].byDateTime[currentResultsByDate.date];
+    currentResultsByDate.numPassed = byDateTime.numPassed;
+    currentResultsByDate.numFailed = byDateTime.numPassed;
+    currentResultsByDate.numNotRun = byDateTime.numNotRun;
+
+    let previousResultsByDate = this.filters[index].previousResultsByDate;
+    currentResultsByDate.date = timeBucketList[timeBucketList.length - 2];
+    byDateTime = this.filters[index].byDateTime[currentResultsByDate.date];
+    previousResultsByDate.numPassed = byDateTime.numPassed;
+    previousResultsByDate.numFailed = byDateTime.numPassed;
+    previousResultsByDate.numNotRun = byDateTime.numNotRun;
+
+
   }
 
   prepareVersionList(index) {
@@ -100,6 +119,20 @@ export class RegressionSummaryComponent implements OnInit {
       versionList.push(element);
       });
     versionList.sort();
+    let currentResultsByVersion = this.filters[index].currentResultsByVersion;
+    currentResultsByVersion.version = versionList[versionList.length - 1];
+    let bySoftwareVersion = this.filters[index].bySoftwareVersion[currentResultsByVersion.version];
+    currentResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+    currentResultsByVersion.numFailed = bySoftwareVersion.numPassed;
+    currentResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+
+    let previousResultsByVersion = this.filters[index].previousResultsByVersion;
+    previousResultsByVersion.version = versionList[versionList.length - 2];
+    bySoftwareVersion = this.filters[index].bySoftwareVersion[previousResultsByVersion.version];
+    previousResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+    previousResultsByVersion.numFailed = bySoftwareVersion.numPassed;
+    previousResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+    let i = 0;
   }
 
   modeChanged() {
@@ -268,28 +301,18 @@ export class RegressionSummaryComponent implements OnInit {
 
   addHistoryToDateTimeBuckets(index, history) {
     let currentDate = this.filters[index].currentDate;
-    //console.log("AddHistory: " + index);
     let today = new Date();
-    //console.log(today);
     let historyTime = new Date(history.started_time);
-    //console.log(historyTime);
-    if (index === 1) {
-      let o = 0;
-    }
     if (currentDate > historyTime) {
       return;
     }
     while (currentDate <= today) {
-      //console.log("comparing: " + this.currentDate + "," + historyTime);
       if (this.isSameDay(currentDate, historyTime)) {
-        //console.log("Found match, " + this.currentDate + "," + historyTime);
-        //this.isSameDay2(this.currentDate, historyTime);
         this.addToTimeBucket(index, currentDate, history);
         break;
       }
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    let i = 0;
   }
 
   fetchScriptInfo2(index) {
@@ -304,7 +327,7 @@ export class RegressionSummaryComponent implements OnInit {
       });
       this.prepareVersionList(index);
       this.prepareBucketList(index);
-      let i = 0;
+      console.log(this.filters[0]);
       this.filters[index] = {...this.filters[index]};
     }, error => {
     })

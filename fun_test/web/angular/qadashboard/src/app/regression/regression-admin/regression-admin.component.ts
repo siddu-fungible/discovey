@@ -165,7 +165,7 @@ export class RegressionAdminComponent implements OnInit {
   }
 
 
-  
+
 
   fetchRegressionScripts() {
     this.apiService.get("/regression/scripts").subscribe((response) => {
