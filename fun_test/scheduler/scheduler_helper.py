@@ -13,6 +13,7 @@ from scheduler.scheduler_states import SchedulerStates
 from lib.utilities.http import fetch_text_file
 from pytz import timezone
 from datetime import timedelta
+import random
 
 
 activate(TIME_ZONE)
@@ -250,6 +251,7 @@ def queue_suite_container(suite_path,
             item_spec = parse_suite(suite_name=item_suite_path.replace(".json", ""))
             suite_level_tags = get_suite_level_tags(suite_spec=item_spec)
             suite_level_tags.extend(container_tags)
+            time.sleep(random.uniform(0.1, 0.3))
             queue_job2(suite_path=item_suite_path, tags=suite_level_tags, build_url=build_url, suite_container_execution_id=container_execution.execution_id, **kwargs)
     return job_id
 
@@ -384,14 +386,7 @@ def re_queue_job(suite_execution_id,
         job_spec["script_path"] = script_path
         if "email_list" in job_spec:
             job_spec["email_list"] = job_spec["email_list"]
-    job_spec["scheduling_type"] = "asap"
-    '''
-    for k in ["schedule_at", "schedule_in_minutes", "schedule_in_minutes_at", "repeat", "repeat_in_minutes"]:
-        try:
-            del job_spec[k]
-        except:
-            pass
-    '''
+    job_spec["scheduling_type"] = SchedulingType.ASAP
     return queue_job2(job_spec=job_spec)
 
 

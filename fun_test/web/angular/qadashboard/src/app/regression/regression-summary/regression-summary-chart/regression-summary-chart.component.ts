@@ -6,51 +6,53 @@ import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angula
   styleUrls: ['./regression-summary-chart.component.css']
 })
 export class RegressionSummaryChartComponent implements OnInit, OnChanges {
-  @Input() testCaseExecutions: any = null;
-  @Input() versionSet: any = null;
-  @Input() suiteExectionVersionMap: any = null;
+  @Input() filterEntry: any = null;
   @Input() public pointClickCallback: Function;
-  @Input() metadata: any = null;
   @Input() title: string = null;
-  @Output() pointInfo: EventEmitter<any> = new EventEmitter();
 
-  availableVersions = new Set();
-  availableVersionList = [];
-  bySoftwareVersion: any = {};
+  @Output() pointInfo: EventEmitter<any> = new EventEmitter();
+  @Output() modeChanged: EventEmitter<any> = new EventEmitter();
+
   y1Values: any = [];
+  x1Values: any = [];
+  mode: string = "date";
+  baseId: number = null;
 
   constructor() { }
 
   ngOnInit() {
-    this.initializeY1Values();
+    //this.initializeY1Values();
     this.parseTestCaseInfo();
-    let i = 0;
+    this.baseId = this.getUid();
   }
 
   ngOnChanges() {
-    this.initializeY1Values();
+    //this.initializeY1Values();
     this.parseTestCaseInfo();
   }
 
   initializeY1Values() {
-    let moduleName = "m";
+
     this.y1Values = [{
         name: 'Passed',
         data: [],
         color: 'green',
-        metadata: this.metadata
+        metadata: {index: this.filterEntry.metadata.index, mode: this.mode},
+        mode: this.mode
     }
     ,  {
         name: 'Failed',
         data: [],
         color: 'red',
-        metadata: this.metadata
+        metadata: {index: this.filterEntry.metadata.index, mode: this.mode},
+        mode: this.mode
 
     }, {
         name: 'Not-run',
         data: [],
         color: 'grey',
-        metadata: this.metadata
+        metadata: {index: this.filterEntry.metadata.index, mode: this.mode},
+        mode: this.mode
 
     }];
   }
@@ -59,56 +61,50 @@ export class RegressionSummaryChartComponent implements OnInit, OnChanges {
     this.pointInfo.emit(pointInfo);
   }
 
-  prepareY1Values() {
-    this.availableVersions.forEach(version => {
-      if (!Number.isNaN(version)) {
-        let infoSection = this.bySoftwareVersion[version];
-        let numPassed = infoSection.numPassed;
-        let numFailed = infoSection.numFailed;
-        let numNotRun = infoSection.numNotRun;
-        this.y1Values[0].data.push(numPassed);
-        this.y1Values[1].data.push(numFailed);
-        this.y1Values[2].data.push(numNotRun);
-      }
-
-
-    });
+  populateResults(infoSection) {
+    if (infoSection) {
+      let numPassed = infoSection.numPassed;
+      let numFailed = infoSection.numFailed;
+      let numNotRun = infoSection.numNotRun;
+      this.y1Values[0].data.push(numPassed);
+      this.y1Values[1].data.push(numFailed);
+      this.y1Values[2].data.push(numNotRun);
+    }
   }
 
-  getPlaceHolder() {
-    return {numPassed: 0, numFailed: 0, numNotRun: 0};
+  modeChangedEvent() {
+    this.ngOnChanges();
+    this.modeChanged.emit();
+  }
+
+  prepareValues() {
+    this.y1Values = [];
+    this.initializeY1Values();
+    let infoSection = null;
+    if (this.mode === 'version') {
+      this.filterEntry.versionList.forEach(version => {
+      if (!Number.isNaN(version)) {
+          infoSection = this.filterEntry.bySoftwareVersion[version];
+          this.populateResults(infoSection);
+        }
+      });
+      this.x1Values = this.filterEntry.versionList;
+    } else if (this.mode === 'date') {
+      this.filterEntry.timeBucketList.forEach(timeBucket => {
+        infoSection = this.filterEntry.byDateTime[timeBucket];
+        this.populateResults(infoSection);
+      });
+      this.x1Values = this.filterEntry.timeBucketList;
+    }
+
   }
 
   parseTestCaseInfo() {
-    if (this.testCaseExecutions) {
-      this.testCaseExecutions.forEach((testCaseExecution) => {
-        let actualVersion = this.suiteExectionVersionMap[testCaseExecution.suite_execution_id];
-        this.availableVersions.add(actualVersion);
-        if (!this.bySoftwareVersion.hasOwnProperty(actualVersion)) {
-          this.bySoftwareVersion[actualVersion] = this.getPlaceHolder();
-        }
-        let infoSection = this.bySoftwareVersion[actualVersion];
-        if (testCaseExecution.result === "PASSED") {
-          infoSection.numPassed += 1;
-        } else if (testCaseExecution.result === "FAILED") {
-          infoSection.numFailed += 1;
-        } else {
-          infoSection.numNotRun += 1;
-        }
-
-      });
-
-    }
-
-
-    this.prepareY1Values();
-    this.availableVersionList = Array.from(this.availableVersions.values());
-    let i = 0;
-
+    this.prepareValues();
   }
 
-  getArrayFromSet(s) {
-    return Array.from(s.values());
-  }
+  getUid() {
+    return Math.floor(Math.random() * Math.floor(1000));
 
+  }
 }

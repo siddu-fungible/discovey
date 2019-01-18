@@ -599,7 +599,8 @@ def get_test_case_executions_by_time(request):
                          "suite_execution_id": te.suite_execution_id,
                          "script_path": te.script_path,
                          "test_case_id": te.test_case_id,
-                         "result": te.result}
+                         "result": te.result,
+                         "started_time": te.started_time}
             tes.append(one_entry)
     return tes
 

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
+import {el} from "@angular/platform-browser/testing/src/browser_util";
 
 @Component({
   selector: 'app-regression-summary',
@@ -10,9 +11,6 @@ import {CommonService} from "../../services/common/common.service";
 })
 export class RegressionSummaryComponent implements OnInit {
   info = {};
-  versionSet = new Set(); // The set of all software versions
-  versionMap = {};
-  versionList = [];
   suiteExectionVersionMap = {};
   constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) { }
   xValues: any [] = [];
@@ -20,43 +18,51 @@ export class RegressionSummaryComponent implements OnInit {
   detailedInfo = null;
   showDetailedInfo = false;
   public pointClickCallback: Function;
-  allRegressionScripts = [];
-  dropdownSettings = {};
-  selectedModules: any[] = [];
   availableModules = [];
   testCaseExecutions: any = null;
+
   //bySoftwareVersion: any = {};
 
+  /*
   filters = [
-    {info: "Networking", payload: {module: "networking"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 0}},
-    {info: "Storage", payload: {module: "storage"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 1}}
+    {info: "Networking", payload: {module: "networking"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 0}, byDateTime: {}},
+    {info: "Storage", payload: {module: "storage"}, testCaseExecutions: null, bySoftwareVersion: {}, metadata: {index: 1}, byDateTime: {}}
+  ];*/
+
+  filters = [
   ];
 
-
   ngOnInit() {
-    this.dropdownSettings = {
-      singleSelection: false,
-      idField: 'name',
-      textField: 'verbose_name',
-      selectAllText: 'Select All',
-      unSelectAllText: 'UnSelect All',
-      itemsShowLimit: 3,
-      allowSearchFilter: true
-    };
     this.fetchAllVersions();
-    /*
-    this.y1Values = [{
-        name: 'Passed',
-        data: []
-    }, {
-        name: 'Failed',
-        data: []
-    }, {
-        name: 'Not-run',
-        data: []
-    }]*/
     this.pointClickCallback = this.pointDetail.bind(this);
+    this.initializeFilter("Networking overall", {module: "networking"}, 0);
+    this.initializeFilter("Storage overall", {module: "storage"}, 1);
+    this.initializeFilter("Networking sanity", {module: "networking", test_case_execution_tags: ["networking-sanity"]}, 2);
+    this.initializeFilter("Storage sanity", {module: "storage", test_case_execution_tags: ["storage-sanity"]}, 3);
 
+    let i = 0;
+
+  }
+
+  initializeFilter(info, payload, index) {
+    let newFilter = {};
+    newFilter["info"] = info;
+    newFilter["payload"] = payload;
+    newFilter["testCaseExecutions"] = null;
+    newFilter["bySoftwareVersion"] = {};
+    newFilter["metadata"] = {index: index};
+    newFilter["byDateTime"] = {};
+    newFilter["versionList"] = [];
+    newFilter["versionSet"] = new Set();
+    newFilter["timeBucketList"] = [];
+    newFilter["timeBucketSet"] = new Set();
+    newFilter["currentDate"] = new Date(2018, 11, 1, 0, 1);
+    newFilter["startDate"] =  new Date(newFilter["currentDate"]);
+    newFilter["currentResultsByVersion"] = {version: 0, numPassed: 0, numFailed: 0, numNotRun: 0};
+    newFilter["previousResultsByVersion"] = {version: 0, numPassed: 0, numFailed: 0, numNotRun: 0};
+    newFilter["currentResultsByDate"] = {date: 0, numPassed: 0, numFailed: 0, numNotRun: 0};
+    newFilter["previousResultsByDate"] = {date: 0, numPassed: 0, numFailed: 0, numNotRun: 0};
+    this.filters.push(newFilter);
   }
 
   epochMsToDate(epochTimeInMs) {
@@ -71,21 +77,11 @@ export class RegressionSummaryComponent implements OnInit {
       let entries = response.data;
       entries.forEach((entry) => {
         let version = parseInt(entry.version);
-        this.versionSet.add(version);
-        this.versionMap[version] = entry;
+        //this.versionSet.add(version);
         this.suiteExectionVersionMap[entry.execution_id] = version;
 
       });
-      //console.log(this.versionSet);
-      if (this.versionSet.size > 0) {
-        this.versionSet.forEach((element) => {
-          this.versionList.push(element);
-        });
-        this.versionList.sort();
-        this.prepareBySoftwareVersion();
-        //this.xValues = this.versionList;
-        this.fetchModules();
-      }
+      this.fetchModules();
 
     }, error => {
       this.loggerService.error("/regression/get_all_versions");
@@ -93,15 +89,71 @@ export class RegressionSummaryComponent implements OnInit {
 
   }
 
+  prepareBucketList(index) {
+    let timeBucketList = this.filters[index].timeBucketList;
+    this.filters[index].timeBucketSet.forEach(element => {
+      timeBucketList.push(element);
+    });
+    //this.timeBucketList.sort();
+    let currentResultsByDate = this.filters[index].currentResultsByDate;
+    currentResultsByDate.date = timeBucketList[timeBucketList.length - 1];
+    let byDateTime = this.filters[index].byDateTime[currentResultsByDate.date];
+    currentResultsByDate.numPassed = byDateTime.numPassed;
+    currentResultsByDate.numFailed = byDateTime.numPassed;
+    currentResultsByDate.numNotRun = byDateTime.numNotRun;
+
+    let previousResultsByDate = this.filters[index].previousResultsByDate;
+    previousResultsByDate.date = timeBucketList[timeBucketList.length - 2];
+    byDateTime = this.filters[index].byDateTime[previousResultsByDate.date];
+    previousResultsByDate.numPassed = byDateTime.numPassed;
+    previousResultsByDate.numFailed = byDateTime.numPassed;
+    previousResultsByDate.numNotRun = byDateTime.numNotRun;
+
+
+  }
+
+  prepareVersionList(index) {
+    let versionList = this.filters[index].versionList;
+    let versionSet = this.filters[index].versionSet;
+    versionSet.forEach((element) => {
+      versionList.push(element);
+      });
+    versionList.sort();
+    let currentResultsByVersion = this.filters[index].currentResultsByVersion;
+    currentResultsByVersion.version = versionList[versionList.length - 1];
+    let bySoftwareVersion = this.filters[index].bySoftwareVersion[currentResultsByVersion.version];
+    currentResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+    currentResultsByVersion.numFailed = bySoftwareVersion.numPassed;
+    currentResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+
+    let previousResultsByVersion = this.filters[index].previousResultsByVersion;
+    previousResultsByVersion.version = versionList[versionList.length - 2];
+    bySoftwareVersion = this.filters[index].bySoftwareVersion[previousResultsByVersion.version];
+    previousResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+    previousResultsByVersion.numFailed = bySoftwareVersion.numPassed;
+    previousResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+    let i = 0;
+  }
+
+  modeChanged() {
+    this.detailedInfo = null;
+  }
+
   showPointDetails(pointInfo): void {
-    //let moduleInfo = this.infobySoftwareVersion[pointInfo.category];
     let metadata = pointInfo.metadata;
     let index = metadata.index;
+    let mode = metadata.mode;
     let resultType = pointInfo.name;
     let category = pointInfo.category;
 
-    this.detailedInfo = this.filters[index].bySoftwareVersion[category];
-    this.detailedInfo.softwareVersion = category;
+    if (mode === "version") {
+      this.detailedInfo = this.filters[index].bySoftwareVersion[category];
+    }
+    if (mode === "date") {
+      this.detailedInfo = this.filters[index].byDateTime[category];
+    }
+    this.detailedInfo.mode = mode;
+    this.detailedInfo.category = category;
     this.showDetailedInfo = true;
     this.commonService.scrollTo('detailed-info');
     let i = 0;
@@ -118,19 +170,19 @@ export class RegressionSummaryComponent implements OnInit {
       //console.log(response);
       this.availableModules = response.data;
       this.availableModules.forEach((module) => {
-        for (let index = 0; index < this.filters.length; index++) {
-          this.fetchScriptInfo2(index);
-        }
 
       });
+      for (let index = 0; index < this.filters.length; index++) {
+        this.fetchScriptInfo2(index);
+      }
+
     }, error => {
       this.loggerService.error("Error fetching modules");
     })
   }
 
-  prepareBySoftwareVersion() {
-    this.versionList.forEach((softwareVersion) => {
-
+  prepareBySoftwareVersion(index) {
+    this.filters[index].versionList.forEach((softwareVersion) => {
       for (let index = 0; index < this.filters.length; index++) {
         if (Number.isNaN(softwareVersion)) {
           //console.log(softwareVersion);
@@ -151,10 +203,6 @@ export class RegressionSummaryComponent implements OnInit {
     console.log(scriptInfo.key);
   }
 
-  modifyScriptAllocationClick (moduleInfo) {
-    moduleInfo.modifyingScriptAllocation = !moduleInfo.modifyingScriptAllocation;
-    this.fetchRegressionScripts();
-  }
 
   aggregateHistoryResults (historyElement) {
     let result = {numPassed: 0, numFailed: 0, numNotRun: 0};
@@ -170,32 +218,100 @@ export class RegressionSummaryComponent implements OnInit {
     return result;
   }
 
-  parseHistory2(index, history, softwareVersion) {
+
+  populateResults(entry, history) {
+    let scriptDetailedInfo = entry.scriptDetailedInfo;
+    let scriptPath = history.script_path;
+    if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
+      scriptDetailedInfo[scriptPath] = {history: [], historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
+    }
+    scriptDetailedInfo[scriptPath].history.push(history);
+    let historyResults = this.aggregateHistoryResults(history);
+    scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
+    scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
+    scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
+
+    entry.numPassed += historyResults.numPassed;
+    entry.numFailed += historyResults.numFailed;
+    entry.numNotRun += historyResults.numNotRun;
+    return historyResults;
+  }
+
+
+  addHistoryToSoftwareVersion(index, history, softwareVersion) {
     let bySoftwareVersion = this.filters[index].bySoftwareVersion;
+    let versionSet = this.filters[index].versionSet;
     if (softwareVersion.toString() === "NaN") {
       console.log(softwareVersion);
       return;
     }
-    //console.log(softwareVersion);
-    //let bySoftwareVersion = this.bySoftwareVersion;
+    versionSet.add(softwareVersion);
     let scriptPath = history.script_path;
-    if (bySoftwareVersion.hasOwnProperty(softwareVersion)) {
-      let softwareVersionEntry = bySoftwareVersion[softwareVersion];
-      let scriptDetailedInfo = softwareVersionEntry.scriptDetailedInfo;
-      if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
-        scriptDetailedInfo[scriptPath] = {history: [], historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
-      }
-      scriptDetailedInfo[scriptPath].history.push(history);
-      let historyResults = this.aggregateHistoryResults(history);
-      scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
-      scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
-      scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
+    if (!bySoftwareVersion.hasOwnProperty(softwareVersion)) {
+      bySoftwareVersion[softwareVersion] = {
+          scriptDetailedInfo: {showingDetails: false},
+          numPassed: 0,
+          numFailed: 0,
+          numNotRun: 0
+        };
+    }
+    let softwareVersionEntry = bySoftwareVersion[softwareVersion];
+    let historyResults = this.populateResults(softwareVersionEntry, history);
+  }
 
-      softwareVersionEntry.numPassed += historyResults.numPassed;
-      softwareVersionEntry.numFailed += historyResults.numFailed;
-      softwareVersionEntry.numNotRun += historyResults.numNotRun;
-    } else {
-      let i = 0;
+  isSameDay(d1, d2) {
+    return d1.getUTCFullYear() === d2.getUTCFullYear() &&
+      d1.getUTCMonth() === d2.getUTCMonth() &&
+      d1.getUTCDate() === d2.getUTCDate();
+  }
+
+  isSameDay2(d1, d2) {
+    console.log(d1.getUTCFullYear(), d2.getUTCFullYear());
+    console.log(d1.getUTCMonth(), d2.getUTCMonth());
+    console.log(d1.getUTCDate(), d2.getUTCDate());
+  }
+
+
+  dateTimeToBucket(d) {
+    //console.log(d.getYear());
+    //console.log(d.getMonth());
+    //console.log(d.getDate());
+    return d.getMonth() + 1 + "/" + d.getDate();
+  }
+
+  addToTimeBucket(index, d, history) {
+    let timeBucketSet = this.filters[index].timeBucketSet;
+    let timeBucket = this.dateTimeToBucket(d);
+    //console.log("Time bucket:" + "," + d + "," + timeBucket);
+    let byDateTime = this.filters[index].byDateTime;
+    if (!this.filters[index].byDateTime.hasOwnProperty(timeBucket)) {
+      byDateTime[timeBucket] = {
+          scriptDetailedInfo: {showingDetails: false},
+          numPassed: 0,
+          numFailed: 0,
+          numNotRun: 0
+        };
+    }
+    let scriptDetailedInfo = byDateTime[timeBucket].scriptDetailedInfo;
+    let dateTimeBucketEntry = byDateTime[timeBucket];
+    let historyResults = this.populateResults(dateTimeBucketEntry, history);
+    //console.log("Addtotimebucket: " + index);
+    timeBucketSet.add(timeBucket);
+  }
+
+  addHistoryToDateTimeBuckets(index, history) {
+    let currentDate = this.filters[index].currentDate;
+    let today = new Date();
+    let historyTime = new Date(history.started_time);
+    if (currentDate > historyTime) {
+      return;
+    }
+    while (currentDate <= today) {
+      if (this.isSameDay(currentDate, historyTime)) {
+        this.addToTimeBucket(index, currentDate, history);
+        break;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
     }
   }
 
@@ -206,30 +322,17 @@ export class RegressionSummaryComponent implements OnInit {
         //console.log(historyElement);
         let elementSuiteExecutionId = historyElement.suite_execution_id;
         let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
-        this.parseHistory2(index, historyElement, matchingSoftwareVersion);
+        this.addHistoryToSoftwareVersion(index, historyElement, matchingSoftwareVersion);
+        this.addHistoryToDateTimeBuckets(index, historyElement);
       });
-      let i = 0;
+      this.prepareVersionList(index);
+      this.prepareBucketList(index);
+      console.log(this.filters[0]);
+      this.filters[index] = {...this.filters[index]};
     }, error => {
     })
   }
 
-  fetchRegressionScripts() {
-    this.apiService.get("/regression/scripts").subscribe((response) => {
-      this.allRegressionScripts = response.data;
-      // Set selected modules for each script
-      this.allRegressionScripts.forEach((regressionScript) => {
-        regressionScript["selectedModules"] = [];
-        regressionScript["savedSelectedModules"] = [];
-        regressionScript["dirty"] = false;
-        regressionScript.modules.forEach((module) => {
-          regressionScript.selectedModules.push(this.getMatchingModule(module));
-        });
-        regressionScript.savedSelectedModules = [...regressionScript.selectedModules];
-      });
-    }, error => {
-      this.loggerService.error("/regression/scripts");
-    })
-  }
 
   getMatchingModule(moduleName) {
     let matchedModule = null;
@@ -242,23 +345,6 @@ export class RegressionSummaryComponent implements OnInit {
     return matchedModule;
   }
 
-  submitSelectModuleClick(regressionScript) {
-    console.log(regressionScript.selectedModules);
-    let payload = {script_path: regressionScript.script_path, modules: regressionScript.selectedModules};
-    this.apiService.post("/regression/script", payload).subscribe((response) => {
-      regressionScript.dirty = false;
-      regressionScript.savedSelectedModules = [...regressionScript.selectedModules];
-    }, error => {
-      this.loggerService.error("/regression/script");
-      this.dismissSelectModuleClick(regressionScript);
-    })
-  }
-
-  dismissSelectModuleClick(regressionScript) {
-    regressionScript.selectedModules = [...regressionScript.savedSelectedModules];
-    regressionScript.dirty = false;
-  }
-
 
   getKeys(map) {
     //console.log(map.keys());
@@ -268,36 +354,6 @@ export class RegressionSummaryComponent implements OnInit {
     } catch (e) {
       console.log(e);
     }
-
-
-  }
-
-  prepareValuesForChart(moduleInfo) {
-    console.log("Prepare values for chart");
-    let i = 0;
-    //console.log(this.xValues);
-    Object.keys(moduleInfo.bySoftwareVersion).forEach((softwareVersion) => {
-      let intSoftwareVersion = parseInt(softwareVersion);
-      let numPassed = moduleInfo.bySoftwareVersion[intSoftwareVersion].numPassed;
-      let numFailed = moduleInfo.bySoftwareVersion[intSoftwareVersion].numFailed;
-      let numNotRun = moduleInfo.bySoftwareVersion[intSoftwareVersion].numNotRun;
-      let total = numPassed + numFailed + numNotRun;
-      if (total) {
-        moduleInfo.xValues.push(intSoftwareVersion);
-        moduleInfo.y1Values[0].data.push(numPassed);
-        moduleInfo.y1Values[1].data.push(numFailed);
-        moduleInfo.y1Values[2].data.push(numNotRun);
-        moduleInfo.xValues = [...moduleInfo.xValues];
-        moduleInfo.y1Values = [...moduleInfo.y1Values];
-      }
-
-
-    });
-    //console.log(this.xValues);
-    for (let index = 0; index < this.filters.length; index++) {
-      this.fetchScriptInfo2(index);
-    };
-    this.filters = [...this.filters];
 
 
   }
