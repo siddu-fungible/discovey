@@ -286,7 +286,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     def _calculate_throughput_in_mbps(self, forwarding_rate, frame_size):
         throughput = None
         try:
-            throughput = float((forwarding_rate * frame_size) / 100000)
+            throughput = float((forwarding_rate * frame_size) * 8 / 100000)
         except Exception as ex:
             fun_test.critical(str(ex))
         return throughput
