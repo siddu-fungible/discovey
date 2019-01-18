@@ -15,7 +15,7 @@ export class RegressionSummaryChartComponent implements OnInit, OnChanges {
 
   y1Values: any = [];
   x1Values: any = [];
-  mode: string = "version";
+  mode: string = "date";
   baseId: number = null;
 
   constructor() { }

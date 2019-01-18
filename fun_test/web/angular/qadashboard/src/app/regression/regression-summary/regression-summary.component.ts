@@ -37,6 +37,9 @@ export class RegressionSummaryComponent implements OnInit {
     this.pointClickCallback = this.pointDetail.bind(this);
     this.initializeFilter("Networking", {module: "networking"}, 0);
     this.initializeFilter("Storage", {module: "storage"}, 1);
+    this.initializeFilter("Networking sanity", {module: "networking", test_case_execution_tags: ["networking-sanity"]}, 2);
+    this.initializeFilter("Storage sanity", {module: "storage", test_case_execution_tags: ["storage-sanity"]}, 3);
+
     let i = 0;
 
   }
