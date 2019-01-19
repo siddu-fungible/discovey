@@ -312,7 +312,7 @@ export class RegressionSummaryComponent implements OnInit {
     let bySoftwareVersion = this.filters[index].bySoftwareVersion;
     let versionSet = this.filters[index].versionSet;
     if (softwareVersion.toString() === "NaN") {
-      console.log(softwareVersion);
+      //console.log(softwareVersion);
       return;
     }
     versionSet.add(softwareVersion);
@@ -384,17 +384,18 @@ export class RegressionSummaryComponent implements OnInit {
     let today = new Date();
     let historyTime = new Date(history.started_time);
     if (this.isGreaterThan(currentDate, historyTime)) {
-      if (index === 4) {
+      /*if (index === 4) {
 
         console.log("Returning:" + currentDate + "," + historyTime);
-      }
+      }*/
       return;
     }
     while (currentDate <= today) {
       if (this.isSameDay(currentDate, historyTime)) {
+        /*
         if (index === 4) {
           console.log("Adding: " + currentDate + "," + historyTime);
-        }
+        }*/
         this.addToTimeBucket(index, currentDate, history);
         break;
       }
@@ -414,7 +415,7 @@ export class RegressionSummaryComponent implements OnInit {
       });
       this.prepareVersionList(index);
       this.prepareBucketList(index);
-      console.log(this.filters[0]);
+      //console.log(this.filters[0]);
       this.filters[index] = {...this.filters[index]};
     }, error => {
     })
