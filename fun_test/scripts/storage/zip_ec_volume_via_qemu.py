@@ -490,6 +490,7 @@ class RndDataWriteAndRead25PctWithDataVolumeFailure(ECinQemuTestcase):
         self.unconfig_result = {}
         self.write_result = {}
         self.read_result = {}
+        test_result = True
 
         per_volume_zip_stats = {"accumulated_out_bytes", "compress_done", "compress_fails",
                                 "compress_reqs", "uncompress_done", "uncompress_fails",
@@ -646,18 +647,19 @@ class RndDataWriteAndRead25PctWithDataVolumeFailure(ECinQemuTestcase):
                         final_value = command_result["data"]
 
                     if key == "accumulated_out_bytes":
-                        if final_value - self.expected_compressed_bytes < 200:
+                        if (final_value - self.my_shared_variables["initial_" + str(key)]) - \
+                                self.expected_compressed_bytes < 200:
                             fun_test.add_checkpoint(
                                 "zip RATIO: " + str(key) + " :0.005 x input ".format(self),
                                 "PASSED",
                                 self.expected_compressed_bytes,
-                                command_result["data"])
+                                final_value - self.my_shared_variables["initial_" + str(key)])
                         else:
                             fun_test.add_checkpoint(
                                 "zip ratio " + str(key) + " not 0.005 x input ".format(self),
                                 "Failed",
                                 self.expected_compressed_bytes,
-                                command_result["data"])
+                                final_value - self.my_shared_variables["initial_" + str(key)])
                             test_result = False
                     elif final_value - self.my_shared_variables["initial_" + str(key)] == value:
                         fun_test.add_checkpoint("zip stats match: " + str(key).format(self),
@@ -743,7 +745,6 @@ class RndDataWriteAndRead25PctWithDataVolumeFailure(ECinQemuTestcase):
                                       "EC combinations")
                     break
 
-        test_result = True
         for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
             for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
                 if not self.write_result[ndata][nparity] or not self.read_result[ndata][nparity] or \
@@ -785,6 +786,7 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
         self.unconfig_result = {}
         self.write_result = {}
         self.read_result = {}
+        test_result = True
         per_volume_zip_stats = {"accumulated_out_bytes", "compress_done", "compress_fails",
                                 "compress_reqs", "uncompress_done", "uncompress_fails",
                                 "uncompress_reqs", "uncompressible"}
@@ -940,18 +942,20 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                         final_value = command_result["data"]
 
                     if key == "accumulated_out_bytes":
-                        if final_value - self.expected_compressed_bytes < 200:
+                        if (final_value - self.my_shared_variables["initial_" + str(key)]) - \
+                                self.expected_compressed_bytes < 200:
                             fun_test.add_checkpoint(
                                 "zip RATIO: " + str(key) + " :0.005 x input ".format(self),
                                 "PASSED",
                                 self.expected_compressed_bytes,
-                                command_result["data"])
+                                final_value - self.my_shared_variables["initial_" + str(key)])
                         else:
                             fun_test.add_checkpoint(
                                 "zip ratio " + str(key) + " not 0.005 x input ".format(self),
                                 "Failed",
                                 self.expected_compressed_bytes,
-                                command_result["data"])
+                                final_value - self.my_shared_variables["initial_" + str(key)])
+
                             test_result = False
                     elif final_value - self.my_shared_variables["initial_" + str(key)] == value:
                         fun_test.add_checkpoint("zip stats match: " + str(key).format(self),
@@ -1038,7 +1042,6 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
                                       "EC combinations")
                     break
 
-        test_result = True
         for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
             for nparity in range(self.nparity_start_range, self.nparity_end_range + 1):
                 if not self.write_result[ndata][nparity] or not self.read_result[ndata][nparity] or \
