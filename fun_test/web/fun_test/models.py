@@ -241,7 +241,7 @@ class RegresssionScriptsSerializer(serializers.Serializer):
 
     class Meta:
         model = RegresssionScripts
-        fields = ('script_path', 'modules', 'components', 'tags')
+        fields = ('script_path', 'modules', 'components', 'tags', 'id')
 
 class ScriptInfo(models.Model):
     script_id = models.IntegerField()

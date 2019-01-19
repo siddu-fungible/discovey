@@ -90,7 +90,7 @@
             <th><label class="badge badge-secondary">Not-run</label></th>
           </tr>
           <tr>
-            <td>Total</td>
+            <td>Overall</td>
             <td>{{ detailedInfo.numPassed }}</td>
             <td>{{ detailedInfo.numFailed }}</td>
             <td>{{ detailedInfo.numNotRun }}</td>
@@ -106,6 +106,10 @@
               <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
               <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
               <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
+
+            </tr>
+            <tr *ngIf="scriptInfo.value.showingDetails">
+              <jira-info [apiUrl]="'/regression/jiras/' + scriptPathToPk(scriptInfo.key)"></jira-info>
 
             </tr>
             <tr *ngIf="scriptInfo.value.showingDetails">

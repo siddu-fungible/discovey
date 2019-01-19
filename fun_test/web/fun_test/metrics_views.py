@@ -645,7 +645,7 @@ def update_jira_info(request, metric_id, jira_id):
 
 def validate_jira(jira_id):
     project_name, id = jira_id.split('-')
-    jira_obj = JiraManager(project_name=str(project_name))
+    jira_obj = app_config.get_jira_manager()
     query = 'project="' + str(project_name) + '" and id="' + str(jira_id) + '"'
     try:
         jira_valid = jira_obj.get_issues_by_jql(jql=query)

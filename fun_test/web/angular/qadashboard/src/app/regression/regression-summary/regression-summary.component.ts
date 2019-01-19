@@ -20,6 +20,7 @@ export class RegressionSummaryComponent implements OnInit {
   public pointClickCallback: Function;
   availableModules = [];
   testCaseExecutions: any = null;
+  scriptInfoMap = {};
 
   //bySoftwareVersion: any = {};
 
@@ -81,12 +82,23 @@ export class RegressionSummaryComponent implements OnInit {
         this.suiteExectionVersionMap[entry.execution_id] = version;
 
       });
-      this.fetchModules();
+      this.fetchScripts();
 
     }, error => {
       this.loggerService.error("/regression/get_all_versions");
     });
+  }
 
+  fetchScripts() {
+    this.apiService.get("/regression/scripts").subscribe(response => {
+      response.data.forEach(entry => {
+        this.scriptInfoMap[entry.script_path] = entry;
+      });
+
+      this.fetchModules();
+    }, error => {
+      this.loggerService.error("/regression/scripts");
+    })
   }
 
   prepareBucketList(index) {
@@ -137,6 +149,10 @@ export class RegressionSummaryComponent implements OnInit {
 
   modeChanged() {
     this.detailedInfo = null;
+  }
+
+  scriptPathToPk(scriptPath) {
+    return this.scriptInfoMap[scriptPath].pk;
   }
 
   showPointDetails(pointInfo): void {

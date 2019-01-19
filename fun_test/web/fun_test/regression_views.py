@@ -20,6 +20,7 @@ from django.utils import timezone
 from fun_global import get_localized_time
 from datetime import datetime, timedelta
 from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
+from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
 import logging
 import dateutil.parser
@@ -609,10 +610,16 @@ def get_test_case_executions_by_time(request):
 @api_safe_json_response
 def scripts(request):
     all_regression_scripts = RegresssionScripts.objects.all()
-    for r in all_regression_scripts:
-        i = 0
-    regression_serializer = RegresssionScriptsSerializer(all_regression_scripts, many=True)
-    regression_scripts = regression_serializer.data
+    # regression_serializer = RegresssionScriptsSerializer(all_regression_scripts, many=True)
+    regression_scripts = []
+    for regression_script in all_regression_scripts:
+        new_entry = {"script_path": regression_script.script_path,
+                     "modules": json.loads(regression_script.modules),
+                     "components": json.loads(regression_script.components),
+                     "tags": json.loads(regression_script.tags),
+                     "pk": regression_script.pk}
+        regression_scripts.append(new_entry)
+    # regression_scripts = regression_serializer.data
     return regression_scripts
 
 @csrf_exempt
@@ -669,3 +676,75 @@ def unallocated_script(request):
 
 def test(request):
     return render(request, 'qa_dashboard/test.html', locals())
+
+
+def validate_jira(jira_id):
+    project_name, id = jira_id.split('-')
+    jira_obj = app_config.get_jira_manager()
+    query = 'project="' + str(project_name) + '" and id="' + str(jira_id) + '"'
+    try:
+        jira_valid = jira_obj.get_issues_by_jql(jql=query)
+        if jira_valid:
+            jira_valid = jira_valid[0]
+            return jira_valid
+    except Exception:
+        return None
+    return None
+
+
+@csrf_exempt
+@api_safe_json_response
+def jiras(request, script_pk, jira_id=None):
+    result = None
+    if request.method == "POST":
+        try:
+            request_json = json.loads(request.body)
+            jira_id = request_json["jira_id"]
+            c = RegresssionScripts.objects.get(pk=script_pk)
+
+            if jira_id:
+                jira_info = validate_jira(jira_id)
+                if jira_info:
+                    try:
+                        script_info = ScriptInfo.objects.get(script_id=script_pk, bug=jira_id)
+                    except ObjectDoesNotExist:
+                        script_info = ScriptInfo(script_id=script_pk, bug=jira_id)
+                        script_info.save()
+                else:
+                    raise ObjectDoesNotExist
+            result = "Ok"
+        except ObjectDoesNotExist as obj:
+            logger.critical("No data found - updating jira ids for script Id {} jira Id: {}".format(script_pk, jira_id))
+    if request.method == "GET":
+        jira_info = {}
+        try:
+            c = RegresssionScripts.objects.get(pk=script_pk)
+            try:
+                scripts = ScriptInfo.objects.filter(script_id=script_pk)
+                if scripts:
+                    for script in scripts:
+                        if script.bug:
+                            jira_id = script.bug
+                            jira_response = validate_jira(jira_id)
+                            jira_data = {}
+                            jira_data["id"] = jira_id
+                            jira_data["summary"] = jira_response.fields.summary
+                            jira_data["status"] = jira_response.fields.status
+                            jira_info[jira_id] = jira_data
+
+            except ObjectDoesNotExist:
+                pass
+            result = jira_info
+        except ObjectDoesNotExist:
+            logger.critical("No data found - fetching jira ids for script pk id {}".format(script_pk))
+    if request.method == "DELETE":
+        try:
+            c = RegresssionScripts.objects.get(pk=script_pk)
+            if jira_id:
+                script_info = ScriptInfo.objects.get(script_id=script_pk, bug=jira_id)
+                script_info.delete()
+            result = True
+        except ObjectDoesNotExist:
+            logger.critical("No data found - Deleting jira ids for script pk id {}".format(script_pk))
+        return "Ok"
+    return result
