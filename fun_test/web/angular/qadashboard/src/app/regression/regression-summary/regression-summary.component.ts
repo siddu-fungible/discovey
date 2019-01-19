@@ -137,19 +137,24 @@ export class RegressionSummaryComponent implements OnInit {
       versionList.push(element);
       });
     versionList.sort();
-    let currentResultsByVersion = this.filters[index].currentResultsByVersion;
-    currentResultsByVersion.version = versionList[versionList.length - 1];
-    let bySoftwareVersion = this.filters[index].bySoftwareVersion[currentResultsByVersion.version];
-    currentResultsByVersion.numPassed = bySoftwareVersion.numPassed;
-    currentResultsByVersion.numFailed = bySoftwareVersion.numPassed;
-    currentResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+    try {
+      let currentResultsByVersion = this.filters[index].currentResultsByVersion;
+      currentResultsByVersion.version = versionList[versionList.length - 1];
+      let bySoftwareVersion = this.filters[index].bySoftwareVersion[currentResultsByVersion.version];
+      currentResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+      currentResultsByVersion.numFailed = bySoftwareVersion.numPassed;
+      currentResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
 
-    let previousResultsByVersion = this.filters[index].previousResultsByVersion;
-    previousResultsByVersion.version = versionList[versionList.length - 2];
-    bySoftwareVersion = this.filters[index].bySoftwareVersion[previousResultsByVersion.version];
-    previousResultsByVersion.numPassed = bySoftwareVersion.numPassed;
-    previousResultsByVersion.numFailed = bySoftwareVersion.numPassed;
-    previousResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+      let previousResultsByVersion = this.filters[index].previousResultsByVersion;
+      previousResultsByVersion.version = versionList[versionList.length - 2];
+      bySoftwareVersion = this.filters[index].bySoftwareVersion[previousResultsByVersion.version];
+      previousResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+      previousResultsByVersion.numFailed = bySoftwareVersion.numPassed;
+      previousResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+    } catch (e) {
+      let i = 0;
+    }
+
     let i = 0;
   }
 
@@ -252,7 +257,13 @@ export class RegressionSummaryComponent implements OnInit {
     scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
     scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
     scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
-    scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].bugs.length;
+    scriptDetailedInfo[scriptPath].numBugs = 0;
+    try {
+      scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].bugs.length;
+
+    } catch (e) {
+      let i = 0;
+    }
 
     entry.numPassed += historyResults.numPassed;
     entry.numFailed += historyResults.numFailed;
