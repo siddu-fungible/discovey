@@ -152,7 +152,7 @@
                            href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
                     </td>
                     <td>{{ executionEntry.test_case_id }}</td>
-                    <td>{{ executionEntry.summary }}</td>
+                    <td>{{ getTestCaseSummary(scriptInfo.key, executionEntry.test_case_id) }}</td>
                   </tr>
                 </table>
               </td>

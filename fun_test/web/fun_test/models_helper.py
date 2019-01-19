@@ -84,6 +84,21 @@ def inspect(module_name):
     '''
     return result
 
+def get_all_test_cases(script_path):
+    test_cases = {}
+
+    try:
+        result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+        if result:
+            if "classes" in result:
+                for c in result["classes"]:
+                    test_cases[c["id"]] = c
+
+    except Exception as ex:
+        print "Error: {}".format(str(ex))
+
+    return test_cases
+
 def get_test_case_details(script_path, test_case_id):
     from lib.system.fun_test import fun_test
     # print "Script Path", script_path

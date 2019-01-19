@@ -260,6 +260,19 @@ export class RegressionSummaryComponent implements OnInit {
     return historyResults;
   }
 
+  getTestCaseSummary(scriptPath, testCaseId) {
+    let summary = "unknown";
+    if (testCaseId === 0) {
+      summary = "Script setup";
+    } else if (this.scriptInfoMap.hasOwnProperty(scriptPath)) {
+      let testCases = this.scriptInfoMap[scriptPath].test_cases;
+      if (testCases.hasOwnProperty(testCaseId)) {
+        summary = testCases[testCaseId].summary;
+      }
+    }
+    return summary;
+  }
+
   updateGlobalNumBugs(numBugs) {
     this.numBugs = numBugs;
   }

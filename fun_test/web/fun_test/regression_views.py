@@ -8,7 +8,7 @@ from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_fro
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2, queue_suite_container
 import scheduler.scheduler_helper
-from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, get_test_case_details
+from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, get_test_case_details, get_all_test_cases
 from web.fun_test.models import SuiteExecution, TestCaseExecution, Tag, Engineer, CatalogTestCaseExecution
 from django.core.exceptions import ObjectDoesNotExist
 from web.fun_test.models import CatalogSuiteExecution, Module
@@ -618,7 +618,8 @@ def scripts(request):
                      "components": json.loads(regression_script.components),
                      "tags": json.loads(regression_script.tags),
                      "pk": regression_script.pk,
-                     "bugs": []}
+                     "bugs": [],
+                     "test_cases": get_all_test_cases(regression_script.script_path)}
         script_infos = ScriptInfo.objects.filter(script_id=regression_script.pk)
         for script_info in script_infos:
             new_entry["bugs"].append(script_info.bug)
