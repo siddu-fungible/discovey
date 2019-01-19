@@ -617,7 +617,11 @@ def scripts(request):
                      "modules": json.loads(regression_script.modules),
                      "components": json.loads(regression_script.components),
                      "tags": json.loads(regression_script.tags),
-                     "pk": regression_script.pk}
+                     "pk": regression_script.pk,
+                     "bugs": []}
+        script_infos = ScriptInfo.objects.filter(script_id=regression_script.pk)
+        for script_info in script_infos:
+            new_entry["bugs"].append(script_info.bug)
         regression_scripts.append(new_entry)
     # regression_scripts = regression_serializer.data
     return regression_scripts

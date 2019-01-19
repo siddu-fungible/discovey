@@ -246,13 +246,18 @@ export class RegressionSummaryComponent implements OnInit {
     scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
     scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
     scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
+    scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].bugs.length;
 
     entry.numPassed += historyResults.numPassed;
     entry.numFailed += historyResults.numFailed;
     entry.numNotRun += historyResults.numNotRun;
+
     return historyResults;
   }
 
+  updateNumBugs(numBugs, node) {
+    node.numBugs = numBugs;
+  }
 
   addHistoryToSoftwareVersion(index, history, softwareVersion) {
     let bySoftwareVersion = this.filters[index].bySoftwareVersion;

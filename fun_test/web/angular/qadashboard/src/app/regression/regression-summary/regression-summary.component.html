@@ -100,6 +100,7 @@
             <tr *ngIf="scriptInfo.value.historyResults">
               <td>
                 {{ scriptInfo.key }}
+                <b><span *ngIf="scriptInfo.value.numBugs > 0" (click)="scriptInfo.value.showingDetails = true" class="no-padding text-color-red">Bugs<sup><span class="text-color-red">{{ scriptInfo.value.numBugs }}</span></sup>&nbsp;</span></b>
                 <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
                    class="anchor-button pseudo-anchor">details</u>
               </td>
@@ -109,7 +110,7 @@
 
             </tr>
             <tr *ngIf="scriptInfo.value.showingDetails">
-              <jira-info [apiUrl]="'/regression/jiras/' + scriptPathToPk(scriptInfo.key)"></jira-info>
+              <jira-info [apiUrl]="'/regression/jiras/' + scriptPathToPk(scriptInfo.key)" (numBugs)="updateNumBugs($event, scriptInfo.value)"></jira-info>
 
             </tr>
             <tr *ngIf="scriptInfo.value.showingDetails">
