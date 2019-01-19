@@ -1,8 +1,8 @@
 from lib.system.fun_test import *
 from scripts.helpers.palladium_app_parser_script import RetrieveLogLinesCase, PalladiumAppParserScript
 
-TERAMARK_PKE_TAG = "pke_teramark"
-TOTAL_NUMBER_OF_TEST_CASES = 20
+TERAMARK_EC_TAG = "alloc_speed_test"
+TOTAL_NUMBER_OF_TEST_CASES = 37
 
 
 class GeneratedTc(FunTestCase):
@@ -28,8 +28,8 @@ class GeneratedTc(FunTestCase):
 
 
 if __name__ == "__main__":
-    script = PalladiumAppParserScript(tag=TERAMARK_PKE_TAG)
-    script.add_test_case(RetrieveLogLinesCase(tag=TERAMARK_PKE_TAG))
+    script = PalladiumAppParserScript(tag=TERAMARK_EC_TAG)
+    script.add_test_case(RetrieveLogLinesCase(tag=TERAMARK_EC_TAG))
     for i in xrange(2, TOTAL_NUMBER_OF_TEST_CASES + 2):
         generated_test_case = GeneratedTc()
         generated_test_case.id = i
