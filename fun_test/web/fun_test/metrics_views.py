@@ -620,7 +620,6 @@ def dag(request):
     metric_model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
-    parent_info = []
     result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False)
     return result
 

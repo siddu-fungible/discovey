@@ -13,7 +13,7 @@
         </tr>
             <ng-container *ngFor="let flatNode of getVisibleNodes(flatNodes)">
             <tr class="fade-element-in">
-              <td *ngIf="flatNode.node.metricModelName" id="{{ flatNode.gUid }}" class="child-transition">
+              <td id="{{ flatNode.gUid }}" class="child-transition">
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
                 <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="flatNode.node.leaf" [routerLink]=""
@@ -30,20 +30,7 @@
               </a>
             </span>
               </td>
-              <td *ngIf="!flatNode.node.metricModelName" class="child-transition">
-                <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
-                        </span>
-                <a [ngClass]="{highlight:flatNode.node.showAddJira}" [routerLink]=""
-                   (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}</a>
-              <span [innerHTML]="'&nbsp'"></span>
-              <a [routerLink]="" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">
-                <span class="arrow-down"></span>
-              </a>
-              <a [routerLink]="" *ngIf="flatNode.collapsed" (click)="expandNode(flatNode)">
-                <span class="arrow-right"></span>
-              </a>
-              </td>
-              <td *ngIf="flatNode.node.metricModelName" class="text-center">
+              <td *ngIf="!flatNode.special" class="text-center">
                 <div class="score-label">
                   <!--<span style="vertical-align: top"-->
                                                <!--[innerHTML]="getTrendHtml(flatNode.node) | safeHtml">-->
@@ -73,31 +60,31 @@
                   {{ flatNode.node.lastScore | number: '1.1-1' }}
                 </div>
               </td>
-              <td *ngIf="!flatNode.node.metricModelName">
+              <td *ngIf="flatNode.special">
                 &nbsp;
               </td>
               <td class="text-center">
                 <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
               </td>
 
-              <td *ngIf="!flatNode.node.leaf && flatNode.node.metricModelName" [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
-              <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && flatNode.node.metricModelName">
+              <td *ngIf="!flatNode.node.leaf && !flatNode.special" [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+              <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special">
                 Bld:<label data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
                            [ngbTooltip]="FailedInfo" [autoClose]="'outside'"
                            class="badge failed-label no-margin badge-danger">FAILED
               </label>
               </td>
-              <td *ngIf="!flatNode.node.metricModelName">
+              <td *ngIf="flatNode.special">
                 &nbsp;
               </td>
-              <td *ngIf="flatNode.node.leaf && flatNode.node.metricModelName">
+              <td *ngIf="flatNode.node.leaf && !flatNode.special">
                 <span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
                 <span *ngIf="flatNode.node.numBugs==0 && flatNode.node.showAddJira" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
                 <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
               </td>
-              <td *ngIf="!flatNode.node.metricModelName">
+              <td *ngIf="flatNode.special">
                 &nbsp;
               </td>
               <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
@@ -285,8 +272,14 @@
         <div>
           <span *ngFor="let parents of currentFlatNode.lineage">
             <span *ngFor="let parent of parents">
-              <a [routerLink]="" (click)="expandFromLineage(parent)"> {{ getNameForParent(parent) }}</a> ></span>
-            <span> {{ currentNode.chartName }}</span><br></span>
+              <span *ngIf="parent.chartName === currentNode.chartName">
+                {{ parent.chartName }}
+              </span>
+              <span *ngIf="parent.chartName !== currentNode.chartName">
+                <a [routerLink]="" (click)="expandFromLineage(parent)"> {{ parent.chartName }}</a> >
+              </span>
+              </span>
+            <br></span>
         </div>
         <div class="closed-section"></div>
         <!-- Fun Metric Chart component -->
