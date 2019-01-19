@@ -623,7 +623,7 @@
     "cap_avg_sz": 1
   },
   "all_queue_wred": {
-    "wred_timer": 60,
+    "wred_timer": 30,
     "wred_prob_index": 0,
     "wred_prof_num": 0,
     "wred_enable": 1,
