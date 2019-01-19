@@ -42,6 +42,7 @@ export class RegressionSummaryComponent implements OnInit {
     this.initializeFilter("Storage overall", {module: "storage"}, 1);
     this.initializeFilter("Networking sanity", {module: "networking", test_case_execution_tags: ["networking-sanity"]}, 2);
     this.initializeFilter("Storage sanity", {module: "storage", test_case_execution_tags: ["storage-sanity"]}, 3);
+    this.initializeFilter("Palladium apps", {test_case_execution_tags: ["palladium-apps"]}, 4);
 
     let i = 0;
 
