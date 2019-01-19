@@ -113,19 +113,26 @@ export class RegressionSummaryComponent implements OnInit {
       timeBucketList.push(element);
     });
     //this.timeBucketList.sort();
-    let currentResultsByDate = this.filters[index].currentResultsByDate;
-    currentResultsByDate.date = timeBucketList[timeBucketList.length - 1];
-    let byDateTime = this.filters[index].byDateTime[currentResultsByDate.date];
-    currentResultsByDate.numPassed = byDateTime.numPassed;
-    currentResultsByDate.numFailed = byDateTime.numPassed;
-    currentResultsByDate.numNotRun = byDateTime.numNotRun;
+    try {
+      let currentResultsByDate = this.filters[index].currentResultsByDate;
+      currentResultsByDate.date = timeBucketList[timeBucketList.length - 1];
+      let byDateTime = this.filters[index].byDateTime[currentResultsByDate.date];
+      currentResultsByDate.numPassed = byDateTime.numPassed;
+      currentResultsByDate.numFailed = byDateTime.numFailed;
+      currentResultsByDate.numNotRun = byDateTime.numNotRun;
 
-    let previousResultsByDate = this.filters[index].previousResultsByDate;
-    previousResultsByDate.date = timeBucketList[timeBucketList.length - 2];
-    byDateTime = this.filters[index].byDateTime[previousResultsByDate.date];
-    previousResultsByDate.numPassed = byDateTime.numPassed;
-    previousResultsByDate.numFailed = byDateTime.numPassed;
-    previousResultsByDate.numNotRun = byDateTime.numNotRun;
+      let previousResultsByDate = this.filters[index].previousResultsByDate;
+      previousResultsByDate.date = timeBucketList[timeBucketList.length - 2];
+      byDateTime = this.filters[index].byDateTime[previousResultsByDate.date];
+      previousResultsByDate.numPassed = byDateTime.numPassed;
+      previousResultsByDate.numFailed = byDateTime.numFailed;
+      previousResultsByDate.numNotRun = byDateTime.numNotRun;
+
+    } catch (e) {
+      let i = 0;
+
+    }
+
 
 
   }
@@ -142,15 +149,23 @@ export class RegressionSummaryComponent implements OnInit {
       currentResultsByVersion.version = versionList[versionList.length - 1];
       let bySoftwareVersion = this.filters[index].bySoftwareVersion[currentResultsByVersion.version];
       currentResultsByVersion.numPassed = bySoftwareVersion.numPassed;
-      currentResultsByVersion.numFailed = bySoftwareVersion.numPassed;
+      currentResultsByVersion.numFailed = bySoftwareVersion.numFailed;
       currentResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
 
-      let previousResultsByVersion = this.filters[index].previousResultsByVersion;
-      previousResultsByVersion.version = versionList[versionList.length - 2];
-      bySoftwareVersion = this.filters[index].bySoftwareVersion[previousResultsByVersion.version];
-      previousResultsByVersion.numPassed = bySoftwareVersion.numPassed;
-      previousResultsByVersion.numFailed = bySoftwareVersion.numPassed;
-      previousResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+      if (versionList.length > 1) {
+        let previousResultsByVersion = this.filters[index].previousResultsByVersion;
+        previousResultsByVersion.version = versionList[versionList.length - 2];
+        bySoftwareVersion = this.filters[index].bySoftwareVersion[previousResultsByVersion.version];
+        previousResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+        previousResultsByVersion.numFailed = bySoftwareVersion.numFailed;
+        previousResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+      } else {
+        let previousResultsByVersion = this.filters[index].previousResultsByVersion;
+        previousResultsByVersion.numPassed = 0;
+        previousResultsByVersion.numFailed = 0;
+        previousResultsByVersion.numNotRun = 0;
+      }
+
     } catch (e) {
       let i = 0;
     }
@@ -326,6 +341,13 @@ export class RegressionSummaryComponent implements OnInit {
     console.log(d1.getUTCDate(), d2.getUTCDate());
   }
 
+  isGreaterThan(d1, d2) {
+    if ( (d1.getUTCFullYear() > d2.getUTCFullYear()) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() > d2.getUTCMonth())) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() === d2.getUTCMonth()) && (d1.getUTCDate() > d2.getUTCDate()))) {
+      return true;
+    }
+    return false;
+  }
+
 
   dateTimeToBucket(d) {
     //console.log(d.getYear());
@@ -351,6 +373,9 @@ export class RegressionSummaryComponent implements OnInit {
     let dateTimeBucketEntry = byDateTime[timeBucket];
     let historyResults = this.populateResults(dateTimeBucketEntry, history);
     //console.log("Addtotimebucket: " + index);
+    if (timeBucket.includes("16")) {
+      let i = 0;
+    }
     timeBucketSet.add(timeBucket);
   }
 
@@ -358,11 +383,18 @@ export class RegressionSummaryComponent implements OnInit {
     let currentDate = this.filters[index].currentDate;
     let today = new Date();
     let historyTime = new Date(history.started_time);
-    if (currentDate > historyTime) {
+    if (this.isGreaterThan(currentDate, historyTime)) {
+      if (index === 4) {
+
+        console.log("Returning:" + currentDate + "," + historyTime);
+      }
       return;
     }
     while (currentDate <= today) {
       if (this.isSameDay(currentDate, historyTime)) {
+        if (index === 4) {
+          console.log("Adding: " + currentDate + "," + historyTime);
+        }
         this.addToTimeBucket(index, currentDate, history);
         break;
       }
