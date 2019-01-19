@@ -596,20 +596,6 @@ def traverse_dag(metric_id, sort_by_name=True):
     result["positive"] = chart.positive
     result["jira_ids"] = json.loads(chart.jira_ids)
 
-
-    # chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
-    # # only get the first two entries
-    # # print "Chart status entry for {}".format(chart.chart_name)
-    # # for chart_status_entry in chart_status_entries:
-    # #    print chart_status_entry.date_time
-    # result["last_two_scores"] = [x.score for x in chart_status_entries]
-    # last_entry = chart_status_entries.last()
-    # if last_entry:
-    #     result["copied_score"] = chart_status_entries.last().copied_score
-    #     result["copied_score_disposition"] = chart_status_entries.last().copied_score_disposition
-    # else:
-    #     result["copied_score"] = False
-
     result["copied_score"] = chart.copied_score
     result["copied_score_disposition"] = chart.copied_score_disposition
     if chart.last_good_score >= 0:
@@ -634,7 +620,6 @@ def dag(request):
     metric_model_name = request_json["metric_model_name"]
     chart_name = request_json["chart_name"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
-
     result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False)
     return result
 
