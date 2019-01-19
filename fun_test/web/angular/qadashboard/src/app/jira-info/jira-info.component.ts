@@ -10,6 +10,8 @@ import {LoggerService} from "../services/logger/logger.service";
 export class JiraInfoComponent implements OnInit {
 
   @Input() apiUrl: any = null;
+  @Input() allowDelete = true;
+  @Input() allowAdd = true;
   jiraId: string = null;
   jiraInfo: any = [];
   editingJira: boolean = false;

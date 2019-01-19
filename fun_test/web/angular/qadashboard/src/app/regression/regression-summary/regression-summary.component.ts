@@ -21,6 +21,8 @@ export class RegressionSummaryComponent implements OnInit {
   availableModules = [];
   testCaseExecutions: any = null;
   scriptInfoMap = {};
+  numBugs = 0;
+  showGlobalBugPanel = false;
 
   //bySoftwareVersion: any = {};
 
@@ -93,6 +95,9 @@ export class RegressionSummaryComponent implements OnInit {
     this.apiService.get("/regression/scripts").subscribe(response => {
       response.data.forEach(entry => {
         this.scriptInfoMap[entry.script_path] = entry;
+        if (entry.bugs.length) {
+          this.numBugs += 1;
+        }
       });
 
       this.fetchModules();
@@ -253,6 +258,10 @@ export class RegressionSummaryComponent implements OnInit {
     entry.numNotRun += historyResults.numNotRun;
 
     return historyResults;
+  }
+
+  updateGlobalNumBugs(numBugs) {
+    this.numBugs = numBugs;
   }
 
   updateNumBugs(numBugs, node) {

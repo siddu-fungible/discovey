@@ -3,7 +3,7 @@
     <div class="card-header min-padding"><b>Bugs Associated</b></div>
     <div class="card-body min-padding">
       <div class="min-padding">
-        <a [routerLink]="" (click)="editingJira=true">Add New </a>
+        <a *ngIf="allowAdd" [routerLink]="" (click)="editingJira=true">Add New </a>
       <i *ngIf="editingJira" style="font-size: 95%;"><input type="text" class="jira-text" [(ngModel)]="jiraId">
         <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
         <span><i class="fa fa-times fa-fw close-color" (click)="editingJira = false"></i></span></i>
@@ -12,7 +12,7 @@
       <div style="margin-top: 2px" *ngIf="jiraInfo.length>0">
         <table class="table no-padding no-margin">
           <tr>
-            <th>
+            <th *ngIf="allowDelete">
             </th>
             <th>
               JIRA Id
@@ -25,7 +25,7 @@
             </th>
           </tr>
           <tr *ngFor="let info of jiraInfo">
-            <td class="right-padding">
+            <td class="right-padding" *ngIf="allowDelete">
               <button class="btn btn-sm no-padding" (click)="removeId(info['id'])"><i class="fa fa-trash-o"
                                                                                       style="font-size:16px; color: red"></i>
               </button>

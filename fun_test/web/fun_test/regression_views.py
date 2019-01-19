@@ -696,6 +696,30 @@ def validate_jira(jira_id):
     return None
 
 
+@api_safe_json_response
+def all_regression_jiras(request):
+    result = None
+    if request.method == "GET":
+        jira_info = {}
+
+        try:
+            scripts = ScriptInfo.objects.all()
+            if scripts:
+                for script in scripts:
+                    if script.bug:
+                        jira_id = script.bug
+                        jira_response = validate_jira(jira_id)
+                        jira_data = {}
+                        jira_data["id"] = jira_id
+                        jira_data["summary"] = jira_response.fields.summary
+                        jira_data["status"] = jira_response.fields.status
+                        jira_info[jira_id] = jira_data
+
+            result = jira_info
+        except ObjectDoesNotExist:
+            logger.critical("No data found - fetching jira ids")
+    return result
+
 @csrf_exempt
 @api_safe_json_response
 def jiras(request, script_pk, jira_id=None):
