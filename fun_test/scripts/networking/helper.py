@@ -306,7 +306,7 @@ def validate_parser_stats(parser_result, compare_value, check_list_keys=[], pars
                     fun_test.test_assert_expected(expected=compare_value, actual=actual,
                                                   message="Check %s stats for %s in parser nu stats" % (counter, key))
                 else:
-                    fun_test.test_assert(compare_value >= actual,
+                    fun_test.test_assert(compare_value <= actual,
                                          message="Check %s stats for %s in parser nu stats. "
                                                  "Expected %s, Actual %s" % (counter, key, compare_value, actual))
         result = True
