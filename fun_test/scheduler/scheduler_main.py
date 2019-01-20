@@ -494,14 +494,8 @@ def revive_scheduled_jobs(job_ids=None):
             job_id = job_spec["job_id"]
             if job_id not in job_ids:
                 continue
-            kill_job(job_id=job_id)
+        kill_job(job_id=job_spec["job_id"])
         scheduler_logger.info("Reviving Job file: {}".format(job_file))
-        '''
-        dst_filename = os.path.basename(job_file)
-        dst_filename = dst_filename.replace(SCHEDULED_JOB_EXTENSION, QUEUED_JOB_EXTENSION)
-        dst_filename = "{}/{}".format(JOBS_DIR, dst_filename)
-        shutil.copy(job_file, dst_filename)
-        '''
         queue_job2(job_spec=job_spec)
         os.remove(job_file)
 
