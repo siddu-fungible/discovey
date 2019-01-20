@@ -15,6 +15,9 @@ from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
+import logging
+from fun_settings import COMMON_WEB_LOGGER_NAME
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 
 from web.fun_test.models import (
@@ -146,7 +149,8 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
         te.version = version
     if tags:
         te.tags = json.dumps(tags)
-    te.save()
+    with transaction.atomic():
+        te.save()
     # print te.version
     return te
 
@@ -387,6 +391,7 @@ def _get_suite_executions(execution_id=None,
                     se.finalized = True
                 if suite_result not in pending_states:
                     se.result = suite_result
+                    # logger.error("Updating ID: {} Suite result: {} ".format(execution_id, se.result))
                 # se.save()
                 ses.append(se)
                 suite_result = se.result
