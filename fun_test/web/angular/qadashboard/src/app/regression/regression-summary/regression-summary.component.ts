@@ -97,7 +97,7 @@ export class RegressionSummaryComponent implements OnInit {
       response.data.forEach(entry => {
         this.scriptInfoMap[entry.script_path] = entry;
         if (entry.bugs.length) {
-          this.numBugs += 1;
+          this.numBugs += entry.bugs.length;
         }
       });
 

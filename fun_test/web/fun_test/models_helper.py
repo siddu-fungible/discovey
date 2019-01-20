@@ -188,16 +188,22 @@ def add_suite_execution(submitted_time,
     else:
         tags = "[]"
 
-    last_suite_execution_id = get_new_suite_execution_id()
-    s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
-                       submitted_time=submitted_time,
-                       scheduled_time=scheduled_time,
-                       completed_time=completed_time,
-                       result="QUEUED",
-                       tags=tags,
-                       catalog_reference=catalog_reference,
-                       suite_container_execution_id=suite_container_execution_id)
-    s.save()
+    for i in xrange(4):
+        try:
+            last_suite_execution_id = get_new_suite_execution_id()
+            s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
+                               submitted_time=submitted_time,
+                               scheduled_time=scheduled_time,
+                               completed_time=completed_time,
+                               result="QUEUED",
+                               tags=tags,
+                               catalog_reference=catalog_reference,
+                               suite_container_execution_id=suite_container_execution_id)
+            s.save()
+            break
+
+        except:
+            pass
     return s
 
 def set_suite_execution_banner(suite_execution_id, banner):
