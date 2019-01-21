@@ -132,7 +132,7 @@ class SpirentSetup(FunTestScript):
             network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
     def cleanup(self):
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class UlBadIpLenErrorIncremental(FunTestCase):

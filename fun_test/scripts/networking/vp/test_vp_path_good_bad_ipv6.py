@@ -73,15 +73,10 @@ def create_underlay_stream(template_obj, port, spirent_config, l4_header_type='U
         # Add ip header
         ipv6 = create_stream['ip_header_obj']
         # Adding Ip address and gateway
-        ipv6.destAddr = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            ipv6.destAddr = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            ipv6.destAddr = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            ipv6.destAddr = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            ipv6.destAddr = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            ipv6.destAddr = l3_config['cc_destination_ip1']
+            ipv6.destAddr = l3_config['destination_ip1']
         ipv6.sourceAddr = l3_config['source_ip1']
         if l4_header_type == 'TCP':
             ipv6.nextHeader = ipv6.NEXT_HEADER_TCP
@@ -127,15 +122,10 @@ def create_overlay_stream(template_obj, port, overlay_type, spirent_config, ul_i
                                                             overlay_type=overlay_type, streamblock_frame_length=300)
 
         streamblock_obj = output['streamblock_obj']
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         update = template_obj.update_overlay_frame_header(streamblock_obj=streamblock_obj,
                                                           header_obj=ip_header, overlay=False,
                                                           updated_header_attributes_dict=
@@ -263,7 +253,7 @@ class SpirentSetup(FunTestScript):
             network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
     def cleanup(self):
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class Ulv6BadUdpXsum(FunTestCase):
@@ -843,15 +833,10 @@ class GoodBad(FunTestCase):
         if protocol_tcp:
             protocol = Ipv4Header.PROTOCOL_TYPE_TCP
         l3_config = spirent_config["l3_config"]["ipv4"]
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         ip_header = Ipv4Header(destination_address=destination,
                                protocol=protocol, source_address=src_ip)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
@@ -977,14 +962,10 @@ class GoodBad(FunTestCase):
         l3_config = spirent_config["l3_config"]["ipv4"]
         ip_header = Ipv4Header()
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=ip_header, overlay=False,
                                                           updated_header_attributes_dict=
@@ -1068,15 +1049,10 @@ class GoodBad(FunTestCase):
                                                             overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP)
         l3_config = spirent_config["l3_config"]["ipv4"]
         ip_header = Ipv4Header()
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=ip_header, overlay=False,
                                                           updated_header_attributes_dict=
@@ -1147,14 +1123,10 @@ class GoodBad(FunTestCase):
         l3_config = spirent_config["l3_config"]["ipv4"]
         ip_header = Ipv4Header()
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=ip_header, overlay=False,
                                                           updated_header_attributes_dict=
@@ -1205,15 +1177,10 @@ class GoodBad(FunTestCase):
                                                             mpls=True)
         l3_config = spirent_config["l3_config"]["ipv4"]
         ip_header = Ipv4Header()
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=ip_header, overlay=False,
                                                           updated_header_attributes_dict=
