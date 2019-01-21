@@ -5,14 +5,21 @@ update-rc.d postgresql enable
 
 
 service postgresql start
-sudo -u postgres -i
+#sudo -u postgres -i
 
 
 
 
+# psql
+psql (9.5.14)
+Type "help" for help.
 
 postgres=# CREATE USER fun_test_user WITH PASSWORD 'fun123';
-postgres=# CREATE DATABASE
+CREATE ROLE
+postgres=# CREATE DATABASE fun_test;
+CREATE DATABASE
+postgres-# \q
+
 
 
 
