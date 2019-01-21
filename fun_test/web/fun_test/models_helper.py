@@ -200,10 +200,10 @@ def add_suite_execution(submitted_time,
                                catalog_reference=catalog_reference,
                                suite_container_execution_id=suite_container_execution_id)
             s.save()
-            break
 
+            break
         except:
-            pass
+            time.sleep(random.uniform(0.1, 1.0))
     return s
 
 def set_suite_execution_banner(suite_execution_id, banner):
@@ -270,6 +270,7 @@ def add_test_case_execution(test_case_id,
                                            test_case_execution_id=te.execution_id)
                 break
         except Exception as ex:
+            time.sleep(random.uniform(0.1, 1.0))
             print "Error: add_test_case_execution: {}".format(str(ex))
 
     return te
