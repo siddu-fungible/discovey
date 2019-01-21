@@ -377,7 +377,7 @@ class BLTF1RestartTestCase(FunTestCase):
                     else:
                         fun_test.log("Actual Stats are not within pass threshold range")
                         fun_test.test_assert_expected(expected=expected_read, actual=actual_read,
-                                                      message="Write counter is correct")
+                                                      message="Read counter is correct")
                 else:
                     fun_test.test_assert_expected(expected=expected_read, actual=actual_read,
                                                   message="Read counter is correct")

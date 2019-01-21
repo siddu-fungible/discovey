@@ -356,6 +356,7 @@ class FSOnECTestcase(FunTestCase):
                 if self.reload_after_config:
                     command_result = self.host.nvme_restart()
                     fun_test.simple_assert(command_result, "Reloading nvme driver")
+                    fun_test.sleep("Waiting for the nvme driver reload to complete", 5)
 
                 # Checking that the volume is accessible to the host
                 lsblk_output = self.host.lsblk("-b")

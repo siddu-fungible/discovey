@@ -20,6 +20,9 @@ export class RegressionSummaryComponent implements OnInit {
   public pointClickCallback: Function;
   availableModules = [];
   testCaseExecutions: any = null;
+  scriptInfoMap = {};
+  numBugs = 0;
+  showGlobalBugPanel = false;
 
   //bySoftwareVersion: any = {};
 
@@ -39,6 +42,7 @@ export class RegressionSummaryComponent implements OnInit {
     this.initializeFilter("Storage overall", {module: "storage"}, 1);
     this.initializeFilter("Networking sanity", {module: "networking", test_case_execution_tags: ["networking-sanity"]}, 2);
     this.initializeFilter("Storage sanity", {module: "storage", test_case_execution_tags: ["storage-sanity"]}, 3);
+    this.initializeFilter("Palladium apps", {test_case_execution_tags: ["palladium-apps"]}, 4);
 
     let i = 0;
 
@@ -81,12 +85,26 @@ export class RegressionSummaryComponent implements OnInit {
         this.suiteExectionVersionMap[entry.execution_id] = version;
 
       });
-      this.fetchModules();
+      this.fetchScripts();
 
     }, error => {
       this.loggerService.error("/regression/get_all_versions");
     });
+  }
 
+  fetchScripts() {
+    this.apiService.get("/regression/scripts").subscribe(response => {
+      response.data.forEach(entry => {
+        this.scriptInfoMap[entry.script_path] = entry;
+        if (entry.bugs.length) {
+          this.numBugs += entry.bugs.length;
+        }
+      });
+
+      this.fetchModules();
+    }, error => {
+      this.loggerService.error("/regression/scripts");
+    })
   }
 
   prepareBucketList(index) {
@@ -95,19 +113,26 @@ export class RegressionSummaryComponent implements OnInit {
       timeBucketList.push(element);
     });
     //this.timeBucketList.sort();
-    let currentResultsByDate = this.filters[index].currentResultsByDate;
-    currentResultsByDate.date = timeBucketList[timeBucketList.length - 1];
-    let byDateTime = this.filters[index].byDateTime[currentResultsByDate.date];
-    currentResultsByDate.numPassed = byDateTime.numPassed;
-    currentResultsByDate.numFailed = byDateTime.numPassed;
-    currentResultsByDate.numNotRun = byDateTime.numNotRun;
+    try {
+      let currentResultsByDate = this.filters[index].currentResultsByDate;
+      currentResultsByDate.date = timeBucketList[timeBucketList.length - 1];
+      let byDateTime = this.filters[index].byDateTime[currentResultsByDate.date];
+      currentResultsByDate.numPassed = byDateTime.numPassed;
+      currentResultsByDate.numFailed = byDateTime.numFailed;
+      currentResultsByDate.numNotRun = byDateTime.numNotRun;
 
-    let previousResultsByDate = this.filters[index].previousResultsByDate;
-    previousResultsByDate.date = timeBucketList[timeBucketList.length - 2];
-    byDateTime = this.filters[index].byDateTime[previousResultsByDate.date];
-    previousResultsByDate.numPassed = byDateTime.numPassed;
-    previousResultsByDate.numFailed = byDateTime.numPassed;
-    previousResultsByDate.numNotRun = byDateTime.numNotRun;
+      let previousResultsByDate = this.filters[index].previousResultsByDate;
+      previousResultsByDate.date = timeBucketList[timeBucketList.length - 2];
+      byDateTime = this.filters[index].byDateTime[previousResultsByDate.date];
+      previousResultsByDate.numPassed = byDateTime.numPassed;
+      previousResultsByDate.numFailed = byDateTime.numFailed;
+      previousResultsByDate.numNotRun = byDateTime.numNotRun;
+
+    } catch (e) {
+      let i = 0;
+
+    }
+
 
 
   }
@@ -119,24 +144,41 @@ export class RegressionSummaryComponent implements OnInit {
       versionList.push(element);
       });
     versionList.sort();
-    let currentResultsByVersion = this.filters[index].currentResultsByVersion;
-    currentResultsByVersion.version = versionList[versionList.length - 1];
-    let bySoftwareVersion = this.filters[index].bySoftwareVersion[currentResultsByVersion.version];
-    currentResultsByVersion.numPassed = bySoftwareVersion.numPassed;
-    currentResultsByVersion.numFailed = bySoftwareVersion.numPassed;
-    currentResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+    try {
+      let currentResultsByVersion = this.filters[index].currentResultsByVersion;
+      currentResultsByVersion.version = versionList[versionList.length - 1];
+      let bySoftwareVersion = this.filters[index].bySoftwareVersion[currentResultsByVersion.version];
+      currentResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+      currentResultsByVersion.numFailed = bySoftwareVersion.numFailed;
+      currentResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
 
-    let previousResultsByVersion = this.filters[index].previousResultsByVersion;
-    previousResultsByVersion.version = versionList[versionList.length - 2];
-    bySoftwareVersion = this.filters[index].bySoftwareVersion[previousResultsByVersion.version];
-    previousResultsByVersion.numPassed = bySoftwareVersion.numPassed;
-    previousResultsByVersion.numFailed = bySoftwareVersion.numPassed;
-    previousResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+      if (versionList.length > 1) {
+        let previousResultsByVersion = this.filters[index].previousResultsByVersion;
+        previousResultsByVersion.version = versionList[versionList.length - 2];
+        bySoftwareVersion = this.filters[index].bySoftwareVersion[previousResultsByVersion.version];
+        previousResultsByVersion.numPassed = bySoftwareVersion.numPassed;
+        previousResultsByVersion.numFailed = bySoftwareVersion.numFailed;
+        previousResultsByVersion.numNotRun = bySoftwareVersion.numNotRun;
+      } else {
+        let previousResultsByVersion = this.filters[index].previousResultsByVersion;
+        previousResultsByVersion.numPassed = 0;
+        previousResultsByVersion.numFailed = 0;
+        previousResultsByVersion.numNotRun = 0;
+      }
+
+    } catch (e) {
+      let i = 0;
+    }
+
     let i = 0;
   }
 
   modeChanged() {
     this.detailedInfo = null;
+  }
+
+  scriptPathToPk(scriptPath) {
+    return this.scriptInfoMap[scriptPath].pk;
   }
 
   showPointDetails(pointInfo): void {
@@ -230,19 +272,47 @@ export class RegressionSummaryComponent implements OnInit {
     scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
     scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
     scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
+    scriptDetailedInfo[scriptPath].numBugs = 0;
+    try {
+      scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].bugs.length;
+
+    } catch (e) {
+      let i = 0;
+    }
 
     entry.numPassed += historyResults.numPassed;
     entry.numFailed += historyResults.numFailed;
     entry.numNotRun += historyResults.numNotRun;
+
     return historyResults;
   }
 
+  getTestCaseSummary(scriptPath, testCaseId) {
+    let summary = "unknown";
+    if (testCaseId === 0) {
+      summary = "Script setup";
+    } else if (this.scriptInfoMap.hasOwnProperty(scriptPath)) {
+      let testCases = this.scriptInfoMap[scriptPath].test_cases;
+      if (testCases.hasOwnProperty(testCaseId)) {
+        summary = testCases[testCaseId].summary;
+      }
+    }
+    return summary;
+  }
+
+  updateGlobalNumBugs(numBugs) {
+    this.numBugs = numBugs;
+  }
+
+  updateNumBugs(numBugs, node) {
+    node.numBugs = numBugs;
+  }
 
   addHistoryToSoftwareVersion(index, history, softwareVersion) {
     let bySoftwareVersion = this.filters[index].bySoftwareVersion;
     let versionSet = this.filters[index].versionSet;
     if (softwareVersion.toString() === "NaN") {
-      console.log(softwareVersion);
+      //console.log(softwareVersion);
       return;
     }
     versionSet.add(softwareVersion);
@@ -271,6 +341,13 @@ export class RegressionSummaryComponent implements OnInit {
     console.log(d1.getUTCDate(), d2.getUTCDate());
   }
 
+  isGreaterThan(d1, d2) {
+    if ( (d1.getUTCFullYear() > d2.getUTCFullYear()) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() > d2.getUTCMonth())) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() === d2.getUTCMonth()) && (d1.getUTCDate() > d2.getUTCDate()))) {
+      return true;
+    }
+    return false;
+  }
+
 
   dateTimeToBucket(d) {
     //console.log(d.getYear());
@@ -296,6 +373,9 @@ export class RegressionSummaryComponent implements OnInit {
     let dateTimeBucketEntry = byDateTime[timeBucket];
     let historyResults = this.populateResults(dateTimeBucketEntry, history);
     //console.log("Addtotimebucket: " + index);
+    if (timeBucket.includes("16")) {
+      let i = 0;
+    }
     timeBucketSet.add(timeBucket);
   }
 
@@ -303,11 +383,19 @@ export class RegressionSummaryComponent implements OnInit {
     let currentDate = this.filters[index].currentDate;
     let today = new Date();
     let historyTime = new Date(history.started_time);
-    if (currentDate > historyTime) {
+    if (this.isGreaterThan(currentDate, historyTime)) {
+      /*if (index === 4) {
+
+        console.log("Returning:" + currentDate + "," + historyTime);
+      }*/
       return;
     }
     while (currentDate <= today) {
       if (this.isSameDay(currentDate, historyTime)) {
+        /*
+        if (index === 4) {
+          console.log("Adding: " + currentDate + "," + historyTime);
+        }*/
         this.addToTimeBucket(index, currentDate, history);
         break;
       }
@@ -327,7 +415,7 @@ export class RegressionSummaryComponent implements OnInit {
       });
       this.prepareVersionList(index);
       this.prepareBucketList(index);
-      console.log(this.filters[0]);
+      //console.log(this.filters[0]);
       this.filters[index] = {...this.filters[index]};
     }, error => {
     })

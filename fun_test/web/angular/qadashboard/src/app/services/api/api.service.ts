@@ -69,4 +69,20 @@ export class ApiService {
         catchError(ApiService.handleError)
       );
   }
+
+  delete(url: string): Observable<ApiResponse> {
+    return this.httpClient.delete<ApiResponse>(url)
+      .pipe(
+        map(response => {
+          if (!response.status) {
+            throw response;
+          } else {
+            return response;
+          }
+        }),
+        catchError(ApiService.handleError)
+      );
+  }
+
+
 }

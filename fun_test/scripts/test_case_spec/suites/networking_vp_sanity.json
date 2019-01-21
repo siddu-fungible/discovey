@@ -1,5 +1,5 @@
 [
   {"info": {"tags": ["networking-sanity"]}},
-  {"path": "networking/vp/test_sanity_vp_path_sweep.py", "test_case_ids": [1, 2]},
-  {"path": "networking/vp/test_sanity_vp_path_random.py", "test_case_ids": [1, 2]}
+  {"path": "networking/vp/test_sanity_vp_path_sweep.py"},
+  {"path": "networking/vp/test_sanity_vp_path_random.py"}
 ]

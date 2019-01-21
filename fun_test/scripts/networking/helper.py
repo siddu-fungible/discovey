@@ -306,18 +306,19 @@ def validate_parser_stats(parser_result, compare_value, check_list_keys=[], pars
                     fun_test.test_assert_expected(expected=compare_value, actual=actual,
                                                   message="Check %s stats for %s in parser nu stats" % (counter, key))
                 else:
-                    fun_test.test_assert(compare_value >= actual,
-                                         message="Check %s stats for %s in parser nu stats" % (counter, key))
+                    fun_test.test_assert(compare_value <= actual,
+                                         message="Check %s stats for %s in parser nu stats. "
+                                                 "Expected %s, Actual %s" % (counter, key, compare_value, actual))
         result = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
 
 
-def get_vp_per_pkts_stats_values(network_controller_obj):
+def get_vp_per_pkts_stats_values(network_controller_obj, cluster_id):
     result = None
     try:
-        output = network_controller_obj.peek_per_vppkts_stats()
+        output = network_controller_obj.peek_per_vppkts_stats(cluster_id=cluster_id)
         fun_test.simple_assert(output, "Ensure vp per packet stats are grepped")
         result = parse_result_dict(output)
     except Exception as ex:
@@ -564,6 +565,16 @@ def convert_bps_to_mbps(count_in_bps):
     return count_in_mbps
 
 
+def _get_psw_stat_diff_from_results(stat_1, stat_2, stat_type, stat_name):
+    new_val = stat_2[stat_type][stat_name]
+    old_val = stat_1[stat_type][stat_name]
+    if not new_val:
+        new_val = 0
+    if not old_val:
+        old_val = 0
+    return int(new_val) - int(old_val)
+
+
 def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
                           psw_stats_nu_1=None, psw_stats_nu_2=None, psw_stats_hnu_1=None,
                           psw_stats_hnu_2=None):
@@ -572,10 +583,15 @@ def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
     parsed_psw_stats_2 = None
     parsed_psw_stats_3 = None
     parsed_psw_stats_4 = None
+    if input_list:
+        result["input"] = {}
+    if output_list:
+        result["output"] = {}
+
     for key in input_list:
-        result[key] = 0
+        result["input"][key] = 0
     for key in output_list:
-        result[key] = 0
+        result["output"][key] = 0
     try:
         if hnu_1 and hnu_2:
             parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, input=True,
@@ -593,41 +609,49 @@ def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
                                                              output_key_list=output_list)
         elif not hnu_1 and hnu_2:
             parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
-                                                             input_key_list=input_list)
-            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
-                                                             input_key_list=input_list)
-            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, output=True,
+                                                             input_key_list=input_list, output=True,
                                                              output_key_list=output_list)
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
+                                                             input_key_list=input_list, output=True,
+                                                             output_key_list=output_list)
+            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, output=True,
+                                                             output_key_list=output_list, input=True,
+                                                             input_key_list=input_list)
             parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2,output=True,
-                                                             output_key_list=output_list)
+                                                             output_key_list=output_list, input=True,
+                                                             input_key_list=input_list)
         else:
-            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
-                                                             input_key_list=input_list)
-            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
-                                                             input_key_list=input_list)
-            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, output=True,
+            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, input=True,
+                                                             input_key_list=input_list, output=True,
                                                              output_key_list=output_list)
-            parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2, output=True,
+            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2, input=True,
+                                                             input_key_list=input_list, output=True,
                                                              output_key_list=output_list)
+            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, output=True,
+                                                             output_key_list=output_list, input=True,
+                                                             input_key_list=input_list)
+            parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, output=True,
+                                                             output_key_list=output_list, input=True,
+                                                             input_key_list=input_list)
 
         if parsed_psw_stats_3 and parsed_psw_stats_4:
+            # As epg output apeears towards ingress port type and input epg in at egress
+            # we need to take appropriate results
             for key in output_list:
-                new_val = parsed_psw_stats_4['output'][key]
-                old_val = parsed_psw_stats_3['output'][key]
-                if not new_val:
-                    new_val = 0
-                if not old_val:
-                    old_val = 0
-                result[key] =  int(new_val) - int(old_val)
+                if "epg" in key:
+                    result["output"][key] = _get_psw_stat_diff_from_results(parsed_psw_stats_1, parsed_psw_stats_2,
+                                                                           stat_type="output", stat_name=key)
+                else:
+                    result["output"][key] = _get_psw_stat_diff_from_results(parsed_psw_stats_3, parsed_psw_stats_4,
+                                                                            stat_type="output", stat_name=key)
 
             for key in input_list:
-                new_val = parsed_psw_stats_2['input'][key]
-                old_val = parsed_psw_stats_1['input'][key]
-                if not new_val:
-                    new_val = 0
-                if not old_val:
-                    old_val = 0
-                result[key] = int(new_val) - int(old_val)
+                if "epg" in key:
+                    result["input"][key] = _get_psw_stat_diff_from_results(parsed_psw_stats_3, parsed_psw_stats_4,
+                                                                            stat_type="input", stat_name=key)
+                else:
+                    result["input"][key] = _get_psw_stat_diff_from_results(parsed_psw_stats_1, parsed_psw_stats_2,
+                                                                            stat_type="input", stat_name=key)
 
         else:
             for key in output_list:
@@ -637,7 +661,7 @@ def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
                     new_val = 0
                 if not old_val:
                     old_val = 0
-                result[key] = int(new_val) - int(old_val)
+                result["output"][key] = int(new_val) - int(old_val)
 
             for key in input_list:
                 new_val = int(parsed_psw_stats_2['input'][key])
@@ -646,8 +670,59 @@ def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
                     new_val = 0
                 if not old_val:
                     old_val = 0
-                result[key] = int(new_val) - int(old_val)
+                result["input"][key] = int(new_val) - int(old_val)
         fun_test.log("Counters diff is %s" % result)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def compare_spray_values(reference_value, actual_value, threshold_percent=10):
+    result = False
+    threshold_value = int((threshold_percent / 100.0) * reference_value)
+    lower_limit = reference_value - threshold_value
+    upper_limit = reference_value + threshold_value
+    if int(lower_limit) <= int(actual_value) <= (upper_limit):
+        result = True
+    return result
+
+
+def check_per_vp_pkt_spray(old_per_vppkt_output_dict, per_vppkt_output_dict, dut_ingress_frame_count, monitor_stats_list):
+    result = False
+    try:
+        output = {}
+        ref_val = "ref_val"
+        total_pkts_sent = int(dut_ingress_frame_count)
+        fun_test.log("Total packets sent %s on ingress" % total_pkts_sent)
+        total_vps = len(per_vppkt_output_dict)
+        fun_test.log("Total vps present %s" % total_vps)
+        reference_value = int(total_pkts_sent / total_vps)
+        fun_test.log("Reference value calculated %s" % reference_value)
+        for key, val in per_vppkt_output_dict.iteritems():
+            vp_number = str(key.split(":")[1])
+            output[vp_number] = {}
+            fun_test.log("=========== Capturing stats for vp number %s ===========")
+            fun_test.log("Refference value is %s" % reference_value)
+            output[vp_number][ref_val] = reference_value
+
+            for stat in monitor_stats_list:
+                if stat in val:
+                    total_count = int(val[stat])
+                    if stat in old_per_vppkt_output_dict[key]:
+                        total_count = int(val[stat]) - int(old_per_vppkt_output_dict[key][stat])
+                    output[vp_number][stat] = total_count
+                    fun_test.log("Value seen for %s is %s" % (stat, total_count))
+                else:
+                    fun_test.critical("Stat %s not seen in per vp pkts stats" % stat)
+
+        for key, val in output.iteritems():
+            fun_test.log("xxxxxxxxxxx Checks on vp number %s xxxxxxxxxx" % str(key))
+            for stat in monitor_stats_list:
+
+                fun_test.test_assert(compare_spray_values(output[key][ref_val], output[key][stat]),
+                                     "Check counter for %s. Expected value: %s Actual value %s for vp %s" %
+                                     (stat, reference_value, output[key][stat], key))
+        result = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return result

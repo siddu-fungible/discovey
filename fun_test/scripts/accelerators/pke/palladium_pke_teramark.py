@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from scripts.helpers.palladium_app_parser_script import RetrieveLogLinesCase, PalladiumAppParserScript
 
 TERAMARK_PKE_TAG = "pke_teramark"
-TOTAL_NUMBER_OF_TEST_CASES = 10
+TOTAL_NUMBER_OF_TEST_CASES = 20
 
 
 class GeneratedTc(FunTestCase):
