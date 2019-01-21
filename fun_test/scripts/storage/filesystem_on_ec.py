@@ -360,7 +360,6 @@ class FSOnECTestcase(FunTestCase):
 
                 # Checking that the volume is accessible to the host
                 lsblk_output = self.host.lsblk("-b")
-                fun_test.sleep("Waiting for FunOS to create the EC volume", 3600)
                 fun_test.simple_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
                 fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                               message="{} volume type check".format(self.volume_name))
