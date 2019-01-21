@@ -86,7 +86,7 @@ class FunethSanity(FunTestScript):
 class FunethTestNUPingHU(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Connect to NU host NU host and ping HU host.",
+                              summary="From NU host ping HU host.",
                               steps="""
         1. Ping PF interface 53.1.1.5
         2. Ping VF interface 53.1.9.5
@@ -107,7 +107,7 @@ class FunethTestNUPingHU(FunTestCase):
 class FunethTestPacketSweep(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="From HU host, ping NU host with all available packeet sizes.",
+                              summary="From HU host, ping NU host with all available packet sizes.",
                               steps="""
         1. 
         """)
