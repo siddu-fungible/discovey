@@ -1249,10 +1249,11 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_per_vppkts_stats(self):
+    def peek_per_vppkts_stats(self, cluster_id):
         stats = None
         try:
-            cmd = "stats/pervppkts"
+            self.COMMAND_DURATION = 60
+            cmd = "stats/pervppkts/[%s]" % cluster_id
             fun_test.debug("Getting vp per pkt")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION, sleep_duration=20)
             fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")

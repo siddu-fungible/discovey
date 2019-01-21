@@ -315,10 +315,10 @@ def validate_parser_stats(parser_result, compare_value, check_list_keys=[], pars
     return result
 
 
-def get_vp_per_pkts_stats_values(network_controller_obj):
+def get_vp_per_pkts_stats_values(network_controller_obj, cluster_id):
     result = None
     try:
-        output = network_controller_obj.peek_per_vppkts_stats()
+        output = network_controller_obj.peek_per_vppkts_stats(cluster_id=cluster_id)
         fun_test.simple_assert(output, "Ensure vp per packet stats are grepped")
         result = parse_result_dict(output)
     except Exception as ex:
@@ -672,6 +672,57 @@ def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
                     old_val = 0
                 result["input"][key] = int(new_val) - int(old_val)
         fun_test.log("Counters diff is %s" % result)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def compare_spray_values(reference_value, actual_value, threshold_percent=10):
+    result = False
+    threshold_value = int((threshold_percent / 100.0) * reference_value)
+    lower_limit = reference_value - threshold_value
+    upper_limit = reference_value + threshold_value
+    if int(lower_limit) <= int(actual_value) <= (upper_limit):
+        result = True
+    return result
+
+
+def check_per_vp_pkt_spray(old_per_vppkt_output_dict, per_vppkt_output_dict, dut_ingress_frame_count, monitor_stats_list):
+    result = False
+    try:
+        output = {}
+        ref_val = "ref_val"
+        total_pkts_sent = int(dut_ingress_frame_count)
+        fun_test.log("Total packets sent %s on ingress" % total_pkts_sent)
+        total_vps = len(per_vppkt_output_dict)
+        fun_test.log("Total vps present %s" % total_vps)
+        reference_value = int(total_pkts_sent / total_vps)
+        fun_test.log("Reference value calculated %s" % reference_value)
+        for key, val in per_vppkt_output_dict.iteritems():
+            vp_number = str(key.split(":")[1])
+            output[vp_number] = {}
+            fun_test.log("=========== Capturing stats for vp number %s ===========")
+            fun_test.log("Refference value is %s" % reference_value)
+            output[vp_number][ref_val] = reference_value
+
+            for stat in monitor_stats_list:
+                if stat in val:
+                    total_count = int(val[stat])
+                    if stat in old_per_vppkt_output_dict[key]:
+                        total_count = int(val[stat]) - int(old_per_vppkt_output_dict[key][stat])
+                    output[vp_number][stat] = total_count
+                    fun_test.log("Value seen for %s is %s" % (stat, total_count))
+                else:
+                    fun_test.critical("Stat %s not seen in per vp pkts stats" % stat)
+
+        for key, val in output.iteritems():
+            fun_test.log("xxxxxxxxxxx Checks on vp number %s xxxxxxxxxx" % str(key))
+            for stat in monitor_stats_list:
+
+                fun_test.test_assert(compare_spray_values(output[key][ref_val], output[key][stat]),
+                                     "Check counter for %s. Expected value: %s Actual value %s for vp %s" %
+                                     (stat, reference_value, output[key][stat], key))
+        result = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
