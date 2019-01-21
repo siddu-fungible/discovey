@@ -7,22 +7,22 @@
     "rx_range_min": 350, "rx_range_max": 500, "duration": 10
   },
   "vp_performance": {
-    "FPG_HNU": {
+    "NU_HNU": {
       "spray_ip_count": 10,
       "spray_enable": {"64": 460, "1500": 450},
       "spray_disable": {"64": 210, "1500": 190}
     },
-    "HNU_FPG": {
+    "HNU_NU": {
       "spray_ip_count": 200,
       "spray_enable": {"64": 580, "1500": 530},
       "spray_disable": {"64": 180, "1500": 180}
     },
-    "FCP_HNU_HNU": {
+    "HNU_HNU_FCP": {
       "spray_ip_count": 1,
       "spray_enable": {"64": 220, "1500": 130},
       "spray_disable": {"64": 140, "1500": 110}
     },
-    "HNU_HNU": {
+    "HNU_HNU_NFCP": {
       "spray_ip_count": 10,
       "spray_enable": {"64": 120, "1500": 100},
       "spray_disable": {"64": 115, "1500": 110}
