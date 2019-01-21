@@ -47,6 +47,7 @@ class CryptoCoreTest(FunTestScript):
                                                     target_port=self.dut.external_dpcsh_port)
         fun_test.shared_variables["topology"] = self.topology
         fun_test.shared_variables["storage_controller"] = self.storage_controller
+        fun_test.shared_variables["xts_ssl"] = False
 
     def cleanup(self):
         # pass
@@ -87,9 +88,13 @@ class CryptoCore(FunTestCase):
         self.qemu = QemuStorageTemplate(host=self.host, dut=self.dut)
         self.storage_controller = fun_test.shared_variables["storage_controller"]
         self.funos_running = True
-        self.xts_ssl_template = XtsOpenssl(self.host)
-        install_status = self.xts_ssl_template.install_ssl()
-        fun_test.test_assert(install_status, "Openssl installation")
+        if not fun_test.shared_variables["xts_ssl"]:
+            self.xts_ssl_template = XtsOpenssl(self.host)
+            install_status = self.xts_ssl_template.install_ssl()
+            fun_test.test_assert(install_status, "Openssl installation")
+            fun_test.shared_variables["xts_ssl"] = True
+        else:
+            self.xts_ssl_template = XtsOpenssl(self.host)
         # install_status = self.host.install_package("fio")
         # fun_test.test_assert(install_status, "fio installed successfully")
 
@@ -475,30 +480,99 @@ class CryptoCore(FunTestCase):
         command_result = self.storage_controller.peek(self.storage_props_tree)
 
 
-class TestingCipher(CryptoCore):
+class Key256Write4k(CryptoCore):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Write & Read on encrypted LSV using nvme cli",
+                              summary="Write & Read on 256bit encrypted LSV using nvme cli with 4k write_size",
                               steps='''
                               1. Start FunOS and attach host over PCIe.
                               2. Create a LSV with encryption.
-                              3. Use NVME write on LBA of 64k using data_file.
+                              3. Use NVME write on LBA using data_file.
                               4. Use NVME read on the written block and save in file.
                               5. Compare the input file and the read data file.''')
 
     def setup(self):
-        super(TestingCipher, self).setup()
+        super(Key256Write4k, self).setup()
 
     def run(self):
-        super(TestingCipher, self).run()
+        super(Key256Write4k, self).run()
 
     def cleanup(self):
-        super(TestingCipher, self).cleanup()
+        super(Key256Write4k, self).cleanup()
+
+
+class Key512Write4k(CryptoCore):
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Write & Read on 512bit encrypted LSV using nvme cli with 4k write_size",
+                              steps='''
+                              1. Start FunOS and attach host over PCIe.
+                              2. Create a LSV with encryption.
+                              3. Use NVME write on LBA using data_file.
+                              4. Use NVME read on the written block and save in file.
+                              5. Compare the input file and the read data file.''')
+
+    def setup(self):
+        super(Key512Write4k, self).setup()
+
+    def run(self):
+        super(Key512Write4k, self).run()
+
+    def cleanup(self):
+        super(Key512Write4k, self).cleanup()
+
+
+class Key256Write8k(CryptoCore):
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Write & Read on 256bit encrypted LSV using nvme cli with 8k write_size",
+                              steps='''
+                              1. Start FunOS and attach host over PCIe.
+                              2. Create a LSV with encryption.
+                              3. Use NVME write on LBA using data_file.
+                              4. Use NVME read on the written block and save in file.
+                              5. Compare the input file and the read data file.''')
+
+    def setup(self):
+        super(Key256Write8k, self).setup()
+
+    def run(self):
+        super(Key256Write8k, self).run()
+
+    def cleanup(self):
+        super(Key256Write8k, self).cleanup()
+
+
+class Key512Write8k(CryptoCore):
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Write & Read on 512bit encrypted LSV using nvme cli with 8k write_size",
+                              steps='''
+                              1. Start FunOS and attach host over PCIe.
+                              2. Create a LSV with encryption.
+                              3. Use NVME write on LBA using data_file.
+                              4. Use NVME read on the written block and save in file.
+                              5. Compare the input file and the read data file.''')
+
+    def setup(self):
+        super(Key512Write8k, self).setup()
+
+    def run(self):
+        super(Key512Write8k, self).run()
+
+    def cleanup(self):
+        super(Key512Write8k, self).cleanup()
 
 
 if __name__ == "__main__":
     crypto_script = CryptoCoreTest()
-    crypto_script.add_test_case(TestingCipher())
+    crypto_script.add_test_case(Key256Write4k())
+    crypto_script.add_test_case(Key512Write4k())
+    crypto_script.add_test_case(Key256Write8k())
+    crypto_script.add_test_case(Key512Write8k())
 
     crypto_script.run()
