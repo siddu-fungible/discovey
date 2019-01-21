@@ -11,11 +11,11 @@ class XtsOpenssl(CryptoTemplate):
         self.host.command("cd /tmp/xts_ssl && tar xf openssl-1.0.1e.tar.gz", timeout=80)
         self.host.command("cd /tmp/xts_ssl/openssl-1.0.1e && ./config &> /dev/null && make &> /dev/null && cd",
                           timeout=180)
-        check_ssl = self.host.command("ls /tmp/xts_ssl/openssl-1.0.1e/apps/openssl")
-        if "cannot access" in check_ssl:
-            return False
-        else:
+        check_ssl = self.host.command("/tmp/xts_ssl/openssl-1.0.1e/apps/openssl version")
+        if "OpenSSL 1.0.1e" in check_ssl:
             return True
+        else:
+            return False
 
     def compute_cipher(self, key, iv, input_file, output_file, encrypt=True):
         key_len = len(key)
