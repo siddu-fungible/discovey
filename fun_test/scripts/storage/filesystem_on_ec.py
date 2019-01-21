@@ -352,7 +352,7 @@ class FSOnECTestcase(FunTestCase):
                 fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                               message="Ensuring error_injection got disabled")
 
-                fun_test.sleep("Waiting for FunOS to create the EC volume", 10)
+                fun_test.sleep("Waiting for FunOS to create the EC volume", 3600)
                 # Reloading the nvme driver before checking the disk
                 if self.reload_after_config:
                     command_result = self.host.nvme_restart()
