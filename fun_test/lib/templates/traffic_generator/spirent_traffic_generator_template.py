@@ -1636,6 +1636,152 @@ class DhcpClientMessageHeader(object):
         self._spirent_handle = handle
 
 
+class Rfc2544ThroughputConfig(object):
+    ASYMMETRIC_TRAFFIC_BACK_OFF_MODE_ALL_RATES = "ALL_RATES"
+    ASYMMETRIC_TRAFFIC_BACK_OFF_MODE_FAILED_RATES = "FAILED_RATES"
+    LOAD_UNIT_PERCENT_LINE_RATE = "PERCENT_LINE_RATE"
+    LOAD_UNIT_FRAMES_PER_SECOND = "FRAMES_PER_SECOND"
+    LOAD_UNIT_INTER_BURST_PER_GAP = "INTER_BURST_GAP"
+    LOAD_UNIT_BITS_PER_SECOND = "BITS_PER_SECOND"
+    LOAD_UNIT_KILOBITS_PER_SECOND = "KILOBITS_PER_SECOND"
+    LOAD_UNIT_MEGABITS_PER_SECOND = "MEGABITS_PER_SECOND"
+    FRAME_SIZE_ITERATION_MODE_CUSTOM = "CUSTOM"
+    FRAME_SIZE_ITERATION_MODE_RANDOM = "RANDOM"
+    FRAME_SIZE_ITERATION_MODE_STEP = "STEP"
+    FRAME_SIZE_ITERATION_MODE_IMIX = "IMIX"
+    FRAME_SIZE_ITERATION_MODE_NONE = "NONE"
+    LATENCY_TYPE_LILO = "LILO"
+    LATENCY_TYPE_LIFO = "LIFO"
+    LATENCY_TYPE_FIFO = "FIFO"
+    LEARNING_FREQUENCY_MODE_ONCE = "LEARN_ONCE"
+    LEARNING_FREQUENCY_MODE_EVERY_TRIAL = "LEARN_EVERY_TRIAL"
+    LEARNING_FREQUENCY_MODE_EVERY_FRAME_SIZE = "LEARN_EVERY_FRAME_SIZE"
+    LEARNING_FREQUENCY_MODE_EVERY_ITERATION = "LEARN_EVERY_ITERATION"
+    LEARNING_MODE_L2 = "L2_LEARNING"
+    LEARNING_MODE_L3 = "L3_LEARNING"
+    PROFILE_CONFIG_MODE_MANUAL = "MANUAL"
+    PROFILE_CONFIG_MODE_PER_PORT = "PER_PORT"
+    PROFILE_CONFIG_MODE_PER_SIDE = "PER_SIDE"
+    PROFILE_CONFIG_MODE_PER_GROUP = "PER_GROUP"
+    SEARCH_MODE_BINARY = "BINARY"
+    SEARCH_MODE_STEP = "STEP"
+    SEARCH_MODE_COMBO = "COMBO"
+    TRAFFIC_START_DELAY_MODE_AFTER_TEST = "AFTER_TEST"
+    TRAFFIC_START_DELAY_MODE_AFTER_USER_RESPONSE = "AFTER_USER_RESPONSE"
+    TRAFFIC_VERIFICATION_FEQ_MODE_TRIAL = "VERIFY_EVERY_TRIAL"
+    TRAFFIC_VERIFICATION_FEQ_MODE_FRAME_SIZE = "VERIFY_EVERY_FRAME_SIZE"
+    TRAFFIC_VERIFICATION_FEQ_MODE_ITERATION = "VERIFY_EVERY_ITERATION"
+    DURATION_MODE_SECONDS = "SECONDS"
+    DURATION_MODE_BURSTS = "BURSTS"
+
+    def __init__(self, acceptable_frame_loss=0, back_off=50, custom_frame_size_list=0,
+                 delay_after_transmission=2, display_laod_unit=LOAD_UNIT_PERCENT_LINE_RATE,
+                 display_traffic_group_load_unit=LOAD_UNIT_PERCENT_LINE_RATE, duration_bursts=1000, duration_seconds=10,
+                 enable_detailed_results_collection=False, enable_exposedf_internal_commands=False,
+                 enable_frame_size_on_test=True, enable_jitter_measurement=True, enable_learning=False,
+                 enable_max_latency_threshold=False, enable_out_of_seq_threshold=False,
+                 enable_pause_before_traffic=False, enable_traffic_verification=False, frame_size_end=256,
+                 frame_size_iteration_mode=FRAME_SIZE_ITERATION_MODE_CUSTOM, frame_size_start=128, frame_size_step=128,
+                 ignore_min_max_limits=False, imix_distribution_list=0, imix_distribution_string="",
+                 l2_delay_before_learning=2, l2_learning_frame_rate=1000, l2_learning_repeat_count=5,
+                 l3_delay_before_learning=2, l3_enable_cyclic_addr_resolution=True, l3_rate=1000, l3_retry_count=5,
+                 latency_type=LATENCY_TYPE_LILO, learning_frequency_mode=LEARNING_FREQUENCY_MODE_ONCE,
+                 learning_mode=LEARNING_MODE_L3, max_latency_threshold=30, num_of_trials=2, out_of_seq_threshold=0,
+                 profile_config_group_type="", profile_config_mode=PROFILE_CONFIG_MODE_MANUAL, random_max_frame_size=256,
+                 random_min_frame_size=128, rate_initial=10, rate_lower_limit=1, rate_upper_limit=100, rate_step=10,
+                 resolution=1, search_mode=SEARCH_MODE_BINARY, stagger_start_delay=0, traffic_start_delay=2,
+                 traffic_start_delay_mode=TRAFFIC_START_DELAY_MODE_AFTER_TEST, traffic_verfication_abort_on_fail=True,
+                 traffic_verification_feq_mode=TRAFFIC_VERIFICATION_FEQ_MODE_ITERATION,
+                 traffic_verfication_tx_frame_count=100, traffic_verification_tx_frame_rate=1000,
+                 use_existing_stream_blocks=True, duration_mode=DURATION_MODE_SECONDS,
+                 asymmetric_traffic_back_off_mode=ASYMMETRIC_TRAFFIC_BACK_OFF_MODE_FAILED_RATES):
+        self.Name = ""
+        self.Active = True
+        self.ProfileConfigMode = profile_config_mode
+        self.L3Rate = l3_rate
+        self.LearningMode = learning_mode
+        self.RateStep = rate_step
+        self.L2DelayBeforeLearning = l2_delay_before_learning
+        self.MaxLatencyThreshold = max_latency_threshold
+        self.FrameSizeEnd = frame_size_end
+        self.EnablePauseBeforeTraffic = enable_pause_before_traffic
+        self.OutOfSeqThreshold = out_of_seq_threshold
+        self.TrafficStartDelayMode = traffic_start_delay_mode
+        self.L3DelayBeforeLearning = l3_delay_before_learning
+        self.L3RetryCount = l3_retry_count
+        self.LearningFreqMode = learning_frequency_mode
+        self.RateInitial = rate_initial
+        self.L2LearningRepeatCount = l2_learning_repeat_count
+        self.AcceptableFrameLoss = acceptable_frame_loss
+        self.AsymmetricTrafficBackoffMode = asymmetric_traffic_back_off_mode
+        self.TrafficStartDelay = traffic_start_delay
+        self.CustomFrameSizeList = custom_frame_size_list
+        self.RandomMaxFrameSize = random_max_frame_size
+        self.DelayAfterTransmission = delay_after_transmission
+        self.RateUpperLimit = rate_upper_limit
+        self.FrameSizeIterationMode = frame_size_iteration_mode
+        self.L3EnableCyclicAddrResolution = l3_enable_cyclic_addr_resolution
+        self.UseExistingStreamBlocks = use_existing_stream_blocks
+        self.EnableJitterMeasurement = enable_jitter_measurement
+        self.TrafficVerificationAbortOnFail = traffic_verfication_abort_on_fail
+        self.DisplayTrafficGroupLoadUnit = display_traffic_group_load_unit
+        self.LatencyType = latency_type
+        self.EnableMaxLatencyThreshold = enable_max_latency_threshold
+        self.RateLowerLimit = rate_lower_limit
+        self.EnableFrameSizeOnTest = enable_frame_size_on_test
+        self.TrafficVerificationTxFrameCount = traffic_verfication_tx_frame_count
+        self.IgnoreMinMaxLimits = ignore_min_max_limits
+        self.RandomMinFrameSize = random_min_frame_size
+        self.DurationMode = duration_mode
+        self.SearchMode = search_mode
+        self.L2LearningFrameRate = l2_learning_frame_rate
+        self.TrafficVerificationFreqMode = traffic_verification_feq_mode
+        self.DisplayLoadUnit = display_laod_unit
+        self.StaggerStartDelay = stagger_start_delay
+        self.NumOfTrials = num_of_trials
+        self.Resolution = resolution
+        self.EnableExposedInternalCommands = enable_exposedf_internal_commands
+        self.TrafficVerificationTxFrameRate = traffic_verification_tx_frame_rate
+        self.EnableDetailedResultsCollection = enable_detailed_results_collection
+        self.DurationBursts = duration_bursts
+        self.ProfileConfigGroupType = profile_config_group_type
+        self.EnableOutOfSeqThreshold = enable_out_of_seq_threshold
+        self.ImixDistributionString = imix_distribution_string
+        self.Backoff = back_off
+        self.DurationSeconds = duration_seconds
+        self.EnableLearning = enable_learning
+        self.EnableTrafficVerification = enable_traffic_verification
+        self.FrameSizeStart = frame_size_start
+        self.ImixDistributionList = imix_distribution_list
+        self.FrameSizeStep = frame_size_step
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key or 'children' in key or 'parent' in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_object_attributes(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+
+
+
+
+
+
+
+
 
 
 

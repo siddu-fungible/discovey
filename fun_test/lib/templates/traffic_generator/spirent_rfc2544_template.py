@@ -41,7 +41,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                                  message="Check Health of Spirent Application")
 
             config_file_exists = os.path.exists(tcc_config_path)
-            fun_test.test_assert(config_file_exists, "%s tcc config exists" % tcc_config_path)
+            fun_test.test_assert(config_file_exists, "%s config exists" % tcc_config_path)
 
             config_file_name = os.path.basename(tcc_config_path)
 
@@ -107,18 +107,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return True
 
-    def get_stream_handles(self):
-        stream_handles = []
-        try:
-            stream_handles = self.stc_manager.get_stream_handle_list()
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return stream_handles
-
     def get_parameters_for_each_stream(self):
         streams_info = {}
         try:
-            stream_handles = self.get_stream_handles()
+            stream_handles = self.get_throughput_command_handle()
             for stream_handle in stream_handles:
                 stream_dict = self.stc_manager.get_stream_parameters(stream_block_handle=stream_handle)
                 fun_test.log("----------------------> Stream Info for %s <----------------------" % stream_handle)
@@ -129,10 +121,19 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return streams_info
 
+    def _fetch_sequencer_handles(self):
+        handles = []
+        try:
+            handles = self.stc_manager.get_sequencer_handles()
+            fun_test.debug(handles)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return handles
+
     def get_sequencer_configuration(self):
         sequencer_config = None
         try:
-            sequencer_handle = self.stc_manager.get_sequencer_handles()[0]
+            sequencer_handle = self._fetch_sequencer_handles()[0]
             sequencer_config = self.stc_manager.get_sequencer_config(handle=sequencer_handle)
             for key, val in sequencer_config.items():
                 fun_test.debug("%s : %s" % (key, val))
@@ -190,8 +191,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         result[self.FRAME_SIZE_1500] = []
         result[self.FRAME_SIZE_IMIX] = []
         try:
-            # spirent_path = self.retrieve_database_file_name()
-            spirent_path = "/home/rushikesh/Spirent/TestCenter 4.81/Results/transit_bidirectional_palladium_2019-01-15_04-24-47/2544-Tput_2019-01-15_04-30-41/2544-Tput-Summary-2_2019-01-15_04-30-41.db"
+            spirent_path = self.retrieve_database_file_name()
+            # spirent_path = "/home/rushikesh/Spirent/TestCenter 4.81/Results/transit_bidirectional_palladium_2019-01-15_04-24-47/2544-Tput_2019-01-15_04-30-41/2544-Tput-Summary-2_2019-01-15_04-30-41.db"
             base_path = self._get_base_db_path(db_path=spirent_path)
             dbs = self._get_throughput_summary_db_list(base_path=base_path)
             for db in dbs:
@@ -317,8 +318,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             scheduler_logger.critical(str(ex))
         return result
 
-    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
-                                       bidirectional=False):
+    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G):
         results = []
         try:
             for key in result_dict:
@@ -362,6 +362,66 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return results
+
+    def get_throughput_config(self):
+        configs = []
+        try:
+            handle = self._fetch_sequencer_handles()[0]
+            fun_test.simple_assert(handle, "Get Sequencer configuration")
+
+            group_commands = self.stc_manager.get_rfc2544_group_commands(
+                sequencer_handle=handle, command_type="children-Rfc2544ThroughputSequencerGroupCommand")
+            for command in group_commands:
+                throughput_command = self.get_throughput_command_handle(group_command_handle=command)
+                config_command = self.get_rfc2544_throughput_config_command(handle=throughput_command)
+                existing_config = self.stc_manager.get_rfc2544_throughput_config(handle=config_command)
+                config_obj = Rfc2544ThroughputConfig()
+                config_obj.spirent_handle = config_command
+                config_obj.update_object_attributes(**existing_config)
+                configs.append(config_obj)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return configs
+
+    def get_throughput_command_handle(self, group_command_handle):
+        handle = None
+        try:
+            handles = self.stc_manager.get_object_children(handle=group_command_handle)
+            for handle in handles:
+                if re.search(r'rfc2544throughput.*', handle):
+                    handle = handle
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return handle
+
+    def get_rfc2544_throughput_config_command(self, handle):
+        command = None
+        try:
+            commands = self.stc_manager.get_object_children(handle)
+            for command in commands:
+                if re.search(r'rfc2544throughput.*', command):
+                    command = command
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return command
+
+    def update_throughput_config(self, config_obj):
+        result = False
+        try:
+            result = self.stc_manager.configure_rfc2544_throughput_config(handle=config_obj.spirent_handle,
+                                                                          attributes=config_obj.get_attributes_dict())
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+
+
+
+
+
+
 
 # TODO: We might need this sqlite wrapper later on to fetch more detail test data
 

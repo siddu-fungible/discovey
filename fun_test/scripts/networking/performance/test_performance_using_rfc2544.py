@@ -96,7 +96,6 @@ class TestTransitPerformance(FunTestCase):
     def run(self):
         fun_test.log("----------------> Start RFC-2544 test using %s <----------------" % self.tcc_file_name)
 
-        # TODO: Dump Per VP stats before and after traffic
         fun_test.log("Fetching per VP stats before traffic")
         network_controller_obj.peek_per_vp_stats()
 
@@ -108,10 +107,6 @@ class TestTransitPerformance(FunTestCase):
 
         fun_test.log("Fetching BAM stats before test")
         network_controller_obj.peek_bam_stats()
-
-        checkpoint = "Get Sequencer configuration"
-        config = self.template_obj.get_sequencer_configuration()
-        fun_test.test_assert(config, checkpoint)
 
         checkpoint = "Start Sequencer"
         result = self.template_obj.start_sequencer()
@@ -137,6 +132,7 @@ class TestTransitPerformance(FunTestCase):
         result_dict = self.template_obj.get_throughput_summary_results_by_frame_size()
         fun_test.test_assert(result_dict['status'], checkpoint)
 
+        # TODO: We need to validate script later on once we know numbers for palladium and F1
         # checkpoint = "Validate results of current run"
         # result = self.template_obj.validate_result(result_dict=result_dict['summary_result'])
         # fun_test.test_assert(result, checkpoint)
@@ -151,8 +147,7 @@ class TestTransitPerformance(FunTestCase):
         checkpoint = "Ensure output JSON populated for performance dashboard"
         result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
                                                                   timestamp=TIMESTAMP,
-                                                                  flow_direction=self.flow_direction,
-                                                                  bidirectional=self.bidirectional)
+                                                                  flow_direction=self.flow_direction)
         fun_test.simple_assert(result, checkpoint)
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
@@ -165,7 +160,7 @@ class TestNuHnuPerformance(TestTransitPerformance):
     tc_id = 2
     flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
     summary = "%s RFC-2544" % flow_direction
-    tcc_file_name = "nu_hnu_palladium.tcc"
+    tcc_file_name = "nu_hnu_palladium_2ports.tcc"
     bidirectional = False
 
 
@@ -177,11 +172,20 @@ class TestHnuNuPerformance(TestTransitPerformance):
     bidirectional = False
 
 
+class TestHnuHnuNonFcpPerformace(TestTransitPerformance):
+    tc_id = 4
+    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
+    summary = "%s RFC-2544" % flow_direction
+    tcc_file_name = "hnu_hnu_palladium_2ports.tcc"
+    bidirectional = False
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
 
     ts.add_test_case(TestTransitPerformance())
     ts.add_test_case(TestNuHnuPerformance())
     ts.add_test_case(TestHnuNuPerformance())
+    ts.add_test_case(TestHnuHnuNonFcpPerformace())
 
     ts.run()

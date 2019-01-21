@@ -1190,6 +1190,35 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def get_rfc2544_group_commands(self, sequencer_handle, command_type):
+        group_commands = []
+        try:
+            group_commands = self.get_object_children(handle=sequencer_handle,
+                                                      child_type=command_type)
+            fun_test.debug("RFC-2544 Group Commands: %s" % group_commands)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return group_commands
+
+    def get_rfc2544_throughput_config(self, handle):
+        config = {}
+        try:
+            config = self.stc.get(handle)
+            fun_test.debug(config)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return config
+
+    def configure_rfc2544_throughput_config(self, handle, attributes):
+        result = False
+        try:
+            self.stc.config(handle, **attributes)
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
 
 if __name__ == "__main__":
     stc_manager = SpirentManager()
