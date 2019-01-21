@@ -172,7 +172,7 @@ class TestHnuNuPerformance(TestTransitPerformance):
     bidirectional = False
 
 
-class TestHnuHnuNonFcpPerformace(TestTransitPerformance):
+class TestHnuHnuNonFcpPerformance(TestTransitPerformance):
     tc_id = 4
     flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
     summary = "%s RFC-2544" % flow_direction
@@ -186,6 +186,6 @@ if __name__ == '__main__':
     ts.add_test_case(TestTransitPerformance())
     ts.add_test_case(TestNuHnuPerformance())
     ts.add_test_case(TestHnuNuPerformance())
-    ts.add_test_case(TestHnuHnuNonFcpPerformace())
+    ts.add_test_case(TestHnuHnuNonFcpPerformance())
 
     ts.run()

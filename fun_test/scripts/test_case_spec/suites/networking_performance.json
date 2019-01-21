@@ -1,4 +1,4 @@
 [
-  {"path": "networking/performance/networking_performance_all_flows.py"}
+  {"path": "networking/performance/test_performance_using_rfc2544.py"}
 
 ]
