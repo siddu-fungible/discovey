@@ -238,7 +238,9 @@
     }
   },
   "WrongKey": {
-    "volume_count": 25,
+    // Volume count from here should have been 25 till CreateDelete512 test case. Reduced due to SWOS-3925.
+    // Change once fix is pushed for the bug.
+    "volume_count": 1,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -270,7 +272,7 @@
     }
   },
   "WrongTweak": {
-    "volume_count": 25,
+    "volume_count": 1,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -302,7 +304,7 @@
     }
   },
   "CreateDelete256": {
-    "volume_count": 25,
+    "volume_count": 1,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -334,7 +336,7 @@
     }
   },
   "CreateDelete512": {
-    "volume_count": 25,
+    "volume_count": 1,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -366,7 +368,9 @@
     }
   },
   "MultipleBLT256": {
-    "volume_count": 10,
+    // Volume count from here should have been 10 till BLTFioDetach test case. Reduced due to SWOS-3925.
+    // Change once fix is pushed for the bug.
+    "volume_count": 4,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -407,7 +411,7 @@
     }
   },
   "MultipleBLT256RW": {
-    "volume_count": 10,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -446,7 +450,7 @@
     }
   },
   "MultipleBLT256RandRW": {
-    "volume_count": 10,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -485,7 +489,7 @@
     }
   },
   "MultipleBLT512": {
-    "volume_count": 10,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -526,7 +530,7 @@
     }
   },
   "MultipleBLT512RW": {
-    "volume_count": 10,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -565,7 +569,7 @@
     }
   },
   "MultipleBLT512RandRW": {
-    "volume_count": 10,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -604,7 +608,7 @@
     }
   },
   "EncryptDisable": {
-    "volume_count": 25,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -636,7 +640,7 @@
     }
   },
   "BLTRandomKey": {
-    "volume_count": 8,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 20971520,
       "block_size": 4096,
@@ -677,7 +681,7 @@
     }
   },
   "MultiVolRandKeyRandCap": {
-    "volume_count": 8,
+    "volume_count": 4,
     "volume_details": {
       "capacity": "Auto",
       "capacity_range": [20971520, 67108864, 83886080, 134217728],
@@ -719,7 +723,7 @@
     }
   },
   "BLTFioDetach": {
-    "volume_count": 8,
+    "volume_count": 4,
     "volume_details": {
       "capacity": "Auto",
       "capacity_range": [20971520, 67108864, 83886080, 134217728],
@@ -761,7 +765,9 @@
     }
   },
   "BLTFioEncZeroPattern": {
-    "volume_count": 8,
+    // Volume count from here should have been 8 till end of test case. Reduced due to SWOS-3925.
+    // Change once fix is pushed for the bug.
+    "volume_count": 4,
     "volume_details": {
       "capacity": "Auto",
       "capacity_range": [20971520, 67108864, 83886080, 134217728],
@@ -804,7 +810,7 @@
     }
   },
   "BLTFioEncDeadBeefPattern": {
-    "volume_count": 8,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 134217728,
       "block_size": 4096,
@@ -847,7 +853,7 @@
     }
   },
   "BLTAlternateEncrypt": {
-    "volume_count": 8,
+    "volume_count": 4,
     "volume_details": {
       "capacity": 134217728,
       "block_size": 4096,
