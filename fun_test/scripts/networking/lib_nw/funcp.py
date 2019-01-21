@@ -13,11 +13,12 @@ class FunControlPlane:
 
     def clone(self, git_base='git@github.com:fungible-inc', repo_name='FunControlPlane'):
         """git clone."""
-        return self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name), timeout=120)
+        return self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
+                                      timeout=120)
 
-    def pull(self):
+    def pull(self, branch='master'):
         """git pull."""
-        return self.linux_obj.command('cd %s/%s; git pull' % (self.ws, self.name), timeout=120)
+        return self.linux_obj.command('cd %s/%s; git pull; git checkout %s' % (self.ws, self.name, branch), timeout=120)
 
     def setup_traffic_server(self, server='nu'):
         """Set up PTF traffic server."""

@@ -15,11 +15,16 @@ class EndPointTestSuite(FunTestScript):
 
     def setup(self):
         #linux_obj = #Linux(host_ip='localhost', ssh_username=REGRESSION_USER, ssh_password=REGRESSION_USER_PASSWORD))
+        # TODO: Replace below with regression user
         linux_obj = Linux(host_ip='localhost', ssh_username='gliang', ssh_password='fun123')
         funcp_obj = funcp.FunControlPlane(linux_obj)
-        funcp_obj.clone()
-        funcp_obj.pull()
-        funcp_obj.setup_traffic_server('hu')
+        fun_test.test_assert(re.search(r'Checking connectivity... done.', funcp_obj.clone()) is not None,
+                             'git clone FunControlPlane repo')
+        # TODO: remove branch info
+        fun_test.test_assert(re.search(r'Already up-to-date.', funcp_obj.pull(branch='george/endpoint')) is not None,
+                             'git pull FunControlPlane repo')
+        fun_test.test_assert(not re.search(r'fail|error|abort|assert', funcp_obj.setup_traffic_server('hu'), re.IGNORECASE),
+                             'Set up PTF traffic server')
         fun_test.shared_variables['funcp_obj'] = funcp_obj
 
     def cleanup(self):
