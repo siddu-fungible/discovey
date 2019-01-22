@@ -335,8 +335,12 @@ input:checked + .slider:before {
 
 }
 
+.pseudo-anchor {
+  color: blue;
+}
 .pseudo-anchor:hover {
   cursor: pointer;
+  color: black;
 }
 
 @media all {
