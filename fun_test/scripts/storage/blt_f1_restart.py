@@ -99,6 +99,8 @@ class BLTF1RestartTestCase(FunTestCase):
 
             if not hasattr(self, "vol_stats_threshold_pass"):
                 self.vol_stats_threshold_pass = 0
+            if not hasattr(self, "trigger_blt_failure"):
+                self.trigger_blt_failure = 0
 
             # LS volume capacity is the ndata times of the BLT volume capacity
             if self.use_lsv:
@@ -198,7 +200,12 @@ class BLTF1RestartTestCase(FunTestCase):
                     uuid=self.lsv_uuid, group=self.group, jvol_uuid=self.jvol_uuid, pvol_id=self.uuids["blt"],
                     command_duration=self.volume_params["command_timeout"])
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Mounting LS volume in the DUT instance")
+                # changes after fixing issue SWOS-3813 - LSV mount fails if underlying BLT is faulty
+                if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+                    fun_test.test_assert(not command_result["status"],
+                                         "Mounting LS volume should fail as underlying BLT volume is faulty")
+                else:
+                    fun_test.test_assert(command_result["status"], "Mounting LS volume in the DUT instance")
 
                 '''
                 # TODO: Inject fault for LSV, if trigger_lsv_failure is enabled
@@ -541,7 +548,13 @@ class BLTF1RestartTestCase(FunTestCase):
                     uuid=self.uuids["lsv"][0], block_size=self.volume_params["block_size"]["lsv"],
                     name=self.volume_params["name"]["lsv"])
                 fun_test.shared_variables["setup_created"] = False
-                fun_test.test_assert(result_delete_lsv["status"], "LS volume is deleted")
+                # changes after fixing issue SWOS-3813 - LSV mount fails if underlying BLT is faulty, hence LSV delete
+                # will fail as it's not mounted
+                if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+                    fun_test.test_assert(not result_delete_lsv["status"],
+                                         "Expected failure in delete LSV as LSV was not mounted")
+                else:
+                    fun_test.test_assert(result_delete_lsv["status"], "LS volume is deleted")
 
                 result_delete_jvol = self.storage_controller.delete_volume(
                     type=self.volume_params["type"]["jvol"], capacity=self.volume_params["capacity"]["jvol"],
@@ -552,11 +565,18 @@ class BLTF1RestartTestCase(FunTestCase):
 
             # Deleting BLT volume
             uuid = self.uuids["blt"][0]
+            type = "blt"
             result_delete_volume = self.storage_controller.delete_thin_block_volume(
                 capacity=self.volume_params["capacity"][type], uuid=uuid,
                 block_size=self.volume_params["block_size"][type], name=self.volume_params["name"][type])
             fun_test.shared_variables["setup_created"] = False
-            fun_test.test_assert(result_delete_volume["status"], "{} volume is deleted".format(type))
+            # changes after fixing issue SWOS-3813 - LSV mount fails if underlying BLT is faulty. As LSV cannot be
+            # deleted, BLT volume deletion fails
+            if self.use_lsv and hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+                fun_test.test_assert(not result_delete_volume["status"],
+                                     "Expected failure, open {} volume can't be deleted".format(type))
+            else:
+                fun_test.test_assert(result_delete_volume["status"], "{} volume is deleted".format(type))
 
             # self.storage_controller.disconnect()
 
