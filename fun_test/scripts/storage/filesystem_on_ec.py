@@ -228,8 +228,8 @@ class FSOnECTestcase(FunTestCase):
         # If the testcase is a buffered I/O then flush the kernel buffers/pages after the write operation, so that
         # the entire file will be flushed to the underlying volume
         if "oflag" not in self.dd_write_args:
-            self.host.sudo_command("sync")
-            self.host.sudo_command("echo 3>/proc/sys/vm/drop_caches")
+            self.host.sudo_command("sync", timeout=cmd_timeout)
+            self.host.sudo_command("echo 3>/proc/sys/vm/drop_caches", timeout=cmd_timeout)
 
     def do_read_test(self, ndata, nparity):
 
@@ -242,8 +242,8 @@ class FSOnECTestcase(FunTestCase):
         # If the testcase is a buffered I/O then flush the kernel buffers/pages before the readoperation, so that
         # the entire file will be read from the underlying volume
         if "iflag" not in self.dd_read_args:
-            self.host.sudo_command("sync")
-            self.host.sudo_command("echo 3>/proc/sys/vm/drop_caches")
+            self.host.sudo_command("sync", timeout=cmd_timeout)
+            self.host.sudo_command("echo 3>/proc/sys/vm/drop_caches", timeout=cmd_timeout)
 
         # Read the previously written file from the EC volume and calculate the md5sum of the same
         return_size = self.host.dd(timeout=cmd_timeout, **self.dd_read_args)
