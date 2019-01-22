@@ -63,9 +63,7 @@ class Funeth:
         if self.funos_branch:
             local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-        self.linux_obj.command('cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws))
-
-        return True
+        return self.linux_obj.command('cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws))
 
     def build(self):
         """Build driver."""
@@ -75,9 +73,7 @@ class Funeth:
         if self.funos_branch:
             self.linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-        self.linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir))
-
-        return True
+        return self.linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir))
 
     def load(self, sriov=0, cc=False, debug=False):
         """Load driver."""
@@ -111,7 +107,7 @@ class Funeth:
             # vfs start from fnid 8
             #_ports.extend(range(8, 8 + sriov))
 
-        return True
+        return self.linux_obj.command('ifconfig %' % self.pf_intf)
 
     def configure_intfs(self):
         """Configure interface."""
@@ -139,7 +135,7 @@ class Funeth:
         for cmd in cmds:
             self.linux_obj.command(cmd)
 
-        return True
+        return self.linux_obj.command('ifconfig %s' % self.pf_intf)
 
     def loopback_test(self, ip_addr='53.1.9.5', packet_count=100):
         """Do loopback test between PF and VF via NU."""
