@@ -670,15 +670,16 @@ def unallocated_script(request):
                 contents = infile.read()
                 result = json.loads(contents)
                 for entry in result:
-                    path = entry["path"]
-                    path = "/" + path
-                    try:
-                        RegresssionScripts.objects.get(script_path=path)
-                    except ObjectDoesNotExist:
-                        if path not in unallocated_scripts:
-                            unallocated_scripts.append(path)
+                    if "path" in entry:
+                        path = entry["path"]
+                        path = "/" + path
+                        try:
+                            RegresssionScripts.objects.get(script_path=path)
+                        except ObjectDoesNotExist:
+                            if path not in unallocated_scripts:
+                                unallocated_scripts.append(path)
         except Exception as ex:
-            pass
+            logging.error(str(ex))
     return unallocated_scripts
 
 
