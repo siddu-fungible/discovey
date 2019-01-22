@@ -135,7 +135,7 @@ class Funeth:
         for cmd in cmds:
             self.linux_obj.command(cmd)
 
-        return self.linux_obj.command('ifconfig %' % self.pf_intf)
+        return self.linux_obj.command('ifconfig %s' % self.pf_intf)
 
     def loopback_test(self, ip_addr='53.1.9.5', packet_count=100):
         """Do loopback test between PF and VF via NU."""
