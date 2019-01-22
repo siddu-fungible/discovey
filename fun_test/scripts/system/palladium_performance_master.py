@@ -1536,7 +1536,8 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                     fun_test.log("flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"], metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     d["input_date_time"] = date_time
-                    MetricHelper(model=NuTransitPerformance).add_entry(**d)
+                    if date_time.year >= 2019:
+                        MetricHelper(model=NuTransitPerformance).add_entry(**d)
             self.result = fun_test.PASSED
 
         except Exception as ex:

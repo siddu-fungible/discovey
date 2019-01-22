@@ -1,0 +1,10 @@
+{
+  "CLBP": {
+    "traffic_duration": 20,
+    "cluster_id": 6,
+    "NU_HNU": {"source_ip": {"enable": true, "range": 100}, "destination_ip": {"enable": true, "range": 10},
+               "source_port": {"enable": true, "range": 100}, "destination_port": {"enable": true, "range": 100}},
+    "HNU_NU": {"source_ip": {"enable": false, "range": 100}, "destination_ip": {"enable": false, "range": 100},
+               "source_port": {"enable": true, "range": 100}, "destination_port": {"enable": true, "range": 100}}
+  }
+}

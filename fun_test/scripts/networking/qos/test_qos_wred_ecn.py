@@ -375,6 +375,7 @@ class ECN_10(Wred_Q0):
     max_queue_pps = 0
     port_1_stream_load = normal_stream_pps_list['ingress_port_1']
     port_3_stream_load_list = normal_stream_pps_list['ingress_port_2']
+    sleep_interval = 15
 
     def describe(self):
         self.set_test_details(id=2,
@@ -430,7 +431,7 @@ class ECN_10(Wred_Q0):
             # Take 5 observations of q_depth and wred_drops and do average
             observed_dict = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj, iterations=3,
                                                            stats_list=self.stats_list, port_num=dut_port_2,
-                                                           queue_num=self.test_queue)
+                                                           queue_num=self.test_queue, sleep_interval=self.sleep_interval)
             fun_test.simple_assert(observed_dict['result'], "Get 5 observations")
             fun_test.log("5 observations captured for pps %s" % current_pps)
 
@@ -454,6 +455,8 @@ class ECN_10(Wred_Q0):
             stop_streams = template_obj.stc_manager.stop_traffic_stream(
                 stream_blocks_list=streamblock_handles_list)
             fun_test.simple_assert(stop_streams, "Ensure dscp streams are stopped")
+
+            fun_test.sleep("Letting traffic to get stopped")
 
             # Get dut ecn count and subtract with one taken before starting traffic
             fun_test.log("Get initial ecn count after traffic is stopped")

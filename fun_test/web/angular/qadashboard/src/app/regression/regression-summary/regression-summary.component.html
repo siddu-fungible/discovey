@@ -11,49 +11,68 @@
                 </div>
                 <div class="card-body">
                   <table id="summary-table" class="table table-responsive">
-                <tr>
-                  <th rowspan="3" class="fun-center text-center" style="background-color: #fff2cc">Module/Tag</th>
-                  <th colspan="6" class="text-center blue-header">By date</th>
-                  <th colspan="6" class="text-center blue-header">By version</th>
-                </tr>
-                <tr>
-                  <th colspan="2" class="text-center passed-table-cell">Passed</th>
-                  <th colspan="2" class="text-center failed-table-cell">Failed</th>
-                  <th colspan="2" class="text-center not-run-table-cell">Not run</th>
-                  <th colspan="2" class="text-center passed-table-cell">Passed</th>
-                  <th colspan="2" class="text-center failed-table-cell">Failed</th>
-                  <th colspan="2" class="text-center not-run-table-cell">Not run</th>
-                </tr>
-                <tr>
-                  <th class="text-center second-header">Previous</th>
-                  <th class="text-center second-header">Current</th>
-                  <th class="text-center second-header">Previous</th>
-                  <th class="text-center second-header">Current</th>
-                  <th class="text-center second-header">Previous</th>
-                  <th class="text-center second-header">Current</th>
-                  <th class="text-center second-header">Previous</th>
-                  <th class="text-center second-header">Current</th>
-                  <th class="text-center second-header">Previous</th>
-                  <th class="text-center second-header">Current</th>
-                  <th class="text-center second-header">Previous</th>
-                  <th class="text-center second-header">Current</th>
-                </tr>
-                <tr *ngFor="let filter of filters">
-                  <td class="text-center">{{ filter.info }}</td>
-                  <td class="text-center">{{ filter.previousResultsByDate.numPassed }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
-                  <td class="text-center">{{ filter.currentResultsByDate.numPassed }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByDate.date }}/2018)</span></td>
-                  <td class="text-center">{{ filter.previousResultsByDate.numFailed }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
-                  <td class="text-center">{{ filter.currentResultsByDate.numFailed }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByDate.date }}/2018)</span></td>
-                  <td class="text-center">{{ filter.previousResultsByDate.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
-                  <td class="text-center">{{ filter.currentResultsByDate.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByDate.date }})</span></td>
-                  <td class="text-center">{{ filter.previousResultsByVersion.numPassed }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
-                  <td class="text-center">{{ filter.currentResultsByVersion.numPassed }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
-                  <td class="text-center">{{ filter.previousResultsByVersion.numFailed }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
-                  <td class="text-center">{{ filter.currentResultsByVersion.numFailed }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
-                  <td class="text-center">{{ filter.previousResultsByVersion.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
-                  <td class="text-center">{{ filter.currentResultsByVersion.numNotRun }}&nbsp;<span class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
-                </tr>
-              </table>
+                    <tr>
+                      <th rowspan="3" class="fun-center text-center" style="background-color: #fff2cc">Module/Tag</th>
+                      <th colspan="6" class="text-center blue-header">By date</th>
+                      <th colspan="6" class="text-center blue-header">By version</th>
+                    </tr>
+                    <tr>
+                      <th colspan="2" class="text-center passed-table-cell">Passed</th>
+                      <th colspan="2" class="text-center failed-table-cell">Failed</th>
+                      <th colspan="2" class="text-center not-run-table-cell">Not run</th>
+                      <th colspan="2" class="text-center passed-table-cell">Passed</th>
+                      <th colspan="2" class="text-center failed-table-cell">Failed</th>
+                      <th colspan="2" class="text-center not-run-table-cell">Not run</th>
+                    </tr>
+                    <tr>
+                      <th class="text-center second-header">Previous</th>
+                      <th class="text-center second-header">Current</th>
+                      <th class="text-center second-header">Previous</th>
+                      <th class="text-center second-header">Current</th>
+                      <th class="text-center second-header">Previous</th>
+                      <th class="text-center second-header">Current</th>
+                      <th class="text-center second-header">Previous</th>
+                      <th class="text-center second-header">Current</th>
+                      <th class="text-center second-header">Previous</th>
+                      <th class="text-center second-header">Current</th>
+                      <th class="text-center second-header">Previous</th>
+                      <th class="text-center second-header">Current</th>
+                    </tr>
+                    <tr *ngFor="let filter of filters; index as index">
+                      <td class="text-center"><u class="pseudo-anchor" (click)="scrollTo('summary-chart-', index)">{{ filter.info }}</u></td>
+                      <td class="text-center">{{ filter.previousResultsByDate.numPassed }}&nbsp;<span
+                        class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
+                      <td class="text-center">{{ filter.currentResultsByDate.numPassed }}&nbsp;<span
+                        class="date-info-text">({{ filter.currentResultsByDate.date }}/2018)</span></td>
+                      <td class="text-center">{{ filter.previousResultsByDate.numFailed }}&nbsp;<span
+                        class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
+                      <td class="text-center">{{ filter.currentResultsByDate.numFailed }}&nbsp;<span
+                        class="date-info-text">({{ filter.currentResultsByDate.date }}/2018)</span></td>
+                      <td class="text-center">{{ filter.previousResultsByDate.numNotRun }}&nbsp;<span
+                        class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
+                      <td class="text-center">{{ filter.currentResultsByDate.numNotRun }}&nbsp;<span
+                        class="date-info-text">({{ filter.currentResultsByDate.date }})</span></td>
+                      <td class="text-center">{{ filter.previousResultsByVersion.numPassed }}&nbsp;<span
+                        class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
+                      <td class="text-center">{{ filter.currentResultsByVersion.numPassed }}&nbsp;<span
+                        class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
+                      <td class="text-center">{{ filter.previousResultsByVersion.numFailed }}&nbsp;<span
+                        class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
+                      <td class="text-center">{{ filter.currentResultsByVersion.numFailed }}&nbsp;<span
+                        class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
+                      <td class="text-center">{{ filter.previousResultsByVersion.numNotRun }}&nbsp;<span
+                        class="date-info-text">({{ filter.previousResultsByVersion.version }})</span></td>
+                      <td class="text-center">{{ filter.currentResultsByVersion.numNotRun }}&nbsp;<span
+                        class="date-info-text">({{ filter.currentResultsByVersion.version }})</span></td>
+                    </tr>
+                  </table>
+                </div>
+                <div class="card-body">
+                  <b><span *ngIf="numBugs > 0" class="no-padding text-color-red">Bugs<sup><span
+                  class="text-color-red">{{ numBugs }}</span></sup></span></b>&nbsp;
+                  <u (click)="showGlobalBugPanel = !showGlobalBugPanel"
+                   class="anchor-button pseudo-anchor">details</u>
+                  <jira-info *ngIf="showGlobalBugPanel" [apiUrl]="'/regression/all_jiras'" [allowDelete]="false" [allowAdd]="false" (numBugs)="updateGlobalNumBugs($event)"></jira-info>
                 </div>
               </div>
             </div>
@@ -61,21 +80,22 @@
           <div class="row">
             <div class="col">
               <ng-container *ngIf="filters.length > 0">
-                <ng-container *ngFor="let filter of filters">
-
-                  <app-regression-summary-chart [title]="filter.info"
+                <ng-container *ngFor="let filter of filters; index as index">
+                  <div id="summary-chart-{{ index }}">
+                                      <app-regression-summary-chart [title]="filter.info"
                                                 (pointInfo)="showPointDetails($event)"
                                                 (modeChanged)="modeChanged()"
                                                 [pointClickCallback]="pointClickCallback"
                                                 [filterEntry]="filter">
                   </app-regression-summary-chart>
 
+                  </div>
+
+
                 </ng-container>
               </ng-container>
             </div>
           </div>
-
-
         </div>
       </div>
     </div>
@@ -92,7 +112,7 @@
             <th><label class="badge badge-secondary">Not-run</label></th>
           </tr>
           <tr>
-            <td>Total</td>
+            <td>Overall</td>
             <td>{{ detailedInfo.numPassed }}</td>
             <td>{{ detailedInfo.numFailed }}</td>
             <td>{{ detailedInfo.numNotRun }}</td>
@@ -102,12 +122,20 @@
             <tr *ngIf="scriptInfo.value.historyResults">
               <td>
                 {{ scriptInfo.key }}
+                <b><span *ngIf="scriptInfo.value.numBugs > 0" (click)="scriptInfo.value.showingDetails = true"
+                         class="no-padding text-color-red">Bugs<sup><span
+                  class="text-color-red">{{ scriptInfo.value.numBugs }}</span></sup>&nbsp;</span></b>
                 <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
                    class="anchor-button pseudo-anchor">details</u>
               </td>
               <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
               <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
               <td>{{ scriptInfo.value.historyResults.numNotRun }}</td>
+
+            </tr>
+            <tr *ngIf="scriptInfo.value.showingDetails">
+              <jira-info [apiUrl]="'/regression/jiras/' + scriptPathToPk(scriptInfo.key)"
+                         (numBugs)="updateNumBugs($event, scriptInfo.value)"></jira-info>
 
             </tr>
             <tr *ngIf="scriptInfo.value.showingDetails">
@@ -127,7 +155,7 @@
                            href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
                     </td>
                     <td>{{ executionEntry.test_case_id }}</td>
-                    <td>{{ executionEntry.summary }}</td>
+                    <td>{{ getTestCaseSummary(scriptInfo.key, executionEntry.test_case_id) }}</td>
                   </tr>
                 </table>
               </td>

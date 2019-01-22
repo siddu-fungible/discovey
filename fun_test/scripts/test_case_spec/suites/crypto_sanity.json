@@ -1,3 +1,4 @@
 [
-  {"path": "security/volume_crypto_test.py"}
+  {"info": {"tags": ["storage-sanity"]}},
+  {"path": "security/blt_crypto_sanity.py"}
 ]

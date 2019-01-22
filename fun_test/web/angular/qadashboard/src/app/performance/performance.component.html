@@ -30,7 +30,7 @@
               </a>
             </span>
               </td>
-              <td class="text-center">
+              <td *ngIf="!flatNode.special" class="text-center">
                 <div class="score-label">
                   <!--<span style="vertical-align: top"-->
                                                <!--[innerHTML]="getTrendHtml(flatNode.node) | safeHtml">-->
@@ -60,23 +60,32 @@
                   {{ flatNode.node.lastScore | number: '1.1-1' }}
                 </div>
               </td>
+              <td *ngIf="flatNode.special">
+                &nbsp;
+              </td>
               <td class="text-center">
                 <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
               </td>
 
-              <td *ngIf="!flatNode.node.leaf" [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
-              <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0">
+              <td *ngIf="!flatNode.node.leaf && !flatNode.special" [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+              <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special">
                 Bld:<label data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
                            [ngbTooltip]="FailedInfo" [autoClose]="'outside'"
                            class="badge failed-label no-margin badge-danger">FAILED
               </label>
               </td>
-              <td *ngIf="flatNode.node.leaf">
-                <span *ngIf="flatNode.node.numBugs>0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
+              <td *ngIf="flatNode.special">
+                &nbsp;
+              </td>
+              <td *ngIf="flatNode.node.leaf && !flatNode.special">
+                <span *ngIf="flatNode.node.numBugs >0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo" class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
-                <span *ngIf="flatNode.node.numBugs==0 && flatNode.node.showAddJira" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
+                <span *ngIf="flatNode.node.numBugs === 0 && flatNode.node.showAddJira" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
                 <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
+              </td>
+              <td *ngIf="flatNode.special">
+                &nbsp;
               </td>
               <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
               <!--<ng-template #GitCommitInfo>-->
@@ -142,7 +151,7 @@
             <tr *ngIf="flatNode.showJiraInfo">
               <td colspan="6">
                 <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
-                <jira-info [apiUrl]="'/metrics/' + flatNode.node.metricId + '/jiras'" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
+                <jira-info [apiUrl]="'/metrics/jiras/' + flatNode.node.metricId" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
               </td>
             </tr>
               <!--<tr *ngIf="flatNode.showGitInfo">-->
@@ -268,6 +277,18 @@
           </div>
         </div>
         <br>
+        <div>
+          <span *ngFor="let parents of currentFlatNode.lineage">
+            <span *ngFor="let parent of parents">
+              <span *ngIf="parent.chartName === currentNode.chartName">
+                {{ parent.chartName }}
+              </span>
+              <span *ngIf="parent.chartName !== currentNode.chartName">
+                <a [routerLink]="" (click)="expandFromLineage(parent)"> {{ parent.chartName }}</a> >
+              </span>
+              </span>
+            <br></span>
+        </div>
         <div class="closed-section"></div>
         <!-- Fun Metric Chart component -->
         <fun-metric-chart [id]="currentNode.metricId"></fun-metric-chart>

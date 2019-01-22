@@ -31,8 +31,10 @@ topology_dict = {
 }
 
 
+# Disconnect linux objects
 def fio_parser(arg1, **kwargs):
     arg1.remote_fio(**kwargs)
+    arg1.disconnect()
 
 
 class BLTCryptoVolumeScript(FunTestScript):
@@ -372,6 +374,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                                      **self.fio_cmd_args)
                                 fun_test.log("FIO Command Output:")
                                 fun_test.log(fio_output[combo][mode])
+                                self.linux_host.disconnect()
                             else:
                                 fio_output[combo][mode] = {}
                                 fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip,
@@ -382,6 +385,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                                      **self.fio_cmd_args)
                                 fun_test.log("FIO Command Output:")
                                 fun_test.log(fio_output[combo][mode])
+                                self.linux_host.disconnect()
                     else:
                         fun_test.log("Running fio test is threaded mode...")
                         thread_id = {}
@@ -432,6 +436,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
                             fun_test.log("Timer expired, killing fio...")
                             self.linux_host.command("for i in `pgrep fio`;do kill -9 $i;done")
+                        self.linux_host.disconnect()
 
                     if self.detach_vol:
 
@@ -780,10 +785,90 @@ class BLTKey512RandRW(BLTCryptoVolumeTestCase):
         super(BLTKey512RandRW, self).cleanup()
 
 
-class MultipleBLT256(BLTCryptoVolumeTestCase):
+class WrongKey(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=7,
+                              summary="Create BLT's with wrong size key.",
+                              steps='''
+                              1. Create a BLT with encryption using unsupported key in dut instances 0.
+        ''')
+
+    def setup(self):
+        super(WrongKey, self).setup()
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        super(WrongKey, self).cleanup()
+
+
+class WrongTweak(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="Create BLT's with wrong size tweak.",
+                              steps='''
+                              1. Create a BLT with encryption using unsupported tweak in dut instances 0.
+        ''')
+
+    def setup(self):
+        super(WrongTweak, self).setup()
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        super(WrongTweak, self).cleanup()
+
+
+class CreateDelete256(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="Create, attach & delete 25 BLT's with encryption using 256 size key.",
+                              steps='''
+                              1. Create BLT's with encryption with 256 size key.
+                              2. Attach it to external linux/container.
+                              3. Detach and delete the BLT.
+        ''')
+
+    def setup(self):
+        super(CreateDelete256, self).setup()
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        super(CreateDelete256, self).cleanup()
+
+
+class CreateDelete512(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=10,
+                              summary="Create, attach & delete 25 BLT's with encryption using 512 size key.",
+                              steps='''
+                              1. Create BLT's with encryption with 512 size key.
+                              2. Attach it to external linux/container.
+                              3. Detach and delete the BLT.
+        ''')
+
+    def setup(self):
+        super(CreateDelete512, self).setup()
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        super(CreateDelete512, self).cleanup()
+
+
+class MultipleBLT256(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=11,
                               summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel on"
                                       "all BLT using different rw pattern, block size & depth."
                                       ,
@@ -806,7 +891,7 @@ class MultipleBLT256(BLTCryptoVolumeTestCase):
 class MultipleBLT256RW(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=8,
+        self.set_test_details(id=12,
                               summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel"
                                       "on all BLT RW tests using different block size & depth",
                               steps='''
@@ -828,7 +913,7 @@ class MultipleBLT256RW(BLTCryptoVolumeTestCase):
 class MultipleBLT256RandRW(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=9,
+        self.set_test_details(id=13,
                               summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel "
                                       "on all BLT RandRW tests using different block size & depth",
                               steps='''
@@ -850,7 +935,7 @@ class MultipleBLT256RandRW(BLTCryptoVolumeTestCase):
 class MultipleBLT512(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=10,
+        self.set_test_details(id=14,
                               summary="Create multiple BLT's with encryption using 512 bit key & run FIO in parallel "
                                       "on all BLT using different RW pattern, block size & depth.",
                               steps='''
@@ -872,7 +957,7 @@ class MultipleBLT512(BLTCryptoVolumeTestCase):
 class MultipleBLT512RW(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=11,
+        self.set_test_details(id=15,
                               summary="Create multiple BLT's with encryption using 512 bit key & run FIO in parallel "
                                       "on all BLT RW tests using different block size & depth",
                               steps='''
@@ -894,7 +979,7 @@ class MultipleBLT512RW(BLTCryptoVolumeTestCase):
 class MultipleBLT512RandRW(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=12,
+        self.set_test_details(id=16,
                               summary="Create multiple BLT's with encryption using 256 bit key & run FIO in parallel "
                                       "on all BLT RandRW tests using different block size & depth",
                               steps='''
@@ -913,48 +998,10 @@ class MultipleBLT512RandRW(BLTCryptoVolumeTestCase):
         super(MultipleBLT512RandRW, self).cleanup()
 
 
-class WrongKey(BLTCryptoVolumeTestCase):
-
-    def describe(self):
-        self.set_test_details(id=13,
-                              summary="Create BLT's with wrong size key.",
-                              steps='''
-                              1. Create a BLT with encryption using unsupported key in dut instances 0.
-        ''')
-
-    def setup(self):
-        super(WrongKey, self).setup()
-
-    def run(self):
-        pass
-
-    def cleanup(self):
-        super(WrongKey, self).cleanup()
-
-
-class WrongTweak(BLTCryptoVolumeTestCase):
-
-    def describe(self):
-        self.set_test_details(id=14,
-                              summary="Create BLT's with wrong size tweak.",
-                              steps='''
-                              1. Create a BLT with encryption using unsupported tweak in dut instances 0.
-        ''')
-
-    def setup(self):
-        super(WrongTweak, self).setup()
-
-    def run(self):
-        pass
-
-    def cleanup(self):
-        super(WrongTweak, self).cleanup()
-
-
 class EncryptDisable(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=15,
+        self.set_test_details(id=17,
                               summary="Create BLT's with wrong size key/tweak with encryption disabled.",
                               steps='''
                               1. Create a BLT with encryption disabled using unsupported tweak in dut instances 0.
@@ -974,7 +1021,7 @@ class EncryptDisable(BLTCryptoVolumeTestCase):
 class BLTRandomKey(BLTCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=16,
+        self.set_test_details(id=18,
                               summary="Create BLT's with encryption with random size key & run FIO in parallel "
                                       "on all BLT using different RW patterns, block size & depth",
                               steps='''
@@ -991,48 +1038,6 @@ class BLTRandomKey(BLTCryptoVolumeTestCase):
 
     def cleanup(self):
         super(BLTRandomKey, self).cleanup()
-
-
-class CreateDelete256(BLTCryptoVolumeTestCase):
-
-    def describe(self):
-        self.set_test_details(id=17,
-                              summary="Create, attach & delete 25 BLT's with encryption using 256 size key.",
-                              steps='''
-                              1. Create BLT's with encryption with 256 size key.
-                              2. Attach it to external linux/container.
-                              3. Detach and delete the BLT.
-        ''')
-
-    def setup(self):
-        super(CreateDelete256, self).setup()
-
-    def run(self):
-        pass
-
-    def cleanup(self):
-        super(CreateDelete256, self).cleanup()
-
-
-class CreateDelete512(BLTCryptoVolumeTestCase):
-
-    def describe(self):
-        self.set_test_details(id=18,
-                              summary="Create, attach & delete 25 BLT's with encryption using 512 size key.",
-                              steps='''
-                              1. Create BLT's with encryption with 512 size key.
-                              2. Attach it to external linux/container.
-                              3. Detach and delete the BLT.
-        ''')
-
-    def setup(self):
-        super(CreateDelete512, self).setup()
-
-    def run(self):
-        pass
-
-    def cleanup(self):
-        super(CreateDelete512, self).cleanup()
 
 
 class MultiVolRandKeyRandCap(BLTCryptoVolumeTestCase):
@@ -1161,18 +1166,18 @@ if __name__ == "__main__":
     bltscript.add_test_case(BLTKey512())
     bltscript.add_test_case(BLTKey512RW())
     bltscript.add_test_case(BLTKey512RandRW())
+    bltscript.add_test_case(WrongKey())
+    bltscript.add_test_case(WrongTweak())
+    bltscript.add_test_case(CreateDelete256())
+    bltscript.add_test_case(CreateDelete512())
     bltscript.add_test_case(MultipleBLT256())
     bltscript.add_test_case(MultipleBLT256RW())
     bltscript.add_test_case(MultipleBLT256RandRW())
     bltscript.add_test_case(MultipleBLT512())
     bltscript.add_test_case(MultipleBLT512RW())
     bltscript.add_test_case(MultipleBLT512RandRW())
-    bltscript.add_test_case(WrongKey())
-    bltscript.add_test_case(WrongTweak())
     bltscript.add_test_case(EncryptDisable())
     bltscript.add_test_case(BLTRandomKey())
-    bltscript.add_test_case(CreateDelete256())
-    bltscript.add_test_case(CreateDelete512())
     bltscript.add_test_case(MultiVolRandKeyRandCap())
     bltscript.add_test_case(BLTFioDetach())
     bltscript.add_test_case(BLTFioEncZeroPattern())

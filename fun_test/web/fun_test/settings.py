@@ -79,9 +79,8 @@ REGRESSION_DB_FILE = "regression.db.sqlite3"
 PERFORMANCE_DB_FILE = "performance.db.sqlite3"
 USERS_DB_FILE = "users.db.sqlite3"
 
-if is_regression_server():
-    DEFAULT_DB_FILE = REGRESSION_DB_FILE
-elif is_performance_server():
+DEFAULT_DB_FILE = REGRESSION_DB_FILE
+if is_performance_server() or is_regression_server():
     DEFAULT_DB_FILE = PERFORMANCE_DB_FILE
 
 # print "DEFAULT DB: {}".format(DEFAULT_DB_FILE)
@@ -109,7 +108,7 @@ DATABASES = {
 }
 
 # Sample for postgresql
-if is_performance_server() and True:
+if is_performance_server() or is_regression_server() and True:
     DATABASES["performance"] = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'fun_test',

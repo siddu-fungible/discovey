@@ -22,7 +22,7 @@ from web.fun_test.metrics_models import Performance1, PerformanceIkv, Performanc
 from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, ShaxPerformance
-from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance
+from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance, NuTransitPerformance
 from web.fun_test.metrics_models import WuDispatchTestPerformance, WuSendSpeedTestPerformance, HuRawVolumePerformance
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import VoltestPerformance
@@ -479,7 +479,7 @@ if __name__ == "__jpegmain__":
     ]
     '''
 
-if __name__ == "__main__":
+if __name__ == "__networking_main__":
     display_name_map = {"output_throughput": "Bandwidth",
                         "output_latency_avg": "Latency",
                         "output_jitter_avg": "Jitter",
@@ -565,3 +565,6 @@ if __name__ == "__main__":
 
     print json.dumps(d)
 
+if __name__ == "__main__":
+    entries = NuTransitPerformance.objects.all().delete()
+    print "Deletion Complete"
