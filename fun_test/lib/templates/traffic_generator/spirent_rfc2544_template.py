@@ -15,6 +15,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     FRAME_SIZE_64 = "64.0"
     FRAME_SIZE_1500 = "1500.0"
     FRAME_SIZE_IMIX = "IMIX"
+    FRAME_SIZE_1000 = "1000.0"
+    FRAME_SIZE_9000 = "9000.0"
     PASSED = "Passed"
     FAILED = "Failed"
     PERFORMANCE_DATA_JSON_FILE = "rfc2544_performance_results.json"
@@ -190,6 +192,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         result[self.FRAME_SIZE_64] = []
         result[self.FRAME_SIZE_1500] = []
         result[self.FRAME_SIZE_IMIX] = []
+        result[self.FRAME_SIZE_1000] = []
+        result[self.FRAME_SIZE_9000] = []
         try:
             spirent_path = self.retrieve_database_file_name()
             # spirent_path = "/home/rushikesh/Spirent/TestCenter 4.81/Results/transit_bidirectional_palladium_2019-01-15_04-24-47/2544-Tput_2019-01-15_04-30-41/2544-Tput-Summary-2_2019-01-15_04-30-41.db"
@@ -205,6 +209,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         result[self.FRAME_SIZE_1500].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_IMIX == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_IMIX].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_1000 == data_dict['AvgFrameSize']:
+                        result[self.FRAME_SIZE_1000].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_9000 == data_dict['AvgFrameSize']:
+                        result[self.FRAME_SIZE_9000].append(data_dict)
             output['status'] = True
             output['summary_result'] = result
         except Exception as ex:
@@ -240,7 +248,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             headers = []
             exclude_header_list = ['UnexpectedRxSignatureFrames', 'MaxLatencyThresholdExceeded', 'FrameLoss',
                                    'FloodFrameCount', 'ConfiguredFrameSize', 'OfferedLoad(fps)', 'FrameSizeType',
-                                   'OutOfSeqThresholdExceeded', 'IntendedLoad(Mbps)']
+                                   'OutOfSeqThresholdExceeded', 'IntendedLoad(Mbps)', 'iMIXDistribution']
             for key in result_dict:
                 if result_dict[key]:
                     all_headers = result_dict[key][0].keys()
@@ -318,15 +326,20 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             scheduler_logger.critical(str(ex))
         return result
 
-    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G):
+    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
+                                       bidirectional=False, spray=False):
         results = []
         try:
+            if not spray:
+                return True
             for key in result_dict:
                 records = result_dict[key]
                 data_dict = OrderedDict()
                 data_dict['mode'] = mode
                 data_dict['version'] = fun_test.get_version()
                 data_dict['timestamp'] = timestamp
+                data_dict['bidirectional'] = bidirectional
+                data_dict['spray'] = spray
                 frame_size = float(records[0]['AvgFrameSize']) if records else None
                 if frame_size:
                     data_dict['flow_type'] = flow_direction
