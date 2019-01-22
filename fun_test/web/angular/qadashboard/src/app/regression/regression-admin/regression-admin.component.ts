@@ -13,6 +13,8 @@ export class RegressionAdminComponent implements OnInit {
   versionSet = new Set(); // The set of all software versions
   versionList = [];
   suiteExectionVersionMap = {};
+  adminOption: string = "Categorize scripts";
+  filterData = [{info: "Networking overall", payload: {module: "networking"}}];
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) {
   }
@@ -28,58 +30,9 @@ export class RegressionAdminComponent implements OnInit {
   selectedModules: any[] = [];
   availableModules = [];
   modifyingScriptAllocation = null;
-  tableInfo: any = [];
 
 
   ngOnInit() {
-    this.tableInfo.push({
-      "moduleName": "accelerators",
-      "name": "Accelerators",
-      "totalCases": 793,
-      "showChildren": false,
-      "children": [{"name": "Crypto", "totalCases": 338}, {"name": "PKE", "totalCases": 20}, {
-        "name": "ZIP",
-        "totalCases": 26
-      }, {"name": "EC", "totalCases": 37}, {"name": "Regex", "totalCases": 372}]
-    });
-    this.tableInfo.push({
-      "moduleName": "storage",
-      "name": "Storage",
-      "totalCases": 29,
-      "showChildren": false,
-      "children": [{"name": "EC DPU Performance", "totalCases": 5}, {
-        "name": "EC Volume Performance",
-        "totalCases": 6
-      }, {"name": "ikv", "totalCases": 2}, {
-        "name": "Replica Volume Performance",
-        "totalCases": 5
-      }, {"name": "Thin Block Volume Performance", "totalCases": 6}, {
-        "name": "Thin Block Volume Sanity",
-        "totalCases": 5
-      }]
-    });
-    this.tableInfo.push({
-      "moduleName": "networking",
-      "name": "Networking",
-      "totalCases": 216,
-      "showChildren": false,
-      "children": [{"name": "VP Performance", "totalCases": 2}, {"name": "Transit Performance", "totalCases": 8}, {
-        "name": "Flow Sanity",
-        "totalCases": 7
-      }, {"name": "CoPP", "totalCases": 45}, {"name": "Sample", "totalCases": 16}, {
-        "name": "PFC and Pause",
-        "totalCases": 32
-      },
-        {"name": "VP Path", "totalCases": 41}, {"name": "Bad header fields", "totalCases": 20},
-        {"name": "QOS", "totalCases": 45}]
-    });
-    this.tableInfo.push({
-      "moduleName": "system",
-      "name": "System",
-      "totalCases": 22,
-      "showChildren": false,
-      "children": []
-    });
     this.dropdownSettings = {
       singleSelection: false,
       idField: 'name',
@@ -90,7 +43,6 @@ export class RegressionAdminComponent implements OnInit {
       allowSearchFilter: true
     };
     this.fetchAllVersions();
-    this.pointClickCallback = this.pointDetail.bind(this);
   }
 
   fetchAllVersions() {
@@ -118,33 +70,6 @@ export class RegressionAdminComponent implements OnInit {
 
   }
 
-  showInfo(info): void {
-    let pointInfo = {};
-    pointInfo["metadata"] = {"module": info.moduleName};
-    pointInfo["name"] = "PASSED";
-    pointInfo["category"] = info.softwareVersion;
-    this.showPointDetails(pointInfo);
-  }
-
-  showPointDetails(pointInfo): void {
-    //let moduleInfo = this.infobySoftwareVersion[pointInfo.category];
-    let moduleName = pointInfo.metadata.module;
-    let resultType = pointInfo.name;
-    let softwareVersion = pointInfo.category;
-    let moduleInfo = this.info[moduleName];
-    this.detailedInfo = moduleInfo.bySoftwareVersion[softwareVersion];
-    this.detailedInfo["softwareVersion"] = softwareVersion;
-    //console.log(moduleInfo.detailedInfo.scriptDetailedInfo);
-    this.showDetailedInfo = true;
-    this.commonService.scrollTo('detailed-info');
-    let i = 0;
-
-  }
-
-  pointDetail(x, y, name): any {
-    let moduleInfo = this.info[x];
-    return "xx";
-  }
 
   fetchModules() {
     this.apiService.get("/regression/modules").subscribe((response) => {

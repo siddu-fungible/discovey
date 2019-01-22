@@ -38,8 +38,8 @@
                       <th class="text-center second-header">Previous</th>
                       <th class="text-center second-header">Current</th>
                     </tr>
-                    <tr *ngFor="let filter of filters">
-                      <td class="text-center">{{ filter.info }}</td>
+                    <tr *ngFor="let filter of filters; index as index">
+                      <td class="text-center"><u class="pseudo-anchor" (click)="scrollTo('summary-chart-', index)">{{ filter.info }}</u></td>
                       <td class="text-center">{{ filter.previousResultsByDate.numPassed }}&nbsp;<span
                         class="date-info-text">({{ filter.previousResultsByDate.date }}/2018)</span></td>
                       <td class="text-center">{{ filter.currentResultsByDate.numPassed }}&nbsp;<span
@@ -80,14 +80,17 @@
           <div class="row">
             <div class="col">
               <ng-container *ngIf="filters.length > 0">
-                <ng-container *ngFor="let filter of filters">
-
-                  <app-regression-summary-chart [title]="filter.info"
+                <ng-container *ngFor="let filter of filters; index as index">
+                  <div id="summary-chart-{{ index }}">
+                                      <app-regression-summary-chart [title]="filter.info"
                                                 (pointInfo)="showPointDetails($event)"
                                                 (modeChanged)="modeChanged()"
                                                 [pointClickCallback]="pointClickCallback"
                                                 [filterEntry]="filter">
                   </app-regression-summary-chart>
+
+                  </div>
+
 
                 </ng-container>
               </ng-container>
