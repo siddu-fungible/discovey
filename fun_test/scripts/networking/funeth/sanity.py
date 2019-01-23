@@ -74,7 +74,7 @@ class FunethSanity(FunTestScript):
             not re.search(r'fail|error|abort|assert', funeth_obj.build(), re.IGNORECASE),
             'Build funeth driver.')
         fun_test.test_assert(
-            not re.search(r'Device not found|error', funeth_obj.load(sriov=4), re.IGNORECASE),
+            not re.search(r'Device not found', funeth_obj.load(sriov=4), re.IGNORECASE),
             'Load funeth driver.')
         fun_test.test_assert(
             re.search(r'inet \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', funeth_obj.configure_intfs()),
