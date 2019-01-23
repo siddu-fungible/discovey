@@ -215,6 +215,11 @@ def prepare_status(chart, purge_old_status=False):
                                             children_score_map=result["children_score_map"])
                     print "Chart: {} Date: {} Score: {}".format(chart.chart_name, date_time, scores[date_time])
                     mcs.save()
+                else:
+                    chart_status[0].score = scores[date_time]
+                    chart_status[0].children_score_map = result["children_score_map"]
+                    chart_status[0].data_sets = data_sets
+                    chart_status[0].save()
         else:
             # print "Reached leaf: {}".format(chart.chart_name)
 
@@ -252,14 +257,14 @@ def prepare_status(chart, purge_old_status=False):
                         score = -1
                         this_days_record = None
                         if len(entries):
-                            if len(entries) > 1:
-                                this_days_record = entries.last()
-                            else:
-                                this_days_record = entries[0]
-
+                            this_days_record = entries[0]
                             output_name = data_set["output"]["name"]  # TODO
                             if "expected" in data_set["output"]:
                                 expected_value = data_set["output"]["expected"]
+                                if expected_value <= 0:
+                                    data_set_mofified = data_set_mofified or chart.fixup_expected_values(
+                                        data_set=data_set)
+                                    expected_value = data_set["output"]["expected"]
                             else:
                                 # let's fix it up
                                 print ("Fixing expected values")
@@ -342,6 +347,7 @@ def prepare_status(chart, purge_old_status=False):
                         chart_status[0].copied_score = False
                         chart_status[0].copied_score_disposition = 0
                     chart_status[0].score = current_score
+                    chart_status[0].data_sets = data_sets
                     chart_status[0].save()
 
                 if is_leaf_degrade or not current_score:

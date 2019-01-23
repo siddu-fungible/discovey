@@ -166,7 +166,7 @@ def get_ecn11_packet_dscp(pcap_filename, dscp_list=[]):
     return result
 
 
-def capture_wred_ecn_stats_n_times(network_controller_obj, port_num, queue_num, iterations, stats_list):
+def capture_wred_ecn_stats_n_times(network_controller_obj, port_num, queue_num, iterations, stats_list, sleep_interval=5):
     result = {}
     result['result'] = False
     try:
@@ -174,7 +174,7 @@ def capture_wred_ecn_stats_n_times(network_controller_obj, port_num, queue_num, 
             output_1 = network_controller_obj.get_qos_wred_ecn_stats(port_num=port_num, queue_num=queue_num)
             fun_test.simple_assert(output_1, "Get wred ecn stats once")
 
-            fun_test.sleep("Letting stats to be updated")
+            fun_test.sleep("Letting stats to be updated", seconds=sleep_interval)
 
             output_2 = network_controller_obj.get_qos_wred_ecn_stats(port_num=port_num, queue_num=queue_num)
             fun_test.simple_assert(output_2, "Get wred ecn stats twice")

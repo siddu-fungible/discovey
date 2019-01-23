@@ -37,7 +37,7 @@ table {
 
 #summary-table > tbody > tr > th, #summary-table > tbody > tr > td {
   text-align: left;
-  border: 2px solid #ddd;
+  border: 1px solid black;
   padding: 2px;
   margin: 2px;
   vertical-align: middle;
@@ -63,3 +63,8 @@ tr td {
   margin: 0 !important;
 }
 */
+
+.date-info-text {
+  font-size: 70%;
+  color: grey;
+}

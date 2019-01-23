@@ -132,7 +132,7 @@ class SpirentSetup(FunTestScript):
             network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
     def cleanup(self):
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
 class UlBadIpLenErrorIncremental(FunTestCase):
@@ -143,7 +143,7 @@ class UlBadIpLenErrorIncremental(FunTestCase):
 
     def describe(self):
         self.set_test_details(
-            id=1,summary="Test VP path FPG-HU with packet UL_BAD_IP_LEN_ERROR_INCR",
+            id=1,summary="Test VP path FPG-HNU with packet UL_BAD_IP_LEN_ERROR_INCR",
             steps="""
             1. Disable all streams and Enable stream UL_BAD_IP_LEN_ERROR_INCR
             2. Start traffic for 10 seconds
@@ -226,7 +226,7 @@ class UlBadIpLenErrorIncremental(FunTestCase):
             clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=1)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
             
             # Get stats before starting traffic
@@ -274,7 +274,7 @@ class UlBadIpLenErrorIncremental(FunTestCase):
 
             dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
             fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=True)
             fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
             dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -331,7 +331,7 @@ class UlBadUdpXsum(UlBadIpLenErrorIncremental):
 
     def describe(self):
         self.set_test_details(
-            id=2,summary="Test VP path FPG-HU with packet UL_BAD_UDP_XSUM",
+            id=2,summary="Test VP path FPG-HNU with packet UL_BAD_UDP_XSUM",
             steps="""
             1. Disable all streams and Enable stream UL_BAD_UDP_XSUM
             2. Start traffic for 10 seconds
@@ -356,14 +356,10 @@ class UlBadUdpXsum(UlBadIpLenErrorIncremental):
             destination_mac=l2_config['destination_mac'])
         fun_test.test_assert(configure_mac, "Configure mac address")
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -428,7 +424,7 @@ class UlBadUdpFFFFXsum(UlBadUdpXsum):
 
     def describe(self):
         self.set_test_details(
-            id=3,summary="Test VP path FPG-HU with packet UL_BAD_UDP_FFFF_XSUM",
+            id=3,summary="Test VP path FPG-HNU with packet UL_BAD_UDP_FFFF_XSUM",
             steps="""
             1. Disable all streams and Enable stream UL_BAD_UDP_FFFF_XSUM
             2. Start traffic for 10 seconds
@@ -453,7 +449,7 @@ class UlBadTcpXsum(UlBadIpLenErrorIncremental):
 
     def describe(self):
         self.set_test_details(
-            id=4,summary="Test VP path FPG-HU with packet UL_BAD_TCP_XSUM",
+            id=4,summary="Test VP path FPG-HNU with packet UL_BAD_TCP_XSUM",
             steps="""
             1. Disable all streams and Enable stream UL_BAD_TCP_XSUM
             2. Start traffic for 10 seconds
@@ -478,14 +474,10 @@ class UlBadTcpXsum(UlBadIpLenErrorIncremental):
             destination_mac=l2_config['destination_mac'])
         fun_test.test_assert(configure_mac, "Configure mac address")
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -529,7 +521,7 @@ class OlVxlanBadIpLenErrorIncr(UlBadIpLenErrorIncremental):
 
     def describe(self):
         self.set_test_details(
-            id=5,summary="Test VP path FPG-HU with packet OL_VXLAN_BAD_IP_LEN_ERROR_INCR",
+            id=5,summary="Test VP path FPG-HNU with packet OL_VXLAN_BAD_IP_LEN_ERROR_INCR",
             steps="""
             1. Disable all streams and Enable stream OL_VXLAN_BAD_IP_LEN_ERROR_INCR
             2. Start traffic for 10 seconds
@@ -554,14 +546,10 @@ class OlVxlanBadIpLenErrorIncr(UlBadIpLenErrorIncremental):
             destination_mac=l2_config['destination_mac'])
         fun_test.test_assert(configure_mac, "Configure mac address")
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -627,7 +615,7 @@ class OlVxlanBadUdpXsum(UlBadIpLenErrorIncremental):
 
     def describe(self):
         self.set_test_details(
-            id=6,summary="Test VP path FPG-HU with packet OL_VXLAN_BAD_UDP_XSUM",
+            id=6,summary="Test VP path FPG-HNU with packet OL_VXLAN_BAD_UDP_XSUM",
             steps="""
             1. Disable all streams and Enable stream OL_VXLAN_BAD_UDP_XSUM
             2. Start traffic for 10 seconds
@@ -658,14 +646,10 @@ class OlVxlanBadUdpXsum(UlBadIpLenErrorIncremental):
             destination_mac=l2_config['destination_mac'])
         fun_test.test_assert(configure_mac, "Configure mac address")
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -710,7 +694,7 @@ class OlVxlanBadUdpFFFFXsum(OlVxlanBadUdpXsum):
 
     def describe(self):
         self.set_test_details(
-            id=7,summary="Test VP path FPG-HU with packet OL_VXLAN_BAD_UDP_FFFF_XSUM",
+            id=7,summary="Test VP path FPG-HNU with packet OL_VXLAN_BAD_UDP_FFFF_XSUM",
             steps="""
             1. Disable all streams and Enable stream OL_VXLAN_BAD_UDP_FFFF_XSUM
             2. Start traffic for 10 seconds
@@ -736,7 +720,7 @@ class OlVxlanBadTcpXsum(UlBadIpLenErrorIncremental):
 
     def describe(self):
         self.set_test_details(
-            id=8,summary="Test VP path FPG-HU with packet OL_VXLAN_BAD_TCP_XSUM",
+            id=8,summary="Test VP path FPG-HNU with packet OL_VXLAN_BAD_TCP_XSUM",
             steps="""
             1. Disable all streams and Enable stream OL_VXLAN_BAD_TCP_XSUM
             2. Start traffic for 10 seconds
@@ -755,14 +739,10 @@ class OlVxlanBadTcpXsum(UlBadIpLenErrorIncremental):
         output = template_obj.configure_overlay_frame_stack(port=port_1)
         self.current_streamblock_obj = output['streamblock_obj']
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         ip_header = Ipv4Header()
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=ip_header, overlay=False,
@@ -806,7 +786,7 @@ class OlVxlanBadTcpZeroXsum(OlVxlanBadTcpXsum):
 
     def describe(self):
         self.set_test_details(
-            id=9,summary="Test VP path FPG-HU with packet OL_VXLAN_BAD_TCP_ZERO_XSUM",
+            id=9,summary="Test VP path FPG-HNU with packet OL_VXLAN_BAD_TCP_ZERO_XSUM",
             steps="""
             1. Disable all streams and Enable stream OL_VXLAN_BAD_TCP_ZERO_XSUM
             2. Start traffic for 10 seconds
@@ -831,7 +811,7 @@ class OlMplsBadIpLenErrorIncr(OlVxlanBadIpLenErrorIncr):
 
     def describe(self):
         self.set_test_details(
-            id=10,summary="Test VP path FPG-HU with packet OL_MPLS_BAD_IP_LEN_ERROR_INCR",
+            id=10,summary="Test VP path FPG-HNU with packet OL_MPLS_BAD_IP_LEN_ERROR_INCR",
             steps="""
             1. Disable all streams and Enable stream OL_MPLS_BAD_IP_LEN_ERROR_INCR
             2. Start traffic for 10 seconds
@@ -857,7 +837,7 @@ class OlMplsBadUdpXsum(UlBadIpLenErrorIncremental):
 
     def describe(self):
         self.set_test_details(
-            id=11,summary="Test VP path FPG-HU with packet OL_MPLS_BAD_UDP_XSUM",
+            id=11,summary="Test VP path FPG-HNU with packet OL_MPLS_BAD_UDP_XSUM",
             steps="""
             1. Disable all streams and Enable stream OL_MPLS_BAD_UDP_XSUM
             2. Start traffic for 10 seconds
@@ -884,14 +864,10 @@ class OlMplsBadUdpXsum(UlBadIpLenErrorIncremental):
 
         ip_header = Ipv4Header()
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=ip_header, overlay=False,
                                                           updated_header_attributes_dict=
@@ -940,7 +916,7 @@ class OlMplsBadTcpXsum(OlMplsBadUdpXsum):
 
     def describe(self):
         self.set_test_details(
-            id=12,summary="Test VP path FPG-HU with packet OL_MPLS_BAD_TCP_XSUM",
+            id=12,summary="Test VP path FPG-HNU with packet OL_MPLS_BAD_TCP_XSUM",
             steps="""
             1. Disable all streams and Enable stream OL_MPLS_BAD_TCP_XSUM
             2. Start traffic for 10 seconds
@@ -966,7 +942,7 @@ class OlMplsBadTcpZeroXsum(OlMplsBadUdpXsum):
 
     def describe(self):
         self.set_test_details(
-            id=13,summary="Test VP path FPG-HU with packet OL_MPLS_BAD_TCP_ZERO_XSUM",
+            id=13,summary="Test VP path FPG-HNU with packet OL_MPLS_BAD_TCP_ZERO_XSUM",
             steps="""
             1. Disable all streams and Enable stream OL_MPLS_BAD_TCP_ZERO_XSUM
             2. Start traffic for 10 seconds
@@ -988,7 +964,7 @@ class OlMplsBadTcpZeroXsum(OlMplsBadUdpXsum):
 class GoodBad(FunTestCase):
     def describe(self):
         self.set_test_details(id=14,
-                              summary="Test VP path FPG-HU with packet good and bad packets",
+                              summary="Test VP path FPG-HNU with packet good and bad packets",
                               steps="""
                               1. Enable all streams.
                               2. Start traffic for 10 seconds
@@ -1016,14 +992,10 @@ class GoodBad(FunTestCase):
         if protocol_tcp:
             protocol = Ipv4Header.PROTOCOL_TYPE_TCP
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         ip_header = Ipv4Header(destination_address=destination,
                                protocol=protocol)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
@@ -1143,14 +1115,10 @@ class GoodBad(FunTestCase):
             destination_mac=l2_config['destination_mac'])
         fun_test.test_assert(configure_mac, "Configure mac address")
         destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-            destination = l3_config['destination_ip2']
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+            destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-            destination = l3_config['hnu_destination_ip1']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-            destination = l3_config['cc_destination_ip1']
+            destination = l3_config['destination_ip1']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -1526,7 +1494,7 @@ class GoodBad(FunTestCase):
             clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=1)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
             clear_3 = network_controller_obj.clear_port_stats(port_num=dut_port_3)
@@ -1572,7 +1540,7 @@ class GoodBad(FunTestCase):
             psw_stats_2 = network_controller_obj.peek_psw_global_stats()
 
             dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=True)
             dut_port_3_results = network_controller_obj.peek_fpg_port_stats(dut_port_3)
 
             # ASSERTS
@@ -1608,7 +1576,7 @@ class GoodBad(FunTestCase):
 
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
+    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
     ts = SpirentSetup()
     ts.add_test_case(UlBadIpLenErrorIncremental())
     ts.add_test_case(UlBadUdpXsum())

@@ -68,7 +68,9 @@ regression_urls = [
     url(r'^script$', regression_views.script),
     url(r'^get_suite_executions_by_time$', regression_views.get_suite_executions_by_time),
     url(r'^get_test_case_executions_by_time$', regression_views.get_test_case_executions_by_time),
-    url(r'^\w+$', views.angular_home)
+    url(r'^all_jiras$', regression_views.all_regression_jiras),
+    url(r'^\w+$', views.angular_home),
+    url(r'^jiras/(\d+)/?(.*)?$', regression_views.jiras)
 
 ]
 
@@ -140,9 +142,7 @@ metric_urls = [
     url(r'^scores', metrics_views.scores),
     url(r'^dag$', metrics_views.dag),
     url(r'^global_settings', metrics_views.global_settings),
-    url(r'^(.*)/jiras$', metrics_views.fetch_jira_info),
-    url(r'^(.*)/jiras/delete/(.*)$', metrics_views.delete_jira_info),
-    url(r'^(.*)/jiras/(.*)$', metrics_views.update_jira_info)
+    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras)
 ]
 
 test_urls = [
@@ -174,7 +174,7 @@ urlpatterns = [
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
     url(r'^common/', include(common_urls)),
-    url(r'^$', common_views.home),
+    url(r'^$', views.angular_home),
     url(r'^initialize$', metrics_views.initialize),
     url(r'^test/', include(test_urls)),
     url(r'^upgrade/', include(upgrade_urls)),

@@ -64,12 +64,21 @@ class FunethSanity(FunTestScript):
         #cmd = "/home/localadmin/gliang/test_funeth.py --sriov 4 --nu_loopback --packets 100"
         #output = linux_obj.command(cmd, timeout=300)
         funeth_obj = Funeth(linux_obj)
-        fun_test.test_assert(re.search(r'Ethernet controller: Device 1dad:1000', funeth_obj.lspci()),
-                             'Fungible Ethernet controller is seen.')
-        fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
-        fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
-        fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
-        fun_test.test_assert(funeth_obj.configure_intfs(), 'Configure funeth interfaces.')
+        fun_test.test_assert(
+            re.search(r'Ethernet controller: Device 1dad:1000', funeth_obj.lspci()),
+            'Fungible Ethernet controller is seen.')
+        fun_test.test_assert(
+            re.search(r'Updating working projectdb.*Updating current build number', funeth_obj.update_src(), re.DOTALL),
+            'Update funeth driver source code.')
+        fun_test.test_assert(
+            not re.search(r'fail|error|abort|assert', funeth_obj.build(), re.IGNORECASE),
+            'Build funeth driver.')
+        fun_test.test_assert(
+            not re.search(r'Device not found', funeth_obj.load(sriov=4), re.IGNORECASE),
+            'Load funeth driver.')
+        fun_test.test_assert(
+            re.search(r'inet \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', funeth_obj.configure_intfs()),
+            'Configure funeth interfaces.')
         packet_count = 100
         output = funeth_obj.loopback_test(packet_count=packet_count)
         fun_test.test_assert(
@@ -86,7 +95,7 @@ class FunethSanity(FunTestScript):
 class FunethTestNUPingHU(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Connect to NU host NU host and ping HU host.",
+                              summary="From NU host ping HU host.",
                               steps="""
         1. Ping PF interface 53.1.1.5
         2. Ping VF interface 53.1.9.5
@@ -107,7 +116,7 @@ class FunethTestNUPingHU(FunTestCase):
 class FunethTestPacketSweep(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="From HU host, ping NU host with all available packeet sizes.",
+                              summary="From HU host, ping NU host with all available packet sizes.",
                               steps="""
         1. 
         """)

@@ -252,12 +252,15 @@ class MetricChart(models.Model):
         if not first_record:
             i = 0
         else:
-            first_record = first_record[-1]
             output_name = data_set["output"]["name"]
-            if output_name in first_record:
-                data_set["output"]["expected"] = first_record[output_name]
-                modified = 1
-            j = 0
+            for first in first_record[::-1]:
+                if output_name in first:
+                    if first[output_name] > 0:
+                        data_set["output"]["expected"] = first[output_name]
+                        modified = 1
+                        break
+            if modified == 0:
+                data_set["output"]["expected"] = 0
             # data_set["expected"] = first_rec
         # self.data_sets = json.dumps(data_set)
         # self.save()
@@ -918,7 +921,7 @@ class LsvZipCryptoPerformance(models.Model):
 
 
 class NuTransitPerformance(models.Model):
-    interpolation_allowed = models.BooleanField(default=True)
+    interpolation_allowed = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)

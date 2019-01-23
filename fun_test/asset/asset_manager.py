@@ -88,6 +88,8 @@ class AssetManager:
             if not docker_hosts_spec_file:
                 # This is probably for script development
                 docker_hosts_spec_file = self.DOCKER_HOSTS_DEVELOPMENT_ASSET_SPEC
+        if is_regression_server():
+            docker_hosts_spec_file = self.DOCKER_HOSTS_DEVELOPMENT_ASSET_SPEC
                 # raise FunTestSystemException("Please set the environment variable:\nDOCKER_HOSTS_SPEC_FILE=<my-docker.hosts.json>")
         local_setting_docker_host_spec_file = fun_test.get_local_setting(setting="DOCKER_HOSTS_SPEC_FILE")
         if local_setting_docker_host_spec_file:

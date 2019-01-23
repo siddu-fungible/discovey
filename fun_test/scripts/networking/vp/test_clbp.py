@@ -5,75 +5,32 @@ from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
 from scripts.networking.nu_config_manager import *
 
-clbp_traffic_duration = 20
-cushion_sleep = 5
 num_ports = 2
+test_configs_json = SCRIPTS_DIR + "/" + "networking" + "/" + "vp" + "/" + "vp_test_configs.json"
+test_inputs = fun_test.parse_file_to_json(test_configs_json)
+test_inputs = test_inputs["CLBP"]
+clbp_traffic_duration = test_inputs['traffic_duration']
+cluster_id = test_inputs["cluster_id"]
+cushion_sleep = 5
 
 
-def compare_spray_values(reference_value, actual_value):
-    result = False
-    if actual_value == reference_value or actual_value + 1 == reference_value or actual_value - 1 == reference_value:
-        result = True
-    return result
-
-
-def check_per_vp_pkt_spray(flow_direction, old_per_vppkt_output_dict, per_vppkt_output_dict, dut_ingress_frame_count):
-    result = False
-    try:
-        total_pkts_sent = int(dut_ingress_frame_count)
-        fun_test.log("Total packets sent %s on ingress" % total_pkts_sent)
-        total_vps = len(per_vppkt_output_dict)
-        fun_test.log("Total vps present %s" % total_vps)
-        reference_value = int(total_pkts_sent / total_vps)
-        fun_test.log("Reference value calculated %s" % reference_value)
-        for key, val in per_vppkt_output_dict.iteritems():
-            total_vp_in = int(val[VP_PACKETS_TOTAL_IN])
-            if VP_PACKETS_TOTAL_IN in old_per_vppkt_output_dict[key]:
-                total_vp_in = int(val[VP_PACKETS_TOTAL_IN]) - int(old_per_vppkt_output_dict[key][VP_PACKETS_TOTAL_IN])
-            total_vp_out = int(val[VP_PACKETS_TOTAL_OUT])
-            if VP_PACKETS_TOTAL_OUT in old_per_vppkt_output_dict[key]:
-                total_vp_out = int(val[VP_PACKETS_TOTAL_OUT]) - int(old_per_vppkt_output_dict[key][VP_PACKETS_TOTAL_OUT])
-            if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-                total_vp_fae_requests = int(val[VP_FAE_REQUESTS_SENT])
-                if VP_FAE_REQUESTS_SENT in old_per_vppkt_output_dict[key]:
-                    total_vp_fae_requests = int(val[VP_FAE_REQUESTS_SENT]) - int(old_per_vppkt_output_dict[key][VP_FAE_REQUESTS_SENT])
-                total_vp_fae_responses = int(val[VP_FAE_RESPONSES_RECEIVED])
-                if VP_FAE_RESPONSES_RECEIVED in old_per_vppkt_output_dict[key]:
-                    total_vp_fae_responses = int(val[VP_FAE_RESPONSES_RECEIVED]) - int(
-                        old_per_vppkt_output_dict[key][VP_FAE_RESPONSES_RECEIVED])
-                total_vp_out_etp = int(val[VP_PACKETS_OUT_ETP])
-                if VP_PACKETS_OUT_ETP in old_per_vppkt_output_dict[key]:
-                    total_vp_out_etp = int(val[VP_PACKETS_OUT_ETP]) - int(old_per_vppkt_output_dict[key][VP_PACKETS_OUT_ETP])
-            else:
-                total_vp_fwd_nu_le = int(val[VP_PACKETS_FORWARDING_NU_LE])
-                if VP_PACKETS_FORWARDING_NU_LE in old_per_vppkt_output_dict[key]:
-                    total_vp_fwd_nu_le = int(val[VP_PACKETS_FORWARDING_NU_LE]) - int(old_per_vppkt_output_dict[key][VP_PACKETS_FORWARDING_NU_LE])
-            fun_test.log("======== Checks on %s =========" % str(key))
-            fun_test.test_assert(compare_spray_values(reference_value, total_vp_in),
-                                 "Check counter for %s. Expected value: %s Actual value %s for key %s" %
-                                 (VP_PACKETS_TOTAL_IN, reference_value, total_vp_in, key))
-            fun_test.test_assert(compare_spray_values(reference_value, total_vp_out),
-                                 "Check counter for %s. Expected value: %s Actual value %s for key %s " %
-                                 (VP_PACKETS_TOTAL_OUT, reference_value, total_vp_out, key))
-            if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HU:
-                fun_test.test_assert(compare_spray_values(reference_value, total_vp_fwd_nu_le),
-                                     "Check counter for %s. Expected value: %s Actual value %s for key %s " %
-                                     (VP_PACKETS_FORWARDING_NU_LE, reference_value, total_vp_fwd_nu_le, key))
-            else:
-                fun_test.test_assert(compare_spray_values(reference_value, total_vp_fae_requests),
-                                     "Check counter for %s. Expected value: %s Actual value %s for key %s " %
-                                     (VP_FAE_REQUESTS_SENT, reference_value, total_vp_fae_requests, key))
-                fun_test.test_assert(compare_spray_values(reference_value, total_vp_fae_responses),
-                                     "Check counter for %s. Expected value: %s Actual value %s for key %s " %
-                                     (VP_FAE_RESPONSES_RECEIVED, reference_value,
-                                      total_vp_fae_responses, key))
-                fun_test.test_assert(compare_spray_values(reference_value, total_vp_out_etp),
-                                     "Check counter for %s. Expected value: %s Actual value %s for key %s " %
-                                     (VP_PACKETS_OUT_ETP, reference_value, total_vp_out_etp, key))
-        result = True
-    except Exception as ex:
-        fun_test.critical(str(ex))
-    return result
+def set_shape_hnu(flow_direction):
+    output = {}
+    output["shape_1"] = 0
+    output["shape_2"] = 0
+    output["hnu_1"] = False
+    output["hnu_2"] = False
+    if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
+        output["shape_1"] = 0
+        output["shape_2"] = 1
+        output["hnu_1"] = False
+        output["hnu_2"] = True
+    elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+        output["shape_1"] = 1
+        output["shape_2"] = 0
+        output["hnu_1"] = True
+        output["hnu_2"] = False
+    return output
 
 
 class SpirentSetup(FunTestScript):
@@ -89,7 +46,18 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config
+            dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2, gen_obj_2
+
+        nonfcp_xoff_thr = 16384
+        fcp_xoff_thr = 16384
+
+        output = set_shape_hnu(flow_direction=flow_direction)
+        shape_1 = output["shape_1"]
+        shape_2 = output["shape_2"]
+        hnu_1 = output["hnu_1"]
+        hnu_2 = output["hnu_2"]
+        fun_test.log("Variables shape1, shape2, hnu1 and hnu2 have values %s, %s, %s and %s" % (shape_1, shape_2,
+                                                                                                hnu_1, hnu_2))
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type,
@@ -123,15 +91,24 @@ class SpirentSetup(FunTestScript):
             # Enable qos pfc
             set_pfc = network_controller_obj.enable_qos_pfc()
             fun_test.test_assert(set_pfc, "Enable qos pfc")
-            buffer = network_controller_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=16380,
-                                                                       fcp_xoff_thr=16380)
+
+            # Enable qos pfc
+            set_pfc = network_controller_obj.enable_qos_pfc(hnu=True)
+            fun_test.test_assert(set_pfc, message="Enable qos pfc on hnu")
+
+            buffer = network_controller_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=nonfcp_xoff_thr,
+                                                                       fcp_xoff_thr=fcp_xoff_thr)
             fun_test.test_assert(buffer, "Set non fcp xoff threshold")
 
+            buffer = network_controller_obj.set_qos_egress_buffer_pool(nonfcp_xoff_thr=nonfcp_xoff_thr,
+                                                                       fcp_xoff_thr=fcp_xoff_thr, mode='hnu')
+            fun_test.test_assert(buffer, message="Set non fcp xoff threshold on hnu")
+
             # Clear port results on DUT
-            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
+            clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         # Configure Generator
@@ -147,6 +124,11 @@ class SpirentSetup(FunTestScript):
                                                              generator_config_obj=gen_config_obj)
         fun_test.test_assert(config_obj, "Creating generator config on port %s" % port_1)
 
+        gen_obj_2 = template_obj.stc_manager.get_generator(port_handle=port_2)
+        config_obj = template_obj.configure_generator_config(port_handle=port_2,
+                                                             generator_config_obj=gen_config_obj)
+        fun_test.test_assert(config_obj, "Creating generator config on port %s" % port_2)
+
         # Applying configuration
         apply = template_obj.stc_manager.apply_configuration()
         fun_test.test_assert(apply, "Applying Generator config")
@@ -158,26 +140,47 @@ class SpirentSetup(FunTestScript):
         del subscribe_results['result']
 
     def cleanup(self):
-        fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
+        template_obj.cleanup()
 
 
-class CLBP(FunTestCase):
+class CLBP_NU_HNU(FunTestCase):
     streamblock_obj = None
+    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Test cluster load balancing behaviour for VP pkts",
+                              summary="Test cluster load balancing behaviour for VP pkts in %s direction" %
+                                      self.flow_direction,
                               steps="""
                             1. Create streamblock with varying source port, dest port, source ip and dest ip
                             2. Start traffic 
-                            3. Check if peek stats are being load balanced among all VPs
+                            3. Check if packets are being load balanced among all VPs
                             """)
 
     def setup(self):
+        range = "range"
+        check_enable = "enable"
+        source_ip = "source_ip"
+        destination_ip = "destination_ip"
+        source_port = "source_port"
+        destination_port = "destination_port"
+
+        output = set_shape_hnu(flow_direction=self.flow_direction)
+        shape_1 = output["shape_1"]
+        shape_2 = output["shape_2"]
+        hnu_1 = output["hnu_1"]
+        hnu_2 = output["hnu_2"]
+        fun_test.log("Variables shape1, shape2, hnu1 and hnu2 have values %s, %s, %s and %s" % (shape_1, shape_2,
+                                                                                                hnu_1, hnu_2))
+        
+        port = port_1
+        if self.flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_FPG:
+            port = port_2
+        
         self.streamblock_obj = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=fps,
                                            fill_type=StreamBlock.FILL_TYPE_PRBS)
 
-        create_stream =template_obj.configure_stream_block(stream_block_obj=self.streamblock_obj, port_handle=port_1)
+        create_stream =template_obj.configure_stream_block(stream_block_obj=self.streamblock_obj, port_handle=port)
         fun_test.test_assert(create_stream, "Create streamblock")
 
         l2_config = spirent_config["l2_config"]
@@ -198,80 +201,111 @@ class CLBP(FunTestCase):
 
         # Vary source ip
         l3_config = spirent_config["l3_config"]["ipv4"]
-        source_ip = l3_config['source_ip1']
-        dest_ip = l3_config['hu_destination_ip1']
+        src_ip = l3_config['source_ip1']
+        dest_ip = l3_config['hnu_destination_ip2']
+        if self.flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_FPG:
+            dest_ip = l3_config["destination_ip1"]
+        '''
         temp = dest_ip.split('.')
         temp[-1] = '100'
         destination_ip = '.'.join(temp)
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
+        if self.flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
             temp_ip = source_ip
             source_ip = destination_ip
             destination_ip = temp_ip
-        recycle_count = 100
-        data = source_ip
-        step = '0.0.0.1'
-        mask = "255.255.255.255"
-        range_obj = RangeModifier(recycle_count=recycle_count, step_value=step, data=data, mask=mask)
-        modify_attribute = 'sourceAddr'
-        create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
-                                                                         streamblock_obj=self.streamblock_obj,
-                                                                         header_obj=ip_header,
-                                                                         header_attribute=modify_attribute)
-        fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
-                             % modify_attribute)
+        '''    
+        if test_inputs[self.flow_direction][source_ip][check_enable]:
+            recycle_count = test_inputs[self.flow_direction][source_ip][range]
+            data = src_ip
+            step = '0.0.0.1'
+            mask = "255.255.255.255"
+            range_obj = RangeModifier(recycle_count=recycle_count, step_value=step, data=data, mask=mask)
+            modify_attribute = 'sourceAddr'
+            create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
+                                                                             streamblock_obj=self.streamblock_obj,
+                                                                             header_obj=ip_header,
+                                                                             header_attribute=modify_attribute)
+            fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
+                                 % modify_attribute)
 
-        # Vary dest ip
-        data = destination_ip
-        range_obj = RangeModifier(recycle_count=recycle_count, step_value=step, data=data, mask=mask)
-        modify_attribute = 'destAddr'
-        create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
-                                                                         streamblock_obj=self.streamblock_obj,
-                                                                         header_obj=ip_header,
-                                                                         header_attribute=modify_attribute)
-        fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
-                             % modify_attribute)
+        if test_inputs[self.flow_direction][destination_ip][check_enable]:
+            recycle_count = test_inputs[self.flow_direction][destination_ip][range]
+            data = dest_ip
+            step = '0.0.0.1'
+            mask = "255.255.255.255"
+            range_obj = RangeModifier(recycle_count=recycle_count, step_value=step, data=data, mask=mask)
+            modify_attribute = 'destAddr'
+            create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
+                                                                             streamblock_obj=self.streamblock_obj,
+                                                                             header_obj=ip_header,
+                                                                             header_attribute=modify_attribute)
+            fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
+                                 % modify_attribute)
 
-        # Vary source port
-        data = 1024
-        step = 1
-        range_obj = RangeModifier(recycle_count=recycle_count, step_value=step, data=data)
-        modify_attribute = 'sourcePort'
-        create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
-                                                                         streamblock_obj=self.streamblock_obj,
-                                                                         header_obj=tcp,
-                                                                         header_attribute=modify_attribute)
-        fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
-                             % modify_attribute)
+        if test_inputs[self.flow_direction][source_port][check_enable]:
+            recycle_count = test_inputs[self.flow_direction][source_port][range]
+            # Vary source port
+            data = 1024
+            step = 1
+            range_obj = RangeModifier(recycle_count=recycle_count, step_value=step, data=data)
+            modify_attribute = 'sourcePort'
+            create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
+                                                                             streamblock_obj=self.streamblock_obj,
+                                                                             header_obj=tcp,
+                                                                             header_attribute=modify_attribute)
+            fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
+                                 % modify_attribute)
 
         # Vary dest port
-        modify_attribute = 'destPort'
-        create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
-                                                                         streamblock_obj=self.streamblock_obj,
-                                                                         header_obj=tcp,
-                                                                         header_attribute=modify_attribute)
-        fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
-                             % modify_attribute)
+        if test_inputs[self.flow_direction][destination_port][check_enable]:
+            recycle_count = test_inputs[self.flow_direction][destination_port][range]
+            data = 1024
+            step = 1
+            range_obj = RangeModifier(recycle_count=recycle_count, step_value=step, data=data)
+            modify_attribute = 'destPort'
+            create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
+                                                                             streamblock_obj=self.streamblock_obj,
+                                                                             header_obj=tcp,
+                                                                             header_attribute=modify_attribute)
+            fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
+                                 % modify_attribute)
 
     def run(self):
+        is_traffic_from_hnu = False
+        if hnu_1:
+            is_traffic_from_hnu = True
+        
         if dut_config['enable_dpcsh']:
+            stat_input_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE]
             # Get stats before starting traffic
             fun_test.log("Get stats before starting traffic")
             bam_stats_1 = get_bam_stats_values(network_controller_obj=network_controller_obj)
             parser_stats_1 = network_controller_obj.peek_parser_stats()
+            parser_stats_2 = network_controller_obj.peek_parser_stats(hnu=is_traffic_from_hnu)
             vp_pkts_stats_1 = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
-            erp_stats_1 = get_erp_stats_values(network_controller_obj=network_controller_obj)
-            psw_stats_1 = network_controller_obj.peek_psw_global_stats()
+            per_vp_pkt_stats_1 = get_vp_per_pkts_stats_values(network_controller_obj=network_controller_obj, cluster_id=cluster_id)
+            fun_test.sleep("Letting per vp stats be dumped")
+            erp_stats_1 = get_erp_stats_values(network_controller_obj=network_controller_obj, hnu=is_traffic_from_hnu)
+            psw_stats_nu_1 = network_controller_obj.peek_psw_global_stats()
+            if hnu_1 or hnu_2:
+                psw_stats_hnu_1 = network_controller_obj.peek_psw_global_stats(hnu=True)
             wro_stats_1 = network_controller_obj.peek_wro_global_stats()
-            vp_per_packet_stats_1 = get_vp_per_pkts_stats_values(network_controller_obj=network_controller_obj)
 
         # Modify generator
+        if self.flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_FPG:
+            port = port_2
+            gen_obj = gen_obj_2
+        else:
+            port = port_1
+            gen_obj = gen_obj_1
+
         gen_config_obj.Duration = clbp_traffic_duration
-        config_obj = template_obj.configure_generator_config(port_handle=port_1,
+        config_obj = template_obj.configure_generator_config(port_handle=port,
                                                              generator_config_obj=gen_config_obj, update=True)
-        fun_test.test_assert(config_obj, "Updating generator config on port %s" % port_1)
+        fun_test.test_assert(config_obj, "Updating generator config on port %s" % port)
 
         # Execute traffic
-        start = template_obj.enable_generator_configs(generator_configs=[gen_obj_1])
+        start = template_obj.enable_generator_configs(generator_configs=[gen_obj])
         fun_test.test_assert(start, "Starting generator config")
 
         stream_handle_1 = self.streamblock_obj.spirent_handle
@@ -280,7 +314,7 @@ class CLBP(FunTestCase):
         fun_test.sleep("Sleeping for executing traffic for %s seconds" % clbp_traffic_duration,
                        seconds=clbp_traffic_duration)
 
-        stop = template_obj.disable_generator_configs(generator_configs=[gen_obj_1])
+        stop = template_obj.disable_generator_configs(generator_configs=[gen_obj])
         fun_test.test_assert(stop, "Stopping generator configs")
 
         fun_test.sleep("Letting rx to take place", seconds=2)
@@ -304,31 +338,35 @@ class CLBP(FunTestCase):
         fun_test.log(port_2_analyzer_result)
 
         if dut_config['enable_dpcsh']:
-            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
+            dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu_1)
             fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu_2)
             fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
             fun_test.log("Get system stats after traffic execution")
             bam_stats_2 = get_bam_stats_values(network_controller_obj=network_controller_obj)
-            parser_stats_2 = network_controller_obj.peek_parser_stats()
+            parser_stats_2 = network_controller_obj.peek_parser_stats(hnu=is_traffic_from_hnu)
             vp_pkts_stats_2 = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
-            erp_stats_2 = get_erp_stats_values(network_controller_obj=network_controller_obj)
-            psw_stats_2 = network_controller_obj.peek_psw_global_stats()
-            vp_per_packet_stats_2 = get_vp_per_pkts_stats_values(network_controller_obj=network_controller_obj)
+            per_vp_pkt_stats_2 = get_vp_per_pkts_stats_values(network_controller_obj=network_controller_obj,
+                                                              cluster_id=cluster_id)
+            fun_test.sleep("Letting per vp stats be dumped")
+            erp_stats_2 = get_erp_stats_values(network_controller_obj=network_controller_obj, hnu=is_traffic_from_hnu)
+            psw_stats_nu_2 = network_controller_obj.peek_psw_global_stats()
+            if hnu_1 or hnu_2:
+                psw_stats_hnu_2 = network_controller_obj.peek_psw_global_stats(hnu=True)
             wro_stats_2 = network_controller_obj.peek_wro_global_stats()
 
             dut_port_1_receive = get_dut_output_stats_value(dut_port_1_results, FRAMES_RECEIVED_OK, tx=False)
 
             fun_test.log("Check counters for vp spray")
-            counter_check = check_per_vp_pkt_spray(flow_direction=flow_direction, per_vppkt_output_dict=vp_per_packet_stats_2,
-                                                   old_per_vppkt_output_dict=vp_per_packet_stats_1,
-                                                   dut_ingress_frame_count=dut_port_1_receive)
+            counter_check = check_per_vp_pkt_spray(per_vppkt_output_dict=per_vp_pkt_stats_2,
+                                                   old_per_vppkt_output_dict=per_vp_pkt_stats_1,
+                                                   dut_ingress_frame_count=dut_port_1_receive, monitor_stats_list=stat_input_list)
             fun_test.test_assert(counter_check, "Check cluster load balancing in per vppkts")
 
         # SPIRENT ASSERTS
         fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=int(rx_results_1['FrameCount']),
-                                      message="Ensure frames transmitted and received on spirent match from %s" % flow_direction)
+                                      message="Ensure frames transmitted and received on spirent match from %s" % self.flow_direction)
 
         zero_counter_seen = template_obj.check_non_zero_error_count(port_2_analyzer_result)
         fun_test.test_assert(zero_counter_seen['result'], "Check for error counters on port2")
@@ -345,16 +383,8 @@ class CLBP(FunTestCase):
 
 if __name__ == "__main__":
     local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
-    fps = 600
-    if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG:
-        fps = 50
-    elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-        fps = 50
-    elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
-        fps = 50
-    elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_CC:
-        fps = 50
+    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
+    fps = 100
     ts = SpirentSetup()
-    ts.add_test_case(CLBP())
+    ts.add_test_case(CLBP_NU_HNU())
     ts.run()

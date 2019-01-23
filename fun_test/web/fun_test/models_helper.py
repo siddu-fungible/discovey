@@ -15,6 +15,9 @@ from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
 
+import logging
+from fun_settings import COMMON_WEB_LOGGER_NAME
+logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
 
 from web.fun_test.models import (
@@ -84,6 +87,21 @@ def inspect(module_name):
     '''
     return result
 
+def get_all_test_cases(script_path):
+    test_cases = {}
+
+    try:
+        result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+        if result:
+            if "classes" in result:
+                for c in result["classes"]:
+                    test_cases[c["id"]] = c
+
+    except Exception as ex:
+        print "Error: {}".format(str(ex))
+
+    return test_cases
+
 def get_test_case_details(script_path, test_case_id):
     from lib.system.fun_test import fun_test
     # print "Script Path", script_path
@@ -131,7 +149,8 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
         te.version = version
     if tags:
         te.tags = json.dumps(tags)
-    te.save()
+    with transaction.atomic():
+        te.save()
     # print te.version
     return te
 
@@ -169,16 +188,22 @@ def add_suite_execution(submitted_time,
     else:
         tags = "[]"
 
-    last_suite_execution_id = get_new_suite_execution_id()
-    s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
-                       submitted_time=submitted_time,
-                       scheduled_time=scheduled_time,
-                       completed_time=completed_time,
-                       result="QUEUED",
-                       tags=tags,
-                       catalog_reference=catalog_reference,
-                       suite_container_execution_id=suite_container_execution_id)
-    s.save()
+    for i in xrange(4):
+        try:
+            last_suite_execution_id = get_new_suite_execution_id()
+            s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
+                               submitted_time=submitted_time,
+                               scheduled_time=scheduled_time,
+                               completed_time=completed_time,
+                               result="QUEUED",
+                               tags=tags,
+                               catalog_reference=catalog_reference,
+                               suite_container_execution_id=suite_container_execution_id)
+            s.save()
+
+            break
+        except:
+            time.sleep(random.uniform(0.1, 1.0))
     return s
 
 def set_suite_execution_banner(suite_execution_id, banner):
@@ -245,6 +270,7 @@ def add_test_case_execution(test_case_id,
                                            test_case_execution_id=te.execution_id)
                 break
         except Exception as ex:
+            time.sleep(random.uniform(0.1, 1.0))
             print "Error: add_test_case_execution: {}".format(str(ex))
 
     return te
@@ -372,6 +398,7 @@ def _get_suite_executions(execution_id=None,
                     se.finalized = True
                 if suite_result not in pending_states:
                     se.result = suite_result
+                    # logger.error("Updating ID: {} Suite result: {} ".format(execution_id, se.result))
                 # se.save()
                 ses.append(se)
                 suite_result = se.result

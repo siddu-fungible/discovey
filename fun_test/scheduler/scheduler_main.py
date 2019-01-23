@@ -127,6 +127,7 @@ class SuiteWorker(Thread):
     def run(self):
 
         scheduler_logger.debug("Running Job: {}".format(self.job_id))
+        # print "Updating to IN_PROGRESS"
         models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["IN_PROGRESS"])
         if "tags" in self.job_spec and self.job_spec["tags"] and "jenkins-hourly" in self.job_spec["tags"]:
             set_jenkins_hourly_execution_status(status=RESULTS["IN_PROGRESS"])
@@ -171,7 +172,10 @@ class SuiteWorker(Thread):
                     version = int(container_execution.version)
                 build_url = build_url.replace("latest", str(version))
                 self.job_build_url = build_url
+                # print "Job: {} Updating to Version1".format(self.job_id)
                 models_helper.update_suite_execution(suite_execution_id=self.job_id, version=version)
+                # print "Job: {} Updating to Version2".format(self.job_id)
+
 
         suite_summary = {}
 
@@ -490,13 +494,8 @@ def revive_scheduled_jobs(job_ids=None):
             job_id = job_spec["job_id"]
             if job_id not in job_ids:
                 continue
+        kill_job(job_id=job_spec["job_id"])
         scheduler_logger.info("Reviving Job file: {}".format(job_file))
-        '''
-        dst_filename = os.path.basename(job_file)
-        dst_filename = dst_filename.replace(SCHEDULED_JOB_EXTENSION, QUEUED_JOB_EXTENSION)
-        dst_filename = "{}/{}".format(JOBS_DIR, dst_filename)
-        shutil.copy(job_file, dst_filename)
-        '''
         queue_job2(job_spec=job_spec)
         os.remove(job_file)
 

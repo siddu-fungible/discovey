@@ -1,154 +1,114 @@
-<!--<p class="component">-->
-  <!--<button (click)="test()">Test</button>-->
-<!--</p>-->
+<div class="component">
 
-<div class="row component">
-  <div class="col">
-    <table class="table table-bordered fixed-layout">
-      <tr class="blue-header">
-        <th class="middle-align no-padding" style="width: 400px">
-          Component
-        </th>
-        <th class="middle-align no-padding">
-          Total Cases
-        </th>
-        <th class="middle-align no-padding">
-          Pass
-        </th>
-        <th class="middle-align no-padding">
-          Fail
-        </th>
-        <th class="middle-align no-padding">
-          Not Run
-        </th>
-        <th class="middle-align no-padding">
-          Last Run Build
-        </th>
-      </tr>
-      <ng-container *ngFor="let info of tableInfo">
-        <tr style="text-align: center;">
-        <td class="middle-align">
-          <a [routerLink]="" (click)="info.showChildren=!info.showChildren">{{ info.name }}</a>
-        </td>
-        <td class="middle-align">
-          {{ info.totalCases }}
-        </td>
-        <td class="middle-align">
-          -
-        </td>
-        <td class="middle-align">
-          -
-        </td>
-        <td class="middle-align">
-          -
-        </td>
-          <td class="middle-align">
-            <a [routerLink]="" (click)="showInfo(info)">{{ info.softwareVersion }}</a>
-          </td>
-      </tr>
-        <ng-container *ngIf="info.showChildren">
-          <tr class="grey-row" *ngFor="let child of info.children">
-            <td class="no-padding">
-          {{ child.name }}
-        </td>
-        <td class="no-padding">
-          {{ child.totalCases }}
-        </td>
-        <td class="no-padding">
-          -
-        </td>
-        <td class="no-padding">
-          -
-        </td>
-        <td class="no-padding">
-          -
-        </td>
-            <td class="no-padding">
-              <a [routerLink]="" (click)="showInfo(info)">{{ info.softwareVersion }}</a>
-            </td>
-          </tr>
-        </ng-container>
+  <label for="admin-option">Choose an admin option:
+    <div id="admin-option" style="display:inline-flex;" ngbDropdown>
+      <button class="btn btn-sm" ngbDropdownToggle>{{ adminOption }}</button>
+      <div ngbDropdownMenu>
+        <button class="dropdown-item" (click)="adminOption = 'Categorize scripts'">Categorize scripts</button>
+        <button class="dropdown-item" (click)="adminOption = 'View script history'">View script history</button>
+      </div>
+    </div>
+  </label>
+
+
+  <ng-container [ngSwitch]="adminOption">
+    <ng-container *ngSwitchCase="'Categorize scripts'">
+      <div class="card card-primary">
+        <div class="card-header"><b>Adding scripts ...</b></div>
+        <div class="card-body">
+          <table class="table">
+            <tr>
+              <th>
+                Script
+              </th>
+              <th>
+                Modules
+              </th>
+            </tr>
+            <tr *ngFor="let regressionScript of allRegressionScripts">
+              <td>
+                {{ regressionScript.script_path }}
+              </td>
+              <td>
+                <ng-multiselect-dropdown
+                  [placeholder]="'Select'"
+                  [data]="availableModules"
+                  [(ngModel)]="regressionScript.selectedModules"
+                  [settings]="dropdownSettings"
+                  (onSelect)="regressionScript.dirty = true"
+                  (onDeSelect)="regressionScript.dirty = true"
+                  (onSelectAll)="regressionScript.dirty = true"
+                  (onDeSelectAll)="regressionScript.dirty = true">
+                </ng-multiselect-dropdown>
+              </td>
+              <td *ngIf="regressionScript.dirty">
+            <span><i class="fa fa-check fa-fw tick-color"
+                     (click)="submitSelectModuleClick(regressionScript)"></i></span>
+                <span><i class="fa fa-times fa-fw close-color"
+                         (click)="dismissSelectModuleClick(regressionScript)"></i></span>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="card card-primary">
+        <div class="card-header"><b>Unassigned scripts ...</b></div>
+        <div class="card-body">
+          <table class="table">
+            <tr>
+              <th>
+                Script
+              </th>
+              <th>
+                Modules
+              </th>
+            </tr>
+            <tr *ngFor="let regressionScript of unallocatedRegressionScripts">
+              <td>
+                {{ regressionScript.script_path }}
+              </td>
+              <td>
+                <ng-multiselect-dropdown
+                  [placeholder]="'Select'"
+                  [data]="availableModules"
+                  [(ngModel)]="regressionScript.selectedModules"
+                  [settings]="dropdownSettings"
+                  (onSelect)="regressionScript.dirty = true"
+                  (onDeSelect)="regressionScript.dirty = true"
+                  (onSelectAll)="regressionScript.dirty = true"
+                  (onDeSelectAll)="regressionScript.dirty = true">
+                </ng-multiselect-dropdown>
+              </td>
+              <td *ngIf="regressionScript.dirty">
+            <span><i class="fa fa-check fa-fw tick-color"
+                     (click)="submitSelectModuleClick(regressionScript)"></i></span>
+                <span><i class="fa fa-times fa-fw close-color"
+                         (click)="dismissSelectModuleClick(regressionScript)"></i></span>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'View script history'">
+      <br>
+      <label for="admin-option">Choose a script:
+        <div id="admin-option" style="display:inline-flex;" ngbDropdown>
+          <button class="btn btn-sm" ngbDropdownToggle>{{ scriptPathSelected }}</button>
+          <div ngbDropdownMenu *ngIf="scriptPathSelected">
+            <ng-container *ngFor="let script of scriptPathsList">
+              <button class="dropdown-item" (click)="scriptPathSelected = script; refreshSummary()">{{ script }}</button>
+            </ng-container>
+          </div>
+        </div>
+      </label>
+
+      <ng-container *ngIf="filterData && filterData.length > 0">
+        <app-regression-summary [filterData]="filterData"></app-regression-summary>
       </ng-container>
-  </table>
-  </div>
+
+    </ng-container>
+  </ng-container>
+
+
 </div>
-
-
-<div class="card card-primary">
-  <div class="card-header"><b>Adding scripts ...</b></div>
-  <div class="card-body">
-    <table class="table">
-      <tr>
-        <th>
-          Script
-        </th>
-        <th>
-          Modules
-        </th>
-      </tr>
-      <tr *ngFor="let regressionScript of allRegressionScripts">
-        <td>
-          {{ regressionScript.script_path }}
-        </td>
-        <td>
-          <ng-multiselect-dropdown
-            [placeholder]="'Select'"
-            [data]="availableModules"
-            [(ngModel)]="regressionScript.selectedModules"
-            [settings]="dropdownSettings"
-            (onSelect)="regressionScript.dirty = true"
-            (onDeSelect)="regressionScript.dirty = true"
-            (onSelectAll)="regressionScript.dirty = true"
-            (onDeSelectAll)="regressionScript.dirty = true">
-          </ng-multiselect-dropdown>
-        </td>
-        <td *ngIf="regressionScript.dirty">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submitSelectModuleClick(regressionScript)"></i></span>
-          <span><i class="fa fa-times fa-fw close-color"
-                   (click)="dismissSelectModuleClick(regressionScript)"></i></span>
-        </td>
-      </tr>
-    </table>
-  </div>
-</div>
-
-
-<div class="card card-primary">
-  <div class="card-header"><b>Unallocated scripts ...</b></div>
-  <div class="card-body">
-    <table class="table">
-      <tr>
-        <th>
-          Script
-        </th>
-        <th>
-          Modules
-        </th>
-      </tr>
-      <tr *ngFor="let regressionScript of unallocatedRegressionScripts">
-        <td>
-          {{ regressionScript.script_path }}
-        </td>
-        <td>
-          <ng-multiselect-dropdown
-            [placeholder]="'Select'"
-            [data]="availableModules"
-            [(ngModel)]="regressionScript.selectedModules"
-            [settings]="dropdownSettings"
-            (onSelect)="regressionScript.dirty = true"
-            (onDeSelect)="regressionScript.dirty = true"
-            (onSelectAll)="regressionScript.dirty = true"
-            (onDeSelectAll)="regressionScript.dirty = true">
-          </ng-multiselect-dropdown>
-        </td>
-        <td *ngIf="regressionScript.dirty">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submitSelectModuleClick(regressionScript)"></i></span>
-          <span><i class="fa fa-times fa-fw close-color"
-                   (click)="dismissSelectModuleClick(regressionScript)"></i></span>
-        </td>
-      </tr>
-    </table>
-  </div>
-</div>
-
-

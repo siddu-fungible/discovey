@@ -14,24 +14,6 @@
         "label": "Networking",
         "children": [
           {
-            "info": "NU Transit: Latency",
-            "metric_model_name": "NuTransitPerformance",
-            "leaf": true,
-            "name": "NU Transit: Latency",
-            "label": "NU Transit: Latency",
-            "children": [],
-            "weight": 1
-          },
-          {
-            "info": "NU Transit: Throughput",
-            "metric_model_name": "NuTransitPerformance",
-            "leaf": true,
-            "name": "NU Transit: Throughput",
-            "label": "NU Transit: Throughput",
-            "children": [],
-            "weight": 1
-          },
-          {
             "info": "Lookup-engine",
             "metric_model_name": "MetricContainer",
             "leaf": false,
@@ -85,7 +67,52 @@
                 "weight": 1
               }
             ]
-          }
+          },
+          {
+                "info": "NU_HNU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_HNU",
+                "weight": 1,
+                "label": "NU_HNU",
+                "reference": true
+              },
+              {
+                "info": "HNU_HNU_FCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HNU_HNU_FCP",
+                "weight": 1,
+                "label": "HNU_HNU_FCP",
+                "reference": true
+              },
+              {
+                "info": "HNU_HNU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HNU_HNU",
+                "weight": 1,
+                "label": "HNU_HNU",
+                "reference": true
+              },
+              {
+                "info": "NU_NU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_NU",
+                "weight": 1,
+                "label": "NU_NU",
+                "reference": true
+              },
+              {
+                "info": "HNU_NU",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HNU_NU",
+                "weight": 1,
+                "label": "HNU_NU",
+                "reference": true
+              }
         ],
         "weight": 1
       },
@@ -1340,22 +1367,6 @@
                     "label": "NU_HNU_output_throughput"
                   },
                   {
-                    "info": "NU_HNU_output_latency_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_HNU_output_latency_avg",
-                    "weight": 1,
-                    "label": "NU_HNU_output_latency_avg"
-                  },
-                  {
-                    "info": "NU_HNU_output_jitter_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_HNU_output_jitter_avg",
-                    "weight": 1,
-                    "label": "NU_HNU_output_jitter_avg"
-                  },
-                  {
                     "info": "NU_HNU_output_pps",
                     "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
@@ -1380,22 +1391,6 @@
                     "name": "HNU_HNU_FCP_output_throughput",
                     "weight": 1,
                     "label": "HNU_HNU_FCP_output_throughput"
-                  },
-                  {
-                    "info": "HNU_HNU_FCP_output_latency_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_HNU_FCP_output_latency_avg",
-                    "weight": 1,
-                    "label": "HNU_HNU_FCP_output_latency_avg"
-                  },
-                  {
-                    "info": "HNU_HNU_FCP_output_jitter_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_HNU_FCP_output_jitter_avg",
-                    "weight": 1,
-                    "label": "HNU_HNU_FCP_output_jitter_avg"
                   },
                   {
                     "info": "HNU_HNU_FCP_output_pps",
@@ -1424,22 +1419,6 @@
                     "label": "HNU_HNU_output_throughput"
                   },
                   {
-                    "info": "HNU_HNU_output_latency_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_HNU_output_latency_avg",
-                    "weight": 1,
-                    "label": "HNU_HNU_output_latency_avg"
-                  },
-                  {
-                    "info": "HNU_HNU_output_jitter_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_HNU_output_jitter_avg",
-                    "weight": 1,
-                    "label": "HNU_HNU_output_jitter_avg"
-                  },
-                  {
                     "info": "HNU_HNU_output_pps",
                     "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
@@ -1466,22 +1445,6 @@
                     "label": "NU_NU_output_throughput"
                   },
                   {
-                    "info": "NU_NU_output_latency_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_NU_output_latency_avg",
-                    "weight": 1,
-                    "label": "NU_NU_output_latency_avg"
-                  },
-                  {
-                    "info": "NU_NU_output_jitter_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_NU_output_jitter_avg",
-                    "weight": 1,
-                    "label": "NU_NU_output_jitter_avg"
-                  },
-                  {
                     "info": "NU_NU_output_pps",
                     "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
@@ -1506,22 +1469,6 @@
                     "name": "HNU_NU_output_throughput",
                     "weight": 1,
                     "label": "HNU_NU_output_throughput"
-                  },
-                  {
-                    "info": "HNU_NU_output_latency_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_NU_output_latency_avg",
-                    "weight": 1,
-                    "label": "HNU_NU_output_latency_avg"
-                  },
-                  {
-                    "info": "HNU_NU_output_jitter_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_NU_output_jitter_avg",
-                    "weight": 1,
-                    "label": "HNU_NU_output_jitter_avg"
                   },
                   {
                     "info": "HNU_NU_output_pps",
