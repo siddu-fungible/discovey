@@ -663,7 +663,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
         }
         this.chart1YaxisTitle = "Scores";
-        this.values = [{data: values}];
+        this.values = [{data: values, name: "Scores"}];
         this.series = dateSeries;
       }
     });
