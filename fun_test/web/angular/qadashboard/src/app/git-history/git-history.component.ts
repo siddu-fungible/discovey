@@ -2,6 +2,7 @@ import {Component, Input, OnInit} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
+import {CommonService} from "../services/common/common.service";
 
 @Component({
   selector: 'git-history',
@@ -19,8 +20,12 @@ export class GitHistoryComponent implements OnInit {
   commitDates: any = null;
   status: string = null;
   showChanged: boolean = false;
+  gitCommit: any = null;
+  faultyMessage: string = null;
+  successMessage: string = null;
+  totalShow: boolean = false;
 
-  constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute) { }
+  constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute, private commonService: CommonService) { }
 
   ngOnInit() {
     this.status = "Fetching Commits";
@@ -68,6 +73,9 @@ export class GitHistoryComponent implements OnInit {
                  "success_commit": this.successCommit};
       this.apiService.post('/metrics/git_commits', payload).subscribe(result => {
         this.commits = result.data.commits;
+        let total = this.commits.length - 1;
+        this.faultyMessage = this.commits[0].message;
+        this.successMessage = this.commits[total].message;
         this.status = null;
       }, error => {
         this.logger.error("Fetching git Commits between the faulty and success commits");
@@ -80,12 +88,16 @@ export class GitHistoryComponent implements OnInit {
 
   showFilesChanged(commit): void {
     this.showChanged = true;
+    this.commonService.scrollTo("changed-files");
     this.changedFiles = commit.changed_files;
+    this.gitCommit = commit.hexsha;
 
   }
 
   showTotalFilesCHanged(): void {
     this.showChanged = true;
+    this.totalShow = true;
+    this.commonService.scrollTo("changed-files");
     let changedFiles = new Set();
     for (let commit of this.commits) {
       for (let file of commit.changed_files) {

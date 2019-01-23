@@ -25,47 +25,29 @@ class GitManager:
             repo = self.initialize_repository(STASH_DIR + "/FunOS")
             commits_list = self.get_commits_list(repo, faulty_commit, success_commit)
             start = False
+            faulty = None
             for commit in commits_list:
-                if success_commit in commit.hexsha:
-                    success = commit
-                    commit_detail = {}
-                    commit_detail["name"] = commit
-                    if commit.authored_datetime:
-                        commit_detail["date"] = commit.authored_datetime
-                    else:
-                        commit_detail["date"] = None
-                    commit_detail["changed_files"] = []
-                    diff = faulty.diff(success)
+                commit_detail = {}
+                commit_detail["hexsha"] = commit.hexsha if commit.hexsha else None
+                commit_detail["date"] = commit.authored_datetime if commit.authored_datetime else None
+                commit_detail["message"] = commit.message if commit.message else None
+                commit_detail["author"] = commit.author if commit.author else None
+                commit_detail["changed_files"] = []
+                if faulty is not None:
+                    diff = faulty.diff(commit)
                     for file in diff:
                         if file.a_rawpath not in commit_detail["changed_files"]:
                             commit_detail["changed_files"].append(file.a_rawpath)
+                if success_commit in commit.hexsha:
                     result["commits"].append(commit_detail)
                     break
                 if start:
                     if "Merge pull" in commit.message:
-                        commit_detail = {}
-                        commit_detail["name"] = commit
-                        if commit.authored_datetime:
-                            commit_detail["date"] = commit.authored_datetime
-                        else:
-                            commit_detail["date"] = None
-                        commit_detail["changed_files"] = []
-                        diff = faulty.diff(commit)
-                        for file in diff:
-                            if file.a_rawpath not in commit_detail["changed_files"]:
-                                commit_detail["changed_files"].append(file.a_rawpath)
                         result["commits"].append(commit_detail)
                         faulty = commit
                 if faulty_commit in commit.hexsha:
                     faulty = commit
                     start = True
-                    commit_detail = {}
-                    commit_detail["name"] = commit
-                    if commit.authored_datetime:
-                        commit_detail["date"] = commit.authored_datetime
-                    else:
-                        commit_detail["date"] = None
-                    commit_detail["changed_files"] = []
                     result["commits"].append(commit_detail)
         except Exception as ex:
             logger.exception("Exception: {}".format(str(ex)))

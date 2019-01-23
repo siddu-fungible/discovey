@@ -753,7 +753,7 @@ def get_git_commits(request):
     request_json = json.loads(request.body)
     faulty_commit = request_json["faulty_commit"]
     success_commit = request_json["success_commit"]
-    m = GitManager()
-    commits = m.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
+    git_obj = app_config.get_git_manager()
+    commits = git_obj.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
     result["commits"] = commits["commits"]
     return result

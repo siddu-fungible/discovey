@@ -411,6 +411,9 @@ input:checked + .slider:before {
 .text-color-red {
   color: red;
 }
+.text-color-green {
+  color: green;
+}
 
 .passed-table-cell {
   background-color: #9ACD32;

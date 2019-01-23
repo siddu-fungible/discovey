@@ -1,4 +1,4 @@
-<div class="component">
+<div id="changed-files" class="component">
   <fun-spinner [status]="status"></fun-spinner>
   <div *ngIf="status===null">
     <div class="row">
@@ -7,39 +7,56 @@
           <div class="card-header min-padding"><b>Commit History</b></div>
           <div class="card-body min-padding">
             <div class="min-padding">
+              <a [routerLink]="" (click)="showTotalFilesCHanged()">All Files Changed</a><br><br>
               <p class="no-margin">
+                <span>Failed Git Commit:</span><span style="color: red"> {{ faultyCommit }}</span><br>
                 <span>
-                  Failed Git Commit:
+                  Failed Git Commit Message:
                 </span>
                 <span style="color: red">
-                {{ faultyCommit }}</span>
-              </p>
+                {{ faultyMessage }}</span>
+              </p><br>
+              <p class="no-margin">
+                <span>
+                  Last Passed Git Commit:</span> <span style="color: green"> {{ successCommit }}</span><br>
+                <span>
+                  Last Passed Git Commit Message:
+                </span>
+                <span style="color: green">
+                {{ successMessage }}</span>
+              </p><br>
               <table class="table table-bordered">
                 <tr>
-                  <th>
-                    <b>FunOS Git Commit</b>
+                  <th class="align msg-width">
+                    <b>FunOS Git Commit Message</b>
                   </th>
-                  <th>
+                  <th class="align fc-width">
+                    Files Changed
+                  </th>
+                  <th class="align committer-width">
+                    Committer
+                  </th>
+                  <th class="align">
                     <b>Committed Date Time</b>
                   </th>
                 </tr>
                 <tr class="no-margin" *ngFor="let commit of commits">
                   <td class="table-padding">
-                    <a [routerLink]="" style="color: black" (click)="showFilesChanged(commit)">{{ commit.name }}</a>
+                    <span *ngIf="commit.hexsha==faultyCommit" class="text-color-red">{{ commit.message }}</span>
+                    <span *ngIf="commit.hexsha==successCommit" class="text-color-green">{{ commit.message }}</span>
+                    <span *ngIf="commit.hexsha!=faultyCommit && commit.hexsha!=successCommit">{{ commit.message }}</span>
                   </td>
-                  <td class="table-padding">
+                  <td class="table-padding align">
+                    <a [routerLink]="" (click)="showFilesChanged(commit)">{{ commit["changed_files"].length }}</a>
+                  </td>
+                  <td class="table-padding align">
+                    {{ commit.author }}
+                  </td>
+                  <td class="table-padding align">
                     {{ commit.date }}
                   </td>
                 </tr>
               </table>
-              <p class="no-margin">
-                <span>
-                  Last Passed Git Commit:
-                </span>
-                <span style="color: green">
-                {{ successCommit }}</span>
-              </p><br>
-              <a [routerLink]="" (click)="showTotalFilesCHanged()">Total Files Changed</a>
             </div>
           </div>
         </div>
@@ -49,6 +66,7 @@
           <div class="card-header min-padding"><b>Files Changed:</b></div>
           <div class="card-body min-padding">
             <div class="min-padding">
+              <p *ngIf="!totalShow"><b>Git Commit:</b> {{ gitCommit }}</p>
               <p class="no-margin" *ngFor="let fileNames of changedFiles">
                 {{ fileNames }}
               </p>
