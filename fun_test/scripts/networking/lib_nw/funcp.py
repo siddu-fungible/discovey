@@ -22,11 +22,10 @@ class FunControlPlane:
 
     def setup_traffic_server(self, server='nu'):
         """Set up PTF traffic server."""
-        if server.lower() == 'nu':
-            arg = ''
-        elif server.lower() == 'hu':
-            arg = '--hu'
-        return self.linux_obj.command('%s/setup_traffic_server %s' % (self.palladium_test_path, arg))
+        if server.lower() in ('nu', 'hu', 'sb'):
+            return self.linux_obj.command('%s/setup_traffic_server %s' % (self.palladium_test_path, server))
+        else:
+            return 'error'
 
     def send_traffic(self, test, timeout=60):
         """Run the given test by sending traffic."""

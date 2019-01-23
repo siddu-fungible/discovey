@@ -22,7 +22,9 @@ class EndPointTestSuite(FunTestScript):
                              'git clone FunControlPlane repo')
         fun_test.test_assert(re.search(r'Already up-to-date.', funcp_obj.pull()) is not None,
                              'git pull FunControlPlane repo')
-        fun_test.test_assert(not re.search(r'fail|error|abort|assert', funcp_obj.setup_traffic_server('hu'), re.IGNORECASE),
+        output = funcp_obj.setup_traffic_server('hu')
+        fun_test.test_assert(re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output,
+                                                                            re.IGNORECASE),
                              'Set up PTF traffic server')
         fun_test.shared_variables['funcp_obj'] = funcp_obj
 
@@ -47,7 +49,7 @@ class EtpTest(FunTestCase):
     def run(self):
         funcp_obj = fun_test.shared_variables['funcp_obj']
         output = funcp_obj.send_traffic('endpoint.EtpTest_simple_tcp', timeout=60)
-        fun_test.test_assert(not re.search(r'FAIL', output), "ETP test")
+        fun_test.test_assert(re.search(r'Ran \d+ test.*OK', output, re.DOTALL), "ETP test")
 
 
 class ErpTest(FunTestCase):
@@ -67,7 +69,7 @@ class ErpTest(FunTestCase):
     def run(self):
         funcp_obj = fun_test.shared_variables['funcp_obj']
         output = funcp_obj.send_traffic('endpoint.ErpTest_simple_tcp', timeout=60)
-        fun_test.test_assert(not re.search(r'FAIL', output), "ERP test")
+        fun_test.test_assert(re.search(r'Ran \d+ test.*OK', output, re.DOTALL), "ERP test")
 
 
 if __name__ == "__main__":
