@@ -103,7 +103,7 @@ class ScriptSetup(FunTestScript):
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
         # TODO: Configure cadence-pc-3 and pc-4 for FCP test
-        self._setup_fcp_external_routes()
+        # self._setup_fcp_external_routes()
 
         TIMESTAMP = get_current_time()
 
