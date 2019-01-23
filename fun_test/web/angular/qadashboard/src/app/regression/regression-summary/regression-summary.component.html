@@ -127,6 +127,7 @@
                   class="text-color-red">{{ scriptInfo.value.numBugs }}</span></sup>&nbsp;</span></b>
                 <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
                    class="anchor-button pseudo-anchor">details</u>
+                &nbsp;<label class="badge badge-history pseudo-anchor" data-placement="top" data-toggle="tooltip" title="history" (click)="clickHistory(scriptInfo.key)">history</label>
               </td>
               <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
               <td>{{ scriptInfo.value.historyResults.numFailed }}</td>

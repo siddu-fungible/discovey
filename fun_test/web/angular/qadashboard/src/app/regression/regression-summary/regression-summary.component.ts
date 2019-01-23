@@ -53,6 +53,11 @@ export class RegressionSummaryComponent implements OnInit {
 
   }
 
+  clickHistory(scriptPath) {
+    let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].pk;
+    window.open(url, '_blank');
+  }
+
   setFilterData() {
     let filterData = this.initialFilterData;
     if (this.filterData) {
@@ -62,7 +67,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   ngOnChanges() {
-    this.ngOnInit();
+    this.setFilterData();
   }
 
   scrollTo(elementId, index) {
@@ -115,6 +120,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   fetchScripts() {
+    this.numBugs = 0;
     this.apiService.get("/regression/scripts").subscribe(response => {
       response.data.forEach(entry => {
         this.scriptInfoMap[entry.script_path] = entry;
