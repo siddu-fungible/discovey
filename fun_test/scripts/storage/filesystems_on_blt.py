@@ -223,7 +223,7 @@ class FSOnBLTTestcase(FunTestCase):
                                                                                    self.mount_point))
         if self.readonly_filesystem:
             check_fs_ro = self.host.is_mount_ro(self.mount_point)
-            fun_test.test_assert_expected(True, check_fs_ro, "File system is mounted as read only")
+            fun_test.test_assert_expected(True, check_fs_ro, "File system is mounted as read only filesystem")
         # Write and read a file into the newly mounted BLT volume
         self.do_write_test()
         self.do_read_test()
@@ -239,34 +239,39 @@ class FSOnBLTTestcase(FunTestCase):
                                                                                        self.mount_point))
         # Remount file system on host and verify file contents
         if self.remount_filesystem:
-            fun_test.log("\n===== Remounting file system: {} =====".format(self.fs_type))
+            if self.remount_as_readonly:
+                self.readonly_filesystem = True
+            fun_test.log("\n===== Remounting file system: {} with Read-only flag: {} =====".format(
+                self.fs_type, self.readonly_filesystem))
             command_result = self.host.mount_volume(self.nvme_block_device, self.mount_point,
                                                     readonly=self.readonly_filesystem)
             fun_test.simple_assert(command_result, "Mounting BLT volume {} on {}".format(self.nvme_block_device,
                                                                                          self.mount_point))
+            if self.readonly_filesystem:
+                check_fs_ro = self.host.is_mount_ro(self.mount_point)
+                fun_test.test_assert_expected(True, check_fs_ro, "File system is remounted as read only filesystem")
             lsblk_output = self.host.lsblk("-b")
             fun_test.test_assert_expected(expected=self.mount_point,
                                           actual=lsblk_output[self.volume_name]["mount_point"],
                                           message="Mounting BLT volume {} on {}".format(self.nvme_block_device,
                                                                                             self.mount_point))
-            if not self.readonly_filesystem:
-                # Check if existing file retains the file contents
-                self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
-                fun_test.test_assert(self.output_md5sum, "Finding md5sum of existing ouptut file {} after remount".
-                                     format(self.dd_read_args["output_file"]))
-                fun_test.test_assert_expected(self.input_md5sum, self.output_md5sum,
-                                              "md5sum of input & output file matches after remount")
+            # Check if existing file retains the file contents
+            self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
+            fun_test.test_assert(self.output_md5sum, "Finding md5sum of existing ouptut file {} after remount".
+                                 format(self.dd_read_args["output_file"]))
+            fun_test.test_assert_expected(self.input_md5sum, self.output_md5sum,
+                                          "md5sum of input & output file matches after remount")
 
-                if not self.remount_as_readonly:
-                    # Cleaning up files
-                    del_input_file = self.host.remove_file(self.dd_read_args["input_file"])
-                    fun_test.test_assert_expected(True, del_input_file, "Input file is deleted")
-                    del_output_file = self.host.remove_file(self.dd_read_args["output_file"])
-                    fun_test.test_assert_expected(True, del_output_file, "Output file is deleted")
+            if not self.remount_as_readonly:
+                # Cleaning up old files
+                del_input_file = self.host.remove_file(self.dd_read_args["input_file"])
+                fun_test.test_assert_expected(True, del_input_file, "Input file is deleted")
+                del_output_file = self.host.remove_file(self.dd_read_args["output_file"])
+                fun_test.test_assert_expected(True, del_output_file, "Output file is deleted")
 
-                    # Write new data in files and re-verify
-                    self.do_write_test()
-                    self.do_read_test()
+                # Write new data in files and re-verify
+                self.do_write_test()
+                self.do_read_test()
 
             # unmounting the BLT volume
             command_result = self.host.unmount_volume(volume=self.nvme_block_device)
