@@ -98,18 +98,16 @@ class CryptoCore(FunTestCase):
         # install_status = self.host.install_package("fio")
         # fun_test.test_assert(install_status, "fio installed successfully")
 
-        command_result = {}
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Enabling counters on DUT instance")
 
-        self.internal_filter_stats = True
         if self.encrypt:
             # Getting initial crypto filter stats
             initial_filter_values = {}
             for filter_param in self.filter_params:
                 crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
-                command_result = {}
+
                 command_result = self.storage_controller.peek(crypto_props_tree)
                 if command_result["data"] is None:
                     command_result["data"] = 0
@@ -127,7 +125,6 @@ class CryptoCore(FunTestCase):
         self.blt_capacity = ((self.blt_capacity + self.blt_details["block_size"] - 1) /
                              self.blt_details["block_size"]) * self.blt_details["block_size"]
 
-        command_result = {}
         command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                capacity=self.blt_capacity,
                                                                block_size=self.blt_details["block_size"],
@@ -139,7 +136,7 @@ class CryptoCore(FunTestCase):
         # Create JVol
         self.jvol_capacity = \
             self.blt_details["block_size"] * self.jvol_details["multiplier"] * self.lsv_details["chunk_size"]
-        command_result = {}
+
         command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_NV_MEMORY",
                                                                capacity=self.jvol_capacity,
                                                                block_size=self.jvol_details["block_size"],
@@ -149,7 +146,6 @@ class CryptoCore(FunTestCase):
         fun_test.simple_assert(command_result["status"], "Creation of Jvol with uuid {}".format(self.jvol_uuid))
 
         # Create LSV
-        command_result = {}
         command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LSV",
                                                                capacity=self.blt_details["capacity"],
                                                                block_size=self.blt_details["block_size"],
@@ -165,7 +161,6 @@ class CryptoCore(FunTestCase):
         fun_test.simple_assert(command_result["status"], "Creation of LSV with uuid {}".format(self.lsv_uuid))
 
         # Attach the volume over PCIe
-        command_result = {}
         command_result = self.storage_controller.volume_attach_pcie(ns_id=1,
                                                                     uuid=self.lsv_uuid,
                                                                     command_duration=self.command_timeout)
@@ -177,7 +172,6 @@ class CryptoCore(FunTestCase):
             diff_filter_values = {}
             for filter_param in self.filter_params:
                 crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
-                command_result = {}
                 command_result = self.storage_controller.peek(crypto_props_tree)
                 if command_result["data"] is None:
                     command_result["data"] = 0
@@ -190,19 +184,9 @@ class CryptoCore(FunTestCase):
                     evalue = 1 * multiplier
                 diff_filter_values[filter_param] = \
                     final_filter_values[filter_param] - initial_filter_values[filter_param]
-                if diff_filter_values[filter_param] != evalue:
-                    self.internal_filter_stats = False
-                    fun_test.add_checkpoint("Crypto filter {} matches expected count".
-                                            format(filter_param),
-                                            "FAILED",
-                                            evalue,
-                                            diff_filter_values[filter_param])
-                else:
-                    fun_test.add_checkpoint("Crypto filter {} matches expected count".
-                                            format(filter_param),
-                                            "PASSED",
-                                            evalue,
-                                            diff_filter_values[filter_param])
+                fun_test.test_assert(expression=diff_filter_values[filter_param] == evalue,
+                                     message="Crypto filter {} count {} matches expected count {}".
+                                     format(filter_param, diff_filter_values[filter_param], evalue))
 
     def run(self):
         testcase = self.__class__.__name__
@@ -210,13 +194,10 @@ class CryptoCore(FunTestCase):
         test_run_status = True
 
         # Stop services on host
-        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-        for service in udev_services:
-            service_status = self.host.systemctl(service_name=service, action="stop")
-            fun_test.simple_assert(service_status, "Stopping {} service".format(service))
+        self.qemu.stop_host_services()
 
         # Remove *.txt files from /tmp
-        self.host.command("rm -rf /tmp/*.txt")
+        self.host.remove_file("/tmp/*.txt")
 
         # Create a file on host used as input for nvme write
         self.host.command("while true ; do printf DEADBEEF; done | head -c {} > /tmp/input_file.txt".
@@ -232,7 +213,6 @@ class CryptoCore(FunTestCase):
         else:
             nvme_reload = self.host.nvme_restart()
             fun_test.test_assert(nvme_reload, "nvme driver module reloaded")
-            fun_test.sleep("Sleeping for {}", 2)
             lsblk_output = self.host.command("lsblk -o NAME | grep -i nvme0")
             if "nvme0" not in lsblk_output:
                 fun_test.test_assert(False, "NVME device not found.")
@@ -261,39 +241,34 @@ class CryptoCore(FunTestCase):
                                                 count=blk_count,
                                                 size=self.write_size,
                                                 data="/tmp/input_file.txt")
-            if lsv_write[i] != "Success":
-                test_run_status = False
-                fun_test.log("Write failed with {} on LSV".format(lsv_write[i]))
+            fun_test.simple_assert(expression=lsv_write[i] == "Success",
+                                   message="Write failed with {} on LSV".format(lsv_write[i]))
+
             lsv_read[i] = self.qemu.nvme_read(device=self.nvme_block_device,
                                               start=start_count,
                                               count=blk_count,
                                               size=self.write_size,
                                               data="/tmp/read_lsv" + "_lba_" + str(start_count))
-            if lsv_read[i] != "Success":
-                test_run_status = False
-                fun_test.simple_assert(False, "Read failed with {} on LSV, LBA {}".format(lsv_read[i], start_count))
+            fun_test.simple_assert(expression=lsv_write[i] == "Success",
+                                   message="Read failed with {} on LSV, LBA {}".format(lsv_read[i], start_count))
 
             self.md5sum_output = self.qemu.md5sum(file_name="/tmp/read_lsv" + "_lba_" + str(start_count))
             fun_test.simple_assert(self.md5sum_output, "Computing md5sum for output file")
-            if self.md5sum_input != self.md5sum_output:
-                test_run_status = False
-                fun_test.simple_assert(False, "The md5sum doesn't match for LBA {}, input {}, output {}".
-                                       format(start_count, self.md5sum_input, self.md5sum_output))
+            fun_test.simple_assert(expression=self.md5sum_input == self.md5sum_output,
+                                   message="The md5sum doesn't match for LBA {}, input {}, output {}".
+                                   format(start_count, self.md5sum_input, self.md5sum_output))
 
             # Now umount volume and mount without encryption
-            command_result = {}
             command_result = self.storage_controller.volume_detach_pcie(ns_id=1,
                                                                         uuid=self.lsv_uuid,
                                                                         command_duration=self.command_timeout)
             fun_test.simple_assert(command_result["status"], "Detach LSV with uuid {}".format(self.lsv_uuid))
 
-            command_result = {}
             command_result = self.storage_controller.unmount_volume(type="VOL_TYPE_BLK_LSV",
                                                                     uuid=self.lsv_uuid,
                                                                     name="lsv1")
             fun_test.simple_assert(command_result["status"], "Unmount LSV with uuid {}".format(self.lsv_uuid))
 
-            command_result = {}
             command_result = self.storage_controller.mount_volume(type="VOL_TYPE_BLK_LSV",
                                                                   capacity=self.blt_details["capacity"],
                                                                   block_size=self.blt_details["block_size"],
@@ -304,7 +279,6 @@ class CryptoCore(FunTestCase):
                                                                   command_duration=self.command_timeout)
             fun_test.simple_assert(command_result["status"], "Mount LSV with uuid {}".format(self.lsv_uuid))
 
-            command_result = {}
             command_result = self.storage_controller.volume_attach_pcie(ns_id=1,
                                                                         uuid=self.lsv_uuid,
                                                                         command_duration=self.command_timeout)
@@ -315,27 +289,24 @@ class CryptoCore(FunTestCase):
                                                      count=blk_count,
                                                      size=self.write_size,
                                                      data="/tmp/enc_read_lsv" + "_lba_" + str(start_count))
-            if lsv_read_cipher[i] != "Success":
-                test_run_status = False
-                fun_test.simple_assert(False, "Cipher Read failed with {} on LSV, LBA {}".
-                                       format(lsv_read_cipher[i], start_count))
+            fun_test.simple_assert(expression=lsv_read_cipher[i] == "Success",
+                                   message="Cipher Read failed with {} on LSV, LBA {}".
+                                   format(lsv_read_cipher[i], start_count))
+
             cipher_md5sum = self.qemu.md5sum(file_name="/tmp/enc_read_lsv" + "_lba_" + str(start_count))
             self.md5sum_cipher.append(cipher_md5sum)
 
             # Mount LSV with encryption now
-            command_result = {}
             command_result = self.storage_controller.volume_detach_pcie(ns_id=1,
                                                                         uuid=self.lsv_uuid,
                                                                         command_duration=self.command_timeout)
             fun_test.simple_assert(command_result["status"], "Detach LSV with uuid {}".format(self.lsv_uuid))
 
-            command_result = {}
             command_result = self.storage_controller.unmount_volume(type="VOL_TYPE_BLK_LSV",
                                                                     uuid=self.lsv_uuid,
                                                                     name="lsv1")
             fun_test.simple_assert(command_result["status"], "Unmount LSV with uuid {}".format(self.lsv_uuid))
 
-            command_result = {}
             command_result = self.storage_controller.mount_volume(type="VOL_TYPE_BLK_LSV",
                                                                   capacity=self.blt_details["capacity"],
                                                                   block_size=self.blt_details["block_size"],
@@ -349,7 +320,6 @@ class CryptoCore(FunTestCase):
                                                                   command_duration=self.command_timeout)
             fun_test.simple_assert(command_result["status"], "Mount LSV with uuid {}".format(self.lsv_uuid))
 
-            command_result = {}
             command_result = self.storage_controller.volume_attach_pcie(ns_id=1,
                                                                         uuid=self.lsv_uuid,
                                                                         command_duration=self.command_timeout)
@@ -360,23 +330,15 @@ class CryptoCore(FunTestCase):
                                                     count=blk_count,
                                                     size=self.write_size,
                                                     data="/tmp/plain_read_lsv" + "_lba_" + str(start_count))
+            fun_test.test_assert(expression=lsv_read_plain[i] == "Success",
+                                 message="Plain txt read completed with {} on LSV, LBA {}".
+                                 format(lsv_read_plain[i], start_count))
 
-            if lsv_read_plain[i] != "Success":
-                test_run_status = False
-                fun_test.simple_assert(False, "Plain txt read failed with {} on LSV, LBA {}".
-                                       format(lsv_read_plain[i], start_count))
             self.md5sum_plain_read = self.qemu.md5sum(file_name="/tmp/plain_read_lsv" + "_lba_" + str(start_count))
-            if self.md5sum_input != self.md5sum_plain_read:
-                test_run_status = False
-                fun_test.critical("There is a mismatch in data read after mount with encryption, input md5sum {},"
-                                  "read md5sum {} for LBA {}".format(self.md5sum_input,
-                                                                     self.md5sum_plain_read, start_count))
-                fun_test.test_assert(False, "Read data for LBA {} doesn't match input data after mount".
-                                     format(start_count))
-            else:
-                fun_test.log("After remount Input md5sum {}, Plain md5sum {} for LBA {}".
-                             format(self.md5sum_input, self.md5sum_plain_read, start_count))
-                fun_test.test_assert(True, "Plain data for LBA {} matches input data after remount".format(start_count))
+            fun_test.simple_assert(expression=self.md5sum_input == self.md5sum_plain_read,
+                                   message="There is a mismatch in data read after mount with encryption, input "
+                                           "md5sum {}, read md5sum {} for LBA {}".
+                                   format(self.md5sum_input, self.md5sum_plain_read, start_count))
 
             # Verify the output with openssl if write_size is 4k
             if self.write_size == 4096:
@@ -414,42 +376,27 @@ class CryptoCore(FunTestCase):
                                                                     "/tmp/enc_read_lsv" + "_lba_" + str(start_count)))
                 ssl_encrypted_md5sum = self.qemu.md5sum(file_name="/tmp/ssl_encrypted" + "_lba_" + str(start_count))
                 ssl_decrypted_md5sum = self.qemu.md5sum(file_name="/tmp/ssl_decrypted" + "_lba_" + str(start_count))
-                if ssl_encrypted_md5sum != self.md5sum_cipher[i]:
-                    test_run_status = False
-                    fun_test.simple_assert(False, "Encrypted file from openssl doesn't match cipher for LBA {}".
-                                           format(start_count))
-                else:
-                    fun_test.log("Encrypted file from openssl matches cipher for LBA {}".format(start_count))
-                if self.md5sum_input != ssl_decrypted_md5sum:
-                    test_run_status = False
-                    fun_test.simple_assert(False, "Decrypted file from openssl doesn't match input for LBA {}".
-                                           format(start_count))
-                else:
-                    fun_test.log("Decrypted file from openssl matches input for LBA {}".format(start_count))
+                fun_test.test_assert(expression=ssl_encrypted_md5sum == self.md5sum_cipher[i],
+                                     message="Compare md5sum of Encrypted file from openssl for LBA {}".
+                                     format(start_count))
+                fun_test.test_assert(expression=self.md5sum_input == ssl_decrypted_md5sum,
+                                     message="Compare md5sum of Decrypted file from openssl for LBA {}".
+                                     format(start_count))
 
             start_count += write_block_count
-
-        if len(self.md5sum_cipher) != len(set(self.md5sum_cipher)):
-            test_run_status = False
-            fun_test.critical("There seems to be same encrypted data on different LBA.")
-            fun_test.critical("MD5SUM is {}".format(self.md5sum_cipher))
-
-        test_result = True
-        if not test_run_status or not self.internal_filter_stats:
-            test_result = False
-        self.host.disconnect()
-        fun_test.test_assert(test_result, self.summary)
+        fun_test.simple_assert(expression=len(self.md5sum_cipher) == len(set(self.md5sum_cipher)),
+                               message="There seems to be same encrypted data on different LBA, {}".
+                               format(self.md5sum_cipher))
 
     def cleanup(self):
-        self.host.disconnect()
+        if hasattr(self, "host_disconnect") and self.host_disconnect:
+            self.host.disconnect()
 
-        command_result = {}
         command_result = self.storage_controller.volume_detach_pcie(ns_id=1,
                                                                     uuid=self.lsv_uuid,
                                                                     command_duration=self.command_timeout)
         fun_test.simple_assert(command_result["status"], "Detach LSV with uuid {}".format(self.lsv_uuid))
 
-        command_result = {}
         command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
                                                                block_size=self.blt_details["block_size"],
                                                                name="lsv1",
@@ -457,7 +404,6 @@ class CryptoCore(FunTestCase):
                                                                type="VOL_TYPE_BLK_LSV")
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Deleted LSV with uuid {}".format(self.lsv_uuid))
-        command_result = {}
         command_result = self.storage_controller.delete_volume(capacity=self.jvol_capacity,
                                                                block_size=self.jvol_details["block_size"],
                                                                name="jvol1",
@@ -465,7 +411,6 @@ class CryptoCore(FunTestCase):
                                                                type="VOL_TYPE_BLK_NV_MEMORY")
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Deleted Journal with uuid {}".format(self.jvol_uuid))
-        command_result = {}
         command_result = self.storage_controller.delete_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                capacity=self.blt_capacity,
                                                                uuid=self.blt_uuid,
@@ -474,7 +419,7 @@ class CryptoCore(FunTestCase):
                                                                command_duration=self.command_timeout)
         fun_test.test_assert(command_result["status"], "Delete BLT with uuid {}".format(self.blt_uuid))
 
-        # Check if there is any residual volumes
+        # TODO SWOS-3597
         fun_test.log("Volume stats after cleanup")
         self.storage_props_tree = "{}/{}".format("storage", "volumes")
         command_result = self.storage_controller.peek(self.storage_props_tree)
@@ -492,15 +437,6 @@ class Key256Write4k(CryptoCore):
                               4. Use NVME read on the written block and save in file.
                               5. Compare the input file and the read data file.''')
 
-    def setup(self):
-        super(Key256Write4k, self).setup()
-
-    def run(self):
-        super(Key256Write4k, self).run()
-
-    def cleanup(self):
-        super(Key256Write4k, self).cleanup()
-
 
 class Key512Write4k(CryptoCore):
 
@@ -513,15 +449,6 @@ class Key512Write4k(CryptoCore):
                               3. Use NVME write on LBA using data_file.
                               4. Use NVME read on the written block and save in file.
                               5. Compare the input file and the read data file.''')
-
-    def setup(self):
-        super(Key512Write4k, self).setup()
-
-    def run(self):
-        super(Key512Write4k, self).run()
-
-    def cleanup(self):
-        super(Key512Write4k, self).cleanup()
 
 
 class Key256Write8k(CryptoCore):
@@ -536,15 +463,6 @@ class Key256Write8k(CryptoCore):
                               4. Use NVME read on the written block and save in file.
                               5. Compare the input file and the read data file.''')
 
-    def setup(self):
-        super(Key256Write8k, self).setup()
-
-    def run(self):
-        super(Key256Write8k, self).run()
-
-    def cleanup(self):
-        super(Key256Write8k, self).cleanup()
-
 
 class Key512Write8k(CryptoCore):
 
@@ -557,15 +475,6 @@ class Key512Write8k(CryptoCore):
                               3. Use NVME write on LBA using data_file.
                               4. Use NVME read on the written block and save in file.
                               5. Compare the input file and the read data file.''')
-
-    def setup(self):
-        super(Key512Write8k, self).setup()
-
-    def run(self):
-        super(Key512Write8k, self).run()
-
-    def cleanup(self):
-        super(Key512Write8k, self).cleanup()
 
 
 if __name__ == "__main__":
