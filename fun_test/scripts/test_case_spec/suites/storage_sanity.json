@@ -1,6 +1,5 @@
 [
   {"info": {"tags": ["storage-sanity", "storage", "ikv"]}},
   {"path": "storage/ikv_test.py"},
-  {"path": "storage/setup_replica.py"},
   {"path": "storage/thin_block_volume_sanity.py"}
 ]
