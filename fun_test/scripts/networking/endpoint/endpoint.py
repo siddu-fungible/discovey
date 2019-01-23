@@ -20,8 +20,7 @@ class EndPointTestSuite(FunTestScript):
         funcp_obj = funcp.FunControlPlane(linux_obj)
         fun_test.test_assert(re.search(r'Checking connectivity... done.', funcp_obj.clone()) is not None,
                              'git clone FunControlPlane repo')
-        # TODO: remove branch info
-        fun_test.test_assert(re.search(r'Already up-to-date.', funcp_obj.pull(branch='george/endpoint')) is not None,
+        fun_test.test_assert(re.search(r'Already up-to-date.', funcp_obj.pull()) is not None,
                              'git pull FunControlPlane repo')
         fun_test.test_assert(not re.search(r'fail|error|abort|assert', funcp_obj.setup_traffic_server('hu'), re.IGNORECASE),
                              'Set up PTF traffic server')
