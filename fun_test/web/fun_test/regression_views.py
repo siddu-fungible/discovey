@@ -637,7 +637,12 @@ def scripts(request):
 def script(request):
     result = None
     request_json = json.loads(request.body)
-    script_path = request_json["script_path"]
+    script_path = None
+    pk = None
+    if "script_path" in request_json:
+        script_path = request_json["script_path"]
+    if "pk" in request_json:
+        pk = request_json["pk"]
     module_names = None
 
     if "modules" in request_json:
@@ -653,8 +658,12 @@ def script(request):
             r.save()
     else:
         try:
-            r = RegresssionScripts.objects.get(script_path=script_path)
-            result = {"pk": r.pk}
+            r = None
+            if script_path:
+                r = RegresssionScripts.objects.get(script_path=script_path)
+            elif pk:
+                r = RegresssionScripts.objects.get(pk=pk)
+            result = {"pk": r.pk, "script_path": r.script_path}
         except ObjectDoesNotExist as ex:
             logging.error("Script: {} does not exist. {}".format(script_path, str(ex)))
     return result

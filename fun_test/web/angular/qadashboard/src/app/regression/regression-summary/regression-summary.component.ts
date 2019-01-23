@@ -53,6 +53,11 @@ export class RegressionSummaryComponent implements OnInit {
 
   }
 
+  clickHistory(scriptPath) {
+    let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].pk;
+    window.open(url, '_blank');
+  }
+
   setFilterData() {
     let filterData = this.initialFilterData;
     if (this.filterData) {
