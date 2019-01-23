@@ -583,8 +583,7 @@ def get_test_case_executions_by_time(request):
         q = Q(modules__contains=module_str)
         scripts_for_module = RegresssionScripts.objects.filter(q)
         scripts_for_module = [x.script_path for x in scripts_for_module]
-    else:
-        i = 0
+
     tes = []
     q = Q(started_time__gte=from_time)
 
@@ -592,6 +591,8 @@ def get_test_case_executions_by_time(request):
         for tag in test_case_execution_tags:
             tag_str = '"{}"'.format(tag)
             q = q & Q(tags__contains=tag_str)
+    if "script_path" in request_json:
+        q = q & Q(script_path=request_json["script_path"])
 
     test_case_executions = TestCaseExecution.objects.filter(q)
 

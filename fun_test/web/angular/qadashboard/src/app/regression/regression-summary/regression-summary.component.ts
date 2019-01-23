@@ -1,4 +1,4 @@
-import {Component, OnInit, Input} from '@angular/core';
+import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
@@ -38,6 +38,7 @@ export class RegressionSummaryComponent implements OnInit {
   filters = [];
 
   doInitializeFilters(filterData) {
+    this.filters = [];
     let index = 0;
     filterData.forEach(filterDataEntry => {
       this.initializeFilter(filterDataEntry.info, filterDataEntry.payload, index);
@@ -48,13 +49,20 @@ export class RegressionSummaryComponent implements OnInit {
   ngOnInit() {
     this.fetchAllVersions();
     this.pointClickCallback = this.pointDetail.bind(this);
+    this.setFilterData();
+
+  }
+
+  setFilterData() {
     let filterData = this.initialFilterData;
     if (this.filterData) {
       filterData = this.filterData;
     }
     this.doInitializeFilters(filterData);
+  }
 
-
+  ngOnChanges() {
+    this.ngOnInit();
   }
 
   scrollTo(elementId, index) {

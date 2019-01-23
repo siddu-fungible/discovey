@@ -14,7 +14,8 @@ export class RegressionAdminComponent implements OnInit {
   versionList = [];
   suiteExectionVersionMap = {};
   adminOption: string = "Categorize scripts";
-  filterData = [{info: "Networking overall", payload: {module: "networking"}}];
+  filterData = null; //{info: "Networking overall", payload: {module: "networking"}}];
+  scriptPathsList = []; // sorted list of script paths;
 
   constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) {
   }
@@ -31,6 +32,8 @@ export class RegressionAdminComponent implements OnInit {
   availableModules = [];
   modifyingScriptAllocation = null;
 
+  byScriptName: any = {};
+  scriptPathSelected: string = null;
 
   ngOnInit() {
     this.dropdownSettings = {
@@ -43,6 +46,12 @@ export class RegressionAdminComponent implements OnInit {
       allowSearchFilter: true
     };
     this.fetchAllVersions();
+    //this.filterData.push({info: "Networking overall", payload: {module: "networking"}});
+  }
+
+  refreshSummary() {
+    this.filterData = [];
+    this.filterData.push({info: this.scriptPathSelected, payload: {script_path: this.scriptPathSelected}});
   }
 
   fetchAllVersions() {
@@ -90,11 +99,24 @@ export class RegressionAdminComponent implements OnInit {
   }
 
 
+  populateByScriptName() {
+    let scriptPaths = new Set();
+    this.allRegressionScripts.forEach(scriptEntry => {
+      scriptPaths.add(scriptEntry.script_path);
+    });
+    this.scriptPathsList = Array.from(scriptPaths);
+    this.scriptPathsList.sort();
+    if (this.scriptPathsList.length) {
+      this.scriptPathSelected = this.scriptPathsList[0];
+    }
+
+  }
 
 
   fetchRegressionScripts() {
     this.apiService.get("/regression/scripts").subscribe((response) => {
       this.allRegressionScripts = response.data;
+      this.populateByScriptName();
       // Set selected modules for each script
       this.allRegressionScripts.forEach((regressionScript) => {
         //console.log("ForEaches");
