@@ -20,6 +20,15 @@ class FunControlPlane:
         """git pull."""
         return self.linux_obj.command('cd %s/%s; git pull; git checkout %s' % (self.ws, self.name, branch), timeout=120)
 
+    def get_prebuilt(self):
+        """Get prebuilt FunControlPlane, which has funnel_gen.py, needed to run test."""
+        cmds = (
+            'cd %s/%s' % (self.ws, self.name),
+            'wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp.tgz',
+            'tar xzvf functrlp.tgz',
+        )
+        return self.linux_obj.command(';'.join(cmds), timeout=120)
+
     def setup_traffic_server(self, server='nu'):
         """Set up PTF traffic server."""
         if server.lower() in ('nu', 'hu', 'sb'):
@@ -27,9 +36,10 @@ class FunControlPlane:
         else:
             return 'error'
 
-    def send_traffic(self, test, timeout=60):
+    def send_traffic(self, test, server='nu', timeout=60):
         """Run the given test by sending traffic."""
-        return self.linux_obj.command('%s/send_traffic %s' % (self.palladium_test_path, test), timeout=timeout)
+        return self.linux_obj.command('%s/send_traffic %s %s' % (self.palladium_test_path, server, test),
+                                      timeout=timeout)
 
     def cleanup(self):
         """Remove worksapce."""
