@@ -7,20 +7,20 @@
           <div class="card-header min-padding"><b>Commit History</b></div>
           <div class="card-body min-padding">
             <div class="min-padding">
-              <a [routerLink]="" (click)="showTotalFilesCHanged()">All Files Changed</a><br><br>
-              <p class="no-margin">
-                <span>Failed Git Commit:</span><span style="color: red"> {{ faultyCommit }}</span><br>
+              <a [routerLink]="" (click)="showTotalFilesCHanged()">All files that changed</a><br><br>
+              <p class="no-margin"><b>Git info for first degrade:</b>
+                <span>Sha:</span><span style="color: red"> {{ faultyCommit }}</span><br>
                 <span>
-                  Failed Git Commit Message:
+                  Message:
                 </span>
                 <span style="color: red">
                 {{ faultyMessage }}</span>
               </p><br>
-              <p class="no-margin">
+              <p class="no-margin"><b>Git info before the first degrade:</b>
                 <span>
-                  Last Passed Git Commit:</span> <span style="color: green"> {{ successCommit }}</span><br>
+                  Sha:</span> <span style="color: green"> {{ successCommit }}</span><br>
                 <span>
-                  Last Passed Git Commit Message:
+                  Message:
                 </span>
                 <span style="color: green">
                 {{ successMessage }}</span>
@@ -47,7 +47,7 @@
                     <span *ngIf="commit.hexsha!=faultyCommit && commit.hexsha!=successCommit">{{ commit.message }}</span>
                   </td>
                   <td class="table-padding align">
-                    <a [routerLink]="" (click)="showFilesChanged(commit)">{{ commit["changed_files"].length }}</a>
+                    <a [routerLink]="" (click)="showFilesChanged(commit)">{{ commit["changed_files"].length > 0 ? commit["changed_files"].length: 'NA' }}</a>
                   </td>
                   <td class="table-padding align">
                     {{ commit.author }}
@@ -66,7 +66,8 @@
           <div class="card-header min-padding"><b>Files Changed:</b></div>
           <div class="card-body min-padding">
             <div class="min-padding">
-              <p *ngIf="!totalShow"><b>Git Commit:</b> {{ gitCommit }}</p>
+              <p *ngIf="!totalShow"><b>Git Commit:</b> {{ gitCommit }}<br>
+              <b>User:</b> {{ gitUser }}</p>
               <p class="no-margin" *ngFor="let fileNames of changedFiles">
                 {{ fileNames }}
               </p>

@@ -24,6 +24,7 @@ export class GitHistoryComponent implements OnInit {
   faultyMessage: string = null;
   successMessage: string = null;
   totalShow: boolean = false;
+  gitUser: string = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute, private commonService: CommonService) { }
 
@@ -88,9 +89,11 @@ export class GitHistoryComponent implements OnInit {
 
   showFilesChanged(commit): void {
     this.showChanged = true;
+    this.totalShow = false;
     this.commonService.scrollTo("changed-files");
     this.changedFiles = commit.changed_files;
     this.gitCommit = commit.hexsha;
+    this.gitUser = commit.author;
 
   }
 
