@@ -142,6 +142,7 @@
             <ng-container *ngIf="scriptInfo.value.showingDetails">
               <tr *ngFor="let suiteExecutionId of scriptInfo.value.suiteExecutionIdSet">
                 <td colspan="4">
+                  <p>Suite-execution ID: {{ suiteExecutionId }}</p>
                   <table class="table">
                     <tr>
                       <th>Result</th>
