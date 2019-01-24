@@ -18,9 +18,9 @@ class EndPointTestSuite(FunTestScript):
         # TODO: Replace below with regression user
         linux_obj = Linux(host_ip='localhost', ssh_username='gliang', ssh_password='fun123')
         funcp_obj = funcp.FunControlPlane(linux_obj)
-        fun_test.test_assert(re.search(r'Checking connectivity... done.', funcp_obj.clone()),
+        fun_test.test_assert(re.findall(r'done', funcp_obj.clone()) == ['done'] * 5,
                              'git clone FunControlPlane repo')
-        fun_test.test_assert(re.search(r'Already up-to-date.', funcp_obj.pull(branch='george/ep')),
+        fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull(branch='george/ep')),
                              'git pull FunControlPlane repo')
         fun_test.test_assert(re.search(r'funnel_gen.py.*COPYING', funcp_obj.get_prebuilt(), re.DOTALL),
                              'Get FunControlPlane prebuilt pkg')
