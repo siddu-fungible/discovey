@@ -16,6 +16,44 @@ class ScriptSetup(FunTestScript):
         1. Connect to DPCSH and configure egress NU/HNU buffer_pool and enable global PFC
         """)
 
+    def _setup_fcp_external_routes(self):
+        username = 'root'
+        pc_3_password = 'Precious1*'
+        pc_4_password = "fun123"
+        cadence_pc_3 = "cadence-pc-3"
+        cadence_pc_4 = "cadence-pc-4"
+        pc_3_config_dir = fun_test.get_helper_dir_path() + "/pc_3_fcp_configs"
+        pc_4_config_dir = fun_test.get_helper_dir_path() + "/pc_4_fcp_configs"
+
+        # Copy req files to cadence pc 3
+        target_file_path = "/tmp"
+        pc_3_obj = Linux(host_ip=cadence_pc_3, ssh_username=username, ssh_password=pc_3_password)
+        for file_name in ['unnh.sh', 'nofcp.sh', 'nh_fcp.sh']:
+            fun_test.log("Coping %s file to cadence pc 3 in /tmp dir" % file_name)
+            transfer_success = fun_test.scp(source_file_path=pc_3_config_dir + "/%s" % file_name,
+                                            target_file_path=target_file_path, target_ip=cadence_pc_3,
+                                            target_username=username, target_password=pc_3_password)
+            fun_test.simple_assert(transfer_success, "Ensure file is transferred")
+
+            # Configure cadence pc 3 for FCP traffic
+            fun_test.log("Executing %s on cadence pc 3" % file_name)
+            cmd = "sh /tmp/%s" % file_name
+            pc_3_obj.command(command=cmd)
+
+        # Copy req files to cadence pc 4
+        pc_4_obj = Linux(host_ip=cadence_pc_4, ssh_username=username, ssh_password=pc_4_password)
+        for file_name in ['nh_fcp.sh', 'unnh.sh']:
+            fun_test.log("Coping %s file to cadence pc 4 in /tmp dir" % file_name)
+            transfer_success = fun_test.scp(source_file_path=pc_4_config_dir + "/%s" % file_name,
+                                            target_file_path=target_file_path, target_ip=cadence_pc_4,
+                                            target_username=username, target_password=pc_4_password)
+            fun_test.simple_assert(transfer_success, "Ensure file is transferred")
+
+            # Configure cadence pc 4 for FCP traffic
+            fun_test.log("Executing %s cadence pc 4" % file_name)
+            cmd = "sh /tmp/%s" % file_name
+            pc_4_obj.command(command=cmd)
+
     def setup(self):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
@@ -56,14 +94,16 @@ class ScriptSetup(FunTestScript):
                                                                             mode="hnu")
         fun_test.test_assert(buffer_pool_set, checkpoint)
 
-        checkpoint = "Set MTU on all interfaces"
         port_list = [5, 13, 15, 18, 1, 2]
         shape = 0
         for port in port_list:
             if port == 1 or port == 2:
                 shape = 1
-            network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
-        fun_test.add_checkpoint(checkpoint)
+            result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
+            fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
+
+        # TODO: Configure cadence-pc-3 and pc-4 for FCP test
+        # self._setup_fcp_external_routes()
 
         TIMESTAMP = get_current_time()
 
@@ -74,16 +114,32 @@ class ScriptSetup(FunTestScript):
 class TestTransitPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
-    flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
-    summary = "%s RFC-2544 Bi-directional" % flow_direction
-    tcc_file_name = "transit_bidirectional_palladium.tcc"  # Bi-directional
-    bidirectional = True
+    flow_direction = FLOW_TYPE_NU_NU_NFCP
+    tcc_file_name = "transit_single_flow.tcc"  # Uni-directional
     spray = False
+
+    def _get_tcc_config_file_path(self, flow_direction):
+        dir_name = None
+        if flow_direction == FLOW_TYPE_NU_NU_NFCP:
+            dir_name = "nu_nu_flow"
+        elif flow_direction == FLOW_TYPE_HNU_HNU_NFCP:
+            dir_name = "hnu_hnu_nfcp_flow"
+        elif flow_direction == FLOW_TYPE_HNU_NU_NFCP:
+            dir_name = "hnu_nu_flow"
+        elif flow_direction == FLOW_TYPE_NU_HNU_NFCP:
+            dir_name = "nu_hnu_flow"
+        elif flow_direction == FLOW_TYPE_HNU_HNU_FCP:
+            dir_name = "hnu_hnu_fcp_flow"
+
+        tcc_config_path = fun_test.get_helper_dir_path() + '/palladium_configs/%s/%s' % (
+            dir_name, self.tcc_file_name)
+        fun_test.debug("Dir Name: %s" % dir_name)
+        return tcc_config_path
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Bi-directional: %s Spray: %s Frames: [64B, 1000B, 9000B]" % (
-                                  self.flow_direction, self.bidirectional, self.spray),
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1000B, 9000B]" % (self.flow_direction,
+                                                                                             self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -98,8 +154,7 @@ class TestTransitPerformance(FunTestCase):
         self.template_obj = Rfc2544Template(spirent_config=spirent_config)
         fun_test.test_assert(self.template_obj, checkpoint)
 
-        tcc_config_path = fun_test.get_helper_dir_path() + '/palladium_configs/%s_flow/%s' % (
-            self.flow_direction.lower(), self.tcc_file_name)
+        tcc_config_path = self._get_tcc_config_file_path(flow_direction=self.flow_direction)
 
         checkpoint = "Load existing tcc configuration"
         result = self.template_obj.setup(tcc_config_path=tcc_config_path)
@@ -151,20 +206,17 @@ class TestTransitPerformance(FunTestCase):
 
         checkpoint = "Display Performance Table"
         table_name = "Performance Numbers for %s flow " % self.flow_direction
-        if self.bidirectional:
-            table_name += " (Bi-directional)"
         if self.spray:
             table_name += " Spray Enable"
         result = self.template_obj.create_performance_table(result_dict=result_dict['summary_result'],
                                                             table_name=table_name)
         fun_test.simple_assert(result, checkpoint)
         checkpoint = "Ensure output JSON populated for performance dashboard"
-        result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
-                                                                  timestamp=TIMESTAMP,
-                                                                  flow_direction=self.flow_direction,
-                                                                  bidirectional=self.bidirectional,
-                                                                  spray=self.spray)
-        fun_test.simple_assert(result, checkpoint)
+        if self.spray or self.flow_direction == FLOW_TYPE_NU_NU_NFCP:
+            result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
+                                                                      timestamp=TIMESTAMP,
+                                                                      flow_direction=self.flow_direction)
+            fun_test.simple_assert(result, checkpoint)
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 
@@ -174,64 +226,57 @@ class TestTransitPerformance(FunTestCase):
 
 class TestNuHnuPerformance(TestTransitPerformance):
     tc_id = 2
-    flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
-    summary = "%s RFC-2544 2 ports with spray enable" % flow_direction
+    flow_direction = FLOW_TYPE_NU_HNU_NFCP
     tcc_file_name = "nu_hnu_palladium_2ports.tcc"  # 2 Ports with Spray Enable
-    bidirectional = False
     spray = True
 
 
 class TestHnuNuPerformance(TestTransitPerformance):
     tc_id = 3
-    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
-    summary = "%s RFC-2544 2 ports with spray enable" % flow_direction
+    flow_direction = FLOW_TYPE_HNU_NU_NFCP
     tcc_file_name = "hnu_nu_palladium_2ports.tcc"  # 2 Ports with Spray Enable
-    bidirectional = False
     spray = True
 
 
 class TestHnuHnuNonFcpPerformance(TestTransitPerformance):
     tc_id = 4
-    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
-    summary = "%s RFC-2544 Bi-directional with spray enable" % flow_direction
+    flow_direction = FLOW_TYPE_HNU_HNU_NFCP
     tcc_file_name = "hnu_hnu_palladium_2ports.tcc"  # Bi-directional with Spray Enable
-    bidirectional = True
     spray = True
 
 
-class TestTransitPerformanceSingleFlow(TestTransitPerformance):
-    tc_id = 5
-    flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
-    summary = "%s RFC-2544 Single flow" % flow_direction
-    tcc_file_name = "transit_single_flow.tcc"  # uni-directional
-    bidirectional = False
-    spray = False
-
-
 class TestNuHnuPerformanceSingleFlow(TestTransitPerformance):
-    tc_id = 6
-    flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
-    summary = "%s RFC-2544 Single flow" % flow_direction
+    tc_id = 5
+    flow_direction = FLOW_TYPE_NU_HNU_NFCP
     tcc_file_name = "nu_hnu_palladium_single_flow.tcc"  # Single Port with Spray Disable
-    bidirectional = False
     spray = False
 
 
 class TestHnuNuPerformanceSingleFlow(TestTransitPerformance):
-    tc_id = 7
-    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
-    summary = "%s RFC-2544 Single flow" % flow_direction
+    tc_id = 6
+    flow_direction = FLOW_TYPE_HNU_NU_NFCP
     tcc_file_name = "hnu_nu_palladium_single_flow.tcc"  # Single Port with Spray Disable
-    bidirectional = False
     spray = False
 
 
 class TestHnuHnuNonFcpPerformanceSingleFlow(TestTransitPerformance):
-    tc_id = 8
-    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
-    summary = "%s RFC-2544 Single flow" % flow_direction
+    tc_id = 7
+    flow_direction = FLOW_TYPE_HNU_HNU_NFCP
     tcc_file_name = "hnu_hnu_palladium_single_flow.tcc"  # Single Port with Spray Disable
-    bidirectional = False
+    spray = False
+
+
+class TestHnuHnuFcpPerformance(TestTransitPerformance):
+    tc_id = 8
+    flow_direction = FLOW_TYPE_HNU_HNU_FCP
+    tcc_file_name = "hnu_hnu_fcp_spray.tcc"
+    spray = True
+
+
+class TestHnuHnuFcpPerformanceSingleFlow(TestTransitPerformance):
+    tc_id = 9
+    flow_direction = FLOW_TYPE_HNU_HNU_FCP
+    tcc_file_name = "hnu_hnu_fcp_single_flow.tcc"
     spray = False
 
 
@@ -245,9 +290,12 @@ if __name__ == '__main__':
     ts.add_test_case(TestHnuHnuNonFcpPerformance())
 
     # Single flow
-    ts.add_test_case(TestTransitPerformanceSingleFlow())
     ts.add_test_case(TestNuHnuPerformanceSingleFlow())
     ts.add_test_case(TestHnuNuPerformanceSingleFlow())
     ts.add_test_case(TestHnuHnuNonFcpPerformanceSingleFlow())
+
+    # FCP cases
+    ts.add_test_case(TestHnuHnuFcpPerformance())
+    ts.add_test_case(TestHnuHnuFcpPerformanceSingleFlow())
 
     ts.run()

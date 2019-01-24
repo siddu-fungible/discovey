@@ -69,8 +69,9 @@ regression_urls = [
     url(r'^get_suite_executions_by_time$', regression_views.get_suite_executions_by_time),
     url(r'^get_test_case_executions_by_time$', regression_views.get_test_case_executions_by_time),
     url(r'^all_jiras$', regression_views.all_regression_jiras),
-    url(r'^\w+$', views.angular_home),
-    url(r'^jiras/(\d+)/?(.*)?$', regression_views.jiras)
+    url(r'^jiras/(\d+)/?(.*)?$', regression_views.jiras),
+    url(r'^(?:\S+)$', views.angular_home)
+
 
 ]
 

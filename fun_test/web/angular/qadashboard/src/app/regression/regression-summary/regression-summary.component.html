@@ -127,6 +127,7 @@
                   class="text-color-red">{{ scriptInfo.value.numBugs }}</span></sup>&nbsp;</span></b>
                 <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
                    class="anchor-button pseudo-anchor">details</u>
+                &nbsp;<label class="badge badge-history pseudo-anchor" data-placement="top" data-toggle="tooltip" title="history" (click)="clickHistory(scriptInfo.key)">history</label>
               </td>
               <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
               <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
@@ -138,28 +139,32 @@
                          (numBugs)="updateNumBugs($event, scriptInfo.value)"></jira-info>
 
             </tr>
-            <tr *ngIf="scriptInfo.value.showingDetails">
-              <td colspan="4">
-                <table class="table">
-                  <tr>
-                    <th>Result</th>
-                    <th>Suite execution ID</th>
-                    <th>TC-ID</th>
-                    <th>Summary</th>
-                  </tr>
-                  <tr *ngFor="let executionEntry of scriptInfo.value.history">
-                    <td><span
-                      [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span>
-                    </td>
-                    <td><a target="_blank"
-                           href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
-                    </td>
-                    <td>{{ executionEntry.test_case_id }}</td>
-                    <td>{{ getTestCaseSummary(scriptInfo.key, executionEntry.test_case_id) }}</td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
+            <ng-container *ngIf="scriptInfo.value.showingDetails">
+              <tr *ngFor="let suiteExecutionId of scriptInfo.value.suiteExecutionIdSet">
+                <td colspan="4">
+                  <p>Suite-execution ID: {{ suiteExecutionId }}</p>
+                  <table class="table">
+                    <tr>
+                      <th>Result</th>
+                      <th>Suite execution ID</th>
+                      <th>TC-ID</th>
+                      <th>Summary</th>
+                    </tr>
+                    <tr *ngFor="let executionEntry of scriptInfo.value.bySuiteExecution[suiteExecutionId].history">
+                      <td><span
+                        [ngClass]="{'failed': executionEntry.result === 'FAILED', 'passed': executionEntry.result === 'PASSED'}">{{ executionEntry.result }}</span>
+                      </td>
+                      <td><a target="_blank"
+                             href="/regression/suite_detail/{{ executionEntry.suite_execution_id }}">{{ executionEntry.suite_execution_id }}</a>
+                      </td>
+                      <td>{{ executionEntry.test_case_id }}</td>
+                      <td>{{ getTestCaseSummary(scriptInfo.key, executionEntry.test_case_id) }}</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+            </ng-container>
           </ng-container>
 
         </table>

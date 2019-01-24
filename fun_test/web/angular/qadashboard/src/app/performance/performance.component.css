@@ -169,9 +169,19 @@ arrow-icon {
   min-width: 200px !important;
   /*display: table !important;*/
 }
+
+::ng-deep #score-info > .tooltip {
+  top: 0 !important;
+}
+::ng-deep #score-info > .tooltip.show {
+  opacity: 1.0 !important;
+}
 ::ng-deep .arrow::before {
   /*border-top-color: black !important;*/
   border-right-color: black !important;
+}
+::ng-deep #score-info > .tooltip > .arrow {
+  top: calc(7% - .4rem) !important;
 }
 ::ng-deep .tooltip-inner a {
   /*display: table-cell !important;*/

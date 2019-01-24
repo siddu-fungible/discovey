@@ -48,7 +48,8 @@ def get_entries_for_day(model, day, data_set):
         if d == "input_date_time":
             continue
         d[input_name] = input_value
-    result = model.objects.filter(**d)
+    order_by = "-input_date_time"
+    result = model.objects.filter(**d).order_by(order_by)
     return result
 
 def get_first_record(model, data_set):
@@ -257,7 +258,7 @@ def prepare_status(chart, purge_old_status=False):
                         score = -1
                         this_days_record = None
                         if len(entries):
-                            this_days_record = entries[0]
+                            this_days_record = entries.last()
                             output_name = data_set["output"]["name"]  # TODO
                             if "expected" in data_set["output"]:
                                 expected_value = data_set["output"]["expected"]
