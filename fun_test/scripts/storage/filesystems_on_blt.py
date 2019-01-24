@@ -10,6 +10,9 @@ import re
 '''
 Script to do functional verification of for different file systems mounted on BLT volume
 '''
+import os
+# os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/local_docker_host_with_storage.json"
+os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/../scratch/remote_docker_host_with_storage.json"
 
 topology_dict = {
     "name": "Basic Storage",
@@ -207,7 +210,7 @@ class FSOnBLTTestcase(FunTestCase):
         if self.fs_type == "f2fs":
             install_status = self.host.install_package("f2fs-tools")
             fun_test.test_assert(install_status, "Installed f2fs-tools Package")
-        fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device)
+        fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device, timeout=120)
         fun_test.test_assert(fs_status, "Creating {} filesystem on BLT volume {}".format(self.fs_type,
                                                                                         self.volume_name))
         command_result = self.host.create_directory(self.mount_point)
