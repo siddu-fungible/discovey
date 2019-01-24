@@ -4,5 +4,6 @@
   "nvme_sanity.json",
   "ec_sanity.json",
   "storage_compression_sanity.json",
-  "ikv_sanity.json"
+  "ikv_sanity.json",
+  "crypto_sanity.json"
 ]

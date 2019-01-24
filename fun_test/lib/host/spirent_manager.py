@@ -521,6 +521,14 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return stream_dict
 
+    def get_stream_handle_list(self):
+        stream_handles = []
+        try:
+            stream_handles = self.stc.get(self.project_handle, "children-streamblock")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stream_handles
+
     def update_object_attributes(self, object_handle, update_attributes):
         result = False
         try:
@@ -1103,6 +1111,110 @@ class SpirentManager(object):
             if re.search(r'Reserving.*.*', output['Status'], re.IGNORECASE):
                 if self.apply_configuration():
                     result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def start_sequencer(self):
+        is_started = False
+        try:
+            fun_test.debug("Starting Sequencer...")
+            result = self.stc.perform("SequencerStart")
+            if result['State'] == 'COMPLETED':
+                is_started = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return is_started
+
+    def wait_until_complete(self):
+        return self.stc.waitUntilComplete()
+
+    def get_sequencer_handles(self):
+        handles= None
+        try:
+            fun_test.debug("Fetching Sequencer Handle")
+            handles = self.get_object_children(handle=self.SYSTEM_OBJECT, child_type="children-sequencer")
+            fun_test.simple_assert(handles, "Fetch Sequencer Handle")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return handles
+
+    def get_sequencer_config(self, handle):
+        config = None
+        try:
+            fun_test.debug("Fetching Sequencer Config")
+            config = self.stc.get(handle)
+            fun_test.simple_assert(config, "Fetch Sequencer Config")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return config
+
+    def get_test_result_setting_handles(self):
+        handles = None
+        try:
+            fun_test.debug("Fetching TestResultSetting handle")
+            handles = self.get_object_children(handle=self.project_handle, child_type="children-TestResultSetting")
+            fun_test.simple_assert(handles, "Fetch TestResultSetting Handle")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return handles
+
+    def get_test_result_setting_config(self, test_result_handle):
+        config = None
+        try:
+            fun_test.debug("Fetching TestResultSetting Config")
+            config = self.stc.get(test_result_handle)
+            fun_test.simple_assert(config, "Fetch TestResultSetting Config")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return config
+
+    def perform_query_result_command(self, result_db_name, result_path):
+        result = None
+        try:
+            fun_test.debug("Fetching Query Result")
+            result = self.stc.perform("QueryResult", DatabaseConnectionString=result_db_name, ResultPath=result_path)
+            fun_test.simple_assert(result, "Fetch Query Result")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def update_test_result_directory(self, test_result_handle, dir_name):
+        result = False
+        try:
+            fun_test.debug("Changing TestResult directory to %s" % dir_name)
+            self.stc.config(test_result_handle, SaveResultsRelativeTo=dir_name)
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_rfc2544_group_commands(self, sequencer_handle, command_type):
+        group_commands = []
+        try:
+            group_commands = self.get_object_children(handle=sequencer_handle,
+                                                      child_type=command_type)
+            fun_test.debug("RFC-2544 Group Commands: %s" % group_commands)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return group_commands
+
+    def get_rfc2544_throughput_config(self, handle):
+        config = {}
+        try:
+            config = self.stc.get(handle)
+            fun_test.debug(config)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return config
+
+    def configure_rfc2544_throughput_config(self, handle, attributes):
+        result = False
+        try:
+            self.stc.config(handle, **attributes)
+            if self.apply_configuration():
+                result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

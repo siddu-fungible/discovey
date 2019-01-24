@@ -583,8 +583,7 @@ def get_test_case_executions_by_time(request):
         q = Q(modules__contains=module_str)
         scripts_for_module = RegresssionScripts.objects.filter(q)
         scripts_for_module = [x.script_path for x in scripts_for_module]
-    else:
-        i = 0
+
     tes = []
     q = Q(started_time__gte=from_time)
 
@@ -592,6 +591,8 @@ def get_test_case_executions_by_time(request):
         for tag in test_case_execution_tags:
             tag_str = '"{}"'.format(tag)
             q = q & Q(tags__contains=tag_str)
+    if "script_path" in request_json:
+        q = q & Q(script_path=request_json["script_path"])
 
     test_case_executions = TestCaseExecution.objects.filter(q)
 
@@ -636,7 +637,12 @@ def scripts(request):
 def script(request):
     result = None
     request_json = json.loads(request.body)
-    script_path = request_json["script_path"]
+    script_path = None
+    pk = None
+    if "script_path" in request_json:
+        script_path = request_json["script_path"]
+    if "pk" in request_json:
+        pk = request_json["pk"]
     module_names = None
 
     if "modules" in request_json:
@@ -652,8 +658,12 @@ def script(request):
             r.save()
     else:
         try:
-            r = RegresssionScripts.objects.get(script_path=script_path)
-            result = {"pk": r.pk}
+            r = None
+            if script_path:
+                r = RegresssionScripts.objects.get(script_path=script_path)
+            elif pk:
+                r = RegresssionScripts.objects.get(pk=pk)
+            result = {"pk": r.pk, "script_path": r.script_path}
         except ObjectDoesNotExist as ex:
             logging.error("Script: {} does not exist. {}".format(script_path, str(ex)))
     return result
@@ -670,15 +680,16 @@ def unallocated_script(request):
                 contents = infile.read()
                 result = json.loads(contents)
                 for entry in result:
-                    path = entry["path"]
-                    path = "/" + path
-                    try:
-                        RegresssionScripts.objects.get(script_path=path)
-                    except ObjectDoesNotExist:
-                        if path not in unallocated_scripts:
-                            unallocated_scripts.append(path)
+                    if "path" in entry:
+                        path = entry["path"]
+                        path = "/" + path
+                        try:
+                            RegresssionScripts.objects.get(script_path=path)
+                        except ObjectDoesNotExist:
+                            if path not in unallocated_scripts:
+                                unallocated_scripts.append(path)
         except Exception as ex:
-            pass
+            logging.error(str(ex))
     return unallocated_scripts
 
 

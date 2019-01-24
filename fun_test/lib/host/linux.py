@@ -1265,6 +1265,7 @@ class Linux(object, ToDictMixin):
         if not unload_status:
             fun_test.sleep("Waiting for nvme driver unload to complete")
             load_status = self.modprobe("nvme")
+            fun_test.sleep("Waiting for nvme driver load to complete", seconds=2)
             if load_status:
                 result = False
         else:

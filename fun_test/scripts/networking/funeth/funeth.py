@@ -107,7 +107,7 @@ class Funeth:
             # vfs start from fnid 8
             #_ports.extend(range(8, 8 + sriov))
 
-        return self.linux_obj.command('ifconfig %' % self.pf_intf)
+        return self.linux_obj.command('ifconfig %s' % self.pf_intf)
 
     def configure_intfs(self):
         """Configure interface."""
