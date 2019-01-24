@@ -1,4 +1,4 @@
-import {Component, OnInit, Input} from '@angular/core';
+import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
@@ -38,6 +38,7 @@ export class RegressionSummaryComponent implements OnInit {
   filters = [];
 
   doInitializeFilters(filterData) {
+    this.filters = [];
     let index = 0;
     filterData.forEach(filterDataEntry => {
       this.initializeFilter(filterDataEntry.info, filterDataEntry.payload, index);
@@ -48,13 +49,25 @@ export class RegressionSummaryComponent implements OnInit {
   ngOnInit() {
     this.fetchAllVersions();
     this.pointClickCallback = this.pointDetail.bind(this);
+    this.setFilterData();
+
+  }
+
+  clickHistory(scriptPath) {
+    let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].pk;
+    window.open(url, '_blank');
+  }
+
+  setFilterData() {
     let filterData = this.initialFilterData;
     if (this.filterData) {
       filterData = this.filterData;
     }
     this.doInitializeFilters(filterData);
+  }
 
-
+  ngOnChanges() {
+    this.setFilterData();
   }
 
   scrollTo(elementId, index) {
@@ -107,6 +120,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   fetchScripts() {
+    this.numBugs = 0;
     this.apiService.get("/regression/scripts").subscribe(response => {
       response.data.forEach(entry => {
         this.scriptInfoMap[entry.script_path] = entry;
@@ -236,23 +250,6 @@ export class RegressionSummaryComponent implements OnInit {
     })
   }
 
-  prepareBySoftwareVersion(index) {
-    this.filters[index].versionList.forEach((softwareVersion) => {
-      for (let index = 0; index < this.filters.length; index++) {
-        if (Number.isNaN(softwareVersion)) {
-          //console.log(softwareVersion);
-          continue;
-        }
-
-        this.filters[index].bySoftwareVersion[softwareVersion] = {
-          scriptDetailedInfo: {showingDetails: false},
-          numPassed: 0,
-          numFailed: 0,
-          numNotRun: 0
-        };
-      }
-    })
-  }
 
   moreInfo(scriptInfo) {
     console.log(scriptInfo.key);
@@ -274,14 +271,21 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
 
-  populateResults(entry, history) {
+  populateResults(entry, historyInputElement) {
     let scriptDetailedInfo = entry.scriptDetailedInfo;
-    let scriptPath = history.script_path;
+    let scriptPath = historyInputElement.script_path;
     if (!scriptDetailedInfo.hasOwnProperty(scriptPath)) {
-      scriptDetailedInfo[scriptPath] = {history: [], historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
+      scriptDetailedInfo[scriptPath] = {bySuiteExecution: {}, suiteExecutionIdSet: new Set(), historyResults: {numPassed: 0, numFailed: 0, numNotRun: 0}};
     }
-    scriptDetailedInfo[scriptPath].history.push(history);
-    let historyResults = this.aggregateHistoryResults(history);
+    scriptDetailedInfo[scriptPath].suiteExecutionIdSet.add(historyInputElement.suite_execution_id);
+
+    let bySuiteExecution = scriptDetailedInfo[scriptPath].bySuiteExecution;
+    if (!bySuiteExecution.hasOwnProperty(historyInputElement.suite_execution_id)) {
+      bySuiteExecution[historyInputElement.suite_execution_id] = {history: []}
+    }
+    bySuiteExecution[historyInputElement.suite_execution_id].history.push(historyInputElement);
+
+    let historyResults = this.aggregateHistoryResults(historyInputElement);
     scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
     scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
     scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
@@ -299,6 +303,11 @@ export class RegressionSummaryComponent implements OnInit {
 
     return historyResults;
   }
+
+  sortSet(s) {
+    return Array.from(s).sort();
+  }
+
 
   getTestCaseSummary(scriptPath, testCaseId) {
     let summary = "unknown";
@@ -376,7 +385,7 @@ export class RegressionSummaryComponent implements OnInit {
     let byDateTime = this.filters[index].byDateTime;
     if (!this.filters[index].byDateTime.hasOwnProperty(timeBucket)) {
       byDateTime[timeBucket] = {
-        scriptDetailedInfo: {showingDetails: false},
+        scriptDetailedInfo: {showingDetails: false, suiteExecutionIdSet: new Set()},
         numPassed: 0,
         numFailed: 0,
         numNotRun: 0
@@ -386,9 +395,6 @@ export class RegressionSummaryComponent implements OnInit {
     let dateTimeBucketEntry = byDateTime[timeBucket];
     let historyResults = this.populateResults(dateTimeBucketEntry, history);
     //console.log("Addtotimebucket: " + index);
-    if (timeBucket.includes("16")) {
-      let i = 0;
-    }
     timeBucketSet.add(timeBucket);
   }
 

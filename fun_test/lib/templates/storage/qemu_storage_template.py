@@ -300,3 +300,10 @@ class QemuStorageTemplate(object):
         output = self.host.list_files(output_file)
         # return the size of newly created custom compressible file
         return size
+
+    @fun_test.safe
+    def stop_host_services(self):
+        udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
+        for service in udev_services:
+            service_status = self.host.systemctl(service_name=service, action="stop")
+            fun_test.simple_assert(service_status, "Stopping {} service".format(service))

@@ -12,6 +12,7 @@ import {SuiteDetailComponent} from "./regression/suite-detail/suite-detail.compo
 import {RegressionAdminComponent} from "./regression/regression-admin/regression-admin.component";
 import {RegressionSummaryComponent} from "./regression/regression-summary/regression-summary.component";
 import {GitHistoryComponent} from "./git-history/git-history.component";
+import {ScriptHistoryComponent} from "./regression/script-history/script-history.component";
 
 const routes: Routes = [
   { path: '', component: RegressionSummaryComponent},
@@ -26,7 +27,8 @@ const routes: Routes = [
   { path: 'regression/jenkins_jobs', component: RegressionComponent, data: {tags: '["jenkins-hourly", "jenkins-nightly"]'}},
   { path: 'regression/jobs_by_tag/:tags', component: RegressionComponent},
   { path: 'regression/submit_job_page', component: SubmitJobComponent },
-  { path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent},
+  { path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent },
+  { path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent },
   { path: 'regression/:filterString', component: RegressionComponent },
   { path: 'upgrade/test', component: TestComponent },
   { path: 'upgrade/demo1', component: Demo1Component }

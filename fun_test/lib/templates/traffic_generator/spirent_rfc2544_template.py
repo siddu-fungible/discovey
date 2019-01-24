@@ -7,7 +7,14 @@ User needs to create .tcc spirent config with the test parameters and RFC-2544 w
 from lib.system.fun_test import *
 from lib.host.spirent_manager import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
+from lib.host.linux import Linux
 import sqlite3
+
+FLOW_TYPE_NU_NU_NFCP = "NU_NU_NFCP"
+FLOW_TYPE_HNU_HNU_NFCP = "HNU_HNU_NFCP"
+FLOW_TYPE_HNU_HNU_FCP = "HNU_HNU_FCP"
+FLOW_TYPE_HNU_NU_NFCP = "HNU_NU_NFCP"
+FLOW_TYPE_NU_HNU_NFCP = "NU_HNU_NFCP"
 
 
 class Rfc2544Template(SpirentTrafficGeneratorTemplate):
@@ -17,6 +24,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     FRAME_SIZE_IMIX = "IMIX"
     FRAME_SIZE_1000 = "1000.0"
     FRAME_SIZE_9000 = "9000.0"
+    FRAME_SIZE_8900 = "8900.0"
     PASSED = "Passed"
     FAILED = "Failed"
     PERFORMANCE_DATA_JSON_FILE = "rfc2544_performance_results.json"
@@ -213,6 +221,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         result[self.FRAME_SIZE_1000].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_9000 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_9000].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_8900 == data_dict['AvgFrameSize']:
+                        result[self.FRAME_SIZE_9000].append(data_dict)
             output['status'] = True
             output['summary_result'] = result
         except Exception as ex:
@@ -326,26 +336,24 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             scheduler_logger.critical(str(ex))
         return result
 
-    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
-                                       bidirectional=False, spray=False):
+    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G):
         results = []
         try:
-            if not spray:
-                return True
             for key in result_dict:
                 records = result_dict[key]
                 data_dict = OrderedDict()
                 data_dict['mode'] = mode
                 data_dict['version'] = fun_test.get_version()
                 data_dict['timestamp'] = timestamp
-                data_dict['bidirectional'] = bidirectional
-                data_dict['spray'] = spray
                 frame_size = float(records[0]['AvgFrameSize']) if records else None
+                actual_frame_size = frame_size
+                if frame_size == 8900.0:
+                    frame_size = 9000.0
                 if frame_size:
                     data_dict['flow_type'] = flow_direction
                     data_dict['frame_size'] = frame_size
 
-                    max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=frame_size)
+                    max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
                     data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
                     throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
                                                                     frame_size=frame_size)
@@ -428,12 +436,6 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-
-
-
-
-
-
 
 
 # TODO: We might need this sqlite wrapper later on to fetch more detail test data

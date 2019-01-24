@@ -58,7 +58,7 @@
         <br>
     </div>
       <br>
-      <div *ngIf="modelName !== 'MetricContainer'">
+      <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
         <br>
         <div [innerHTML]="inner.currentDescription"></div>
