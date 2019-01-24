@@ -10,9 +10,6 @@ import re
 '''
 Script to do functional verification of for different file systems mounted on BLT volume
 '''
-import os
-# os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/local_docker_host_with_storage.json"
-os.environ["DOCKER_HOSTS_SPEC_FILE"] = fun_test.get_script_parent_directory() + "/../scratch/remote_docker_host_with_storage.json"
 
 topology_dict = {
     "name": "Basic Storage",
