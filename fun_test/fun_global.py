@@ -24,6 +24,11 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
 
+STATES = {"TO_BE_SCHEDULED": "TO_BE_SCHEDULED",
+          "ACTIVE": "ACTIVE",
+          "DONE": "DONE",
+          "FAILED": "FAILED",
+          "QUEUED": "QUEUED"}
 
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())

@@ -323,6 +323,57 @@ def get_past_build_status(request):
               "failed_git_commit": previous_entry.git_commit}
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def get_first_degrade(request):
+    result = {}
+    previous_entry = {}
+    previous_score = None
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
+    for entry in chart_status_entries:
+        if previous_score:
+            current_score = entry.score
+            diff = current_score - previous_score
+            min_score = min(current_score, previous_score)
+            deviation = (diff * 100) / min_score
+            is_degrade = True if deviation <= -3 else False
+        else:
+            previous_score = entry.score
+            previous_entry = entry
+
+        if is_degrade:
+            result = {"passed_jenkins_job_id": entry.jenkins_job_id,
+                      "passed_suite_execution_id": entry.suite_execution_id,
+                      "passed_lsf_job_id": entry.lsf_job_id,
+                      "passed_date_time": entry.date_time,
+                      "passed_git_commit": entry.git_commit,
+                      "failed_jenkins_job_id": previous_entry.jenkins_job_id,
+                      "failed_suite_execution_id": previous_entry.suite_execution_id,
+                      "failed_lsf_job_id": previous_entry.lsf_job_id,
+                      "failed_date_time": previous_entry.date_time,
+                      "failed_git_commit": previous_entry.git_commit}
+        if entry.build_status == 'PASSED' or entry.copied_score is False:
+            result = {"passed_jenkins_job_id": entry.jenkins_job_id,
+                      "passed_suite_execution_id": entry.suite_execution_id,
+                      "passed_lsf_job_id": entry.lsf_job_id,
+                      "passed_date_time": entry.date_time,
+                      "passed_git_commit": entry.git_commit,
+                      "failed_jenkins_job_id": previous_entry.jenkins_job_id,
+                      "failed_suite_execution_id": previous_entry.suite_execution_id,
+                      "failed_lsf_job_id": previous_entry.lsf_job_id,
+                      "failed_date_time": previous_entry.date_time,
+                      "failed_git_commit": previous_entry.git_commit}
+            return result
+        else:
+            previous_entry = entry
+    result = {"failed_jenkins_job_id": previous_entry.jenkins_job_id,
+              "failed_suite_execution_id": previous_entry.suite_execution_id,
+              "failed_lsf_job_id": previous_entry.lsf_job_id,
+              "failed_date_time": previous_entry.date_time,
+              "failed_git_commit": previous_entry.git_commit}
+    return result
 
 @csrf_exempt
 @api_safe_json_response

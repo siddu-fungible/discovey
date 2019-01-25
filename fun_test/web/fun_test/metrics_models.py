@@ -2,7 +2,7 @@ from fun_settings import MAIN_WEB_APP
 from django.db import models
 from django.apps import apps
 #from web.fun_test import apps
-from fun_global import RESULTS, get_current_time, get_localized_time
+from fun_global import RESULTS, STATES, get_current_time, get_localized_time
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 import json
@@ -57,6 +57,24 @@ class MetricChartStatus(models.Model):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
         return s
 
+class TriageChartStatus(models.Model):
+    metric_id = models.IntegerField(default=-1)
+    date_time = models.DateTimeField(default=datetime.now)
+    score = models.FloatField(default=-1)
+    suite_execution_id = models.IntegerField(default=-1)
+    jenkins_job_id = models.IntegerField(default=-1)
+    lsf_job_id = models.IntegerField(default=-1)
+    build_status = models.CharField(max_length=15, default=STATES["TO_BE_SCHEDULED"])
+    git_commit = models.TextField(default="")
+
+    if get_default_db_engine() == DB_ENGINE_TYPE_POSTGRES:
+        children_score_map = JSONField(default={})
+    else:
+        children_score_map = models.TextField(default="{}")
+
+    def __str__(self):
+        s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
+        return s
 
 class TimestampField(serializers.Field):
     def to_representation(self, value):
