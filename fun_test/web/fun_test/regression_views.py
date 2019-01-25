@@ -624,7 +624,8 @@ def scripts(request):
                      "tags": json.loads(regression_script.tags),
                      "pk": regression_script.pk,
                      "bugs": [],
-                     "test_cases": get_all_test_cases(regression_script.script_path)}
+                     "test_cases": get_all_test_cases(regression_script.script_path),
+                     "baseline_suite_execution_id": regression_script.baseline_suite_execution_id}
         script_infos = ScriptInfo.objects.filter(script_id=regression_script.pk)
         for script_info in script_infos:
             new_entry["bugs"].append(script_info.bug)
@@ -637,7 +638,12 @@ def scripts(request):
 def script(request):
     result = None
     request_json = json.loads(request.body)
-    script_path = request_json["script_path"]
+    script_path = None
+    pk = None
+    if "script_path" in request_json:
+        script_path = request_json["script_path"]
+    if "pk" in request_json:
+        pk = request_json["pk"]
     module_names = None
 
     if "modules" in request_json:
@@ -653,11 +659,32 @@ def script(request):
             r.save()
     else:
         try:
-            r = RegresssionScripts.objects.get(script_path=script_path)
-            result = {"pk": r.pk}
+            r = None
+            if script_path:
+                r = RegresssionScripts.objects.get(script_path=script_path)
+            elif pk:
+                r = RegresssionScripts.objects.get(pk=pk)
+            result = {"pk": r.pk, "script_path": r.script_path}
         except ObjectDoesNotExist as ex:
             logging.error("Script: {} does not exist. {}".format(script_path, str(ex)))
     return result
+
+@csrf_exempt
+@api_safe_json_response
+def script_update(request, pk):
+    result = None
+    request_json = json.loads(request.body)
+    q = Q(pk=pk)
+    script = RegresssionScripts.objects.get(q)
+    if script:
+        if "baseline_suite_execution_id" in request_json:
+            script.baseline_suite_execution_id = request_json["baseline_suite_execution_id"]
+        script.save()
+    else:
+        logging.error("Could not find script with pk: {}".format(pk))
+
+    return result
+
 
 @csrf_exempt
 @api_safe_json_response

@@ -424,7 +424,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let today = new Date();
       let yesterday = new Date(today);
       // yesterday.setDate(yesterday.getDate() - 1);
-      // yesterday.setHours(23, 59, 59);
+      yesterday.setHours(23, 59, 59);
       let lastDate = yesterday;
 
       let currentDate = firstDate;

@@ -28,6 +28,7 @@ TERAMARK_LOOKUP = "le_teramark"
 FLOW_TEST_TAG = "qa_storage2_endpoint"
 TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
+TERAMARK_EC = "ec_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -75,7 +76,7 @@ class MyScript(FunTestScript):
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
-                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA]
+                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -124,7 +125,7 @@ class PalladiumPerformanceTc(FunTestCase):
 
     def validate_json_file(self, validation_required=True):
         log_dir = LOGS_DIR
-        file_path = log_dir + "/nu_transit_performance_data.json"
+        file_path = log_dir + "/nu_rfc2544_performance.json"
         data = {}
         fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
         fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
@@ -393,6 +394,8 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
 
 class EcPerformanceTc(PalladiumPerformanceTc):
+    tag = TERAMARK_EC
+
     def describe(self):
         self.set_test_details(id=4,
                               summary="EC performance",
