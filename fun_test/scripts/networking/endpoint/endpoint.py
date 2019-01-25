@@ -18,7 +18,8 @@ class EndPointTestSuite(FunTestScript):
         # TODO: Replace below with regression user
         linux_obj = Linux(host_ip='localhost', ssh_username='gliang', ssh_password='fun123')
         funcp_obj = funcp.FunControlPlane(linux_obj)
-        fun_test.test_assert(re.findall(r'done', funcp_obj.clone()) == ['done'] * 5,
+        done_list = re.findall(r'done', funcp_obj.clone())
+        fun_test.test_assert( done_list == ['done'] * 5 or done_list == ['done'] * 6,
                              'git clone FunControlPlane repo')
         fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull(branch='george/ep')),
                              'git pull FunControlPlane repo')

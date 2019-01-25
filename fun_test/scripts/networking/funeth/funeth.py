@@ -46,7 +46,7 @@ class Funeth:
 
             self.linux_obj.command('cd {3}; git clone {0}/{1} {2}'.format(mirror, repo, subdir, ws))
             if branch:
-                self.linux_obj.command('cd {1}; git checkout {0}'.format(branch, ws))
+                self.linux_obj.command('cd {0}/{1}; git checkout {2}'.format(ws, repo, branch))
 
         sdkdir = os.path.join(self.ws, 'FunSDK')
         self.linux_obj.command('sudo rm -rf {}'.format(self.ws))
