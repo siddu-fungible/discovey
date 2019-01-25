@@ -385,7 +385,7 @@ export class RegressionSummaryComponent implements OnInit {
     let byDateTime = this.filters[index].byDateTime;
     if (!this.filters[index].byDateTime.hasOwnProperty(timeBucket)) {
       byDateTime[timeBucket] = {
-        scriptDetailedInfo: {showingDetails: false, suiteExecutionIdSet: new Set()},
+        scriptDetailedInfo: {showingDetails: false},
         numPassed: 0,
         numFailed: 0,
         numNotRun: 0
@@ -482,6 +482,39 @@ export class RegressionSummaryComponent implements OnInit {
 
   getTestCaseExecutions(index) {
     return this.filters[index].testCaseExecutions;
+  }
+
+  isBaselineForScript(scriptPath, suiteExecutionId) {
+    let result = false;
+    if (this.getBaselineSuiteExecutionId(scriptPath) === suiteExecutionId) {
+        result = true;
+    }
+    return result;
+  }
+
+  setBaseline(scriptPath, suiteExecutionId) {
+    let payload = {baseline_suite_execution_id: suiteExecutionId};
+    let availableSuiteExecutionId = this.getBaselineSuiteExecutionId(scriptPath);
+    if (availableSuiteExecutionId === suiteExecutionId) {
+      payload.baseline_suite_execution_id = null;
+      suiteExecutionId = null;
+    }
+
+    this.apiService.post("/regression/script_update/" + this.scriptInfoMap[scriptPath].pk, payload).subscribe(response => {
+      this.scriptInfoMap[scriptPath].baseline_suite_execution_id = suiteExecutionId;
+    });
+  }
+
+
+  getBaselineSuiteExecutionId(scriptPath) {
+    let result = null;
+    if (this.scriptInfoMap.hasOwnProperty(scriptPath)) {
+      result = this.scriptInfoMap[scriptPath].baseline_suite_execution_id;
+      if (result < 0) {
+        result = null;
+      }
+    }
+    return result;
   }
 
 }
