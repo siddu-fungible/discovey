@@ -204,7 +204,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         result[self.FRAME_SIZE_9000] = []
         try:
             spirent_path = self.retrieve_database_file_name()
-            # spirent_path = "/home/rushikesh/Spirent/TestCenter 4.81/Results/transit_bidirectional_palladium_2019-01-15_04-24-47/2544-Tput_2019-01-15_04-30-41/2544-Tput-Summary-2_2019-01-15_04-30-41.db"
+            # spirent_path = "/home/rushikesh/Spirent/TestCenter 4.81/Results/nu_hnu_palladium_2ports_2019-01-23_07-08-45/2544-Tput_2019-01-23_07-13-54/2544-Tput-Summary-6_2019-01-23_07-13-54.db"
             base_path = self._get_base_db_path(db_path=spirent_path)
             dbs = self._get_throughput_summary_db_list(base_path=base_path)
             for db in dbs:
@@ -305,7 +305,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     def _calculate_throughput_in_mbps(self, forwarding_rate, frame_size):
         throughput = None
         try:
-            throughput = float(forwarding_rate * (frame_size + 8) / 100000)
+            throughput = float((forwarding_rate * (frame_size + 8)) * 8 / 1000000)
         except Exception as ex:
             fun_test.critical(str(ex))
         return throughput
@@ -316,10 +316,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             forwarding_rates = []
             for record in records:
                 if float(record['AvgFrameSize']) == frame_size:
-                    forwarding_rates.append(record['ForwardingRate(fps)'])
+                    forwarding_rates.append(float(record['ForwardingRate(fps)']))
             max_rate = max(forwarding_rates)
             for record in records:
-                if max_rate == record['ForwardingRate(fps)']:
+                if max_rate == float(record['ForwardingRate(fps)']):
                     max_rate_record = record
                     break
         except Exception as ex:

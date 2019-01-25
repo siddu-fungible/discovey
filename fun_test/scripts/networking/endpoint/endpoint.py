@@ -18,10 +18,13 @@ class EndPointTestSuite(FunTestScript):
         # TODO: Replace below with regression user
         linux_obj = Linux(host_ip='localhost', ssh_username='gliang', ssh_password='fun123')
         funcp_obj = funcp.FunControlPlane(linux_obj)
-        fun_test.test_assert(re.search(r'Checking connectivity... done.', funcp_obj.clone()) is not None,
+        done_list = re.findall(r'done', funcp_obj.clone())
+        fun_test.test_assert( done_list == ['done'] * 5 or done_list == ['done'] * 6,
                              'git clone FunControlPlane repo')
-        fun_test.test_assert(re.search(r'Already up-to-date.', funcp_obj.pull()) is not None,
+        fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull(branch='george/ep')),
                              'git pull FunControlPlane repo')
+        fun_test.test_assert(re.search(r'funnel_gen.py.*COPYING', funcp_obj.get_prebuilt(), re.DOTALL),
+                             'Get FunControlPlane prebuilt pkg')
         output = funcp_obj.setup_traffic_server('hu')
         fun_test.test_assert(re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output,
                                                                             re.IGNORECASE),
@@ -48,7 +51,7 @@ class EtpTest(FunTestCase):
 
     def run(self):
         funcp_obj = fun_test.shared_variables['funcp_obj']
-        output = funcp_obj.send_traffic('endpoint.EtpTest_simple_tcp', timeout=60)
+        output = funcp_obj.send_traffic('endpoint.EtpTest_simple_tcp', server='hu', timeout=60)
         fun_test.test_assert(re.search(r'Ran \d+ test.*OK', output, re.DOTALL), "ETP test")
 
 
@@ -68,7 +71,7 @@ class ErpTest(FunTestCase):
 
     def run(self):
         funcp_obj = fun_test.shared_variables['funcp_obj']
-        output = funcp_obj.send_traffic('endpoint.ErpTest_simple_tcp', timeout=60)
+        output = funcp_obj.send_traffic('endpoint.ErpTest_simple_tcp', server='hu', timeout=60)
         fun_test.test_assert(re.search(r'Ran \d+ test.*OK', output, re.DOTALL), "ERP test")
 
 

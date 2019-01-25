@@ -429,3 +429,8 @@ input:checked + .slider:before {
   background-color: lightgrey;
   color: black;
 }
+
+/* table */
+.pseudo-table {
+  border: 0;
+}
