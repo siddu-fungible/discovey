@@ -196,7 +196,7 @@ def prepare_status(chart, purge_old_status=False):
 
                     scores.setdefault(date_time, 0)
                     scores[date_time] += child_score * child_weight
-                    print "Child: {} Score: {} Datetime: {}".format(child_metric.chart_name, child_score, date_time)
+                    # print "Child: {} Score: {} Datetime: {}".format(child_metric.chart_name, child_score, date_time)
                 sum_of_child_weights += child_weight
 
             # Normalize all scores
@@ -214,7 +214,7 @@ def prepare_status(chart, purge_old_status=False):
                                             data_sets=data_sets,
                                             score=scores[date_time],
                                             children_score_map=result["children_score_map"])
-                    print "Chart: {} Date: {} Score: {}".format(chart.chart_name, date_time, scores[date_time])
+                    # print "Chart: {} Date: {} Score: {}".format(chart.chart_name, date_time, scores[date_time])
                     mcs.save()
                 else:
                     chart_status[0].score = scores[date_time]
@@ -329,8 +329,8 @@ def prepare_status(chart, purge_old_status=False):
                         else:
                             mcs.copied_score_disposition = 0
                     # print current_date, scores
-                    print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
-                                                                        scores[current_date])
+                    # print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
+                    #                                                     scores[current_date])
                     mcs.save()
                 else:
                     if replacement:
