@@ -1272,7 +1272,7 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
     def run(self):
         metrics = collections.OrderedDict()
         try:
-            fun_test.test_assert(self.validate_job(validation_required=False), "validating job")
+            fun_test.test_assert(self.validate_job(), "validating job")
             flow_test_passed = False
             match = None
             for line in self.lines:
@@ -1590,7 +1590,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
     myscript.add_test_case(TeraMarkCryptoPerformanceTC())
     myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(FlowTestPerformanceTC())
     myscript.add_test_case(TeraMarkZipPerformanceTC())
     # myscript.add_test_case(TeraMarkDfaPerformanceTC())
     myscript.add_test_case(TeraMarkJpegPerformanceTC())
