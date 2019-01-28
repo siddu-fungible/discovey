@@ -253,7 +253,7 @@ def add_test_case_execution(test_case_id,
                             suite_execution_id,
                             path,
                             result=RESULTS["NOT_RUN"], log_prefix="", tags=[]):
-    max_retries = 4
+    max_retries = 10
     te = None
     with transaction.atomic():
         try:
@@ -270,7 +270,7 @@ def add_test_case_execution(test_case_id,
                                            test_case_execution_id=te.execution_id)
                 break
         except Exception as ex:
-            time.sleep(random.uniform(0.1, 1.0))
+            time.sleep(random.uniform(0.1, 3.0))
             print "Error: add_test_case_execution: {}".format(str(ex))
 
     return te

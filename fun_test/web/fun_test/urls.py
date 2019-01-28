@@ -71,6 +71,7 @@ regression_urls = [
     url(r'^get_test_case_executions_by_time$', regression_views.get_test_case_executions_by_time),
     url(r'^all_jiras$', regression_views.all_regression_jiras),
     url(r'^jiras/(\d+)/?(.*)?$', regression_views.jiras),
+    url(r'^script_execution/(\d+)$', regression_views.script_execution),
     url(r'^(?:\S+)$', views.angular_home)
 
 

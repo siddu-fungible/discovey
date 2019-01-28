@@ -910,10 +910,10 @@ class PeekCommands(object):
                 master_table_obj.header = False
                 cmd = "stats/fpg/%s/port[%d]" % (mode, port_num)
                 result_list = self.dpc_client.execute(verb='peek', arg_list=[cmd])
-                if result_list:
-                    result = result_list[0]
+                index = 0
+                for result in result_list:
                     if prev_result:
-                        diff_result = self._get_difference(result=result, prev_result=prev_result)
+                        diff_result = self._get_difference(result=result, prev_result=prev_result[index])
                         tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter', 'Counter diff'])
                         rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter', 'Counter diff'])
                         tx_table_obj.align = 'l'
@@ -932,11 +932,11 @@ class PeekCommands(object):
                                     tx_table_obj.add_row([key, result[key], diff_result[key]])
                                 else:
                                     rx_table_obj.add_row([key, result[key], diff_result[key]])
-                        prev_result = result
                         if tx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Tx Stats', [tx_table_obj])
+                            master_table_obj.add_row([tx_table_obj])
                         if rx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Rx Stats', [rx_table_obj])
+                            master_table_obj.add_row([rx_table_obj])
+                        index += 1
                     else:
                         tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter'])
                         rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter'])
@@ -956,11 +956,12 @@ class PeekCommands(object):
                                     tx_table_obj.add_row([key, result[key]])
                                 else:
                                     rx_table_obj.add_row([key, result[key]])
-                        prev_result = result
                         if tx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Tx Stats', [tx_table_obj])
+                            master_table_obj.add_row([tx_table_obj])
                         if rx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Rx Stats', [rx_table_obj])
+                            master_table_obj.add_row([rx_table_obj])
+
+                prev_result = result_list
                 if get_result_only:
                     return cmd, master_table_obj
                 print master_table_obj

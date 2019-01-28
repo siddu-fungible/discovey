@@ -1,0 +1,119 @@
+{
+  "Key256Write4k": {
+    "blt_details": {
+      "capacity": 1048576,
+      "block_size": 4096
+    },
+    "jvol_details": {
+        "multiplier": 8,
+        "block_size": 512
+    },
+    "lsv_head": 30,
+    "lsv_details": {
+        "chunk_size": 32
+    },
+    "data_size": 32768,
+    "write_size": 4096,
+    "encrypt": true,
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "nvme_device": "/dev/nvme0",
+    "filter_params": [
+      "cryptofilter_create",
+      "cryptofilter_xform_flow_alloc_done",
+      "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added",
+      "vol_encrypt_filter_added"
+    ],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"]
+  },
+  "Key512Write4k": {
+    "blt_details": {
+      "capacity": 1048576,
+      "block_size": 4096
+    },
+    "jvol_details": {
+        "multiplier": 8,
+        "block_size": 512
+    },
+    "lsv_head": 30,
+    "lsv_details": {
+        "chunk_size": 32
+    },
+    "data_size": 32768,
+    "write_size": 4096,
+    "encrypt": true,
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "nvme_device": "/dev/nvme0",
+    "filter_params": [
+      "cryptofilter_create",
+      "cryptofilter_xform_flow_alloc_done",
+      "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added",
+      "vol_encrypt_filter_added"
+    ],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"]
+  },
+  "Key256Write8k": {
+    "blt_details": {
+      "capacity": 1048576,
+      "block_size": 4096
+    },
+    "jvol_details": {
+        "multiplier": 8,
+        "block_size": 512
+    },
+    "lsv_head": 30,
+    "lsv_details": {
+        "chunk_size": 32
+    },
+    "data_size": 32768,
+    "write_size": 8192,
+    "encrypt": true,
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "nvme_device": "/dev/nvme0",
+    "filter_params": [
+      "cryptofilter_create",
+      "cryptofilter_xform_flow_alloc_done",
+      "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added",
+      "vol_encrypt_filter_added"
+    ],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"]
+  },
+  "Key512Write8k": {
+    "blt_details": {
+      "capacity": 1048576,
+      "block_size": 4096
+    },
+    "jvol_details": {
+        "multiplier": 8,
+        "block_size": 512
+    },
+    "lsv_head": 30,
+    "lsv_details": {
+        "chunk_size": 32
+    },
+    "data_size": 32768,
+    "write_size": 8192,
+    "encrypt": true,
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "nvme_device": "/dev/nvme0",
+    "filter_params": [
+      "cryptofilter_create",
+      "cryptofilter_xform_flow_alloc_done",
+      "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added",
+      "vol_encrypt_filter_added"
+    ],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "host_disconnect": true
+  }
+}

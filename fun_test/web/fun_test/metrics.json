@@ -69,50 +69,50 @@
             ]
           },
           {
-                "info": "NU_HNU",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "NU_HNU",
-                "weight": 1,
-                "label": "NU_HNU",
-                "reference": true
-              },
-              {
-                "info": "HNU_HNU_FCP",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "HNU_HNU_FCP",
-                "weight": 1,
-                "label": "HNU_HNU_FCP",
-                "reference": true
-              },
-              {
-                "info": "HNU_HNU",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "HNU_HNU",
-                "weight": 1,
-                "label": "HNU_HNU",
-                "reference": true
-              },
-              {
-                "info": "NU_NU",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "NU_NU",
-                "weight": 1,
-                "label": "NU_NU",
-                "reference": true
-              },
-              {
-                "info": "HNU_NU",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "HNU_NU",
-                "weight": 1,
-                "label": "HNU_NU",
-                "reference": true
-              }
+            "info": "NU_HNU",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "NU_HNU",
+            "weight": 1,
+            "label": "NU_HNU",
+            "reference": true
+          },
+          {
+            "info": "HNU_HNU_FCP",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "HNU_HNU_FCP",
+            "weight": 1,
+            "label": "HNU_HNU_FCP",
+            "reference": true
+          },
+          {
+            "info": "HNU_HNU",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "HNU_HNU",
+            "weight": 1,
+            "label": "HNU_HNU",
+            "reference": true
+          },
+          {
+            "info": "NU_NU",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "NU_NU",
+            "weight": 1,
+            "label": "NU_NU",
+            "reference": true
+          },
+          {
+            "info": "HNU_NU",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "HNU_NU",
+            "weight": 1,
+            "label": "HNU_NU",
+            "reference": true
+          }
         ],
         "weight": 1
       },
@@ -123,6 +123,15 @@
         "name": "Storage",
         "label": "Storage",
         "children": [
+          {
+            "info": "flow_test",
+            "metric_model_name": "FlowTestPerformance",
+            "leaf": true,
+            "name": "flow_test",
+            "label": "flow_test",
+            "children": [],
+            "weight": 1
+          },
           {
             "info": "Volume Type",
             "metric_model_name": "MetricContainer",

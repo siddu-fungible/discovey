@@ -810,3 +810,24 @@ def jiras(request, script_pk, jira_id=None):
             logger.critical("No data found - Deleting jira ids for script pk id {}".format(script_pk))
         return "Ok"
     return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def script_execution(request, pk):
+    result = None
+    try:
+        request_json = json.loads(request.body)
+        r = RegresssionScripts.objects.get(pk=pk)
+        script_path = r.script_path
+        q = Q(script_path=script_path)
+        if "suite_execution_id" in request_json:
+            suite_execution_id = request_json["suite_execution_id"]
+            q = q & Q(suite_execution_id=suite_execution_id)
+        test_case_executions = TestCaseExecution.objects.filter(q)
+        result = {}
+        for test_case_execution in test_case_executions:
+            result[test_case_execution.test_case_id] = {"execution_id": test_case_execution.execution_id, "result": test_case_execution.result}
+    except ObjectDoesNotExist:
+        raise Exception("Script with pk: {} does not exist".format(pk))
+    return result
