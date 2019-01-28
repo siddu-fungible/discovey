@@ -2,7 +2,9 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
-import {el} from "@angular/platform-browser/testing/src/browser_util";
+import { Subscription } from 'rxjs';
+import { of } from 'rxjs';
+import { delay, share } from 'rxjs/operators';
 
 @Component({
   selector: 'app-regression-summary',
@@ -27,6 +29,7 @@ export class RegressionSummaryComponent implements OnInit {
   scriptInfoMap = {};
   numBugs = 0;
   showGlobalBugPanel = false;
+  scriptSuiteBaselineMap = {};
 
   initialFilterData = [{info: "Networking overall", payload: {module: "networking"}},
     {info: "Storage overall", payload: {module: "storage"}},
@@ -54,7 +57,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   clickHistory(scriptPath) {
-    let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].pk;
+    let url = "/regression/script_history_page/" + this.scriptInfoMap[scriptPath].entry.pk;
     window.open(url, '_blank');
   }
 
@@ -123,16 +126,84 @@ export class RegressionSummaryComponent implements OnInit {
     this.numBugs = 0;
     this.apiService.get("/regression/scripts").subscribe(response => {
       response.data.forEach(entry => {
-        this.scriptInfoMap[entry.script_path] = entry;
+        this.scriptInfoMap[entry.script_path] = {entry: entry};
+        if (entry.baseline_suite_execution_id > 0) {
+          let payload = {suite_execution_id: entry.baseline_suite_execution_id};
+          this.apiService.post('/regression/script_execution/' + entry.pk, payload ).subscribe(response => {
+            this.scriptInfoMap[entry.script_path]["baselineResults"] = response.data;
+          }, error => {
+
+          });
+        }
         if (entry.bugs.length) {
           this.numBugs += entry.bugs.length;
         }
       });
-
       this.fetchModules();
     }, error => {
       this.loggerService.error("/regression/scripts");
     })
+  }
+
+  getBaselineResult(scriptPath, testCaseId) {
+    let result = "UNKNOWN";
+    if (this.scriptInfoMap.hasOwnProperty(scriptPath)) {
+      if (this.scriptInfoMap[scriptPath].hasOwnProperty('baselineResults')) {
+        let baselineResults = this.scriptInfoMap[scriptPath].baselineResults;
+        if (baselineResults.hasOwnProperty(testCaseId)) {
+          result = baselineResults[testCaseId].result;
+        }
+      }
+    }
+    return result;
+  }
+
+  matchWithBaseline(scriptPath, scriptInfo, baselineSuiteExecutionId) {
+    try {
+      let suiteList = Array.from(scriptInfo.suiteExecutionIdSet);
+      let mostRecentSuite = Math.max.apply(Math, suiteList.map(o => o));
+      let result = {matches: true, message: null};
+
+      let baselineResults = this.scriptInfoMap[scriptPath].baselineResults;
+      if (!baselineResults) {
+        result.matches = false;
+        result.message = "Baseline results missing for " + scriptPath;
+        return result;
+      }
+      //console.log("Recent suite: " + mostRecentSuite);
+      //console.log("Baseline results: " + baselineResults);
+      let baselineResultKeys = Object.keys(baselineResults);
+      for (let index = 0; index < baselineResultKeys.length; index++) {
+        let baselineTestCaseId = baselineResultKeys[index];
+        let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
+        if (!history.hasOwnProperty(parseInt(baselineTestCaseId))) {
+          let errorMessage = "Baseline TC: " + baselineTestCaseId + " not found";
+          //console.log(errorMessage);
+          result.matches = false;
+          result.message = errorMessage;
+          break;
+        }
+        let historyResult = history[parseInt(baselineTestCaseId)].result;
+        if (historyResult !== "IN_PROGRESS") {
+          if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
+            let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
+            //console.log(errorMessage);
+            result.matches = false;
+            result.message = errorMessage;
+            break;
+          }
+        }
+
+        //console.log(baselineResults[baselineResultKeys[index]].result);
+
+      }
+      //console.log(result);
+      scriptInfo.mismatchMessage = result.message;
+      return result;
+    } catch (e) {
+      let i = 0;
+    }
+
   }
 
   prepareBucketList(index) {
@@ -205,7 +276,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   scriptPathToPk(scriptPath) {
-    return this.scriptInfoMap[scriptPath].pk;
+    return this.scriptInfoMap[scriptPath].entry.pk;
   }
 
   showPointDetails(pointInfo): void {
@@ -281,9 +352,9 @@ export class RegressionSummaryComponent implements OnInit {
 
     let bySuiteExecution = scriptDetailedInfo[scriptPath].bySuiteExecution;
     if (!bySuiteExecution.hasOwnProperty(historyInputElement.suite_execution_id)) {
-      bySuiteExecution[historyInputElement.suite_execution_id] = {history: []}
+      bySuiteExecution[historyInputElement.suite_execution_id] = {history: {}}
     }
-    bySuiteExecution[historyInputElement.suite_execution_id].history.push(historyInputElement);
+    bySuiteExecution[historyInputElement.suite_execution_id].history[historyInputElement.test_case_id] = (historyInputElement);
 
     let historyResults = this.aggregateHistoryResults(historyInputElement);
     scriptDetailedInfo[scriptPath].historyResults.numPassed += historyResults.numPassed;
@@ -291,7 +362,7 @@ export class RegressionSummaryComponent implements OnInit {
     scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
     scriptDetailedInfo[scriptPath].numBugs = 0;
     try {
-      scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].bugs.length;
+      scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].entry.bugs.length;
 
     } catch (e) {
       let i = 0;
@@ -314,7 +385,7 @@ export class RegressionSummaryComponent implements OnInit {
     if (testCaseId === 0) {
       summary = "Script setup";
     } else if (this.scriptInfoMap.hasOwnProperty(scriptPath)) {
-      let testCases = this.scriptInfoMap[scriptPath].test_cases;
+      let testCases = this.scriptInfoMap[scriptPath].entry.test_cases;
       if (testCases.hasOwnProperty(testCaseId)) {
         summary = testCases[testCaseId].summary;
       }
@@ -385,7 +456,7 @@ export class RegressionSummaryComponent implements OnInit {
     let byDateTime = this.filters[index].byDateTime;
     if (!this.filters[index].byDateTime.hasOwnProperty(timeBucket)) {
       byDateTime[timeBucket] = {
-        scriptDetailedInfo: {showingDetails: false, suiteExecutionIdSet: new Set()},
+        scriptDetailedInfo: {showingDetails: false},
         numPassed: 0,
         numFailed: 0,
         numNotRun: 0
@@ -483,6 +554,59 @@ export class RegressionSummaryComponent implements OnInit {
   getTestCaseExecutions(index) {
     return this.filters[index].testCaseExecutions;
   }
+
+  isBaselineForScript(scriptPath, suiteExecutionId) {
+    let result = false;
+    if (this.getBaselineSuiteExecutionId(scriptPath) === suiteExecutionId) {
+        result = true;
+    }
+    return result;
+  }
+
+  setBaseline(detailedInfo, scriptPath, suiteExecutionId) {
+    let payload = {baseline_suite_execution_id: suiteExecutionId};
+    let availableSuiteExecutionId = this.getBaselineSuiteExecutionId(scriptPath);
+    if (availableSuiteExecutionId === suiteExecutionId) {
+      payload.baseline_suite_execution_id = null;
+      suiteExecutionId = null;
+    }
+
+    this.apiService.post("/regression/script_update/" + this.scriptInfoMap[scriptPath].entry.pk, payload).subscribe(response => {
+      this.scriptInfoMap[scriptPath].entry.baseline_suite_execution_id = suiteExecutionId;
+      //detailedInfo = {...detailedInfo};
+      window.location.reload();
+    });
+  }
+
+
+  getBaselineSuiteExecutionId(scriptPath) {
+    let result = null;
+    if (this.scriptInfoMap.hasOwnProperty(scriptPath)) {
+      result = this.scriptInfoMap[scriptPath].entry.baseline_suite_execution_id;
+      if (result < 0) {
+        result = null;
+      }
+
+    }
+    return result;
+  }
+
+  /*
+  getBaselineSuiteExecutionId(scriptPath) {
+    return of(67).pipe(delay(2000));
+    /*let result = null;
+    if (this.scriptInfoMap.hasOwnProperty(scriptPath)) {
+      result = this.scriptInfoMap[scriptPath].baseline_suite_execution_id;
+      if (result < 0) {
+        result = null;
+      }
+    }
+    return result;
+
+  }
+  */
+
+
 
 }
 

@@ -624,7 +624,8 @@ def scripts(request):
                      "tags": json.loads(regression_script.tags),
                      "pk": regression_script.pk,
                      "bugs": [],
-                     "test_cases": get_all_test_cases(regression_script.script_path)}
+                     "test_cases": get_all_test_cases(regression_script.script_path),
+                     "baseline_suite_execution_id": regression_script.baseline_suite_execution_id}
         script_infos = ScriptInfo.objects.filter(script_id=regression_script.pk)
         for script_info in script_infos:
             new_entry["bugs"].append(script_info.bug)
@@ -667,6 +668,23 @@ def script(request):
         except ObjectDoesNotExist as ex:
             logging.error("Script: {} does not exist. {}".format(script_path, str(ex)))
     return result
+
+@csrf_exempt
+@api_safe_json_response
+def script_update(request, pk):
+    result = None
+    request_json = json.loads(request.body)
+    q = Q(pk=pk)
+    script = RegresssionScripts.objects.get(q)
+    if script:
+        if "baseline_suite_execution_id" in request_json:
+            script.baseline_suite_execution_id = request_json["baseline_suite_execution_id"]
+        script.save()
+    else:
+        logging.error("Could not find script with pk: {}".format(pk))
+
+    return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -791,4 +809,25 @@ def jiras(request, script_pk, jira_id=None):
         except ObjectDoesNotExist:
             logger.critical("No data found - Deleting jira ids for script pk id {}".format(script_pk))
         return "Ok"
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def script_execution(request, pk):
+    result = None
+    try:
+        request_json = json.loads(request.body)
+        r = RegresssionScripts.objects.get(pk=pk)
+        script_path = r.script_path
+        q = Q(script_path=script_path)
+        if "suite_execution_id" in request_json:
+            suite_execution_id = request_json["suite_execution_id"]
+            q = q & Q(suite_execution_id=suite_execution_id)
+        test_case_executions = TestCaseExecution.objects.filter(q)
+        result = {}
+        for test_case_execution in test_case_executions:
+            result[test_case_execution.test_case_id] = {"execution_id": test_case_execution.execution_id, "result": test_case_execution.result}
+    except ObjectDoesNotExist:
+        raise Exception("Script with pk: {} does not exist".format(pk))
     return result

@@ -66,10 +66,12 @@ regression_urls = [
     url(r'^scripts$', regression_views.scripts),
     url(r'^unallocated_script$', regression_views.unallocated_script),
     url(r'^script$', regression_views.script),
+    url(r'^script_update/(\d+)$', regression_views.script_update),
     url(r'^get_suite_executions_by_time$', regression_views.get_suite_executions_by_time),
     url(r'^get_test_case_executions_by_time$', regression_views.get_test_case_executions_by_time),
     url(r'^all_jiras$', regression_views.all_regression_jiras),
     url(r'^jiras/(\d+)/?(.*)?$', regression_views.jiras),
+    url(r'^script_execution/(\d+)$', regression_views.script_execution),
     url(r'^(?:\S+)$', views.angular_home)
 
 
