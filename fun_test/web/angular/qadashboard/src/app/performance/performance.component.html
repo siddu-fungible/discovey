@@ -10,9 +10,8 @@
             <label class="no-margin" data-placement="right" triggers="click"
                    [ngbTooltip]="ScoreInfo" [autoClose]="'outside'">
               Score <sup><i class="fa fa-info-circle" style="padding: 2px"></i></sup></label>
-            <ng-template #ScoreInfo>
+            <ng-template #LeafScoreInfo>
               <div style="color: black">
-
                 <b>Score for leaf metrics:</b><br>
                 The score approaches 100 as the actual value approaches the expected value (established baseline
                 number). Expected value for the product may vary.
@@ -26,9 +25,17 @@
                   </li>
                   Expected value is derived from the first value entered into the database.
                 </ul>
+              </div>
+            </ng-template>
+            <ng-template #ContainerScoreInfo>
+              <div style="color: black">
                 <b>Score for container of leaves or container of containers:</b>
                 <p>Weighted average of the children's scores</p>
               </div>
+            </ng-template>
+            <ng-template #ScoreInfo>
+              <ng-template [ngTemplateOutlet]="LeafScoreInfo"></ng-template>
+              <ng-template [ngTemplateOutlet]="ContainerScoreInfo"></ng-template>
             </ng-template>
           </th>
           <th class="text-center">#</th>
@@ -226,11 +233,12 @@
         <div *ngIf="showScoreInfo">
           <div [ngSwitch]="mode">
             <br>
-            <ng-template [ngTemplateOutlet]="ScoreInfo"></ng-template>
             <div *ngSwitchCase="modeType.ShowingAtomicMetric">
+              <ng-template [ngTemplateOutlet]="LeafScoreInfo"></ng-template>
               <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
             </div>
             <div *ngSwitchCase="modeType.ShowingNonAtomicMetric">
+              <ng-template [ngTemplateOutlet]="ContainerScoreInfo"></ng-template>
               <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
               <div *ngIf="currentNode">
                 <table class="table table-nonfluid">
