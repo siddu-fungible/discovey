@@ -184,13 +184,16 @@ export class RegressionSummaryComponent implements OnInit {
           break;
         }
         let historyResult = history[parseInt(baselineTestCaseId)].result;
-        if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
-          let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
-          //console.log(errorMessage);
-          result.matches = false;
-          result.message = errorMessage;
-          break;
+        if (historyResult !== "IN_PROGRESS") {
+          if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
+            let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
+            //console.log(errorMessage);
+            result.matches = false;
+            result.message = errorMessage;
+            break;
+          }
         }
+
         //console.log(baselineResults[baselineResultKeys[index]].result);
 
       }
