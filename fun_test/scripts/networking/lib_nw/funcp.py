@@ -22,9 +22,11 @@ class FunControlPlane:
 
     def get_prebuilt(self):
         """Get prebuilt FunControlPlane, which has funnel_gen.py, needed to run test."""
+        # TODO: Add platform check to use correct prebuilt functrlp file - functrlp_mips.tgz, or functrlp_palladium.tgz
+        filename = 'functrlp_palladium.tgz'
         cmds = (
             'cd %s/%s' % (self.ws, self.name),
-            'wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp.tgz',
+            'wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/%s' % filename,
             'tar xzvf functrlp.tgz',
         )
         return self.linux_obj.command(';'.join(cmds), timeout=120)
