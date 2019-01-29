@@ -74,8 +74,12 @@ class ErpTest(FunTestCase):
 
     def run(self):
         funcp_obj = fun_test.shared_variables['funcp_obj']
-        output = funcp_obj.send_traffic('endpoint.ErpTest_simple_tcp', server='hu', timeout=60)
-        fun_test.test_assert(re.search(r'Ran \d+ test.*OK', output, re.DOTALL), "ERP test")
+        #output = funcp_obj.send_traffic('endpoint.ErpTest_simple_tcp', server='hu', timeout=60)
+        output = funcp_obj.send_traffic('erp', server='hu', timeout=3600)
+        match = re.search(r'The following tests failed:\n(.*?)\n', output, re.DOTALL)
+        failed_cases = match.group(1).split(',')
+        fun_test.log('Failed cases: %s' % '\n'.join(sorted(failed_cases)))
+        fun_test.test_assert(len(failed_cases) == 0, "ERP test")
 
 
 class ParserTest(FunTestCase):
