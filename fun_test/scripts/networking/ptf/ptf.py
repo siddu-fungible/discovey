@@ -76,8 +76,11 @@ class ErpTest(FunTestCase):
         funcp_obj = fun_test.shared_variables['funcp_obj']
         #output = funcp_obj.send_traffic('endpoint.ErpTest_simple_tcp', server='hu', timeout=60)
         output = funcp_obj.send_traffic('erp', server='hu', timeout=3600)
-        match = re.search(r'The following tests failed:\n(.*?)\n', output, re.DOTALL)
-        failed_cases = match.group(1).split(',')
+        match = re.search(r'The following tests failed:\n(.*?)', output, re.DOTALL)
+        if match:
+            failed_cases = match.group(1).split(',')
+        else:
+            failed_cases = []
         fun_test.log('Failed cases: %s' % '\n'.join(sorted(failed_cases)))
         fun_test.test_assert(len(failed_cases) == 0, "ERP test")
 
