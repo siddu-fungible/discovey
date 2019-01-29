@@ -2,5 +2,6 @@
   "SDK_URL": "http://dochub.fungible.local/doc/jenkins/funsdk/latest",
   "CONTAINER_START_TIME": 10,
   "DOCKER_HOSTS_SPEC_FILE": "/tmp/my_docker_hosts.json",
-  "FUNCTRLP_TGZ_URL": "http://127.0.0.1:5000/functrlp.tgz"
+  "FUNCTRLP_TGZ_URL": "http://127.0.0.1:5000/functrlp.tgz",
+  "CONTAINER_NAME_PREFIX": "john"
 }
