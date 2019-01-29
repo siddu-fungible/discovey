@@ -14,7 +14,8 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() title: string;
   @Input() xAxisLabel: string;
   @Input() y1AxisLabel: string;
-  @Input() mileStoneIndex: number = null;
+  @Input() tapeOutMileStoneIndex: number = null;
+  @Input() f1MileStoneIndex: number = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
@@ -84,18 +85,32 @@ export class FunChartComponent implements OnInit, OnChanges {
         },
         series: this.y1Values
       };
-      if (this.mileStoneIndex) {
-        chartOptions.xAxis["plotLines"] = [{
+      chartOptions.xAxis["plotLines"] = [];
+      if (this.tapeOutMileStoneIndex) {
+        chartOptions.xAxis["plotLines"].push({
           color: 'red', // Color value
           dashStyle: 'solid', // Style of the plot line. Default to solid
-          value: this.mileStoneIndex, // Value of where the line will appear
+          value: this.tapeOutMileStoneIndex, // Value of where the line will appear
           width: 2, // Width of the line
           label: {
             text: 'Tape-out',
             verticalAlign: 'top',
             textAlign: 'center'
           }
-        }];
+        });
+      }
+      if (this.f1MileStoneIndex) {
+        chartOptions.xAxis["plotLines"].push({
+          color: 'red', // Color value
+          dashStyle: 'solid', // Style of the plot line. Default to solid
+          value: this.f1MileStoneIndex, // Value of where the line will appear
+          width: 2, // Width of the line
+          label: {
+            text: 'F1',
+            verticalAlign: 'top',
+            textAlign: 'center'
+          }
+        });
       }
     }
     else if (this.chartType === 'vertical_colored_bar_chart') {

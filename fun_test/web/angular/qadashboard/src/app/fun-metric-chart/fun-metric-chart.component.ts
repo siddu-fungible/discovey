@@ -42,7 +42,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   chart1XaxisTitle: any;
   chart1YaxisTitle: any;
   y1AxisTitle: any;
-  mileStoneIndex: number = null;
+  tapeOutMileStoneIndex: number = null;
+  f1MileStoneIndex: number = null;
   chartName: string;
   internalChartName: string;
   modelName: string;
@@ -271,7 +272,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //sets the state of the component to default values
   setDefault(): void {
     this.timeMode = "all";
-    this.mileStoneIndex = null;
+    this.tapeOutMileStoneIndex = null;
+    this.f1MileStoneIndex = null;
     this.showingTable = false;
     this.showingConfigure = false;
     this.pointClicked = false;
@@ -533,7 +535,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let matchingDateFound = false;
           seriesDates.push(originalKeyList[startIndex]);
           if (originalKeyList[startIndex].includes("2018-09-16")) { // Tape-out
-            this.mileStoneIndex = startIndex;
+            this.tapeOutMileStoneIndex = startIndex;
+          }
+          if (originalKeyList[startIndex].includes("2019-01")) { // F1
+            let curDate = new Date(originalKeyList[startIndex]);
+            if (curDate.getDate() > 22 && this.f1MileStoneIndex===null) { // dated 22 Jan
+                this.f1MileStoneIndex = startIndex;
+            }
           }
           while (startIndex >= endIndex) {
             if (keyValue[j][originalKeyList[startIndex]]) {
@@ -646,7 +654,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let total = 0;
           dateSeries.push(series[startIndex]);
           if (series[startIndex].includes("2018-09-16")) { // Tape-out
-            this.mileStoneIndex = startIndex;
+            this.tapeOutMileStoneIndex = startIndex;
+          }
+          if (series[startIndex].includes("2019-01-23")) { // F1
+            this.f1MileStoneIndex = startIndex;
           }
           while (startIndex >= endIndex) {
             if (keyValue[series[startIndex]] != -1) {
