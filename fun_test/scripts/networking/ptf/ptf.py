@@ -26,7 +26,7 @@ class PTFTestSuite(FunTestScript):
                              'git clone FunControlPlane repo')
         fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull(branch='george/ep')),
                              'git pull FunControlPlane repo')
-        fun_test.test_assert(re.search(r'funnel_gen.py.*COPYING', funcp_obj.get_prebuilt(), re.DOTALL),
+        fun_test.test_assert(re.search(r'funnel_gen.py', funcp_obj.get_prebuilt(), re.DOTALL),
                              'Get FunControlPlane prebuilt pkg')
         output = funcp_obj.setup_traffic_server('hu')
         fun_test.test_assert(re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output,
