@@ -745,6 +745,19 @@ def jiras(request, metric_id, jira_id=None):
         return "Ok"
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def bug_info(request):
+    result = None
+    if request.method == "POST":
+        try:
+            request_json = json.loads(request.body)
+            bug_ids = request_json["bug_ids"]
+            result = "Ok"
+        except ObjectDoesNotExist as obj:
+            logger.critical("No data found")
+    return result
+
 
 @csrf_exempt
 @api_safe_json_response

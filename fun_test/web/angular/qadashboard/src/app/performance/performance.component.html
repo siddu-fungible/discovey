@@ -101,8 +101,13 @@
               <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
             </td>
 
-            <td *ngIf="!flatNode.node.leaf && !flatNode.special"
-                [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+            <td *ngIf="!flatNode.node.leaf && !flatNode.special">
+              <span [innerHTML]="getStatusHtml(flatNode) | safeHtml"></span>
+              <span *ngIf="flatNode.node.failures.size!= 0 || flatNode.node.degrades.size!= 0">&nbsp;</span>
+              <span *ngIf="flatNode.jiraList.size"><a [routerLink]="" (click)="openBugPanel(flatNode)"><span style='color: red'>
+                 <i class='fa fa-bug'></i>:</span>
+                <span style='color: black'>{{ flatNode.jiraList.size }}</span></a></span>
+            </td>
             <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special">
               Bld:<label data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
                          [ngbTooltip]="FailedInfo" [autoClose]="'outside'"
@@ -191,7 +196,12 @@
                          (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
             </td>
           </tr>
-
+          <tr *ngIf="flatNode.showBugPanel">
+            <td colspan="6">
+              <bug-panel [bugApiUrl]="'/metrics/bug_info/'" [data]="flatNode.jiraList"
+                         [allowDelete]="false" [allowAdd]="false"></bug-panel>
+            </td>
+          </tr>
         </ng-container>
       </table>
     </div>

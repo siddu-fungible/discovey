@@ -19,7 +19,7 @@ export class JiraInfoComponent implements OnInit {
   @Output() numBugs: EventEmitter<number> = new EventEmitter();
   status: string = null;
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService) {
+  constructor(public apiService: ApiService, public loggerService: LoggerService) {
   }
 
   ngOnInit() {
@@ -28,8 +28,8 @@ export class JiraInfoComponent implements OnInit {
 
   fetchJiraIds(): void {
     this.jiraInfo = [];
-    this.status = "Fetching";
     if (this.apiUrl) {
+      this.status = "Fetching";
       this.apiService.get(this.apiUrl).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
         this.numBugs.emit(this.jiraInfo.length);

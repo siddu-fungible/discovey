@@ -35,11 +35,12 @@ class Node {
   copiedScore: boolean = false;
   copiedScoreDisposition: number = null;
   numBugs: number = 0;
+  jiraIds: any = [];
   showAddJira: boolean = false;
   degrades: any = new Set();
   upgrades: any = new Set();
   failures: any = new Set();
-  bugs: any = new Set();
+  bugs: any = {};
 }
 
 class FlatNode {
@@ -49,6 +50,8 @@ class FlatNode {
   hide: boolean;
   indent: number;
   showJiraInfo: boolean = false;
+  showBugPanel: boolean = false;
+  jiraList: any = new Set();
   children: FlatNode[] = [];
   lineage: any = [];
   special: boolean = false;
@@ -125,6 +128,7 @@ export class PerformanceComponent implements OnInit {
   upgradeFlatNode: any = {};
   degradeFlatNode: any = {};
 
+
   constructor(
     private apiService: ApiService,
     private loggerService: LoggerService,
@@ -198,8 +202,8 @@ export class PerformanceComponent implements OnInit {
       statusFlatNode = this.upgradeFlatNode;
     } else {
       node.chartName = "Down Since Previous";
-    node.numLeaves = Object.keys(this.degradeFlatNode).length;
-    statusFlatNode = this.degradeFlatNode;
+      node.numLeaves = Object.keys(this.degradeFlatNode).length;
+      statusFlatNode = this.degradeFlatNode;
     }
     statusNode = this.getNewFlatNode(node, 0);
     statusNode.hide = false;
@@ -227,6 +231,7 @@ export class PerformanceComponent implements OnInit {
     node.copiedScore = dagEntry.copied_score;
     node.copiedScoreDisposition = dagEntry.copied_score_disposition;
     node.numBugs = dagEntry.jira_ids.length;
+    node.jiraIds = dagEntry.jira_ids;
     node.showAddJira = false;
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
@@ -250,19 +255,19 @@ export class PerformanceComponent implements OnInit {
 
   expandFromLineage(parent): void {
     this.chartReady = false;
-      for (let flatNode of this.flatNodes) {
-        let node = flatNode.node;
-        if (Number(parent.guid) === flatNode.gUid) {
-          this.expandNode(flatNode);
-          if (node.metricModelName === 'MetricContainer') {
-            this.showNonAtomicMetric(flatNode);
-            break;
-          } else {
-            this.showAtomicMetric(flatNode);
-            break;
-          }
+    for (let flatNode of this.flatNodes) {
+      let node = flatNode.node;
+      if (Number(parent.guid) === flatNode.gUid) {
+        this.expandNode(flatNode);
+        if (node.metricModelName === 'MetricContainer') {
+          this.showNonAtomicMetric(flatNode);
+          break;
+        } else {
+          this.showAtomicMetric(flatNode);
+          break;
         }
       }
+    }
     this.chartReady = true;
   }
 
@@ -415,9 +420,9 @@ export class PerformanceComponent implements OnInit {
       //this.loggerService.log('Node:' + nodeInfo.chart_name);
       let parentsGuid = {};
       parentsGuid["guid"] = thisFlatNode.gUid;
-        parentsGuid["chartName"] = newNode.chartName;
-        lineage.push(parentsGuid);
-        thisFlatNode.lineage = [lineage.slice()];
+      parentsGuid["chartName"] = newNode.chartName;
+      lineage.push(parentsGuid);
+      thisFlatNode.lineage = [lineage.slice()];
       if (!nodeInfo.leaf) {
         let children = nodeInfo.children;
 
@@ -437,65 +442,73 @@ export class PerformanceComponent implements OnInit {
 
   addUpDownStatusNumbers(childFlatNode, thisFlatNode): void {
     let childNode = childFlatNode["node"];
-          if (childNode.upgrades.size != 0) {
-            childNode.upgrades.forEach(childMetricId => {
-              thisFlatNode.node.upgrades.add(childMetricId);
-            });
-          }
-          if (childNode.degrades.size != 0) {
-            childNode.degrades.forEach(childMetricId => {
-              thisFlatNode.node.degrades.add(childMetricId);
-            });
-          }
-          if (childNode.failures.size != 0) {
-            childNode.failures.forEach(childMetricId => {
-              thisFlatNode.node.failures.add(childMetricId);
-            });
-          }
-          if (childNode.bugs.size != 0) {
-            childNode.bugs.forEach(childMetricId => {
-              thisFlatNode.node.bugs.add(childMetricId);
-            });
-          }
+    if (childNode.upgrades.size != 0) {
+      childNode.upgrades.forEach(childMetricId => {
+        thisFlatNode.node.upgrades.add(childMetricId);
+      });
+    }
+    if (childNode.degrades.size != 0) {
+      childNode.degrades.forEach(childMetricId => {
+        thisFlatNode.node.degrades.add(childMetricId);
+      });
+    }
+    if (childNode.failures.size != 0) {
+      childNode.failures.forEach(childMetricId => {
+        thisFlatNode.node.failures.add(childMetricId);
+      });
+    }
+    if (childNode.bugs.size != 0) {
+      Object.keys(childNode.bugs).forEach((function (key) {
+        thisFlatNode.node.bugs[key] = childNode.bugs[key];
+      }));
+    }
+    if (Object.keys(thisFlatNode.node.bugs).length != 0) {
+      Object.keys(thisFlatNode.node.bugs).forEach(k => {
+        let bugObj = thisFlatNode.node.bugs[k];
+        for (let id in thisFlatNode.node.bugs[k]) {
+          thisFlatNode.jiraList.add(bugObj[id]);
+        }
+      });
+    }
   }
 
   addUpgradeDegradeNodes(thisFlatNode, dagEntry): void {
     let leafNode = thisFlatNode.node;
-        if (leafNode.trend > 0) {
-          leafNode.upgrades.add(leafNode.metricId);
-          this.addLineagesForUpgradesDegrades(true, leafNode, dagEntry, thisFlatNode);
-        } else if (leafNode.trend < 0) {
-          leafNode.degrades.add(leafNode.metricId);
-          this.addLineagesForUpgradesDegrades(false, leafNode, dagEntry, thisFlatNode);
-        }
-        if (leafNode.lastNumBuildFailed == 1) {
-          leafNode.failures.add(leafNode.metricId);
-        }
-        if (leafNode.numBugs > 0) {
-          leafNode.bugs.add(leafNode.metricId);
-        }
+    if (leafNode.trend > 0) {
+      leafNode.upgrades.add(leafNode.metricId);
+      this.addLineagesForUpgradesDegrades(true, leafNode, dagEntry, thisFlatNode);
+    } else if (leafNode.trend < 0) {
+      leafNode.degrades.add(leafNode.metricId);
+      this.addLineagesForUpgradesDegrades(false, leafNode, dagEntry, thisFlatNode);
+    }
+    if (leafNode.lastNumBuildFailed == 1) {
+      leafNode.failures.add(leafNode.metricId);
+    }
+    if (leafNode.numBugs > 0) {
+      leafNode.bugs[leafNode.metricId] = leafNode.jiraIds;
+    }
   }
 
   addLineagesForUpgradesDegrades(upgrade: boolean, leafNode: Node, dagEntry: object, thisFlatNode: any): void {
     let newLeafNode = this.getNodeFromEntry(leafNode.metricId, dagEntry[leafNode.metricId]);
-          let flatNode = this.getNewFlatNode(newLeafNode, 1);
-          let statusNode = null;
-          for (let p of thisFlatNode.lineage) {
-              flatNode.lineage.push(p);
-            }
-            if (upgrade) {
-              statusNode = this.upgradeFlatNode;
-            } else {
-              statusNode = this.degradeFlatNode;
-            }
-          if (statusNode[newLeafNode.metricId]) {
-            let tempNode = statusNode[newLeafNode.metricId];
-            for (let p of thisFlatNode.lineage) {
-              tempNode.lineage.push(p);
-            }
-          } else {
-            statusNode[newLeafNode.metricId] = flatNode;
-          }
+    let flatNode = this.getNewFlatNode(newLeafNode, 1);
+    let statusNode = null;
+    for (let p of thisFlatNode.lineage) {
+      flatNode.lineage.push(p);
+    }
+    if (upgrade) {
+      statusNode = this.upgradeFlatNode;
+    } else {
+      statusNode = this.degradeFlatNode;
+    }
+    if (statusNode[newLeafNode.metricId]) {
+      let tempNode = statusNode[newLeafNode.metricId];
+      for (let p of thisFlatNode.lineage) {
+        tempNode.lineage.push(p);
+      }
+    } else {
+      statusNode[newLeafNode.metricId] = flatNode;
+    }
   }
 
   collapseBranch = (flatNode) => {
@@ -621,25 +634,24 @@ export class PerformanceComponent implements OnInit {
 
   };
 
-  getStatusHtml = (node) => {
+  getStatusHtml = (flatNode) => {
     let s = "";
-    if (node.degrades.size != 0) {
-      s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + node.degrades.size + "";
+    if (flatNode.node.degrades.size != 0) {
+      s += "<span style='color: red'><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i></span>" + flatNode.node.degrades.size + "";
     }
-    if (node.failures.size != 0) {
-      if (node.degrades.size != 0) {
+    if (flatNode.node.failures.size != 0) {
+      if (flatNode.node.degrades.size != 0) {
         s += "&nbsp";
       }
-      s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + node.failures.size + "</span>";
+      s += "<span style='color: red'><i class='fa fa-times fa-icon-red'>:</i></span>" + "<span style='color: black'>" + flatNode.node.failures.size + "</span>";
     }
-    // if (node.bugs.size != 0) {
-    //   if (node.failures.size != 0 || node.degrades.size != 0) {
-    //     s += "&nbsp";
-    //   }
-    //     s += "<span style='color: red'><i class='fa fa-bug'></i>:</span>" + "<span style='color: black'>" + node.bugs.size + "</span>";
-    // }
     return s;
   };
+
+  openBugPanel(flatNode): void {
+    flatNode.showBugPanel = !flatNode.showBugPanel;
+
+  }
 
   setDefaultUrls(): void {
     this.currentRegressionUrl = null;
