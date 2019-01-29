@@ -27,7 +27,7 @@ class FunControlPlane:
         cmds = (
             'cd %s/%s' % (self.ws, self.name),
             'wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/%s' % filename,
-            'tar xzvf functrlp.tgz',
+            'tar xzvf %s' % filename,
         )
         return self.linux_obj.command(';'.join(cmds), timeout=120)
 
