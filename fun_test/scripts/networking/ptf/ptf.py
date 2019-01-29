@@ -17,9 +17,7 @@ class PTFTestSuite(FunTestScript):
                               """)
 
     def setup(self):
-        #linux_obj = #Linux(host_ip='localhost', ssh_username=REGRESSION_USER, ssh_password=REGRESSION_USER_PASSWORD))
-        # TODO: Replace below with regression user
-        linux_obj = Linux(host_ip='localhost', ssh_username='gliang', ssh_password='fun123')
+        linux_obj = Linux(host_ip='localhost', ssh_username=REGRESSION_USER, ssh_password=REGRESSION_USER_PASSWORD))
         funcp_obj = funcp.FunControlPlane(linux_obj)
         done_list = re.findall(r'done', funcp_obj.clone())
         fun_test.test_assert( done_list == ['done'] * 5 or done_list == ['done'] * 6,
@@ -34,6 +32,7 @@ class PTFTestSuite(FunTestScript):
                              'Set up PTF traffic server')
         fun_test.shared_variables['funcp_obj'] = funcp_obj
 
+
     def cleanup(self):
         fun_test.shared_variables['funcp_obj'].cleanup()
 
@@ -47,9 +46,15 @@ class EtpTest(FunTestCase):
         """)
 
     def setup(self):
+        # TODO: Remove below workaround after SWOS-2890 is fixed
+        linux_obj_hu = Linux(host_ip='cadence-pc-5', ssh_username='localadmin', ssh_password='Precious1*')
+        linux_obj_hu.command('nohup ping 19.1.1.1')
         pass
 
     def cleanup(self):
+        # TODO: Remove below workaround after SWOS-2890 is fixed
+        linux_obj_hu = Linux(host_ip='cadence-pc-5', ssh_username='localadmin', ssh_password='Precious1*')
+        linux_obj_hu.command('pkill ping')
         pass
 
     def run(self):
