@@ -70,7 +70,7 @@ class EtpTest(FunTestCase):
     def setup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
         linux_obj_hu = Linux(host_ip='cadence-pc-5', ssh_username='localadmin', ssh_password='Precious1*')
-        linux_obj_hu.command('nohup ping 19.1.1.1 -i 100')
+        linux_obj_hu.command('nohup ping 19.1.1.1 -i 100 &')
         pass
 
     def cleanup(self):
