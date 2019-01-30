@@ -46,3 +46,21 @@ class FunControlPlane:
     def cleanup(self):
         """Remove worksapce."""
         return self.linux_obj.command('rm -fr {}'.format(self.ws))
+
+
+class FunSDK:
+    """FunSDK repository."""
+    def __init__(self, linux_obj, ws='%s/tmp/' % os.getenv('HOME'), name='FunSDK'):
+        self.linux_obj = linux_obj
+        self.ws = ws
+        self.name = name
+        self.linux_obj.command('rm -fr {0}; mkdir {0}'.format(self.ws))
+
+    def clone(self, git_base='git@github.com:fungible-inc', repo_name='FunSDK-small'):
+        """git clone."""
+        return self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
+                                      timeout=120)
+
+    def sdkup(self):
+        """Update SDK."""
+        return self.linux_obj.command('cd %s/%s; ./script/bob --sdkup' % (self.ws, self.name))
