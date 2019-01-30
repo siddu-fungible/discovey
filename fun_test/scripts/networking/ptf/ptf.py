@@ -5,6 +5,11 @@ from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 import re
 
 
+PTF_SERVER = 'cadence-pc-5'
+PTF_SERVER_USERNAME = 'localadmin'
+PTF_SERVER_PASSWD = 'Precious1*'
+
+
 class PTFTestSuite(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
@@ -34,6 +39,8 @@ class PTFTestSuite(FunTestScript):
 
 
     def cleanup(self):
+        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        linux_obj_ptf.command('sudo pkill ptf')
         fun_test.shared_variables['funcp_obj'].cleanup()
 
 
@@ -69,14 +76,14 @@ class EtpTest(FunTestCase):
 
     def setup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
-        linux_obj_hu = Linux(host_ip='cadence-pc-5', ssh_username='localadmin', ssh_password='Precious1*')
-        linux_obj_hu.command('nohup ping 19.1.1.1 -i 100 &')
+        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        linux_obj_ptf.command('nohup ping 19.1.1.1 -i 100 &')
         pass
 
     def cleanup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
-        linux_obj_hu = Linux(host_ip='cadence-pc-5', ssh_username='localadmin', ssh_password='Precious1*')
-        linux_obj_hu.command('pkill ping')
+        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        linux_obj_ptf.command('pkill ping')
         pass
 
     def run(self):
