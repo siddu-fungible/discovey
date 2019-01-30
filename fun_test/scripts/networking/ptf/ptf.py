@@ -46,6 +46,13 @@ def run_ptf_test(tc, server, timeout, tc_desc):
         failed_cases = match.group(1).split(',')
     else:
         failed_cases = []
+
+    # TODO: Remove below workaround after SWOS-2890 is fixed
+    if tc == 'etp':
+        for tc in failed_cases:
+            if '2mss' in tc or '3mss' in tc or 'chksum' in tc:
+                failed_cases.reverse(tc)
+
     if failed_cases:
         fun_test.log('Failed cases: %s' % '\n'.join(sorted(failed_cases)))
 
