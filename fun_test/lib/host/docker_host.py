@@ -264,6 +264,9 @@ class DockerHost(Linux, ToDictMixin):
         if local_dochub_ip:
             command += " -h {}".format(local_dochub_ip)
 
+        container_name_prefix = fun_test.get_local_setting("CONTAINER_NAME_PREFIX")
+        if container_name_prefix:
+            container_name = container_name_prefix + container_name
         return self.setup_container(image_name=storage_image_name,
                                     container_name=container_name,
                                     pool0_internal_ports=ssh_internal_ports,

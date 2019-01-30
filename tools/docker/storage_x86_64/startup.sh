@@ -19,7 +19,7 @@ dpcsh_tgz_url=
 funos_tgz_url=
 qemu_tgz_url=
 modules_tgz_url=http://$dochub_fungible_local/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz
-functrlp_tgz_url=http://$dochub_fungible_local/doc/jenkins/funcontrolplane/latest/functrlp.tgz
+functrlp_tgz_url=http://$dochub_fungible_local/doc/jenkins/funcontrolplane/latest/functrlp_posix.tgz
 sdk_url=
 kernel_url=
     

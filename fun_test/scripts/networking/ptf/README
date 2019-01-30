@@ -1,0 +1,3 @@
+This folder holds all PTF test cases which are from FunControlPlane repository. It mainly consists of endpoint (ETP and
+ERP), parser, FCP. It also includes all other scripts whichever can run in Palladium - L2/L3, ACL, QoS, Sample, Punt,
+etc.

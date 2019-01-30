@@ -899,6 +899,17 @@ class PeekCommands(object):
                 sorted_dict[key] = result[key]
         return sorted_dict
 
+    def _get_colmun_name_fpg(self, result, port_num):
+        column_name = None
+        for key in result:
+            if re.search(r'.*_MAC_.*', key, re.IGNORECASE):
+                column_name = "Port %d FPG stats" % port_num
+                break
+            elif re.search(r'.*misc.*', key, re.IGNORECASE):
+                column_name = "Port %d MISC stats" % port_num
+                break
+        return column_name
+
     def peek_fpg_stats(self, port_num, grep_regex=None, mode='nu', get_result_only=False):
         prev_result = {}
         result = None
@@ -914,12 +925,13 @@ class PeekCommands(object):
                 for result in result_list:
                     if prev_result:
                         diff_result = self._get_difference(result=result, prev_result=prev_result[index])
-                        tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter', 'Counter diff'])
-                        rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter', 'Counter diff'])
+                        column_name = self._get_colmun_name_fpg(result=result, port_num=port_num)
+                        tx_table_obj = PrettyTable([column_name, 'Counter', 'Counter diff'])
+                        rx_table_obj = PrettyTable([column_name, 'Counter', 'Counter diff'])
                         tx_table_obj.align = 'l'
-                        tx_table_obj.sortby = "Port %d Tx Stats" % port_num
+                        tx_table_obj.sortby = column_name
                         rx_table_obj.align = 'l'
-                        rx_table_obj.sortby = "Port %d Rx Stats" % port_num
+                        rx_table_obj.sortby = column_name
                         for key in result:
                             if grep_regex:
                                 if re.search(grep_regex, key, re.IGNORECASE):
@@ -931,6 +943,7 @@ class PeekCommands(object):
                                 if re.search(r'.*tx.*', key, re.IGNORECASE):
                                     tx_table_obj.add_row([key, result[key], diff_result[key]])
                                 else:
+
                                     rx_table_obj.add_row([key, result[key], diff_result[key]])
                         if tx_table_obj.rowcount > 1:
                             master_table_obj.add_row([tx_table_obj])
@@ -938,12 +951,13 @@ class PeekCommands(object):
                             master_table_obj.add_row([rx_table_obj])
                         index += 1
                     else:
-                        tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter'])
-                        rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter'])
+                        column_name = self._get_colmun_name_fpg(result=result, port_num=port_num)
+                        tx_table_obj = PrettyTable([column_name, 'Counter'])
+                        rx_table_obj = PrettyTable([column_name, 'Counter'])
                         tx_table_obj.align = 'l'
-                        tx_table_obj.sortby = "Port %d Tx Stats" % port_num
+                        tx_table_obj.sortby = column_name
                         rx_table_obj.align = 'l'
-                        rx_table_obj.sortby = "Port %d Rx Stats" % port_num
+                        rx_table_obj.sortby = column_name
                         for key in result:
                             if grep_regex:
                                 if re.search(grep_regex, key, re.IGNORECASE):
