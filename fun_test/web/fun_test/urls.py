@@ -146,7 +146,7 @@ metric_urls = [
     url(r'^dag$', metrics_views.dag),
     url(r'^global_settings', metrics_views.global_settings),
     url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras),
-    url(r'^bug_info/', metrics_views.bug_info)
+    url(r'^bug_info$', metrics_views.bug_info)
 ]
 
 test_urls = [

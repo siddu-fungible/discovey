@@ -14,7 +14,8 @@ fetchJiraIds(): void {
     if (this.bugApiUrl) {
       this.status = "Fetching";
       let payload = {};
-      payload["bug_ids"] = this.data;
+      let bug_ids = Array.from(this.data);
+      payload["bug_ids"] = Array.from(this.data);
       this.apiService.post(this.bugApiUrl, payload).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
         this.status = null;
