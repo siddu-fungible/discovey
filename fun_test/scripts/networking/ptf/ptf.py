@@ -58,7 +58,7 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     if tc == 'etp':
         for tc in failed_cases:
             if '2mss' in tc or '3mss' in tc or 'chksum' in tc:
-                failed_cases.reverse(tc)
+                failed_cases.remove(tc)
 
     if failed_cases:
         fun_test.log('Failed cases: %s' % '\n'.join(sorted(failed_cases)))
