@@ -42,7 +42,8 @@ class PTFTestSuite(FunTestScript):
         done_list = re.findall(r'done', funsdk_obj.clone())
         fun_test.test_assert(done_list == ['done'] * 5 or done_list == ['done'] * 6,
                              'git clone FunSDK repo')
-        fun_test.test_assert(re.search(r'Updating current build number', funsdk_obj.sdkup()), 'bob --sdkup')
+        fun_test.test_assert(re.search(r'Updating current build number', funsdk_obj.sdkup()),
+                             'FunSDK script/bob --sdkup')
 
         # Set up PTF server
         output = funcp_obj.setup_traffic_server('hu')
