@@ -252,9 +252,13 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
 def add_test_case_execution(test_case_id,
                             suite_execution_id,
                             path,
-                            result=RESULTS["NOT_RUN"], log_prefix="", tags=[]):
+                            result=RESULTS["NOT_RUN"],
+                            log_prefix="",
+                            tags=[],
+                            inputs=None):
     max_retries = 10
     te = None
+    inputs = inputs if inputs else {}
     with transaction.atomic():
         try:
             for index in xrange(max_retries):
@@ -264,7 +268,9 @@ def add_test_case_execution(test_case_id,
                                        result=result,
                                        started_time=get_current_time(),  # timezone.now(), #get_current_time(),
                                        script_path=path,
-                                       log_prefix=log_prefix, tags=json.dumps(tags))
+                                       log_prefix=log_prefix,
+                                       tags=json.dumps(tags),
+                                       inputs=json.dumps(inputs))
                 te.save()
                 add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                            test_case_execution_id=te.execution_id)
@@ -377,6 +383,7 @@ def _get_suite_executions(execution_id=None,
             if save_test_case_info:
                 suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
                                                           "test_case_id": test_case_execution.test_case_id,
+                                                          "inputs": test_case_execution.inputs,
                                                           "result": test_case_execution.result})
 
 

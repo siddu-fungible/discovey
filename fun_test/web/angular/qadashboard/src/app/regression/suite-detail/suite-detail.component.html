@@ -27,6 +27,7 @@
                     <th class="text-center">E Id</th>
                     <th class="text-center">T Id</th>
                     <th class="text-center">Summary</th>
+                    <th class="text-center">Inputs</th>
                     <th class="text-center">Result</th>
                     <th class="text-center">Scheduled At</th>
                     <th class="text-center">HTML</th>
@@ -38,6 +39,7 @@
                     <td>{{ script.value.execution_id }}</td>
                     <td>{{ script.value.test_case_id }}</td>
                     <td class="text-left">{{ script.value.test_case_id === 0? 'Script setup': script.value.summary }}</td>
+                    <td>{{ parseInputs(script.value.inputs)  }}</td>
                     <td [ngClass]="{'table-danger': script.value.result === 'FAILED'}">
                         <a [ngClass]="'text-'+ resultToClass(script.value.result)">{{ script.value.result }}</a>
                     </td>
