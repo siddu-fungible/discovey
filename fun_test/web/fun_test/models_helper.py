@@ -383,6 +383,7 @@ def _get_suite_executions(execution_id=None,
             if save_test_case_info:
                 suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
                                                           "test_case_id": test_case_execution.test_case_id,
+                                                          "inputs": test_case_execution.inputs,
                                                           "result": test_case_execution.result})
 
 
