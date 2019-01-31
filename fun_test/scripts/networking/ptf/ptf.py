@@ -33,7 +33,7 @@ class PTFTestSuite(FunTestScript):
         done_list = re.findall(r'done', funcp_obj.clone())
         fun_test.test_assert(done_list == ['done'] * 5 or done_list == ['done'] * 6,
                              'git clone FunControlPlane repo')
-        fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.'),
+        fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull()),
                              'git pull FunControlPlane repo')
         fun_test.test_assert(re.search(r'funnel_gen.py', funcp_obj.get_prebuilt(), re.DOTALL),
                              'Get FunControlPlane prebuilt pkg')
