@@ -12,6 +12,7 @@ export class JiraInfoComponent implements OnInit {
   @Input() apiUrl: any = null;
   @Input() allowDelete = true;
   @Input() allowAdd = true;
+  @Input() allowContext: boolean = false;
   jiraId: string = null;
   jiraInfo: any = [];
   editingJira: boolean = false;
@@ -48,7 +49,7 @@ export class JiraInfoComponent implements OnInit {
 
   setActiveResolvedBugs(): void {
     for (let info of this.jiraInfo) {
-          if (info['status'] != "Resolved" && info['status'] != "Done" && info['status'] != "Closed") {
+          if (info['status'] !== "Resolved" && info['status'] !== "Done" && info['status'] !== "Closed") {
             this.activeBugs += 1;
           } else {
             this.resolvedBugs += 1;

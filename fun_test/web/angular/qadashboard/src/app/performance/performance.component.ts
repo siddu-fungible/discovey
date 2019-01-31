@@ -130,7 +130,7 @@ export class PerformanceComponent implements OnInit {
   degradeFlatNode: any = {};
 
   jiraList: any = {};
-  showBugPanel: boolean =  false;
+  showBugPanel: boolean = false;
 
 
   constructor(
@@ -483,16 +483,16 @@ export class PerformanceComponent implements OnInit {
           }
         }
         if (bugObj.jiraIds) {
-           for (let id of bugObj.jiraIds) {
-             if(thisFlatNode.jiraList[id]) {
-               if(!thisFlatNode.jiraList[id].includes(context)) {
-                 thisFlatNode.jiraList[id].push(context);
-               }
-             } else {
-                thisFlatNode.jiraList[id] = [context];
-             }
+          for (let id of bugObj.jiraIds) {
+            if (thisFlatNode.jiraList[id]) {
+              if (!thisFlatNode.jiraList[id].includes(context)) {
+                thisFlatNode.jiraList[id].push(context);
+              }
+            } else {
+              thisFlatNode.jiraList[id] = [context];
+            }
 
-        }
+          }
         }
       });
     }
@@ -872,13 +872,13 @@ export class PerformanceComponent implements OnInit {
   }
 
   closeLeafPanel(value, flatNode): void {
-    if(value==true) {
+    if (value) {
       flatNode.showJiraInfo = false;
     }
   }
 
   closeSummaryPanel(value): void {
-    if(value===true) {
+    if (value) {
       this.showBugPanel = false;
     }
 

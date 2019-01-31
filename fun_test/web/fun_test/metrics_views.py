@@ -745,27 +745,6 @@ def jiras(request, metric_id, jira_id=None):
         return "Ok"
     return result
 
-@csrf_exempt
-@api_safe_json_response
-def bug_info(request):
-    result = None
-    if request.method == "POST":
-        jira_info = {}
-        try:
-            request_json = json.loads(request.body)
-            bug_ids = request_json["bug_ids"]
-            for jira_id in bug_ids:
-                jira_response = validate_jira(jira_id)
-                jira_data = {}
-                jira_data["id"] = jira_id
-                jira_data["summary"] = jira_response.fields.summary
-                jira_data["status"] = jira_response.fields.status
-                jira_info[jira_id] = jira_data
-            result = jira_info
-        except ObjectDoesNotExist as obj:
-            logger.critical("No data found")
-    return result
-
 
 @csrf_exempt
 @api_safe_json_response

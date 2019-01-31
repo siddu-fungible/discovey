@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import { JiraInfoComponent } from "./jira-info.component";
+import {JiraInfoComponent} from "./jira-info.component";
 
 @Component({
   selector: 'summary-jira-info',
@@ -7,17 +7,16 @@ import { JiraInfoComponent } from "./jira-info.component";
   styleUrls: ['./jira-info.component.css']
 })
 export class SummaryJiraInfoComponent extends JiraInfoComponent {
-  @Input() bugApiUrl: any = null;
+  @Input() summaryInfo: any = null;
   @Input() data: any = new Set();
-  @Input() allowContext: boolean = false;
 
-fetchJiraIds(): void {
+  fetchJiraIds(): void {
     this.jiraInfo = [];
-    if (this.bugApiUrl) {
+    if (this.summaryInfo) {
       this.status = "Fetching";
       let payload = {};
       payload["bug_ids"] = Object.keys(this.data);
-      this.apiService.post(this.bugApiUrl, payload).subscribe((response) => {
+      this.apiService.post(this.summaryInfo, payload).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
         this.setActiveResolvedBugs();
         this.status = null;
@@ -27,15 +26,16 @@ fetchJiraIds(): void {
       });
     }
   }
+
   getContextArray(id): any {
-  let contextArray = this.data[id];
-  let result = [];
-  for (let context of contextArray) {
-    context = context.substring(0, context.length - 2);
-    if (context.indexOf("All metrics") === -1) {
-      result.push(context);
+    let contextArray = this.data[id];
+    let result = [];
+    for (let context of contextArray) {
+      context = context.substring(0, context.length - 2); // to remove the arrow at the end of the string
+      if (context.indexOf("All metrics") === -1) {
+        result.push(context);
+      }
     }
-  }
-  return result;
+    return result;
   }
 }
