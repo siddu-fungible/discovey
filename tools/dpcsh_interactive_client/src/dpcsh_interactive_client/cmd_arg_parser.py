@@ -1079,6 +1079,10 @@ peek_dam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", 
 peek_bam_resource_stats_parser = peek_resource_stats_parsers.add_parser('bam', help='Peek bam resource stats')
 peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# Eqm stats
+peek_eqm_stats_parser = peek_stats_parsers.add_parser('eqm', help="EQM stats")
+peek_eqm_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 
