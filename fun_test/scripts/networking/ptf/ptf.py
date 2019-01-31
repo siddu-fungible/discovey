@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from lib.host.linux import Linux
 from scripts.networking.lib_nw import funcp
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
+import os
 import re
 
 
@@ -23,18 +24,34 @@ class PTFTestSuite(FunTestScript):
 
     def setup(self):
         linux_obj = Linux(host_ip='localhost', ssh_username=REGRESSION_USER, ssh_password=REGRESSION_USER_PASSWORD)
-        funcp_obj = funcp.FunControlPlane(linux_obj)
+        workspace = '%s/tmp/' % os.getenv('HOME')
+        linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
+        funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
+        funsdk_obj = funcp.FunSDK(linux_obj, ws=workspace)
+
+        # Get FunControlPlane
         done_list = re.findall(r'done', funcp_obj.clone())
-        fun_test.test_assert( done_list == ['done'] * 5 or done_list == ['done'] * 6,
+        fun_test.test_assert(done_list == ['done'] * 5 or done_list == ['done'] * 6,
                              'git clone FunControlPlane repo')
-        fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull(branch='george/ep')),
+        fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull()),
                              'git pull FunControlPlane repo')
         fun_test.test_assert(re.search(r'funnel_gen.py', funcp_obj.get_prebuilt(), re.DOTALL),
                              'Get FunControlPlane prebuilt pkg')
+
+        # Get FunSDK
+        done_list = re.findall(r'done', funsdk_obj.clone())
+        fun_test.test_assert(done_list == ['done'] * 5 or done_list == ['done'] * 6,
+                             'git clone FunSDK repo')
+        fun_test.test_assert(re.search(r'Updating current build number', funsdk_obj.sdkup()),
+                             'FunSDK script/bob --sdkup')
+
+        # Set up PTF server
         output = funcp_obj.setup_traffic_server('hu')
         fun_test.test_assert(re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output,
                                                                             re.IGNORECASE),
                              'Set up PTF traffic server')
+
+        fun_test.shared_variables['linux_obj'] = linux_obj
         fun_test.shared_variables['funcp_obj'] = funcp_obj
 
 
@@ -42,12 +59,14 @@ class PTFTestSuite(FunTestScript):
         linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
         linux_obj_ptf.command('sudo pkill ptf')
         fun_test.shared_variables['funcp_obj'].cleanup()
+        fun_test.shared_variables['linux_obj'].command('export WORKSPACE=$WSTMP')
 
 
 def run_ptf_test(tc, server, timeout, tc_desc):
     """Run PTF test cases."""
     funcp_obj = fun_test.shared_variables['funcp_obj']
     output = funcp_obj.send_traffic(tc, server=server, timeout=timeout)
+    failed = re.search(r'FAILED (failures=\d+)', output)
     match = re.search(r'The following tests failed:\n(.*?)', output, re.DOTALL)
     if match:
         failed_cases = match.group(1).split(',')
@@ -63,7 +82,7 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     if failed_cases:
         fun_test.log('Failed cases: %s' % '\n'.join(sorted(failed_cases)))
 
-    fun_test.test_assert(len(failed_cases) == 0, tc_desc)
+    fun_test.test_assert(not failed and len(failed_cases) == 0, tc_desc)
 
 
 class EtpTest(FunTestCase):
