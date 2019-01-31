@@ -44,6 +44,7 @@ class PTFTestSuite(FunTestScript):
                              'git clone FunSDK repo')
         fun_test.test_assert(re.search(r'Updating current build number', funsdk_obj.sdkup()), 'bob --sdkup')
 
+        # Set up PTF server
         output = funcp_obj.setup_traffic_server('hu')
         fun_test.test_assert(re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output,
                                                                             re.IGNORECASE),
