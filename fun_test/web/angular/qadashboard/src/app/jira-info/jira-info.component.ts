@@ -12,14 +12,18 @@ export class JiraInfoComponent implements OnInit {
   @Input() apiUrl: any = null;
   @Input() allowDelete = true;
   @Input() allowAdd = true;
+  @Input() allowContext: boolean = false;
   jiraId: string = null;
   jiraInfo: any = [];
   editingJira: boolean = false;
   showJiraInfo: boolean = false;
   @Output() numBugs: EventEmitter<number> = new EventEmitter();
+  @Output() close: EventEmitter<boolean> = new EventEmitter();
   status: string = null;
+  activeBugs: number = 0;
+  resolvedBugs: number = 0;
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService) {
+  constructor(public apiService: ApiService, public loggerService: LoggerService) {
   }
 
   ngOnInit() {
@@ -28,10 +32,11 @@ export class JiraInfoComponent implements OnInit {
 
   fetchJiraIds(): void {
     this.jiraInfo = [];
-    this.status = "Fetching";
     if (this.apiUrl) {
+      this.status = "Fetching";
       this.apiService.get(this.apiUrl).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
+        this.setActiveResolvedBugs();
         this.numBugs.emit(this.jiraInfo.length);
         this.jiraId = null;
         this.status = null;
@@ -40,6 +45,20 @@ export class JiraInfoComponent implements OnInit {
         this.status = null;
       });
     }
+  }
+
+  setActiveResolvedBugs(): void {
+    for (let info of this.jiraInfo) {
+          if (info['status'] !== "Resolved" && info['status'] !== "Done" && info['status'] !== "Closed") {
+            this.activeBugs += 1;
+          } else {
+            this.resolvedBugs += 1;
+          }
+        }
+  }
+
+  closePanel(): void {
+    this.close.emit(true);
   }
 
   submit(): void {
