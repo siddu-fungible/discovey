@@ -19,6 +19,8 @@ export class JiraInfoComponent implements OnInit {
   @Output() numBugs: EventEmitter<number> = new EventEmitter();
   @Output() close: EventEmitter<boolean> = new EventEmitter();
   status: string = null;
+  activeBugs: number = 0;
+  resolvedBugs: number = 0;
 
   constructor(public apiService: ApiService, public loggerService: LoggerService) {
   }
@@ -33,6 +35,7 @@ export class JiraInfoComponent implements OnInit {
       this.status = "Fetching";
       this.apiService.get(this.apiUrl).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
+        this.setActiveResolvedBugs();
         this.numBugs.emit(this.jiraInfo.length);
         this.jiraId = null;
         this.status = null;
@@ -41,6 +44,16 @@ export class JiraInfoComponent implements OnInit {
         this.status = null;
       });
     }
+  }
+
+  setActiveResolvedBugs(): void {
+    for (let info of this.jiraInfo) {
+          if (info['status'] != "Resolved" && info['status'] != "Done" && info['status'] != "Closed") {
+            this.activeBugs += 1;
+          } else {
+            this.resolvedBugs += 1;
+          }
+        }
   }
 
   closePanel(): void {

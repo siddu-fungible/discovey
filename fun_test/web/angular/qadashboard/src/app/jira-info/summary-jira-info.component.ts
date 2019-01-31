@@ -10,8 +10,7 @@ export class SummaryJiraInfoComponent extends JiraInfoComponent {
   @Input() bugApiUrl: any = null;
   @Input() data: any = new Set();
   @Input() allowContext: boolean = false;
-  activeBugs: number = 0;
-  resolvedBugs: number = 0;
+
 fetchJiraIds(): void {
     this.jiraInfo = [];
     if (this.bugApiUrl) {
@@ -20,15 +19,7 @@ fetchJiraIds(): void {
       payload["bug_ids"] = Object.keys(this.data);
       this.apiService.post(this.bugApiUrl, payload).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
-        for (let info of this.jiraInfo) {
-          if (info['status'] != "Resolved" && info['status'] != "Done" && info['status'] != "Closed") {
-            this.activeBugs += 1;
-          } else {
-            this.resolvedBugs += 1;
-          }
-        }
-        // this.numActiveBugs.emit(activeBugs);
-        // this.numResolvedBugs.emit(resolvedBugs);
+        this.setActiveResolvedBugs();
         this.status = null;
       }, error => {
         this.loggerService.error("Fetching BugIds failed");

@@ -1,24 +1,21 @@
 <div class="card">
   <div class="card card-primary">
-    <div class="card-header min-padding"><b>Bugs Associated </b>
-      <span *ngIf="data"><span style="color: red">Active </span>- {{ activeBugs }}
+    <div class="card-header min-padding"><b>Bugs </b>
+      <span><span style="color: red">Active </span>- {{ activeBugs }}
       <span style="color: green">Resolved </span> - {{ resolvedBugs }}</span>
-    <button class="btn-sm btn-primary close-button" (click)="closePanel()"><b style="color: white;">X</b></button>
+      <button class="btn-sm btn-primary close-button" (click)="closePanel()">close <b style="color: white;">X</b></button>
     </div>
     <div class="card-body min-padding">
       <div class="min-padding">
         <a *ngIf="allowAdd" [routerLink]="" (click)="editingJira=true">Add New </a>
-      <i *ngIf="editingJira" style="font-size: 95%;"><input type="text" class="jira-text" [(ngModel)]="jiraId">
-        <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
-        <span><i class="fa fa-times fa-fw close-color" (click)="editingJira = false"></i></span></i>
+        <i *ngIf="editingJira" style="font-size: 95%;"><input type="text" class="jira-text" [(ngModel)]="jiraId">
+          <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
+          <span><i class="fa fa-times fa-fw close-color" (click)="editingJira = false"></i></span></i>
       </div>
       <fun-spinner [status]="status"></fun-spinner>
       <div style="margin-top: 2px" *ngIf="jiraInfo.length>0">
         <table class="table no-padding no-margin">
           <tr>
-            <th *ngIf="allowContext" style="width: 30%">
-              Lineage
-            </th>
             <th *ngIf="allowDelete" style="width: 5%">
             </th>
             <th style="width: 10%">
@@ -30,13 +27,11 @@
             <th style="width: 10%">
               Status
             </th>
+            <th *ngIf="allowContext" style="width: 30%">
+              Lineage
+            </th>
           </tr>
           <tr *ngFor="let info of jiraInfo">
-            <td *ngIf="allowContext">
-              <span *ngFor="let context of getContextArray(info['id'])">
-              {{ context }}<br>
-              </span>
-            </td>
             <td class="right-padding" *ngIf="allowDelete">
               <button class="btn btn-sm no-padding" (click)="removeId(info['id'])"><i class="fa fa-trash-o"
                                                                                       style="font-size:16px; color: red"></i>
@@ -50,6 +45,13 @@
             </td>
             <td>
               {{ info["status"] }}
+            </td>
+            <td *ngIf="allowContext">
+              <span>
+                <li *ngFor="let context of getContextArray(info['id'])">
+                  {{ context }}<br>
+                </li>
+              </span>
             </td>
           </tr>
         </table>
