@@ -104,9 +104,9 @@
             <td *ngIf="!flatNode.node.leaf && !flatNode.special">
               <span [innerHTML]="getStatusHtml(flatNode) | safeHtml"></span>
               <span *ngIf="flatNode.node.failures.size!= 0 || flatNode.node.degrades.size!= 0">&nbsp;</span>
-              <span *ngIf="flatNode.jiraList.size"><a [routerLink]="" (click)="openBugPanel(flatNode)"><span style='color: red'>
-                 <i class='fa fa-bug'></i>:</span>
-                <span style='color: black'>{{ flatNode.jiraList.size }}</span></a></span>
+              <span *ngIf="flatNode.jiraList!=null"><a [routerLink]="" (click)="openBugPanel(flatNode)"><span class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ getJiraListLength(flatNode.jiraList) }}</span>
+              </sup></span>
+                </a></span>
             </td>
             <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special">
               Bld:<label data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
@@ -193,13 +193,7 @@
             <td colspan="6">
               <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
               <jira-info [apiUrl]="'/metrics/jiras/' + flatNode.node.metricId"
-                         (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
-            </td>
-          </tr>
-          <tr *ngIf="flatNode.showBugPanel">
-            <td colspan="6">
-              <bug-panel [bugApiUrl]="'/metrics/bug_info'" [data]="flatNode.jiraList"
-                         [allowDelete]="false" [allowAdd]="false"></bug-panel>
+                         (numBugs)="updateNumBug($event, flatNode.node)" (close)="closeLeafPanel($event, flatNode)"></jira-info>
             </td>
           </tr>
         </ng-container>
@@ -207,6 +201,10 @@
     </div>
     <!-- right side of the perf page dispalying the charts -->
     <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7">
+      <div *ngIf="mode === modeType.ShowingBugPanel && showBugPanel">
+         <summary-jira-info [bugApiUrl]="'/metrics/bug_info'" [data]="jiraList"
+                         [allowDelete]="false" [allowContext]="true" [allowAdd]="false" (close)="closeSummaryPanel($event)"></summary-jira-info>
+      </div>
       <span id="chart-info"></span>
       <div *ngIf="mode != modeType.None && chartReady" class="card" style="padding: 10px">
         <table>

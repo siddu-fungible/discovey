@@ -50,8 +50,8 @@ class FlatNode {
   hide: boolean;
   indent: number;
   showJiraInfo: boolean = false;
-  showBugPanel: boolean = false;
-  jiraList: any = new Set();
+  jiraList: any = {};
+  context: any = new Set();
   children: FlatNode[] = [];
   lineage: any = [];
   special: boolean = false;
@@ -64,7 +64,8 @@ class FlatNode {
 enum Mode {
   None,
   ShowingAtomicMetric,
-  ShowingNonAtomicMetric
+  ShowingNonAtomicMetric,
+  ShowingBugPanel
 }
 
 @Component({
@@ -128,6 +129,9 @@ export class PerformanceComponent implements OnInit {
   upgradeFlatNode: any = {};
   degradeFlatNode: any = {};
 
+  jiraList: any = {};
+  showBugPanel: boolean =  false;
+
 
   constructor(
     private apiService: ApiService,
@@ -159,6 +163,10 @@ export class PerformanceComponent implements OnInit {
   getGuid(): number {
     this.lastGuid++;
     return this.lastGuid;
+  }
+
+  getJiraListLength(jiraList): Number {
+    return Object.keys(jiraList).length;
   }
 
   gitIdentify(): void {
@@ -465,8 +473,26 @@ export class PerformanceComponent implements OnInit {
     if (Object.keys(thisFlatNode.node.bugs).length != 0) {
       Object.keys(thisFlatNode.node.bugs).forEach(k => {
         let bugObj = thisFlatNode.node.bugs[k];
-        for (let id in thisFlatNode.node.bugs[k]) {
-          thisFlatNode.jiraList.add(bugObj[id]);
+        let context = "";
+        if (bugObj.context) {
+          for (let el of bugObj.context) {
+            for (let child of el) {
+              context += child.chartName;
+              context += "->";
+            }
+          }
+        }
+        if (bugObj.jiraIds) {
+           for (let id of bugObj.jiraIds) {
+             if(thisFlatNode.jiraList[id]) {
+               if(!thisFlatNode.jiraList[id].includes(context)) {
+                 thisFlatNode.jiraList[id].push(context);
+               }
+             } else {
+                thisFlatNode.jiraList[id] = [context];
+             }
+
+        }
         }
       });
     }
@@ -485,7 +511,10 @@ export class PerformanceComponent implements OnInit {
       leafNode.failures.add(leafNode.metricId);
     }
     if (leafNode.numBugs > 0) {
-      leafNode.bugs[leafNode.metricId] = leafNode.jiraIds;
+      let value = {};
+      value["jiraIds"] = leafNode.jiraIds;
+      value["context"] = thisFlatNode.lineage;
+      leafNode.bugs[leafNode.metricId] = value;
     }
   }
 
@@ -649,8 +678,10 @@ export class PerformanceComponent implements OnInit {
   };
 
   openBugPanel(flatNode): void {
-    flatNode.showBugPanel = !flatNode.showBugPanel;
-
+    this.mode = Mode.ShowingBugPanel;
+    this.chartReady = false;
+    this.showBugPanel = !this.showBugPanel;
+    this.jiraList = flatNode.jiraList;
   }
 
   setDefaultUrls(): void {
@@ -784,6 +815,7 @@ export class PerformanceComponent implements OnInit {
     if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
       this.currentFlatNode.showJiraInfo = false;
     }
+    this.showBugPanel = false;
     this.currentNode = flatNode.node;
     this.currentFlatNode = flatNode;
     this.currentNode.showAddJira = true;
@@ -803,6 +835,7 @@ export class PerformanceComponent implements OnInit {
       if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
         this.currentFlatNode.showJiraInfo = false;
       }
+      this.showBugPanel = false;
       this.currentNode = flatNode.node;
       this.currentFlatNode = flatNode;
       this.mode = Mode.ShowingNonAtomicMetric;
@@ -836,6 +869,19 @@ export class PerformanceComponent implements OnInit {
 
   updateNumBug(numBugs, node): void {
     node.numBugs = numBugs;
+  }
+
+  closeLeafPanel(value, flatNode): void {
+    if(value==true) {
+      flatNode.showJiraInfo = false;
+    }
+  }
+
+  closeSummaryPanel(value): void {
+    if(value===true) {
+      this.showBugPanel = false;
+    }
+
   }
 
   //copy atomic URL to clipboard

@@ -17,6 +17,7 @@ export class JiraInfoComponent implements OnInit {
   editingJira: boolean = false;
   showJiraInfo: boolean = false;
   @Output() numBugs: EventEmitter<number> = new EventEmitter();
+  @Output() close: EventEmitter<boolean> = new EventEmitter();
   status: string = null;
 
   constructor(public apiService: ApiService, public loggerService: LoggerService) {
@@ -40,6 +41,10 @@ export class JiraInfoComponent implements OnInit {
         this.status = null;
       });
     }
+  }
+
+  closePanel(): void {
+    this.close.emit(true);
   }
 
   submit(): void {

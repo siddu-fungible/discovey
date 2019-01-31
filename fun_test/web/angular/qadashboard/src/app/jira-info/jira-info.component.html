@@ -1,6 +1,10 @@
 <div class="card">
   <div class="card card-primary">
-    <div class="card-header min-padding"><b>Bugs Associated</b></div>
+    <div class="card-header min-padding"><b>Bugs Associated </b>
+      <span *ngIf="data"><span style="color: red">Active </span>- {{ activeBugs }}
+      <span style="color: green">Resolved </span> - {{ resolvedBugs }}</span>
+    <a [routerLink]="" (click)="closePanel()" style="float: right; color: black"><b>X</b></a>
+    </div>
     <div class="card-body min-padding">
       <div class="min-padding">
         <a *ngIf="allowAdd" [routerLink]="" (click)="editingJira=true">Add New </a>
@@ -12,6 +16,9 @@
       <div style="margin-top: 2px" *ngIf="jiraInfo.length>0">
         <table class="table no-padding no-margin">
           <tr>
+            <th *ngIf="allowContext" style="width: 30%">
+              Lineage
+            </th>
             <th *ngIf="allowDelete">
             </th>
             <th>
@@ -25,6 +32,11 @@
             </th>
           </tr>
           <tr *ngFor="let info of jiraInfo">
+            <td *ngIf="allowContext">
+              <span *ngFor="let context of getContextArray(info['id'])">
+              {{ context }}<br>
+              </span>
+            </td>
             <td class="right-padding" *ngIf="allowDelete">
               <button class="btn btn-sm no-padding" (click)="removeId(info['id'])"><i class="fa fa-trash-o"
                                                                                       style="font-size:16px; color: red"></i>

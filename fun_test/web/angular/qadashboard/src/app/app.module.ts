@@ -42,7 +42,7 @@ import { GitHistoryComponent } from './git-history/git-history.component';
 import { ClipboardModule } from 'ngx-clipboard';
 import { RegressionSummaryChartComponent } from './regression/regression-summary/regression-summary-chart/regression-summary-chart.component';
 import { ScriptHistoryComponent } from './regression/script-history/script-history.component';
-import { BugPanelComponent } from "./jira-info/bug-panel.component";
+import { SummaryJiraInfoComponent } from "./jira-info/summary-jira-info.component";
 
 
 @NgModule({
@@ -72,7 +72,7 @@ import { BugPanelComponent } from "./jira-info/bug-panel.component";
     GitHistoryComponent,
     RegressionSummaryChartComponent,
     ScriptHistoryComponent,
-    BugPanelComponent
+    SummaryJiraInfoComponent
   ],
   imports: [
     BsDropdownModule,
