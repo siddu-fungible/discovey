@@ -63,4 +63,4 @@ class FunSDK:
 
     def sdkup(self):
         """Update SDK."""
-        return self.linux_obj.command('cd %s/%s; ./script/bob --sdkup' % (self.ws, self.name))
+        return self.linux_obj.command('cd %s/%s; ./scripts/bob --sdkup' % (self.ws, self.name))
