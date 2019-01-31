@@ -26,6 +26,7 @@ from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, A
 from web.fun_test.metrics_models import WuDispatchTestPerformance, WuSendSpeedTestPerformance, HuRawVolumePerformance
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import VoltestPerformance
+from web.fun_test.set_base_line import SetBaseLine
 
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus
@@ -565,6 +566,15 @@ if __name__ == "__networking_main__":
 
     print json.dumps(d)
 
-if __name__ == "__main__":
+if __name__ == "__main_delete_nutransit__":
     entries = NuTransitPerformance.objects.all().delete()
     print "Deletion Complete"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    base_line_date = datetime(year=2019, month=1, day=5, minute=0, hour=0, second=0)
+    for entry in entries:
+        if entry.leaf:
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date)
+    print "Setting Complete"

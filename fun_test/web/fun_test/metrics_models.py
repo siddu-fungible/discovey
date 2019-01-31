@@ -105,6 +105,7 @@ class MetricChart(models.Model):
     last_git_commit = models.TextField(default="")
     owner_info = models.TextField(default="UNKNOWN")
     jira_ids = models.TextField(default="[]")
+    base_line_date = models.DateTimeField(verbose_name="base_line_date", default="")
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
