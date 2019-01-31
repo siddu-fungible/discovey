@@ -65,6 +65,7 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     """Run PTF test cases."""
     funcp_obj = fun_test.shared_variables['funcp_obj']
     output = funcp_obj.send_traffic(tc, server=server, timeout=timeout)
+    failed = re.search(r'FAILED (failures=\d+)', output)
     match = re.search(r'The following tests failed:\n(.*?)', output, re.DOTALL)
     if match:
         failed_cases = match.group(1).split(',')
@@ -80,7 +81,7 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     if failed_cases:
         fun_test.log('Failed cases: %s' % '\n'.join(sorted(failed_cases)))
 
-    fun_test.test_assert(len(failed_cases) == 0, tc_desc)
+    fun_test.test_assert(not failed and len(failed_cases) == 0, tc_desc)
 
 
 class EtpTest(FunTestCase):
