@@ -12,6 +12,11 @@ class SpirentManager(object):
     ETHERNET_COPPER_INTERFACE = "EthernetCopper"
     ETHERNET_10GIG_FIBER_INTERFACE = "Ethernet10GigFiber"
     ETHERNET_100GIG_FIBER_INTERFACE = "Ethernet100GigFiber"
+    ETHERNET_25GIG_FIBER_INTERFACE = "Ethernet25GigFiber"
+    ETHERNET_40GIG_FIBER_INTERFACE = "Ethernet40GigFiber"
+    SPEED_100G = "SPEED_100G"
+    SPEED_25G = "SPEED_25G"
+    SPEED_40G = "SPEED_40G"
     LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
     ETHERNETII_FRAME = "ethernet:EthernetII"
     ETHERNET_PAUSE_FRAME = "ethernetpause:EthernetPause"
@@ -1218,6 +1223,32 @@ class SpirentManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def configure_speed_config(self, interface_handle, line_speed, auto_negotiation=False,
+                               forward_error_correction=False):
+        result = False
+        try:
+            self.stc.config(interface_handle, linespeed=line_speed, AutoNegotiation=auto_negotiation,
+                            ForwardErrorCorrection=forward_error_correction)
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_interface_handle(self, port_handle, interface_type):
+        handle = None
+        try:
+            children = self.get_object_children(handle=port_handle)
+            for child in children:
+                if interface_type.lower() in child:
+                    fun_test.debug(child)
+                    handle = child
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return handle
+
 
 
 if __name__ == "__main__":
