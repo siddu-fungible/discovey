@@ -21,7 +21,7 @@ fetchJiraIds(): void {
       this.apiService.post(this.bugApiUrl, payload).subscribe((response) => {
         this.jiraInfo = (Object.values(response.data));
         for (let info of this.jiraInfo) {
-          if (info['status'] != "Resolved" || info['status'] != "Done") {
+          if (info['status'] != "Resolved" && info['status'] != "Done" && info['status'] != "Closed") {
             this.activeBugs += 1;
           } else {
             this.resolvedBugs += 1;

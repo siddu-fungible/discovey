@@ -104,7 +104,7 @@
             <td *ngIf="!flatNode.node.leaf && !flatNode.special">
               <span [innerHTML]="getStatusHtml(flatNode) | safeHtml"></span>
               <span *ngIf="flatNode.node.failures.size!= 0 || flatNode.node.degrades.size!= 0">&nbsp;</span>
-              <span *ngIf="flatNode.jiraList!=null"><a [routerLink]="" (click)="openBugPanel(flatNode)"><span class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ getJiraListLength(flatNode.jiraList) }}</span>
+              <span *ngIf="flatNode.jiraList!=null && getJiraListLength(flatNode.jiraList)!=0"><a [routerLink]="" (click)="openBugPanel(flatNode)"><span class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ getJiraListLength(flatNode.jiraList) }}</span>
               </sup></span>
                 </a></span>
             </td>

@@ -3,7 +3,7 @@
     <div class="card-header min-padding"><b>Bugs Associated </b>
       <span *ngIf="data"><span style="color: red">Active </span>- {{ activeBugs }}
       <span style="color: green">Resolved </span> - {{ resolvedBugs }}</span>
-    <a [routerLink]="" (click)="closePanel()" style="float: right; color: black"><b>X</b></a>
+    <button class="btn-sm btn-primary close-button" (click)="closePanel()"><b style="color: white;">X</b></button>
     </div>
     <div class="card-body min-padding">
       <div class="min-padding">
@@ -19,15 +19,15 @@
             <th *ngIf="allowContext" style="width: 30%">
               Lineage
             </th>
-            <th *ngIf="allowDelete">
+            <th *ngIf="allowDelete" style="width: 5%">
             </th>
-            <th>
+            <th style="width: 10%">
               JIRA Id
             </th>
-            <th>
+            <th style="width: 40%">
               Summary
             </th>
-            <th>
+            <th style="width: 10%">
               Status
             </th>
           </tr>

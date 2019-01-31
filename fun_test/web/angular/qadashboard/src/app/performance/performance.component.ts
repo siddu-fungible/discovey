@@ -165,7 +165,7 @@ export class PerformanceComponent implements OnInit {
     return this.lastGuid;
   }
 
-  getJiraListLength(jiraList): Number {
+  getJiraListLength(jiraList): number {
     return Object.keys(jiraList).length;
   }
 
