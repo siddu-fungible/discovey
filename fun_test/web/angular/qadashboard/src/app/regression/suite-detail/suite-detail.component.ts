@@ -68,6 +68,15 @@ export class SuiteDetailComponent implements OnInit {
     });
   }
 
+  parseInputs(inputs) {
+    let parsedInputs = JSON.parse(inputs);
+    let s = "";
+    if (Object.keys(parsedInputs).length) {
+      s = JSON.stringify(parsedInputs);
+    }
+    return s;
+  }
+
   getKeys(map) {
     //console.log(map.keys());
     try {

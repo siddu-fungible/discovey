@@ -49,6 +49,10 @@ class SchedulingType:
     TODAY = "today"
     REPEAT = "repeat"
 
+class SuiteType:
+    STATIC = "regular"
+    DYNAMIC = "dynamic"
+
 DAY_OF_WEEK_TO_INDEX = {
     "monday": 0,
     "tuesday": 1,
@@ -255,6 +259,14 @@ def queue_suite_container(suite_path,
             queue_job2(suite_path=item_suite_path, tags=suite_level_tags, build_url=build_url, suite_container_execution_id=container_execution.execution_id, **kwargs)
     return job_id
 
+def queue_dynamic_job(suite_path, build_url, tags, email_list, email_on_fail_only=None):
+    # jobs that don't have a suite file. we create a suite dynamically
+    return queue_job2(suite_path=suite_path,
+                      build_url=build_url,
+                      tags=tags,
+                      email_list=email_list,
+                      email_on_fail_only=email_on_fail_only)
+
 def queue_job2(suite_path="unknown",
                build_url=None,
                scheduling_type=None,
@@ -266,9 +278,11 @@ def queue_job2(suite_path="unknown",
                email_list=None,
                email_on_fail_only=None,
                environment=None,
+               inputs=None,
                repeat_in_minutes=None,
                suite_container_execution_id=-1,
-               job_spec=None):
+               job_spec=None,
+               suite_type=SuiteType.STATIC):
     time.sleep(0.1)
     print "Environment: {}".format(environment)
     if suite_path == "unknown":
@@ -298,6 +312,8 @@ def queue_job2(suite_path="unknown",
         job_spec["email_on_fail_only"] = email_on_fail_only
         job_spec["environment"] = environment
         job_spec["tz"] = tz_string
+        job_spec["suite_type"] = suite_type
+        job_spec["inputs"] = inputs
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
     job_spec_valid, error_message = validate_spec(spec=job_spec)
@@ -537,5 +553,6 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
 
 
 if __name__ == "__main__":
-    print get_flat_console_log_file_name(path="/clean_sanity.py")
-    print get_flat_html_log_file_name(path="/examples/clean_sanity.py")
+    # print get_flat_console_log_file_name(path="/clean_sanity.py")
+    # print get_flat_html_log_file_name(path="/examples/clean_sanity.py")
+    pass

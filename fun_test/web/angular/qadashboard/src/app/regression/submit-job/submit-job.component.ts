@@ -109,11 +109,16 @@ export class SubmitJobComponent implements OnInit {
   }
 
   parseScriptInfo(scriptInfo) {
+    let s = "";
     if (scriptInfo.hasOwnProperty('path')) {
-      return scriptInfo.path;
+      s = scriptInfo.path;
+      if (scriptInfo.hasOwnProperty('inputs')) {
+        s = s + " Inputs: " + JSON.stringify(scriptInfo.inputs);
+      }
     } else if (scriptInfo.hasOwnProperty('info')) {
-      return scriptInfo.info.tags;
+      s = "Tags: " + scriptInfo.info.tags;
     }
+    return s;
   }
 
   getSchedulingOptions(payload) {
