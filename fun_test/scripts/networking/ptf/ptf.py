@@ -23,7 +23,7 @@ class PTFTestSuite(FunTestScript):
 
     def setup(self):
         linux_obj = Linux(host_ip='localhost', ssh_username=REGRESSION_USER, ssh_password=REGRESSION_USER_PASSWORD)
-        workspace = '/tmp/'
+        workspace = '/tmp'
         linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
         funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
         funsdk_obj = funcp.FunSDK(linux_obj, ws=workspace)
