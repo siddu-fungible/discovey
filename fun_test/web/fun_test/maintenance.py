@@ -570,7 +570,7 @@ if __name__ == "__main_delete_nutransit__":
     entries = NuTransitPerformance.objects.all().delete()
     print "Deletion Complete"
 
-if __name__ == "__main__":
+if __name__ == "__baseline_main__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
     base_line_date = datetime(year=2018, month=4, day=1, minute=59, hour=23, second=59)
@@ -586,4 +586,17 @@ if __name__ == "__main__":
         else:
             base_line_date = datetime(year=2018, month=4, day=1, minute=59, hour=23, second=59)
         sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
+    print "Setting Complete"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    model_names = ["TeraMarkZipDeflatePerformance", "TeraMarkZipLzmaPerformance"]
+    for entry in entries:
+        if entry.metric_model_name in model_names:
+            if "Latency" in entry.chart_name:
+                base_line_date = datetime(year=2018, month=4, day=1, minute=59, hour=23, second=59)
+            else:
+                base_line_date = entry.base_line_date + timedelta(days=1)
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Setting Complete"
