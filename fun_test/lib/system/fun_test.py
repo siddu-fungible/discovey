@@ -141,6 +141,7 @@ class FunTest:
                             dest="local_settings_file",
                             default=None)
         parser.add_argument('--environment', dest="environment", default=None)
+        parser.add_argument('--inputs', dest="inputs", default=None)
         args = parser.parse_args()
         if args.disable_fun_test:
             self.fun_test_disabled = True
@@ -157,6 +158,7 @@ class FunTest:
         self.local_settings_file = args.local_settings_file
         self.abort_requested = False
         self.environment = args.environment
+        self.inputs = args.inputs
         self.local_settings = {}
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
@@ -232,6 +234,16 @@ class FunTest:
                 result = json.loads(self.environment)
             except Exception as ex:
                 self.critical("Invalid JSON format: %s " % str(ex))
+        return result
+
+    def get_job_inputs(self):
+        result = None
+        if self.inputs:
+            try:
+                result = json.loads(self.inputs)
+            except Exception as ex:
+                self.critical("Invalid JSON format: %s " % str(ex))
+
         return result
 
     def get_local_setting(self, setting):
@@ -1000,7 +1012,9 @@ class FunTestScript(object):
                                                                  suite_execution_id=fun_test.suite_execution_id,
                                                                  result=fun_test.IN_PROGRESS,
                                                                  path=fun_test.relative_path,
-                                                                 log_prefix=fun_test.log_prefix, tags=suite_execution_tags)
+                                                                 log_prefix=fun_test.log_prefix,
+                                                                 tags=suite_execution_tags,
+                                                                 inputs=fun_test.get_job_inputs())
             fun_test.simple_assert(self.test_cases, "At least one test-case is required. No test-cases found")
             if self.test_case_order:
                 new_order = []
@@ -1045,7 +1059,8 @@ class FunTestScript(object):
                                                                result=fun_test.NOT_RUN,
                                                                path=fun_test.relative_path,
                                                                log_prefix=fun_test.log_prefix,
-                                                               tags=suite_execution_tags)
+                                                               tags=suite_execution_tags,
+                                                               inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
             self.setup()

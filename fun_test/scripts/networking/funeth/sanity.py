@@ -65,7 +65,7 @@ class FunethSanity(FunTestScript):
         #output = linux_obj.command(cmd, timeout=300)
         funeth_obj = Funeth(linux_obj)
         fun_test.test_assert(
-            re.search(r'Ethernet controller: Device 1dad:1000', funeth_obj.lspci()),
+            re.search(r'Ethernet controller: (?:Device 1dad:1000|Fungible Device 1000)', funeth_obj.lspci()),
             'Fungible Ethernet controller is seen.')
         fun_test.test_assert(
             re.search(r'Updating working projectdb.*Updating current build number', funeth_obj.update_src(), re.DOTALL),

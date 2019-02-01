@@ -1,0 +1,4 @@
+[
+  {"path": "examples/with_test_inputs.py", "inputs": {"list1": [1, 3, 4]}},
+  {"path": "examples/with_test_inputs.py", "inputs": {"list1": [1, 3, 5], "john": "abraham", "rate": "10Gbps"}}
+]

@@ -33,6 +33,7 @@ class SuiteWorker(Thread):
         self.job_dir = None
         self.job_test_case_ids = None
         self.job_environment = {}
+        self.job_inputs = {}
         self.job_build_url = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/"
         if 'script_path' in job_spec:
             self.job_script_path = job_spec["script_path"]
@@ -40,10 +41,12 @@ class SuiteWorker(Thread):
             self.job_test_case_ids = job_spec["test_case_ids"]
         if "build_url" in job_spec:
             self.job_build_url = job_spec["build_url"]
-        if self.job_spec["scheduling_type"] == SchedulingType.TODAY or self.job_spec["scheduling_type"] == SchedulingType.REPEAT:
+        if self.job_spec["scheduling_type"] in [SchedulingType.TODAY,  SchedulingType.REPEAT]:
             self.job_build_url = None
         if "environment" in job_spec:
-            self.job_environment = job_spec["environment"] 
+            self.job_environment = job_spec["environment"]
+        if "inputs" in job_spec and job_spec["inputs"]:
+            self.job_inputs = job_spec["inputs"]
         self.current_script_process = None
 
         self.suite_shutdown = False
@@ -136,7 +139,8 @@ class SuiteWorker(Thread):
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         if not suite_execution:
             raise SchedulerException("Unable to retrieve suite execution id: {}".format(suite_execution_id))
-        job_environment = self.job_environment
+        # job_environment = self.job_environment
+        # job_inputs = self.job_inputs
         self.prepare_job_directory()
 
 
@@ -239,7 +243,16 @@ class SuiteWorker(Thread):
                     if "test_case_ids" in script_item:
                         popens.append("--test_case_ids=" + ','.join(str(v) for v in script_item["test_case_ids"]))
                     if self.job_environment:
-                        popens.append("--environment={}".format(json.dumps(self.job_environment)))
+                        popens.append("--environment={}".format(json.dumps(self.job_environment)))  #TODO: validate
+
+                    script_inputs = {}
+                    if "inputs" in script_item:
+                        script_inputs = script_item["inputs"]
+                    job_inputs = self.job_inputs
+                    script_inputs.update(job_inputs)
+                    if script_inputs:
+                        popens.append("--inputs={}".format(json.dumps(script_inputs))) #TODO: validate
+
                     scheduler_logger.debug("Job Id: {} before subprocess Script: {}".format(self.job_id, script_path))
                     self.current_script_process = subprocess.Popen(popens,
                                                                    close_fds=True,

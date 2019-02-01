@@ -1,0 +1,4 @@
+[
+  {"info": {"tags": ["storage-sanity"]}},
+  {"path": "security/crypto_packet.py"}
+]

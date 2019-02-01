@@ -899,6 +899,17 @@ class PeekCommands(object):
                 sorted_dict[key] = result[key]
         return sorted_dict
 
+    def _get_colmun_name_fpg(self, result, port_num):
+        column_name = None
+        for key in result:
+            if re.search(r'.*_MAC_.*', key, re.IGNORECASE):
+                column_name = "Port %d FPG stats" % port_num
+                break
+            elif re.search(r'.*misc.*', key, re.IGNORECASE):
+                column_name = "Port %d MISC stats" % port_num
+                break
+        return column_name
+
     def peek_fpg_stats(self, port_num, grep_regex=None, mode='nu', get_result_only=False):
         prev_result = {}
         result = None
@@ -910,16 +921,17 @@ class PeekCommands(object):
                 master_table_obj.header = False
                 cmd = "stats/fpg/%s/port[%d]" % (mode, port_num)
                 result_list = self.dpc_client.execute(verb='peek', arg_list=[cmd])
-                if result_list:
-                    result = result_list[0]
+                index = 0
+                for result in result_list:
                     if prev_result:
-                        diff_result = self._get_difference(result=result, prev_result=prev_result)
-                        tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter', 'Counter diff'])
-                        rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter', 'Counter diff'])
+                        diff_result = self._get_difference(result=result, prev_result=prev_result[index])
+                        column_name = self._get_colmun_name_fpg(result=result, port_num=port_num)
+                        tx_table_obj = PrettyTable([column_name, 'Counter', 'Counter diff'])
+                        rx_table_obj = PrettyTable([column_name, 'Counter', 'Counter diff'])
                         tx_table_obj.align = 'l'
-                        tx_table_obj.sortby = "Port %d Tx Stats" % port_num
+                        tx_table_obj.sortby = column_name
                         rx_table_obj.align = 'l'
-                        rx_table_obj.sortby = "Port %d Rx Stats" % port_num
+                        rx_table_obj.sortby = column_name
                         for key in result:
                             if grep_regex:
                                 if re.search(grep_regex, key, re.IGNORECASE):
@@ -931,19 +943,21 @@ class PeekCommands(object):
                                 if re.search(r'.*tx.*', key, re.IGNORECASE):
                                     tx_table_obj.add_row([key, result[key], diff_result[key]])
                                 else:
+
                                     rx_table_obj.add_row([key, result[key], diff_result[key]])
-                        prev_result = result
                         if tx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Tx Stats', [tx_table_obj])
+                            master_table_obj.add_row([tx_table_obj])
                         if rx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Rx Stats', [rx_table_obj])
+                            master_table_obj.add_row([rx_table_obj])
+                        index += 1
                     else:
-                        tx_table_obj = PrettyTable(['Port %d Tx Stats' % port_num, 'Counter'])
-                        rx_table_obj = PrettyTable(['Port %d Rx Stats' % port_num, 'Counter'])
+                        column_name = self._get_colmun_name_fpg(result=result, port_num=port_num)
+                        tx_table_obj = PrettyTable([column_name, 'Counter'])
+                        rx_table_obj = PrettyTable([column_name, 'Counter'])
                         tx_table_obj.align = 'l'
-                        tx_table_obj.sortby = "Port %d Tx Stats" % port_num
+                        tx_table_obj.sortby = column_name
                         rx_table_obj.align = 'l'
-                        rx_table_obj.sortby = "Port %d Rx Stats" % port_num
+                        rx_table_obj.sortby = column_name
                         for key in result:
                             if grep_regex:
                                 if re.search(grep_regex, key, re.IGNORECASE):
@@ -956,11 +970,12 @@ class PeekCommands(object):
                                     tx_table_obj.add_row([key, result[key]])
                                 else:
                                     rx_table_obj.add_row([key, result[key]])
-                        prev_result = result
                         if tx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Tx Stats', [tx_table_obj])
+                            master_table_obj.add_row([tx_table_obj])
                         if rx_table_obj.rowcount > 1:
-                            master_table_obj.add_column('Rx Stats', [rx_table_obj])
+                            master_table_obj.add_row([rx_table_obj])
+
+                prev_result = result_list
                 if get_result_only:
                     return cmd, master_table_obj
                 print master_table_obj
@@ -2203,6 +2218,49 @@ class PeekCommands(object):
             return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
             self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+
+    def peek_eqm_stats(self, grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "stats/eqm"
+                    result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            for key in sorted(result):
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result[key], diff_result[key]])
+                                else:
+                                    table_obj.add_row([key, result[key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counter'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            for key in sorted(result):
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        table_obj.add_row([key, result[key]])
+                                else:
+                                    table_obj.add_row([key, result[key]])
+                        prev_result = result
+                        print table_obj
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
 
 class SampleCommands(object):
 

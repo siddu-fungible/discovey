@@ -11,6 +11,10 @@
 .passed {
   color: green;
 }
+.baseline-available {
+  color: purple;
+}
+
 .blue-header {
   background-color: #337ab7;
   color: white;

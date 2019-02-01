@@ -9,7 +9,7 @@ class FunControlPlane:
         self.ws = ws
         self.name = name
         self.palladium_test_path = '%s/FunControlPlane/scripts/palladium_test' % self.ws
-        self.linux_obj.command('rm -fr {0}; mkdir {0}'.format(self.ws))
+        self.linux_obj.command('rm -fr {0}/{1}; mkdir -p {0}/{1}'.format(self.ws, self.name))
 
     def clone(self, git_base='git@github.com:fungible-inc', repo_name='FunControlPlane'):
         """git clone."""
@@ -22,10 +22,12 @@ class FunControlPlane:
 
     def get_prebuilt(self):
         """Get prebuilt FunControlPlane, which has funnel_gen.py, needed to run test."""
+        # TODO: Add platform check to use correct prebuilt functrlp file - functrlp_mips.tgz, or functrlp_palladium.tgz
+        filename = 'functrlp_palladium.tgz'
         cmds = (
             'cd %s/%s' % (self.ws, self.name),
-            'wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp.tgz',
-            'tar xzvf functrlp.tgz',
+            'wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/%s' % filename,
+            'tar xzvf %s' % filename,
         )
         return self.linux_obj.command(';'.join(cmds), timeout=120)
 
@@ -44,3 +46,21 @@ class FunControlPlane:
     def cleanup(self):
         """Remove worksapce."""
         return self.linux_obj.command('rm -fr {}'.format(self.ws))
+
+
+class FunSDK:
+    """FunSDK repository."""
+    def __init__(self, linux_obj, ws='%s/tmp/' % os.getenv('HOME'), name='FunSDK'):
+        self.linux_obj = linux_obj
+        self.ws = ws
+        self.name = name
+        self.linux_obj.command('rm -fr {0}/{1}; mkdir -p {0}/{1}'.format(self.ws, self.name))
+
+    def clone(self, git_base='git@github.com:fungible-inc', repo_name='FunSDK-small'):
+        """git clone."""
+        return self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
+                                      timeout=120)
+
+    def sdkup(self):
+        """Update SDK."""
+        return self.linux_obj.command('cd %s/%s; ./scripts/bob --sdkup' % (self.ws, self.name))
