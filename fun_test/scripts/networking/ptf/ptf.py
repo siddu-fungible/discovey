@@ -2,7 +2,6 @@ from lib.system.fun_test import *
 from lib.host.linux import Linux
 from scripts.networking.lib_nw import funcp
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
-import os
 import re
 
 
@@ -24,7 +23,7 @@ class PTFTestSuite(FunTestScript):
 
     def setup(self):
         linux_obj = Linux(host_ip='localhost', ssh_username=REGRESSION_USER, ssh_password=REGRESSION_USER_PASSWORD)
-        workspace = '%s/tmp/' % os.getenv('HOME')
+        workspace = '/tmp/'
         linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
         funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
         funsdk_obj = funcp.FunSDK(linux_obj, ws=workspace)
