@@ -39,15 +39,13 @@ class SpirentSetup(FunTestScript):
         global spirent_config, subscribed_results, dut_config, template_obj, network_controller_obj, tx_port, rx_port, \
             sample_port, generator_port_obj_dict, analyzer_port_obj_dict, generator_config, analyzer_config
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
-        dut_config = nu_config_obj.read_dut_config(dut_type=NuConfigManager.DUT_TYPE_PALLADIUM,
-                                                   flow_type=NuConfigManager.SAMPLE_FLOW_TYPE,
+        dut_config = nu_config_obj.read_dut_config(dut_type=None, flow_type=NuConfigManager.SAMPLE_FLOW_TYPE,
                                                    flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU)
 
         template_obj = SpirentEthernetTrafficTemplate(session_name="sample", spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         result = template_obj.setup(no_of_ports_needed=NUM_PORTS, flow_type=NuConfigManager.SAMPLE_FLOW_TYPE,
                                     flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU)
         fun_test.test_assert(result['result'], "Ensure Setup is done")
@@ -124,7 +122,7 @@ class SpirentSetup(FunTestScript):
 
 
 class SampleIngressFPGtoFPG(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 1
     load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
@@ -155,8 +153,9 @@ class SampleIngressFPGtoFPG(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
 
         checkpoint = "Create stream on %s port" % tx_port
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
@@ -169,7 +168,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -358,7 +357,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
 
 
 class SampleIngressFPGtoFPGWithRate(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 100
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -389,8 +388,9 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
 
         checkpoint = "Create stream on %s port" % tx_port
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
@@ -403,7 +403,7 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -598,7 +598,7 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
 
 
 class SampleFCOIngressFPGtoFPG(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 1
     load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
@@ -631,8 +631,9 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
                                   """ % TRAFFIC_DURATION)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
 
         checkpoint = "Create stream on %s port" % tx_port
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
@@ -645,7 +646,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -846,7 +847,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
 
 
 class SamplePPStoFPG(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 100
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -883,8 +884,9 @@ class SamplePPStoFPG(FunTestCase):
                                       """)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
 
         checkpoint = "Create stream on %s port" % tx_port
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
@@ -897,7 +899,7 @@ class SamplePPStoFPG(FunTestCase):
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -1102,7 +1104,7 @@ class SamplePPStoFPG(FunTestCase):
 
 
 class SampleEgressFPGtoFPG(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 100
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -1133,8 +1135,9 @@ class SampleEgressFPGtoFPG(FunTestCase):
                                       """ % TRAFFIC_DURATION)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
 
         checkpoint = "Create stream on %s port" % tx_port
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
@@ -1147,7 +1150,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -1167,7 +1170,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
                                                                 header_obj=tcp_header_obj, update=False)
         fun_test.simple_assert(result, checkpoint)
 
-        ethernet_obj.srcMac = self.l2_config['destination_mac']
+        ethernet_obj.srcMac = self.routes_config['routermac']
         ethernet_obj.dstMac = "fe:dc:ba:44:55:99"  # Destination mac of spirent port
         ip_header_obj.ttl = 254
 
@@ -1344,7 +1347,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
 
 
 class SampleIngressFPGtoFPGDisable(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 100
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -1382,8 +1385,9 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
                               """ % (TRAFFIC_DURATION, TRAFFIC_DURATION))
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
 
         checkpoint = "Create stream on %s port" % tx_port
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
@@ -1396,7 +1400,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle

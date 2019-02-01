@@ -1249,6 +1249,13 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return handle
 
+    def get_interface_details(self, interface_handle):
+        result = {}
+        try:
+            result = self.stc.get(interface_handle)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
 
 if __name__ == "__main__":

@@ -29,8 +29,6 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
         project_handle = self.stc_manager.create_project(project_name=self.session_name)
         fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
-        physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
-
         if not self.stc_connected:
             fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
                                  message="Health of Spirent Test Center")
@@ -50,10 +48,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 port_handle = self.stc_manager.create_port(location=val)
                 fun_test.test_assert(port_handle, "Create Port: %s" % val)
                 result['port_list'].append(port_handle)
-                interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
-                                                               port_handle=port_handle)
-                fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
-                                                                                         port_handle))
+                interface_obj = self.configure_spirent_interface(port_handle=port_handle)
+                fun_test.test_assert(interface_obj, "Configure %s Interface for Port %s" % (str(interface_obj),
+                                                                                            port_handle))
                 result['interface_obj_list'].append(interface_obj)
 
             # Attach ports method take care of applying configuration
@@ -73,23 +70,62 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return True
 
-    def create_physical_interface(self, interface_type, port_handle):
+    def configure_spirent_interface(self, port_handle):
         result = None
         try:
-            interface_class = None
-            if interface_type == self.stc_manager.ETHERNET_COPPER_INTERFACE:
-                interface_class = EthernetCopperInterface
-            elif interface_type == self.stc_manager.ETHERNET_10GIG_FIBER_INTERFACE:
-                interface_class = Ethernnet10GigFiberInterface
-
-            interface_obj = interface_class()
-            attributes = interface_obj.get_attributes_dict()
-            spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
-                                                                        interface_type=str(interface_obj),
-                                                                        attributes=attributes)
-            fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
-            interface_obj._spirent_handle = spirent_handle
+            interface_obj = None
+            if self.chassis_type == SpirentManager.PHYSICAL_CHASSIS_TYPE:
+                job_inputs = fun_test.get_job_inputs()
+                fun_test.simple_assert(job_inputs, "Job inputs are not found")
+                if job_inputs['speed'] == SpirentManager.SPEED_100G:
+                    interface_obj = Ethernet100GigFiberInterface(auto_negotiation=False,
+                                                                 forward_error_correction=False,
+                                                                 line_speed=Ethernet100GigFiberInterface.SPEED_100G)
+                elif job_inputs['speed'] == SpirentManager.SPEED_25G:
+                    interface_obj = Ethernet25GigFiberInterface(auto_negotiation=False,
+                                                                forward_error_correction=False,
+                                                                line_speed=Ethernet25GigFiberInterface.SPEED_25G)
+                attributes = interface_obj.get_attributes_dict()
+                spirent_handle = self.stc_manager.get_interface_handle(port_handle=port_handle,
+                                                                       interface_type=str(interface_obj))
+                update_handle = self.stc_manager.update_physical_interface(interface_handle=spirent_handle,
+                                                                           update_attributes=attributes)
+                fun_test.simple_assert(update_handle, "Ensure %s interface config updated")
+                spirent_handle = self.stc_manager.get_interface_handle(port_handle=port_handle,
+                                                                       interface_type=str(interface_obj))
+                fun_test.simple_assert(self._ensure_physical_interface_updated(interface_obj=interface_obj,
+                                                                               new_handle=spirent_handle),
+                                       "Ensure Interface %s updated successfully for port %s" % (str(interface_obj),
+                                                                                                 port_handle))
+                interface_obj._spirent_handle = spirent_handle
+            else:
+                interface_obj = EthernetCopperInterface()
+                attributes = interface_obj.get_attributes_dict()
+                spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
+                                                                            interface_type=str(interface_obj),
+                                                                            attributes=attributes)
+                fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
+                interface_obj._spirent_handle = spirent_handle
             result = interface_obj
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _ensure_physical_interface_updated(self, interface_obj, new_handle):
+        result = False
+        try:
+            params = self.stc_manager.get_interface_details(interface_handle=new_handle)
+            fun_test.test_assert_expected(expected=interface_obj.AutoNegotiation, actual=params['AutoNegotiation'],
+                                          message="Ensure Auto Negotiation set to False for interface %s" %
+                                                  str(interface_obj), ignore_on_success=True)
+            fun_test.test_assert_expected(expected=interface_obj.ForwardErrorCorrection,
+                                          actual=params['ForwardErrorCorrection'],
+                                          message="Ensure Forward Error Correction set to False for interface %s" %
+                                                  str(interface_obj), ignore_on_success=True)
+            fun_test.test_assert_expected(expected=interface_obj.LineSpeed, actual=params['LineSpeed'],
+                                          message="Ensure Line Speed updated for interface %s" % str(interface_obj),
+                                          ignore_on_success=True)
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -1412,8 +1448,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     port_handle = self.stc_manager.create_port(location=val)
                     fun_test.test_assert(port_handle, "Create Port: %s" % val)
                     result['port_list'].append(port_handle)
-                    interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
-                                                                   port_handle=port_handle)
+                    interface_obj = self.configure_spirent_interface(port_handle=port_handle)
                     fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
                                                                                              port_handle))
                     result['interface_obj_list'].append(interface_obj)
