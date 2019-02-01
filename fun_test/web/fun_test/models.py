@@ -135,6 +135,7 @@ class TestCaseExecution(models.Model):
     comments = models.TextField(default="")
     log_prefix = models.TextField(default="")
     tags = models.TextField(default="[]")
+    inputs = models.TextField(default="{}")
 
     def __str__(self):
         s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,

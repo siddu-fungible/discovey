@@ -101,8 +101,20 @@
               <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
             </td>
 
-            <td *ngIf="!flatNode.node.leaf && !flatNode.special"
-                [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+            <td *ngIf="!flatNode.node.leaf && !flatNode.special">
+              <span [innerHTML]="getStatusHtml(flatNode) | safeHtml"></span>
+              <span *ngIf="flatNode.node.failures.size !== 0 || flatNode.node.degrades.size !== 0">&nbsp;</span>
+              <ng-container *ngIf="getJiraListLength(flatNode.jiraList) as length">
+                <span *ngIf="flatNode.jiraList !== null && length !== 0">
+                  <a [routerLink]="" (click)="openBugPanel(flatNode)"><span
+                    class="badge no-padding badge-light bug-badge">Bugs
+                    <sup><span class="text-color-red">{{ length }}</span>
+              </sup>
+                  </span>
+                </a>
+                </span>
+              </ng-container>
+            </td>
             <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special">
               Bld:<label data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
                          [ngbTooltip]="FailedInfo" [autoClose]="'outside'"
@@ -113,11 +125,11 @@
               &nbsp;
             </td>
             <td *ngIf="flatNode.node.leaf && !flatNode.special">
-                <span *ngIf="flatNode.node.numBugs >0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo"
+                <span *ngIf="flatNode.node.numBugs > 0" (click)="flatNode.showJiraInfo = !flatNode.showJiraInfo"
                       class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
               <span *ngIf="flatNode.node.numBugs === 0 && flatNode.node.showAddJira"
-                    (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
+                    (click)="flatNode.showJiraInfo = !flatNode.showJiraInfo">
                 <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
             </td>
@@ -188,15 +200,20 @@
             <td colspan="6">
               <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
               <jira-info [apiUrl]="'/metrics/jiras/' + flatNode.node.metricId"
-                         (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
+                         (numBugs)="updateNumBug($event, flatNode.node)"
+                         (close)="closeLeafPanel($event, flatNode)"></jira-info>
             </td>
           </tr>
-
         </ng-container>
       </table>
     </div>
     <!-- right side of the perf page dispalying the charts -->
     <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7">
+      <div *ngIf="mode === modeType.ShowingBugPanel && showBugPanel">
+        <summary-jira-info [summaryInfo]="'/common/bug_info'" [data]="jiraList"
+                           [allowDelete]="false" [allowContext]="true" [allowAdd]="false"
+                           (close)="closeSummaryPanel($event)"></summary-jira-info>
+      </div>
       <span id="chart-info"></span>
       <div *ngIf="mode != modeType.None && chartReady" class="card" style="padding: 10px">
         <table>
