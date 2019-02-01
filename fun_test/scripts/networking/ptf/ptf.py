@@ -85,6 +85,17 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     fun_test.test_assert(not failed and len(failed_cases) == 0, tc_desc)
 
 
+def get_ptf_log():
+    for log_file in ('ptf.log',):
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=log_file)
+        fun_test.scp(source_ip=PTF_SERVER,
+                     source_file_path="/home/{}/FunControlPlane/{}".format(PTF_SERVER_USERNAME, log_file),
+                     source_username=PTF_SERVER_USERNAME,
+                     source_password=PTF_SERVER_PASSWD,
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]), filename=artifact_file_name)
+
+
 class EtpTest(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
@@ -103,7 +114,7 @@ class EtpTest(FunTestCase):
         # TODO: Remove below workaround after SWOS-2890 is fixed
         linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
         linux_obj_ptf.command('pkill ping')
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('etp', server='hu', timeout=6000, tc_desc='ETP test')
@@ -121,7 +132,7 @@ class ErpTest(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('erp', server='hu', timeout=1800, tc_desc='ERP test')
@@ -139,7 +150,7 @@ class ParserTest(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('prv', server='hu', timeout=7200, tc_desc='Parser test')
@@ -157,7 +168,7 @@ class FCPTest(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('fcp_palladium', server='nu', timeout=1800, tc_desc='FCP loopback test')
@@ -175,7 +186,7 @@ class OtherPalladiumTest(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('palladium', server='nu', timeout=1800,
