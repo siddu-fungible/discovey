@@ -252,9 +252,13 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
 def add_test_case_execution(test_case_id,
                             suite_execution_id,
                             path,
-                            result=RESULTS["NOT_RUN"], log_prefix="", tags=[]):
-    max_retries = 4
+                            result=RESULTS["NOT_RUN"],
+                            log_prefix="",
+                            tags=[],
+                            inputs=None):
+    max_retries = 10
     te = None
+    inputs = inputs if inputs else {}
     with transaction.atomic():
         try:
             for index in xrange(max_retries):
@@ -264,13 +268,15 @@ def add_test_case_execution(test_case_id,
                                        result=result,
                                        started_time=get_current_time(),  # timezone.now(), #get_current_time(),
                                        script_path=path,
-                                       log_prefix=log_prefix, tags=json.dumps(tags))
+                                       log_prefix=log_prefix,
+                                       tags=json.dumps(tags),
+                                       inputs=json.dumps(inputs))
                 te.save()
                 add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                            test_case_execution_id=te.execution_id)
                 break
         except Exception as ex:
-            time.sleep(random.uniform(0.1, 1.0))
+            time.sleep(random.uniform(0.1, 3.0))
             print "Error: add_test_case_execution: {}".format(str(ex))
 
     return te
@@ -377,6 +383,7 @@ def _get_suite_executions(execution_id=None,
             if save_test_case_info:
                 suite_execution["test_case_info"].append({"script_path": test_case_execution.script_path,
                                                           "test_case_id": test_case_execution.test_case_id,
+                                                          "inputs": test_case_execution.inputs,
                                                           "result": test_case_execution.result})
 
 

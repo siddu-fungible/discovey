@@ -10,9 +10,8 @@
             <label class="no-margin" data-placement="right" triggers="click"
                    [ngbTooltip]="ScoreInfo" [autoClose]="'outside'">
               Score <sup><i class="fa fa-info-circle" style="padding: 2px"></i></sup></label>
-            <ng-template #ScoreInfo>
+            <ng-template #LeafScoreInfo>
               <div style="color: black">
-
                 <b>Score for leaf metrics:</b><br>
                 The score approaches 100 as the actual value approaches the expected value (established baseline
                 number). Expected value for the product may vary.
@@ -26,9 +25,17 @@
                   </li>
                   Expected value is derived from the first value entered into the database.
                 </ul>
+              </div>
+            </ng-template>
+            <ng-template #ContainerScoreInfo>
+              <div style="color: black">
                 <b>Score for container of leaves or container of containers:</b>
                 <p>Weighted average of the children's scores</p>
               </div>
+            </ng-template>
+            <ng-template #ScoreInfo>
+              <ng-template [ngTemplateOutlet]="LeafScoreInfo"></ng-template>
+              <ng-template [ngTemplateOutlet]="ContainerScoreInfo"></ng-template>
             </ng-template>
           </th>
           <th class="text-center">#</th>
@@ -94,8 +101,20 @@
               <span *ngIf="!flatNode.node.leaf">{{ flatNode.node.numLeaves }}</span>
             </td>
 
-            <td *ngIf="!flatNode.node.leaf && !flatNode.special"
-                [innerHTML]="getStatusHtml(flatNode.node) | safeHtml"></td>
+            <td *ngIf="!flatNode.node.leaf && !flatNode.special">
+              <span [innerHTML]="getStatusHtml(flatNode) | safeHtml"></span>
+              <span *ngIf="flatNode.node.failures.size !== 0 || flatNode.node.degrades.size !== 0">&nbsp;</span>
+              <ng-container *ngIf="getJiraListLength(flatNode.jiraList) as length">
+                <span *ngIf="flatNode.jiraList !== null && length !== 0">
+                  <a [routerLink]="" (click)="openBugPanel(flatNode)"><span
+                    class="badge no-padding badge-light bug-badge">Bugs
+                    <sup><span class="text-color-red">{{ length }}</span>
+              </sup>
+                  </span>
+                </a>
+                </span>
+              </ng-container>
+            </td>
             <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special">
               Bld:<label data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
                          [ngbTooltip]="FailedInfo" [autoClose]="'outside'"
@@ -106,94 +125,91 @@
               &nbsp;
             </td>
             <td *ngIf="flatNode.node.leaf && !flatNode.special">
-                <span *ngIf="flatNode.node.numBugs >0" (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo"
+                <span *ngIf="flatNode.node.numBugs > 0" (click)="flatNode.showJiraInfo = !flatNode.showJiraInfo"
                       class="badge no-padding badge-light bug-badge">Bugs<sup><span class="text-color-red">{{ flatNode.node.numBugs }}</span>
                 </sup></span>
               <span *ngIf="flatNode.node.numBugs === 0 && flatNode.node.showAddJira"
-                    (click)="flatNode.showJiraInfo=!flatNode.showJiraInfo">
+                    (click)="flatNode.showJiraInfo = !flatNode.showJiraInfo">
                 <span *ngIf="!flatNode.showJiraInfo" class="plus-minus">+</span>
                   <span *ngIf="flatNode.showJiraInfo" class="plus-minus">-</span></span>
-              </td>
-              <td *ngIf="flatNode.special">
-                &nbsp;
-              </td>
-              <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
-              <!--<ng-template #GitCommitInfo>-->
-                  <!--<git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>-->
-              <!--</ng-template>-->
-              <ng-template #TrendInfo>
-                <div style="color: black">
-                  <b><u>Trend Calculation:</u></b><br>
-                    Deviation = ((Current Score - Previous Score)/(min(Current Score, Previous Score))) * 100<br>
-                    Tolerance = <span>&#177;</span>3%<br>
-                    Up Trend = Deviation > +3%<br>
-                    Down Trend = Deviation < -3%<br>
-                </div>
-                  <div *ngIf="!flatNode.node.copiedScore" style="color: black">
-                    <b><u>Calculation:</u></b><br>
-                    Current Score = {{ this.lastScore }}<br>
-                    Previous Score = {{ this.penultimateScore }}<br>
-                    Deviation = (({{ this.lastScore }} - {{ this.penultimateScore }})/(min({{ this.lastScore }}, {{ this.penultimateScore }}))) * 100<br>
-                    Deviation = {{ this.deviation }}%
-                  </div>
-                <div *ngIf="flatNode.node.copiedScore" style="color: black">
-                    <br>
-                    The current score is a copied score from yesterday due to unavailability of data.<br>
-                    The trend is copied from existing score's trend.
-                </div>
-              </ng-template>
-              <ng-template #FailedInfo>
-                  <div *ngIf="passedDateTime" style="color: black;">
-                  <b>Last Passed:</b><br> {{ passedDateTime }}<br>
-                  <!--Git Commit: {{ passedGitCommit }}<br>-->
-                  <a *ngIf="passedLsfUrl" [routerLink]="" (click)='openUrl(passedLsfUrl)'>Lsf log<br></a>
-                  <a *ngIf="passedJenkinsUrl" [routerLink]="" (click)='openUrl(passedJenkinsUrl)'>Jenkins log<br></a>
-                  <a *ngIf="passedRegressionUrl" [routerLink]="" (click)='openUrl(passedRegressionUrl)'>Regression
-                    log<br></a>
-                </div>
-                <hr>
-                <div *ngIf="currentJenkinsUrl || currentLsfUrl || currentRegressionUrl" style="color: black;">
-                  <b>Current Failure:</b>
-                  <!--<label data-placement="right" (click)="gitIdentify()" triggers="click"-->
-                           <!--[ngbTooltip]="GitCommitInfo" [autoClose]="'outside'"-->
-                           <!--class="badge failed-label no-margin git-commit">Git Commit History-->
-              <!--</label>-->
-                  <label (click)="openGitDetails(flatNode.node)" class="badge failed-label no-margin git-commit">
-                    Git Commit History
-                  </label>
-                  <br>
-                  <!--Git Commit: {{ currentGitCommit }}<br>-->
-                  <a *ngIf="currentLsfUrl" [routerLink]="" (click)='openUrl(currentLsfUrl)'>Lsf log<br></a>
-                  <a *ngIf="currentJenkinsUrl" [routerLink]="" (click)='openUrl(currentJenkinsUrl)'>Jenkins log<br></a>
-                  <a *ngIf="currentRegressionUrl" [routerLink]="" (click)='openUrl(currentRegressionUrl)'>Regression log<br></a>
-                </div>
-                <hr>
-                <div *ngIf="failedDateTime" style="color: black;">
-                  <b>First Failure:</b><br> {{ failedDateTime }}<br>
-                  <!--Git Commit: {{ failedGitCommit }}<br>-->
-                  <a *ngIf="failedLsfUrl" [routerLink]="" (click)='openUrl(failedLsfUrl)'>Lsf log<br></a>
-                  <a *ngIf="failedJenkinsUrl" [routerLink]="" (click)='openUrl(failedJenkinsUrl)'>Jenkins log<br></a>
-                  <a *ngIf="failedRegressionUrl" [routerLink]="" (click)='openUrl(failedRegressionUrl)'>Regression
-                    log<br></a>
-                </div>
-              </ng-template>
-            </tr>
-            <tr *ngIf="flatNode.showJiraInfo">
-              <td colspan="6">
-                <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
-                <jira-info [apiUrl]="'/metrics/jiras/' + flatNode.node.metricId" (numBugs)="updateNumBug($event, flatNode.node)"></jira-info>
-              </td>
-            </tr>
-              <!--<tr *ngIf="flatNode.showGitInfo">-->
-                <!--<td colspan="6">-->
-                <!--<git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>-->
-              <!--</td>-->
-              <!--</tr>-->
+            </td>
+            <td *ngIf="flatNode.special">
+              &nbsp;
+            </td>
+            <ng-template #GitCommitInfo>
+              <git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>
+            </ng-template>
+            <ng-template #TrendInfo>
+              <div style="color: black">
+                <b><u>Trend Calculation:</u></b><br>
+                Deviation = ((Current Score - Previous Score)/(min(Current Score, Previous Score))) * 100<br>
+                Tolerance = <span>&#177;</span>3%<br>
+                Up Trend = Deviation > +3%<br>
+                Down Trend = Deviation < -3%<br>
+              </div>
+              <div *ngIf="!flatNode.node.copiedScore" style="color: black">
+                <b><u>Calculation:</u></b><br>
+                Current Score = {{ this.lastScore }}<br>
+                Previous Score = {{ this.penultimateScore }}<br>
+                Deviation = (({{ this.lastScore }} - {{ this.penultimateScore }})/(min({{ this.lastScore }}, {{
+                this.penultimateScore }}))) * 100<br>
+                Deviation = {{ this.deviation }}%
+              </div>
+              <div *ngIf="flatNode.node.copiedScore" style="color: black">
+                <br>
+                The current score is a copied score from yesterday due to unavailability of data.<br>
+                The trend is copied from existing score's trend.
+              </div>
+            </ng-template>
+            <ng-template #FailedInfo>
+              <div *ngIf="passedDateTime" style="color: black;">
+                <b>Last Passed:</b><br> {{ passedDateTime }}<br>
+                <a *ngIf="passedLsfUrl" [routerLink]="" (click)='openUrl(passedLsfUrl)'>Lsf log<br></a>
+                <a *ngIf="passedJenkinsUrl" [routerLink]="" (click)='openUrl(passedJenkinsUrl)'>Jenkins log<br></a>
+                <a *ngIf="passedRegressionUrl" [routerLink]="" (click)='openUrl(passedRegressionUrl)'>Regression
+                  log<br></a>
+              </div>
+              <hr>
+              <div *ngIf="currentJenkinsUrl || currentLsfUrl || currentRegressionUrl" style="color: black;">
+                <b>Current Failure:</b>
+                <!--<label data-placement="right" (click)="gitIdentify()" triggers="click"-->
+                <!--[ngbTooltip]="GitCommitInfo" [autoClose]="'outside'"-->
+                <!--class="badge failed-label no-margin git-commit">Git Commit History-->
+                <!--</label>-->
+                <br>
+                <a *ngIf="currentLsfUrl" [routerLink]="" (click)='openUrl(currentLsfUrl)'>Lsf log<br></a>
+                <a *ngIf="currentJenkinsUrl" [routerLink]="" (click)='openUrl(currentJenkinsUrl)'>Jenkins log<br></a>
+                <a *ngIf="currentRegressionUrl" [routerLink]="" (click)='openUrl(currentRegressionUrl)'>Regression
+                  log<br></a>
+              </div>
+              <hr>
+              <div *ngIf="failedDateTime" style="color: black;">
+                <b>First Failure:</b><br> {{ failedDateTime }}<br>
+                <a *ngIf="failedLsfUrl" [routerLink]="" (click)='openUrl(failedLsfUrl)'>Lsf log<br></a>
+                <a *ngIf="failedJenkinsUrl" [routerLink]="" (click)='openUrl(failedJenkinsUrl)'>Jenkins log<br></a>
+                <a *ngIf="failedRegressionUrl" [routerLink]="" (click)='openUrl(failedRegressionUrl)'>Regression
+                  log<br></a>
+              </div>
+            </ng-template>
+          </tr>
+          <tr *ngIf="flatNode.showJiraInfo">
+            <td colspan="6">
+              <!--<span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>-->
+              <jira-info [apiUrl]="'/metrics/jiras/' + flatNode.node.metricId"
+                         (numBugs)="updateNumBug($event, flatNode.node)"
+                         (close)="closeLeafPanel($event, flatNode)"></jira-info>
+            </td>
+          </tr>
         </ng-container>
       </table>
     </div>
     <!-- right side of the perf page dispalying the charts -->
     <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7">
+      <div *ngIf="mode === modeType.ShowingBugPanel && showBugPanel">
+        <summary-jira-info [summaryInfo]="'/common/bug_info'" [data]="jiraList"
+                           [allowDelete]="false" [allowContext]="true" [allowAdd]="false"
+                           (close)="closeSummaryPanel($event)"></summary-jira-info>
+      </div>
       <span id="chart-info"></span>
       <div *ngIf="mode != modeType.None && chartReady" class="card" style="padding: 10px">
         <table>
@@ -229,23 +245,13 @@
         </table>
         <div *ngIf="showScoreInfo">
           <div [ngSwitch]="mode">
-            <br>The score approaches 100 as the actual value approaches the expected value (established baseline
-            number).<br>
-            Expected value for the product may vary.
-            <ul>
-              <li>
-                For metrics added before the Tapeout:
-              </li>
-              Expected Value is derived from the Tapeout numbers as the baseline.
-              <li>
-                For metrics added after the Tapeout:
-              </li>
-              Expected Value is derived from the first value entered into the database.
-            </ul>
+            <br>
             <div *ngSwitchCase="modeType.ShowingAtomicMetric">
+              <ng-template [ngTemplateOutlet]="LeafScoreInfo"></ng-template>
               <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
             </div>
             <div *ngSwitchCase="modeType.ShowingNonAtomicMetric">
+              <ng-template [ngTemplateOutlet]="ContainerScoreInfo"></ng-template>
               <p [innerHTML]="getCurrentNodeScoreInfo(currentNode) | safeHtml"></p>
               <div *ngIf="currentNode">
                 <table class="table table-nonfluid">
