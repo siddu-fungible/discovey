@@ -1335,7 +1335,7 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
                         input_operation = m.group("operation")
                         input_effort = int(m.group("effort"))
                         output_stats = json.loads(m.group("stats"))
-                        output_bandwidth_avg = output_stats['_avg_bw_kbps']
+                        output_bandwidth_avg = output_stats['_avg_bw_gbps']
                         output_bandwidth_total = output_stats['_total_bw_kbps']
                         output_latency_min = output_stats['_min_latency']
                         output_latency_avg = output_stats['_avg_latency']

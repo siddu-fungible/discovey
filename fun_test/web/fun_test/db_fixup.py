@@ -146,8 +146,9 @@ def prepare_status(chart, purge_old_status=False):
     today = datetime.now(pytz.timezone('US/Pacific'))
 
     # from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
-    from_date = today.replace(year=start_year, month=start_month, day=start_day, minute=minute, hour=hour, second=0, microsecond=0)
+    # from_date = today.replace(year=start_year, month=start_month, day=start_day, minute=minute, hour=hour, second=0, microsecond=0)
     # from_date = get_localized_time(from_date)
+    from_date = chart.base_line_date
 
     # yesterday = today - timedelta(days=0) # Just use today
     yesterday = today # - timedelta(days=0) # Just use today
@@ -411,7 +412,7 @@ def prepare_status(chart, purge_old_status=False):
 
 if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
-    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="TeraMarkCryptoPerformance")
 
     # total_chart = MetricChart.objects.get(metric_model_name="WuSendSpeedTestPerformance", chart_name="Average WU send ungated cycles")
     prepare_status(chart=total_chart, purge_old_status=False)

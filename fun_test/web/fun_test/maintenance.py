@@ -573,8 +573,14 @@ if __name__ == "__main_delete_nutransit__":
 if __name__ == "__main__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
-    base_line_date = datetime(year=2019, month=1, day=5, minute=0, hour=0, second=0)
+    base_line_date = datetime(year=2018, month=4, day=1, minute=59, hour=23, second=59)
+    model_names = ["TeraMarkZipDeflatePerformance", "TeraMarkZipLzmaPerformance", "TeraMarkCryptoPerformance"]
+    y1_axis_title = None
     for entry in entries:
-        if entry.leaf:
-            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date)
+        if entry.metric_model_name in model_names:
+            base_line_date = datetime(year=2019, month=1, day=30, minute=0, hour=0, second=0)
+            y1_axis_title = "Gbps"
+        else:
+            base_line_date = datetime(year=2018, month=4, day=1, minute=59, hour=23, second=59)
+        sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
     print "Setting Complete"
