@@ -611,7 +611,7 @@
     "non_wred_load_percent": 15
   },
   "ecn": {
-    "ecn_timer": 15,
+    "ecn_timer": 2,
     "ecn_prob_index": 0,
     "ecn_prof_num": 0,
     "ecn_enable": 1,
