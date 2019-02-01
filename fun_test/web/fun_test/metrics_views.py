@@ -500,7 +500,7 @@ def data(request):
         else:
             data_sets = chart.data_sets
             data_sets = json.loads(data_sets)
-
+        date_range = [chart.base_line_date, datetime.now()]
         for data_set in data_sets:
             inputs = data_set["inputs"]
             d = {}
@@ -512,7 +512,7 @@ def data(request):
             # today = today.replace(hour=0, minute=0, second=1)
             # d["input_date_time__lt"] = today
             try:
-                result = model.objects.filter(**d)  # unpack, pack
+                result = model.objects.filter(input_date_time__range=date_range, **d)  # unpack, pack
                 data.append([model_to_dict(x) for x in result])
             except ObjectDoesNotExist:
                 logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))
