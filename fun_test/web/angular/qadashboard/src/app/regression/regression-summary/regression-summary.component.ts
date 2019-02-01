@@ -35,7 +35,10 @@ export class RegressionSummaryComponent implements OnInit {
     {info: "Storage overall", payload: {module: "storage"}},
     {info: "Networking sanity", payload: {module: "networking", test_case_execution_tags: ["networking-sanity"]}},
     {info: "Storage sanity", payload: {module: "storage", test_case_execution_tags: ["storage-sanity"]}},
-    {info: "Accelerators", payload: {test_case_execution_tags: ["palladium-apps"]}}];
+    {info: "Accelerators", payload: {test_case_execution_tags: ["palladium-apps"]}},
+    {info: "Storage regression", payload: {test_case_execution_tags: ["storage-regression"]}},
+    {info: "Storage performance", payload: {test_case_execution_tags: ["storage-performance"]}}
+  ];
 
 
   filters = [];
