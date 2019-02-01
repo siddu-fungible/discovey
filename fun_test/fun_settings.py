@@ -55,6 +55,6 @@ TEAM_REGRESSION_EMAIL = "team-regression@fungible.com"
 SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"
 
 REGRESSION_USER = "regression"
-REGRESSION_USER_PASSWORD = "FunPrecious123"
+REGRESSION_USER_PASSWORD = "R3gr35510n123"
 
 MAIN_WEB_APP = 'fun_test'
