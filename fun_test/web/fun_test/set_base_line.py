@@ -1,14 +1,5 @@
-import os
-import django
-from web.web_global import PRIMARY_SETTINGS_FILE
-from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
-import logging
 from datetime import datetime
-
-logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
-django.setup()
-
+import web.fun_test.django_interactive
 from web.fun_test.metrics_models import MetricChart, MetricChartStatus
 
 class SetBaseLine():
