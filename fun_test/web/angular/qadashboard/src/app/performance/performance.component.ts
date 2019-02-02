@@ -899,8 +899,11 @@ export class PerformanceComponent implements OnInit {
   //copy atomic URL to clipboard
   copyAtomicUrl(): string {
     let baseUrl = window.location.protocol +
-      '//' + window.location.hostname +
-      ':' + window.location.port;
+      '//' + window.location.hostname ;
+    if (window.location.port !== "")  {
+      baseUrl += ':' + window.location.port;
+    }
+
     let url = baseUrl + "/performance/atomic/" + this.currentNode.metricId;
     this.clipboardService.copyFromContent(url);
     let message = 'URL: ' + url + " copied to clipboard";
