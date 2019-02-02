@@ -66,12 +66,21 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     """Run PTF test cases."""
     funcp_obj = fun_test.shared_variables['funcp_obj']
     output = funcp_obj.send_traffic(tc, server=server, timeout=timeout)
-    failed = re.search(r'FAILED (failures=\d+)', output)
-    match = re.search(r'The following tests failed:\n(.*?)', output, re.DOTALL)
-    if match:
-        failed_cases = match.group(1).split(',')
+    not_pass = re.search(r'FAILED|ERROR|ATTENTION: SOME TESTS DID NOT PASS!!!', output)
+
+    # Failed cases
+    failed_match = re.search(r'The following tests failed:\n(.*)', output, re.DOTALL)
+    if failed_match:
+        failed_cases = failed_match.group(1).split(',')
     else:
         failed_cases = []
+
+    # Errored cases
+    errored_match = re.search(r'The following tests errored:\n(.*)', output, re.DOTALL)
+    if errored_match:
+        errored_cases = errored_match.group(1).split(',')
+    else:
+        errored_cases = []
 
     # TODO: Remove below workaround after SWOS-2890 is fixed
     if tc == 'etp':
@@ -82,7 +91,10 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     if failed_cases:
         fun_test.log('Failed cases: %s' % '\n'.join(sorted(failed_cases)))
 
-    fun_test.test_assert(not failed and len(failed_cases) == 0, tc_desc)
+    if errored_cases:
+        fun_test.log('Errored cases: %s' % '\n'.join(sorted(errored_cases)))
+
+    fun_test.test_assert(not not_pass and not failed_cases and not errored_cases, tc_desc)
 
 
 def get_ptf_log():
