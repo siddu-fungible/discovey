@@ -2,7 +2,7 @@ from fun_settings import MAIN_WEB_APP
 from django.db import models
 from django.apps import apps
 #from web.fun_test import apps
-from fun_global import RESULTS, get_current_time, get_localized_time
+from fun_global import RESULTS, METRIC_TYPE, get_current_time, get_localized_time
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 import json
@@ -61,8 +61,9 @@ class MetricChartStatus(models.Model):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
         return s
 
-class TriageChartStatus(models.Model):
+class Triage(models.Model):
     metric_id = models.IntegerField(default=-1)
+    metric_type = models.CharField(max_length=15, default=METRIC_TYPE["SCORES"])
     triage_id = models.IntegerField(default=-1)
     date_time = models.DateTimeField(default=datetime.now)
     degraded_suite_execution_id = models.IntegerField(default=-1)
@@ -76,26 +77,27 @@ class TriageChartStatus(models.Model):
     stable_git_commit = models.TextField(default="")
     stable_build_properties = models.TextField(default="")
     last_good_score = models.FloatField(default=-1)
-    build_status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
+    status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
 
     def __str__(self):
-        s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.build_status, self.last_good_score)
+        s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.last_good_score)
         return s
 
-class TriageFlowStatus(models.Model):
+class TriageFlow(models.Model):
     metric_id = models.IntegerField(default=-1)
+    metric_type = models.CharField(max_length=15, default=METRIC_TYPE["SCORES"])
     triage_id = models.IntegerField(default=-1)
     date_time = models.DateTimeField(default=datetime.now)
     score = models.FloatField(default=-1)
     suite_execution_id = models.IntegerField(default=-1)
     jenkins_job_id = models.IntegerField(default=-1)
     lsf_job_id = models.IntegerField(default=-1)
-    build_status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
+    status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
     git_commit = models.TextField(default="")
     build_properties = models.TextField(default="")
 
     def __str__(self):
-        s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.build_status, self.score)
+        s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.score)
         return s
 
 class TimestampField(serializers.Field):

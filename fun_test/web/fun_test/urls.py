@@ -122,6 +122,7 @@ metric_urls = [
     url(r'^chart_info$', metrics_views.chart_info),
     url(r'^data$', metrics_views.data),
     url(r'^past_status$', metrics_views.get_past_build_status),
+    url(r'^first_degrade$', metrics_views.get_first_degrade),
     url(r'^data_by_model$', metrics_views.get_data_by_model),
     url(r'^metric_by_id$', metrics_views.metric_by_id),
     url(r'^git_commits$', metrics_views.get_git_commits),
@@ -144,7 +145,8 @@ metric_urls = [
     url(r'^scores', metrics_views.scores),
     url(r'^dag$', metrics_views.dag),
     url(r'^global_settings', metrics_views.global_settings),
-    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras)
+    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras),
+    url(r'^triage_db$', metrics_views.update_triage_db),
 ]
 
 test_urls = [

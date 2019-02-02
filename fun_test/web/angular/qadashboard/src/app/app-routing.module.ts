@@ -11,7 +11,7 @@ import {SubmitJobComponent} from "./regression/submit-job/submit-job.component";
 import {SuiteDetailComponent} from "./regression/suite-detail/suite-detail.component";
 import {RegressionAdminComponent} from "./regression/regression-admin/regression-admin.component";
 import {RegressionSummaryComponent} from "./regression/regression-summary/regression-summary.component";
-import {GitHistoryComponent} from "./git-history/git-history.component";
+import {TriageComponent} from "./triage/triage.component";
 import {ScriptHistoryComponent} from "./regression/script-history/script-history.component";
 
 const routes: Routes = [
@@ -20,7 +20,7 @@ const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'performance', component: PerformanceComponent },
   { path: 'performance/atomic/:id', component: FunMetricChartComponent},
-  { path: 'performance/atomic/:id/history', component: GitHistoryComponent},
+  { path: 'performance/atomic/:id/triage', component: TriageComponent},
   { path: 'regression/summary', component: RegressionSummaryComponent},
   { path: 'regression/admin', component: RegressionAdminComponent },
   { path: 'regression', component: RegressionComponent },

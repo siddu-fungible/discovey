@@ -6,10 +6,10 @@ import {CommonService} from "../services/common/common.service";
 
 @Component({
   selector: 'git-history',
-  templateUrl: './git-history.component.html',
-  styleUrls: ['./git-history.component.css']
+  templateUrl: './triage.component.html',
+  styleUrls: ['./triage.component.css']
 })
-export class GitHistoryComponent implements OnInit {
+export class TriageComponent implements OnInit {
   @Input() id: number = null;
   // @Input() faultyCommit: string = null;
   // @Input() successCommit: string = '0af7f75c8a6f89620792ecd6f46212cda81a40b3';
@@ -25,6 +25,7 @@ export class GitHistoryComponent implements OnInit {
   successMessage: string = null;
   totalShow: boolean = false;
   gitUser: string = null;
+  triageInfo: any = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute, private commonService: CommonService) { }
 
@@ -44,30 +45,23 @@ export class GitHistoryComponent implements OnInit {
 
   setCommits(): void {
     let payload = {"metric_id": this.id};
-    this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
+    this.apiService.post('/metrics/first_degrade', payload).subscribe((data) => {
       let result = data.data;
-      if (result.last_git_commit && result.last_git_commit !== "") {
-        this.faultyCommit = result.last_git_commit;
-        this.fetchGitCommits();
-      }
-    }, error => {
-      this.logger.error("Current Failed Urls");
-    });
-
-    let payload1 = {"metric_id": this.id};
-    this.apiService.post('/metrics/past_status', payload1).subscribe((data) => {
-      let result = data.data;
+      this.triageInfo = result;
       if (result.passed_git_commit && result.passed_git_commit !== "") {
         this.successCommit = result.passed_git_commit;
-        this.fetchGitCommits();
       }
+      if (result.degraded_git_commit && result.degraded_git_commit !== "") {
+        this.faultyCommit = result.degraded_git_commit;
+      }
+      this.fetchGitCommits();
     }, error => {
       this.logger.error("Past Status Urls");
     });
 
   }
 
-  fetchGitCommits(): void{
+  fetchGitCommits(): void {
     if (this.faultyCommit && this.successCommit) {
       let payload = {};
       payload = {"faulty_commit": this.faultyCommit,
@@ -78,13 +72,22 @@ export class GitHistoryComponent implements OnInit {
         this.faultyMessage = this.commits[0].message;
         this.successMessage = this.commits[total].message;
         this.status = null;
+        let payload = {"metric_id": this.id,
+        "commits": this.commits,
+        "triage_info": this.triageInfo};
+        this.apiService.post('/metrics/triage_db', payload).subscribe(response => {
+          alert("submitted");
+        }, error => {
+          this.logger.error("Updating DB Failed");
+        });
       }, error => {
         this.logger.error("Fetching git Commits between the faulty and success commits");
       });
     }
-    // else{
-    //   this.status = null;
-    // }
+    else{
+      this.status = null;
+      console.log("Git commit is missing from the data");
+    }
   }
 
   showFilesChanged(commit): void {

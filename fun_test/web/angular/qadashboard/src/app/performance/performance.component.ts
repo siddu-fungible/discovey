@@ -802,7 +802,7 @@ export class PerformanceComponent implements OnInit {
   };
 
   openGitDetails(node): void {
-    let url = "/performance/atomic/" + node.metricId + "/history";
+    let url = "/performance/atomic/" + node.metricId + "/triage";
     window.open(url, '_blank');
   }
 

@@ -24,6 +24,7 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
 
+METRIC_TYPE = {"SCORES": "SCORES"}
 
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())

@@ -30,6 +30,7 @@ from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
 from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer
+from web.fun_test.metrics_models import Triage, TriageFlow
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -335,8 +336,9 @@ def get_first_degrade(request):
     for entry in chart_status_entries:
         if previous_score:
             current_score = entry.score
-            if current_score == previous_score or current_score > previous_score:
+            if current_score == previous_score or current_score < previous_score:
                 previous_entry = entry
+                previous_score = entry.score
             else:
                 current_entry = entry
                 break
@@ -349,11 +351,13 @@ def get_first_degrade(request):
                       "passed_lsf_job_id": current_entry.lsf_job_id,
                       "passed_date_time": current_entry.date_time,
                       "passed_git_commit": current_entry.git_commit,
-                      "failed_jenkins_job_id": previous_entry.jenkins_job_id,
-                      "failed_suite_execution_id": previous_entry.suite_execution_id,
-                      "failed_lsf_job_id": previous_entry.lsf_job_id,
-                      "failed_date_time": previous_entry.date_time,
-                      "failed_git_commit": previous_entry.git_commit}
+                      "passed_score": current_entry.score,
+                      "degraded_jenkins_job_id": previous_entry.jenkins_job_id,
+                      "degraded_suite_execution_id": previous_entry.suite_execution_id,
+                      "degraded_lsf_job_id": previous_entry.lsf_job_id,
+                      "degraded_date_time": previous_entry.date_time,
+                      "degraded_git_commit": previous_entry.git_commit,
+                      "degraded_score": previous_entry.score}
     return result
 
 @csrf_exempt
@@ -788,4 +792,41 @@ def get_git_commits(request):
     git_obj = app_config.get_git_manager()
     commits = git_obj.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
     result["commits"] = commits["commits"]
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def update_triage_db(request):
+    result = {}
+    request_json = json.loads(request.body)
+    metric_id = request_json["metric_id"]
+    commits = request_json["commits"]
+    triage_info = request_json["triage_info"]
+
+    degraded_suite_id = triage_info["degraded_suite_execution_id"]
+    degraded_jenkins_job_id = triage_info["degraded_jenkins_job_id"]
+    degraded_lsf_job_id = triage_info["degraded_lsf_job_id"]
+    degraded_git_commit = commits[-1] if commits[-1] else None
+    degraded_jenkins = JenkinsJobIdMap.objects.filter(jenkins_job_id=degraded_jenkins_job_id)
+    degraded_build_properties = degraded_jenkins[0].build_properties if degraded_jenkins[0].build_properties else ""
+
+    passed_suite_id = triage_info["passed_suite_execution_id"]
+    passed_jenkins_job_id = triage_info["passed_jenkins_job_id"]
+    passed_lsf_job_id = triage_info["passed_lsf_job_id"]
+    passed_git_commit = commits[0] if commits[0] else None
+    passed_jenkins = JenkinsJobIdMap.objects.filter(jenkins_job_id=passed_jenkins_job_id)
+    passed_build_properties = passed_jenkins[0].build_properties if passed_jenkins[0].build_properties else ""
+
+    passed_score = triage_info["passed_score"]
+    degraded_score = triage_info["degraded_score"]
+    triage_id = LastTriageId.get_next_id()
+    triage = Triage(metric_id=metric_id, triage_id=triage_id, degrade_suite_execution_id=degraded_suite_id,
+                degraded_jenkins_job_id=degraded_jenkins_job_id, degraded_lsf_job_id=degraded_lsf_job_id,
+                degraded_git_commit=degraded_git_commit, degraded_build_properties=degraded_build_properties,
+                stable_suite_execution_id=passed_suite_id, stable_jenkins_job_id=passed_jenkins_job_id,
+                stable_lsf_job_id=passed_lsf_job_id, stable_git_commit=passed_git_commit,
+                stable_build_properties=passed_build_properties, last_good_score=passed_score)
+
+    for commit in commits[1:-1]:
+        print triage_id
     return result
