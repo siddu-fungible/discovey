@@ -22,6 +22,16 @@ class TBConfigs:
     def get_password(self, nu_or_hu):
         return self.configs[nu_or_hu]['password']
 
+    def get_mgmt_interface(self, nu_or_hu):
+        return self.configs[nu_or_hu]['mgmt_interface']
+
+    def get_a_nu_interface(self):
+        namespaces = self.get_namespaces('nu')
+        for ns in namespaces:
+            interfaces = self.configs['nu']['namespaces'][ns]['interfaces'].keys()
+            if interfaces:
+                return interfaces[0]
+
     def get_hu_pf_interface(self):
         return self.configs['hu']['pf_interface']
 
