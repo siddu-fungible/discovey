@@ -1,4 +1,6 @@
 [
+  {"info": {"tags": ["networking-funeth-performance"]}},
+  {"path": "networking/funeth/sanity.py"},
   {"path": "networking/funeth/performance.py"}
 
 ]
