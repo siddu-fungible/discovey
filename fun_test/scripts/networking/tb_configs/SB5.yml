@@ -6,6 +6,7 @@ nu:
   hostname: nu-lab-01
   username: localadmin
   password: Precious1*
+  mgmt_interface: enp96s0f0
   namespaces:
     default:
       interfaces:
@@ -28,6 +29,7 @@ hu:
   hostname: hu-lab-01
   username: localadmin
   password: Precious1*
+  mgmt_interface: enp96s0f0
   pf_interface: hu0-f0
   vf_interface: hu0-f8
   namespaces:

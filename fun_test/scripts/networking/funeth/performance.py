@@ -1,17 +1,12 @@
 from lib.system.fun_test import *
-from lib.host.linux import Linux
 from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
+from scripts.networking.tb_configs import tb_configs
 import json
 import re
 
 
-NU_HOST = 'cadence-pc-3'
-HU_HOST = 'cadence-pc-5'
-NU_HOST_MGMT_INTF = 'enp10s0'
-HU_HOST_MGMT_INTF = 'eth0'
-NU_INTF_IP = '19.1.1.1'
-HU_PF_INTF_IP = '53.1.1.5'
+TB = 'SN2'
 BW_LIMIT = '100M'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
@@ -27,10 +22,12 @@ class FunethPerformance(FunTestScript):
 
     def setup(self):
 
-        # NU_HOST
-        linux_obj = Linux(host_ip=NU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
-        linux_obj.command('sudo ifconfig fpg0 mtu 1482')  # TODO: Remove after MTU issue is fixed
-        linux_obj.command('sudo ptp4l -i %s -2 &' % NU_HOST_MGMT_INTF)
+        tb_config_obj = tb_configs.TBConfigs(TB)
+        funeth_obj = Funeth(tb_config_obj)
+
+        # NU host
+        linux_obj = funeth_obj.linux_obj_dict['nu']
+        linux_obj.command('sudo ptp4l -i %s -2 &' % funeth_obj.get_mgmt_interface('nu'))
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
@@ -44,9 +41,8 @@ class FunethPerformance(FunTestScript):
         fun_test.shared_variables['nu_container_id'] = container_id
 
         # HU_HOST
-        linux_obj = Linux(host_ip=HU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
-        linux_obj.command('sudo ifconfig hu3-f0 mtu 1482')  # TODO: Remove after MTU issue is fixed
-        linux_obj.command('sudo ptp4l -i %s -2 &' % HU_HOST_MGMT_INTF)
+        linux_obj = funeth_obj.linux_obj_dict['hu']
+        linux_obj.command('sudo ptp4l -i %s -2 &' % funeth_obj.get_mgmt_interface('hu'))
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
@@ -61,14 +57,19 @@ class FunethPerformance(FunTestScript):
 
         # From NU host, do pscheduler ping HU host to make sure it's alive
         fun_test.sleep('Sleep for a while to wait for ptp sync and pscheduler fully up', 10)
+        ip_addr = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', self.pf_intf)
         output = fun_test.shared_variables['nu_linux_obj'].command(
-            '%s pscheduler ping %s' % (fun_test.shared_variables['nu_cmd_prefix'], HU_PF_INTF_IP))
+            '%s pscheduler ping %s' % (fun_test.shared_variables['nu_cmd_prefix'], ip_addr))
         fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "NU pscheduler ping HU")
+        fun_test.shared_variables['hu_ip_addr'] = ip_addr
 
         # From HU host, do pscheduler ping NU host to make sure it's alive
+        intf = funeth_obj.get_a_nu_interface()
+        ip_addr = funeth_obj.get_interface_ipv4_addr('nu', intf)
         output = fun_test.shared_variables['hu_linux_obj'].command(
-            '%s pscheduler ping %s' % (fun_test.shared_variables['hu_cmd_prefix'], NU_INTF_IP))
+            '%s pscheduler ping %s' % (fun_test.shared_variables['hu_cmd_prefix'], ip_addr))
         fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "HU pscheduler ping NU")
+        fun_test.shared_variables['nu_ip_addr'] = ip_addr
 
         for h in ('nu', 'hu'):
             for cmd in ('ps aux | egrep "ptp|phc" | grep -v grep',
@@ -98,7 +99,7 @@ class FunethPerformanceBase(FunTestCase):
     def cleanup(self):
         pass
 
-    def _run(self, flow_type, dst, throughput_tool='iperf3', protocol='udp', parallel=8, duration=10, frame_size=1500):
+    def _run(self, flow_type, throughput_tool='iperf3', protocol='udp', parallel=8, duration=10, frame_size=1500):
 
         def udp_payload(frame_size):
             return frame_size-18-20-8
@@ -109,9 +110,11 @@ class FunethPerformanceBase(FunTestCase):
         if flow_type == 'NU_HU':
             linux_obj_desc = 'nu_linux_obj'
             cmd_prefix_desc = 'nu_cmd_prefix'
-        else:
+            dst = fun_test.shared_variables['hu_ip_addr']
+        elif flow_type == 'HU_NU':
             linux_obj_desc = 'hu_linux_obj'
             cmd_prefix_desc = 'hu_cmd_prefix'
+            dst = fun_test.shared_variables['nu_ip_addr']
         linux_obj = fun_test.shared_variables[linux_obj_desc]
         cmd_prefix = fun_test.shared_variables[cmd_prefix_desc]
 
@@ -199,7 +202,7 @@ class FunethPerformance_NU_HU_64B(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU', dst=HU_PF_INTF_IP, frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='NU_HU', frame_size=64)
 
 
 class FunethPerformance_NU_HU_1500B(FunethPerformanceBase):
@@ -211,7 +214,7 @@ class FunethPerformance_NU_HU_1500B(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU', dst=HU_PF_INTF_IP, frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='NU_HU', frame_size=1500)
 
 
 class FunethPerformance_HU_NU_64B(FunethPerformanceBase):
@@ -223,7 +226,7 @@ class FunethPerformance_HU_NU_64B(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU', frame_size=64)
 
 
 class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
@@ -235,7 +238,7 @@ class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_NU', frame_size=1500)
 
 
 class FunethPerformance_HU_NU_64B_TCP(FunethPerformanceBase):
@@ -247,7 +250,7 @@ class FunethPerformance_HU_NU_64B_TCP(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU', protocol='tcp', frame_size=64)
 
 
 class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
@@ -259,7 +262,7 @@ class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, protocol='tcp', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_NU', protocol='tcp', frame_size=1500)
 
 if __name__ == "__main__":
     FunethScript = FunethPerformance()

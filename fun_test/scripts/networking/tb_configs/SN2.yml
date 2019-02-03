@@ -6,6 +6,7 @@ nu:
   hostname: cadence-pc-3
   username: user
   password: Precious1*
+  mgmt_interface: enp10s0
   namespaces:
     default:
       interfaces:
@@ -28,6 +29,7 @@ hu:
   hostname: cadence-pc-5
   username: localadmin
   password: Precious1*
+  mgmt_interface: eth0
   pf_interface: hu3-f0
   vf_interface: hu3-f8
   namespaces:
