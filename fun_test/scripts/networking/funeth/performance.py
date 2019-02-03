@@ -217,9 +217,33 @@ class FunethPerformance_NU_HU_1500B(FunethPerformanceBase):
         FunethPerformanceBase._run(self, flow_type='NU_HU', frame_size=1500)
 
 
-class FunethPerformance_HU_NU_64B(FunethPerformanceBase):
+class FunethPerformance_NU_HU_64B_TCP(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=3,
+                              summary="Do TCP throughput and latency test of NU -> HU with 64B frames",
+                              steps="""
+        1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='NU_HU', protocol='tcp', frame_size=64)
+
+
+class FunethPerformance_NU_HU_1500B_TCP(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Do TCP throughput and latency test of NU -> HU with 1500B frames",
+                              steps="""
+        1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='NU_HU', protocol='tcp', frame_size=1500)
+
+
+class FunethPerformance_HU_NU_64B(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=5,
                               summary="Do throughput and latency test of NU <- HU with 64B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
@@ -231,7 +255,7 @@ class FunethPerformance_HU_NU_64B(FunethPerformanceBase):
 
 class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=6,
                               summary="Do throughput and latency test of NU <- HU with 1500B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
@@ -243,7 +267,7 @@ class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
 
 class FunethPerformance_HU_NU_64B_TCP(FunethPerformanceBase):
     def describe(self):
-        self.set_test_details(id=5,
+        self.set_test_details(id=7,
                               summary="Do TCP throughput and latency test of NU <- HU with 64B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
@@ -255,7 +279,7 @@ class FunethPerformance_HU_NU_64B_TCP(FunethPerformanceBase):
 
 class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=8,
                               summary="Do TCP throughput and latency test of NU <- HU with 1500B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
@@ -267,11 +291,14 @@ class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
 if __name__ == "__main__":
     FunethScript = FunethPerformance()
     # TODO: Uncomment below after EM-804 is fixed
-    #FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
-    #FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_64B_TCP())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_TCP())
     # TODO: Below throughput result is too small in SN2, need further investigation
-    #FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
-    #FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
-    #FunethScript.add_test_case(FunethPerformance_HU_NU_64B_TCP())
+    FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
+    FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
+    FunethScript.add_test_case(FunethPerformance_HU_NU_64B_TCP())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_TCP())
     FunethScript.run()
+    fun_test.log('Performance results:\n{}'.format(RESULT_FILE))
