@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+import re
 import os
 import sys
 from time import asctime
@@ -22,7 +23,8 @@ class Funeth:
 
     def lspci(self):
         """Do lspci to check funeth controller."""
-        return self.linux_obj.command('lspci -d 1dad:')
+        output = self.linux_obj.command('lspci -d 1dad:')
+        return re.search(r'Ethernet controller: (?:Device 1dad:1000|Fungible Device 1000)', output) is not None
 
     def update_src(self):
         """Update driver source."""
@@ -67,7 +69,8 @@ class Funeth:
         if self.funos_branch:
             local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-        return self.linux_obj.command('cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws))
+        output =  self.linux_obj.command('cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws))
+        return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
 
     def build(self):
         """Build driver."""
@@ -77,14 +80,12 @@ class Funeth:
         if self.funos_branch:
             self.linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-        return self.linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir))
+        output = self.linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir))
+        return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
     def load(self, sriov=0, cc=False, debug=False):
         """Load driver."""
-
         drvdir = os.path.join(self.ws, 'fungible-host-drivers', 'linux', 'kernel')
-
-        #_ports = range(0, 1)
         _modparams = []
 
         if debug:
@@ -106,70 +107,85 @@ class Funeth:
             fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
             self.linux_obj.command('ifconfig -a')
 
-        return self.linux_obj.command('ifconfig %s' % self.pf_intf)
+        output = self.linux_obj.command('ifconfig %s' % self.pf_intf)
+        return re.search(r'Device not found', output, re.IGNORECASE) is None
 
     def configure_intfs(self, nu_or_hu):
         """Configure interface."""
-
+        result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
             for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
                 mac_addr = self.tb_config_obj.get_interface_mac_addr(nu_or_hu, intf)
                 ipv4_addr = self.tb_config_obj.get_interface_ipv4_addr(nu_or_hu, intf)
                 ipv4_netmask = self.tb_config_obj.get_interface_ipv4_netmask(nu_or_hu, intf)
-                if ns == 'default':
-                    cmds = (
-                        'sudo ifconfig {} hw ether {}'.format(intf, mac_addr),
-                        'sudo ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
-                        'sudo ifconfig {} up'.format(intf),
-                    )
-                    return_intf = intf
-                else:
-                    cmds = (
-                        'sudo ip netns add {}'.format(ns),
-                        'sudo ip link set {} netns {}'.format(intf, ns),
-                        'sudo ip netns exec {} ifconfig {} hw ether {}'.format(ns, intf, mac_addr),
-                        'sudo ip netns exec {} ifconfig {} {} netmask {}'.format(ns, intf, ipv4_addr, ipv4_netmask),
-                        'sudo ip netns exec {} ifconfig {} up'.format(ns, intf),
-                    )
+                cmds = [
+                    'ifconfig {} hw ether {}'.format(intf, mac_addr),
+                    'ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
+                    'ifconfig {} up'.format(intf),
+                    'ifconfig {}'.format(intf),
+                ]
+                if ns != 'default':
+                    cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
                 for cmd in cmds:
-                    self.linux_obj.command(cmd)
-
-        return self.linux_obj.command('ifconfig %s' % return_intf)
+                    if ns == 'default':
+                        output = self.linux_obj.command('sudo {}'.format(cmd))
+                    else:
+                        output = self.linux_obj.command('sudo ip netns exec {} {}'.format(ns, cmd))
+                result &= re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
+                                    output, re.DOTALL) is not None
+        return result
 
     def loopback_test(self, packet_count=100):
         """Do loopback test between PF and VF via NU."""
-
         ip_addr = self.tb_config_obj.get_interface_ipv4_addr('hu', self.vf_intf)
-
-        return self.linux_obj.command('sudo ping -c {} -i 0.1 {}'.format(packet_count, ip_addr))
+        output = self.linux_obj.command('sudo ping -c {} -i 0.1 {}'.format(packet_count, ip_addr))
+        return re.search(r'{0} packets transmitted, {0} received, 0% packet loss'.format(packet_count),
+                         output) is not None
 
     def configure_ipv4_route(self, nu_or_hu):
         """Configure IP routes to NU."""
+        result = True
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for route in self.tb_config_obj.get_ipv4_routes(nu_or_hu, ns):
+                prefix = route['prefix']
+                nexthop = route['nexthop']
 
-        for route in self.tb_config_obj.get_ipv4_routes(nu_or_hu):
-            prefix = route['prefix']
-            nexthop = route['nexthop']
-            cmds = (
-                'sudo ip route delete {}'.format(prefix),
-                'sudo ip route add {} via {}'.format(prefix, nexthop),
-                'sudo arp -s {} {}'.format(nexthop, self.tb_config_obj.get_router_mac()),
-            )
-            for cmd in cmds:
-                self.linux_obj.command(cmd)
+                # Route
+                cmds = (
+                    'ip route delete {}'.format(prefix),
+                    'ip route add {} via {}'.format(prefix, nexthop),
+                    'ip route',
+                )
+                for cmd in cmds:
+                    if ns == 'default':
+                        output = self.linux_obj.command('sudo {}'.format(cmd))
+                    else:
+                        output = self.linux_obj.command('sudo ip netns exec {} {}'.format(ns, cmd))
+                    result &= re.search(r'{} via {}'.format(prefix, nexthop), output) is not None
 
-        return self.linux_obj.command('ip route')
+                # ARP
+                router_mac = self.tb_config_obj.get_router_mac()
+                cmds = (
+                    'arp -s {} {}'.format(nexthop, router_mac),
+                    'arp -na',
+                )
+                for cmd in cmds:
+                    if ns == 'default':
+                        output = self.linux_obj.command('sudo {}'.format(cmd))
+                    else:
+                        output = self.linux_obj.command('sudo ip netns exec {} {}'.format(ns, cmd))
+                    result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(nexthop, router_mac), output) is not None
+
+        return result
 
     def unload(self):
         """Unload driver."""
-
         self.linux_obj.command('sudo rmmod funeth')
 
     def ifdown(self, intf):
         """Shut down interface."""
-
         self.linux_obj.command('sudo ip link set {} down'.format(intf))
 
     def ifup(self, intf):
         """No shut interface."""
-
         self.linux_obj.command('sudo ip link set {} up'.format(intf))

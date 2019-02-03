@@ -1,22 +1,9 @@
 from funeth import Funeth
 from tb_configs import tb_configs
 from lib.system.fun_test import *
-from lib.host.linux import Linux
-import re
 
 
 TB = 'SN2'
-
-NU_HOST = 'cadence-pc-3'
-HU_HOST = 'cadence-pc-5'
-NU_INTF = 'fpg0'
-NU_HOST_FPG0_IP_ADDR = '19.1.1.1'
-NU_HOST_FPG0_IP_NETMASK = '255.255.255.0'
-NU_HOST_FPG0_MAC_ADDR = 'fe:dc:ba:44:66:33'
-NU_ROUTE_TO_HU_PF = '53.1.1.0/24'
-NU_ROUTE_TO_HU_VF = '53.1.9.0/24'
-NU_ROUTE_NEXTHOP = '19.1.1.2'
-ROUTER_MAC = '00:de:ad:be:ef:00'
 
 
 class FunethSanity(FunTestScript):
@@ -39,28 +26,14 @@ class FunethSanity(FunTestScript):
         fun_test.test_assert(funeth_obj.configure_ipv4_route('nu'), 'Configure NU host IPv4 routes')
 
         # HU host
-        fun_test.test_assert(
-            re.search(r'Ethernet controller: (?:Device 1dad:1000|Fungible Device 1000)', funeth_obj.lspci()),
-            'Fungible Ethernet controller is seen.')
-        fun_test.test_assert(
-            re.search(r'Updating working projectdb.*Updating current build number', funeth_obj.update_src(), re.DOTALL),
-            'Update funeth driver source code.')
-        fun_test.test_assert(
-            not re.search(r'fail|error|abort|assert', funeth_obj.build(), re.IGNORECASE),
-            'Build funeth driver.')
-        fun_test.test_assert(
-            not re.search(r'Device not found', funeth_obj.load(sriov=4), re.IGNORECASE),
-            'Load funeth driver.')
-        fun_test.test_assert(
-            re.search(r'inet \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', funeth_obj.configure_intfs('hu')),
-            'Configure funeth interfaces.')
-        packet_count = 100
-        output = funeth_obj.loopback_test(packet_count=packet_count)
-        fun_test.test_assert(
-            re.search(r'{0} packets transmitted, {0} received, 0% packet loss'.format(packet_count), output),
-            "HU PF and VF interface loopback ping test via NU")
-        fun_test.test_assert(funeth_obj.configure_ipv4_route('hu'), 'Configure IP routes to NU.')
-        fun_test.shared_variables['hu_linux_obj'] = linux_obj
+        fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
+        fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
+        fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
+        fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
+        fun_test.test_assert(funeth_obj.configure_intfs('hu'), 'Configure funeth interfaces.')
+        fun_test.test_assert(funeth_obj.configure_ipv4_route('hu'), 'Configure HU host IPv4 routes.')
+        fun_test.test_assert(funeth_obj.loopback_test(packet_count=100),
+                             'HU PF and VF interface loopback ping test via NU')
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
     def cleanup(self):
