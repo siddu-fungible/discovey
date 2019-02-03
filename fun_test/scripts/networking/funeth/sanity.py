@@ -1,5 +1,5 @@
 from funeth import Funeth
-from tb_configs import tb_configs
+from scripts.networking.tb_configs import tb_configs
 from lib.system.fun_test import *
 
 
@@ -45,8 +45,8 @@ class FunethTestNUPingHU(FunTestCase):
         self.set_test_details(id=1,
                               summary="From NU host ping HU host.",
                               steps="""
-        1. Ping PF interface 53.1.1.5
-        2. Ping VF interface 53.1.9.5
+        1. Ping PF interface, e.g. 53.1.1.5
+        2. Ping VF interface, e.g. 53.1.9.5
         """)
 
     def setup(self):
@@ -56,9 +56,17 @@ class FunethTestNUPingHU(FunTestCase):
         pass
 
     def run(self):
-        linux_obj = fun_test.shared_variables['nu_linux_obj']
-        fun_test.test_assert(linux_obj.ping("53.1.1.5"), "Ping PF interface success")
-        #fun_test.test_assert(linux_obj.ping("53.1.9.5"), "Ping VF interface success")
+        funeth_obj = fun_test.shared_variables['funeth_obj']
+        linux_obj = funeth_obj.linux_obj_dict['nu']
+        tb_config_obj = funeth_obj.tb_config_obj
+
+        # PF
+        pf_ip_addr = tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
+        fun_test.test_assert(linux_obj.ping(pf_ip_addr), "Ping PF interface success")
+
+        # VF
+        vf_ip_addr = tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
+        fun_test.test_assert(linux_obj.ping(vf_ip_addr), "Ping VF interface success")
 
 
 class FunethTestPacketSweep(FunTestCase):

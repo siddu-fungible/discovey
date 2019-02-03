@@ -11,9 +11,14 @@ class Funeth:
 
     def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, ws='/mnt/workspace'):
         self.tb_config_obj = tb_config_obj
-        self.linux_obj = Linux(host_ip=tb_config_obj.get_hostname('hu'),
-                               ssh_username=tb_config_obj.get_username('hu'),
-                               ssh_password=tb_config_obj.get_password('hu'))
+        self.linux_obj_dict = {}
+        for nu_or_hu in ('nu', 'hu'):
+            self.linux_obj_dict.update(
+                {nu_or_hu: Linux(host_ip=tb_config_obj.get_hostname(nu_or_hu),
+                                 ssh_username=tb_config_obj.get_username(nu_or_hu),
+                                 ssh_password=tb_config_obj.get_password(nu_or_hu))
+                 }
+            )
         self.funos_branch = funos_branch
         self.fundrv_branch = fundrv_branch
         self.funsdk_branch = funsdk_branch
@@ -23,7 +28,7 @@ class Funeth:
 
     def lspci(self):
         """Do lspci to check funeth controller."""
-        output = self.linux_obj.command('lspci -d 1dad:')
+        output = self.linux_obj_dict['hu'].command('lspci -d 1dad:')
         return re.search(r'Ethernet controller: (?:Device 1dad:1000|Fungible Device 1000)', output) is not None
 
     def update_src(self):
@@ -37,26 +42,26 @@ class Funeth:
 
             sys.stderr.write('+ [{0}] Update mirror: {1}\n'.format(asctime(), repo))
 
-            if not self.linux_obj.check_file_directory_exists(mirror):
-                self.linux_obj.create_directory(mirror, sudo=False)
+            if not self.linux_obj_dict['hu'].check_file_directory_exists(mirror):
+                self.linux_obj_dict['hu'].create_directory(mirror, sudo=False)
 
-            if self.linux_obj.check_file_directory_exists(mirror + '/' + repo):
-                self.linux_obj.command('cd {}; git remote update'.format(mirror + '/' + repo))
+            if self.linux_obj_dict['hu'].check_file_directory_exists(mirror + '/' + repo):
+                self.linux_obj_dict['hu'].command('cd {}; git remote update'.format(mirror + '/' + repo))
             else:
-                self.linux_obj.command('cd {3}; {0} {1}/{2}.git {2}'.format(_cmd, _ghbase, repo, mirror))
+                self.linux_obj_dict['hu'].command('cd {3}; {0} {1}/{2}.git {2}'.format(_cmd, _ghbase, repo, mirror))
 
         def local_checkout(ws, repo, **kwargs):
             subdir = kwargs.get('subdir', repo)
             branch = kwargs.get('branch', None)
             mirror = kwargs.get('mirror', '/mnt/github-mirror')
 
-            self.linux_obj.command('cd {3}; git clone {0}/{1} {2}'.format(mirror, repo, subdir, ws))
+            self.linux_obj_dict['hu'].command('cd {3}; git clone {0}/{1} {2}'.format(mirror, repo, subdir, ws))
             if branch:
-                self.linux_obj.command('cd {0}/{1}; git checkout {2}'.format(ws, repo, branch))
+                self.linux_obj_dict['hu'].command('cd {0}/{1}; git checkout {2}'.format(ws, repo, branch))
 
         sdkdir = os.path.join(self.ws, 'FunSDK')
-        self.linux_obj.command('sudo rm -rf {}'.format(self.ws))
-        self.linux_obj.create_directory(self.ws, sudo=False)
+        self.linux_obj_dict['hu'].command('sudo rm -rf {}'.format(self.ws))
+        self.linux_obj_dict['hu'].create_directory(self.ws, sudo=False)
 
         update_mirror(self.ws, 'fungible-host-drivers')
         update_mirror(self.ws, 'FunSDK-small')
@@ -69,7 +74,7 @@ class Funeth:
         if self.funos_branch:
             local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-        output =  self.linux_obj.command('cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws))
+        output =  self.linux_obj_dict['hu'].command('cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws))
         return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
 
     def build(self):
@@ -78,9 +83,9 @@ class Funeth:
         funsdkdir = os.path.join(self.ws, 'FunSDK')
 
         if self.funos_branch:
-            self.linux_obj.command('cd {}; scripts/bob --build hci'.format(funsdkdir))
+            self.linux_obj_dict['hu'].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-        output = self.linux_obj.command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir))
+        output = self.linux_obj_dict['hu'].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir))
         return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
     def load(self, sriov=0, cc=False, debug=False):
@@ -94,7 +99,7 @@ class Funeth:
         if sriov > 0:
             _modparams.append('sriov_test=yes')
 
-        self.linux_obj.command('cd {0}; sudo insmod funeth.ko {1}'.format(drvdir, " ".join(_modparams)), timeout=300)
+        self.linux_obj_dict['hu'].command('cd {0}; sudo insmod funeth.ko {1}'.format(drvdir, " ".join(_modparams)), timeout=300)
 
         fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
@@ -103,11 +108,11 @@ class Funeth:
 
         if sriov > 0:
             sriov_en = '/sys/class/net/{0}/device'.format(self.pf_intf)
-            self.linux_obj.command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en), timeout=300)
+            self.linux_obj_dict['hu'].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en), timeout=300)
             fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
-            self.linux_obj.command('ifconfig -a')
+            self.linux_obj_dict['hu'].command('ifconfig -a')
 
-        output = self.linux_obj.command('ifconfig %s' % self.pf_intf)
+        output = self.linux_obj_dict['hu'].command('ifconfig %s' % self.pf_intf)
         return re.search(r'Device not found', output, re.IGNORECASE) is None
 
     def configure_intfs(self, nu_or_hu):
@@ -128,17 +133,24 @@ class Funeth:
                     cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
                 for cmd in cmds:
                     if ns == 'default':
-                        output = self.linux_obj.command('sudo {}'.format(cmd))
-                    else:
-                        output = self.linux_obj.command('sudo ip netns exec {} {}'.format(ns, cmd))
-                result &= re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
-                                    output, re.DOTALL) is not None
+                        output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                    elif not 'netns' in cmd:
+                        output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+                # Ubuntu 16.04
+                match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
+                                  output, re.DOTALL)
+                if not match:
+                    # Ubuntu 18.04
+                    match = re.search(r'inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                                    output, re.DOTALL)
+                result &= match is not None
+
         return result
 
     def loopback_test(self, packet_count=100):
         """Do loopback test between PF and VF via NU."""
         ip_addr = self.tb_config_obj.get_interface_ipv4_addr('hu', self.vf_intf)
-        output = self.linux_obj.command('sudo ping -c {} -i 0.1 {}'.format(packet_count, ip_addr))
+        output = self.linux_obj_dict['hu'].command('sudo ping -c {} -i 0.1 {}'.format(packet_count, ip_addr))
         return re.search(r'{0} packets transmitted, {0} received, 0% packet loss'.format(packet_count),
                          output) is not None
 
@@ -158,10 +170,10 @@ class Funeth:
                 )
                 for cmd in cmds:
                     if ns == 'default':
-                        output = self.linux_obj.command('sudo {}'.format(cmd))
+                        output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                     else:
-                        output = self.linux_obj.command('sudo ip netns exec {} {}'.format(ns, cmd))
-                    result &= re.search(r'{} via {}'.format(prefix, nexthop), output) is not None
+                        output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+                result &= re.search(r'{} via {}'.format(prefix, nexthop), output) is not None
 
                 # ARP
                 router_mac = self.tb_config_obj.get_router_mac()
@@ -171,21 +183,21 @@ class Funeth:
                 )
                 for cmd in cmds:
                     if ns == 'default':
-                        output = self.linux_obj.command('sudo {}'.format(cmd))
+                        output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                     else:
-                        output = self.linux_obj.command('sudo ip netns exec {} {}'.format(ns, cmd))
-                    result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(nexthop, router_mac), output) is not None
+                        output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+                result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(nexthop, router_mac), output) is not None
 
         return result
 
     def unload(self):
         """Unload driver."""
-        self.linux_obj.command('sudo rmmod funeth')
+        self.linux_obj_dict['hu'].command('sudo rmmod funeth')
 
     def ifdown(self, intf):
         """Shut down interface."""
-        self.linux_obj.command('sudo ip link set {} down'.format(intf))
+        self.linux_obj_dict['hu'].command('sudo ip link set {} down'.format(intf))
 
     def ifup(self, intf):
         """No shut interface."""
-        self.linux_obj.command('sudo ip link set {} up'.format(intf))
+        self.linux_obj_dict['hu'].command('sudo ip link set {} up'.format(intf))

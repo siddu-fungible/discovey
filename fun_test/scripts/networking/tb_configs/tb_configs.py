@@ -1,3 +1,5 @@
+from lib.system.fun_test import *
+from fun_settings import SCRIPTS_DIR
 import yaml
 
 
@@ -5,7 +7,7 @@ class TBConfigs:
     """Class for Test Bed configs. The test bed examples are 'SN2', 'SB5'.
     """
     def __init__(self, tb_name):
-        with open('%.yml'.format(tb_name.upper())) as f:
+        with open('{}/networking/tb_configs/{}.yml'.format(SCRIPTS_DIR, tb_name.upper())) as f:
             self.configs = yaml.load(f)
 
     def get_router_mac(self):
