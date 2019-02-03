@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from lib.host.linux import Linux
 import os
 import sys
 from time import asctime
@@ -7,14 +8,17 @@ from time import asctime
 class Funeth:
     """Funeth driver class"""
 
-    def __init__(self, linux_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, ws='/mnt/workspace'):
-        self.linux_obj = linux_obj
+    def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, ws='/mnt/workspace'):
+        self.tb_config_obj = tb_config_obj
+        self.linux_obj = Linux(host_ip=tb_config_obj.get_hostname('hu'),
+                               ssh_username=tb_config_obj.get_username('hu'),
+                               ssh_password=tb_config_obj.get_password('hu'))
         self.funos_branch = funos_branch
         self.fundrv_branch = fundrv_branch
         self.funsdk_branch = funsdk_branch
         self.ws = ws
-        self.pf_intf = None
-        self.vf_intf = None
+        self.pf_intf = self.tb_config_obj.get_hu_pf_interface()
+        self.vf_intf = self.tb_config_obj.get_hu_vf_interface()
 
     def lspci(self):
         """Do lspci to check funeth controller."""
@@ -91,72 +95,81 @@ class Funeth:
 
         self.linux_obj.command('cd {0}; sudo insmod funeth.ko {1}'.format(drvdir, " ".join(_modparams)), timeout=300)
 
-        fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 10)
+        fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
         if cc:
             self.pf_intf = 'fpg0'
-        else:
-            self.pf_intf = 'hu3-f0'
-        self.vf_intf = 'hu3-f8'
 
         if sriov > 0:
             sriov_en = '/sys/class/net/{0}/device'.format(self.pf_intf)
             self.linux_obj.command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en), timeout=300)
-            fun_test.sleep('Sleep for a while to wait for sriov enabled', 10)
+            fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
             self.linux_obj.command('ifconfig -a')
-            # vfs start from fnid 8
-            #_ports.extend(range(8, 8 + sriov))
 
         return self.linux_obj.command('ifconfig %s' % self.pf_intf)
 
-    def configure_intfs(self):
+    def configure_intfs(self, nu_or_hu):
         """Configure interface."""
 
-        # Configure PF interface IP/MAC/arp/route
-        # TODO: Pass IP/MAC/arp/route/etc. as args
-        cmds = (
-            'sudo ifconfig {} hw ether 00:de:ad:be:ef:11'.format(self.pf_intf),
-            'sudo ifconfig {} 53.1.1.5 netmask 255.255.255.0'.format(self.pf_intf),
-            'sudo arp -s 53.1.1.1 00:de:ad:be:ef:00',
-            'sudo ip route add 53.1.9.0/24 via 53.1.1.1',
-        )
-        for cmd in cmds:
-            self.linux_obj.command(cmd)
+        for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
+            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+                mac_addr = self.tb_config_obj.get_interface_mac_addr(nu_or_hu, intf)
+                ipv4_addr = self.tb_config_obj.get_interface_ipv4_addr(nu_or_hu, intf)
+                ipv4_netmask = self.tb_config_obj.get_interface_ipv4_netmask(nu_or_hu, intf)
+                if ns == 'default':
+                    cmds = (
+                        'sudo ifconfig {} hw ether {}'.format(intf, mac_addr),
+                        'sudo ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
+                        'sudo ifconfig {} up'.format(intf),
+                    )
+                    return_intf = intf
+                else:
+                    cmds = (
+                        'sudo ip netns add {}'.format(ns),
+                        'sudo ip link set {} netns {}'.format(intf, ns),
+                        'sudo ip netns exec {} ifconfig {} hw ether {}'.format(ns, intf, mac_addr),
+                        'sudo ip netns exec {} ifconfig {} {} netmask {}'.format(ns, intf, ipv4_addr, ipv4_netmask),
+                        'sudo ip netns exec {} ifconfig {} up'.format(ns, intf),
+                    )
+                for cmd in cmds:
+                    self.linux_obj.command(cmd)
 
-        # Configure VF interface hu3-f8 namespace/IP/MAC/arp/route
-        cmds = (
-            'sudo ip netns add n8',
-            'sudo ip link set {} netns n8'.format(self.vf_intf),
-            'sudo ip netns exec n8 ifconfig {} hw ether 00:de:ad:be:ef:51'.format(self.vf_intf),
-            'sudo ip netns exec n8 ifconfig {} 53.1.9.5/24 up'.format(self.vf_intf),
-            'sudo ip netns exec n8 arp -s 53.1.9.1 00:de:ad:be:ef:00',
-            'sudo ip netns exec n8 ip route add 53.1.1.0/24 via 53.1.9.1',
-        )
-        for cmd in cmds:
-            self.linux_obj.command(cmd)
+        return self.linux_obj.command('ifconfig %s' % return_intf)
 
-        return self.linux_obj.command('ifconfig %s' % self.pf_intf)
-
-    def loopback_test(self, ip_addr='53.1.9.5', packet_count=100):
+    def loopback_test(self, packet_count=100):
         """Do loopback test between PF and VF via NU."""
+
+        ip_addr = self.tb_config_obj.get_interface_ipv4_addr('hu', self.vf_intf)
 
         return self.linux_obj.command('sudo ping -c {} -i 0.1 {}'.format(packet_count, ip_addr))
 
-    def configure_ip_route(self, ip_prefix='19.1.1.0/24', next_hop='53.1.1.1'):
+    def configure_ipv4_route(self, nu_or_hu):
         """Configure IP routes to NU."""
 
-        self.linux_obj.command('sudo ip route add {} via {}'.format(ip_prefix, next_hop))
+        for route in self.tb_config_obj.get_ipv4_routes(nu_or_hu):
+            prefix = route['prefix']
+            nexthop = route['nexthop']
+            cmds = (
+                'sudo ip route delete {}'.format(prefix),
+                'sudo ip route add {} via {}'.format(prefix, nexthop),
+                'sudo arp -s {} {}'.format(nexthop, self.tb_config_obj.get_router_mac()),
+            )
+            for cmd in cmds:
+                self.linux_obj.command(cmd)
 
-        return True
+        return self.linux_obj.command('ip route')
 
     def unload(self):
         """Unload driver."""
+
         self.linux_obj.command('sudo rmmod funeth')
 
     def ifdown(self, intf):
         """Shut down interface."""
+
         self.linux_obj.command('sudo ip link set {} down'.format(intf))
 
     def ifup(self, intf):
         """No shut interface."""
+
         self.linux_obj.command('sudo ip link set {} up'.format(intf))

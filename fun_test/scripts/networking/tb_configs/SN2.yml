@@ -1,44 +1,42 @@
 router_mac:
   00:de:ad:be:ef:00
 
-nu_host:
-  hostname:
-    cadence-pc-3
-  username:
-    user
-  password:
-    Precious1*
+# NU host
+nu:
+  hostname: cadence-pc-3
+  username: user
+  password: Precious1*
   namespaces:
     default:
       interfaces:
         fpg0:
           mac_addr: fe:dc:ba:44:66:33
-          ip_addr: 19.1.1.1
-          netmask: 255.255.255.0
+          ipv4_addr: 19.1.1.1
+          ipv4_netmask: 255.255.255.0
         #fpg1:
         #  mac_addr: fe:dc:ba:44:55:77
-        #  ip_addr: 21.1.1.1
-        #  netmask: 255.255.255.0
+        #  ipv4_addr: 21.1.1.1
+        #  ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 19.1.1.2
         - prefix: 53.1.9.0/24
           nexthop: 19.1.1.2
 
-hu_host:
-  hostname:
-    cadence-pc-5
-  username:
-    localadmin
-  password:
-    Precious1*
+# HU host
+hu:
+  hostname: cadence-pc-5
+  username: localadmin
+  password: Precious1*
+  pf_interface: hu3-f0
+  vf_interface: hu3-f8
   namespaces:
     default:
       interfaces:
         hu3-f0:
           mac_addr: 00:de:ad:be:ef:11
-          ip_addr: 53.1.1.5
-          netmask: 255.255.255.0
+          ipv4_addr: 53.1.1.5
+          ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.9.0/24
           nexthop: 53.1.1.1
@@ -48,8 +46,8 @@ hu_host:
       interfaces:
         hu3-f8:
           mac_addr: 00:de:ad:be:ef:51
-          ip_addr: 53.1.9.5
-          netmask: 255.255.255.0
+          ipv4_addr: 53.1.9.5
+          ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 53.1.9.1

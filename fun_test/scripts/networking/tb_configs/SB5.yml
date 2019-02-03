@@ -1,13 +1,11 @@
 router_mac:
   00:de:ad:be:ef:00
 
-nu_host:
-  hostname:
-    nu-lab-01
-  username:
-    localadmin
-  password:
-    Precious1*
+# NU host
+nu:
+  hostname: nu-lab-01
+  username: localadmin
+  password: Precious1*
   namespaces:
     default:
       interfaces:
@@ -25,13 +23,13 @@ nu_host:
         - prefix: 29.1.9.0/24
           nexthop: 21.1.1.2
 
-hu_host:
-  hostname:
-    hu-lab-01
-  username:
-    localadmin
-  password:
-    Precious1*
+# HU host
+hu:
+  hostname: hu-lab-01
+  username: localadmin
+  password: Precious1*
+  pf_interface: hu0-f0
+  vf_interface: hu0-f8
   namespaces:
     default:
       interfaces:
