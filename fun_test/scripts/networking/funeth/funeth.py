@@ -132,9 +132,9 @@ class Funeth:
                 if ns != 'default':
                     cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
                 for cmd in cmds:
-                    if ns == 'default':
+                    if ns == 'default' or 'netns' in cmd:
                         output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
-                    elif not 'netns' in cmd:
+                    else:
                         output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
                 # Ubuntu 16.04
                 match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
