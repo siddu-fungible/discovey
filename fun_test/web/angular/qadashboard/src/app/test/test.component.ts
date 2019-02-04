@@ -2,215 +2,124 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 
+class Node {
+  uId: number;  // unique Id
+  scriptPath: string;
+  childrenIds: number [] = [];
+  indent: number = 0;
+  show: boolean = false;
+  expanded: boolean = false;
+  leaf: boolean = false;
+}
+
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
   styleUrls: ['./test.component.css']
 })
 export class TestComponent implements OnInit, OnChanges {
-  yValues: any = [];
-  xValues: any = [];
-  title: string;
-  xAxisLabel: string;
-  yAxisLabel: string;
-  @Input() chartName: string;
-  @Input() modelName: string;
-  @Input() mode: string;
-  y1AxisTitle: string = null;
-  y2AxisTitle: string = null;
-  chartInfo: any = null;
-  copyChartInfo: any = null;
-  previewDataSets: any = [];
-  addDataSet: any = null;
-  outputList: any = [];
-  tableInfo: any = null;
-  dummyChartInfo: any;
-  showOutputSelection: boolean;
-  negativeGradient: boolean = false;
-  inputNames: any;
-  selectedOutput: any;
-  metricId: any;
-  addData: boolean = false;
-
+  data: any = {};
+  parsedData: any = {};
+  uId = 0;
+  flatNodes: Node [] = [];
+  nodeIdMap: any = {};
+  singleSelectNode = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService) {
   }
 
-  ngOnInit() {
-    // let temp = [];
-    // temp["name"] = 'series 1';
-    // temp["data"] = [1,2,3,4,5];
-    // this.yValues[0] = temp;
-    this.yValues.push({name: 'series 1', data: [1, 2, 3, 4, 5]});
-    this.yValues.push({name: 'series 2', data: [6, 7, 8, 9, 10]});
-    this.yValues.push({name: 'series 3', data: [11, 12, 13, 14, 15]});
-    this.yValues.push({name: 'series 4', data: [16, 17, 18, 19, 20]});
-    this.yValues.push({name: 'series 5', data: [21, 22, 23, 24, 25]});
-    this.xValues.push([0, 1, 2, 3, 4]);
-    this.title = "Funchart";
-    this.xAxisLabel = "Date";
-    this.yAxisLabel = "Range";
-    this.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
-    this.showOutputSelection = false;
-
-
-    if (this.chartName) {
-      let payload = {};
-      payload["metric_model_name"] = this.modelName;
-      payload["chart_name"] = this.chartName;
-      this.apiService.post("/metrics/chart_info", payload).subscribe((chartInfo) => {
-        this.chartInfo = chartInfo.data;
-        //this.copyChartInfo = angular.copy(this.chartInfo);
-        this.previewDataSets = this.chartInfo.data_sets;
-        this.negativeGradient = !this.chartInfo.positive;
-        this.metricId = this.chartInfo.metric_id;
-        this.y1AxisTitle = this.chartInfo.y1_axis_title;
-
-      }, error => {
-        this.logger.error("EditChartController: chart_info");
-      });
-    } else {
+  getIndentHtml = (node) => {
+    let s = "";
+    if (node.hasOwnProperty("indent")) {
+      for (let i = 0; i < node.indent - 1; i++) {
+        s += "<span style=\"color: white\">&rarr;</span>";
+      }
+      if (node.indent)
+        s += "<span>&nbsp;&nbsp;</span>";
     }
 
-    this.describeTable();
+    return s;
+  };
 
+
+  getUid() {
+    return this.uId++;
+  }
+
+  ngOnInit() {
+    this.data = ["examples/vanilla.py", "networking/script1.py", "networking/qos/script2.py"];
+    this.parseIt();
   }
 
   ngOnChanges(){
+  }
+
+  addFlatNode() {
 
   }
 
-  dismiss() {
+  addParts(remainingParts, parsedDataReference, show=false) {
+    parsedDataReference.children[remainingParts[0]] = {indent: parsedDataReference.indent + 1};
+    let newReference = parsedDataReference.children[remainingParts[0]];
+    let newNode = new Node();
+    newNode.scriptPath = remainingParts[0];
+    newNode.uId = this.getUid();
+    newNode.indent = parsedDataReference.indent + 1;
+    newNode.show = show;
+    if (newNode.scriptPath.endsWith(".py")) {
+      newNode.leaf = true;
+    }
+    this.nodeIdMap[newNode.uId] = newNode;
+    this.flatNodes.push(newNode);
 
+    if (remainingParts.length > 1) {
+      newReference["children"] = {};
+      let newArray = remainingParts.slice(1, remainingParts.length);
+      newNode.childrenIds.push(this.addParts(newArray, newReference).uId);
+    }
+    return newNode;
   }
 
-  describeTable = () => {
-    this.inputNames = [];
-    var self = this;
-    this.apiService.get("/metrics/describe_table/" + this.modelName).subscribe(function (tableInfo) {
-      self.tableInfo = tableInfo.data;
-      Object.keys(self.tableInfo).forEach((field) => {
-          let fieldInfo = self.tableInfo[field];
-          let oneField = {};
-        oneField["name"] = field;
-        if ('choices' in fieldInfo && oneField["name"].startsWith("input")) {
-          oneField["choices"] = fieldInfo.choices.map((choice) => {
-            return choice[1]
-          });
-          self.inputNames.push(oneField);
-        }
-        if (oneField["name"].startsWith("output")) {
-          self.outputList.push(oneField["name"]);
-        }
-      });
-    }, error => {
-      this.logger.error("describe table create chart");
-    });
-  };
+  collapse(node, doCollapse=false) {
+    /*if (node.indent > 1) { // cannot collapse the first level
+      node.show = false;
+    }*/
 
-  outputChange = () => {
-    if (this.selectedOutput) {
-      this.dummyChartInfo.output.name = this.selectedOutput;
-    }
-  };
-
-  addDataSetClick = () => {
-    this.showOutputSelection = true;
-    if (!this.tableInfo) {
-      return this.describeTable();
-    }
-    this.addDataSet = {};
-    this.addDataSet["inputs"] = this.inputNames;
-    this.addDataSet["output"] = {min: 0, max: 99999};
-  };
-
-  addClick = () => {
-    let error = false;
-    //
-    let validDataSet = {};
-    validDataSet["inputs"] = {};
-    validDataSet["output"] = {};
-    if (this.addDataSet) {
-
-      // lets validate all inputs
-      this.addDataSet["inputs"].forEach((oneField) => {
-        if (!oneField.selectedChoice && oneField.name !== "input_date_time" && oneField.choices.length) {
-          let message = "Please select a choice for " + oneField.name;
-          alert(message);
-          error = true;
-          return this.logger.error(message);
-        } else {
-          validDataSet["inputs"][oneField.name] = oneField.selectedChoice;
-
-        }
-      });
-      if (!error) {
-        if (!this.addDataSet.name) {
-          let message = "Please provide a name for the data-set";
-          alert(message);
-          error = true;
-          this.logger.error(message);
-        } else if (!this.addDataSet["output"].name) {
-          let message = "Please select atleast one output";
-          alert(message);
-          error = true;
-          this.logger.error(message);
-        } else {
-          validDataSet["name"] = this.addDataSet.name;
-          validDataSet["output"]["name"] = this.addDataSet["output"].name;
-          validDataSet["output"]["min"] = this.addDataSet["output"].min;
-          validDataSet["output"]["max"] = this.addDataSet["output"].max;
-        }
-
-      }
+    if (doCollapse) {
+      node.show = false;
     }
 
-    if (!error) {
-      // using temp to change the reference of previewdatasets so that the onchanges is triggered
-      let temp = Object.assign([], this.previewDataSets);
-      this.previewDataSets = null;
-      temp.push(validDataSet);
-      this.previewDataSets = temp;
-      this.showOutputSelection = false;
-      // this.addDataSet = null;
+    for (let index = 0; index < node.childrenIds.length; index++) {
+      this.collapse(this.nodeIdMap[node.childrenIds[index]], true);
     }
-
-  };
-
-
-  removeClick = (index) => {
-     // using temp to change the reference of previewdatasets so that the onchanges is triggered
-    //this.copyChartInfo.data_sets.splice(index, 1);
-    this.previewDataSets.splice(index, 1);
-    let temp = Object.assign([], this.previewDataSets);
-    this.previewDataSets = null;
-    this.previewDataSets = temp;
-
-    //= this.copyChartInfo.data_sets;
-  };
-
-  submit = () => {
-    //this.previewDataSets = this.copyChartInfo.data_sets;
-    let payload = {};
-    payload["metric_model_name"] = this.modelName;
-    payload["chart_name"] = this.chartName;
-    payload["data_sets"] = this.previewDataSets;
-    payload["negative_gradient"] = this.negativeGradient;
-    payload["y1_axis_title"] = this.y1AxisTitle;
-    payload["y2_axis_title"] = this.y2AxisTitle;
-    payload["leaf"] = true;
-
-    this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
-      if (data) {
-        alert("Submitted");
-      } else {
-        alert("Submission failed. Please check alerts");
-      }
-
-    }, error => {
-      this.logger.error("EditChart: Submit");
-    });
+    node.expanded = false;
   }
 
+  expand(node) {
+    node.show = true;
+
+    for (let index = 0; index < node.childrenIds.length; index++) {
+      this.nodeIdMap[node.childrenIds[index]].show = true;
+    }
+    node.expanded = true;
+  }
+
+  getIndents(node) {
+    return Array(node.indent);
+  }
+
+  parseIt() {
+    this.parsedData["root"] = {indent: 0, children: {}};
+    let rootNode = new Node();
+    rootNode.scriptPath = "root";
+    rootNode.uId = this.getUid();
+    for (let index = 0; index < this.data.length; index++) {
+      let parts = this.data[index].split("/");
+      rootNode.childrenIds.push(this.addParts(parts, this.parsedData["root"], true).uId);
+    }
+
+    let i = 0;
+
+  }
 
 }
