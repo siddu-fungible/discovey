@@ -5,7 +5,8 @@ import {LoggerService} from "../services/logger/logger.service";
 class Node {
   uId: number;  // unique Id
   scriptPath: string;
-  childrenIds: number [] = [];
+  pk: number;
+  childrenIds = null;
   indent: number = 0;
   show: boolean = false;
   expanded: boolean = false;
@@ -24,8 +25,19 @@ export class TestComponent implements OnInit, OnChanges {
   flatNodes: Node [] = [];
   nodeIdMap: any = {};
   singleSelectNode = null;
+  selectionMode = false;
+  savedSingleSelectNode = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService) {
+  }
+
+  fetchScripts() {
+    this.apiService.get('/regression/scripts').subscribe(response => {
+      this.data = response.data;
+      this.parseIt();
+    }, error => {
+      this.logger.error('/regression/scripts');
+    })
   }
 
   getIndentHtml = (node) => {
@@ -41,14 +53,18 @@ export class TestComponent implements OnInit, OnChanges {
     return s;
   };
 
+  selectClick () {
+    this.selectionMode = !this.selectionMode;
+  }
 
   getUid() {
     return this.uId++;
   }
 
   ngOnInit() {
-    this.data = ["examples/vanilla.py", "networking/script1.py", "networking/qos/script2.py"];
-    this.parseIt();
+    //this.data = ["examples/vanilla.py", "networking/script1.py", "networking/qos/script2.py"];
+    this.fetchScripts();
+
   }
 
   ngOnChanges(){
@@ -58,49 +74,55 @@ export class TestComponent implements OnInit, OnChanges {
 
   }
 
-  addParts(remainingParts, parsedDataReference, show=false) {
-    parsedDataReference.children[remainingParts[0]] = {indent: parsedDataReference.indent + 1};
-    let newReference = parsedDataReference.children[remainingParts[0]];
-    let newNode = new Node();
-    newNode.scriptPath = remainingParts[0];
-    newNode.uId = this.getUid();
-    newNode.indent = parsedDataReference.indent + 1;
-    newNode.show = show;
-    if (newNode.scriptPath.endsWith(".py")) {
-      newNode.leaf = true;
+  addParts(remainingParts, parsedDataReference, pk, show=false) {
+    let firstToken = remainingParts[0];
+    let thisNode = null;
+    if (!parsedDataReference.children.hasOwnProperty(firstToken)) {
+      parsedDataReference.children[firstToken] = {indent: parsedDataReference.indent + 1};
+      let newNode = new Node();
+      newNode.scriptPath = firstToken;
+      newNode.uId = this.getUid();
+      newNode.indent = parsedDataReference.indent + 1;
+      newNode.show = show;
+      newNode.childrenIds = new Set();
+      if (newNode.scriptPath.endsWith(".py")) {
+        newNode.leaf = true;
+        newNode.pk = pk;
+      }
+      parsedDataReference.children[firstToken]["uId"] = newNode.uId;
+      this.nodeIdMap[newNode.uId] = newNode;
+      //this.flatNodes.push(newNode);
     }
-    this.nodeIdMap[newNode.uId] = newNode;
-    this.flatNodes.push(newNode);
-
+    thisNode = this.nodeIdMap[parsedDataReference.children[firstToken].uId];
+    let newReference = parsedDataReference.children[firstToken];
     if (remainingParts.length > 1) {
-      newReference["children"] = {};
+      if (!newReference.hasOwnProperty("children")) {
+        newReference["children"] = {};
+      }
+
       let newArray = remainingParts.slice(1, remainingParts.length);
-      newNode.childrenIds.push(this.addParts(newArray, newReference).uId);
+      thisNode.childrenIds.add(this.addParts(newArray, newReference, pk).uId);
     }
-    return newNode;
+    return thisNode;
   }
 
   collapse(node, doCollapse=false) {
-    /*if (node.indent > 1) { // cannot collapse the first level
-      node.show = false;
-    }*/
-
     if (doCollapse) {
       node.show = false;
     }
 
-    for (let index = 0; index < node.childrenIds.length; index++) {
-      this.collapse(this.nodeIdMap[node.childrenIds[index]], true);
-    }
+    this.nodeIdMap[node.uId].childrenIds.forEach(childId => {
+      this.collapse(this.nodeIdMap[childId], true);
+    });
     node.expanded = false;
   }
 
   expand(node) {
     node.show = true;
 
-    for (let index = 0; index < node.childrenIds.length; index++) {
-      this.nodeIdMap[node.childrenIds[index]].show = true;
-    }
+    this.nodeIdMap[node.uId].childrenIds.forEach(childId => {
+      this.nodeIdMap[childId].show = true;
+    });
     node.expanded = true;
   }
 
@@ -108,17 +130,28 @@ export class TestComponent implements OnInit, OnChanges {
     return Array(node.indent);
   }
 
+  flattenNode (node) {
+    this.flatNodes.push(node);
+    node.childrenIds.forEach(childId => {
+      this.flattenNode(this.nodeIdMap[childId]);
+    });
+  }
+
   parseIt() {
     this.parsedData["root"] = {indent: 0, children: {}};
     let rootNode = new Node();
     rootNode.scriptPath = "root";
     rootNode.uId = this.getUid();
+    rootNode.childrenIds = new Set();
     for (let index = 0; index < this.data.length; index++) {
-      let parts = this.data[index].split("/");
-      rootNode.childrenIds.push(this.addParts(parts, this.parsedData["root"], true).uId);
+      let parts = this.data[index].script_path.split("/");
+      let newArray = parts.slice(1, parts.length);
+      let pk = this.data[index].pk;
+      rootNode.childrenIds.add(this.addParts(newArray, this.parsedData["root"], pk,true).uId);
     }
-
+    this.flattenNode(rootNode);
     let i = 0;
+
 
   }
 

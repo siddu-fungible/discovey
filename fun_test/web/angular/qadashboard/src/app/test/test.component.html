@@ -1,5 +1,7 @@
 <div class="component">
-  <table>
+  <div *ngIf="singleSelectNode" style="display: inline-block">Selected file: {{ singleSelectNode.scriptPath }}</div>
+  <button (click)="selectClick()" class="btn btn-link">Select a file</button>
+  <table *ngIf="selectionMode">
     <tr>
       <th>Path</th>
     </tr>
@@ -10,8 +12,8 @@
           <input *ngIf="node.leaf" type="radio" [checked]="singleSelectNode && singleSelectNode.uId === node.uId" (click)="singleSelectNode = node">
           {{ node.scriptPath }}
           &nbsp;
-          <span *ngIf="node.childrenIds.length > 0 && !node.expanded" class="pseudo-anchor" (click)="expand(node)"><span class="arrow arrow-right"></span></span> &nbsp;
-          <span *ngIf="node.childrenIds.length > 0 && node.expanded" class="pseudo-anchor" (click)="collapse(node)"><span class="arrow arrow-down"></span></span>
+          <span *ngIf="node.childrenIds.size > 0 && !node.expanded" class="pseudo-anchor" (click)="expand(node)"><span class="arrow arrow-right"></span></span> &nbsp;
+          <span *ngIf="node.childrenIds.size > 0 && node.expanded" class="pseudo-anchor" (click)="collapse(node)"><span class="arrow arrow-down"></span></span>
         </ng-container>
       </td>
 
