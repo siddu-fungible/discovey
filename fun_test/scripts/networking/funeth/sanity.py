@@ -20,6 +20,7 @@ class FunethSanity(FunTestScript):
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
+        funeth_obj.setup_workspace()
 
         # NU host
         fun_test.test_assert(funeth_obj.configure_intfs('nu'), 'Configure NU host interface')
@@ -37,7 +38,7 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
     def cleanup(self):
-        pass
+        fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 
 
 class FunethTestNUPingHU(FunTestCase):
