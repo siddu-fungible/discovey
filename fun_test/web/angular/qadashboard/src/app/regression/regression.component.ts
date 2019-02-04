@@ -73,20 +73,22 @@ export class RegressionComponent implements OnInit {
   }
 
   setPage(page) {
-    this.status = "Fetching Data";
+
     this.pager = this.pagerService.getPager(this.suiteExecutionsCount, page, this.recordsPerPage);
     if (page === 0 || (page > this.pager.endPage)) {
-      this.status = null;
+
       return;
     }
     let payload = {};
     if (this.tags) {
       payload["tags"] = this.tags;
     }
+    this.status = "Fetching Data";
     this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + this.filterString, payload).subscribe(result => {
       this.items = JSON.parse(result.data);
+      this.status = null;
     });
-    this.status = null;
+    
   }
 
   testCaseLength = function (testCases) {

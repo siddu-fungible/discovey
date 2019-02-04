@@ -22,7 +22,7 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     QEMU_LOG = "/tmp/qemu.log"
 
     QEMU_MODULES_TGZ = "modules.tgz"
-    QEMU_FUNCP_TGZ = "functrlp.tgz"
+    QEMU_FUNCP_TGZ = "functrlp_posix.tgz"
 
     FUNCP_EXTRACT_LIST = ["build/posix/lib/libfunq.so", "build/posix/bin/funq-setup", "build/posix/bin/dpc"]
 

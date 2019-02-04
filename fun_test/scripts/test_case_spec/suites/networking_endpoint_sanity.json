@@ -1,6 +1,5 @@
 [
   {"info": {"tags": ["networking-endpoint-sanity"]}},
-  {"path": "networking/funeth/sanity.py"},
-  {"path": "networking/ptf/ptf.py"}
-
+  {"path": "networking/funeth/sanity.py", "test_case_ids": [1]},
+  {"path": "networking/ptf/ptf.py", "test_case_ids": [1, 2]}
 ]

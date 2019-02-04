@@ -259,25 +259,25 @@ def add_test_case_execution(test_case_id,
     max_retries = 10
     te = None
     inputs = inputs if inputs else {}
-    with transaction.atomic():
+    for index in xrange(max_retries):
         try:
-            for index in xrange(max_retries):
-                te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
-                                       test_case_id=test_case_id,
-                                       suite_execution_id=suite_execution_id,
-                                       result=result,
-                                       started_time=get_current_time(),  # timezone.now(), #get_current_time(),
-                                       script_path=path,
-                                       log_prefix=log_prefix,
-                                       tags=json.dumps(tags),
-                                       inputs=json.dumps(inputs))
-                te.save()
-                add_test_case_execution_id(suite_execution_id=suite_execution_id,
-                                           test_case_execution_id=te.execution_id)
-                break
+            te = TestCaseExecution(execution_id=get_next_test_case_execution_id(),
+                                   test_case_id=test_case_id,
+                                   suite_execution_id=suite_execution_id,
+                                   result=result,
+                                   started_time=get_current_time(),  # timezone.now(), #get_current_time(),
+                                   script_path=path,
+                                   log_prefix=log_prefix,
+                                   tags=json.dumps(tags),
+                                   inputs=json.dumps(inputs))
+            te.save()
+            add_test_case_execution_id(suite_execution_id=suite_execution_id,
+                                       test_case_execution_id=te.execution_id)
         except Exception as ex:
             time.sleep(random.uniform(0.1, 3.0))
-            print "Error: add_test_case_execution: {}".format(str(ex))
+            print "Error: add_test_case_execution: {} index: {}".format(str(ex), index)
+        break
+
 
     return te
 
@@ -355,7 +355,12 @@ def _get_suite_executions(execution_id=None,
 
     ses = []
     for suite_execution in all_objects_dict:
-        test_case_execution_ids = json.loads(suite_execution["fields"]["test_case_execution_ids"])
+        ts = get_test_case_executions_by_suite_execution(suite_execution_id=suite_execution["fields"]["execution_id"])
+        test_case_execution_ids = []
+        for t in ts:
+            test_case_execution_ids.append(t.execution_id)
+        suite_execution["fields"]["test_case_execution_ids"] = json.dumps(test_case_execution_ids)
+        # test_case_execution_ids = json.loads(suite_execution["fields"]["test_case_execution_ids"])
         suite_result = RESULTS["UNKNOWN"]
         num_passed = 0
         num_failed = 0

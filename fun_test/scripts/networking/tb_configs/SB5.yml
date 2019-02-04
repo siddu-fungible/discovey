@@ -1,0 +1,57 @@
+router_mac:
+  00:de:ad:be:ef:00
+
+# NU host
+nu:
+  hostname: nu-lab-01
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: enp96s0f0
+  namespaces:
+    default:
+      interfaces:
+        #fpg0:
+        #  mac_addr: fe:dc:ba:44:66:33
+        #  ip_addr: 19.1.1.1
+        #  netmask: 255.255.255.0
+        fpg1:
+          mac_addr: fe:dc:ba:44:55:77
+          ip_addr: 21.1.1.1
+          netmask: 255.255.255.0
+      routes:
+        - prefix: 29.1.1.0/24
+          nexthop: 21.1.1.2
+        - prefix: 29.1.9.0/24
+          nexthop: 21.1.1.2
+
+# HU host
+hu:
+  hostname: hu-lab-01
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: enp96s0f0
+  pf_interface: hu0-f0
+  vf_interface: hu0-f8
+  namespaces:
+    default:
+      interfaces:
+        hu0-f0:
+          mac_addr: 00:de:ad:be:ef:11
+          ip_addr: 29.1.1.2
+          netmask: 255.255.255.0
+      routes:
+        - prefix: 29.1.9.0/24
+          nexthop: 29.1.1.1
+        - prefix: 21.1.1.0/24
+          nexthop: 29.1.1.1
+    n8:
+      interfaces:
+        hu0-f8:
+          mac_addr: 00:de:ad:be:ef:11
+          ip_addr: 29.1.9.5
+          netmask: 255.255.255.0
+      routes:
+        - prefix: 29.1.1.0/24
+          nexthop: 29.1.9.1
+        - prefix: 21.1.1.0/24
+          nexthop: 29.1.9.1

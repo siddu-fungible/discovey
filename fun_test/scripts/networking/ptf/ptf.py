@@ -29,30 +29,22 @@ class PTFTestSuite(FunTestScript):
         funsdk_obj = funcp.FunSDK(linux_obj, ws=workspace)
 
         # Get FunControlPlane
-        done_list = re.findall(r'done', funcp_obj.clone())
-        fun_test.test_assert(done_list == ['done'] * 5 or done_list == ['done'] * 6,
-                             'git clone FunControlPlane repo')
-        fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull()),
-                             'git pull FunControlPlane repo')
-        fun_test.test_assert(re.search(r'funnel_gen.py', funcp_obj.get_prebuilt(), re.DOTALL),
-                             'Get FunControlPlane prebuilt pkg')
+        fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
+        fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
+        fun_test.test_assert(funcp_obj.get_prebuilt(), 'Get FunControlPlane prebuilt pkg')
 
         # Get FunSDK
-        done_list = re.findall(r'done', funsdk_obj.clone())
-        fun_test.test_assert(done_list == ['done'] * 5 or done_list == ['done'] * 6,
-                             'git clone FunSDK repo')
-        fun_test.test_assert(re.search(r'Updating current build number', funsdk_obj.sdkup()),
-                             'FunSDK script/bob --sdkup')
+        fun_test.test_assert(funsdk_obj.clone(), 'git clone FunSDK repo')
+        fun_test.test_assert(funsdk_obj.sdkup(), 'FunSDK script/bob --sdkup')
 
         # Set up PTF server
         output = funcp_obj.setup_traffic_server('hu')
-        fun_test.test_assert(re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output,
-                                                                            re.IGNORECASE),
-                             'Set up PTF traffic server')
+        fun_test.test_assert(
+            re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output, re.IGNORECASE),
+            'Set up PTF traffic server')
 
         fun_test.shared_variables['linux_obj'] = linux_obj
         fun_test.shared_variables['funcp_obj'] = funcp_obj
-
 
     def cleanup(self):
         linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
@@ -209,8 +201,8 @@ if __name__ == "__main__":
     for tc in (
             EtpTest,
             ErpTest,
-            #ParserTest,  # TODO: Enable these tests
-            #FCPTest,
+            ParserTest,
+            #FCPTest,  # TODO: Enable these tests
             #OtherPalladiumTest,
     ):
         ts.add_test_case(tc())
