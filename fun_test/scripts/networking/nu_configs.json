@@ -17,7 +17,7 @@
   {
     "name": "spirent_configs",
     "type": "spirent_traffic_generator",
-    "connect_via_lab_server": false,
+    "connect_via_lab_server": true,
     "virtual": {
       "routermac": "00:DE:AD:BE:EF:00",
       "routes": {
@@ -92,7 +92,10 @@
   {
    "name": "f1_spirent_map",
     "transit_flow": {
-      "NU_NU": {"FPG1": "10.1.40.91/2/1", "FPG2": "10.1.40.91/2/2", "FPG3": "10.1.40.91/2/3", "FPG4": "10.1.40.91/2/4"}
+      "NU_NU": {"FPG0": "10.1.40.91/2/1", "FPG1": "10.1.40.91/2/2", "FPG2": "10.1.40.91/2/3", "FPG3": "10.1.40.91/2/4"}
+    },
+    "sample_flow": {
+      "NU_NU": {"FPG0": "10.1.40.91/2/1", "FPG1": "10.1.40.91/2/2", "FPG2": "10.1.40.91/2/3", "FPG3": "10.1.40.91/2/4"}
     }
   }
 ]

@@ -731,6 +731,14 @@ class EthernetCopperInterface(object):
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
 
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
     def __str__(self):
         return "EthernetCopper"
 
@@ -798,6 +806,14 @@ class Ethernet10GigFiberInterface(object):
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
 
     def __str__(self):
         return "Ethernet10GigFiber"
@@ -869,6 +885,14 @@ class Ethernet100GigFiberInterface(object):
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
 
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
     def __str__(self):
         return "Ethernet100GigFiber"
 
@@ -938,6 +962,14 @@ class Ethernet25GigFiberInterface(object):
 
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
 
     def __str__(self):
         return "Ethernet25GigFiber"

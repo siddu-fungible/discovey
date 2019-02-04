@@ -86,6 +86,7 @@ class SpirentSetup(FunTestScript):
 
         if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
+            '''
             checkpoint = "Configure QoS settings"
             enable_pfc = network_controller_obj.enable_qos_pfc()
             fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
@@ -116,7 +117,7 @@ class SpirentSetup(FunTestScript):
                                                                                 sx_thr=250,
                                                                                 mode="hnu")
             fun_test.test_assert(buffer_pool_set, checkpoint)
-
+            '''
     def cleanup(self):
         template_obj.cleanup()
 
@@ -194,18 +195,18 @@ class SampleIngressFPGtoFPG(FunTestCase):
 
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
-
+        '''
         checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
                                                                                              dut_sample_port)
         result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
                                                                 fpg=dut_rx_port, dest=dut_sample_port)
         fun_test.test_assert(result['status'], checkpoint)
-
+        '''
     def run(self):
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
-
+        '''
         checkpoint = "Clear FPG port stats on DUT"
         for port_num in dut_config['ports']:
             shape = 0
@@ -214,7 +215,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
-
+        
         checkpoint = "Get PSW stats before traffic"
         psw_stats_before = network_controller_obj.peek_psw_global_stats()
         fun_test.test_assert(psw_stats_before, checkpoint)
@@ -222,7 +223,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
         checkpoint = "Get Sample stats before traffic"
         sample_stats_before = network_controller_obj.show_sample_stats()
         fun_test.test_assert(sample_stats_before, checkpoint)
-
+        '''
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
@@ -1717,10 +1718,11 @@ if __name__ == '__main__':
     ts = SpirentSetup()
 
     ts.add_test_case(SampleIngressFPGtoFPG())
+    '''
     ts.add_test_case(SampleIngressFPGtoFPGWithRate())
     ts.add_test_case(SampleFCOIngressFPGtoFPG())
     ts.add_test_case(SamplePPStoFPG())
     ts.add_test_case(SampleEgressFPGtoFPG())
     ts.add_test_case(SampleIngressFPGtoFPGDisable())
-
+    '''
     ts.run()
