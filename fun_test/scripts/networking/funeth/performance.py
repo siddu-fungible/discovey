@@ -2,11 +2,12 @@ from lib.system.fun_test import *
 from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
 from scripts.networking.tb_configs import tb_configs
+from scripts.networking.funeth import sanity
 import json
 import re
 
 
-TB = 'SN2'
+TB = sanity.TB
 BW_LIMIT = '100M'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
@@ -24,6 +25,7 @@ class FunethPerformance(FunTestScript):
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
 
         # NU host
         linux_obj = funeth_obj.linux_obj_dict['nu']
@@ -288,6 +290,7 @@ class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
     def run(self):
         FunethPerformanceBase._run(self, flow_type='HU_NU', protocol='tcp', frame_size=1500)
 
+
 if __name__ == "__main__":
     FunethScript = FunethPerformance()
     # TODO: Uncomment below after EM-804 is fixed
@@ -300,5 +303,6 @@ if __name__ == "__main__":
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
     FunethScript.add_test_case(FunethPerformance_HU_NU_64B_TCP())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_TCP())
+    FunethScript.add_test_case(sanity.FunethTestNUPingHU())  # Do a basic sanity check after performance test
     FunethScript.run()
     fun_test.log('Performance results:\n{}'.format(RESULT_FILE))
