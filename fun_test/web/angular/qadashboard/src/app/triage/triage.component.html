@@ -2,12 +2,17 @@
   <fun-spinner [status]="status"></fun-spinner>
   <div *ngIf="status===null">
     <div class="row">
-      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
+      <div *ngIf="showCommits" class="col">
         <div class="card card-primary" style="margin: 4px;">
           <div class="card-header min-padding"><b>Commit History</b></div>
           <div class="card-body min-padding">
             <div class="min-padding">
-              <a [routerLink]="" (click)="showTotalFilesCHanged()">All files that changed</a><br><br>
+              <span>
+                <a [routerLink]="" (click)="showTotalFilesCHanged()" style="float: right">All files that changed</a>
+                <button *ngIf="startButton" type="button" class="btn btn-primary" (click)="startTriaging()">Start Triaging</button>
+                <a *ngIf="!startButton" [routerLink]="" (click)="showTriaging()">Show Triaging Status</a>
+              </span>
+              <br><br>
               <p class="no-margin"><b>Git info for first degrade:</b>
                 <span>Sha:</span><span style="color: red"> {{ faultyCommit }}</span><br>
                 <span>
@@ -44,10 +49,12 @@
                   <td class="table-padding">
                     <span *ngIf="commit.hexsha==faultyCommit" class="text-color-red">{{ commit.message }}</span>
                     <span *ngIf="commit.hexsha==successCommit" class="text-color-green">{{ commit.message }}</span>
-                    <span *ngIf="commit.hexsha!=faultyCommit && commit.hexsha!=successCommit">{{ commit.message }}</span>
+                    <span
+                      *ngIf="commit.hexsha!=faultyCommit && commit.hexsha!=successCommit">{{ commit.message }}</span>
                   </td>
                   <td class="table-padding align">
-                    <a [routerLink]="" (click)="showFilesChanged(commit)">{{ commit["changed_files"].length > 0 ? commit["changed_files"].length: 'NA' }}</a>
+                    <a [routerLink]="" (click)="showFilesChanged(commit)">{{ commit["changed_files"].length > 0 ?
+                      commit["changed_files"].length: 'NA' }}</a>
                   </td>
                   <td class="table-padding align">
                     {{ commit.author }}
@@ -61,16 +68,163 @@
           </div>
         </div>
       </div>
-      <div *ngIf="showChanged" class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
+      <div *ngIf="showChanged" class="col">
         <div class="card card-primary" style="margin: 4px;">
           <div class="card-header min-padding"><b>Files Changed:</b></div>
           <div class="card-body min-padding">
             <div class="min-padding">
               <p *ngIf="!totalShow"><b>Git Commit:</b> {{ gitCommit }}<br>
-              <b>User:</b> {{ gitUser }}</p>
+                <b>User:</b> {{ gitUser }}</p>
               <p class="no-margin" *ngFor="let fileNames of changedFiles">
                 {{ fileNames }}
               </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="showTriagingStatus" class="col">
+        <button type="button" class="btn btn-outline-dark back-button" (click)="goBack()">Back</button>
+        <button type="button" class="btn btn-outline-dark back-button" (click)="refreshStatus()">Refresh <i class="fa fa-refresh"></i></button>
+        <br>
+        <div class="card card-primary" style="margin: 4px;">
+          <div class="card-header min-padding"><b>Triaging Status:</b></div>
+          <div class="card-body min-padding">
+            <div class="min-padding">
+              <table class="table table-bordered" style="width: 65%">
+                <tr>
+                  <th class="align header-padding" style="width: 7%;">
+                    Triage Id
+                  </th>
+                  <th class="align header-padding" style="width: 7%;">
+                    Metric Id
+                  </th>
+                  <th class="align header-padding" style="width: 10%;">
+                    Metric Type
+                  </th>
+                  <th class="align header-padding" style="width: 7%;">
+                    Last Good Score
+                  </th>
+                  <th class="align header-padding" style="width: 10%;">
+                    Status
+                  </th>
+                  <th class="align header-padding" style="width: 20%;">
+                    Faulty Commit
+                  </th>
+                </tr>
+                <tr *ngFor="let id of triageDetails">
+                  <td class="align">
+                    {{ id.triage_id }}
+                  </td>
+                  <td class="align">
+                    {{ id.metric_id }}
+                  </td>
+                  <td class="align">
+                    {{ id.metric_type }}
+                  </td>
+                  <td class="align">
+                    {{ id.last_good_score }}
+                  </td>
+                  <td class="align">
+                    {{ id.status }}
+                  </td>
+                  <td class="align">
+                    <div *ngIf="fault === null" class="progress">
+                      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                           aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+                    </div>
+                    <span *ngIf="fault != null">{{ fault }}</span>
+                  </td>
+                </tr>
+              </table>
+              <p><b>Total Flows:</b></p>
+              <table class="table table-bordered" style="width: 85%">
+                <tr>
+                  <th class="align" style="width: 30%;">
+                    Git commit
+                  </th>
+                  <th class="align" style="width: 10%;">
+                    Committer
+                  </th>
+                  <th class="align" style="width: 7%;">
+                    Jenkins #
+                  </th>
+                  <th class="align" style="width: 7%;">
+                    Lsf #
+                  </th>
+                  <th class="align" style="width: 10%;">
+                    Status
+                  </th>
+                  <th class="align" style="width: 20%;">
+                    Score
+                  </th>
+                </tr>
+                <tr class="no-margin">
+                  <td class="table-padding text-color-red">
+                    {{ faultyCommit }}
+                  </td>
+                  <td class="table-padding align">
+                    {{ faultyAuthor }}
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                </tr>
+                <tr class="no-margin" *ngFor="let commit of triageFlows">
+                  <td class="table-padding">
+                    {{ commit.git_commit }}
+                  </td>
+                  <td class="table-padding align">
+                    {{ commit.committer }}
+                  </td>
+                  <td class="table-padding align">
+                    <span *ngIf="commit.jenkins !== -1">{{ commit.jenkins }}</span>
+                    <span *ngIf="commit.jenkins === -1">NA</span>
+                  </td>
+                  <td class="table-padding align">
+                    <span *ngIf="commit.lsf !== -1">{{ commit.lsf }}</span>
+                    <span *ngIf="commit.lsf === -1">NA</span>
+                  </td>
+                  <td class="table-padding align">
+                    {{ commit.status }}
+                  </td>
+                  <td class="table-padding align">
+                    <div *ngIf="commit.score === -1" class="progress">
+                      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                           aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+                    </div>
+                    <span *ngIf="commit.score != -1">{{ commit.score }}</span>
+                  </td>
+                </tr>
+                <tr class="no-margin">
+                  <td class="table-padding text-color-red">
+                    {{ successCommit }}
+                  </td>
+                  <td class="table-padding align">
+                    {{ successAuthor }}
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                </tr>
+              </table>
             </div>
           </div>
         </div>

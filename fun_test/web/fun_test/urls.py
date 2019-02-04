@@ -22,6 +22,7 @@ from . import metrics_views
 from . import tests_views
 from . import upgrade_views
 from . import demo_views
+from . import triaging
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 
@@ -145,8 +146,7 @@ metric_urls = [
     url(r'^scores', metrics_views.scores),
     url(r'^dag$', metrics_views.dag),
     url(r'^global_settings', metrics_views.global_settings),
-    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras),
-    url(r'^triage_db$', metrics_views.update_triage_db),
+    url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras)
 ]
 
 test_urls = [
@@ -156,6 +156,12 @@ test_urls = [
 
 upgrade_urls = [
     url(r'^.*$', upgrade_views.home)
+]
+
+triage_urls = [
+    url(r'^insert_db$', triaging.insert_triage_db),
+    url(r'^fetch_flows$', triaging.fetch_triage_flow)
+
 ]
 
 demo_urls = [
@@ -177,6 +183,7 @@ urlpatterns = [
     url(r'^regression/', include(regression_urls)),
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
+    url(r'^triage/', include(triage_urls)),
     url(r'^common/', include(common_urls)),
     url(r'^$', views.angular_home),
     url(r'^initialize$', metrics_views.initialize),

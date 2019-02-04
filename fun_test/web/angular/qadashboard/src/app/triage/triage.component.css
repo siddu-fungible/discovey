@@ -14,3 +14,10 @@
 .fc-width {
   width: 5%;
 }
+.back-button {
+  border: solid 1px black;
+  margin: 3px;
+}
+.header-padding {
+  padding: 4px;
+}

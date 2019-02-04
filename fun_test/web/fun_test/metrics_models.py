@@ -62,7 +62,7 @@ class MetricChartStatus(models.Model):
         return s
 
 class Triage(models.Model):
-    metric_id = models.IntegerField(default=-1)
+    metric_id = models.IntegerField(default=-1, unique=True)
     metric_type = models.CharField(max_length=15, default=METRIC_TYPE["SCORES"])
     triage_id = models.IntegerField(default=-1)
     date_time = models.DateTimeField(default=datetime.now)
@@ -94,6 +94,7 @@ class TriageFlow(models.Model):
     lsf_job_id = models.IntegerField(default=-1)
     status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
     git_commit = models.TextField(default="")
+    committer = models.TextField(default="")
     build_properties = models.TextField(default="")
 
     def __str__(self):

@@ -26,6 +26,14 @@ export class TriageComponent implements OnInit {
   totalShow: boolean = false;
   gitUser: string = null;
   triageInfo: any = null;
+  showTriagingStatus: boolean = false;
+  showCommits: boolean = true;
+  startButton: boolean = true;
+  faultyAuthor: string = null;
+  successAuthor: string = null;
+  triageFlows: any = null;
+  triageDetails: any = null;
+  fault: string = null;
 
   constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute, private commonService: CommonService) { }
 
@@ -41,6 +49,44 @@ export class TriageComponent implements OnInit {
       }
     });
 
+  }
+
+  startTriaging(): void {
+    let payload = {"metric_id": this.id,
+        "commits": this.commits,
+        "triage_info": this.triageInfo};
+        this.apiService.post('/triage/insert_db', payload).subscribe(response => {
+          this.startButton = false;
+          alert("submitted");
+        }, error => {
+          this.logger.error("Updating DB Failed");
+        });
+  }
+
+  showTriaging(): void {
+    this.showCommits = false;
+    this.showChanged = false;
+    this.status = "Fetching Status";
+    this.refreshStatus();
+  }
+
+  refreshStatus(): void{
+    let payload = {"metric_id": this.id};
+    this.apiService.post('/triage/fetch_flows', payload).subscribe((data) => {
+      let result = data.data;
+      this.triageFlows = result.flows;
+      this.triageDetails = result.triage;
+      this.showTriagingStatus = true;
+      this.status = null;
+    }, error => {
+      this.logger.error("Fetching Status Failed");
+    });
+  }
+
+  goBack(): void {
+    this.showChanged = false;
+    this.showTriagingStatus = false;
+    this.showCommits = true;
   }
 
   setCommits(): void {
@@ -70,16 +116,10 @@ export class TriageComponent implements OnInit {
         this.commits = result.data.commits;
         let total = this.commits.length - 1;
         this.faultyMessage = this.commits[0].message;
+        this.faultyAuthor = this.commits[0].author;
+        this.successAuthor = this.commits[total].author;
         this.successMessage = this.commits[total].message;
         this.status = null;
-        let payload = {"metric_id": this.id,
-        "commits": this.commits,
-        "triage_info": this.triageInfo};
-        this.apiService.post('/metrics/triage_db', payload).subscribe(response => {
-          alert("submitted");
-        }, error => {
-          this.logger.error("Updating DB Failed");
-        });
       }, error => {
         this.logger.error("Fetching git Commits between the faulty and success commits");
       });
