@@ -293,16 +293,20 @@ class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
 
 if __name__ == "__main__":
     FunethScript = FunethPerformance()
+
+    # NU -> HU
     # TODO: Uncomment below after EM-804 is fixed
     FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
     FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
     FunethScript.add_test_case(FunethPerformance_NU_HU_64B_TCP())
     FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_TCP())
+
+    # HU -> NU
     # TODO: Below throughput result is too small in SN2, need further investigation
     FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
     FunethScript.add_test_case(FunethPerformance_HU_NU_64B_TCP())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_TCP())
-    FunethScript.add_test_case(sanity.FunethTestNUPingHU())  # Do a basic sanity check after performance test
+
     FunethScript.run()
     fun_test.log('Performance results:\n{}'.format(RESULT_FILE))
