@@ -1052,9 +1052,11 @@ class NetworkController(DpcshClient):
     def peek_psw_port_stats(self, port_num, queue_num=None, hnu=False):
         stats = None
         try:
+            self.COMMAND_DURATION = 30
             max_retry = 3
             current_retry = 0
             sleep_duration = 2
+            chunk = 16384
             type = 'nu'
             if hnu:
                 type = 'hnu'
@@ -1066,16 +1068,17 @@ class NetworkController(DpcshClient):
                 stats_cmd = "stats/psw/%s/port/[%d]" % (type, port_num)
                 fun_test.debug("Getting PSW stats for port %d" % port_num)
             while current_retry < max_retry:
+                fun_test.log("Executing command for %s time " % (current_retry + 1))
                 result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd,
                                            command_duration=self.COMMAND_DURATION,
-                                           sleep_duration=sleep_duration, chunk=8192)
+                                           sleep_duration=sleep_duration, chunk=chunk)
                 fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %
                                                                             (port_num))
                 fun_test.debug("PSW port %d stats: %s" % (port_num, result['data']))
                 if isinstance(result['data'], dict):
                     break
                 self.disconnect()
-                fun_test.sleep("Before reconnecting", seconds=3)
+                fun_test.sleep("Before reconnecting", seconds=5)
                 current_retry += 1
             stats = result['data']
         except Exception as ex:
@@ -1247,10 +1250,25 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_per_vppkts_stats(self):
+    def peek_per_vppkts_stats(self, cluster_id):
         stats = None
         try:
-            cmd = "stats/pervppkts"
+            self.COMMAND_DURATION = 60
+            cmd = "stats/pervppkts/[%s]" % cluster_id
+            fun_test.debug("Getting vp per pkt")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION,
+                                       sleep_duration=20)
+            fun_test.simple_assert(expression=result['status'], message="Get vp per pkts stats")
+            fun_test.debug("Per vppkts stats: %s" % result['data'])
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_per_vp_stats(self):
+        stats = None
+        try:
+            cmd = "stats/per_vp"
             fun_test.debug("Getting vp per pkt")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION,
                                        sleep_duration=20)
@@ -1387,34 +1405,6 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def peek_fwd_flex_stats(self, counter_num):
-        try:
-            stats = None
-            stats_cmd = "stats/fwd/flex/[%d]" % counter_num
-            fun_test.debug("Getting counter stats for counter %d" % counter_num)
-            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'],
-                                   message="Getting counter stats for counter %d" % counter_num)
-            fun_test.debug("Counter %d stats: %s" % (counter_num, result['data']))
-            stats = result['data']
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return stats
-
-    def peek_erp_flex_stats(self, counter_num):
-        try:
-            stats = None
-            stats_cmd = "stats/erp/flex/[%d]" % counter_num
-            fun_test.debug("Getting counter stats for counter %d" % counter_num)
-            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=result['status'],
-                                   message="Getting counter stats for counter %d" % counter_num)
-            fun_test.debug("Counter %d stats: %s" % (counter_num, result['data']))
-            stats = result['data']
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return stats
-
     def disable_sample_rule(self, id, dest, fpg=None, acl=None, flag_mask=None, hu=None, psw_drop=None, pps_en=None,
                             pps_interval=None, pps_burst=None, sampler_en=None, sampler_rate=None,
                             sampler_run_sz=None, first_cell_only=None, pps_tick=None):
@@ -1458,6 +1448,34 @@ class NetworkController(DpcshClient):
         try:
             result = self.json_execute(verb='sample', data=['show'], command_duration=20)
             fun_test.simple_assert(result['status'], "Stats fetched")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_fwd_flex_stats(self, counter_num):
+        try:
+            stats = None
+            stats_cmd = "stats/fwd/flex/[%d]" % counter_num
+            fun_test.debug("Getting counter stats for counter %d" % counter_num)
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Getting counter stats for counter %d" % counter_num)
+            fun_test.debug("Counter %d stats: %s" % (counter_num, result['data']))
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_erp_flex_stats(self, counter_num):
+        try:
+            stats = None
+            stats_cmd = "stats/erp/flex/[%d]" % counter_num
+            fun_test.debug("Getting counter stats for counter %d" % counter_num)
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Getting counter stats for counter %d" % counter_num)
+            fun_test.debug("Counter %d stats: %s" % (counter_num, result['data']))
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))
