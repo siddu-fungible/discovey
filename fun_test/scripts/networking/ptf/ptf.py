@@ -55,8 +55,14 @@ class PTFTestSuite(FunTestScript):
 
 def run_ptf_test(tc, server, timeout, tc_desc):
     """Run PTF test cases."""
+
+    job_environment = fun_test.get_job_environment()
+    dpc_proxy_ip = str(job_environment['UART_HOST'])
+    dpc_proxy_port = int(job_environment['UART_TCP_PORT_0'])
+
     funcp_obj = fun_test.shared_variables['funcp_obj']
-    output = funcp_obj.send_traffic(tc, server=server, timeout=timeout)
+    output = funcp_obj.send_traffic(tc, server=server, dpc_proxy_ip=dpc_proxy_ip, dpc_proxy_port=dpc_proxy_port,
+                                    timeout=timeout)
     not_pass = re.search(r'FAILED|ERROR|ATTENTION: SOME TESTS DID NOT PASS!!!', output)
 
     # Failed cases

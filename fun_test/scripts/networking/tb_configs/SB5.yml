@@ -48,7 +48,7 @@ hu:
       interfaces:
         hu0-f8:
           mac_addr: 00:de:ad:be:ef:11
-          ipv4_addr: 29.1.9.5
+          ipv4_addr: 29.1.9.2
           ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 29.1.1.0/24
