@@ -254,14 +254,15 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return self.project_handle
 
-    def create_port(self, location, use_default_host=False):
+    def create_port(self, location, use_default_host=False, apply_config=False):
         port = None
         try:
             if not self.project_handle:
                 raise Exception("Please Create Project First")
             port = self.stc.create('port', under=self.project_handle, location=location,
                                    useDefaultHost=use_default_host)
-            self.apply_configuration()
+            if apply_config:
+                self.apply_configuration()
         except Exception as ex:
             fun_test.critical(str(ex))
         return port
@@ -299,12 +300,10 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def attach_ports(self):
+    def attach_ports(self, port_list, auto_connect=True):
         result = False
         try:
-            output = self.stc.perform("AttachPorts")
-            # if re.search(r'ERROR', output):
-            #    raise FunTestLibException("Failed to Attach Ports: %s" % output)
+            self.stc.perform("attachPorts", portList=port_list, autoConnect=auto_connect)
             if self.apply_configuration():
                 for port in self.get_port_list():
                     if self.get_port_details(port=port)['Online'] == "false":
@@ -1256,6 +1255,39 @@ class SpirentManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def get_activephy_targets_under_port(self, port_handle):
+        result = None
+        try:
+            result = self.stc.get(port_handle, 'activephy-Targets')
+            fun_test.debug(result)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_fec_status(self, handle):
+        status = None
+        try:
+            status = self.stc.get(handle, 'ForwardErrorCorrection')
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return status
+
+    def get_auto_negotiation_status(self, handle):
+        status = None
+        try:
+            status = self.stc.get(handle, 'AutoNegotiation')
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return status
+
+    def get_interface_link_status(self, handle):
+        status = None
+        try:
+            status = self.stc.get(handle, 'LinkStatus')
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return status
 
 
 if __name__ == "__main__":
