@@ -24,6 +24,7 @@ TRAFFIC_DURATION = 30
 NUM_PORTS = 3
 generator_port_obj_dict = {}
 analyzer_port_obj_dict = {}
+TEST_CONFIG_FILE = SCRIPTS_DIR + "/networking/sample/test_configs.json"
 
 
 class SpirentSetup(FunTestScript):
@@ -86,7 +87,7 @@ class SpirentSetup(FunTestScript):
 
         if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
-            '''
+
             checkpoint = "Configure QoS settings"
             enable_pfc = network_controller_obj.enable_qos_pfc()
             fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
@@ -117,7 +118,7 @@ class SpirentSetup(FunTestScript):
                                                                                 sx_thr=250,
                                                                                 mode="hnu")
             fun_test.test_assert(buffer_pool_set, checkpoint)
-            '''
+
     def cleanup(self):
         template_obj.cleanup()
 
@@ -158,13 +159,17 @@ class SampleIngressFPGtoFPG(FunTestCase):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
 
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
+
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
-                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
-                                      min_frame_length=78, max_frame_length=1500)
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
+                                      frame_length_mode=test_config['frame_length_mode'],
+                                      min_frame_length=test_config['min_frame_size'],
+                                      max_frame_length=test_config['max_frame_size'])
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
@@ -195,18 +200,17 @@ class SampleIngressFPGtoFPG(FunTestCase):
 
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
-        '''
         checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
                                                                                              dut_sample_port)
         result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
                                                                 fpg=dut_rx_port, dest=dut_sample_port)
         fun_test.test_assert(result['status'], checkpoint)
-        '''
+
     def run(self):
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
-        '''
+
         checkpoint = "Clear FPG port stats on DUT"
         for port_num in dut_config['ports']:
             shape = 0
@@ -223,7 +227,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
         checkpoint = "Get Sample stats before traffic"
         sample_stats_before = network_controller_obj.show_sample_stats()
         fun_test.test_assert(sample_stats_before, checkpoint)
-        '''
+
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
