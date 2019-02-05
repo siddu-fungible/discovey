@@ -15,6 +15,7 @@
     "enable_dpcsh": true
   },
   {
+    //TODO: have pfx ==> port (FPG..)
     "name": "spirent_configs",
     "type": "spirent_traffic_generator",
     "connect_via_lab_server": false,
@@ -65,6 +66,7 @@
     }
   },
   {
+    //TODO: Change DUT intf names
     "name": "palladium_spirent_map",
     "transit_flow": {
       "NU_NU": {"FPG18": "10.1.23.138/1/2", "FPG5": "10.1.23.137/1/2", "FPG15": "10.1.23.138/1/1", "FPG13": "10.1.23.137/1/1"},
