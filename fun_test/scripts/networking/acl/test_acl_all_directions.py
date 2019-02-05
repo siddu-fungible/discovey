@@ -240,11 +240,10 @@ class AclIngressDropNUtoNU(FunTestCase):
         c = 0
         for port_num in dut_config['ports']:
             shape = 0
-            result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
-            fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+            if c <= 1:
+                result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+                fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             c += 1
-            if c>2:
-                break
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
         checkpoint = "Deactivate not required stream blocks"
