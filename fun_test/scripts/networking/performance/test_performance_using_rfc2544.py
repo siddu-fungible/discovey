@@ -54,6 +54,23 @@ class ScriptSetup(FunTestScript):
             cmd = "sh /tmp/%s" % file_name
             pc_4_obj.command(command=cmd)
 
+    def ensure_dpcsh_ready(self, max_time=180):
+        status = False
+        try:
+            timer = FunTimer(max_time=max_time)
+            while not timer.is_expired():
+                fun_test.sleep("DPCsh to come up", seconds=30)
+                result = network_controller_obj.echo_hello()
+                if result['status']:
+                    raw_output = result['raw_output']
+                    if raw_output != 'null':
+                        fun_test.log("dpcsh echoed hello output: %s" % raw_output)
+                        status = True
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return status
+
     def setup(self):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
@@ -62,6 +79,8 @@ class ScriptSetup(FunTestScript):
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
+
+        fun_test.simple_assert(self.ensure_dpcsh_ready(), "Ensure DPCsh ready to process commands")
 
         checkpoint = "Configure QoS settings"
         enable_pfc = network_controller_obj.enable_qos_pfc()
@@ -297,5 +316,4 @@ if __name__ == '__main__':
     # FCP cases
     ts.add_test_case(TestHnuHnuFcpPerformance())
     ts.add_test_case(TestHnuHnuFcpPerformanceSingleFlow())
-
     ts.run()
