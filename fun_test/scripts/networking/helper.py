@@ -36,9 +36,7 @@ VP_PACKETS_TOTAL_OUT = "vp_packets_total_out"
 VP_PACKETS_OUT_HU = "vp_packets_out_hu"
 VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
 VP_PACKETS_FORWARDING_NU_DIRECT = "vp_packets_forwarding_nu_direct"
-VP_PACKETS_OUT_NU_ETP = "vp_packets_out_nu_etp"
-VP_PACKETS_OUT_HNU_ETP = "vp_packets_out_hnu_etp"
-VP_NO_DROP_PACKETS_TO_HNU_ETP = "vp_no_drop_packets_to_hnu_etp"
+VP_PACKETS_OUT_ETP = "vp_packets_out_etp"
 VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
 VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
 VP_PACKETS_CONTROL_T2C_COUNT = "vp_packets_control_t2c"
@@ -66,34 +64,35 @@ SFG_SAMPLER_COPY = "SAMPLER_COPY"
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1
 ETH_COPP_ARP_RESP_METER_ID = 2
+ETH_COPP_RARP_METER_ID = 3
 ETH_COPP_ISIS_1_METER_ID = 4
 ETH_COPP_ISIS_2_METER_ID = 5
 ETH_COPP_LLDP_METER_ID = 6
 ETH_COPP_PTP_METER_ID = 7
-IPV4_COPP_ICMP_METER_ID = 8
-IPV4_COPP_OSPF_1_METER_ID = 9
-IPV4_COPP_OSPF_2_METER_ID = 10
-IPV4_COPP_DHCP_METER_ID = 11
-IPV4_COPP_PIM_METER_ID = 12
-IPV4_COPP_BGP_METER_ID = 13
-IPV4_COPP_IGMP_METER_ID = 14
-IPV4_COPP_PTP_1_METER_ID = 15
-IPV4_COPP_PTP_2_METER_ID = 16
-IPV4_COPP_PTP_3_METER_ID = 17
-IPV4_COPP_PTP_4_METER_ID = 18
-IPV4_COPP_TTL_ERR_METER_ID = 19
-IPV4_COPP_OPTS_METER_ID = 20
+IPV4_COPP_ICMP_METER_ID = 30
+IPV4_COPP_OSPF_1_METER_ID = 31
+IPV4_COPP_OSPF_2_METER_ID = 32
+IPV4_COPP_DHCP_METER_ID = 33
+IPV4_COPP_PIM_METER_ID = 34
+IPV4_COPP_BGP_METER_ID = 35
+IPV4_COPP_IGMP_METER_ID = 36
+IPV4_COPP_PTP_1_METER_ID = 37
+IPV4_COPP_PTP_2_METER_ID = 38
+IPV4_COPP_PTP_3_METER_ID = 39
+IPV4_COPP_PTP_4_METER_ID = 40
+IPV4_COPP_TTL_ERR_METER_ID = 41
+IPV4_COPP_OPTS_METER_ID = 42
 IPV4_COPP_FOR_US_METER_ID = 21
-ERR_TRAP_COPP_FSF_METER_ID = 40
-ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 41
-ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 42
-ERR_TRAP_COPP_PRSR_V4_VER_METER_ID = 51
-ERR_TRAP_COPP_PRSR_V6_VER_METER_ID = 52
-ERR_TRAP_COPP_PRSR_IHL_METER_ID = 53
-ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 54
-ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 55
-ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 56
-ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 57
+ERR_TRAP_COPP_FSF_METER_ID = 3
+ERR_TRAP_COPP_OUTER_CKSUM_ERR_METER_ID = 4
+ERR_TRAP_COPP_INNER_CKSUM_ERR_METER_ID = 5
+ERR_TRAP_COPP_PRSR_V4_VER_METER_ID = 14
+ERR_TRAP_COPP_PRSR_V6_VER_METER_ID = 15
+ERR_TRAP_COPP_PRSR_IHL_METER_ID = 16
+ERR_TRAP_COPP_PRSR_OL_V4_VER_METER_ID = 17
+ERR_TRAP_COPP_PRSR_OL_V6_VER_METER_ID = 18
+ERR_TRAP_COPP_PRSR_OL_IHL_METER_ID = 19
+ERR_TRAP_COPP_PRSR_IP_FLAG_ZERO_METER_ID = 20
 
 
 psw_global_stats_counter_names = {'orm_drop': 'orm_drop', 'grm_sx_drop': 'grm_sx_drop',
@@ -289,7 +288,7 @@ def get_wro_global_stats_values(network_controller_obj):
     return result
 
 
-def validate_parser_stats(parser_result, compare_value, check_list_keys=[], parser_old_result=None, match_values=True):
+def validate_parser_stats(parser_result, compare_value, check_list_keys=[], parser_old_result=None):
     result = False
     try:
         stat_counter_list = ['prv_sent', 'eop_cnt', 'sop_cnt']
@@ -303,24 +302,18 @@ def validate_parser_stats(parser_result, compare_value, check_list_keys=[], pars
                         actual = int(current_dict[counter]) - int(old_dict[counter])
                     else:
                         actual = int(current_dict[counter])
-
-                if match_values:
-                    fun_test.test_assert_expected(expected=compare_value, actual=actual,
-                                                  message="Check %s stats for %s in parser nu stats" % (counter, key))
-                else:
-                    fun_test.test_assert(compare_value <= actual,
-                                         message="Check %s stats for %s in parser nu stats. "
-                                                 "Expected %s, Actual %s" % (counter, key, compare_value, actual))
+                fun_test.test_assert_expected(expected=compare_value, actual=actual,
+                                              message="Check %s stats for %s in parser nu stats" % (counter, key))
         result = True
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
 
 
-def get_vp_per_pkts_stats_values(network_controller_obj, cluster_id):
+def get_vp_per_pkts_stats_values(network_controller_obj):
     result = None
     try:
-        output = network_controller_obj.peek_per_vppkts_stats(cluster_id=cluster_id)
+        output = network_controller_obj.peek_per_vppkts_stats()
         fun_test.simple_assert(output, "Ensure vp per packet stats are grepped")
         result = parse_result_dict(output)
     except Exception as ex:
@@ -567,164 +560,38 @@ def convert_bps_to_mbps(count_in_bps):
     return count_in_mbps
 
 
-def _get_psw_stat_diff_from_results(stat_1, stat_2, stat_type, stat_name):
-    new_val = stat_2[stat_type][stat_name]
-    old_val = stat_1[stat_type][stat_name]
-    if not new_val:
-        new_val = 0
-    if not old_val:
-        old_val = 0
-    return int(new_val) - int(old_val)
-
-
-def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
-                          psw_stats_nu_1=None, psw_stats_nu_2=None, psw_stats_hnu_1=None,
-                          psw_stats_hnu_2=None):
-    result = {}
-    parsed_psw_stats_1 = None
-    parsed_psw_stats_2 = None
-    parsed_psw_stats_3 = None
-    parsed_psw_stats_4 = None
-    if input_list:
-        result["input"] = {}
-    if output_list:
-        result["output"] = {}
-
-    for key in input_list:
-        result["input"][key] = 0
-    for key in output_list:
-        result["output"][key] = 0
+def get_flex_counter_values(network_controller_obj, counter_id, erp=False):
+    counter_value = 0
     try:
-        if hnu_1 and hnu_2:
-            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, input=True,
-                                                             input_key_list=input_list, output=True,
-                                                             output_key_list=output_list)
-            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2, input=True,
-                                                             input_key_list=input_list, output=True,
-                                                             output_key_list=output_list)
-        elif not hnu_1 and not hnu_2:
-            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
-                                                             input_key_list=input_list, output=True,
-                                                             output_key_list=output_list)
-            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
-                                                             input_key_list=input_list, output=True,
-                                                             output_key_list=output_list)
-        elif not hnu_1 and hnu_2:
-            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, input=True,
-                                                             input_key_list=input_list, output=True,
-                                                             output_key_list=output_list)
-            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, input=True,
-                                                             input_key_list=input_list, output=True,
-                                                             output_key_list=output_list)
-            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, output=True,
-                                                             output_key_list=output_list, input=True,
-                                                             input_key_list=input_list)
-            parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2,output=True,
-                                                             output_key_list=output_list, input=True,
-                                                             input_key_list=input_list)
+        if erp:
+            counterstats = network_controller_obj.peek_erp_flex_stats(counter_num=counter_id)
+            fun_test.log("counterstat value : %s " % counterstats)
+            counter_value = int(counterstats['bank1']['pkts'])
+            fun_test.log("Counter %s value : %s" % (counter_id, counter_value))
         else:
-            parsed_psw_stats_1 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_1, input=True,
-                                                             input_key_list=input_list, output=True,
-                                                             output_key_list=output_list)
-            parsed_psw_stats_2 = get_psw_global_stats_values(psw_stats_output=psw_stats_hnu_2, input=True,
-                                                             input_key_list=input_list, output=True,
-                                                             output_key_list=output_list)
-            parsed_psw_stats_3 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_1, output=True,
-                                                             output_key_list=output_list, input=True,
-                                                             input_key_list=input_list)
-            parsed_psw_stats_4 = get_psw_global_stats_values(psw_stats_output=psw_stats_nu_2, output=True,
-                                                             output_key_list=output_list, input=True,
-                                                             input_key_list=input_list)
-
-        if parsed_psw_stats_3 and parsed_psw_stats_4:
-            # As epg output apeears towards ingress port type and input epg in at egress
-            # we need to take appropriate results
-            for key in output_list:
-                if "epg" in key:
-                    result["output"][key] = _get_psw_stat_diff_from_results(parsed_psw_stats_1, parsed_psw_stats_2,
-                                                                           stat_type="output", stat_name=key)
-                else:
-                    result["output"][key] = _get_psw_stat_diff_from_results(parsed_psw_stats_3, parsed_psw_stats_4,
-                                                                            stat_type="output", stat_name=key)
-
-            for key in input_list:
-                if "epg" in key:
-                    result["input"][key] = _get_psw_stat_diff_from_results(parsed_psw_stats_3, parsed_psw_stats_4,
-                                                                            stat_type="input", stat_name=key)
-                else:
-                    result["input"][key] = _get_psw_stat_diff_from_results(parsed_psw_stats_1, parsed_psw_stats_2,
-                                                                            stat_type="input", stat_name=key)
-
-        else:
-            for key in output_list:
-                new_val = parsed_psw_stats_2['output'][key]
-                old_val = parsed_psw_stats_1['output'][key]
-                if not new_val:
-                    new_val = 0
-                if not old_val:
-                    old_val = 0
-                result["output"][key] = int(new_val) - int(old_val)
-
-            for key in input_list:
-                new_val = int(parsed_psw_stats_2['input'][key])
-                old_val = int(parsed_psw_stats_1['input'][key])
-                if not new_val:
-                    new_val = 0
-                if not old_val:
-                    old_val = 0
-                result["input"][key] = int(new_val) - int(old_val)
-        fun_test.log("Counters diff is %s" % result)
+            counterstats = network_controller_obj.peek_fwd_flex_stats(counter_num=counter_id)
+            fun_test.log("counterstat value : %s " % counterstats)
+            counter_value = int(counterstats['bank2']['pkts'])
+            fun_test.log("Counter %s value : %s" % (counter_id, counter_value))
     except Exception as ex:
         fun_test.critical(str(ex))
-    return result
+    return counter_value
 
 
-def compare_spray_values(reference_value, actual_value, threshold_percent=10):
-    result = False
-    threshold_value = int((threshold_percent / 100.0) * reference_value)
-    lower_limit = reference_value - threshold_value
-    upper_limit = reference_value + threshold_value
-    if int(lower_limit) <= int(actual_value) <= (upper_limit):
-        result = True
-    return result
-
-
-def check_per_vp_pkt_spray(old_per_vppkt_output_dict, per_vppkt_output_dict, dut_ingress_frame_count, monitor_stats_list):
-    result = False
+def get_qos_stats(network_controller_obj, queue_no, dut_port, queue_type='pg_deq', hnu=False):
+    qos_val = 0
     try:
-        output = {}
-        ref_val = "ref_val"
-        total_pkts_sent = int(dut_ingress_frame_count)
-        fun_test.log("Total packets sent %s on ingress" % total_pkts_sent)
-        total_vps = len(per_vppkt_output_dict)
-        fun_test.log("Total vps present %s" % total_vps)
-        reference_value = int(total_pkts_sent / total_vps)
-        fun_test.log("Reference value calculated %s" % reference_value)
-        for key, val in per_vppkt_output_dict.iteritems():
-            vp_number = str(key.split(":")[1])
-            output[vp_number] = {}
-            fun_test.log("=========== Capturing stats for vp number %s ===========")
-            fun_test.log("Refference value is %s" % reference_value)
-            output[vp_number][ref_val] = reference_value
+        if queue_no<10:
+            queue_num = "0"+str(queue_no)
+        else:
+            queue_num=str(queue_no)
+        stats = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu, queue_num=queue_num)
+        fun_test.simple_assert(stats, "Ensure psw command is executed on port %s" % dut_port)
+        if stats:
+            qos_val = int(stats['count'][queue_type]['pkts'])
+        else:
+            qos_val = 0
 
-            for stat in monitor_stats_list:
-                if stat in val:
-                    total_count = int(val[stat])
-                    if stat in old_per_vppkt_output_dict[key]:
-                        total_count = int(val[stat]) - int(old_per_vppkt_output_dict[key][stat])
-                    output[vp_number][stat] = total_count
-                    fun_test.log("Value seen for %s is %s" % (stat, total_count))
-                else:
-                    fun_test.critical("Stat %s not seen in per vp pkts stats" % stat)
-
-        for key, val in output.iteritems():
-            fun_test.log("xxxxxxxxxxx Checks on vp number %s xxxxxxxxxx" % str(key))
-            for stat in monitor_stats_list:
-
-                fun_test.test_assert(compare_spray_values(output[key][ref_val], output[key][stat]),
-                                     "Check counter for %s. Expected value: %s Actual value %s for vp %s" %
-                                     (stat, reference_value, output[key][stat], key))
-        result = True
     except Exception as ex:
         fun_test.critical(str(ex))
-    return result
+    return qos_val
