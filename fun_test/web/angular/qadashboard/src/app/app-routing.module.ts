@@ -1,8 +1,8 @@
-import { NgModule }             from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import {NgModule} from '@angular/core';
+import {RouterModule, Routes} from '@angular/router';
 
-import { DashboardComponent }   from './dashboard/dashboard.component';
-import { PerformanceComponent } from "./performance/performance.component";
+import {DashboardComponent} from './dashboard/dashboard.component';
+import {PerformanceComponent} from "./performance/performance.component";
 import {TestComponent} from "./test/test.component";
 import {FunMetricChartComponent} from "./fun-metric-chart/fun-metric-chart.component";
 import {Demo1Component} from "./demo1/demo1.component";
@@ -15,7 +15,7 @@ import {TriageComponent} from "./triage/triage.component";
 import {ScriptHistoryComponent} from "./regression/script-history/script-history.component";
 
 const routes: Routes = [
-  { path: '', component: RegressionSummaryComponent},
+  { path: '', component: DashboardComponent},
   { path: 'upgrade', component: DashboardComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'performance', component: PerformanceComponent },
@@ -35,8 +35,9 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [ RouterModule.forRoot(routes) ],
-  exports: [ RouterModule ]
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
 })
-export class AppRoutingModule {}
+export class AppRoutingModule {
+}
 

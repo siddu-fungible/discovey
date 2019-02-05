@@ -1,8 +1,9 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnInit, ViewChild, TemplateRef} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
+import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'git-history',
@@ -34,8 +35,13 @@ export class TriageComponent implements OnInit {
   triageFlows: any = null;
   triageDetails: any = null;
   fault: string = null;
+  closeResult: string;
+  continueTriaging: boolean = true;
 
-  constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute, private commonService: CommonService) { }
+  @ViewChild("content") modalContent: TemplateRef<any>;
+
+  constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute,
+              private commonService: CommonService, private modalService: NgbModal) { }
 
   ngOnInit() {
     this.status = "Fetching Commits";
@@ -51,12 +57,39 @@ export class TriageComponent implements OnInit {
 
   }
 
+  showModal() {
+    this.modalService.open(this.modalContent, {ariaLabelledBy: 'modal-title'}).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+      if (result === "OK click") {
+        this.continueTriaging = true;
+      } else {
+        this.continueTriaging = false;
+      }
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+      if (reason === "Cross click") {
+        this.continueTriaging = true;
+      }
+    });
+  }
+
+  private getDismissReason(reason: any): string {
+    if (reason === ModalDismissReasons.ESC) {
+      return 'by pressing ESC';
+    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
+      return 'by clicking on a backdrop';
+    } else {
+      return  `with: ${reason}`;
+    }
+  }
+
   startTriaging(): void {
     let payload = {"metric_id": this.id,
         "commits": this.commits,
         "triage_info": this.triageInfo};
         this.apiService.post('/triage/insert_db', payload).subscribe(response => {
           this.startButton = false;
+          this.showTriaging();
           alert("submitted");
         }, error => {
           this.logger.error("Updating DB Failed");
@@ -76,6 +109,16 @@ export class TriageComponent implements OnInit {
       let result = data.data;
       this.triageFlows = result.flows;
       this.triageDetails = result.triage;
+      let detail = this.triageDetails[0];
+      for (let flow of this.triageFlows) {
+        if (flow.score < detail.last_good_score) {
+          if (this.modalContent && this.continueTriaging) {
+            this.showModal();
+            this.fault = flow.git_commit;
+            break;
+          }
+        }
+      }
       this.showTriagingStatus = true;
       this.status = null;
     }, error => {
@@ -151,5 +194,27 @@ export class TriageComponent implements OnInit {
       }
     }
     this.changedFiles = changedFiles;
+  }
+
+  resultToClass(result): string {
+    result = result.toUpperCase();
+    let klass = "default";
+    if (result === "FAILED") {
+      klass = "danger";
+    } else if (result === "COMPLETED") {
+      klass = "success";
+    } else if (result === "ACTIVE") {
+      klass = "warning";
+    }
+    return klass;
+  }
+
+  testEntry(): void {
+    let payload = {"metric_id": this.id};
+    this.apiService.post('/triage/test', payload).subscribe((data) => {
+      let result = data.data;
+    }, error => {
+      this.logger.error("Testing entry Failed");
+    });
   }
 }

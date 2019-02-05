@@ -32,8 +32,10 @@ class MetricsGlobalSettingsSerializer(ModelSerializer):
 
 class SchedulingStates:
     ACTIVE = "ACTIVE"
-    SUCCCESS = "SUCCESS"
+    COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    SUCCESS = "SUCCESS"
+    SUSPENDED = "SUSPENDED"
 
 class MetricChartStatus(models.Model):
     metric_id = models.IntegerField(default=-1)
@@ -78,6 +80,7 @@ class Triage(models.Model):
     stable_build_properties = models.TextField(default="")
     last_good_score = models.FloatField(default=-1)
     status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
+    max_tries = models.IntegerField(default=-1)
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.last_good_score)
@@ -87,6 +90,7 @@ class TriageFlow(models.Model):
     metric_id = models.IntegerField(default=-1)
     metric_type = models.CharField(max_length=15, default=METRIC_TYPE["SCORES"])
     triage_id = models.IntegerField(default=-1)
+    triage_flow_id = models.IntegerField(default=-1, unique=True)
     date_time = models.DateTimeField(default=datetime.now)
     score = models.FloatField(default=-1)
     suite_execution_id = models.IntegerField(default=-1)
@@ -629,6 +633,18 @@ class LastTriageId(models.Model):
         if not LastTriageId.objects.count():
             LastTriageId().save()
         last = LastTriageId.objects.all().last()
+        last.last_id = last.last_id + 1
+        last.save()
+        return last.last_id
+
+class LastTriageFlowId(models.Model):
+    last_id = models.IntegerField(unique=True, default=100)
+
+    @staticmethod
+    def get_next_id():
+        if not LastTriageFlowId.objects.count():
+            LastTriageFlowId().save()
+        last = LastTriageFlowId.objects.all().last()
         last.last_id = last.last_id + 1
         last.save()
         return last.last_id

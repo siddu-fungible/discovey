@@ -160,8 +160,8 @@ upgrade_urls = [
 
 triage_urls = [
     url(r'^insert_db$', triaging.insert_triage_db),
-    url(r'^fetch_flows$', triaging.fetch_triage_flow)
-
+    url(r'^fetch_flows$', triaging.fetch_triage_flow),
+    url(r'^test$', triaging.update_triage)
 ]
 
 demo_urls = [

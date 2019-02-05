@@ -31,6 +31,14 @@ class Funeth:
         output = self.linux_obj_dict['hu'].command('lspci -d 1dad:')
         return re.search(r'Ethernet controller: (?:Device 1dad:1000|Fungible Device 1000)', output) is not None
 
+    def setup_workspace(self):
+        """Set env WORKSPACE, which is used in fungible-host-driver compilation."""
+        self.linux_obj_dict['hu'].command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % self.ws)
+
+    def cleanup_workspace(self):
+        """Restore old WORKSPACE if exists."""
+        self.linux_obj_dict['hu'].command('export WORKSPACE=$WSTMP')
+
     def update_src(self):
         """Update driver source."""
 
