@@ -343,17 +343,36 @@ class NuConfigManager(object):
         try:
             job_environment = fun_test.get_job_environment()
             job_inputs = fun_test.get_job_inputs()
-            if job_environment and "dut_type" in job_environment:
-                pass
-                # TODO: get dut_type from Jenkins Job enviroment
+            if job_environment and ("EMULATION_TARGET" in job_environment or "RUN_TARGET" in job_environment):
+                if job_environment['EMULATION_TARGET'] == self.DUT_TYPE_PALLADIUM:
+                    self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
+                elif job_environment['RUN_TARGET'] == self.DUT_TYPE_F1.upper():
+                    self.DUT_TYPE = self.DUT_TYPE_F1
             else:
-                if job_inputs and "dut_type" in job_inputs:
-                    self.DUT_TYPE = job_inputs['dut_type']
+                if job_inputs and "speed" in job_inputs:
+                    if job_inputs['speed'] == "SPEED_1G":
+                        self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
+                    elif job_inputs['speed'] == "SPEED_25G" or job_inputs['speed'] == "SPEED_100G":
+                        self.DUT_TYPE = self.DUT_TYPE_F1
                 else:
                     self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
         except Exception as ex:
             fun_test.critical(str(ex))
         return self.DUT_TYPE
+
+    def read_test_configs_by_dut_type(self, config_file):
+        result = None
+        try:
+            all_configs = self._parse_file_to_json_in_order(file_name=config_file)
+            fun_test.simple_assert(all_configs, "Read all Configs")
+            for config in all_configs:
+                if config['dut_type'] == self.DUT_TYPE:
+                    fun_test.log("Test Config Fetched: %s" % config)
+                    result = config
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
 
 nu_config_obj = NuConfigManager()
