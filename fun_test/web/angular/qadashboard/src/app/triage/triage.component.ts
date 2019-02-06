@@ -140,7 +140,7 @@ export class TriageComponent implements OnInit {
   }
 
   stopTriaging(): void {
-    this.continueTriaging = !this.continueTriaging;
+    this.continueTriaging = false;
     if (!this.continueTriaging) {
       let git_commit = "";
       let statusFlag = false;
@@ -193,7 +193,7 @@ export class TriageComponent implements OnInit {
       let currentDate = new Date();
       let diff = currentDate.getTime() - new Date(detail.date_time).getTime();
       let time_elapsed = diff / 60000;
-      this.timePercentage = Math.round(time_elapsed) + " / 90 (Max timeout in mins)";
+      this.timePercentage = Math.round(time_elapsed) + " min / 90 min (Max)";
       // if (this.modalContent && this.continueTriaging && git_commit !== "") {
       //   this.showModal(git_commit);
       // }
@@ -314,5 +314,9 @@ export class TriageComponent implements OnInit {
     }, error => {
       this.logger.error("Testing entry Failed");
     });
+  }
+
+  moreTriaging(): void {
+    this.continueTriaging = true;
   }
 }

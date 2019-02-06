@@ -68,20 +68,6 @@
           </div>
         </div>
       </div>
-      <div *ngIf="showChanged" class="col">
-        <div class="card card-primary" style="margin: 4px;">
-          <div class="card-header min-padding"><b>Files changed:</b></div>
-          <div class="card-body min-padding">
-            <div class="min-padding">
-              <p *ngIf="!totalShow"><b>Git commit:</b> {{ gitCommit }}<br>
-                <b>User:</b> {{ gitUser }}</p>
-              <p class="no-margin" *ngFor="let fileNames of changedFiles">
-                {{ fileNames }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
       <div *ngIf="showTriagingStatus" class="col">
         <button type="button" class="btn btn-outline-dark back-button" (click)="goBack()">Back</button>
         <button type="button" class="btn btn-outline-dark back-button" (click)="refreshStatus()">Refresh <i
@@ -153,10 +139,12 @@
                 </tr>
               </table>
               <div *ngIf="continueTriaging">Do you want to continue triaging?
-              <button type="button" class="btn btn-outline-success no-padding" (click)="stopTriaging()">Yes</button>&nbsp;
-              <button type="button" class="btn btn-outline-danger no-padding" (click)="stopTriaging()">No</button></div>
-              <div *ngIf="!continueTriaging">
-                Potential faulty Commit: <a [routerLink]="" (click)="openFaultyCommitDetails(fault)" style="color: red">{{ fault }}</a>
+              <button type="button" class="btn btn-sm btn-outline-success" (click)="moreTriaging()">Yes</button>&nbsp;
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="stopTriaging()">No</button></div>
+              <div *ngIf="!continueTriaging" style="font-weight: 900">
+                <span class="text-color-green">Triaging complete</span><br>
+                Potential faulty Commit: <a [routerLink]="" (click)="openFaultyCommitDetails(fault)" class="text-color-red">{{ fault }}</a><br>
+                <br>
               </div>
               <ng-template #content let-c="close('Close click')" let-d="dismiss('Cross click')" let-o="close('OK click')">
                 <div class="modal-header">
@@ -222,7 +210,8 @@
                     NA
                   </td>
                 </tr>
-                <tr class="no-margin" *ngFor="let commit of triageFlows">
+                <ng-container *ngFor="let commit of triageFlows">
+                  <tr [ngClass]="{'grey-highlight': commit.status === 'SUSPENDED'}" class="no-margin">
                   <td class="table-padding align">
                     {{ commit.flow_id }}
                   </td>
@@ -253,6 +242,7 @@
                     </div>
                   </td>
                 </tr>
+                </ng-container>
                 <tr class="no-margin">
                   <td class="table-padding align">
                     NA
@@ -278,6 +268,20 @@
                 </tr>
               </table>
               <button *ngIf="continueTriaging" type="button" (click)="testEntry()">Test</button>
+            </div>
+          </div>
+        </div>
+      </div>
+       <div *ngIf="showChanged" class="col">
+        <div class="card card-primary" style="margin: 4px;">
+          <div class="card-header min-padding"><b>Files changed:</b></div>
+          <div class="card-body min-padding">
+            <div class="min-padding">
+              <p *ngIf="!totalShow"><b>Git commit:</b> {{ gitCommit }}<br>
+                <b>User:</b> {{ gitUser }}</p>
+              <p class="no-margin" *ngFor="let fileNames of changedFiles">
+                {{ fileNames }}
+              </p>
             </div>
           </div>
         </div>

@@ -10,6 +10,11 @@ from web.fun_test.metrics_models import MetricChart, MetricChartStatus, TriageFl
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import SchedulingStates
 
+pick_values = {0: 78.5,
+               1: 75.4,
+               2: 74.3,
+               3: 72.1,
+               4: 70}
 
 @csrf_exempt
 @api_safe_json_response
@@ -23,16 +28,17 @@ def update_triage_flow(request):
         triage_details = triage[0]
         last_good_score = triage_details.last_good_score
         if len(entries):
-            update_mid(entries, 0, len(entries) - 1, last_good_score)
+            update_mid(entries, 0, len(entries) - 1, last_good_score, 0)
             print "updated"
 
 
-def update_mid(entries, l, r, last_good_score):
+def update_mid(entries, l, r, last_good_score, id):
     if r >= l:
         mid = l + (r - l) / 2
         entry = entries[mid]
         if entry.score == -1:
-            entry.score = round(random.uniform(70, 80), 2)
+            # entry.score = round(random.uniform(70, 80), 2)
+            entry.score = pick_values[id]
             entry.status = SchedulingStates.COMPLETED
             entry.suite_execution_id = 1234
             entry.jenkins_job_id = 4444
@@ -42,9 +48,9 @@ def update_mid(entries, l, r, last_good_score):
             suspend_flows(entry, entries, last_good_score, mid, l, r)
         else:
             if entry.score >= last_good_score:
-                update_mid(entries, l, mid - 1, last_good_score)
+                update_mid(entries, l, mid - 1, last_good_score, id + 1)
             if entry.score < last_good_score:
-                update_mid(entries, mid + 1, r, last_good_score)
+                update_mid(entries, mid + 1, r, last_good_score, id + 1)
 
 def suspend_flows(entry, entries, last_good_score, mid, l, r):
     if entry.score >= last_good_score:
@@ -81,6 +87,8 @@ def fetch_triage_flow(request):
             commit_detail["metric_type"] = triage_details.metric_type if triage_details.metric_type else None
             commit_detail[
                 "last_good_score"] = triage_details.last_good_score if triage_details.last_good_score else None
+            commit_detail[
+                "degraded_score"] = triage_details.last_good_score if triage_details.last_good_score else None
             commit_detail["status"] = triage_details.status if triage_details.status else None
             commit_detail["max_tries"] = triage_details.max_tries if triage_details.max_tries else None
             commit_detail["faulty_commit"] = triage_details.faulty_commit if triage_details.faulty_commit else None
