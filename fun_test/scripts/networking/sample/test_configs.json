@@ -9,6 +9,7 @@
     "load": 100,
     "insert_signature": true,
     "fill_type": "PRBS",
+    "soc_clk_in_khz": 256,
     "frame_length_mode": "RANDOM"
   },
   {
@@ -21,6 +22,7 @@
     "load": 100,
     "insert_signature": true,
     "fill_type": "PRBS",
+    "soc_clk_in_khz": 1000000,
     "frame_length_mode": "RANDOM"
   }
 ]

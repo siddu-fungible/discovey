@@ -947,12 +947,14 @@ class SamplePPStoFPG(FunTestCase):
 
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
+        pps_tick = test_config['soc_clk_in_khz']
 
         checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d with pps_burst as 1 " \
                      "and pps_interval as 10000 and pps_tick as 256 " % (dut_rx_port, dut_sample_port)
         result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
                                                                 fpg=dut_rx_port, dest=dut_sample_port,
-                                                                pps_burst=1, pps_interval=10000, pps_en=1, pps_tick=256)
+                                                                pps_burst=1, pps_interval=10000, pps_en=1,
+                                                                pps_tick=pps_tick)
         fun_test.test_assert(result['status'], checkpoint)
 
         generator_config.Duration = 60
@@ -1102,9 +1104,12 @@ class SamplePPStoFPG(FunTestCase):
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
 
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        pps_tick = test_config['soc_clk_in_khz']
+
         checkpoint = "Delete sample rule for id: %d" % self.sample_id
         network_controller_obj.disable_sample_rule(id=self.sample_id, fpg=dut_rx_port, dest=dut_sample_port,
-                                                   pps_burst=0, pps_interval=10000, pps_en=0, pps_tick=256)
+                                                   pps_burst=0, pps_interval=10000, pps_en=0, pps_tick=pps_tick)
         fun_test.add_checkpoint(checkpoint)
 
         generator_config.Duration = TRAFFIC_DURATION
