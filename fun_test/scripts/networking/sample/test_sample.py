@@ -211,11 +211,14 @@ class SampleIngressFPGtoFPG(FunTestCase):
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
 
+        # TODO: Need to figure out better approach to determine if dut port is FPG or HNU
         checkpoint = "Clear FPG port stats on DUT"
         for port_num in dut_config['ports']:
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -397,13 +400,17 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
 
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
+
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
-                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
-                                      min_frame_length=78, max_frame_length=1500)
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
+                                      frame_length_mode=test_config['frame_length_mode'],
+                                      min_frame_length=test_config['min_frame_size'],
+                                      max_frame_length=test_config['max_frame_size'])
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
@@ -452,6 +459,8 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -640,11 +649,14 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
 
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
+
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
                                       frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_FIXED,
                                       fixed_frame_length=500)
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
@@ -695,6 +707,8 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -893,13 +907,16 @@ class SamplePPStoFPG(FunTestCase):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
 
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
+
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
                                       frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_FIXED,
-                                      fixed_frame_length=128)
+                                      fixed_frame_length=test_config['fixed_frame_size'])
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
@@ -956,6 +973,8 @@ class SamplePPStoFPG(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -1144,13 +1163,17 @@ class SampleEgressFPGtoFPG(FunTestCase):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
 
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
+
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
-                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
-                                      min_frame_length=78, max_frame_length=1500)
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
+                                      frame_length_mode=test_config['frame_length_mode'],
+                                      min_frame_length=test_config['min_frame_size'],
+                                      max_frame_length=test_config['max_frame_size'])
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
@@ -1205,6 +1228,8 @@ class SampleEgressFPGtoFPG(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -1448,6 +1473,8 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -1577,6 +1604,8 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -1722,11 +1751,9 @@ if __name__ == '__main__':
     ts = SpirentSetup()
 
     ts.add_test_case(SampleIngressFPGtoFPG())
-    '''
     ts.add_test_case(SampleIngressFPGtoFPGWithRate())
     ts.add_test_case(SampleFCOIngressFPGtoFPG())
     ts.add_test_case(SamplePPStoFPG())
     ts.add_test_case(SampleEgressFPGtoFPG())
     ts.add_test_case(SampleIngressFPGtoFPGDisable())
-    '''
     ts.run()
