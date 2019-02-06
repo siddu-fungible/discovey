@@ -749,6 +749,7 @@ def ensure_dpcsh_ready(network_controller_obj, max_time=180):
         fun_test.critical(str(ex))
     return status
 
+
 def get_flex_counter_values(network_controller_obj, counter_id, erp=False):
     counter_value = 0
     try:
