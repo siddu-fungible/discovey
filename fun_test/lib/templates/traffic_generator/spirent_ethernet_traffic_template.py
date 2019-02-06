@@ -125,18 +125,19 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
     def _ensure_fec_disabled(self, port_list):
         result = False
         try:
-            for port_handle in port_list:
-                handle = self.stc_manager.get_activephy_targets_under_port(port_handle=port_handle)
-                fec_status = self.stc_manager.get_fec_status(handle=handle)
-                if fec_status == 'true':
-                    fun_test.log("Disabling FEC on %s" % handle)
-                    status_updated = self.stc_manager.update_physical_interface(
-                        interface_handle=handle, update_attributes={"ForwardErrorCorrection": False})
-                    fun_test.simple_assert(status_updated, "Ensure Interface config updated")
+            if self.chassis_type == SpirentManager.PHYSICAL_CHASSIS_TYPE:
+                for port_handle in port_list:
                     handle = self.stc_manager.get_activephy_targets_under_port(port_handle=port_handle)
                     fec_status = self.stc_manager.get_fec_status(handle=handle)
-                    fun_test.simple_assert(fec_status == 'false', "Ensure FEC disable for %s under %s" % (handle,
-                                                                                                          port_handle))
+                    if fec_status == 'true':
+                        fun_test.log("Disabling FEC on %s" % handle)
+                        status_updated = self.stc_manager.update_physical_interface(
+                            interface_handle=handle, update_attributes={"ForwardErrorCorrection": False})
+                        fun_test.simple_assert(status_updated, "Ensure Interface config updated")
+                        handle = self.stc_manager.get_activephy_targets_under_port(port_handle=port_handle)
+                        fec_status = self.stc_manager.get_fec_status(handle=handle)
+                        fun_test.simple_assert(fec_status == 'false', "Ensure FEC disable for %s under %s" % (
+                            handle, port_handle))
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1482,7 +1483,6 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     port_handle))
                 fun_test.log("Chassis Type: %s FEC Status: %s Interface: %s Port: %s" % (
                     self.chassis_type, self.stc_manager.get_fec_status(handle=handle), handle, port_handle))
-                result['interface_obj_list'][count].spirent_handle = handle
                 count += 1
             result['result'] = True
         except Exception as ex:
