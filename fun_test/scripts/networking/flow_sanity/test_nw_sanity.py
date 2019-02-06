@@ -1608,7 +1608,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
         flow_type = NuConfigManager.VP_FLOW_TYPE
         self.fps = 50
 
-        self.configure_cadence_pcs_for_fcp()
+        # self.configure_cadence_pcs_for_fcp()
         self.configure_ports()
         self.detach_ports = False
 
@@ -1719,8 +1719,7 @@ if __name__ == "__main__":
     ts.add_test_case(VPPathIPv4TCPNFCP())
 
     # VP HNU --> HNU (FCP) Flow
-    # TODO: Enable FCP test after we did some changes in master nutest for FCP to work
-    # ts.add_test_case(VPPathIPv4TCPFCP())
+    ts.add_test_case(VPPathIPv4TCPFCP())
 
     # VP HNU --> NU Flow
     ts.add_test_case(VpPathIpv4HnuNu())
