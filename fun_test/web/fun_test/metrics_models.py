@@ -81,6 +81,7 @@ class Triage(models.Model):
     last_good_score = models.FloatField(default=-1)
     status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
     max_tries = models.IntegerField(default=-1)
+    faulty_commit = models.TextField(default="")
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.last_good_score)

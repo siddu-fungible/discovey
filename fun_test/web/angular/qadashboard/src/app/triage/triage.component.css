@@ -1,5 +1,5 @@
 .table-padding {
-  padding: 2px;
+  padding: 2px !important;
 }
 .align {
   vertical-align: middle;

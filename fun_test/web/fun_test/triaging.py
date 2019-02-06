@@ -13,7 +13,7 @@ from web.fun_test.metrics_models import SchedulingStates
 
 @csrf_exempt
 @api_safe_json_response
-def update_triage(request):
+def update_triage_flow(request):
     request_json = json.loads(request.body)
     metric_id = request_json["metric_id"]
     entries = TriageFlow.objects.filter(metric_id=metric_id).order_by("-date_time")
@@ -25,21 +25,6 @@ def update_triage(request):
         if len(entries):
             update_mid(entries, 0, len(entries) - 1, last_good_score)
             print "updated"
-            # for entry in entries:
-            #     if pick:
-            #         entry.score = round(random.uniform(70,80), 2)
-            #         entry.status = SchedulingStates.COMPLETED
-            #         entry.suite_execution_id = 1234
-            #         entry.jenkins_job_id = 4444
-            #         entry.lsf_job_id = 12345
-            #         entry.date_time = entry.date_time
-            #         entry.save()
-            #     pick = not pick
-    #     if triage_details:
-    #         if entry.score < triage_details.last_good_score:
-    #             fault = entry.git_commit
-    #             return fault
-    # return 0
 
 
 def update_mid(entries, l, r, last_good_score):
@@ -54,25 +39,29 @@ def update_mid(entries, l, r, last_good_score):
             entry.lsf_job_id = 12345
             entry.date_time = entry.date_time
             entry.save()
+            suspend_flows(entry, entries, last_good_score, mid, l, r)
         else:
             if entry.score >= last_good_score:
-                index = mid + 1
-                while index <= r:
-                    updating_entry = entries[index]
-                    if updating_entry.status == SchedulingStates.ACTIVE:
-                        updating_entry.status = SchedulingStates.SUSPENDED
-                        updating_entry.save()
-                    index = index + 1
-                update_mid(entries, l, mid - 1, entry.score)
+                update_mid(entries, l, mid - 1, last_good_score)
             if entry.score < last_good_score:
-                while l < mid:
-                    updating_entry = entries[l]
-                    if updating_entry.status == SchedulingStates.ACTIVE:
-                        updating_entry.status = SchedulingStates.SUSPENDED
-                        updating_entry.save()
-                    l = l + 1
-                update_mid(entries, mid + 1, r, entry.score)
+                update_mid(entries, mid + 1, r, last_good_score)
 
+def suspend_flows(entry, entries, last_good_score, mid, l, r):
+    if entry.score >= last_good_score:
+        index = mid + 1
+        while index <= r:
+            updating_entry = entries[index]
+            if updating_entry.status == SchedulingStates.ACTIVE:
+                updating_entry.status = SchedulingStates.SUSPENDED
+                updating_entry.save()
+            index = index + 1
+    if entry.score < last_good_score:
+        while l < mid:
+            updating_entry = entries[l]
+            if updating_entry.status == SchedulingStates.ACTIVE:
+                updating_entry.status = SchedulingStates.SUSPENDED
+                updating_entry.save()
+            l = l + 1
 
 @csrf_exempt
 @api_safe_json_response
@@ -94,6 +83,8 @@ def fetch_triage_flow(request):
                 "last_good_score"] = triage_details.last_good_score if triage_details.last_good_score else None
             commit_detail["status"] = triage_details.status if triage_details.status else None
             commit_detail["max_tries"] = triage_details.max_tries if triage_details.max_tries else None
+            commit_detail["faulty_commit"] = triage_details.faulty_commit if triage_details.faulty_commit else None
+            commit_detail["date_time"] = triage_details.date_time if triage_details.date_time else None
             result["triage"].append(commit_detail)
         entries = TriageFlow.objects.filter(metric_id=metric_id).order_by("-date_time")
         if len(entries):
@@ -147,7 +138,7 @@ def insert_triage_db(request):
                         degraded_git_commit=degraded_git_commit, degraded_build_properties=degraded_build_properties,
                         stable_suite_execution_id=passed_suite_id, stable_jenkins_job_id=passed_jenkins_job_id,
                         stable_lsf_job_id=passed_lsf_job_id, stable_git_commit=passed_git_commit,
-                        stable_build_properties=passed_build_properties, last_good_score=passed_score)
+                        stable_build_properties=passed_build_properties, last_good_score=passed_score, max_tries=5)
         triage.save()
         for commit in commits[1:-1]:
             triage_flow = TriageFlow(metric_id=metric_id, triage_id=triage_id,
@@ -157,8 +148,35 @@ def insert_triage_db(request):
             triage_flow.save()
     return 1
 
+@csrf_exempt
+@api_safe_json_response
+def update_triage(request):
+    request_json = json.loads(request.body)
+    metric_id = request_json["metric_id"]
+    faulty_commit = request_json["faulty_commit"]
+    result = {}
+    triage = Triage.objects.filter(metric_id=metric_id)
+    if len(triage):
+        triage_details = triage[0]
+        triage_details.status = SchedulingStates.SUCCESS
+        triage_details.faulty_commit = faulty_commit
+        triage_details.save()
+        result["faulty_commit"] = triage_details.faulty_commit
+        result["status"] = triage_details.status
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def check_triage(request):
+    request_json = json.loads(request.body)
+    metric_id = request_json["metric_id"]
+    triage = Triage.objects.filter(metric_id=metric_id)
+    if len(triage):
+        return True
+    return False
+
 
 if __name__ == "__main__":
     metric_id = 157
-    update_triage(metric_id=metric_id)
+    update_triage_flow(metric_id=metric_id)
     print "completed"

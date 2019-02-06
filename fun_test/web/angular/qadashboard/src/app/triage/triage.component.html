@@ -91,7 +91,7 @@
           <div class="card-header min-padding"><b>Triaging status:</b></div>
           <div class="card-body min-padding">
             <div class="min-padding">
-              <table class="table table-bordered" style="width: 75%">
+              <table class="table table-bordered" style="width: 65%">
                 <tr>
                   <th class="align header-padding" style="width: 7%;">
                     Triage id
@@ -108,11 +108,11 @@
                   <th class="align header-padding" style="width: 10%;">
                     Status
                   </th>
-                  <th class="align header-padding" style="width: 15%;">
-                    Faulty commit
+                  <th class="align header-padding" style="width: 5%;">
+                    Trials
                   </th>
                   <th class="align header-padding" style="width: 20%;">
-                    Progress
+                    Time elapsed
                   </th>
                 </tr>
                 <tr *ngFor="let id of triageDetails">
@@ -129,21 +129,53 @@
                     {{ id.last_good_score }}
                   </td>
                   <td class="align">
-                    {{ id.status }}
+                    <span [ngClass]="{'table-danger': triageStatus === 'FAILED'}">
+                      <span [ngClass]="'text-'+
+                          resultToClass(triageStatus)">{{ triageStatus }}</span>
+                    </span>
                   </td>
                   <td class="align">
-                    <span *ngIf="fault != null">{{ fault }}</span>
+                    {{ maxTries }}
                   </td>
                   <td class="align">
-                    <div *ngIf="fault === null" class="progress">
-                      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
-                           aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+                    <!--<span [ngClass]="{'table-danger': triageStatus === 'FAILED'}">-->
+                      <!--<span [ngClass]="'text-'+-->
+                          <!--resultToClass(triageStatus)">{{ triageStatus }}</span>-->
+                    <!--</span>-->
+                    <span>
+                      {{ timePercentage }}
+                    </span>
+                    <div class="progress">
+                      <div id="dynamic-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                          aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%;"></div>
                     </div>
                   </td>
                 </tr>
               </table>
-              <p><b>Total flows:</b></p>
-              <table class="table table-bordered" style="width: 90%">
+              <div *ngIf="continueTriaging">Do you want to continue triaging?
+              <button type="button" class="btn btn-outline-success no-padding" (click)="stopTriaging()">Yes</button>&nbsp;
+              <button type="button" class="btn btn-outline-danger no-padding" (click)="stopTriaging()">No</button></div>
+              <div *ngIf="!continueTriaging">
+                Potential faulty Commit: <a [routerLink]="" (click)="openFaultyCommitDetails(fault)" style="color: red">{{ fault }}</a>
+              </div>
+              <ng-template #content let-c="close('Close click')" let-d="dismiss('Cross click')" let-o="close('OK click')">
+                <div class="modal-header">
+                  <h4 class="modal-title">Triaging done</h4>
+                  <button type="button" class="close" aria-label="Close" (click)="d">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>A potential commit with degrade is found.<br>
+                    <b>Do you want to continue triaging?</b></p>
+                </div>
+                <div class="modal-footer" style="align-items: center;">
+                  <button type="button" class="btn btn-danger" (click)="o">Yes</button>
+                  <button type="button" ngbAutofocus class="btn btn-outline-secondary" (click)="c">No</button>
+                </div>
+              </ng-template>
+              <p><b>All flows:</b></p>
+              <table class="table table-bordered" style="width: 80%">
                 <tr>
                   <th class="align" style="width: 7%;">
                     Flow id
@@ -161,13 +193,10 @@
                     Lsf #
                   </th>
                   <th class="align" style="width: 10%;">
-                    Status
-                  </th>
-                  <th class="align" style="width: 10%;">
                     Score
                   </th>
                   <th class="align" style="width: 20%;">
-                    Progress
+                    Status
                   </th>
                 </tr>
                 <tr class="no-margin">
@@ -192,15 +221,12 @@
                   <td class="table-padding align">
                     NA
                   </td>
-                  <td class="table-padding align">
-                    NA
-                  </td>
                 </tr>
                 <tr class="no-margin" *ngFor="let commit of triageFlows">
                   <td class="table-padding align">
                     {{ commit.flow_id }}
                   </td>
-                  <td class="table-padding">
+                  <td class="table-padding" style="vertical-align: middle">
                     {{ commit.git_commit }}
                   </td>
                   <td class="table-padding align">
@@ -213,15 +239,13 @@
                     <span *ngIf="commit.lsf !== -1">{{ commit.lsf }}</span>
                   </td>
                   <td class="table-padding align">
+                    <span *ngIf="commit.score != -1">{{ commit.score }}</span>
+                  </td>
+                  <td class="table-padding align">
                     <span [ngClass]="{'table-danger': commit.status === 'FAILED'}">
                       <span [ngClass]="'text-'+
                           resultToClass(commit.status)">{{ commit.status }}</span>
                     </span>
-                  </td>
-                  <td class="table-padding align">
-                    <span *ngIf="commit.score != -1">{{ commit.score }}</span>
-                  </td>
-                  <td>
                     <div *ngIf="(commit.status !== 'SUSPENDED' || commit.status === 'FAILED') && commit.score === -1"
                          class="progress">
                       <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
@@ -251,32 +275,9 @@
                   <td class="table-padding align">
                     NA
                   </td>
-                  <td class="table-padding align">
-                    NA
-                  </td>
                 </tr>
               </table>
               <button *ngIf="continueTriaging" type="button" (click)="testEntry()">Test</button>
-              <ng-template #content let-c="close('Close click')" let-d="dismiss('Cross click')" let-o="close('OK click')">
-                <div class="modal-header">
-                  <h4 class="modal-title">Triaging done</h4>
-                  <button type="button" class="close" aria-label="Close" (click)="d">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <p>A potential commit with degrade is found.<br>
-                    <b>Do you want to continue triaging?</b></p>
-                </div>
-                <div class="modal-footer" style="align-items: center;">
-                  <button type="button" class="btn btn-danger" (click)="o">Yes</button>
-                  <button type="button" ngbAutofocus class="btn btn-outline-secondary" (click)="c">No</button>
-                </div>
-              </ng-template>
-
-              <hr>
-
-              <pre>{{closeResult}}</pre>
             </div>
           </div>
         </div>
