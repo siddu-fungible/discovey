@@ -29,7 +29,7 @@ class FunethPerformance(FunTestScript):
 
         # NU host
         linux_obj = funeth_obj.linux_obj_dict['nu']
-        linux_obj.command('sudo ptp4l -i %s -2 &' % funeth_obj.get_mgmt_interface('nu'))
+        linux_obj.command('sudo ptp4l -i %s -2 &' % funeth_obj.tb_config_obj.get_mgmt_interface('nu'))
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
@@ -44,7 +44,7 @@ class FunethPerformance(FunTestScript):
 
         # HU_HOST
         linux_obj = funeth_obj.linux_obj_dict['hu']
-        linux_obj.command('sudo ptp4l -i %s -2 &' % funeth_obj.get_mgmt_interface('hu'))
+        linux_obj.command('sudo ptp4l -i %s -2 &' % funeth_obj.tb_config_obj.get_mgmt_interface('hu'))
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
@@ -59,15 +59,15 @@ class FunethPerformance(FunTestScript):
 
         # From NU host, do pscheduler ping HU host to make sure it's alive
         fun_test.sleep('Sleep for a while to wait for ptp sync and pscheduler fully up', 10)
-        ip_addr = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', self.pf_intf)
+        ip_addr = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
         output = fun_test.shared_variables['nu_linux_obj'].command(
             '%s pscheduler ping %s' % (fun_test.shared_variables['nu_cmd_prefix'], ip_addr))
         fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "NU pscheduler ping HU")
         fun_test.shared_variables['hu_ip_addr'] = ip_addr
 
         # From HU host, do pscheduler ping NU host to make sure it's alive
-        intf = funeth_obj.get_a_nu_interface()
-        ip_addr = funeth_obj.get_interface_ipv4_addr('nu', intf)
+        intf = funeth_obj.tb_config_obj.get_a_nu_interface()
+        ip_addr = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', intf)
         output = fun_test.shared_variables['hu_linux_obj'].command(
             '%s pscheduler ping %s' % (fun_test.shared_variables['hu_cmd_prefix'], ip_addr))
         fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "HU pscheduler ping NU")

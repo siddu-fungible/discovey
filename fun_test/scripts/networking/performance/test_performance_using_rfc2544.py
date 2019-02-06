@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_rfc2544_template import *
 from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
+from scripts.networking.helper import *
 
 
 network_controller_obj = None
@@ -62,6 +63,9 @@ class ScriptSetup(FunTestScript):
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
+
+        fun_test.simple_assert(ensure_dpcsh_ready(network_controller_obj=network_controller_obj),
+                               "Ensure DPCsh ready to process commands")
 
         checkpoint = "Configure QoS settings"
         enable_pfc = network_controller_obj.enable_qos_pfc()
@@ -297,5 +301,4 @@ if __name__ == '__main__':
     # FCP cases
     ts.add_test_case(TestHnuHnuFcpPerformance())
     ts.add_test_case(TestHnuHnuFcpPerformanceSingleFlow())
-
     ts.run()

@@ -43,7 +43,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
     def __init__(self, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         TrafficGeneratorTemplate.__init__(self)
         if not chassis_type:
-            self.chassis_type = SpirentManager.PHYSICAL_CHASSIS_TYPE
+            self.chassis_type = SpirentManager.VIRTUAL_CHASSIS_TYPE
         else:
             self.chassis_type = chassis_type
         self.spirent_config = spirent_config

@@ -43,10 +43,10 @@ class FunControlPlane:
         else:
             return 'error'
 
-    def send_traffic(self, test, server='nu', timeout=60):
+    def send_traffic(self, test, server, dpc_proxy_ip, dpc_proxy_port, timeout=60):
         """Run the given test by sending traffic."""
-        return self.linux_obj.command('%s/send_traffic %s %s' % (self.palladium_test_path, server, test),
-                                      timeout=timeout)
+        return self.linux_obj.command('%s/send_traffic %s -dpc_proxy_ip %s -dpc_proxy_port %s %s' % (
+            self.palladium_test_path, server, dpc_proxy_ip, dpc_proxy_port, test), timeout=timeout)
 
     def cleanup(self):
         """Remove worksapce."""
