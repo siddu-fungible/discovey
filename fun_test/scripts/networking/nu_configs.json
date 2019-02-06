@@ -2,11 +2,16 @@
   {
     "name": "palladium_configs",
     "type": "palladium",
-    "ports": [6, 7, 5],
-    "hnu_ports": [10],
     "dpcsh_tcp_proxy_ip": "10.1.21.120",
     "dpcsh_tcp_proxy_port": 40221,
     "interface_mode": "25G",
+    "enable_dpcsh": true
+  },
+  {
+    "name": "f1_configs",
+    "type": "f1",
+    "dpcsh_tcp_proxy_ip": "10.1.40.21",
+    "dpcsh_tcp_proxy_port": 40221,
     "enable_dpcsh": true
   },
   {
@@ -14,91 +19,53 @@
     "type": "spirent_traffic_generator",
     "connect_via_lab_server": false,
     "virtual": {
-        "slot_no": 1,
-        "ports": [1, 2],
-        "hnu_ports": [3],
-        "interface_type": "EthernetCopper"
-    },
-    "physical": {
-        "slot_no": 2,
-        "ports": [1, 2, 4],
-        "hnu_ports": [3],
-        "interface_type": "Ethernet10GigFiber"
-    },
-    "l3_config": {
+      "routermac": "00:DE:AD:BE:EF:00",
+      "routes": {
         "ipv4": {
-          "source_ip1": "206.1.1.2",
-          "source_ip2": "192.85.1.2",
           "destination_ip1": "50.0.1.1",
           "destination_ip2": "75.0.0.5",
           "destination_ip3": "75.0.0.3",
           "destination_ip4": "75.0.0.2",
-          "gateway": "192.85.1.1",
+          "vp_destination_ip": "18.0.6.1",
+          "cc_destination_ip": "20.1.1.2",
+          "cc_glean_ip": "32.1.1.1",
           "hnu_destination_ip1": "51.1.1.4",
           "hnu_destination_ip2": "52.1.1.4",
-          "hnu_fcp_destination_ip1": "52.1.1.1",
-          "hu_destination_ip1": "18.0.6.1",
-          "vp_destination_ip1": "18.0.6.1",
-          "cc_destination_ip1": "20.1.1.2",
-          "cc_glean_ip1": "32.1.1.1"
+          "hnu_fcp_destination_ip1": "51.1.1.1",
+          "hnu_fcp_destination_ip2": "52.1.1.1"
         },
         "ipv6": {
-          "source_ip1": "1001::10:10:1:1",
           "destination_ip1": "2001::50:0:1:1",
           "destination_ip4": "2001::50:0:2:1",
-          "source_ip2": "1001::10:10:2:1",
-          "destination_ip2": "2001::50:0:2:1",
           "hnu_destination_ip1": "2001::51:1:1:4",
-          "hnu_destination_ip2": "2001::52:1:1:4",
-          "hu_destination_ip1": "2001::18:0:6:1"
+          "hnu_destination_ip2": "2001::52:1:1:4"
         }
-    },
-    "l3_overlay_config": {
+      },
+      "overlay_routes": {
         "ipv4": {
-          "source_ip1": "206.1.1.2",
           "destination_ip1": "50.0.3.1",
-          "source_ip2": "192.85.1.2",
-          "destination_ip2": "50.0.2.1",
-          "gateway": "192.85.1.1"
+          "destination_ip2": "50.0.2.1"
         },
         "ipv6": {
-          "source_ip1": "1001::10:10:1:1",
           "destination_ip1": "2001::50:0:3:1",
-          "source_ip2": "1001::10:10:2:1",
           "destination_ip2": "2001::50:0:2:1"
         }
-    },
-    "l2_config": {
-        "source_mac": "",
-        "destination_mac": "00:DE:AD:BE:EF:00"
-    },
-    "l2_overlay_config": {
-        "source_mac": "",
-        "destination_mac": "00:DE:AD:BE:EF:00"
-    },
-    "l4_config":{
-      "tcp":{
-        "source_port": 1024,
-        "destination_port": 1024
-      },
-      "udp": {
-        "source_port": 1024,
-        "destination_port": 1024
       }
     },
-    "l4_overlay_config":{
-      "tcp":{
-        "source_port": 1024,
-        "destination_port": 1024
-      },
-      "udp": {
-        "source_port": 1024,
-        "destination_port": 1024
+    "physical": {
+      "routermac": "00:DE:AD:BE:EF:00",
+      "routes": {
+        "ipv4": {
+          "destination_ip1": "20.1.1.1",
+          "destination_ip2": "19.1.1.1",
+          "destination_ip3": "60.1.1.1",
+          "destination_ip4": "61.1.1.1"
+        }
       }
     }
   },
   {
-    "name": "dut_spirent_map",
+    "name": "palladium_spirent_map",
     "transit_flow": {
       "NU_NU": {"FPG18": "10.1.23.138/1/2", "FPG5": "10.1.23.137/1/2", "FPG15": "10.1.23.138/1/1", "FPG13": "10.1.23.137/1/1"},
       "HNU_HNU": {"FPG1": "10.1.23.139/1/1", "FPG2": "10.1.23.139/1/2"}
@@ -123,9 +90,12 @@
     }
   },
   {
-    "name": "local_settings",
-    "flow_direction": "NU_NU",
-    "ip_version": "4",
-    "spray_enable": false
+   "name": "f1_spirent_map",
+    "transit_flow": {
+      "NU_NU": {"FPG0": "10.1.40.91/2/1", "FPG1": "10.1.40.91/2/2", "FPG2": "10.1.40.91/2/3", "FPG3": "10.1.40.91/2/4"}
+    },
+    "sample_flow": {
+      "NU_NU": {"FPG0": "10.1.40.91/2/1", "FPG1": "10.1.40.91/2/2", "FPG2": "10.1.40.91/2/3", "FPG3": "10.1.40.91/2/4"}
+    }
   }
 ]
