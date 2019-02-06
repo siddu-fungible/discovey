@@ -74,6 +74,8 @@ class SpirentSetup(FunTestScript):
 
         if dut_config['enable_dpcsh']:
             dpcsh_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
+            fun_test.simple_assert(ensure_dpcsh_ready(network_controller_obj=dpcsh_obj),
+                                   "Ensure dpcsh ready to process commands")
 
         configs = fun_test.parse_file_to_json(INTERFACE_LOADS_SPEC)
         fun_test.simple_assert(configs, "Read Interface loads file")
