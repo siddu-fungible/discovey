@@ -56,8 +56,8 @@
       "routermac": "00:DE:AD:BE:EF:00",
       "routes": {
         "ipv4": {
-          "destination_ip1": "19.1.1.1",
-          "destination_ip2": "20.1.1.1",
+          "destination_ip1": "20.1.1.1",
+          "destination_ip2": "19.1.1.1",
           "destination_ip3": "60.1.1.1",
           "destination_ip4": "61.1.1.1"
         }
