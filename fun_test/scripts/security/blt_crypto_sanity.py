@@ -546,6 +546,9 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                                                format(x, ekey, mode, combo, x, evalue, actual))
                                     else:
                                         fun_test.critical("{} is not found in BLT {} {} stats".format(ekey, i, x))
+                                        fun_test.add_checkpoint("{} not found in {} diff_crypto_stats on BLT {}".
+                                                                format(ekey, x, i))
+
                         if hasattr(self, "crypto_ops_params"):
                             filter_values = []
                             for i in self.crypto_ops_params:
@@ -629,6 +632,14 @@ class BLTCryptoVolumeTestCase(FunTestCase):
             fun_test.test_assert(expression=self.blt_delete_count == self.volume_count,
                                  message="Volume count {} & delete count {}".format(self.volume_count,
                                                                                     self.blt_delete_count))
+            for x in range(1, self.volume_count + 1, 1):
+                storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
+                                                          "VOL_TYPE_BLK_LOCAL_THIN", self.thin_uuid[x])
+                command_result = self.storage_controller.peek(storage_props_tree)
+                fun_test.simple_assert(command_result["status"], "BLT {} with uuid {} peek failed".
+                                       format(x, self.thin_uuid[x]))
+                fun_test.simple_assert(expression=command_result["data"] is None,
+                                       message="BLT {} with uuid {} not cleaned".format(x, self.thin_uuid[x]))
 
 
 class BLTKey256(BLTCryptoVolumeTestCase):
