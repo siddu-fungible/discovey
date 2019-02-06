@@ -72,6 +72,17 @@
     "ecn_bits": 10,
     "counter_id": 135
 },
+  "hnu_nu_v6_drop":
+{
+  "source_ip" : "2300::1",
+    "source_port": 1123,
+    "dest_port": 727,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 99
+},
     "nu_nu_egress_drop_test":
   {
     "source_ip" : "192.85.1.11",

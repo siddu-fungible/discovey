@@ -22,6 +22,9 @@ acl_fields_dict_ipv6_nu_nu = acl_json_output["nu_nu_v6_test"]
 acl_fields_dict_qos_nu_nu = acl_json_output['qos_nu_nu']
 acl_fields_dict_sanity_ing_hnu_hnu = acl_json_output['hnu_hnu_drop_test']
 acl_fields_dict_sanity_eg_hnu_nu = acl_json_output['hnu_nu_drop_test']
+acl_fields_dict_sanity_v6_nu_hnu = acl_json_output['v6_nu_hnu_test']
+acl_fields_dict_ipv6_hnu_hnu = acl_json_output['hnu_hnu_v6_drop']
+acl_fields_dict_ipv6_hnu_nu = acl_json_output['hnu_nu_v6_drop']
 
 
 def create_streams(tx_port, load, dip, sip, load_type, dmac, s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
@@ -1728,6 +1731,898 @@ class AclEgressDropHNUtoNU(FunTestCase):
         fun_test.add_checkpoint(checkpoint)
 
 
+class AclIPv6NUtoHNU(FunTestCase):
+    l2_config = None
+    l3_config = None
+    load = 10
+    load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
+    stream_obj_sport = None
+    stream_obj_dport = None
+    stream_obj_sip = None
+    stream_obj_dip = None
+    stream_obj_drop = None
+    stream_obj_ecn = None
+    stream_obj_tcpflag = None
+    capture_results = None
+
+    def describe(self):
+        self.set_test_details(id=7, summary="Test IPv6 ACL FPG to HNU",
+                              steps="""
+                                 1. Create TCP frame stream on Tx Port
+                                 2. Start Traffic for %d secs
+                                 3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
+                                 4. Ensure on spirent Tx port frames must be equal to Rx port frames
+                                 5. Ensure no errors are seen on spirent ports
+                                 """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        global dut_rx_port, dut_tx_port
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv6']
+        # Multiple streams for seding packets with different fields
+        checkpoint = "Creating multiple streams on %s port" % nu_ing_port
+
+        self.stream_obj_sport = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                               dip=self.l3_config['hnu_destination_ip2'],
+                                               sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                               dmac=self.l2_config['destination_mac'],
+                                               s_port=1024, d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
+
+        self.stream_obj_dport = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                               dip=self.l3_config['hnu_destination_ip2'],
+                                               sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                               dmac=self.l2_config['destination_mac'],
+                                               s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'], d_port=1024)
+
+        self.stream_obj_sip = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=self.l3_config['hnu_destination_ip2'],
+                                             sip="3001::1", dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                             d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
+
+        self.stream_obj_dip = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=self.l3_config['hnu_destination_ip2'],
+                                             sip="3001::1", dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                             d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
+
+        self.stream_obj_tcpflag = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type,
+                                                 ipv6=True, dip=self.l3_config['hnu_destination_ip2'],
+                                                 sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                                 dmac=self.l2_config['destination_mac'],
+                                                 s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                                 d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
+                                                 sync_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'])
+
+        self.stream_obj_ecn = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=self.l3_config['hnu_destination_ip2'],
+                                             sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                             dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                             d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
+                                             sync_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'],
+                                             ack_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_ack_bit'])
+
+        self.stream_obj_drop = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                              dip=self.l3_config['hnu_destination_ip2'],
+                                              sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                              dmac=self.l2_config['destination_mac'],
+                                              s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                              d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
+                                              sync_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'],
+                                              ack_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_ack_bit'],
+                                              v6_traffic_class=2)
+
+        dut_rx_port = dut_config['ports'][0]
+        dut_tx_port = dut_config['ports'][3]
+
+    def run(self):
+        tx_port = nu_ing_port
+        rx_port = hnu_eg_port
+        checkpoint = "Clear FPG port stats on DUT"
+        c = 0
+        for port_num in dut_config['ports']:
+            if c == 0:
+                shape = 0
+                result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+                fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+            elif c == 3:
+                shape = 1
+                result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+                fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+            c += 1
+        fun_test.add_checkpoint(checkpoint=checkpoint)
+
+        checkpoint = "Deactivate not required stream blocks"
+        obj_list = []
+        obj_list.append(self.stream_obj_dip)
+        obj_list.append(self.stream_obj_dport)
+        obj_list.append(self.stream_obj_sip)
+        obj_list.append(self.stream_obj_tcpflag)
+        obj_list.append(self.stream_obj_drop)
+        obj_list.append(self.stream_obj_ecn)
+        template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+        del obj_list[:]
+        obj_list.append(self.stream_obj_sport)
+        template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+        checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+        # Getting Spirent results - only when analyzer/generator is subscribed
+
+        checkpoint = "Fetch Tx Port Results for %s" % tx_port
+        tx_port_result = template_obj.stc_manager.get_generator_port_results(
+            port_handle=tx_port, subscribe_handle=subscribed_results['generator_subscribe'])
+        fun_test.simple_assert(expression=tx_port_result, message=checkpoint)
+
+        checkpoint = "Fetch Rx Port Results for %s" % rx_port
+        rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
+
+        fun_test.log("Tx Port: %s" % tx_port_result)
+        fun_test.log("Rx Port: %s" % rx_port_result)
+
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+        fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+        fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+        fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+        fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                     tx=False)
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+            dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+
+        fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
+
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj_sport.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount_sport = int(
+            stream_results[self.stream_obj_sport.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount_sport = int(
+            stream_results[self.stream_obj_sport.spirent_handle]["rx_result"]["FrameCount"])
+        fun_test.test_assert_expected(expected=tx_stream_result_framecount_sport,
+                                      actual=rx_stream_result_framecount_sport,
+                                      message="Comparing tx and rx frame count on Spirent for stream dport")
+
+        checkpoint = "Ensure no errors are seen on Rx spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+        del obj_list[:]
+        obj_list.append(self.stream_obj_sport)
+        obj_list.append(self.stream_obj_drop)
+        template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+
+        del obj_list[:]
+        obj_list.append(self.stream_obj_dport)
+        obj_list.append(self.stream_obj_sip)
+        obj_list.append(self.stream_obj_dip)
+        obj_list.append(self.stream_obj_tcpflag)
+        #obj_list.append(self.stream_obj_ecn)
+        template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+        checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (
+        tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj_dport.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount_dport = int(
+            stream_results[self.stream_obj_dport.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount_dport = int(
+            stream_results[self.stream_obj_dport.spirent_handle]["rx_result"]["FrameCount"])
+        fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport,
+                                      actual=rx_stream_result_framecount_dport,
+                                      message="Comparing tx and rx frame count on Spirent for stream dport")
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj_sip.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount_sip = int(
+            stream_results[self.stream_obj_sip.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount_sip = int(
+            stream_results[self.stream_obj_sip.spirent_handle]["rx_result"]["FrameCount"])
+        fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip,
+                                      actual=rx_stream_result_framecount_sip,
+                                      message="Comparing tx and rx frame count on Spirent for stream sip")
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj_dip.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount_dip = int(
+            stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount_dip = int(
+            stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
+        fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
+                                      actual=rx_stream_result_framecount_dip,
+                                      message="Comparing tx and rx frame count on Spirent for stream dip")
+
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj_tcpflag.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount_tcpflag = int(
+            stream_results[self.stream_obj_tcpflag.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount_tcpflag = int(
+            stream_results[self.stream_obj_tcpflag.spirent_handle]["rx_result"]["FrameCount"])
+        fun_test.test_assert_expected(expected=tx_stream_result_framecount_tcpflag,
+                                      actual=rx_stream_result_framecount_tcpflag,
+                                      message="Comparing tx and rx frame count on Spirent for stream tcpflag")
+        #enable ecn after bug fix is complete for ECN on ERP
+        # stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+        #                                                                     [self.stream_obj_ecn.spirent_handle],
+        #                                                                     tx_result=True, rx_result=True)
+        # # tx_stream_result_framecount_ecn = int(
+        #     stream_results[self.stream_obj_ecn.spirent_handle]["tx_result"]["FrameCount"])
+        # rx_stream_result_framecount_ecn = int(
+        #     stream_results[self.stream_obj_ecn.spirent_handle]["rx_result"]["FrameCount"])
+        # fun_test.test_assert_expected(expected=tx_stream_result_framecount_ecn,
+        #                               actual=rx_stream_result_framecount_ecn,
+        #                               message="Comparing tx and rx frame count on Spirent for stream tcpflag")
+
+        acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+        acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port,hnu=True)
+        fun_test.log("Port DPC results : ")
+        fun_test.log(acl_stats_tx_before)
+        fun_test.log(acl_stats_rx_before)
+        # Send drop traffic which matches all the fields below
+        obj_list.append(self.stream_obj_sport)
+        template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+
+        del obj_list[:]
+        obj_list.append(self.stream_obj_drop)
+        template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+        counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                         counter_id=acl_fields_dict_sanity_v6_nu_hnu['counter_id'],erp=True)
+
+        checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj_drop.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount_drop = int(
+            stream_results[self.stream_obj_drop.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount_drop = int(
+            stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
+
+        counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                           counter_id=acl_fields_dict_sanity_v6_nu_hnu['counter_id'],erp=True)
+
+        fun_test.log("tx_streamcount" + str(tx_stream_result_framecount_drop))
+        checkpoint="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted"
+        fun_test.test_assert_expected(expected=0, actual=rx_stream_result_framecount_drop,
+                                      message=checkpoint)
+        # add counter values with the stream value using : peek_fwd_flex_stats
+        fun_test.test_assert_expected(expected=tx_stream_result_framecount_drop,
+                                      actual=(counter_after - counter_bef),
+                                      message="Packets dropped should be equal to counter value")
+        rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        checkpoint = "Ensure no errors are seen on Rx spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+    def cleanup(self):
+        dut_rx_port = dut_config['ports'][0]
+
+        checkpoint = "Delete the streams"
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sport.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dport.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Clear subscribed results"
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+        fun_test.add_checkpoint(checkpoint)
+
+
+class AclIPv6HNUtoHNU(FunTestCase):
+    l2_config = None
+    l3_config = None
+    load = 10
+    load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
+    stream_obj_sport = None
+    stream_obj_dport = None
+    stream_obj_sip = None
+    stream_obj_dip = None
+    stream_obj_drop = None
+    stream_obj_tcpflag = None
+    stream_obj_ecn = None
+    capture_results = None
+
+    def describe(self):
+        self.set_test_details(id=8, summary="Test IPv6 ACL HNU to HNU",
+                              steps="""
+                                 1. Create TCP frame stream on Tx Port
+                                 2. Start Traffic for %d secs
+                                 3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
+                                 4. Ensure on spirent Tx port frames must be equal to Rx port frames
+                                 5. Ensure no errors are seen on spirent ports
+                                 """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        global dut_rx_port, dut_tx_port
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv6']
+        # Multiple streams for seding packets with different fields
+        checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
+
+        self.stream_obj_sport = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type,
+                                               ipv6=True, dip=self.l3_config['hnu_destination_ip2'],
+                                               sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                               dmac=self.l2_config['destination_mac'],
+                                               s_port=1024, d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'])
+
+        self.stream_obj_dport = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type,
+                                               ipv6=True, dip=self.l3_config['hnu_destination_ip2'],
+                                               sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                               dmac=self.l2_config['destination_mac'],
+                                               s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'], d_port=1024)
+
+        self.stream_obj_sip = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=self.l3_config['hnu_destination_ip2'],
+                                             sip="3001::1", dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                             d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'])
+
+        self.stream_obj_dip = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=acl_fields_dict_ipv6_hnu_hnu['wrong_dip'],
+                                             sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                             dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                             d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'])
+
+        self.stream_obj_tcpflag = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type,
+                                                 ipv6=True, dip=self.l3_config['hnu_destination_ip2'],
+                                                 sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                                 dmac=self.l2_config['destination_mac'],
+                                                 s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                                 d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'],
+                                                 sync_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'])
+
+        self.stream_obj_ecn = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=self.l3_config['hnu_destination_ip2'],
+                                             sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                             dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                             d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'],
+                                             sync_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'],
+                                             ack_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_ack_bit'])
+
+        self.stream_obj_drop = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                              dip=self.l3_config['hnu_destination_ip2'],
+                                              sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                              dmac=self.l2_config['destination_mac'],
+                                              s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                              d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'],
+                                              sync_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'],
+                                              ack_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_ack_bit'],
+                                              v6_traffic_class=2)
+
+        dut_rx_port = dut_config['ports'][2]
+        dut_tx_port = dut_config['ports'][3]
+
+    def run(self):
+        tx_port = hnu_ing_port
+        rx_port = hnu_eg_port
+        checkpoint = "Clear FPG port stats on DUT"
+        c = 0
+        for port_num in dut_config['ports']:
+            if c == 2 or c == 3:
+                shape = 1
+                result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+                fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+            c += 1
+        fun_test.add_checkpoint(checkpoint=checkpoint)
+
+        checkpoint = "Deactivate not required stream blocks"
+        obj_list = []
+        obj_list.append(self.stream_obj_dip)
+        obj_list.append(self.stream_obj_dport)
+        obj_list.append(self.stream_obj_sip)
+        obj_list.append(self.stream_obj_tcpflag)
+        obj_list.append(self.stream_obj_drop)
+        obj_list.append(self.stream_obj_ecn)
+        template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+        del obj_list[:]
+        obj_list.append(self.stream_obj_sport)
+        template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+        checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+
+        checkpoint = "Fetch Rx Port Results for %s" % rx_port
+        rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
+
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+        fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+        fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+        fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+        fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+        checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                     tx=False)
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+            dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+
+        fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
+
+        # Validate Spirent stats
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj_sport.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount_sport = int(
+            stream_results[self.stream_obj_sport.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount_sport = int(
+            stream_results[self.stream_obj_sport.spirent_handle]["rx_result"]["FrameCount"])
+        fun_test.test_assert_expected(expected=tx_stream_result_framecount_sport,
+                                      actual=rx_stream_result_framecount_sport,
+                                      message="Comparing tx and rx frame count on Spirent for stream sip")
+
+        checkpoint = "Ensure no errors are seen on Rx spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+        if frames_received == frames_transmitted:
+            del obj_list[:]
+            obj_list.append(self.stream_obj_sport)
+            obj_list.append(self.stream_obj_drop)
+            template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+
+            del obj_list[:]
+            obj_list.append(self.stream_obj_dport)
+            obj_list.append(self.stream_obj_sip)
+            obj_list.append(self.stream_obj_dip)
+            obj_list.append(self.stream_obj_tcpflag)
+            obj_list.append(self.stream_obj_ecn)
+            template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+            checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (
+            tx_port, TRAFFIC_DURATION)
+            result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+            fun_test.simple_assert(expression=result, message=checkpoint)
+
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_dport.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_dport = int(
+                stream_results[self.stream_obj_dport.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_dport = int(
+                stream_results[self.stream_obj_dport.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport,
+                                          actual=rx_stream_result_framecount_dport,
+                                          message="Comparing tx and rx frame count on Spirent for stream dport")
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_sip.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_sip = int(
+                stream_results[self.stream_obj_sip.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_sip = int(
+                stream_results[self.stream_obj_sip.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip,
+                                          actual=rx_stream_result_framecount_sip,
+                                          message="Comparing tx and rx frame count on Spirent for stream sip")
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_dip.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_dip = int(
+                stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_dip = int(
+                stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
+                                          actual=rx_stream_result_framecount_dip,
+                                          message="Comparing tx and rx frame count on Spirent for stream dip")
+
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_tcpflag.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_tcpflag = int(
+                stream_results[self.stream_obj_tcpflag.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_tcpflag = int(
+                stream_results[self.stream_obj_tcpflag.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_tcpflag,
+                                          actual=rx_stream_result_framecount_tcpflag,
+                                          message="Comparing tx and rx frame count on Spirent for stream tcpflag")
+
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_ecn.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_ecn = int(
+                stream_results[self.stream_obj_ecn.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_ecn = int(
+                stream_results[self.stream_obj_ecn.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_ecn,
+                                          actual=rx_stream_result_framecount_ecn,
+                                          message="Comparing tx and rx frame count on Spirent for stream tcpflag")
+
+            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            fun_test.log("Port DPC results : ")
+            fun_test.log(acl_stats_tx_before)
+            fun_test.log(acl_stats_rx_before)
+            # Send drop traffic which matches all the fields below
+            obj_list.append(self.stream_obj_sport)
+            template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+
+            del obj_list[:]
+            obj_list.append(self.stream_obj_drop)
+            template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+            counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                             counter_id=acl_fields_dict_ipv6_hnu_hnu['counter_id'])
+
+            checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
+            result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+            fun_test.simple_assert(expression=result, message=checkpoint)
+
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_drop.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_drop = int(
+                stream_results[self.stream_obj_drop.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_drop = int(
+                stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
+
+            counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                               counter_id=acl_fields_dict_ipv6_hnu_hnu['counter_id'])
+
+            fun_test.log("tx_streamcount" + str(tx_stream_result_framecount_drop))
+            checkpoint="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted"
+            fun_test.test_assert_expected(expected=0, actual=rx_stream_result_framecount_drop,
+                                          message=checkpoint)
+            # add counter values with the stream value using : peek_fwd_flex_stats
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_drop,
+                                          actual=(counter_after - counter_bef),
+                                          message="Packets dropped should be equal to counter value")
+            rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+                port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+            checkpoint = "Ensure no errors are seen on Rx spirent port"
+            result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+            fun_test.test_assert(result['result'], checkpoint)
+
+    def cleanup(self):
+        dut_rx_port = dut_config['ports'][0]
+
+        checkpoint = "Delete the streams"
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sport.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dport.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Clear subscribed results"
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+        fun_test.add_checkpoint(checkpoint)
+
+
+class AclIPv6HNUtoNU(FunTestCase):
+    l2_config = None
+    l3_config = None
+    load = 10
+    load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
+    stream_obj_sport = None
+    stream_obj_dport = None
+    stream_obj_sip = None
+    stream_obj_dip = None
+    stream_obj_drop = None
+    stream_obj_tcpflag = None
+    stream_obj_ecn = None
+    capture_results = None
+
+    def describe(self):
+        self.set_test_details(id=9, summary="Test IPv6 ACL HNU to HNU",
+                              steps="""
+                                 1. Create TCP frame stream on Tx Port
+                                 2. Start Traffic for %d secs
+                                 3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
+                                 4. Ensure on spirent Tx port frames must be equal to Rx port frames
+                                 5. Ensure no errors are seen on spirent ports
+                                 """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        global dut_rx_port, dut_tx_port
+        self.l2_config = spirent_config['l2_config']
+        self.l3_config = spirent_config['l3_config']['ipv6']
+        # Multiple streams for seding packets with different fields
+        checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
+
+        self.stream_obj_sport = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type,
+                                               ipv6=True, dip=self.l3_config['destination_ip1'],
+                                               sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                               dmac=self.l2_config['destination_mac'],
+                                               s_port=1024, d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'])
+
+        self.stream_obj_dport = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type,
+                                               ipv6=True, dip=self.l3_config['destination_ip1'],
+                                               sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                               dmac=self.l2_config['destination_mac'],
+                                               s_port=acl_fields_dict_ipv6_hnu_nu['source_port'], d_port=1024)
+
+        self.stream_obj_sip = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=self.l3_config['destination_ip1'],
+                                             sip="3001::1", dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                             d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'])
+
+        self.stream_obj_dip = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=acl_fields_dict_ipv6_hnu_nu['wrong_dip'],
+                                             sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                             dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                             d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'])
+
+        self.stream_obj_tcpflag = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type,
+                                                 ipv6=True, dip=self.l3_config['destination_ip1'],
+                                                 sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                                 dmac=self.l2_config['destination_mac'],
+                                                 s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                                 d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'],
+                                                 sync_bit=acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'])
+
+        self.stream_obj_ecn = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                             dip=self.l3_config['destination_ip1'],
+                                             sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                             dmac=self.l2_config['destination_mac'],
+                                             s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                             d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'],
+                                             sync_bit=acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'],
+                                             ack_bit=acl_fields_dict_ipv6_hnu_nu['tcp_ack_bit'], v6_traffic_class=4)
+
+        self.stream_obj_drop = create_streams(tx_port=hnu_ing_port, load=self.load, load_type=self.load_type, ipv6=True,
+                                              dip=self.l3_config['destination_ip1'],
+                                              sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                              dmac=self.l2_config['destination_mac'],
+                                              s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                              d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'],
+                                              sync_bit=acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'],
+                                              ack_bit=acl_fields_dict_ipv6_hnu_nu['tcp_ack_bit'],
+                                              v6_traffic_class=2)
+
+        dut_rx_port = dut_config['ports'][2]
+        dut_tx_port = dut_config['ports'][1]
+
+    def run(self):
+        tx_port = hnu_ing_port
+        rx_port = nu_eg_port
+        checkpoint = "Clear FPG port stats on DUT"
+        c = 0
+        for port_num in dut_config['ports']:
+            if c == 1:
+                shape = 0
+                result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+                fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+            elif c == 2:
+                shape = 1
+                result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+                fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+            c += 1
+        fun_test.add_checkpoint(checkpoint=checkpoint)
+
+        checkpoint = "Deactivate not required stream blocks"
+        obj_list = []
+        obj_list.append(self.stream_obj_dip)
+        obj_list.append(self.stream_obj_dport)
+        obj_list.append(self.stream_obj_sip)
+        obj_list.append(self.stream_obj_tcpflag)
+        obj_list.append(self.stream_obj_drop)
+        obj_list.append(self.stream_obj_ecn)
+        template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+        del obj_list[:]
+        obj_list.append(self.stream_obj_sport)
+        template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+        checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+        fun_test.simple_assert(expression=result, message=checkpoint)
+
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+
+        checkpoint = "Fetch Rx Port Results for %s" % rx_port
+        rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+            port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+        fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
+
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+        fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+        fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+        fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+        fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+        checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                     tx=False)
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                        stat_type=FRAMES_TRANSMITTED_OK)
+        fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+            dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+
+        fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
+
+        # Validate Spirent stats
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj_sport.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount_sport = int(
+            stream_results[self.stream_obj_sport.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount_sport = int(
+            stream_results[self.stream_obj_sport.spirent_handle]["rx_result"]["FrameCount"])
+        fun_test.test_assert_expected(expected=tx_stream_result_framecount_sport,
+                                      actual=rx_stream_result_framecount_sport,
+                                      message="Comparing tx and rx frame count on Spirent for stream sip")
+
+        checkpoint = "Ensure no errors are seen on Rx spirent port"
+        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+        fun_test.test_assert(result['result'], checkpoint)
+
+        if frames_received == frames_transmitted:
+            del obj_list[:]
+            obj_list.append(self.stream_obj_sport)
+            obj_list.append(self.stream_obj_drop)
+            template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+
+            del obj_list[:]
+            obj_list.append(self.stream_obj_dport)
+            obj_list.append(self.stream_obj_sip)
+            obj_list.append(self.stream_obj_dip)
+            obj_list.append(self.stream_obj_tcpflag)
+            obj_list.append(self.stream_obj_ecn)
+            template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+            checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (
+            tx_port, TRAFFIC_DURATION)
+            result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+            fun_test.simple_assert(expression=result, message=checkpoint)
+
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_dport.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_dport = int(
+                stream_results[self.stream_obj_dport.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_dport = int(
+                stream_results[self.stream_obj_dport.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport,
+                                          actual=rx_stream_result_framecount_dport,
+                                          message="Comparing tx and rx frame count on Spirent for stream dport")
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_sip.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_sip = int(
+                stream_results[self.stream_obj_sip.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_sip = int(
+                stream_results[self.stream_obj_sip.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip,
+                                          actual=rx_stream_result_framecount_sip,
+                                          message="Comparing tx and rx frame count on Spirent for stream sip")
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_dip.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_dip = int(
+                stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_dip = int(
+                stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
+                                          actual=rx_stream_result_framecount_dip,
+                                          message="Comparing tx and rx frame count on Spirent for stream dip")
+
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_tcpflag.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_tcpflag = int(
+                stream_results[self.stream_obj_tcpflag.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_tcpflag = int(
+                stream_results[self.stream_obj_tcpflag.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_tcpflag,
+                                          actual=rx_stream_result_framecount_tcpflag,
+                                          message="Comparing tx and rx frame count on Spirent for stream tcpflag")
+
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_ecn.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_ecn = int(
+                stream_results[self.stream_obj_ecn.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_ecn = int(
+                stream_results[self.stream_obj_ecn.spirent_handle]["rx_result"]["FrameCount"])
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_ecn,
+                                          actual=rx_stream_result_framecount_ecn,
+                                          message="Comparing tx and rx frame count on Spirent for stream tcpflag")
+
+            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            fun_test.log("Port DPC results : ")
+            fun_test.log(acl_stats_tx_before)
+            fun_test.log(acl_stats_rx_before)
+            # Send drop traffic which matches all the fields below
+            obj_list.append(self.stream_obj_sport)
+            template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
+
+            del obj_list[:]
+            obj_list.append(self.stream_obj_drop)
+            template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+
+            counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                             counter_id=acl_fields_dict_ipv6_hnu_nu['counter_id'])
+
+            checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
+            result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
+            fun_test.simple_assert(expression=result, message=checkpoint)
+
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+            stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                                [self.stream_obj_drop.spirent_handle],
+                                                                                tx_result=True, rx_result=True)
+            tx_stream_result_framecount_drop = int(
+                stream_results[self.stream_obj_drop.spirent_handle]["tx_result"]["FrameCount"])
+            rx_stream_result_framecount_drop = int(
+                stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
+
+            counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                                    counter_id=acl_fields_dict_ipv6_hnu_nu['counter_id'])
+
+            fun_test.log("tx_streamcount" + str(tx_stream_result_framecount_drop))
+            checkpoint="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted"
+            fun_test.test_assert_expected(expected=0, actual=rx_stream_result_framecount_drop,
+                                          message=checkpoint)
+            # add counter values with the stream value using : peek_fwd_flex_stats
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_drop,
+                                          actual=(counter_after - counter_bef),
+                                          message="Packets dropped should be equal to counter value")
+            rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
+                port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
+            checkpoint = "Ensure no errors are seen on Rx spirent port"
+            result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
+            fun_test.test_assert(result['result'], checkpoint)
+
+    def cleanup(self):
+        dut_rx_port = dut_config['ports'][0]
+
+        checkpoint = "Delete the streams"
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sport.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dport.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Clear subscribed results"
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+        fun_test.add_checkpoint(checkpoint)
+
+
 if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(AclIngressDropNUtoNU())
@@ -1736,4 +2631,7 @@ if __name__ == '__main__':
     ts.add_test_case(AclEgressDropNUtoHNU())
     ts.add_test_case(AclIngressDropHNUtoHNU())
     ts.add_test_case(AclEgressDropHNUtoNU())
+    ts.add_test_case(AclIPv6NUtoHNU())
+    ts.add_test_case(AclIPv6HNUtoHNU())
+    ts.add_test_case(AclIPv6HNUtoNU())
     ts.run()
