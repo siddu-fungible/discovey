@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from collections import OrderedDict
 import re
 
+
 class NuConfigManager(object):
     NU_CONFIGS_SPEC = SCRIPTS_DIR + "/networking/nu_configs.json"
     SPIRENT_TRAFFIC_GENERATOR_ASSETS = ASSET_DIR + "/traffic_generator_hosts.json"
@@ -35,13 +36,19 @@ class NuConfigManager(object):
     IP_VERSION = "ip_version"
     SPRAY_ENABLE = "spray_enable"
     INTEGRATION_FLOW_TYPE = "integration_flow"
+    DUT_TYPE = None
+    CHASSIS_TYPE = None
 
-    def __int__(self, chassis_type=CHASSIS_TYPE_PHYSICAL):
-        self._get_chassis_type()
+    def __int__(self):
+        self.get_dut_type()
+        self.get_chassis_type()
 
-    def _get_chassis_type(self):
-        self.chassis_type = self.CHASSIS_TYPE_PHYSICAL
-        return self.chassis_type
+    def get_chassis_type(self):
+        if self.DUT_TYPE == self.DUT_TYPE_F1:
+            self.CHASSIS_TYPE = self.CHASSIS_TYPE_PHYSICAL
+        else:
+            self.CHASSIS_TYPE = self.CHASSIS_TYPE_VIRTUAL
+        return self.CHASSIS_TYPE
 
     def _parse_file_to_json_in_order(self, file_name):
         result = None
@@ -65,12 +72,10 @@ class NuConfigManager(object):
     def read_dut_config(self, dut_type=None, flow_type=TRANSIT_FLOW_TYPE, flow_direction=FLOW_DIRECTION_NU_NU):
         result = {}
         try:
-            if not dut_type:
-                dut_type = self.DUT_TYPE_PALLADIUM
             configs = self._get_nu_configs()
             fun_test.simple_assert(configs, "Failed to read config spec")
             for config in configs:
-                if config["type"] == dut_type:
+                if config["type"] == self.DUT_TYPE:
                     result = config
                     job_environment = fun_test.get_job_environment()
                     if 'UART_HOST' in job_environment and 'UART_TCP_PORT_0' in job_environment:
@@ -117,8 +122,12 @@ class NuConfigManager(object):
         try:
             configs = self._get_nu_configs()
             fun_test.simple_assert(configs, "Failed to read config spec")
+            if self.DUT_TYPE == self.DUT_TYPE_F1:
+                name = "f1_spirent_map"
+            else:
+                name = "palladium_spirent_map"
             for config in configs:
-                if config["name"] == "dut_spirent_map":
+                if config["name"] == name:
                     result.update(config)
                     break
         except Exception as ex:
@@ -183,33 +192,19 @@ class NuConfigManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-    '''
-    def _do_port_mapping(self, num_ports, chassis_configs, dut_configs, fpg_ports=False, hnu_ports=False):
-        result = {}
+
+    def get_traffic_routes_by_chassis_type(self, spirent_config, ip_version="ipv4", overlay=False):
+        routes_dict = {'l3_config': None, 'routermac': None, 'status': False}
         try:
-            fun_test.simple_assert(fpg_ports or hnu_ports, "Neither flag fpg_ports or hnu_ports specified. "
-                                                           "Please sepcify one.")
-            if fpg_ports:
-                key = 'ports'
+            if overlay:
+                routes_dict['l3_config'] = spirent_config[self.CHASSIS_TYPE]['overlay_routes'][ip_version]
             else:
-                key = 'hnu_ports'
-
-            fun_test.simple_assert(num_ports <= len(chassis_configs[key]),
-                                   message="Number of ports asked %s is greater than available on spirent %s"
-                                           % (num_ports, len(chassis_configs[key])))
-            fun_test.simple_assert(num_ports <= len(chassis_configs[key]),
-                                   message="Number of ports asked %s is greater than available on dut %s"
-                                           % (num_ports, len(dut_configs[key])))
-
-            chassis_slot_num = chassis_configs['slot_no']
-            for i in range(0, num_ports):
-                current_port_num = chassis_configs[key][i]
-                port_location = '%s/%s' % (chassis_slot_num, current_port_num)
-                result[port_location] = dut_configs[key][i]
+                routes_dict['l3_config'] = spirent_config[self.CHASSIS_TYPE]['routes'][ip_version]
+            routes_dict['routermac'] = spirent_config[self.CHASSIS_TYPE]['routermac']
+            routes_dict['status'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
-        return result
-    '''
+        return routes_dict
 
     def get_spirent_dut_port_mapper(self, flow_type=TRANSIT_FLOW_TYPE, no_of_ports_needed=2,
                                     flow_direction=FLOW_DIRECTION_NU_NU):
@@ -360,18 +355,42 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return result
 
-
     def get_dut_type(self):
+        try:
+            job_environment = fun_test.get_job_environment()
+            job_inputs = fun_test.get_job_inputs()
+            if job_environment and ("EMULATION_TARGET" in job_environment or "RUN_TARGET" in job_environment):
+                if job_environment['EMULATION_TARGET'] == self.DUT_TYPE_PALLADIUM:
+                    self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
+                elif job_environment['RUN_TARGET'] == self.DUT_TYPE_F1.upper():
+                    self.DUT_TYPE = self.DUT_TYPE_F1
+            else:
+                if job_inputs and "speed" in job_inputs:
+                    if job_inputs['speed'] == "SPEED_1G":
+                        self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
+                    elif job_inputs['speed'] == "SPEED_25G" or job_inputs['speed'] == "SPEED_100G":
+                        self.DUT_TYPE = self.DUT_TYPE_F1
+                else:
+                    self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return self.DUT_TYPE
+
+    def read_test_configs_by_dut_type(self, config_file):
         result = None
         try:
-            result = self.DUT_TYPE_PALLADIUM
-            # TODO: get dut type from environment
-            #job_environment = fun_test.get_job_environment()
-            #result = job_environment['DUT_TYPE']
+            all_configs = self._parse_file_to_json_in_order(file_name=config_file)
+            fun_test.simple_assert(all_configs, "Read all Configs")
+            for config in all_configs:
+                if config['dut_type'] == self.DUT_TYPE:
+                    fun_test.log("Test Config Fetched: %s" % config)
+                    result = config
+                    break
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
 
 
-
 nu_config_obj = NuConfigManager()
+nu_config_obj.get_dut_type()
+nu_config_obj.get_chassis_type()

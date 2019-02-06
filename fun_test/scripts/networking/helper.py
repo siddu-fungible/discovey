@@ -729,6 +729,26 @@ def check_per_vp_pkt_spray(old_per_vppkt_output_dict, per_vppkt_output_dict, dut
         fun_test.critical(str(ex))
     return result
 
+
+def ensure_dpcsh_ready(network_controller_obj, max_time=180):
+    status = False
+    try:
+        timer = FunTimer(max_time=max_time)
+        while not timer.is_expired():
+            fun_test.sleep("DPCsh to come up", seconds=30)
+            result = network_controller_obj.echo_hello()
+            if result['status']:
+                raw_output = result['raw_output']
+                if raw_output != 'null':
+                    fun_test.log("dpcsh echoed hello output: %s" % raw_output)
+                    level_changed = network_controller_obj.set_syslog_level(level=3)
+                    fun_test.simple_assert(level_changed, "Changed Syslog level to 3")
+                    status = True
+                    break
+    except Exception as ex:
+        fun_test.critical(str(ex))
+
+
 def get_flex_counter_values(network_controller_obj, counter_id, erp=False):
     counter_value = 0
     try:
