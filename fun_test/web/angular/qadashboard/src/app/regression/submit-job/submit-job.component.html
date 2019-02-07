@@ -1,6 +1,6 @@
 <div style="padding-top: 70px;">
   <div class="row">
-    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
+    <div class="col">
       <div class="card" style="margin: 4px;">
         <div class="card-header">Submit Job</div>
         <div class="card-body">
@@ -14,6 +14,10 @@
               </td>
             </tr>
             <tr>
+              <td><input (click)="suiteSelectionMode = 'BY_SUITE'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SUITE'">By suite</td>
+              <td><input (click)="suiteSelectionMode = 'BY_SCRIPT'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SCRIPT'">By script</td>
+            </tr>
+            <tr *ngIf="suiteSelectionMode === 'BY_SUITE'">
               <td class="no-wrap">
                 <label for="suite-select">Select a suite</label>
               </td>
@@ -27,7 +31,11 @@
 
                 </select>
               </td>
-
+            </tr>
+            <tr *ngIf="suiteSelectionMode === 'BY_SCRIPT'">
+              <td colspan="2">
+                <app-script-selector [resetEvent]="resetScriptSelector" (singleSelectPk)="singleSelectPkEvent($event)"></app-script-selector>
+              </td>
             </tr>
             <tr>
               <td class="no-wrap">
@@ -142,10 +150,10 @@
       </div>
       <div style="padding: 5px;">
         <ng-container *ngIf="!submitting">
-          <button *ngIf="selectedInfo" (click)="submitClick()"
+          <button *ngIf="selectedInfo || selectedScriptPk" (click)="submitClick()"
                 class="btn btn-primary">Submit
           </button>
-          <button *ngIf="selectedInfo" (click)="ngOnInit()"
+          <button *ngIf="selectedInfo && !(suiteSelectionMode !== 'BY_SCRIPT')" (click)="ngOnInit()"
                   class="btn">Clear
           </button>
         </ng-container>
@@ -153,9 +161,8 @@
 
       </div>
     </div>
-    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-xxl-6">
-      <div class="card" *ngIf="selectedInfo" class="title">
-        <!--<legend>{{ selectedSuite }}</legend>-->
+    <div *ngIf="selectedInfo" class="col">
+      <div class="card" class="title">
         <div class="side-table">
           <table class="table table-bordered">
             <tr>

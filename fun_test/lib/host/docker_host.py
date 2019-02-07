@@ -513,6 +513,7 @@ class DockerHost(Linux, ToDictMixin):
                     if not self.localhost:
                         self.sudo_command("docker logs {}".format(container_name))
 
+        self.disconnect()
         return container_asset
 
     def ensure_container_running(self, container_name, max_wait_time=120):

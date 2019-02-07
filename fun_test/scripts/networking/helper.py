@@ -37,6 +37,8 @@ VP_PACKETS_OUT_HU = "vp_packets_out_hu"
 VP_PACKETS_FORWARDING_NU_LE = "vp_packets_forwarding_nu_le"
 VP_PACKETS_FORWARDING_NU_DIRECT = "vp_packets_forwarding_nu_direct"
 VP_PACKETS_OUT_NU_ETP = "vp_packets_out_nu_etp"
+VP_PACKETS_OUT_HNU_ETP = "vp_packets_out_hnu_etp"
+VP_NO_DROP_PACKETS_TO_HNU_ETP = "vp_no_drop_packets_to_hnu_etp"
 VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
 VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
 VP_PACKETS_CONTROL_T2C_COUNT = "vp_packets_control_t2c"
@@ -726,3 +728,59 @@ def check_per_vp_pkt_spray(old_per_vppkt_output_dict, per_vppkt_output_dict, dut
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def ensure_dpcsh_ready(network_controller_obj, max_time=180):
+    status = False
+    try:
+        timer = FunTimer(max_time=max_time)
+        while not timer.is_expired():
+            fun_test.sleep("DPCsh to come up", seconds=30)
+            result = network_controller_obj.echo_hello()
+            if result['status']:
+                raw_output = result['raw_output']
+                if raw_output != 'null':
+                    fun_test.log("dpcsh echoed hello output: %s" % raw_output)
+                    level_changed = network_controller_obj.set_syslog_level(level=3)
+                    fun_test.simple_assert(level_changed, "Changed Syslog level to 3")
+                    status = True
+                    break
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return status
+
+
+def get_flex_counter_values(network_controller_obj, counter_id, erp=False):
+    counter_value = 0
+    try:
+        if erp:
+            counterstats = network_controller_obj.peek_erp_flex_stats(counter_num=counter_id)
+            fun_test.log("counterstat value : %s " % counterstats)
+            counter_value = int(counterstats['bank1']['pkts'])
+            fun_test.log("Counter %s value : %s" % (counter_id, counter_value))
+        else:
+            counterstats = network_controller_obj.peek_fwd_flex_stats(counter_num=counter_id)
+            fun_test.log("counterstat value : %s " % counterstats)
+            counter_value = int(counterstats['bank2']['pkts'])
+            fun_test.log("Counter %s value : %s" % (counter_id, counter_value))
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return counter_value
+
+
+def get_qos_stats(network_controller_obj, queue_no, dut_port, queue_type='pg_deq', hnu=False):
+    qos_val = 0
+    try:
+        if queue_no<10:
+            queue_num = "0"+str(queue_no)
+        else:
+            queue_num=str(queue_no)
+        stats = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu, queue_num=queue_num)
+        fun_test.simple_assert(stats, "Ensure psw command is executed on port %s" % dut_port)
+        if stats:
+            qos_val = int(stats['count'][queue_type]['pkts'])
+        else:
+            qos_val = 0
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return qos_val
