@@ -1149,7 +1149,8 @@ class TestVpFlows(FunTestCase):
 
     def configure_cadence_pcs_for_fcp(self):
         username = 'root'
-        password = 'fun123'
+        pc_3_password = 'Precious1*'
+        pc_4_password = "fun123"
         cadence_pc_3 = "cadence-pc-3"
         cadence_pc_4 = "cadence-pc-4"
         pc_3_config_dir = fun_test.get_helper_dir_path() + "/pc_3_fcp_configs"
@@ -1157,12 +1158,12 @@ class TestVpFlows(FunTestCase):
 
         # Copy req files to cadence pc 3
         target_file_path = "/tmp"
-        pc_3_obj = Linux(host_ip=cadence_pc_3, ssh_username=username, ssh_password=password)
-        for file_name in ['unnh.sh', 'nofcp.sh', 'nh_fcp.sh']:
+        pc_3_obj = Linux(host_ip=cadence_pc_3, ssh_username=username, ssh_password=pc_3_password)
+        for file_name in ['nh_fcp.sh']:
             fun_test.log("Coping %s file to cadence pc 3 in /tmp dir" % file_name)
             transfer_success = fun_test.scp(source_file_path=pc_3_config_dir + "/%s" % file_name,
                                             target_file_path=target_file_path, target_ip=cadence_pc_3,
-                                            target_username=username, target_password=password)
+                                            target_username=username, target_password=pc_3_password)
             fun_test.simple_assert(transfer_success, "Ensure file is transferred")
 
             # Configure cadence pc 3 for FCP traffic
@@ -1171,15 +1172,15 @@ class TestVpFlows(FunTestCase):
             pc_3_obj.command(command=cmd)
 
         # Copy req files to cadence pc 4
-        pc_4_obj = Linux(host_ip=cadence_pc_4, ssh_username=username, ssh_password=password)
-        for file_name in ['nh_fcp.sh', 'unnh.sh']:
+        pc_4_obj = Linux(host_ip=cadence_pc_4, ssh_username=username, ssh_password=pc_4_password)
+        for file_name in ['nh_fcp.sh']:
             fun_test.log("Coping %s file to cadence pc 4 in /tmp dir" % file_name)
             transfer_success = fun_test.scp(source_file_path=pc_4_config_dir + "/%s" % file_name,
                                             target_file_path=target_file_path, target_ip=cadence_pc_4,
-                                            target_username=username, target_password=password)
+                                            target_username=username, target_password=pc_4_password)
             fun_test.simple_assert(transfer_success, "Ensure file is transferred")
 
-            # Configure cadence pc 3 for FCP traffic
+            # Configure cadence pc 4 for FCP traffic
             fun_test.log("Executing %s cadence pc 4" % file_name)
             cmd = "sh /tmp/%s" % file_name
             pc_4_obj.command(command=cmd)
@@ -1611,7 +1612,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
         flow_type = NuConfigManager.VP_FLOW_TYPE
         self.fps = 50
 
-        # self.configure_cadence_pcs_for_fcp()
+        self.configure_cadence_pcs_for_fcp()
         self.configure_ports()
         self.detach_ports = False
 
