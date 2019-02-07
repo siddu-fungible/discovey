@@ -55,7 +55,6 @@ class LSVVolumeLevelScript(FunTestScript):
         TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         self.storage_controller.disconnect()
 
-
 class LSVVolumeLevelTestcase(FunTestCase):
 
     def describe(self):
@@ -89,10 +88,16 @@ class LSVVolumeLevelTestcase(FunTestCase):
         fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
                      format(testcase, self.fio_bs_iodepth))
 
-        if ('zip_params_to_monitor' not in testcase_dict[testcase] or
-                not testcase_dict[testcase]['zip_params_to_monitor']):
+        if ('compress_params_to_monitor' not in testcase_dict[testcase] or
+                not testcase_dict[testcase]['compress_params_to_monitor']):
             benchmark_parsing = False
-            fun_test.critical("Expected zip stats needed for this {} testcase is not available in "
+            fun_test.critical("Expected compress stats needed for this {} testcase is not available in "
+                              "the {} file".format(testcase, testcase_dict))
+
+        if ('uncompress_params_to_monitor' not in testcase_dict[testcase] or
+                not testcase_dict[testcase]['uncompress_params_to_monitor']):
+            benchmark_parsing = False
+            fun_test.critical("Expected uncompress stats needed for this {} testcase is not available in "
                               "the {} file".format(testcase, testcase_dict))
 
         if ('params_to_monitor_per_attach' not in testcase_dict[testcase] or
@@ -106,6 +111,12 @@ class LSVVolumeLevelTestcase(FunTestCase):
                     not testcase_dict[testcase]['enc_params_to_monitor']):
                 benchmark_parsing = False
                 fun_test.critical("Expected encryption stats needed for this {} testcase is not available in "
+                                  "the {} file".format(testcase, testcase_dict))
+
+            if ('dec_params_to_monitor' not in testcase_dict[testcase] or
+                    not testcase_dict[testcase]['dec_params_to_monitor']):
+                benchmark_parsing = False
+                fun_test.critical("Expected decryption stats needed for this {} testcase is not available in "
                                   "the {} file".format(testcase, testcase_dict))
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
@@ -252,14 +263,24 @@ class LSVVolumeLevelTestcase(FunTestCase):
                                 "uncompress_reqs", "uncompressible"}
 
         # Take stats before running fio
-        for key in self.zip_params_to_monitor:
+        for key in self.compress_params_to_monitor:
             initial_value = 0
-            if key not in per_volume_zip_stats:
-                prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
-            else:
-                prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
-                                                       self.uuids["lsv"], "compression",
-                                                       str(key))
+            fun_test.log("Trying " + str(key))
+            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                   self.uuids["lsv"], "compression",
+                                                   str(key))
+            command_result = self.storage_controller.peek(prop_tree, command_duration=5)
+            fun_test.log(command_result["data"])
+            if command_result["data"]:
+                initial_value = command_result["data"]
+            self.my_shared_variables["initial_" + str(key)] = initial_value
+
+        for key in self.uncompress_params_to_monitor:
+            initial_value = 0
+            fun_test.log("Trying " + str(key))
+            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                   self.uuids["lsv"], "uncompression",
+                                                   str(key))
             command_result = self.storage_controller.peek(prop_tree, command_duration=5)
             fun_test.log(command_result["data"])
             if command_result["data"]:
@@ -268,12 +289,26 @@ class LSVVolumeLevelTestcase(FunTestCase):
 
         for key in self.enc_params_to_monitor:
             initial_value = 0
-            prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
+            fun_test.log("Trying " + str(key))
+            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                             self.uuids["lsv"], "encryption", str(key))
             command_result = self.storage_controller.peek(prop_tree, command_duration=5)
             fun_test.log(command_result["data"])
             if command_result["data"]:
                 initial_value = command_result["data"]
             self.my_shared_variables["initial_" + str(key)] = initial_value
+
+        for key in self.dec_params_to_monitor:
+            initial_value = 0
+            fun_test.log("Trying " + str(key))
+            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                   self.uuids["lsv"], "decryption", str(key))
+            command_result = self.storage_controller.peek(prop_tree, command_duration=5)
+            fun_test.log(command_result["data"])
+            if command_result["data"]:
+                initial_value = command_result["data"]
+            self.my_shared_variables["initial_" + str(key)] = initial_value
+
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth
         fio_result = {}
@@ -299,29 +334,59 @@ class LSVVolumeLevelTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
+                '''
+                command_result = self.storage_controller.peek("storage", command_duration=5)
+                fun_test.log(command_result["data"])
+                '''
                 if (mode == "read") or (mode == "randread"):
                     adjust_fio_read_counters = True
                 if (mode == "write") or (mode == "randwrite") or (mode == "rw") or (mode == "randrw"):
                     fun_test.log("COMPRESSION STATS AFTER FIO mode:{} fio-bs:{} ".format(mode, fio_block_size))
-                    for key, value in self.zip_params_to_monitor.items():
-                        if key not in per_volume_zip_stats:
-                            prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
-                        else:
-                            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
-                                                             self.uuids["lsv"], "compression",
-                                                             str(key))
+                    for key, value in self.compress_params_to_monitor.items():
+                        fun_test.log("Trying " + str(key))
+                        prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                         self.uuids["lsv"], "compression",
+                                                         str(key))
+                        command_result = self.storage_controller.peek(prop_tree, command_duration=5)
+                        fun_test.log(command_result["data"])
+
+                    fun_test.log("UNCOMPRESSION STATS AFTER FIO mode:{} fio-bs:{} ".format(mode, fio_block_size))
+                    for key, value in self.uncompress_params_to_monitor.items():
+                        fun_test.log("Trying " + str(key))
+                        prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                               self.uuids["lsv"], "uncompression",
+                                                               str(key))
                         command_result = self.storage_controller.peek(prop_tree, command_duration=5)
                         fun_test.log(command_result["data"])
 
                     if self.encrypt:
                         fun_test.log("ENCRYPTION STATS AFTER FIO mode:{} fio-bs:{} ".format(mode, fio_block_size))
                         for key, value in self.enc_params_to_monitor.items():
-                            prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
+                            fun_test.log("Trying " + str(key))
+                            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                                   self.uuids["lsv"], "encryption", str(key))
                             command_result = self.storage_controller.peek(prop_tree, command_duration=5)
                             fun_test.log(command_result["data"])
+
+                        fun_test.log("DECRYPTION STATS AFTER FIO mode:{} fio-bs:{} ".format(mode, fio_block_size))
+                        for key, value in self.dec_params_to_monitor.items():
+                            fun_test.log("Trying " + str(key))
+                            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                                   self.uuids["lsv"], "decryption", str(key))
+                            command_result = self.storage_controller.peek(prop_tree, command_duration=5)
+                            fun_test.log(command_result["data"])
+
+                    prop_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                           self.uuids["lsv"])
+                    command_result = self.storage_controller.peek(prop_tree, command_duration=50)
+                    fun_test.log(command_result["data"])
+
+        # BIG FOR LOOP FOR FIO ENDS HERE.
+
         # take the params_to_monitor_per_attach params again and verify
         for key, value in self.params_to_monitor_per_attach.items():
             final_value = 0
+            fun_test.log("Trying " + str(key))
             prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
             command_result = self.storage_controller.peek(prop_tree, command_duration=5)
             fun_test.log(command_result["data"])
@@ -339,62 +404,110 @@ class LSVVolumeLevelTestcase(FunTestCase):
                                         final_value - self.my_shared_variables["initial_" + str(key)])
                 test_result = False
         # take the final stats and verify
-        for key, value in self.zip_params_to_monitor.items():
+        for key, value in self.compress_params_to_monitor.items():
             final_value = 0
             fun_test.log("Trying " + str(key))
-            if key not in per_volume_zip_stats:
-                prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
-            else:
-                prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
-                                                       self.uuids["lsv"], "compression",
-                                                       str(key))
+            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                   self.uuids["lsv"], "compression",
+                                                   str(key))
             command_result = self.storage_controller.peek(prop_tree, command_duration=5)
             fun_test.log(command_result["data"])
             if command_result["data"]:
                 final_value = command_result["data"]
             if key == "accumulated_out_bytes":
-		if (final_value - self.my_shared_variables["initial_" + str(key)]) - self.expected_compressed_bytes < 200:
-                    fun_test.add_checkpoint("zip RATIO: " + str(key) + " :0.005 x input: " + str(len(self.fio_bs_iodepth))
+                if (final_value - self.my_shared_variables["initial_" + str(key)]) - \
+                        self.expected_compressed_bytes < 200:
+                    fun_test.add_checkpoint("zip RATIO: " + str(key) + " :0.005 x input: " +
+                                            str(len(self.fio_bs_iodepth))
                                             + "x " +
                                             self.fio_cmd_args["size"].format(self),
                                             "PASSED",
                                             self.expected_compressed_bytes,
                                             final_value - self.my_shared_variables["initial_" + str(key)])
                 else:
-                    fun_test.add_checkpoint("zip ratio " + str(key) + " not 0.005 x input " + str(len(self.fio_bs_iodepth)) +
+                    fun_test.add_checkpoint("zip ratio " + str(key) + " not 0.005 x input " +
+                                            str(len(self.fio_bs_iodepth)) +
                                             "x " +
                                             self.fio_cmd_args["size"].format(self),
                                             "Failed",
                                             self.expected_compressed_bytes,
                                             final_value - self.my_shared_variables["initial_" + str(key)])
                     test_result = False
-            elif command_result["data"] - self.my_shared_variables["initial_" + str(key)] == value:
-                fun_test.add_checkpoint("zip stats match: " + str(key).format(self),
+            elif final_value - self.my_shared_variables["initial_" + str(key)] == value:
+                fun_test.add_checkpoint("compress stats match: " + str(key).format(self),
                                         "PASSED",
                                         value,
-                                        command_result["data"] - self.my_shared_variables["initial_" + str(key)])
+                                        final_value - self.my_shared_variables["initial_" + str(key)])
             else:
-                fun_test.add_checkpoint("zip stats dont match: " + str(key).format(self),
+                fun_test.add_checkpoint("compress stats dont match: " + str(key).format(self),
                                         "Failed",
                                         value,
-                                        command_result["data"] - self.my_shared_variables["initial_" + str(key)])
+                                        final_value - self.my_shared_variables["initial_" + str(key)])
                 test_result = False
-            if self.encrypt:
-                for key, value in self.enc_params_to_monitor.items():
-                    prop_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", str(key))
-                    command_result = self.storage_controller.peek(prop_tree, command_duration=5)
-                    fun_test.log(command_result["data"])
-                    if command_result["data"] - self.my_shared_variables["initial_" + str(key)] == value:
-                        fun_test.add_checkpoint("enc stats match: " + str(key).format(self),
-                                                "PASSED",
-                                                value,
-                                                command_result["data"] - self.my_shared_variables["initial_" + str(key)])
-                    else:
-                        fun_test.add_checkpoint("enc stats dont match: " + str(key).format(self),
-                                                "Failed",
-                                                value,
-                                                command_result["data"] - self.my_shared_variables["initial_" + str(key)])
-                        test_result = False
+
+        for key, value in self.uncompress_params_to_monitor.items():
+            final_value = 0
+            fun_test.log("Trying " + str(key))
+            prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                   self.uuids["lsv"], "uncompression",
+                                                   str(key))
+            command_result = self.storage_controller.peek(prop_tree, command_duration=5)
+            fun_test.log(command_result["data"])
+            if command_result["data"]:
+                final_value = command_result["data"]
+
+            if final_value - self.my_shared_variables["initial_" + str(key)] == value:
+                fun_test.add_checkpoint("uncompress stats match: " + str(key).format(self),
+                                        "PASSED",
+                                        value,
+                                        final_value - self.my_shared_variables["initial_" + str(key)])
+            else:
+                fun_test.add_checkpoint("uncompress stats dont match: " + str(key).format(self),
+                                        "Failed",
+                                        value,
+                                        final_value - self.my_shared_variables["initial_" + str(key)])
+                test_result = False
+
+        if self.encrypt:
+            for key, value in self.enc_params_to_monitor.items():
+                final_value = 0
+                prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                       self.uuids["lsv"], "encryption", str(key))
+                command_result = self.storage_controller.peek(prop_tree, command_duration=5)
+                fun_test.log(command_result["data"])
+                if command_result["data"]:
+                    final_value = command_result["data"]
+                if final_value - self.my_shared_variables["initial_" + str(key)] == value:
+                    fun_test.add_checkpoint("enc stats match: " + str(key).format(self),
+                                            "PASSED",
+                                            value,
+                                            final_value - self.my_shared_variables["initial_" + str(key)])
+                else:
+                    fun_test.add_checkpoint("enc stats dont match: " + str(key).format(self),
+                                            "Failed",
+                                            value,
+                                            final_value - self.my_shared_variables["initial_" + str(key)])
+                    test_result = False
+
+            for key, value in self.dec_params_to_monitor.items():
+                final_value = 0
+                prop_tree = "{}/{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LSV",
+                                                       self.uuids["lsv"], "decryption", str(key))
+                command_result = self.storage_controller.peek(prop_tree, command_duration=5)
+                fun_test.log(command_result["data"])
+                if command_result["data"]:
+                    final_value = command_result["data"]
+                if final_value - self.my_shared_variables["initial_" + str(key)] == value:
+                    fun_test.add_checkpoint("dec stats match: " + str(key).format(self),
+                                            "PASSED",
+                                            value,
+                                            final_value - self.my_shared_variables["initial_" + str(key)])
+                else:
+                    fun_test.add_checkpoint("dec stats dont match: " + str(key).format(self),
+                                            "Failed",
+                                            value,
+                                            final_value - self.my_shared_variables["initial_" + str(key)])
+                    test_result = False
 
         fun_test.test_assert(test_result, self.summary)
 
@@ -544,7 +657,7 @@ class LSVFioSeqWriteSeqReadWithCRCOnBLT(LSVVolumeLevelTestcase):
         super(LSVFioSeqWriteSeqReadWithCRCOnBLT, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnJVOL(LSVVolumeLevelTestcase):
+class LSVFioRandWriteRandReadWithCRCOnJVOL(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=6,
                               summary="FIO Random Write/Read, CRC32 on JVOL, compression on LSV enabled",
@@ -557,16 +670,16 @@ class LSVFioSeqWriteSeqReadWithCRCOnJVOL(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOL, self).setup()
+        super(LSVFioRandWriteRandReadWithCRCOnJVOL, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOL, self).run()
+        super(LSVFioRandWriteRandReadWithCRCOnJVOL, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOL, self).cleanup()
+        super(LSVFioRandWriteRandReadWithCRCOnJVOL, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnLSV(LSVVolumeLevelTestcase):
+class LSVFioRWWithCRCOnLSV(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=7,
                               summary="FIO Random Write/Read, CRC32 on LSV, compression on LSV enabled",
@@ -579,13 +692,13 @@ class LSVFioSeqWriteSeqReadWithCRCOnLSV(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSV, self).setup()
+        super(LSVFioRWWithCRCOnLSV, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSV, self).run()
+        super(LSVFioRWWithCRCOnLSV, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnLSV, self).cleanup()
+        super(LSVFioRWWithCRCOnLSV, self).cleanup()
 
 
 class LSVFioSeqWriteSeqReadWthEnc(LSVVolumeLevelTestcase):
@@ -654,7 +767,7 @@ class LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc(LSVVolumeLevelTestcase):
         super(LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc, self).cleanup()
 
 
-class LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc(LSVVolumeLevelTestcase):
+class LSVFioRWWithCRCOnJVOLWthEnc(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=11,
                               summary="FIO Random Write/Read compression & CRC32 on JVOL with Encryption",
@@ -667,13 +780,13 @@ class LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).setup()
+        super(LSVFioRWWithCRCOnJVOLWthEnc, self).setup()
 
     def run(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).run()
+        super(LSVFioRWWithCRCOnJVOLWthEnc, self).run()
 
     def cleanup(self):
-        super(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc, self).cleanup()
+        super(LSVFioRWWithCRCOnJVOLWthEnc, self).cleanup()
 
 
 class LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc(LSVVolumeLevelTestcase):
@@ -720,7 +833,7 @@ class LSVStressPlain(LSVVolumeLevelTestcase):
         super(LSVStressPlain, self).cleanup()
 
 
-class LSVStressPlainCRC(LSVVolumeLevelTestcase):
+class LSVStressRandWriteRandPlainCRC(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=14,
                               summary="FIO compression stress with CRC32",
@@ -733,13 +846,13 @@ class LSVStressPlainCRC(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVStressPlainCRC, self).setup()
+        super(LSVStressRandWriteRandPlainCRC, self).setup()
 
     def run(self):
-        super(LSVStressPlainCRC, self).run()
+        super(LSVStressRandWriteRandPlainCRC, self).run()
 
     def cleanup(self):
-        super(LSVStressPlainCRC, self).cleanup()
+        super(LSVStressRandWriteRandPlainCRC, self).cleanup()
 
 
 class LSVStressEnc(LSVVolumeLevelTestcase):
@@ -764,7 +877,7 @@ class LSVStressEnc(LSVVolumeLevelTestcase):
         super(LSVStressEnc, self).cleanup()
 
 
-class LSVStressEncCRC(LSVVolumeLevelTestcase):
+class LSVStressRandWriteRandReadEncCRC(LSVVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=16,
                               summary="FIO tress with compression, CRC32 and Encryption",
@@ -777,13 +890,13 @@ class LSVStressEncCRC(LSVVolumeLevelTestcase):
         """)
 
     def setup(self):
-        super(LSVStressEncCRC, self).setup()
+        super(LSVStressRandWriteRandReadEncCRC, self).setup()
 
     def run(self):
-        super(LSVStressEncCRC, self).run()
+        super(LSVStressRandWriteRandReadEncCRC, self).run()
 
     def cleanup(self):
-        super(LSVStressEncCRC, self).cleanup()
+        super(LSVStressRandWriteRandReadEncCRC, self).cleanup()
 
 
 if __name__ == "__main__":
@@ -791,24 +904,26 @@ if __name__ == "__main__":
     lsvscript = LSVVolumeLevelScript()
 
     lsvscript.add_test_case(LSVFioSeqWriteSeqRead())
-    lsvscript.add_test_case(LSVFioRandWriteRandRead())
 
+    lsvscript.add_test_case(LSVFioRandWriteRandRead())
     lsvscript.add_test_case(LSVFioRW())
     lsvscript.add_test_case(LSVFioRandRW())
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnBLT())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnJVOL())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnLSV())
-    
+    lsvscript.add_test_case(LSVFioRandWriteRandReadWithCRCOnJVOL())
+    lsvscript.add_test_case(LSVFioRWWithCRCOnLSV())
+
     #With Encryption
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWthEnc())
+
     lsvscript.add_test_case(LSVFioRandWriteRandReadWthEnc())
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnBLTWthEnc())
-    lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc())
+    lsvscript.add_test_case(LSVFioRWWithCRCOnJVOLWthEnc())
     lsvscript.add_test_case(LSVFioSeqWriteSeqReadWithCRCOnLSVWthEnc())
 
     #DEFLATE STRESS TESTS
     lsvscript.add_test_case(LSVStressPlain())
-    lsvscript.add_test_case(LSVStressPlainCRC())
+    lsvscript.add_test_case(LSVStressRandWriteRandPlainCRC())
     lsvscript.add_test_case(LSVStressEnc())
-    lsvscript.add_test_case(LSVStressEncCRC())
+    lsvscript.add_test_case(LSVStressRandWriteRandReadEncCRC())
+
     lsvscript.run()
