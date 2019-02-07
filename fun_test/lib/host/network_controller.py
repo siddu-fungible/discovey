@@ -1486,7 +1486,7 @@ class NetworkController(DpcshClient):
                      op="FUN_NU_OP_SFG_METER_CFG_W", len8=3, common={}, inst=0, bank=0, ):
         result = None
         try:
-            cmd_arg_dict = {"": op, "len8": len8, "common": common, "inst": inst, "bank": bank, "index": index,
+            cmd_arg_dict = {"op": op, "len8": len8, "common": common, "inst": inst, "bank": bank, "index": index,
                             "interval": interval, "crd": crd, "commit_rate": commit_rate, "excess_rate": excess_rate,
                             "commit_burst": commit_burst, "excess_burst": excess_burst, "dir": dir,
                             "len_mode": len_mode, "rate_mode": rate_mode, "pps_mode": pps_mode,

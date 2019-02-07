@@ -3,9 +3,9 @@
     "bps_meter":{
       "dport" : 1166,
       "meter_id" : 60,
-      "meter_interval" : 1,
-      "meter_credit" : 1,
-      "commit_rate" : 1
+      "meter_interval" : 14,
+      "meter_credit" : 82,
+      "commit_rate" : 4
     }
   }
 ]

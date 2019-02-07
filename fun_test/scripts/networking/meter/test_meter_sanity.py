@@ -15,9 +15,9 @@ subscribed_results = None
 NUM_PORTS = 2
 generator_port_obj_dict = {}
 analyzer_port_obj_dict = {}
-sample_json_file = fun_test.get_script_parent_directory() + '/meter.json'
-acl_json_output = fun_test.parse_file_to_json(sample_json_file)
-meter_bps = acl_json_output['bps_meter']
+meter_json_file = fun_test.get_script_parent_directory() + '/meter.json'
+meter_json_output = fun_test.parse_file_to_json(meter_json_file)
+meter_bps = meter_json_output[0]['bps_meter']
 
 
 def create_streams(tx_port, dip, dmac, load=test_config['load_pps'], load_type = test_config['fill_type'], sip="192.168.1.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
@@ -129,11 +129,6 @@ class SpirentSetup(FunTestScript):
 
 
 class MeterBase(FunTestCase):
-
-    dut_rx_port = dut_config['ports'][0]
-    dut_tx_port = dut_config['ports'][1]
-    tx_port = nu_ing_port
-    rx_port = nu_eg_port
     stream_obj = None
     load_type = "KILOBITS_PER_SECOND"
     load = test_config['load_kbps']
@@ -155,6 +150,7 @@ class MeterBase(FunTestCase):
                                   """ % TRAFFIC_DURATION)
 
     def setup(self):
+
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
         # Multiple streams for seding packets with different fields
@@ -174,16 +170,17 @@ class MeterBase(FunTestCase):
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
     def run(self):
-
+        tx_port = nu_ing_port
+        rx_port = nu_eg_port
         result = network_controller_obj.update_meter(index=self.meter_id, interval=self.meter_interval,
                                                      crd=self.meter_credit, commit_rate=self.commit_rate, pps_mode=0)
 
         meter_before =  network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
-        checkpoint = "Start traffic from %s port for %d secs" % (self.tx_port, TRAFFIC_DURATION)
-        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[self.tx_port]])
+        checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
         checkpoint = "Validate Tx and Rx Rate"
-
+        fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
         rate_result = template_obj.validate_traffic_rate_results(
             rx_summary_subscribe_handle=subscribed_results['rx_summary_subscribe'],
             tx_summary_subscribe_handle=subscribed_results['tx_stream_subscribe'],
