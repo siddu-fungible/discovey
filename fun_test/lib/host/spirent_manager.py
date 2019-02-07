@@ -329,7 +329,7 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type='0800',
+    def configure_mac_address(self, streamblock, destination_mac, source_mac=None,  ethernet_type='0800',
                               frame_type=ETHERNETII_FRAME):
         result = False
         try:
@@ -341,7 +341,10 @@ class SpirentManager(object):
                     fun_test.log("Handle Fetched: %s" % handle)
                     ethernet_handle = handle
                     break
-            self.stc.config(ethernet_handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
+            if source_mac:
+                self.stc.config(ethernet_handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
+            else:
+                self.stc.config(ethernet_handle, dstMac=destination_mac, etherType=ethernet_type)
             # self.stc.create(frame_type, under=streamblock, srcMac=source_mac, dstMac=destination_mac,
             #                etherType=ethernet_type)
             result = True
@@ -349,7 +352,7 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_ip_address(self, streamblock, source, destination, gateway=None, ip_version=IP_VERSION_4):
+    def configure_ip_address(self, streamblock, destination, source=None, gateway=None, ip_version=IP_VERSION_4):
         result = False
         try:
             handles = self.get_object_children(handle=streamblock)
@@ -362,7 +365,10 @@ class SpirentManager(object):
             if gateway:
                 self.stc.config(ip_handle, sourceAddr=source, destAddr=destination, gateway=gateway)
             else:
-                self.stc.config(ip_handle, sourceAddr=source, destAddr=destination)
+                if source:
+                    self.stc.config(ip_handle, sourceAddr=source, destAddr=destination)
+                else:
+                    self.stc.config(ip_handle, destAddr=destination)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))

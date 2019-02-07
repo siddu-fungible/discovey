@@ -1,6 +1,6 @@
-import {Component, OnInit, Input, OnChanges, Output, EventEmitter} from '@angular/core';
-import {ApiService} from "../services/api/api.service";
-import {LoggerService} from "../services/logger/logger.service";
+import {Component, EventEmitter, OnInit, OnChanges, Input, Output} from '@angular/core';
+import {ApiService} from "../../services/api/api.service";
+import {LoggerService} from "../../services/logger/logger.service";
 
 class Node {
   uId: number;  // unique Id
@@ -13,12 +13,13 @@ class Node {
   leaf: boolean = false;
 }
 
+
 @Component({
-  selector: 'app-test',
-  templateUrl: './test.component.html',
-  styleUrls: ['./test.component.css']
+  selector: 'app-script-selector',
+  templateUrl: './script-selector.component.html',
+  styleUrls: ['./script-selector.component.css']
 })
-export class TestComponent implements OnInit, OnChanges {
+export class ScriptSelectorComponent implements OnInit, OnChanges {
   data: any = {};
   parsedData: any = {};
   uId = 0;
@@ -27,6 +28,7 @@ export class TestComponent implements OnInit, OnChanges {
   singleSelectNode = null;
   selectionMode = false;
   savedSingleSelectNode = null;
+  @Input() resetEvent: any = null;
   @Output() singleSelectPk: EventEmitter<number> = new EventEmitter();
 
 
@@ -41,6 +43,7 @@ export class TestComponent implements OnInit, OnChanges {
       this.logger.error('/regression/scripts');
     })
   }
+
 
   getIndentHtml = (node) => {
     let s = "";
@@ -153,7 +156,6 @@ export class TestComponent implements OnInit, OnChanges {
     }
     this.flattenNode(rootNode);
     let i = 0;
-
 
   }
 
