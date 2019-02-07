@@ -495,12 +495,15 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                         for ekey, evalue in expected_volume_stats[mode].items():
                             if ekey in diff_volume_stats[combo][mode][x]:
                                 actual = diff_volume_stats[combo][mode][x][ekey]
-                                fun_test.test_assert(expression=actual == evalue,
-                                                     message="{} check for {} mode & {} "
-                                                             "combo on BLT {}, expected {} : actual {}".
-                                                     format(ekey, mode, combo, x, evalue, actual))
+                                fun_test.test_assert_expected(evalue, actual,
+                                                              message="{} check for {} mode & {} combo on BLT {}".
+                                                              format(ekey, mode, combo, x))
                             else:
                                 fun_test.critical("{} is not found in BLT stats".format(ekey))
+                                fun_test.add_checkpoint("{} not found in BLT {} stats".format(ekey, x),
+                                                        "FAILED",
+                                                        ekey,
+                                                        "Not found")
 
                     final_crypto_stats[combo][mode] = {}
                     diff_crypto_stats[combo][mode] = {}
@@ -540,14 +543,13 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                                 for ekey, evalue in expected_crypto_stats.items():
                                     if ekey in diff_crypto_stats[combo][mode][i][x]:
                                         actual = diff_crypto_stats[combo][mode][i][x][ekey]
-                                        fun_test.simple_assert(expression=actual == evalue,
-                                                               message="{} : {} stats for {} mode & {} combo on BLT {},"
-                                                                       " expected {} : actual {}".
-                                                               format(x, ekey, mode, combo, x, evalue, actual))
+                                        fun_test.test_assert_expected(evalue, actual,
+                                                                      message="{} : {} stats for {} mode & {} combo on "
+                                                                              "BLT {}".format(x, ekey, mode, combo, i))
                                     else:
                                         fun_test.critical("{} is not found in BLT {} {} stats".format(ekey, i, x))
                                         fun_test.add_checkpoint("{} not found in {} diff_crypto_stats on BLT {}".
-                                                                format(ekey, x, i))
+                                                                format(ekey, x, i), "FAILED", ekey, "Not found")
 
                         if hasattr(self, "crypto_ops_params"):
                             filter_values = []
