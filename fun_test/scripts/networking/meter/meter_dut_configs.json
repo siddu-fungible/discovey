@@ -1,0 +1,32 @@
+[
+  {
+    "name": "palladium_test_config",
+    "dut_type": "palladium",
+    "min_frame_size": 78,
+    "max_frame_size": 1500,
+    "fixed_frame_size": 128,
+    "load_type": "FRAMES_PER_SECOND",
+    "load": 10,
+    "traffic_duration":2,
+    "insert_signature": true,
+    "fill_type": "PRBS",
+    "soc_clk_in_khz": 256,
+    "frame_length_mode": "FIXED",
+    "dest_port" : 1666
+  },
+  {
+    "name": "f1_test_config",
+    "dut_type": "f1",
+    "min_frame_size": 78,
+    "max_frame_size": 1500,
+    "fixed_frame_size": 128,
+    "load_type": "FRAMES_PER_SECOND",
+    "load": 10,
+    "traffic_duration":2,
+    "insert_signature": true,
+    "fill_type": "PRBS",
+    "soc_clk_in_khz": 1000000,
+    "frame_length_mode": "FIXED",
+    "dest_port" : 1666
+  }
+]
