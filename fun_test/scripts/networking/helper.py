@@ -748,3 +748,39 @@ def ensure_dpcsh_ready(network_controller_obj, max_time=180):
     except Exception as ex:
         fun_test.critical(str(ex))
     return status
+
+
+def get_flex_counter_values(network_controller_obj, counter_id, erp=False):
+    counter_value = 0
+    try:
+        if erp:
+            counterstats = network_controller_obj.peek_erp_flex_stats(counter_num=counter_id)
+            fun_test.log("counterstat value : %s " % counterstats)
+            counter_value = int(counterstats['bank1']['pkts'])
+            fun_test.log("Counter %s value : %s" % (counter_id, counter_value))
+        else:
+            counterstats = network_controller_obj.peek_fwd_flex_stats(counter_num=counter_id)
+            fun_test.log("counterstat value : %s " % counterstats)
+            counter_value = int(counterstats['bank2']['pkts'])
+            fun_test.log("Counter %s value : %s" % (counter_id, counter_value))
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return counter_value
+
+
+def get_qos_stats(network_controller_obj, queue_no, dut_port, queue_type='pg_deq', hnu=False):
+    qos_val = 0
+    try:
+        if queue_no<10:
+            queue_num = "0"+str(queue_no)
+        else:
+            queue_num=str(queue_no)
+        stats = network_controller_obj.peek_psw_port_stats(port_num=dut_port, hnu=hnu, queue_num=queue_num)
+        fun_test.simple_assert(stats, "Ensure psw command is executed on port %s" % dut_port)
+        if stats:
+            qos_val = int(stats['count'][queue_type]['pkts'])
+        else:
+            qos_val = 0
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return qos_val

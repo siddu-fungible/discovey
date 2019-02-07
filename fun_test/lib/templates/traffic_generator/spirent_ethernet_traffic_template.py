@@ -1488,4 +1488,3 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-

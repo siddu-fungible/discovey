@@ -401,7 +401,7 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return delay_value
-    
+
     def set_filter_runt(self, port_num, buffer_64=0, runt_err_en=1, en_delete=0, shape=0):
         result = False
         try:
@@ -409,15 +409,15 @@ class NetworkController(DpcshClient):
                                                                                          "runt_err_en": runt_err_en,
                                                                                          "en_delete": en_delete}]
             fun_test.debug("Enable runt filter on port %d" % port_num)
-            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_PORT, data=filter_runt_args, 
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_PORT, data=filter_runt_args,
                                                 command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=json_cmd_result['status'], 
+            fun_test.simple_assert(expression=json_cmd_result['status'],
                                    message="Enable runt filter on port %d" % port_num)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-    
+
     def enable_ptp_first_step(self, port_num, shape=0):
         result = False
         try:
@@ -425,13 +425,13 @@ class NetworkController(DpcshClient):
             fun_test.debug("Enable PTP 1 step on port %d" % port_num)
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_PORT, data=ptp_first_step_args,
                                                 command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=json_cmd_result['status'], 
+            fun_test.simple_assert(expression=json_cmd_result['status'],
                                    message="Enable PTP 1 step on port %d" % port_num)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-    
+
     def disable_ptp_first_step(self, port_num, shape=0):
         result = False
         try:
@@ -439,13 +439,13 @@ class NetworkController(DpcshClient):
             fun_test.debug("disable PTP 1 step on port %d" % port_num)
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_PORT, data=ptp_first_step_args,
                                                 command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=json_cmd_result['status'], 
+            fun_test.simple_assert(expression=json_cmd_result['status'],
                                    message="disable PTP 1 step on port %d" % port_num)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-    
+
     def dump_runt_filter(self, port_num, shape=0):
         result = None
         try:
@@ -453,13 +453,13 @@ class NetworkController(DpcshClient):
             fun_test.debug("Dump runt filter on port %d" % port_num)
             json_cmd_result = self.json_execute(verb=self.VERB_TYPE_PORT, data=dump_runt_filter_args,
                                                 command_duration=self.COMMAND_DURATION)
-            fun_test.simple_assert(expression=json_cmd_result['status'], 
+            fun_test.simple_assert(expression=json_cmd_result['status'],
                                    message="Dump runt filter on port %d" % port_num)
             # TODO: See the output of this cmd on palladium and modify the lib accordingly
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-    
+
     def set_qos_egress_buffer_pool(self, sf_thr=None, sx_thr=None, dx_thr=None, df_thr=None, fcp_thr=None,
                                    nonfcp_thr=None, sample_copy_thr=0, sf_xoff_thr=0, fcp_xoff_thr=0,
                                    nonfcp_xoff_thr=0, mode='nu'):
@@ -1056,7 +1056,7 @@ class NetworkController(DpcshClient):
             max_retry = 3
             current_retry = 0
             sleep_duration = 2
-            chunk=16384
+            chunk = 16384
             type = 'nu'
             if hnu:
                 type = 'hnu'
@@ -1069,7 +1069,8 @@ class NetworkController(DpcshClient):
                 fun_test.debug("Getting PSW stats for port %d" % port_num)
             while current_retry < max_retry:
                 fun_test.log("Executing command for %s time " % (current_retry + 1))
-                result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION,
+                result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd,
+                                           command_duration=self.COMMAND_DURATION,
                                            sleep_duration=sleep_duration, chunk=chunk)
                 fun_test.simple_assert(expression=result['status'], message="Get PSW stats for port %d" %
                                                                             (port_num))
@@ -1278,7 +1279,6 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-
     def peek_meter_stats_by_id(self, meter_id, bank=0, erp=False):
         stats = None
         try:
@@ -1448,6 +1448,34 @@ class NetworkController(DpcshClient):
         try:
             result = self.json_execute(verb='sample', data=['show'], command_duration=20)
             fun_test.simple_assert(result['status'], "Stats fetched")
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_fwd_flex_stats(self, counter_num):
+        try:
+            stats = None
+            stats_cmd = "stats/fwd/flex/[%d]" % counter_num
+            fun_test.debug("Getting counter stats for counter %d" % counter_num)
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Getting counter stats for counter %d" % counter_num)
+            fun_test.debug("Counter %d stats: %s" % (counter_num, result['data']))
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_erp_flex_stats(self, counter_num):
+        try:
+            stats = None
+            stats_cmd = "stats/erp/flex/[%d]" % counter_num
+            fun_test.debug("Getting counter stats for counter %d" % counter_num)
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Getting counter stats for counter %d" % counter_num)
+            fun_test.debug("Counter %d stats: %s" % (counter_num, result['data']))
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))

@@ -19,6 +19,7 @@ class NuConfigManager(object):
     CC_FLOW_TYPE = "cc_flow"
     VP_FLOW_TYPE = "vp_flow"
     SAMPLE_FLOW_TYPE = "sample_flow"
+    ACL_FLOW_TYPE = "acl_flow"
     FLOW_DIRECTION_NU_NU = "NU_NU"
     FLOW_DIRECTION_FPG_CC = "NU_CC"
     FLOW_DIRECTION_CC_FPG = "CC_NU"
@@ -30,6 +31,7 @@ class NuConfigManager(object):
     FLOW_DIRECTION_FPG_HU = "NU_HU"
     FLOW_DIRECTION_HU_FPG = "HU_NU"
     FLOW_DIRECTION_HNU_HNU = "HNU_HNU_NFCP"
+    FLOW_DIRECTION_ALL = "ALL"
     FLOW_DIRECTION = "flow_direction"
     IP_VERSION = "ip_version"
     SPRAY_ENABLE = "spray_enable"
@@ -106,7 +108,7 @@ class NuConfigManager(object):
                     m = re.search(r'(\d+)', key)
                     if m:
                         result['ports'].append(int(m.group(1)))
-            elif flow_type == self.SAMPLE_FLOW_TYPE:
+            elif flow_type == self.SAMPLE_FLOW_TYPE or flow_type == self.ACL_FLOW_TYPE:
                 for key, value in (dut_spirent_map[flow_type][flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
@@ -302,6 +304,20 @@ class NuConfigManager(object):
                     result[key] = value
                     count += 1
             elif flow_type == self.SAMPLE_FLOW_TYPE:
+                fun_test.log("Fetching NU VP path map. Traffic Direction: %s" % flow_direction)
+                fun_test.simple_assert(len(dut_spirent_map[flow_type][flow_direction]) >= no_of_ports_needed,
+                                       "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
+                                       (no_of_ports_needed, len(dut_spirent_map[flow_type][flow_direction])))
+                count = 0
+                for key, value in dut_spirent_map[flow_type][flow_direction].iteritems():
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1
+            elif flow_type == self.ACL_FLOW_TYPE:
                 fun_test.log("Fetching NU VP path map. Traffic Direction: %s" % flow_direction)
                 fun_test.simple_assert(len(dut_spirent_map[flow_type][flow_direction]) >= no_of_ports_needed,
                                        "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
