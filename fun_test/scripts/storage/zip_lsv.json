@@ -17,27 +17,23 @@
     "command_timeout": 50,
     "iter_interval": 2,
     "ns_id": 1,
-    // FIO commandline arguments //"do_verify": 1, "verify":"sha1",
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
                       "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipinflate_filter":256,// tells how many times we got the request to decompress
-      "zipdeflate_filter":128,// tells how many times we got the request to compress
-      "zipfilter_compress_done":128,// tells how many times zipdeflte_filter (above) called this wu to compress
-      "zipfilter_decompress_done":256,// tells how many times zipinflate_filter (above) called this wu to decompress
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
       "compress_reqs":128,// tells how many times we got the request to compress
       "compress_done":128,// tells how many times we succeeded in compressing
-      "compress_fails":0,
-      "uncompress_reqs":0,// this tells how many times we sent decompression request to the hw
-      "uncompress_done":0,
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":256,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":256,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -53,12 +49,15 @@
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
     // Block size, IO Depth combo
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
@@ -80,25 +79,23 @@
     "command_timeout": 50,
     "iter_interval": 2,
     "ns_id": 1,
-    "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify":"sha1",
-                      "buffer_compress_percentage": 100},
+   "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
+                      "verify": "pattern", "verify_pattern": "0x000000000",
+                      "buffer_compress_percentage": 10},
     "fio_modes": ["randwrite", "randread"],
 
-    "expected_compressed_bytes": 0,
-    "zip_params_to_monitor": {
-      "zipinflate_filter":256,
-      "zipdeflate_filter":128,
-      "zipfilter_compress_done":128, // random data cannot be compressed
-      "zipfilter_decompress_done":0, // random data
+    "expected_compressed_bytes": 2500,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":0,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":256,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":256,
       "uncompress_fails":0,
-      "uncompressible":128 // random data
-      //"zipfilter_uncompress_done":32
+      "uncompressible":0
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -116,12 +113,17 @@
     },
     // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
    "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
+    //"fio_bs_iodepth": ["(4, 1)"]
   },
   "LSVFioRW": {
     "CRC_BLT" : 0,
@@ -143,23 +145,20 @@
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
                       "buffer_compress_percentage": 100},
-    "fio_modes": ["write", "read"],
+    "fio_modes": ["rw"],
 
-    "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "expected_compressed_bytes": 900,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":49,// tells how many times we got the request to compress
+      "compress_done":49,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":101,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":101,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -175,12 +174,15 @@
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
@@ -204,23 +206,20 @@
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
                       "buffer_compress_percentage": 100},
-    "fio_modes": ["write", "read"],
+    "fio_modes": ["randrw"],
 
-    "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "expected_compressed_bytes": 900,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":49,// tells how many times we got the request to compress
+      "compress_done":49,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":86,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":86,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -236,12 +235,15 @@
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
@@ -268,20 +270,17 @@
                       "buffer_compress_percentage": 100},
     "fio_modes": ["write", "read"],
     "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":256,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":256,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -297,16 +296,19 @@
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
-  "LSVFioSeqWriteSeqReadWithCRCOnJVOL": {
+  "LSVFioRandWriteRandReadWithCRCOnJVOL": {
     "CRC_BLT" : 0,
     "CRC_JVOL": 1,
     "CRC_LSV": 0,
@@ -326,23 +328,20 @@
     "ns_id": 1,
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
-                      "buffer_compress_percentage": 100},
-    "fio_modes": ["write", "read"],
+                      "buffer_compress_percentage": 90},
+    "fio_modes": ["randwrite", "randread"],
     "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":256,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":256,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -358,16 +357,19 @@
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
-  "LSVFioSeqWriteSeqReadWithCRCOnLSV": {
+  "LSVFioRWWithCRCOnLSV": {
     "CRC_BLT" : 0,
     "CRC_JVOL":0,
     "CRC_LSV": 1,
@@ -388,22 +390,19 @@
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
                       "buffer_compress_percentage": 100},
-    "fio_modes": ["write", "read"],
-    "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "fio_modes": ["rw"],
+    "expected_compressed_bytes": 900,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":49,// tells how many times we got the request to compress
+      "compress_done":49,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":101,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":101,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -419,12 +418,15 @@
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
@@ -451,20 +453,17 @@
     "fio_modes": ["write", "read"],
     //0.005 times of input ie 4 x 4m x 0.005 = 81920
     "expected_compressed_bytes": 81920,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":4096,
-      "zipinflate_filter":8192,
-      "zipfilter_compress_done":4096,
-      "zipfilter_decompress_done":8192,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":4096,
-      "compress_done":4096,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":4096,// tells how many times we got the request to compress
+      "compress_done":4096,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":8192,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":8192,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -480,16 +479,19 @@
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
     "fio_bs_iodepth": ["(4, 4)", "(8, 4)", "(16, 4)", "(32, 4)"]
   },
-  "LSVStressPlainCRC": {
+  "LSVStressRandWriteRandPlainCRC": {
     "CRC_BLT":1,
     "CRC_LSV": 1,
     "CRC_JVOL" :1,
@@ -512,23 +514,20 @@
     "fio_cmd_args": {"io_queues": 1, "size": "4m", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
                       "buffer_compress_percentage": 100},
-    "fio_modes": ["write", "read"],
+    "fio_modes": ["randwrite", "randread"],
 
     "expected_compressed_bytes": 81920,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":4096,
-      "zipinflate_filter":8192,
-      "zipfilter_compress_done":4096,
-      "zipfilter_decompress_done":8192,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":4096,
-      "compress_done":4096,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":4096,// tells how many times we got the request to compress
+      "compress_done":4096,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":8192,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":8192,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -544,12 +543,15 @@
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":0,
-      "cryptofilter_done":0,
-      "fun_crypto_aes_wu":0,
-      "hw_crypto_aes_hw_done":0
+      "encrypt_done": 0,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 0
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 0,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 0
     },
     "fio_bs_iodepth": ["(4, 4)", "(8, 4)", "(16, 4)", "(32, 4)"]
   },
@@ -579,20 +581,17 @@
     "fio_modes": ["write", "read"],
     "expected_compressed_bytes": 2500,
 
-     "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-       "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-       "zipfilter_decompress_done":256,
+     "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":256,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":256,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":4,
@@ -609,10 +608,14 @@
       "fun_crypto_setkey":2
     },
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":384,
-      "cryptofilter_done":384,
-      "fun_crypto_aes_wu":384,
-      "hw_crypto_aes_hw_done":384
+      "encrypt_done": 128,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 128
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 256,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 256
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
@@ -637,23 +640,20 @@
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
                       "buffer_compress_percentage": 100},
-    "fio_modes": ["write", "read"],
+    "fio_modes": ["randwrite", "randread"],
 
     "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":256,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":256,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":4,
@@ -669,12 +669,15 @@
       "cryptofilter_create":2,
       "fun_crypto_setkey":2
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":384,
-      "cryptofilter_done":384,
-      "fun_crypto_aes_wu":384,
-      "hw_crypto_aes_hw_done":384
+      "encrypt_done": 128,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 128
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 256,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 256
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
@@ -702,20 +705,17 @@
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":256,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":256,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":4,
@@ -731,16 +731,19 @@
       "cryptofilter_create":2,
       "fun_crypto_setkey":2
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":384,
-      "cryptofilter_done":384,
-      "fun_crypto_aes_wu":384,
-      "hw_crypto_aes_hw_done":384
+      "encrypt_done": 128,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 128
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 256,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 256
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
-  "LSVFioSeqWriteSeqReadWithCRCOnJVOLWthEnc": {
+  "LSVFioRWWithCRCOnJVOLWthEnc": {
     "CRC_BLT" : 0,
     "CRC_JVOL": 1,
     "CRC_LSV": 0,
@@ -761,23 +764,20 @@
     "fio_cmd_args": {"io_queues": 1, "size": "128k", "timeout": 280, "do_verify": 1, "verify_fatal": 1,
                       "verify": "pattern", "verify_pattern": "0x000000000",
                       "buffer_compress_percentage": 100},
-    "fio_modes": ["write", "read"],
+    "fio_modes": ["rw"],
 
     "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":49,// tells how many times we got the request to compress
+      "compress_done":49,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":101,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":101,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":4,
@@ -793,12 +793,15 @@
       "cryptofilter_create":2,
       "fun_crypto_setkey":2
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":384,
-      "cryptofilter_done":384,
-      "fun_crypto_aes_wu":384,
-      "hw_crypto_aes_hw_done":384
+      "encrypt_done": 49,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 49
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 128,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 128
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
@@ -826,20 +829,17 @@
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 2500,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":128,
-      "zipinflate_filter":256,
-      "zipfilter_compress_done":128,
-      "zipfilter_decompress_done":256,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":128,
-      "compress_done":128,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":128,// tells how many times we got the request to compress
+      "compress_done":128,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":256,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":256,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":4,
@@ -855,12 +855,15 @@
       "cryptofilter_create":2,
       "fun_crypto_setkey":2
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":384,
-      "cryptofilter_done":384,
-      "fun_crypto_aes_wu":384,
-      "hw_crypto_aes_hw_done":384
+      "encrypt_done": 128,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 128
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 256,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 256
     },
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"]
   },
@@ -887,20 +890,17 @@
     "fio_modes": ["write", "read"],
 
     "expected_compressed_bytes": 81920,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter":4096,
-      "zipinflate_filter":8192,
-      "zipfilter_compress_done":4096,
-      "zipfilter_decompress_done":8192,
+    "compress_params_to_monitor": {
       "accumulated_out_bytes":0,
-      "compress_reqs":4096,
-      "compress_done":4096,
-      "compress_fails":0,
-      "uncompress_reqs":0,
-      "uncompress_done":0,
+      "compress_reqs":4096,// tells how many times we got the request to compress
+      "compress_done":4096,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":8192,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":8192,
       "uncompress_fails":0,
       "uncompressible":0
-      //"zipfilter_uncompress_done":32
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":4,
@@ -916,16 +916,19 @@
       "cryptofilter_create":2,
       "fun_crypto_setkey":2
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":12288,
-      "cryptofilter_done":12288,
-      "fun_crypto_aes_wu":12288,
-      "hw_crypto_aes_hw_done":12288
+      "encrypt_done": 4096,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 4096
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 8192,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 8192
     },
     "fio_bs_iodepth": ["(4, 4)", "(8, 4)", "(16, 4)", "(32, 4)"]
   },
-  "LSVStressEncCRC": {
+  "LSVStressRandWriteRandReadEncCRC": {
     "CRC_BLT": 1,
     "CRC_LSV": 1,
     "CRC_JVOL": 1,
@@ -967,10 +970,7 @@
       "buffer_pattern": "0xffffffffffffffff",
       "buffer_compress_percentage": 100
     },
-    "fio_modes": [
-      "write",
-      "read"
-    ],
+    "fio_modes": ["randwrite", "randread"],
     "expected_volume_stats": {
       "write": {
         "fault_injection": 0,
@@ -984,20 +984,17 @@
       }
     },
     "expected_compressed_bytes": 81920,
-    "zip_params_to_monitor": {
-      "zipdeflate_filter": 4096,
-      "zipinflate_filter":8192,
-      "zipfilter_compress_done": 4096,
-      "zipfilter_decompress_done":8192,
-      "accumulated_out_bytes": 0,
-      "compress_reqs": 4096,
-      "compress_done": 4096,
-      "compress_fails": 0,
-      "uncompress_reqs": 0,
-      "uncompress_done": 0,
-      "uncompress_fails": 0,
-      "uncompressible": 0
-      //"zipfilter_uncompress_done":32
+    "compress_params_to_monitor": {
+      "accumulated_out_bytes":0,
+      "compress_reqs":4096,// tells how many times we got the request to compress
+      "compress_done":4096,// tells how many times we succeeded in compressing
+      "compress_fails":0
+    },
+    "uncompress_params_to_monitor": {
+      "uncompress_reqs":8192,// this tells how many times we sent decompression request to the hw
+      "uncompress_done":8192,
+      "uncompress_fails":0,
+      "uncompressible":0
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":4,
@@ -1013,12 +1010,15 @@
       "cryptofilter_create":2,
       "fun_crypto_setkey":2
     },
-    // encryption is disabled for this test
     "enc_params_to_monitor": {
-      "cryptofilter_aes_xts":12288,
-      "cryptofilter_done":12288,
-      "fun_crypto_aes_wu":12288,
-      "hw_crypto_aes_hw_done":12288
+      "encrypt_done": 4096,
+      "encrypt_fails": 0,
+      "encrypt_reqs": 4096
+    },
+    "dec_params_to_monitor": {
+      "decrypt_done": 8192,
+      "decrypt_fails": 0,
+      "decrypt_reqs": 8192
     },
     "fio_bs_iodepth": [
       "(4, 4)",

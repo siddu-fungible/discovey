@@ -79,7 +79,7 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     else:
         errored_cases = []
 
-    # TODO: Remove below workaround after SWOS-2890 is fixed
+    # TODO: Remove below workaround after EM-820 is fixed
     if tc == 'etp':
         for tc in failed_cases:
             if '2mss' in tc or '3mss' in tc or 'chksum' in tc:
@@ -115,14 +115,14 @@ class EtpTest(FunTestCase):
 
     def setup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
-        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        linux_obj_ptf.command('nohup ping 19.1.1.1 -i 100 &')
+        #linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        #linux_obj_ptf.command('nohup ping 19.1.1.1 -i 100 &')
         pass
 
     def cleanup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
-        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        linux_obj_ptf.command('pkill ping')
+        #linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        #linux_obj_ptf.command('pkill ping')
         get_ptf_log()
 
     def run(self):

@@ -101,7 +101,7 @@ class FunethPerformanceBase(FunTestCase):
     def cleanup(self):
         pass
 
-    def _run(self, flow_type, throughput_tool='iperf3', protocol='udp', parallel=8, duration=10, frame_size=1500):
+    def _run(self, flow_type, throughput_tool='iperf3', protocol='udp', parallel=1, duration=10, frame_size=1500):
 
         def udp_payload(frame_size):
             return frame_size-18-20-8
@@ -146,17 +146,15 @@ class FunethPerformanceBase(FunTestCase):
             output = linux_obj.command(
                 '%s pscheduler task --tool %s throughput -d %s -l %s -t %s -P %s' % (
                     cmd_prefix, throughput_tool, dst, tcp_payload(frame_size), duration, parallel), timeout=300)
-            #match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)\s+(\d+) / (\d+)\s+Jitter:\s(\S+ [m|u|n]s)',
-            #                  output,
-            #                  re.DOTALL)
-            #fun_test.test_assert(match, "Measure %s throughput" % flow_type)
+            match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)', output, re.DOTALL)
+            fun_test.test_assert(match, "Measure %s throughput" % flow_type)
 
-            #result.update(
-            #    {
-            #        'throughput': match.group(1),
-            #        'pps': (int(match.group(3)) - int(match.group(2))) / duration,
-            #    }
-            #)
+            result.update(
+                {
+                    'throughput': match.group(1),
+                    #'pps': (int(match.group(3)) - int(match.group(2))) / duration,
+                }
+            )
 
         # Latency
         packet_count = duration * result.get('pps', 1)
@@ -296,15 +294,15 @@ if __name__ == "__main__":
 
     # NU -> HU
     # TODO: Uncomment below after EM-804 is fixed
-    FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
-    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
+    #FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
+    #FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
     FunethScript.add_test_case(FunethPerformance_NU_HU_64B_TCP())
     FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_TCP())
 
     # HU -> NU
     # TODO: Below throughput result is too small in SN2, need further investigation
-    FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
-    FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
+    #FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
+    #FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
     FunethScript.add_test_case(FunethPerformance_HU_NU_64B_TCP())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_TCP())
 
