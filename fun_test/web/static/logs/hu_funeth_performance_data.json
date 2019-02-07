@@ -1,2 +1,24 @@
 [
+    {
+        "flow_type": "HU_NU",
+        "frame_size": 64,
+        "latency_max": "157.59 ms",
+        "latency_mean": "76.44 ms",
+        "latency_median": "66.44 ms",
+        "latency_min": "63.84 ms",
+        "throughput": "497.66 Kbps",
+        "timestamp": "2019-02-07 00:50:35.875534-08:00",
+        "version": 5195
+    },
+    {
+        "flow_type": "HU_NU",
+        "frame_size": 1500,
+        "latency_max": "149.77 ms",
+        "latency_mean": "78.25 ms",
+        "latency_median": "70.73 ms",
+        "latency_min": "68.53 ms",
+        "throughput": "484.50 Kbps",
+        "timestamp": "2019-02-07 00:51:54.877368-08:00",
+        "version": 5195
+    }
 ]
