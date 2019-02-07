@@ -8,7 +8,7 @@ import re
 
 
 TB = sanity.TB
-BW_LIMIT = '100M'
+BW_LIMIT = '2M'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
 
