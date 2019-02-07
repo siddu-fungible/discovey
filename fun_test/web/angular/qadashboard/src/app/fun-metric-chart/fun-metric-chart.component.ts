@@ -42,8 +42,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   chart1XaxisTitle: any;
   chart1YaxisTitle: any;
   y1AxisTitle: any;
-  tapeOutMileStoneIndex: number = null;
-  f1MileStoneIndex: number = null;
   chartName: string;
   internalChartName: string;
   modelName: string;
@@ -52,6 +50,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   buildProps: any;
   showBuildProps: boolean = false;
   paddingNeeded: boolean = false;
+  mileStoneMarkers: any = {};
+  mileStoneIndices: any = {};
 
   public formatter: Function;
   public tooltip: Function;
@@ -112,7 +112,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["metric_id"] = this.id;
     this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
       this.chartName = data.data["chart_name"];
-      this.internalChartName = data.data["internal_chart_name"]
+      this.internalChartName = data.data["internal_chart_name"];
       this.modelName = data.data["metric_model_name"];
       this.setDefault();
       this.fetchInfo();
@@ -260,6 +260,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
         this.inner.leaf = this.leaf;
+        this.mileStoneMarkers = this.chartInfo.milestone_markers;
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -272,8 +273,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //sets the state of the component to default values
   setDefault(): void {
     this.timeMode = "all";
-    this.tapeOutMileStoneIndex = null;
-    this.f1MileStoneIndex = null;
+    this.mileStoneIndices = {};
     this.showingTable = false;
     this.showingConfigure = false;
     this.pointClicked = false;
@@ -534,15 +534,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let endIndex = keyList[i][1];
           let matchingDateFound = false;
           seriesDates.push(originalKeyList[startIndex]);
-          if (originalKeyList[startIndex].includes("2018-09-16")) { // Tape-out
-            this.tapeOutMileStoneIndex = startIndex;
+          Object.keys(this.mileStoneMarkers).forEach((milestone) => {
+            let marker_date = this.mileStoneMarkers[milestone].split(" ")[0];
+             if (originalKeyList[startIndex].includes(marker_date)) { // Tape-out and F1
+               let milestone_obj = {};
+               milestone_obj["name"] = milestone;
+               milestone_obj["index"] = startIndex;
+            this.mileStoneIndices[milestone] = startIndex;
           }
-          if (originalKeyList[startIndex].includes("2019-01")) { // F1
-            let curDate = new Date(originalKeyList[startIndex]);
-            if (curDate.getDate() > 22 && this.f1MileStoneIndex===null) { // dated 22 Jan
-                this.f1MileStoneIndex = startIndex;
-            }
-          }
+          });
+
           while (startIndex >= endIndex) {
             if (keyValue[j][originalKeyList[startIndex]]) {
               let oneRecord = keyValue[j][originalKeyList[startIndex]];
@@ -653,12 +654,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let count = 0;
           let total = 0;
           dateSeries.push(series[startIndex]);
-          if (series[startIndex].includes("2018-09-16")) { // Tape-out
-            this.tapeOutMileStoneIndex = startIndex;
+          Object.keys(this.mileStoneMarkers).forEach((milestone) => {
+            let marker_date = this.mileStoneMarkers[milestone].split(" ")[0];
+             if (series[startIndex].includes(marker_date)) { // Tape-out and F1
+            this.mileStoneIndices[milestone] = startIndex;
           }
-          if (series[startIndex].includes("2019-01-23")) { // F1
-            this.f1MileStoneIndex = startIndex;
-          }
+          });
           while (startIndex >= endIndex) {
             if (keyValue[series[startIndex]] != -1) {
               total += keyValue[series[startIndex]];

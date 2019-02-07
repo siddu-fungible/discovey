@@ -29,7 +29,7 @@ from datetime import datetime
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
-from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer
+from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -104,9 +104,11 @@ def chart_info(request):
     metric_id = int(request_json["metric_id"])
     if not chart_name:
         chart = MetricChart.objects.get(metric_id=metric_id)
+        milestones = MileStoneMarkers.objects.filter(metric_id=metric_id)
     else:
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result = None
+    markers_dict = {}
     if chart:
         result = {"data_sets": json.loads(chart.data_sets),
                   "description": chart.description,
@@ -129,6 +131,9 @@ def chart_info(request):
                   "last_lsf_job_id": chart.last_lsf_job_id,
                   "last_git_commit": chart.last_git_commit,
                   "owner_info": chart.owner_info}
+        for markers in milestones:
+            markers_dict[markers.milestone_name] = markers.milestone_date
+        result["milestone_markers"] = markers_dict
     return result
 
 

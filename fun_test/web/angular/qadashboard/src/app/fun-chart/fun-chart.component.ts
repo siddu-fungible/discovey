@@ -14,8 +14,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() title: string;
   @Input() xAxisLabel: string;
   @Input() y1AxisLabel: string;
-  @Input() tapeOutMileStoneIndex: number = null;
-  @Input() f1MileStoneIndex: number = null;
+  @Input() mileStones: any = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
@@ -86,32 +85,19 @@ export class FunChartComponent implements OnInit, OnChanges {
         series: this.y1Values
       };
       chartOptions.xAxis["plotLines"] = [];
-      if (this.tapeOutMileStoneIndex) {
-        chartOptions.xAxis["plotLines"].push({
+      Object.keys(this.mileStones).forEach((milestone)=> {
+          chartOptions.xAxis["plotLines"].push({
           color: 'red', // Color value
           dashStyle: 'solid', // Style of the plot line. Default to solid
-          value: this.tapeOutMileStoneIndex, // Value of where the line will appear
+          value: this.mileStones[milestone], // Value of where the line will appear
           width: 2, // Width of the line
           label: {
-            text: 'Tape-out',
+            text: milestone,
             verticalAlign: 'top',
             textAlign: 'center'
           }
         });
-      }
-      if (this.f1MileStoneIndex) {
-        chartOptions.xAxis["plotLines"].push({
-          color: 'red', // Color value
-          dashStyle: 'solid', // Style of the plot line. Default to solid
-          value: this.f1MileStoneIndex, // Value of where the line will appear
-          width: 2, // Width of the line
-          label: {
-            text: 'F1',
-            verticalAlign: 'top',
-            textAlign: 'center'
-          }
-        });
-      }
+      });
     }
     else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {
