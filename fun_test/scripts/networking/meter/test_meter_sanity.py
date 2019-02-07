@@ -15,12 +15,15 @@ subscribed_results = None
 NUM_PORTS = 2
 generator_port_obj_dict = {}
 analyzer_port_obj_dict = {}
+sample_json_file = fun_test.get_script_parent_directory() + '/meter.json'
+acl_json_output = fun_test.parse_file_to_json(sample_json_file)
+meter_bps = acl_json_output['bps_meter']
 
 
-def create_streams(tx_port, dip, dmac, sip="192.168.1.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
+def create_streams(tx_port, dip, dmac, load=test_config['load_pps'], load_type = test_config['fill_type'], sip="192.168.1.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
                    ipv6=False, v6_traffic_class=0):
     stream_obj = StreamBlock(fill_type=test_config['fill_type'], insert_signature=test_config['insert_signature'],
-                             load = test_config['load'], load_unit=test_config['load_type'],
+                             load = load, load_unit=load_type,
                              frame_length_mode= test_config['frame_length_mode'],
                              fixed_frame_length=test_config['fixed_frame_size'])
 
@@ -132,9 +135,16 @@ class MeterBase(FunTestCase):
     tx_port = nu_ing_port
     rx_port = nu_eg_port
     stream_obj = None
+    load_type = "KILOBITS_PER_SECOND"
+    load = test_config['load_kbps']
+    dport = meter_bps['dport']
+    meter_id = meter_bps['meter_id']
+    meter_interval = meter_bps['meter_interval']
+    meter_credit = meter_bps['meter_credit']
+    commit_rate = meter_bps['commit_rate']
 
     def describe(self):
-        self.set_test_details(id=1, summary="Test SrTC meter transit for pps",
+        self.set_test_details(id=1, summary="Test SrTC meter transit for bps",
                               steps="""
                                   1. Create Stream on Tx port with defined kbps
                                   2. Start Traffic for %d secs
@@ -149,10 +159,10 @@ class MeterBase(FunTestCase):
         self.l3_config = self.routes_config['l3_config']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
-        self.stream_obj = create_streams(tx_port=nu_ing_port,
+        self.stream_obj = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type,
                                          dmac=self.routes_config['routermac'],
                                          dip=self.l3_config['destination_ip1'],
-                                         d_port=test_config['dest_port'])
+                                         d_port=self.dport)
         checkpoint = "Clear FPG port stats on DUT"
         c = 0
         for port_num in dut_config['ports']:
@@ -165,6 +175,10 @@ class MeterBase(FunTestCase):
 
     def run(self):
 
+        result = network_controller_obj.update_meter(index=self.meter_id, interval=self.meter_interval,
+                                                     crd=self.meter_credit, commit_rate=self.commit_rate, pps_mode=0)
+
+        meter_before =  network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
         checkpoint = "Start traffic from %s port for %d secs" % (self.tx_port, TRAFFIC_DURATION)
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[self.tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
@@ -194,6 +208,9 @@ class MeterBase(FunTestCase):
 
             fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
                                           message=checkpoint)
+            meter_after = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
+            fun_test.log(meter_after)
+
 
     def cleanup(self):
         dut_rx_port = dut_config['ports'][0]
