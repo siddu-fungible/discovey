@@ -32,7 +32,7 @@
   },
   "v6_nu_hnu_test":
   {
-    "source_ip" : "2002::2",
+    "source_ip" : "2002::1",
     "wrong_dip" : "2001::52:1:1:1",
     "source_port": 1234,
     "dest_port": 797,

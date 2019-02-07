@@ -13,6 +13,8 @@ test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFI
 TRAFFIC_DURATION = test_config['traffic_duration']
 subscribed_results = None
 NUM_PORTS = 2
+generator_port_obj_dict = {}
+analyzer_port_obj_dict = {}
 
 
 def create_streams(tx_port, dip, dmac, sip="192.168.1.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
@@ -129,6 +131,7 @@ class MeterBase(FunTestCase):
     dut_tx_port = dut_config['ports'][1]
     tx_port = nu_ing_port
     rx_port = nu_eg_port
+    stream_obj = None
 
     def describe(self):
         self.set_test_details(id=1, summary="Test SrTC meter transit for pps",
@@ -161,7 +164,50 @@ class MeterBase(FunTestCase):
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
     def run(self):
-        checkpoint = "Enable Generator Config and start traffic for %d secs for all ports" % TRAFFIC_DURATION
-        result = self.template_obj.enable_generator_configs(generator_configs=[
-            generator_port_obj_dict[self.spirent_tx_port]])
+
+        checkpoint = "Start traffic from %s port for %d secs" % (self.tx_port, TRAFFIC_DURATION)
+        result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[self.tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
+        checkpoint = "Validate Tx and Rx Rate"
+
+        rate_result = template_obj.validate_traffic_rate_results(
+            rx_summary_subscribe_handle=subscribed_results['rx_summary_subscribe'],
+            tx_summary_subscribe_handle=subscribed_results['tx_stream_subscribe'],
+            stream_objects=self.stream_obj)
+        fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
+
+        fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
+
+        if dut_config['enable_dpcsh']:
+            checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (
+                dut_config['ports'][0], dut_config['ports'][1])
+            port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
+            fun_test.log("DUT Port %d Results: %s" % (dut_config['ports'][0], port1_result))
+            fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
+            port2_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][1])
+            fun_test.log("DUT Port %d Results: %s" % (dut_config['ports'][1], port2_result))
+            fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
+
+            frames_transmitted = get_dut_output_stats_value(result_stats=port1_result,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_RECEIVED_OK)
+
+            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
+                                          message=checkpoint)
+
+    def cleanup(self):
+        dut_rx_port = dut_config['ports'][0]
+
+        checkpoint = "Delete the streams"
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj.spirent_handle])
+        fun_test.add_checkpoint(checkpoint)
+
+        checkpoint = "Clear subscribed results"
+        template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+        fun_test.add_checkpoint(checkpoint)
+
+
+if __name__ == '__main__':
+    ts = SpirentSetup()
+    ts.add_test_case(MeterBase())
+    ts.run()
