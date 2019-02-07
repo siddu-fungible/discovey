@@ -1785,7 +1785,8 @@ class AclIPv6NUtoHNU(FunTestCase):
 
         self.stream_obj_dip = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                              dip=self.l3_config['hnu_destination_ip2'],
-                                             sip="3001::1", dmac=self.routes_config['routermac'],
+                                             sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                             dmac=self.routes_config['routermac'],
                                              s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
                                              d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
 
@@ -2627,12 +2628,12 @@ class AclIPv6HNUtoNU(FunTestCase):
 if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(AclIngressDropNUtoNU())
-    ts.add_test_case(AclIPv6NUtoNU())
-    ts.add_test_case(AclQosTCNuNu())
-    ts.add_test_case(AclEgressDropNUtoHNU())
-    ts.add_test_case(AclIngressDropHNUtoHNU())
-    ts.add_test_case(AclEgressDropHNUtoNU())
-    ts.add_test_case(AclIPv6NUtoHNU())
-    ts.add_test_case(AclIPv6HNUtoHNU())
-    ts.add_test_case(AclIPv6HNUtoNU())
+    # ts.add_test_case(AclIPv6NUtoNU())
+    # ts.add_test_case(AclQosTCNuNu())
+    # ts.add_test_case(AclEgressDropNUtoHNU())
+    # ts.add_test_case(AclIngressDropHNUtoHNU())
+    # ts.add_test_case(AclEgressDropHNUtoNU())
+    # ts.add_test_case(AclIPv6NUtoHNU())
+    # ts.add_test_case(AclIPv6HNUtoHNU())
+    # ts.add_test_case(AclIPv6HNUtoNU())
     ts.run()
