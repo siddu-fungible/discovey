@@ -1367,14 +1367,11 @@ class TestVpFlows(FunTestCase):
             if flow_direction != NuConfigManager.FLOW_DIRECTION_HNU_FPG:
                 diff_stats_erp = get_diff_stats(old_stats=erp_stats_1, new_stats=erp_stats_2,
                                                 stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
-                diff_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) - int(tx_results_1['FrameCount'])
-                expected_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
-                if diff_stats == 1:
-                    expected_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) - 1
-
-                fun_test.test_assert_expected(expected=expected_erp_stats,
-                                              actual=(int(tx_results_1['FrameCount'])),
-                                              message="Check non fcp packets counter from erp stats")
+                actual_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
+                fun_test.test_assert(actual_erp_stats >= dut_port_1_receive,
+                                     message="Validate NU ERP NON FCP Packets received count."
+                                             "Pass criteria: actual count >= expected count"
+                                             "Expected: %s Found: %s" % (dut_port_1_receive, actual_erp_stats))
 
             stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE]
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG or \
@@ -1419,16 +1416,22 @@ class TestVpFlows(FunTestCase):
                                              "Pass criteria actual > expected Expected: %s Found: %s" % (
                                          tx_results_1['FrameCount'], psw_diff_stats[epg0_pkt]))
             else:
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[ifpg],
-                                              message="Check ifpg counter in psw nu stats in input")
+                fun_test.test_assert(int(psw_diff_stats[ifpg]) >= int(tx_results_1['FrameCount']),
+                                     message="Check ifpg counter in psw nu stats in input. "
+                                             "Pass criteria actual > expected Expected: %s Found: %s" % (
+                                                 psw_diff_stats[epg0_pkt], tx_results_1['FrameCount']))
             # Check psw nu output stats
             psw_diff_stats = get_diff_stats(old_stats=parsed_output_1, new_stats=parsed_output_2)
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[fpg1_pkt],
-                                              message="Check FPG1 counter in psw nu stats in output")
+                fun_test.test_assert(int(psw_diff_stats[fpg1_pkt]) >= int(tx_results_1['FrameCount']),
+                                     message="Check epg_pkt counter in psw nu stats in output. "
+                                             "Pass criteria actual > expected Expected: %s Found: %s" % (
+                                                 psw_diff_stats[fpg1_pkt], tx_results_1['FrameCount']))
             else:
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[epg0_pkt],
-                                              message="Check epg_pkt counter in psw nu stats in output")
+                fun_test.test_assert(int(psw_diff_stats[epg0_pkt]) >= int(tx_results_1['FrameCount']),
+                                     message="Check epg_pkt counter in psw nu stats in output. "
+                                             "Pass criteria actual > expected Expected: %s Found: %s" % (
+                                         psw_diff_stats[epg0_pkt], tx_results_1['FrameCount']))
 
         # SPIRENT ASSERTS
         if int(tx_results_1['FrameCount']) == int(rx_results_1['FrameCount']):
@@ -1616,7 +1619,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
 
         routermac = self.routes_config["routermac"]
-        l3_config = spirent_config["l3_config"]
+        l3_config = self.routes_config["l3_config"]
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
 
         # Create streamblock 1
