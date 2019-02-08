@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from collections import OrderedDict
 import re
+import json
 
 
 class NuConfigManager(object):
@@ -357,9 +358,13 @@ class NuConfigManager(object):
 
     def get_dut_type(self):
         try:
-            job_environment = fun_test.get_job_environment()
+            result = fun_test.get_job_environment()
             # job_environment = {"EMULATION_TARGET": "F1", "UART_HOST": "10.1.40.21", "UART_TCP_PORT_0": "40221"}
-            print job_environment
+            job_environment = None
+            if type(result) == unicode:
+                job_environment = json.loads(result)
+                print job_environment
+
             job_inputs = fun_test.get_job_inputs()
             if job_environment and ("EMULATION_TARGET" in job_environment or "RUN_TARGET" in job_environment):
                 if job_environment["EMULATION_TARGET"] == self.DUT_TYPE_PALLADIUM:
