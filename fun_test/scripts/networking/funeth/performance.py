@@ -1,18 +1,14 @@
 from lib.system.fun_test import *
-from lib.host.linux import Linux
 from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
+from scripts.networking.tb_configs import tb_configs
+import funeth, sanity
 import json
 import re
 
 
-NU_HOST = 'cadence-pc-3'
-HU_HOST = 'cadence-pc-5'
-NU_HOST_MGMT_INTF = 'enp10s0'
-HU_HOST_MGMT_INTF = 'eth0'
-NU_INTF_IP = '19.1.1.1'
-HU_PF_INTF_IP = '53.1.1.5'
-BW_LIMIT = '100M'
+TB = sanity.TB
+BW_LIMIT = '2M'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
 
@@ -27,10 +23,13 @@ class FunethPerformance(FunTestScript):
 
     def setup(self):
 
-        # NU_HOST
-        linux_obj = Linux(host_ip=NU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
-        linux_obj.command('sudo ifconfig fpg0 mtu 1482')  # TODO: Remove after MTU issue is fixed
-        linux_obj.command('sudo ptp4l -i %s -2 &' % NU_HOST_MGMT_INTF)
+        tb_config_obj = tb_configs.TBConfigs(TB)
+        funeth_obj = funeth.Funeth(tb_config_obj)
+        fun_test.shared_variables['funeth_obj'] = funeth_obj
+
+        # NU host
+        linux_obj = funeth_obj.linux_obj_dict['nu']
+        linux_obj.command('sudo ptp4l -i %s -2 &' % funeth_obj.tb_config_obj.get_mgmt_interface('nu'))
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
@@ -44,9 +43,8 @@ class FunethPerformance(FunTestScript):
         fun_test.shared_variables['nu_container_id'] = container_id
 
         # HU_HOST
-        linux_obj = Linux(host_ip=HU_HOST, ssh_username="localadmin", ssh_password="Precious1*")
-        linux_obj.command('sudo ifconfig hu3-f0 mtu 1482')  # TODO: Remove after MTU issue is fixed
-        linux_obj.command('sudo ptp4l -i %s -2 &' % HU_HOST_MGMT_INTF)
+        linux_obj = funeth_obj.linux_obj_dict['hu']
+        linux_obj.command('sudo ptp4l -i %s -2 &' % funeth_obj.tb_config_obj.get_mgmt_interface('hu'))
         linux_obj.command('sudo phc2sys -a -rr &')
         linux_obj.command('docker run --privileged -d -P --net=host -v "/var/run" perfsonar/testpoint')
         output = linux_obj.command('docker ps')
@@ -61,14 +59,19 @@ class FunethPerformance(FunTestScript):
 
         # From NU host, do pscheduler ping HU host to make sure it's alive
         fun_test.sleep('Sleep for a while to wait for ptp sync and pscheduler fully up', 10)
+        ip_addr = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
         output = fun_test.shared_variables['nu_linux_obj'].command(
-            '%s pscheduler ping %s' % (fun_test.shared_variables['nu_cmd_prefix'], HU_PF_INTF_IP))
+            '%s pscheduler ping %s' % (fun_test.shared_variables['nu_cmd_prefix'], ip_addr))
         fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "NU pscheduler ping HU")
+        fun_test.shared_variables['hu_ip_addr'] = ip_addr
 
         # From HU host, do pscheduler ping NU host to make sure it's alive
+        intf = funeth_obj.tb_config_obj.get_a_nu_interface()
+        ip_addr = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', intf)
         output = fun_test.shared_variables['hu_linux_obj'].command(
-            '%s pscheduler ping %s' % (fun_test.shared_variables['hu_cmd_prefix'], NU_INTF_IP))
+            '%s pscheduler ping %s' % (fun_test.shared_variables['hu_cmd_prefix'], ip_addr))
         fun_test.test_assert(re.search(r'pScheduler is alive', output) is not None, "HU pscheduler ping NU")
+        fun_test.shared_variables['nu_ip_addr'] = ip_addr
 
         for h in ('nu', 'hu'):
             for cmd in ('ps aux | egrep "ptp|phc" | grep -v grep',
@@ -98,7 +101,7 @@ class FunethPerformanceBase(FunTestCase):
     def cleanup(self):
         pass
 
-    def _run(self, flow_type, dst, throughput_tool='iperf3', protocol='udp', parallel=8, duration=10, frame_size=1500):
+    def _run(self, flow_type, throughput_tool='iperf3', protocol='udp', parallel=1, duration=10, frame_size=1500):
 
         def udp_payload(frame_size):
             return frame_size-18-20-8
@@ -106,12 +109,34 @@ class FunethPerformanceBase(FunTestCase):
         def tcp_payload(frame_size):
             return frame_size-18-20-20
 
+        def format_throughput(s):
+            """Return throughput in Mbps"""
+            if s.endswith('Kbps'):
+                factor = 1.0/1000
+            elif s.endswith('Mbps'):
+                factor = 1.0
+            elif s.endswith('Gbps'):
+                factor = 1.0*1000
+            return float(s.rstrip('KMGbps').strip()) * factor
+
+        def format_latency(s):
+            """Return latency in us"""
+            if s.endswith('ns'):
+                factor = 1.0/1000
+            elif s.endswith('us'):
+                factor = 1.0
+            elif s.endswith('ms'):
+                factor = 1.0*1000
+            return float(s.rstrip('nums').strip()) * factor
+
         if flow_type == 'NU_HU':
             linux_obj_desc = 'nu_linux_obj'
             cmd_prefix_desc = 'nu_cmd_prefix'
-        else:
+            dst = fun_test.shared_variables['hu_ip_addr']
+        elif flow_type == 'HU_NU':
             linux_obj_desc = 'hu_linux_obj'
             cmd_prefix_desc = 'hu_cmd_prefix'
+            dst = fun_test.shared_variables['nu_ip_addr']
         linux_obj = fun_test.shared_variables[linux_obj_desc]
         cmd_prefix = fun_test.shared_variables[cmd_prefix_desc]
 
@@ -132,26 +157,24 @@ class FunethPerformanceBase(FunTestCase):
 
             result.update(
                 {
-                    'throughput': match.group(1),
-                    'pps': (int(match.group(3)) - int(match.group(2)))/duration,
-                    'jitter': match.group(4),
+                    'throughput': format_throughput(match.group(1)),
+                    'pps': (float(match.group(3)) - float(match.group(2)))/duration,
+                    'jitter': format_latency(match.group(4)),
                 }
             )
         elif protocol.lower() == 'tcp':
             output = linux_obj.command(
                 '%s pscheduler task --tool %s throughput -d %s -l %s -t %s -P %s' % (
                     cmd_prefix, throughput_tool, dst, tcp_payload(frame_size), duration, parallel), timeout=300)
-            #match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)\s+(\d+) / (\d+)\s+Jitter:\s(\S+ [m|u|n]s)',
-            #                  output,
-            #                  re.DOTALL)
-            #fun_test.test_assert(match, "Measure %s throughput" % flow_type)
+            match = re.search(r'Summary.*Throughput.*\s+(\S+ [K|M|G]bps)', output, re.DOTALL)
+            fun_test.test_assert(match, "Measure %s throughput" % flow_type)
 
-            #result.update(
-            #    {
-            #        'throughput': match.group(1),
-            #        'pps': (int(match.group(3)) - int(match.group(2))) / duration,
-            #    }
-            #)
+            result.update(
+                {
+                    'throughput': format_throughput(match.group(1)),
+                    #'pps': (int(match.group(3)) - int(match.group(2))) / duration,
+                }
+            )
 
         # Latency
         packet_count = duration * result.get('pps', 1)
@@ -172,7 +195,7 @@ class FunethPerformanceBase(FunTestCase):
                 k = 'latency_max'
             elif i[0] == 'Mean':
                 k = 'latency_mean'
-            result.update({k: i[1]})
+            result.update({k: format_latency(i[1])})
 
         result.update(
             {'timestamp': '%s' % get_current_time(),
@@ -193,82 +216,115 @@ class FunethPerformanceBase(FunTestCase):
 class FunethPerformance_NU_HU_64B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Do throughput and latency test of NU -> HU with 64B frames",
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 64B frames",
                               steps="""
         1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU', dst=HU_PF_INTF_IP, frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', frame_size=64)
 
 
 class FunethPerformance_NU_HU_1500B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Do throughput and latency test of NU -> HU with 1500B frames",
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 1500B frames",
                               steps="""
         1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU', dst=HU_PF_INTF_IP, frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', frame_size=1500)
+
+
+class FunethPerformance_NU_HU_64B_TCP(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Do TCP throughput and latency test of NU -> HU Non-FCP with 64B frames",
+                              steps="""
+        1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', protocol='tcp', frame_size=64)
+
+
+class FunethPerformance_NU_HU_1500B_TCP(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Do TCP throughput and latency test of NU -> HU Non-FCP with 1500B frames",
+                              steps="""
+        1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', protocol='tcp', frame_size=1500)
 
 
 class FunethPerformance_HU_NU_64B(FunethPerformanceBase):
     def describe(self):
-        self.set_test_details(id=3,
-                              summary="Do throughput and latency test of NU <- HU with 64B frames",
+        self.set_test_details(id=5,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 64B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', frame_size=64)
 
 
 class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
     def describe(self):
-        self.set_test_details(id=4,
-                              summary="Do throughput and latency test of NU <- HU with 1500B frames",
+        self.set_test_details(id=6,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 1500B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', frame_size=1500)
 
 
 class FunethPerformance_HU_NU_64B_TCP(FunethPerformanceBase):
     def describe(self):
-        self.set_test_details(id=5,
-                              summary="Do TCP throughput and latency test of NU <- HU with 64B frames",
+        self.set_test_details(id=7,
+                              summary="Do TCP throughput and latency test of NU <- HU Non-FCP with 64B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', protocol='tcp', frame_size=64)
 
 
 class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
     def describe(self):
-        self.set_test_details(id=6,
-                              summary="Do TCP throughput and latency test of NU <- HU with 1500B frames",
+        self.set_test_details(id=8,
+                              summary="Do TCP throughput and latency test of NU <- HU Non-FCP with 1500B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', dst=NU_INTF_IP, protocol='tcp', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', protocol='tcp', frame_size=1500)
+
 
 if __name__ == "__main__":
     FunethScript = FunethPerformance()
+
+    # NU -> HU
     # TODO: Uncomment below after EM-804 is fixed
     #FunethScript.add_test_case(FunethPerformance_NU_HU_64B())
     #FunethScript.add_test_case(FunethPerformance_NU_HU_1500B())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_64B_TCP())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_TCP())
+
+    # HU -> NU
     # TODO: Below throughput result is too small in SN2, need further investigation
     #FunethScript.add_test_case(FunethPerformance_HU_NU_64B())
     #FunethScript.add_test_case(FunethPerformance_HU_NU_1500B())
-    #FunethScript.add_test_case(FunethPerformance_HU_NU_64B_TCP())
+    FunethScript.add_test_case(FunethPerformance_HU_NU_64B_TCP())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_TCP())
+
     FunethScript.run()
+    fun_test.log('Performance results:\n{}'.format(RESULT_FILE))

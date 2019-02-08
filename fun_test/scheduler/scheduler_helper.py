@@ -49,6 +49,10 @@ class SchedulingType:
     TODAY = "today"
     REPEAT = "repeat"
 
+class SuiteType:
+    STATIC = "regular"
+    DYNAMIC = "dynamic"
+
 DAY_OF_WEEK_TO_INDEX = {
     "monday": 0,
     "tuesday": 1,
@@ -196,7 +200,7 @@ def get_scheduling_time(spec):
 def validate_spec(spec):
     valid = False
     error_message = ""
-    if spec["scheduling_type"] == SchedulingType.PERIODIC or spec["scheduling_type"] == SchedulingType.TODAY:
+    if spec["scheduling_type"] in [SchedulingType.PERIODIC, SchedulingType.TODAY]:
         if spec["requested_hour"] > 23:
             error_message = "requested_hour > 23"
         if spec["requested_minute"] > 59:
@@ -218,6 +222,9 @@ def validate_spec(spec):
         valid = True
     if spec["scheduling_type"] == SchedulingType.REPEAT:
         valid = True
+    if not spec["scheduling_type"]:
+        valid = False
+        error_message = "scheduling type cannot be empty"
     return valid, error_message
 
 def parse_suite(suite_name):
@@ -255,38 +262,53 @@ def queue_suite_container(suite_path,
             queue_job2(suite_path=item_suite_path, tags=suite_level_tags, build_url=build_url, suite_container_execution_id=container_execution.execution_id, **kwargs)
     return job_id
 
-def queue_job2(suite_path="unknown",
+def queue_dynamic_job(suite_path, scheduling_type, build_url, tags, email_list, email_on_fail_only=None):
+    # jobs that don't have a suite file. we create a suite dynamically
+    return queue_job2(suite_path=suite_path,
+                      build_url=build_url,
+                      tags=tags,
+                      email_list=email_list,
+                      email_on_fail_only=email_on_fail_only,
+                      suite_type=SuiteType.DYNAMIC,
+                      scheduling_type=scheduling_type)
+
+def queue_job2(suite_path=None,
+               script_path=None,
                build_url=None,
                scheduling_type=None,
                requested_days=None,
                requested_hour=None,
                requested_minute=None,
-               tz_string=None,
+               tz_string="PST",
                tags=None,
                email_list=None,
                email_on_fail_only=None,
                environment=None,
+               inputs=None,
                repeat_in_minutes=None,
                suite_container_execution_id=-1,
-               job_spec=None):
+               job_spec=None,
+               suite_type=SuiteType.STATIC):
     time.sleep(0.1)
     print "Environment: {}".format(environment)
-    if suite_path == "unknown":
+    if not suite_path:
         if job_spec:
             suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
             tags = job_spec["tags"]
+    final_suite_path = suite_path if suite_path else script_path
     suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                         scheduled_time=get_current_time(),
                                                         completed_time=get_current_time(),
-                                                        suite_path=suite_path,
+                                                        suite_path=final_suite_path,
                                                         tags=tags,
                                                         suite_container_execution_id=suite_container_execution_id)
-    # if tags and "jenkins-hourly" in tags:
-    #    set_jenkins_hourly_execution_status(status=RESULTS["QUEUED"])
+
     if not job_spec:
         job_spec = {}
-        suite_path = suite_path.replace(JSON_EXTENSION, "")
-        job_spec["suite_name"] = suite_path.replace(JSON_EXTENSION, "")
+        if suite_path:
+            suite_path = suite_path.replace(JSON_EXTENSION, "")
+        job_spec["suite_name"] = suite_path #.replace(JSON_EXTENSION, "")
+        job_spec["script_path"] = script_path
         job_spec["build_url"] = build_url
         job_spec["scheduling_type"] = scheduling_type
         job_spec["requested_days"] = requested_days
@@ -298,6 +320,8 @@ def queue_job2(suite_path="unknown",
         job_spec["email_on_fail_only"] = email_on_fail_only
         job_spec["environment"] = environment
         job_spec["tz"] = tz_string
+        job_spec["suite_type"] = suite_type
+        job_spec["inputs"] = inputs
     job_id = suite_execution.execution_id
     job_spec["job_id"] = job_id
     job_spec_valid, error_message = validate_spec(spec=job_spec)
@@ -483,8 +507,9 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
     suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
-    header_list = ["TC-ID", "Summary", "Path", "Result"]
-    list_of_rows = [[x["test_case_id"], models_helper.get_test_case_details(x["script_path"], x["test_case_id"])['summary'], x["script_path"], x["result"]] for x in
+    header_list = ["TC-ID", "Summary", "Inputs", "Path", "Result"]
+    list_of_rows = [[x["test_case_id"],
+                     models_helper.get_test_case_details(x["script_path"], x["test_case_id"])['summary'], x["inputs"], x["script_path"], x["result"]] for x in
                     suite_execution["test_case_info"]]
     table2 = _get_table(header_list=header_list, list_of_rows=list_of_rows)
 
@@ -537,5 +562,11 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
 
 
 if __name__ == "__main__":
-    print get_flat_console_log_file_name(path="/clean_sanity.py")
-    print get_flat_html_log_file_name(path="/examples/clean_sanity.py")
+    # print get_flat_console_log_file_name(path="/clean_sanity.py")
+    # print get_flat_html_log_file_name(path="/examples/clean_sanity.py")
+    # queue_dynamic_job(suite_path="abc.json", build_url=None, tags="tag1", email_list=['john.abraham@fungible.com'], scheduling_type=SchedulingType.ASAP)
+    queue_job2(script_path="examples/vanilla.py",
+               build_url=None,
+               tags=["tag1"],
+               email_list=['john.abraham@fungible.com'],
+               scheduling_type=SchedulingType.ASAP)

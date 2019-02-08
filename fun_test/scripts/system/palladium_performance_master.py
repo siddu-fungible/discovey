@@ -28,6 +28,7 @@ TERAMARK_LOOKUP = "le_teramark"
 FLOW_TEST_TAG = "qa_storage2_endpoint"
 TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
+TERAMARK_EC = "ec_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
@@ -75,7 +76,7 @@ class MyScript(FunTestScript):
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
-                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA]
+                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -393,6 +394,8 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
 
 class EcPerformanceTc(PalladiumPerformanceTc):
+    tag = TERAMARK_EC
+
     def describe(self):
         self.set_test_details(id=4,
                               summary="EC performance",
@@ -1269,7 +1272,7 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
     def run(self):
         metrics = collections.OrderedDict()
         try:
-            fun_test.test_assert(self.validate_job(validation_required=False), "validating job")
+            fun_test.test_assert(self.validate_job(), "validating job")
             flow_test_passed = False
             match = None
             for line in self.lines:
@@ -1332,7 +1335,7 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
                         input_operation = m.group("operation")
                         input_effort = int(m.group("effort"))
                         output_stats = json.loads(m.group("stats"))
-                        output_bandwidth_avg = output_stats['_avg_bw_kbps']
+                        output_bandwidth_avg = output_stats['_avg_bw_gbps']
                         output_bandwidth_total = output_stats['_total_bw_kbps']
                         output_latency_min = output_stats['_min_latency']
                         output_latency_avg = output_stats['_avg_latency']
@@ -1587,7 +1590,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
     myscript.add_test_case(TeraMarkCryptoPerformanceTC())
     myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(FlowTestPerformanceTC())
     myscript.add_test_case(TeraMarkZipPerformanceTC())
     # myscript.add_test_case(TeraMarkDfaPerformanceTC())
     myscript.add_test_case(TeraMarkJpegPerformanceTC())

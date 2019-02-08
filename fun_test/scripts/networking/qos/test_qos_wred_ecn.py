@@ -375,7 +375,8 @@ class ECN_10(Wred_Q0):
     max_queue_pps = 0
     port_1_stream_load = normal_stream_pps_list['ingress_port_1']
     port_3_stream_load_list = normal_stream_pps_list['ingress_port_2']
-    sleep_interval = 15
+    sleep_interval = 5
+    iterations = 3
 
     def describe(self):
         self.set_test_details(id=2,
@@ -384,11 +385,20 @@ class ECN_10(Wred_Q0):
                                   1. Update stream on port 1 to start with pps
                                   3. setup ecn config
                                   4. Start stream from port 1 and port 3
-                                  5. Note down 5 iterations of wred_ecn stats for q depth and ecn count and take average of it
+                                  5. Note down 3 iterations of wred_ecn stats for q depth and ecn count and take average of it
                                   6. Now iterate step 5 for different pps for normal stream.
                                   7. Verify that as q depth increases, ecn count increases
                                   8. For every iteration check if ecn count on dut and spirent match
                                   """)
+
+    def setup(self):
+        super(ECN_10, self).setup()
+
+        # Set non fcp curr count
+        egress = network_controller_obj.set_qos_egress_buffer_pool(df_thr=6000, dx_thr=6000, fcp_thr=8000,
+                                                          nonfcp_thr=8000, nonfcp_xoff_thr=7000, sample_copy_thr=250,
+                                                                   sf_thr=6000, sf_xoff_thr=5000, sx_thr=6000)
+        fun_test.test_assert(egress, "Set egress buffer pool threshold values")
 
     def run(self):
         output_avg_dict = OrderedDict()
@@ -418,25 +428,22 @@ class ECN_10(Wred_Q0):
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
+            fun_test.log("Get psw nu stats before capturing ecn counts")
+            network_controller_obj.peek_psw_global_stats(hnu=hnu)
+
             start_streams = template_obj.stc_manager.start_traffic_stream(
                 stream_blocks_list=streamblock_handles_list)
             fun_test.test_assert(start_streams, "Start running traffic")
 
             fun_test.sleep("Executing traffic", seconds=self.timer)
 
-            fun_test.log("Get psw nu stats before capturing ecn counts")
-            network_controller_obj.peek_psw_global_stats(hnu=hnu)
-
-            fun_test.log("Taking 5 observations of q_depth and wred_drops for fps %s" % current_pps)
+            fun_test.log("Taking %s observations of q_depth and wred_drops for fps %s" % (self.iterations, current_pps))
             # Take 5 observations of q_depth and wred_drops and do average
-            observed_dict = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj, iterations=3,
+            observed_dict = capture_wred_ecn_stats_n_times(network_controller_obj=network_controller_obj, iterations=self.iterations,
                                                            stats_list=self.stats_list, port_num=dut_port_2,
                                                            queue_num=self.test_queue, sleep_interval=self.sleep_interval)
             fun_test.simple_assert(observed_dict['result'], "Get 5 observations")
             fun_test.log("5 observations captured for pps %s" % current_pps)
-
-            fun_test.log("Get psw nu stats after capturing ecn counter stats")
-            network_controller_obj.peek_psw_global_stats(hnu=hnu)
 
             # Check stats increase
             for stats in self.stats_list:
@@ -455,6 +462,9 @@ class ECN_10(Wred_Q0):
             stop_streams = template_obj.stc_manager.stop_traffic_stream(
                 stream_blocks_list=streamblock_handles_list)
             fun_test.simple_assert(stop_streams, "Ensure dscp streams are stopped")
+
+            fun_test.log("Get psw nu stats after capturing ecn counter stats")
+            network_controller_obj.peek_psw_global_stats(hnu=hnu)
 
             fun_test.sleep("Letting traffic to get stopped")
 
@@ -538,7 +548,7 @@ class ECN_10_00(FunTestCase):
     max_thr = qos_profile_dict['ecn_max_thr']
     prob_index = qos_profile_dict['ecn_prob_index']
     prof_num = qos_profile_dict['ecn_prof_num']
-    stream_pps_list = qos_profile_dict['stream_pps']['ingress_port_2']
+    stream_pps_list = qos_profile_dict['stream_pps']['ingress_port_1']
     enable_ecn = qos_profile_dict['ecn_enable']
     avg_period = qos_profile_dict['avg_period']
     cap_avg_sz = qos_profile_dict['cap_avg_sz']
@@ -559,7 +569,7 @@ class ECN_10_00(FunTestCase):
 
     def setup(self):
         # Update streams to dscp and ecn bits
-        stream_pps = get_load_value_from_load_percent(load_percent=self.stream_pps_list[-1],
+        stream_pps = get_load_value_from_load_percent(load_percent=self.stream_pps_list,
                                                       max_egress_load=self.max_egress_load)
 
         for stream, queue_num, ecn_bits in zip(streamblock_objs_list, self.stream_dscps, self.stream_ecn_bits_list):
@@ -624,6 +634,15 @@ class ECN_10_00(FunTestCase):
                 if key == str(qos_binary_value):
                     if int(out[key]['Ipv4FrameCount']) > 0:
                         result[str(queue)] = True
+                        fun_test.add_checkpoint("Diff serv count having ECN bits set to 11 for queue %s is %s" % (
+                            queue, int(out[key]['Ipv4FrameCount'])))
+                    else:
+                        fun_test.add_checkpoint("Diff serv count having ECN bits set to 11 for queue %s is %s" % (
+                        queue, 0))
+
+        # Display ecn stats
+        network_controller_obj.get_qos_wred_ecn_stats(dut_port_2, self.port_1_stream_dscp)
+
         self.do_test_asserts(result)
 
     def do_test_asserts(self, result):

@@ -38,6 +38,11 @@ export class SubmitJobComponent implements OnInit {
   selectedDays: string[] = [];
   submitting: string = null;
 
+  selectedScriptPk: number = null;
+  resetScriptSelector: boolean = false;
+
+  suiteSelectionMode: string = "BY_SUITE";
+
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title) {
   }
@@ -106,14 +111,21 @@ export class SubmitJobComponent implements OnInit {
 
   changedValue(selectedSuite) {
     this.selectedInfo = this.suitesInfo[selectedSuite];
+    this.selectedScriptPk = null;
+    this.resetScriptSelector = true;
   }
 
   parseScriptInfo(scriptInfo) {
+    let s = "";
     if (scriptInfo.hasOwnProperty('path')) {
-      return scriptInfo.path;
+      s = scriptInfo.path;
+      if (scriptInfo.hasOwnProperty('inputs')) {
+        s = s + " Inputs: " + JSON.stringify(scriptInfo.inputs);
+      }
     } else if (scriptInfo.hasOwnProperty('info')) {
-      return scriptInfo.info.tags;
+      s = "Tags: " + scriptInfo.info.tags;
     }
+    return s;
   }
 
   getSchedulingOptions(payload) {
@@ -159,7 +171,12 @@ export class SubmitJobComponent implements OnInit {
     let self = this;
     this.jobId = null;
     let payload = {};
-    payload["suite_path"] = this.selectedSuite;
+    if (this.suiteSelectionMode === 'BY_SUITE') {
+      payload["suite_path"] = this.selectedSuite;
+    } else {
+      payload["script_pk"] = this.selectedScriptPk;
+    }
+
     payload["build_url"] = this.buildUrl;
     payload["tags"] = this._getSelectedtags();
     payload["email_on_fail_only"] = this.emailOnFailOnly;
@@ -188,5 +205,14 @@ export class SubmitJobComponent implements OnInit {
       ctrl.submitting = null;
     });
   }
+
+  singleSelectPkEvent(pk) {
+    console.log("Pk: " + pk);
+    this.selectedSuite = "";
+    this.selectedInfo = null;
+    this.selectedScriptPk = pk;
+  }
+
+
 
 }

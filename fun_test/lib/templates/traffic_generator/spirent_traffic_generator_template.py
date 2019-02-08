@@ -43,7 +43,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
     def __init__(self, spirent_config, chassis_type=SpirentManager.VIRTUAL_CHASSIS_TYPE):
         TrafficGeneratorTemplate.__init__(self)
         if not chassis_type:
-            self.chassis_type = SpirentManager.PHYSICAL_CHASSIS_TYPE
+            self.chassis_type = SpirentManager.VIRTUAL_CHASSIS_TYPE
         else:
             self.chassis_type = chassis_type
         self.spirent_config = spirent_config
@@ -731,11 +731,19 @@ class EthernetCopperInterface(object):
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
 
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
     def __str__(self):
         return "EthernetCopper"
 
 
-class Ethernnet10GigFiberInterface(object):
+class Ethernet10GigFiberInterface(object):
     SPEED_UNKNOWN = "SPEED_UNKNOWN"
     SPEED_1G = "SPEED_1G"
     CUSTOM_FEC_MODE_KR = "KR_FEC"
@@ -799,8 +807,172 @@ class Ethernnet10GigFiberInterface(object):
     def update_stream_block_object(self, **kwargs):
         self.__dict__.update(**kwargs)
 
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
     def __str__(self):
         return "Ethernet10GigFiber"
+
+
+class Ethernet100GigFiberInterface(object):
+    SPEED_UNKNOWN = "SPEED_UNKNOWN"
+    SPEED_1G = "SPEED_1G"
+    SPEED_100G = "SPEED_100G"
+    SPEED_25G = "SPEED_25G"
+    CUSTOM_FEC_MODE_KR = "KR_FEC"
+    CUSTOM_FEC_MODE_RS = "RS_FEC"
+    CUSTOM_FEC_MODE_KP4 = "KP4_FEC"
+    CUSTOM_FEC_MODE_NONE = "NONE"
+    DATA_PATH_MODE_NORMAL = "NORMAL"
+    DATA_PATH_MODE_LOCAL_LOOPBACK = "LOCAL_LOOPBACK"
+    DATA_PATH_MODE_LINE_MONITOR = "LINE_MONITOR"
+    FULL_DUPLEX = "FULL"
+    HALF_DUPLEX = "HALF"
+    _spirent_handle = None
+
+    def __init__(self, advertise_ieee=True, advertise_nbaset=True, alternate_speeds=SPEED_UNKNOWN,
+                 auto_negotiation=True, auto_negotiation_master_slave="MASTER",
+                 auto_negotiation_master_slave_enable=True, cable_type_length="OPTICAL", cfp_interface="ACC_6068A",
+                 collision_exponent=10, custom_fec_mode=CUSTOM_FEC_MODE_KR,
+                 data_path_mode=DATA_PATH_MODE_NORMAL, deficit_idle_count=False, detection_mode="AUTO_DETECT",
+                 down_shift_enable=False, duplex=FULL_DUPLEX, flow_control=False,
+                 forward_error_correction=True, ignore_link_status=False, internal_ppm_adjust=0,
+                 is_pfc_negotiated=False, line_speed=SPEED_1G, priority_flow_control_array=False,
+                 mtu=1500, optimize_xon="DISABLE", performance_mode="STC_DEFAULT", port_setup_mode="PORTCONFIG_ONLY",
+                 test_mode="NORMAL_OPERATION", transmit_clock_source="INTERNAL"):
+        self.AdvertiseIEEE = advertise_ieee
+        self.AdvertiseNBASET = advertise_nbaset
+        self.AlternateSpeeds = alternate_speeds
+        self.CableTypeLength = cable_type_length
+        self.CfpInterface = cfp_interface
+        self.AutoNegotiation = auto_negotiation
+        self.AutoNegotiationMasterSlave = auto_negotiation_master_slave
+        self.AutoNegotiationMasterSlaveEnable = auto_negotiation_master_slave_enable
+        self.CollisionExponent = collision_exponent
+        self.CustomFecMode = custom_fec_mode
+        self.DataPathMode = data_path_mode
+        self.DeficitIdleCount = deficit_idle_count
+        self.DetectionMode = detection_mode
+        self.DownshiftEnable = down_shift_enable
+        self.Duplex = duplex
+        self.FlowControl = flow_control
+        self.ForwardErrorCorrection = forward_error_correction
+        self.IgnoreLinkStatus = ignore_link_status
+        self.InternalPpmAdjust = internal_ppm_adjust
+        self.IsPfcNegotiated = is_pfc_negotiated
+        self.LineSpeed = line_speed
+        self.Mtu = mtu
+        self.OptimizedXon = optimize_xon
+        self.PerformanceMode = performance_mode
+        self.PortSetupMode = port_setup_mode
+        self.PriorityFlowControlArray = priority_flow_control_array
+        self.TestMode = test_mode
+        self.TransmitClockSource = transmit_clock_source
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+    def __str__(self):
+        return "Ethernet100GigFiber"
+
+
+class Ethernet25GigFiberInterface(object):
+    SPEED_UNKNOWN = "SPEED_UNKNOWN"
+    SPEED_1G = "SPEED_1G"
+    SPEED_100G = "SPEED_100G"
+    SPEED_25G = "SPEED_25G"
+    CUSTOM_FEC_MODE_KR = "KR_FEC"
+    CUSTOM_FEC_MODE_RS = "RS_FEC"
+    CUSTOM_FEC_MODE_KP4 = "KP4_FEC"
+    CUSTOM_FEC_MODE_NONE = "NONE"
+    DATA_PATH_MODE_NORMAL = "NORMAL"
+    DATA_PATH_MODE_LOCAL_LOOPBACK = "LOCAL_LOOPBACK"
+    DATA_PATH_MODE_LINE_MONITOR = "LINE_MONITOR"
+    FULL_DUPLEX = "FULL"
+    HALF_DUPLEX = "HALF"
+    _spirent_handle = None
+
+    def __init__(self, advertise_ieee=True, advertise_nbaset=True, alternate_speeds=SPEED_UNKNOWN,
+                 auto_negotiation=True, auto_negotiation_master_slave="MASTER",
+                 auto_negotiation_master_slave_enable=True, cable_type_length="OPTICAL", cfp_interface="ACC_6068A",
+                 collision_exponent=10, custom_fec_mode=CUSTOM_FEC_MODE_KR,
+                 data_path_mode=DATA_PATH_MODE_NORMAL, deficit_idle_count=False, detection_mode="AUTO_DETECT",
+                 down_shift_enable=False, duplex=FULL_DUPLEX, flow_control=False,
+                 forward_error_correction=True, ignore_link_status=False, internal_ppm_adjust=0,
+                 is_pfc_negotiated=False, line_speed=SPEED_1G, priority_flow_control_array=False,
+                 mtu=1500, optimize_xon="DISABLE", performance_mode="STC_DEFAULT", port_setup_mode="PORTCONFIG_ONLY",
+                 test_mode="NORMAL_OPERATION", transmit_clock_source="INTERNAL"):
+        self.AdvertiseIEEE = advertise_ieee
+        self.AdvertiseNBASET = advertise_nbaset
+        self.AlternateSpeeds = alternate_speeds
+        self.CableTypeLength = cable_type_length
+        self.CfpInterface = cfp_interface
+        self.AutoNegotiation = auto_negotiation
+        self.AutoNegotiationMasterSlave = auto_negotiation_master_slave
+        self.AutoNegotiationMasterSlaveEnable = auto_negotiation_master_slave_enable
+        self.CollisionExponent = collision_exponent
+        self.CustomFecMode = custom_fec_mode
+        self.DataPathMode = data_path_mode
+        self.DeficitIdleCount = deficit_idle_count
+        self.DetectionMode = detection_mode
+        self.DownshiftEnable = down_shift_enable
+        self.Duplex = duplex
+        self.FlowControl = flow_control
+        self.ForwardErrorCorrection = forward_error_correction
+        self.IgnoreLinkStatus = ignore_link_status
+        self.InternalPpmAdjust = internal_ppm_adjust
+        self.IsPfcNegotiated = is_pfc_negotiated
+        self.LineSpeed = line_speed
+        self.Mtu = mtu
+        self.OptimizedXon = optimize_xon
+        self.PerformanceMode = performance_mode
+        self.PortSetupMode = port_setup_mode
+        self.PriorityFlowControlArray = priority_flow_control_array
+        self.TestMode = test_mode
+        self.TransmitClockSource = transmit_clock_source
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+    def __str__(self):
+        return "Ethernet25GigFiber"
 
 
 class AnalyzerConfig(object):
@@ -1773,7 +1945,6 @@ class Rfc2544ThroughputConfig(object):
     @spirent_handle.setter
     def spirent_handle(self, handle):
         self._spirent_handle = handle
-
 
 
 

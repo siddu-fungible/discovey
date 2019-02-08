@@ -25,7 +25,6 @@ from . import demo_views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 
-
 regression_urls = [
     url(r'^$', views.angular_home),
     url(r'^completed_jobs$', views.angular_home),
@@ -66,12 +65,13 @@ regression_urls = [
     url(r'^scripts$', regression_views.scripts),
     url(r'^unallocated_script$', regression_views.unallocated_script),
     url(r'^script$', regression_views.script),
+    url(r'^script_update/(\d+)$', regression_views.script_update),
     url(r'^get_suite_executions_by_time$', regression_views.get_suite_executions_by_time),
     url(r'^get_test_case_executions_by_time$', regression_views.get_test_case_executions_by_time),
     url(r'^all_jiras$', regression_views.all_regression_jiras),
     url(r'^jiras/(\d+)/?(.*)?$', regression_views.jiras),
+    url(r'^script_execution/(\d+)$', regression_views.script_execution),
     url(r'^(?:\S+)$', views.angular_home)
-
 
 ]
 
@@ -108,7 +108,8 @@ common_urls = [
     url(r'^alerts_page$', common_views.alerts_page),
     url(r'^add_session_log$', common_views.add_session_log),
     url(r'^get_session_logs$', common_views.get_session_logs),
-    url(r'^home$', common_views.home)
+    url(r'^home$', common_views.home),
+    url(r'^bug_info$', common_views.bug_info)
 ]
 
 metric_urls = [
@@ -184,6 +185,4 @@ urlpatterns = [
 
 ]
 
-
 urlpatterns += staticfiles_urlpatterns()
-

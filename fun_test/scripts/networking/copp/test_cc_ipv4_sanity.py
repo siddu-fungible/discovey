@@ -101,6 +101,7 @@ class TestCcIPv4ICMP(FunTestCase):
     stream_obj = None
     validate_meter_stats = True
     meter_id = None
+    routes_config = None
 
     def describe(self):
         self.set_test_details(id=1, summary="NU --> CC IPv4 ICMP (Internet Control Message Protocol) destined to "
@@ -132,8 +133,11 @@ class TestCcIPv4ICMP(FunTestCase):
                                   port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
-        l2_config = spirent_config['l2_config']
-        l3_config = spirent_config['l3_config']['ipv4']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+
+        routermac = self.routes_config['routermac']
+        l3_config = self.routes_config['l3_config']
 
         checkpoint = "Configure stream with EthernetII, IPv4 and ICMP Echo Request under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -145,7 +149,7 @@ class TestCcIPv4ICMP(FunTestCase):
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
-        ether_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'],
+        ether_obj = Ethernet2Header(destination_mac=routermac,
                                     ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,

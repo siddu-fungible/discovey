@@ -1,111 +1,24 @@
-<div class="modal-content">
-    <div class="modal-header">
-        <h3 *ngIf="mode === 'Edit'" class="modal-title">Edit chart: {{ chartName }}</h3>
-        <h3 ng-if="mode === 'Create'" class="modal-title">Create chart</h3>
-    </div>
-    <div class="modal-body edit-modal-body">
-        <fun-metric-chart [id]="metricId" [minimal]="'true'" [previewDataSets]="previewDataSets" style="width:350px; height:350px;"></fun-metric-chart>
-        <div *ngIf="mode === 'Create'">
-            <table class="table table-nonfluid">
-                <tr>
-                    <td><label>Chart name: </label></td>
-                    <td>
-                        <input type="text" required
-                                   [(ngModel)]="chartName">
-                    </td>
-                </tr>
-            <tr>
-              <td><label>Y1 axis title: </label></td>
-              <td>
-                    <input type="text" required
-                                       [(ngModel)]="y1AxisTitle"/>
-                </td>
-            </tr>
-        </table>
-        </div>
-        <div *ngIf="((mode==='Create') && chartName) || (mode==='Edit')">
-            <span class="fa fa-plus"></span>
-            <a [routerLink]="" (click)="addDataSetClick()">Add data-set</a>
-        </div>
+<div class="component">
+  <div *ngIf="singleSelectNode" style="display: inline-block">Selected file: {{ singleSelectNode.scriptPath }}</div>
+  <button (click)="selectClick()" class="btn btn-link">Select a file</button>
+  <table *ngIf="selectionMode">
+    <tr>
+      <th>Path</th>
+    </tr>
+    <tr *ngFor="let node of flatNodes">
+      <td>
+        <ng-container *ngIf="node.show">
+          <span [innerHTML]="getIndentHtml(node) | safeHtml">&nbsp;</span>
+          <input *ngIf="node.leaf" type="radio" [checked]="singleSelectNode && singleSelectNode.uId === node.uId" (click)="singleSelectClick(node)">
+          {{ node.scriptPath }}
+          &nbsp;
+          <span *ngIf="node.childrenIds.size > 0 && !node.expanded" class="pseudo-anchor" (click)="expand(node)"><span class="arrow arrow-right"></span></span> &nbsp;
+          <span *ngIf="node.childrenIds.size > 0 && node.expanded" class="pseudo-anchor" (click)="collapse(node)"><span class="arrow arrow-down"></span></span>
+        </ng-container>
+      </td>
 
-        <div *ngIf="showOutputSelection">
-            <table class="table table-bordered table-nonfluid">
-                <tr>
-                    <th>Name</th>
-                    <th [attr.colspan]="addDataSet.inputs.length" style="text-align:center;">Input</th>
-                    <th>Output</th>
-                    <th>Min</th>
-                    <th>Max</th>
-                </tr>
-                <tr>
-                    <td>
-                            <input type="text" minlength="1" maxlength="50" required="true"
-                                       [(ngModel)]="addDataSet.name"/>
-                    </td>
-                    <td *ngFor="let input of addDataSet.inputs"><label>{{ input.name }}</label>
-                        <select [(ngModel)]="input.selectedChoice">
-                                <option *ngFor="let choice of input.choices">
-                                  {{ choice }}</option>
-                        </select>
-                    </td>
+    </tr>
+  </table>
 
-
-                    <td>
-                        <select (change)="outputChange()"
-                                    [(ngModel)]="addDataSet.output.name">
-                          <option *ngFor="let output of outputList">{{ output }}</option>
-
-                        </select>
-                    </td>
-
-                    <td>
-                        <input type="number" min="0" max="999999" required
-                                   [(ngModel)]="addDataSet.output.min"/>
-                    </td>
-
-                    <td>
-                        <input type="number" min="0" max="999999" required
-                                   [(ngModel)]="addDataSet.output.max"/>
-                    </td>
-                </tr>
-            </table>
-            <button class="btn btn-primary" (click)="addClick()">Add</button>
-
-        </div>
-        <p><input type="checkbox" [(ngModel)]="negativeGradient">&nbsp;Negative gradient</p>
-
-        <table class="table table-nonfluid table-bordered">
-            <tr>
-                <th>Delete</th>
-                <th>Name</th>
-                <th *ngFor="let inputName of inputNames">{{ inputName.name }}</th>
-                <th>Output</th>
-                <th>Min</th>
-                <th>Max</th>
-                <th>Expected</th>
-            </tr>
-            <tr *ngFor="let dataSet of previewDataSets; index as i">
-                <td>
-                    <button class="btn btn-sm" (click)="removeClick(i)"><i class="fa fa-trash-o"
-                                                                                 style="font-size:20px; color: red"></i>
-                    </button>
-                </td>
-                <td>{{ dataSet.name }}</td>
-                <td *ngFor="let inputValue of inputNames">{{ dataSet.inputs[inputValue.name] }}</td>
-                <td>{{ dataSet.output.name }}</td>
-                <td>
-                    <input type="number" [(ngModel)]="dataSet.output.min" ng-value="dataSet.output.min"
-                           style="width: 100px">
-                </td>
-                <td><input type="number" [(ngModel)]="dataSet.output.max" ng-value="dataSet.output.max"
-                           style="width: 100px"></td>
-                <td><input type="number" [(ngModel)]="dataSet.output.expected" ng-value="dataSet.output.expected"
-                           style="width: 100px"></td>
-            </tr>
-        </table>
-    </div>
-    <div class="modal-footer">
-        <button class="btn btn-success" (click)="submit()">Submit</button>
-        <button class="btn" (click)="dismiss()">Close</button>
-    </div>
 </div>
+

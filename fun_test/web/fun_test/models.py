@@ -135,6 +135,7 @@ class TestCaseExecution(models.Model):
     comments = models.TextField(default="")
     log_prefix = models.TextField(default="")
     tags = models.TextField(default="[]")
+    inputs = models.TextField(default="{}")
 
     def __str__(self):
         s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,
@@ -223,6 +224,7 @@ class RegresssionScripts(models.Model):
     modules = models.TextField(default='["storage"]')  # Refers to class Module
     components = models.TextField(default=json.dumps(['component1']))
     tags = models.TextField(default=json.dumps(['tag1']))
+    baseline_suite_execution_id = models.IntegerField(default=-1, null=True)
 
 class RegresssionScriptsSerializer(serializers.Serializer):
     script_path = serializers.CharField(max_length=200)
@@ -241,7 +243,7 @@ class RegresssionScriptsSerializer(serializers.Serializer):
 
     class Meta:
         model = RegresssionScripts
-        fields = ('script_path', 'modules', 'components', 'tags', 'id')
+        fields = ('script_path', 'modules', 'components', 'tags', 'id', 'baseline_suite_execution_id')
 
 class ScriptInfo(models.Model):
     script_id = models.IntegerField()

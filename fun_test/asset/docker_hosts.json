@@ -33,7 +33,7 @@
     "images": [
       {
         "category":  "storage_basic",
-        "name": "storage_x86_64:v3"
+        "name": "storage_x86_64:v01_29"
       },
       {
         "category": "fio_traffic_generator",
@@ -45,11 +45,11 @@
       },
       {
         "category":  "f1_colocated_qemu_fungible_yocto",
-        "name": "storage_x86_64:v2"
+        "name": "storage_x86_64:v01_29"
       },
       {
         "category":  "f1_colocated_qemu_fungible_ubuntu",
-        "name": "f1_colocated_qemu:latest"
+        "name": "f1_colocated_qemu:v01_29"
       }
     ]
   }
