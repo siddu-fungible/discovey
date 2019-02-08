@@ -944,6 +944,34 @@
                 "label": "ECDH 25519",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "info": "PKE soak",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "PKE soak",
+                "label": "Soak",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "ECDHE_RSA X25519 RSA 2K",
+                    "metric_model_name": "TeraMarkPkeX25519TlsSoakPerformance",
+                    "leaf": true,
+                    "name": "ECDHE_RSA X25519 RSA 2K",
+                    "label": "ECDHE_RSA X25519 RSA 2K",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "ECDHE_RSA P256 RSA 2K",
+                    "metric_model_name": "TeraMarkPkeP256TlsSoakPerformance",
+                    "leaf": true,
+                    "name": "ECDHE_RSA P256 RSA 2K",
+                    "label": "ECDHE_RSA P256 RSA 2K",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
               }
             ]
           },

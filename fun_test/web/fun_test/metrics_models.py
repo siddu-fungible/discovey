@@ -1132,7 +1132,7 @@ class TeraMarkPkeEcdh25519Performance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
-class TeraMarkPkeX25519TlsSoakPerformance(models.Model):
+class PkeX25519TlsSoakPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
@@ -1148,7 +1148,7 @@ class TeraMarkPkeX25519TlsSoakPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
-class TeraMarkPkeP256TlsSoakPerformance(models.Model):
+class PkeP256TlsSoakPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
