@@ -197,8 +197,8 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                uuid=self.uuid["blt"],
                                                                command_duration=self.command_timeout)
 
-        fun_test.test_assert(command_result["status"], "BLT with uuid {} & capacity {}".format(self.uuid["blt"],
-                                                                                               self.blt_capacity))
+        fun_test.test_assert(command_result["status"], "BLT creation with uuid {} & capacity {}".
+                             format(self.uuid["blt"], self.blt_capacity))
         self.volume_list.append("blt")
         self.all_volume.append("blt")
 
@@ -226,7 +226,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                name="jvol1",
                                                                uuid=self.uuid["jvol"],
                                                                command_duration=self.command_timeout)
-        fun_test.test_assert(command_result["status"], "JVol with uuid {} & capacity {}".
+        fun_test.test_assert(command_result["status"], "JVol creation with uuid {} & capacity {}".
                              format(self.uuid["jvol"], self.jvol_capacity))
         self.all_volume.append("jvol")
         self.all_volume.append("lsv")
@@ -253,7 +253,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                    zip_effort=self.zip_effort,
                                                                    command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "LSV with uuid {} & capacity {} with compression".
+            fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {} with compression".
                                  format(self.attach_uuid, self.lsv_capacity))
         else:
             command_result = self.storage_controller.create_volume(type=self.vol_types["lsv"],
@@ -269,7 +269,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                    xtweak=self.xts_tweak,
                                                                    command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "LSV with uuid {} & capacity {}".
+            fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {}".
                                  format(self.attach_uuid, self.lsv_capacity))
 
         if self.traffic_parallel:
@@ -281,7 +281,8 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                     remote_ip=self.linux_host.internal_ip,
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.simple_assert(command_result["status"], "LSV attach {}".format(x))
+                fun_test.simple_assert(command_result["status"], "LSV with uuid {} parallel attach {}".
+                                       format(self.attach_uuid, x))
                 attach_count += 1
             fun_test.test_assert_expected(self.parallel_count, attach_count,
                                           message="Parallel count & attach count")
