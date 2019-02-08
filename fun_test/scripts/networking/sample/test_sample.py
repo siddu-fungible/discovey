@@ -1205,7 +1205,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
 
         ethernet_obj.srcMac = self.routes_config['routermac']
         if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
-            ethernet_obj.dstMac = "fe:dc:ba:44:55:99"
+            ethernet_obj.dstMac = "fe:dc:ba:44:55:77"
         else:
             ethernet_obj.dstMac = "fe:dc:ba:44:55:99"  # Destination mac of spirent port
         ip_header_obj.ttl = 254
