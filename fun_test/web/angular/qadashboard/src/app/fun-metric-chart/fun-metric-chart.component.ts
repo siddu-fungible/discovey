@@ -50,8 +50,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   buildProps: any;
   showBuildProps: boolean = false;
   paddingNeeded: boolean = false;
-  mileStoneMarkers: any = {};
-  mileStoneIndices: any = {};
+  mileStoneMarkers: any = {}; // fetch the milestones for each chart from backend and save it
+  mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
 
   public formatter: Function;
   public tooltip: Function;
@@ -534,13 +534,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let endIndex = keyList[i][1];
           let matchingDateFound = false;
           seriesDates.push(originalKeyList[startIndex]);
-          Object.keys(this.mileStoneMarkers).forEach((milestone) => {
-            let marker_date = this.mileStoneMarkers[milestone].split(" ")[0];
-             if (originalKeyList[startIndex].includes(marker_date)) { // Tape-out and F1
-               let milestone_obj = {};
-               milestone_obj["name"] = milestone;
-               milestone_obj["index"] = startIndex;
-            this.mileStoneIndices[milestone] = startIndex;
+          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0]; // removing the time to check if the milestone date exists
+            //comparing two date objects to get the f1 milestone incase of date mismatch
+            let compareDate =  new Date(originalKeyList[startIndex]);
+             if (originalKeyList[startIndex].includes(markerDate) || compareDate >= new Date(this.mileStoneMarkers[mileStone])) { // Tape-out and F1
+              if (!this.mileStoneIndices[mileStone]) {
+                this.mileStoneIndices[mileStone] = startIndex;
+              }
           }
           });
 
@@ -654,10 +655,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let count = 0;
           let total = 0;
           dateSeries.push(series[startIndex]);
-          Object.keys(this.mileStoneMarkers).forEach((milestone) => {
-            let marker_date = this.mileStoneMarkers[milestone].split(" ")[0];
-             if (series[startIndex].includes(marker_date)) { // Tape-out and F1
-            this.mileStoneIndices[milestone] = startIndex;
+          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0];
+             if (series[startIndex].includes(markerDate)) { // Tape-out and F1
+            this.mileStoneIndices[mileStone] = startIndex;
           }
           });
           while (startIndex >= endIndex) {

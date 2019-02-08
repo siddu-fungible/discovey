@@ -607,6 +607,6 @@ if __name__ == "__main__":
         if entry.metric_id:
             mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16), milestone_name="Tape-out")
             mmt.save()
-            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=25), milestone_name="F1")
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24), milestone_name="F1")
             mmf.save()
     print "MileStone Complete"

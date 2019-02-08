@@ -85,19 +85,22 @@ export class FunChartComponent implements OnInit, OnChanges {
         series: this.y1Values
       };
       chartOptions.xAxis["plotLines"] = [];
-      Object.keys(this.mileStones).forEach((milestone)=> {
+      if (this.mileStones) {
+        Object.keys(this.mileStones).forEach((milestone) => {
           chartOptions.xAxis["plotLines"].push({
-          color: 'red', // Color value
-          dashStyle: 'solid', // Style of the plot line. Default to solid
-          value: this.mileStones[milestone], // Value of where the line will appear
-          width: 2, // Width of the line
-          label: {
-            text: milestone,
-            verticalAlign: 'top',
-            textAlign: 'center'
-          }
+            color: 'red', // Color value
+            dashStyle: 'solid', // Style of the plot line. Default to solid
+            value: this.mileStones[milestone], // Value of where the line will appear
+            width: 2, // Width of the line
+            label: {
+              text: milestone,
+              verticalAlign: 'top',
+              textAlign: 'center'
+            }
+          });
         });
-      });
+      }
+
     }
     else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {
