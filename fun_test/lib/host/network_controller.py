@@ -1411,13 +1411,13 @@ class NetworkController(DpcshClient):
         result = None
         try:
             cmd_arg_dict = {"id": id, "mode": 2, "dest": dest}
-            if fpg:
+            if fpg is not None:
                 cmd_arg_dict['fpg'] = fpg
-            if acl:
+            if acl is not None:
                 cmd_arg_dict['acl'] = acl
-            if flag_mask:
+            if flag_mask is not None:
                 cmd_arg_dict['flag_mask'] = flag_mask
-            if hu:
+            if hu is not None:
                 cmd_arg_dict['hu'] = hu
             if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
@@ -1425,13 +1425,13 @@ class NetworkController(DpcshClient):
                 cmd_arg_dict['pps_en'] = pps_en
             if pps_interval is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
-            if pps_burst:
+            if pps_burst is not None:
                 cmd_arg_dict['pps_burst'] = pps_burst
             if sampler_en is not None:
                 cmd_arg_dict['sampler_en'] = sampler_en
-            if sampler_rate:
+            if sampler_rate is not None:
                 cmd_arg_dict['sampler_rate'] = sampler_rate
-            if sampler_run_sz:
+            if sampler_run_sz is not None:
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
             if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only

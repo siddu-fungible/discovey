@@ -60,6 +60,9 @@
           "destination_ip2": "19.1.1.1",
           "destination_ip3": "60.1.1.1",
           "destination_ip4": "61.1.1.1"
+        },
+        "ipv6": {
+          "destination_ip1": "2001::20:1:1:1"
         }
       }
     }
