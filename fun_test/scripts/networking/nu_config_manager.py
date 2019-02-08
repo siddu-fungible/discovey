@@ -358,12 +358,13 @@ class NuConfigManager(object):
     def get_dut_type(self):
         try:
             job_environment = fun_test.get_job_environment()
+            # job_environment = {"EMULATION_TARGET": "F1", "UART_HOST": "10.1.40.21", "UART_TCP_PORT_0": "40221"}
             print job_environment
             job_inputs = fun_test.get_job_inputs()
             if job_environment and ("EMULATION_TARGET" in job_environment or "RUN_TARGET" in job_environment):
-                if job_environment['EMULATION_TARGET'] == self.DUT_TYPE_PALLADIUM:
+                if job_environment["EMULATION_TARGET"] == self.DUT_TYPE_PALLADIUM:
                     self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
-                elif job_environment['EMULATION_TARGET'] == self.DUT_TYPE_F1.upper():
+                elif job_environment["EMULATION_TARGET"] == self.DUT_TYPE_F1.upper():
                     self.DUT_TYPE = self.DUT_TYPE_F1
             else:
                 if job_inputs and "speed" in job_inputs:
