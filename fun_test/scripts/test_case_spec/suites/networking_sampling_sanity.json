@@ -1,4 +1,4 @@
 [
   {"info": {"tags": ["networking-sanity"]}},
-  {"path": "networking/sample/test_sample.py"}
+  {"path": "networking/sample/test_sample.py", "inputs": {"speed": "SPEED_25G"}}
 ]
