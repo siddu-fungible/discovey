@@ -233,6 +233,81 @@
       "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     }
   },
+  "LsvKey256RandRW50": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    "blt_details": {
+      "capacity": 268435456,
+      "block_size": 4096
+    },
+    "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_rwmixread": 50,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"BADC0FFEE0DDF00D\\\"",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "lsv_pass_threshold": 0,
+    "expected_lsv_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 540}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 496}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}}
+    },
+    "blt_pass_threshold": 60,
+    "expected_blt_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 528}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 750, "num_writes": 557}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 851, "num_writes": 516}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 542}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}},
+      "(8, 1)": {"randrw": {"encrypt_done": 540, "encrypt_fails": 0, "encrypt_reqs": 540}},
+      "(16, 1)": {"randrw": {"encrypt_done": 496, "encrypt_fails": 0, "encrypt_reqs": 496}},
+      "(32, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}}
+    }
+  },
   "LsvKey512": {
     "vol_types": {
       "blt": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -458,6 +533,81 @@
       "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
       "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    }
+  },
+  "LsvKey512RandRW50": {
+    "vol_types": {
+      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
+      "lsv": "VOL_TYPE_BLK_LSV"
+    },
+    "blt_details": {
+      "capacity": 268435456,
+      "block_size": 4096
+    },
+    "lsv_head": 30,
+    "lsv_details": {
+      "chunk_size": 32
+    },
+    "jvol_details": {
+      "multiplier": 8,
+      "block_size": 512
+    },
+    "ns_id": 1,
+    "encrypt": true,
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_rwmixread": 50,
+    "traffic_parallel": false,
+    "parallel_count": 4,
+    "fio_loop": 1,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"BADC0FFEE0DDF00D\\\"",
+      "verify_fatal": 1,
+      "timeout": 120
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "lsv_pass_threshold": 0,
+    "expected_lsv_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 540}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 496}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}}
+    },
+    "blt_pass_threshold": 60,
+    "expected_blt_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 528}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 750, "num_writes": 557}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 851, "num_writes": 516}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 542}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}},
+      "(8, 1)": {"randrw": {"encrypt_done": 540, "encrypt_fails": 0, "encrypt_reqs": 540}},
+      "(16, 1)": {"randrw": {"encrypt_done": 496, "encrypt_fails": 0, "encrypt_reqs": 496}},
+      "(32, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}}
     }
   },
   "LsvEncCompress": {
@@ -732,81 +882,6 @@
       "(32, 1)": {"randrw": {"uncompress_done": 989, "uncompress_fails": 0, "uncompress_reqs": 989, "uncompressible": 0}}
     }
   },
-  "LsvKey512RandRW50": {
-    "vol_types": {
-      "blt": "VOL_TYPE_BLK_LOCAL_THIN",
-      "jvol": "VOL_TYPE_BLK_NV_MEMORY",
-      "lsv": "VOL_TYPE_BLK_LSV"
-    },
-    "blt_details": {
-      "capacity": 268435456,
-      "block_size": 4096
-    },
-    "lsv_head": 30,
-    "lsv_details": {
-      "chunk_size": 32
-    },
-    "jvol_details": {
-      "multiplier": 8,
-      "block_size": 512
-    },
-    "ns_id": 1,
-    "encrypt": true,
-    "key_size": 64,
-    "xtweak_size": 8,
-    "command_timeout": 5,
-    "iter_interval": 2,
-    "fio_rwmixread": 50,
-    "traffic_parallel": false,
-    "parallel_count": 4,
-    "fio_loop": 1,
-    "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
-      "verify": "pattern",
-      "verify_pattern": "\\\"BADC0FFEE0DDF00D\\\"",
-      "verify_fatal": 1,
-      "timeout": 120
-    },
-    "fio_modes": [
-      "randrw"
-    ],
-    "fio_bs_iodepth": [
-      "(4, 1)",
-      "(8, 1)",
-      "(16, 1)",
-      "(32, 1)"
-    ],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
-    "lsv_pass_threshold": 0,
-    "expected_lsv_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
-      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 540}},
-      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 496}},
-      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}}
-    },
-    "blt_pass_threshold": 60,
-    "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 528}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 750, "num_writes": 557}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 851, "num_writes": 516}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 542}}
-    },
-    "expected_decryption_stats": {
-      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
-      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
-      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
-      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
-    },
-    "expected_encryption_stats": {
-      "(4, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}},
-      "(8, 1)": {"randrw": {"encrypt_done": 540, "encrypt_fails": 0, "encrypt_reqs": 540}},
-      "(16, 1)": {"randrw": {"encrypt_done": 496, "encrypt_fails": 0, "encrypt_reqs": 496}},
-      "(32, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}}
-    }
-  },
   "LsvEncDeadBeef": {
     "vol_types": {
       "blt": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -1020,6 +1095,7 @@
       "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
-    }
+    },
+    "host_disconnect": true
   }
 }

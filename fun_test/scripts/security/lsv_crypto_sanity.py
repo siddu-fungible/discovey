@@ -33,6 +33,7 @@ topology_dict = {
 
 def fio_parser(arg1, **kwargs):
     arg1.remote_fio(**kwargs)
+    arg1.disconnect()
 
 
 class LsvCryptoVolumeScript(FunTestScript):
@@ -154,7 +155,6 @@ class LsvCryptoVolumeTestCase(FunTestCase):
             initial_filter_values = {}
             for filter_param in self.filter_params:
                 crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
-                command_result = {}
                 command_result = self.storage_controller.peek(crypto_props_tree)
                 if command_result["data"] is None:
                     command_result["data"] = 0
@@ -179,8 +179,11 @@ class LsvCryptoVolumeTestCase(FunTestCase):
         self.uuid["jvol"] = []
         self.uuid["lsv"] = []
         self.volume_list = []
+        self.all_volume = []
+        self.detach_count = 0
 
         # LSV should be 70% of BLT capacity. So increase the BLT capacity by 30% and use BLT capacity for LSV.
+        # Only single BLT can be used with LSV
         self.blt_capacity = (self.blt_details["capacity"] * self.lsv_head / 100) + self.blt_details["capacity"]
         # Make sure the capacity is multiple of block size
         self.blt_capacity = ((self.blt_capacity + self.blt_details["block_size"] - 1) /
@@ -194,8 +197,10 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                uuid=self.uuid["blt"],
                                                                command_duration=self.command_timeout)
 
-        fun_test.test_assert(command_result["status"], "BLT with uuid {} creation on DUT".format(self.uuid["blt"]))
+        fun_test.test_assert(command_result["status"], "BLT with uuid {} & capacity {}".format(self.uuid["blt"],
+                                                                                               self.blt_capacity))
         self.volume_list.append("blt")
+        self.all_volume.append("blt")
 
         # Key generation for encryption based on size or input is random or alternate
         if self.key_size == "random":
@@ -210,7 +215,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
             self.xts_key = utils.generate_key(self.key_size)
         self.xts_tweak = utils.generate_key(self.xtweak_size)
 
-        self.attch_type = "VOL_TYPE_BLK_LSV"
+        self.attach_type = "VOL_TYPE_BLK_LSV"
         # The minimum jvol_capacity requirement is LSV chunk size * lsv block size * 4
         self.jvol_capacity = \
             self.blt_details["block_size"] * self.jvol_details["multiplier"] * self.lsv_details["chunk_size"]
@@ -221,7 +226,10 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                name="jvol1",
                                                                uuid=self.uuid["jvol"],
                                                                command_duration=self.command_timeout)
-        fun_test.test_assert(command_result["status"], "JVol creation")
+        fun_test.test_assert(command_result["status"], "JVol with uuid {} & capacity {}".
+                             format(self.uuid["jvol"], self.jvol_capacity))
+        self.all_volume.append("jvol")
+        self.all_volume.append("lsv")
         # Creating LSV and setting it to attach_uuid
         self.volume_list.append("lsv")
         self.uuid["lsv"] = utils.generate_uuid()
@@ -245,7 +253,8 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                    zip_effort=self.zip_effort,
                                                                    command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "LSV creation with compression")
+            fun_test.test_assert(command_result["status"], "LSV with uuid {} & capacity {} with compression".
+                                 format(self.attach_uuid, self.lsv_capacity))
         else:
             command_result = self.storage_controller.create_volume(type=self.vol_types["lsv"],
                                                                    capacity=self.lsv_capacity,
@@ -260,8 +269,11 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                    xtweak=self.xts_tweak,
                                                                    command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "LSV creation")
+            fun_test.test_assert(command_result["status"], "LSV with uuid {} & capacity {}".
+                                 format(self.attach_uuid, self.lsv_capacity))
+
         if self.traffic_parallel:
+            attach_count = 0
             for x in range(1, self.parallel_count + 1, 1):
                 command_result = self.storage_controller.volume_attach_remote(
                     ns_id=x,
@@ -269,15 +281,17 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                     remote_ip=self.linux_host.internal_ip,
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                if not command_result["status"]:
-                    fun_test.test_assert(command_result["status"], "Vol attach {}".format(x))
+                fun_test.simple_assert(command_result["status"], "LSV attach {}".format(x))
+                attach_count += 1
+            fun_test.test_assert_expected(self.parallel_count, attach_count,
+                                          message="Parallel count & attach count")
         else:
             command_result = self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
                                                                           uuid=self.attach_uuid,
                                                                           remote_ip=self.linux_host.internal_ip,
                                                                           command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Vol attach")
+            fun_test.test_assert(command_result["status"], "Attach LSV with uuid {}".format(self.attach_uuid))
 
         # Check the expected filter params
         if self.encrypt:
@@ -285,7 +299,6 @@ class LsvCryptoVolumeTestCase(FunTestCase):
             diff_filter_values = {}
             for filter_param in self.filter_params:
                 crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
-                command_result = {}
                 command_result = self.storage_controller.peek(crypto_props_tree)
                 if command_result["data"] is None:
                     command_result["data"] = 0
@@ -301,9 +314,8 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                     evalue = 1 * multiplier
                 diff_filter_values[filter_param] = \
                     final_filter_values[filter_param] - initial_filter_values[filter_param]
-                fun_test.test_assert(expression=diff_filter_values[filter_param] == evalue,
-                                     message="Compare Crypto filter {} count {} with expected count {}".
-                                     format(filter_param, diff_filter_values[filter_param], evalue))
+                fun_test.test_assert_expected(evalue, diff_filter_values[filter_param],
+                                              message="Comparing crypto filter {} count".format(filter_param))
 
     def run(self):
 
@@ -401,8 +413,8 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                         for x in self.crypto_ops:
                             initial_crypto_stats[combo][mode][x] = {}
                             crypto_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes",
-                                                                        self.vol_types["lsv"],
-                                                                        self.uuid["lsv"], x)
+                                                                        self.attach_type,
+                                                                        self.attach_uuid, x)
 
                             command_result = self.storage_controller.peek(crypto_props_tree)
                             fun_test.simple_assert(command_result["status"], "Initial {} stats for LSV".
@@ -421,8 +433,8 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                         for x in self.zip_ops:
                             initial_zip_stats[combo][mode][x] = {}
                             zip_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes",
-                                                                     self.vol_types["lsv"],
-                                                                     self.uuid["lsv"], x)
+                                                                     self.attach_type,
+                                                                     self.attach_uuid, x)
                             command_result = self.storage_controller.peek(zip_props_tree)
                             fun_test.simple_assert(command_result["status"], "Initial {} stats on LSV".format(x))
                             initial_zip_stats[combo][mode][x] = command_result["data"]
@@ -445,6 +457,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                  format(mode, combo))
                             fun_test.log("FIO Command Output:")
                             fun_test.log(fio_output[combo][mode])
+                            self.linux_host.disconnect()
                         else:
                             fio_output[combo][mode] = {}
                             fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip,
@@ -457,6 +470,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                  format(mode, combo))
                             fun_test.log("FIO Command Output:")
                             fun_test.log(fio_output[combo][mode])
+                            self.linux_host.disconnect()
                     else:
                         fun_test.log("Running fio test is threaded mode...")
                         thread_id = {}
@@ -504,7 +518,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                 if not self.linux_host.command("pgrep fio"):
                                     break
                                 else:
-                                    fun_test.sleep("Waiting for fio to exit...sleeping 10 secs", seconds=10)
+                                    fun_test.sleep("Waiting for fio to exit...", seconds=10)
 
                             fun_test.log("Timer expired, killing fio...")
                             self.linux_host.command("for i in `pgrep fio`;do kill -9 $i;done")
@@ -594,8 +608,8 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                             diff_crypto_stats[combo][mode][x] = {}
                             final_crypto_stats[combo][mode][x] = {}
                             crypto_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes",
-                                                                        self.vol_types["lsv"],
-                                                                        self.uuid["lsv"], x)
+                                                                        self.attach_type,
+                                                                        self.attach_uuid, x)
 
                             command_result = self.storage_controller.peek(crypto_props_tree)
                             fun_test.simple_assert(command_result["status"], "Final {} stats for LSV".
@@ -622,12 +636,15 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                             for ekey, evalue in expected_crypto_stats.items():
                                 if ekey in diff_crypto_stats[combo][mode][x]:
                                     actual = diff_crypto_stats[combo][mode][x][ekey]
-                                    fun_test.simple_assert(expression=actual == evalue,
-                                                           message="{} : {} stats for {} mode & {} combo on BLT {},"
-                                                                   " expected {} : actual {}".
-                                                           format(x, ekey, mode, combo, x, evalue, actual))
+                                    fun_test.test_assert_expected(evalue, actual,
+                                                                  message="{} : {} stats for {} mode & {} combo on "
+                                                                          "LSV".format(x, ekey, mode, combo))
                                 else:
                                     fun_test.critical("{} is not found in LSV {} stats".format(ekey, x))
+                                    fun_test.add_checkpoint("{} not found in LSV {} stats".format(ekey, x),
+                                                            "FAILED",
+                                                            ekey,
+                                                            "Not found")
                         if hasattr(self, "crypto_ops_params"):
                             filter_values = []
                             for i in self.crypto_ops_params:
@@ -647,8 +664,8 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                             final_zip_stats[combo][mode][x] = {}
                             diff_zip_stats[combo][mode][x] = {}
                             zip_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes",
-                                                                     self.vol_types["lsv"],
-                                                                     self.uuid["lsv"], x)
+                                                                     self.attach_type,
+                                                                     self.attach_uuid, x)
                             command_result = self.storage_controller.peek(zip_props_tree)
                             fun_test.simple_assert(command_result["status"], "Final {} stats on LSV".format(x))
                             final_zip_stats[combo][mode][x] = command_result["data"]
@@ -675,12 +692,15 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                             for ekey, evalue in expected_zip_stats.items():
                                 if ekey in diff_zip_stats[combo][mode][x]:
                                     actual = diff_zip_stats[combo][mode][x][ekey]
-                                    fun_test.simple_assert(expression=actual == evalue,
-                                                           message="{} : {} stats for {} mode & {} combo on BLT {},"
-                                                                   " expected {} : actual {}".
-                                                           format(x, ekey, mode, combo, x, evalue, actual))
+                                    fun_test.test_assert_expected(evalue, actual,
+                                                                  message="{} : {} stats for {} mode & {} combo on "
+                                                                          "LSV".format(x, ekey, mode, combo))
                                 else:
                                     fun_test.critical("{} is not found in LSV {} stats".format(ekey, x))
+                                    fun_test.add_checkpoint("{} not found in LSV {} stats".format(ekey, x),
+                                                            "FAILED",
+                                                            ekey,
+                                                            "Not found")
 
     def cleanup(self):
         if hasattr(self, "host_disconnect") and self.host_disconnect:
@@ -693,20 +713,25 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                                   uuid=self.attach_uuid,
                                                                                   remote_ip=self.linux_host.internal_ip)
                     fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detach Vol {}".format(x))
+                    fun_test.simple_assert(command_result["status"], "Detach vol {} with uuid {}".
+                                           format(x, self.attach_uuid))
+                    self.detach_count += 1
+
+                fun_test.test_assert_expected(self.parallel_count, self.detach_count,
+                                              message="Parallel count & detach count")
 
             else:
                 command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
                                                                               uuid=self.attach_uuid,
                                                                               remote_ip=self.linux_host.internal_ip)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detach Vol")
+                fun_test.test_assert(command_result["status"], "Detach vol with uuid {}".format(self.attach_uuid))
 
             command_result = self.storage_controller.delete_volume(capacity=self.lsv_capacity,
                                                                    block_size=self.lsv_blocksize,
                                                                    name="lsv1",
-                                                                   uuid=self.uuid["lsv"],
-                                                                   type=self.vol_types["lsv"])
+                                                                   uuid=self.attach_uuid,
+                                                                   type=self.attach_type)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Deleted LSV")
             command_result = self.storage_controller.delete_volume(capacity=self.jvol_capacity,
@@ -723,12 +748,24 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                    type=self.vol_types["blt"])
             fun_test.test_assert(command_result["status"], "Deleting BLT with uuid {} on DUT".format(self.uuid["blt"]))
 
-        # TODO code this check after SWOS-3597 is fixed
-        # Cleanup should not have any traces of volumes left
-        storage_props_tree = "{}/{}".format("storage", "volumes")
-        command_result = self.storage_controller.peek(storage_props_tree)
-        if command_result["status"]:
-            fun_test.test_assert(command_result["status"], "Cleanup traces of volume")
+        # Verify cleanup is successful
+        for vol_type in self.all_volume:
+            if vol_type == "blt":
+                storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
+                                                          self.vol_types[vol_type], self.uuid[vol_type])
+                command_result = self.storage_controller.peek(storage_props_tree)
+                fun_test.simple_assert(command_result["status"], "{} with uuid {} peek failed".
+                                       format(vol_type, self.uuid[vol_type]))
+                fun_test.simple_assert(expression=command_result["data"] is None,
+                                       message="BLT with uuid {} not cleaned up".format(self.uuid[vol_type]))
+            else:
+                storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
+                                                          self.vol_types[vol_type], self.uuid[vol_type])
+                command_result = self.storage_controller.peek(storage_props_tree)
+                fun_test.simple_assert(command_result["status"], "{} with uuid {} peek failed".
+                                       format(vol_type, self.uuid[vol_type]))
+                fun_test.simple_assert(expression=command_result["data"] is None,
+                                       message="{} with uuid {} not cleaned up".format(vol_type, self.uuid[vol_type]))
 
 
 class LsvKey256(LsvCryptoVolumeTestCase):
@@ -770,10 +807,23 @@ class LsvKey256RandRW(LsvCryptoVolumeTestCase):
         ''')
 
 
-class LsvKey512(LsvCryptoVolumeTestCase):
+class LsvKey256RandRW50(LsvCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=4,
+                              summary="LSV with 256 bit key and run FIO RandRW(50%RW) pattern with different block "
+                                      "size & depth",
+                              steps='''
+                              1. Create a lsv with encryption using 256 bit key on dut.
+                              2. Attach it to external linux/container.
+                              3. Run FIO traffic.
+        ''')
+
+
+class LsvKey512(LsvCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=5,
                               summary="LSV with 512 bit key and run FIO with different RW pattern(write,read,"
                                       "randwrite,randread), with different block size & depth",
                               steps='''
@@ -786,7 +836,7 @@ class LsvKey512(LsvCryptoVolumeTestCase):
 class LsvKey512RW(LsvCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=5,
+        self.set_test_details(id=6,
                               summary="LSV with 512 bit key and run FIO RW pattern with different block size"
                                       " & depth",
                               steps='''
@@ -799,7 +849,7 @@ class LsvKey512RW(LsvCryptoVolumeTestCase):
 class LsvKey512RandRW(LsvCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=7,
                               summary="LSV with 512 bit key and run FIO RandRW pattern with different block "
                                       "size & depth",
                               steps='''
@@ -809,10 +859,23 @@ class LsvKey512RandRW(LsvCryptoVolumeTestCase):
         ''')
 
 
+class LsvKey512RandRW50(LsvCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="LSV with 512 bit key and run FIO RandRW(50%RW) pattern with different block "
+                                      "size & depth",
+                              steps='''
+                              1. Create a lsv with encryption using random key on dut.
+                              2. Attach it to external linux/container.
+                              3. Run FIO traffic.
+        ''')
+
+
 class LsvEncCompress(LsvCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=7,
+        self.set_test_details(id=9,
                               summary="LSV with random key & compression and run diff FIO RW pattern(write,"
                                       "read,randwrite,randread) with different block size & depth & deadbeef data "
                                       "pattern",
@@ -826,7 +889,7 @@ class LsvEncCompress(LsvCryptoVolumeTestCase):
 class LsvEncCompressRW(LsvCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=8,
+        self.set_test_details(id=10,
                               summary="LSV with random key & compression and run FIO RW pattern set to"
                                       " rwmix:30 using different block size & depth & deadbeef data pattern",
                               steps='''
@@ -839,21 +902,8 @@ class LsvEncCompressRW(LsvCryptoVolumeTestCase):
 class LsvEncCompressRandRW(LsvCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=9,
+        self.set_test_details(id=11,
                               summary="LSV with random key & compression and run FIO RandRW pattern"
-                                      " with different block size & depth & deadbeef data pattern",
-                              steps='''
-                              1. Create a lsv with encryption using random key on dut.
-                              2. Attach it to external linux/container.
-                              3. Run FIO traffic.
-        ''')
-
-
-class LsvKey512RandRW50(LsvCryptoVolumeTestCase):
-
-    def describe(self):
-        self.set_test_details(id=10,
-                              summary="LSV with random key and run FIO 50% RandRW pattern"
                                       " with different block size & depth & deadbeef data pattern",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
@@ -865,7 +915,7 @@ class LsvKey512RandRW50(LsvCryptoVolumeTestCase):
 class LsvEncDeadBeef(LsvCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=11,
+        self.set_test_details(id=12,
                               summary="LSV with random key and run diff FIO RW pattern(write,read "
                                       "randwrite,randread), with different block size & depth & deadbeef "
                                       "pattern in parallel",
@@ -879,7 +929,7 @@ class LsvEncDeadBeef(LsvCryptoVolumeTestCase):
 class LsvEncZeroPattern(LsvCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=12,
+        self.set_test_details(id=13,
                               summary="LSV with random key and run diff FIO RW pattern(write,read,"
                                       "randwrite,randread), with different block size & depth & 0x000000000 string "
                                       "pattern in parallel",
@@ -893,7 +943,7 @@ class LsvEncZeroPattern(LsvCryptoVolumeTestCase):
 class LsvEncZeroHPattern(LsvCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=13,
+        self.set_test_details(id=14,
                               summary="LSV with random key and run diff FIO RW pattern(write,read,"
                                       "randwrite,randread), with different block size & depth & 0x000000000 hex "
                                       "pattern in parallel",
@@ -909,13 +959,14 @@ if __name__ == "__main__":
     lsvscript.add_test_case(LsvKey256())
     lsvscript.add_test_case(LsvKey256RW())
     lsvscript.add_test_case(LsvKey256RandRW())
+    lsvscript.add_test_case(LsvKey256RandRW50())
     lsvscript.add_test_case(LsvKey512())
     lsvscript.add_test_case(LsvKey512RW())
     lsvscript.add_test_case(LsvKey512RandRW())
+    lsvscript.add_test_case(LsvKey512RandRW50())
     lsvscript.add_test_case(LsvEncCompress())
     lsvscript.add_test_case(LsvEncCompressRW())
     lsvscript.add_test_case(LsvEncCompressRandRW())
-    lsvscript.add_test_case(LsvKey512RandRW50())
     lsvscript.add_test_case(LsvEncDeadBeef())
     lsvscript.add_test_case(LsvEncZeroPattern())
     lsvscript.add_test_case(LsvEncZeroHPattern())
