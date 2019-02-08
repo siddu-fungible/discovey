@@ -236,7 +236,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 if command_result["status"]:
                     self.blt_create_count += 1
                 else:
-                    fun_test.test_assert(command_result["status"], "Creation of BLT {} on DUT".format(x))
+                    fun_test.test_assert(command_result["status"], "FAIL : BLT {} with uuid {} & capacity {}".
+                                         format(x, self.thin_uuid[x], self.volume_details["capacity"]))
 
                 command_result = self.storage_controller.volume_attach_remote(ns_id=x,
                                                                               uuid=self.thin_uuid[x],
@@ -247,26 +248,29 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     self.blt_attach_count += 1
                 else:
                     fun_test.test_assert(command_result["status"],
-                                         "Attaching of BLT {} on DUT".format(x))
+                                         "FAIL : Attach BLT {} with uuid {}".
+                                         format(x, self.thin_uuid[x]))
             elif self.vol_encrypt:
                 fun_test.test_assert(not command_result["status"],
                                      message="BLT creation should fail")
                 self.blt_creation_fail = True
             else:
                 self.blt_create_count += 1
-                fun_test.test_assert(command_result["status"], "Creating BLT with encryption disabled")
+                fun_test.test_assert(command_result["status"], "BLT {} with uuid {} & capacity {} with encryption "
+                                                               "disabled".format(x,
+                                                                                 self.thin_uuid[x],
+                                                                                 self.volume_details["capacity"]))
 
         if self.key_size == "random" or self.key_size == "alternate":
             fun_test.log("Total BLT with 256 bit key: {}".format(key256_count))
             fun_test.log("Total BLT with 512 bit key: {}".format(key512_count))
         if not self.blt_creation_fail:
-            fun_test.test_assert(expression=self.blt_create_count == self.volume_count,
-                                 message="Volume count {} & create count {}".format(self.volume_count,
-                                                                                    self.blt_create_count))
+            fun_test.test_assert_expected(self.volume_count, self.blt_create_count,
+                                          message="BLT count and create count")
         if self.correct_key_tweak:
-            fun_test.test_assert(expression=self.blt_attach_count == self.volume_count,
-                                 message="Volume count {} & attach count {}".format(self.volume_count,
-                                                                                    self.blt_attach_count))
+            fun_test.test_assert_expected(self.volume_count, self.blt_attach_count,
+                                          message="BLT count and attach count")
+
             # Check the expected filter params only if its correct key & tweak
             if self.volume_details["encrypt"] == "enable" or self.volume_details["encrypt"] == "alternate":
                 final_filter_values = {}
@@ -288,9 +292,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                         evalue = 1 * multiplier
                     diff_filter_values[filter_param] = \
                         final_filter_values[filter_param] - initial_filter_values[filter_param]
-                    fun_test.test_assert(expression=diff_filter_values[filter_param] == evalue,
-                                         message="Compare crypto filter {} count {} with expected count {}".
-                                         format(filter_param, diff_filter_values[filter_param], evalue))
+                    fun_test.test_assert_expected(evalue, diff_filter_values[filter_param],
+                                                  message="Comparing crypto filter {} count".format(filter_param))
 
     def run(self):
 
@@ -601,7 +604,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     if command_result["status"]:
                         self.blt_detach_count += 1
                     else:
-                        fun_test.test_assert(command_result["status"], "Detaching of BLT {}".format(x))
+                        fun_test.test_assert(command_result["status"], "FAIL : Detach BLT {} with uuid {}".
+                                             format(x, self.thin_uuid[x]))
 
                 if self.volume_details["block_size"] == "Auto":
                     bs_auto = True
@@ -620,7 +624,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 if command_result["status"]:
                     self.blt_delete_count += 1
                 else:
-                    fun_test.test_assert(not command_result["status"], "Deleting BLT {} on DUT".format(x))
+                    fun_test.test_assert(not command_result["status"], "FAIL : Delete BLT {} with uuid {}".
+                                         format(x, self.thin_uuid[x]))
 
                 if bs_auto:
                     self.volume_details["block_size"] = "Auto"
@@ -628,12 +633,12 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                         self.volume_details["capacity"] = "Auto"
 
             if self.correct_key_tweak:
-                fun_test.test_assert(expression=self.blt_detach_count == self.volume_count,
-                                     message="Volume count {} & detach count {}".format(self.volume_count,
-                                                                                        self.blt_detach_count))
-            fun_test.test_assert(expression=self.blt_delete_count == self.volume_count,
-                                 message="Volume count {} & delete count {}".format(self.volume_count,
-                                                                                    self.blt_delete_count))
+                fun_test.test_assert_expected(self.volume_count, self.blt_detach_count,
+                                              message="BLT count & detach count")
+
+            fun_test.test_assert_expected(self.volume_count, self.blt_delete_count,
+                                          message="BLT count & delete count")
+
             for x in range(1, self.volume_count + 1, 1):
                 storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                           "VOL_TYPE_BLK_LOCAL_THIN", self.thin_uuid[x])
