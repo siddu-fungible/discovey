@@ -1551,6 +1551,50 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                                      git_commit="", model_name="NuTransitPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class SoakDmaPerformanceTC(PalladiumPerformanceTc):
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="Soak DMA memcpy and memset Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+
+            fun_test.test_assert(self.validate_json_file(), "validate json file and output")
+            for line in self.lines:
+                m = re.search(
+                    r'Bandwidth\s+for\s+DMA\s+(?P<operation>\S+)\s+for\s+size\s+(?P<size>\S+):\s+(?P<bandwidth>\S+)(?P<units>MB/sec)\s+\[(?P<metric_name>\S+)\]',
+                    line)
+                if m:
+                    input_operation = m.group("operation")
+                    if "memcpy" in input_operation:
+                        input_size = m.group("size")
+                        output_bandwidth = float(m.group("bandwidth"))
+                        output_unit = m.group("units")
+                        metric_name = m.group("metric_name")
+                        metrics["input_size"] = input_size
+                        metrics["output_bandwidth"] = output_bandwidth
+                        metrics["output_unit"] = output_unit
+                        metrics["input_metric_name"] = metric_name
+                        if "soak_dma_memcpy_non_coh" in metric_name:
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            MetricHelper(model=TeraMarkCryptoPerformance).add_entry(**d)
+                        else:
+
+                    else:
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="TeraMarkCryptoPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
