@@ -30,7 +30,7 @@ from web.fun_test.set_base_line import SetBaseLine
 
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus
-from web.fun_test.metrics_models import LastMetricId
+from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
 
 
 class MetricHelper(object):
@@ -588,7 +588,7 @@ if __name__ == "__baseline_main__":
         sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
     print "Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_zip__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
     model_names = ["TeraMarkZipDeflatePerformance", "TeraMarkZipLzmaPerformance"]
@@ -600,3 +600,13 @@ if __name__ == "__main__":
                 base_line_date = entry.base_line_date + timedelta(days=1)
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Setting Complete"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.metric_id:
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16), milestone_name="Tape-out")
+            mmt.save()
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24), milestone_name="F1")
+            mmf.save()
+    print "MileStone Complete"
