@@ -240,7 +240,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
                                                                                sleep_time=10)
         fun_test.test_assert(self.capture_results['result'], checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
 
         # Getting Spirent results
         checkpoint = "Fetch Tx Port Results for %s" % tx_port
@@ -834,7 +834,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
         errors_seen = False
-        if result['TcpChecksumErrorCount'] > 0 and result['PrbsErrorFrameCount'] > 0:
+        if 'TcpChecksumErrorCount'in result and result['TcpChecksumErrorCount'] > 0:
             errors_seen = True
         fun_test.test_assert(errors_seen, checkpoint)
 
@@ -1204,7 +1204,10 @@ class SampleEgressFPGtoFPG(FunTestCase):
         fun_test.simple_assert(result, checkpoint)
 
         ethernet_obj.srcMac = self.routes_config['routermac']
-        ethernet_obj.dstMac = "fe:dc:ba:44:55:99"  # Destination mac of spirent port
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            ethernet_obj.dstMac = "fe:dc:ba:44:55:99"
+        else:
+            ethernet_obj.dstMac = "fe:dc:ba:44:55:99"  # Destination mac of spirent port
         ip_header_obj.ttl = 254
 
         self.header_objs['eth_obj'] = ethernet_obj
@@ -1635,7 +1638,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=40)
+        fun_test.sleep("Traffic to complete", seconds=45)
 
         # Getting Spirent results
         checkpoint = "Fetch Tx Port Results for %s" % tx_port
