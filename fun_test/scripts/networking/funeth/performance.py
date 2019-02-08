@@ -109,6 +109,26 @@ class FunethPerformanceBase(FunTestCase):
         def tcp_payload(frame_size):
             return frame_size-18-20-20
 
+        def format_throughput(s):
+            """Return throughput in Mbps"""
+            if s.endswith('Kbps'):
+                factor = 1.0/1000
+            elif s.endswith('Mbps'):
+                factor = 1.0
+            elif s.endswith('Gbps'):
+                factor = 1.0*1000
+            return float(s.rstrip('KMGbps').strip()) * factor
+
+        def format_latency(s):
+            """Return latency in us"""
+            if s.endswith('ns'):
+                factor = 1.0/1000
+            elif s.endswith('us'):
+                factor = 1.0
+            elif s.endswith('ms'):
+                factor = 1.0*1000
+            return float(s.rstrip('nums').strip()) * factor
+
         if flow_type == 'NU_HU':
             linux_obj_desc = 'nu_linux_obj'
             cmd_prefix_desc = 'nu_cmd_prefix'
@@ -137,9 +157,9 @@ class FunethPerformanceBase(FunTestCase):
 
             result.update(
                 {
-                    'throughput': match.group(1),
-                    'pps': (int(match.group(3)) - int(match.group(2)))/duration,
-                    'jitter': match.group(4),
+                    'throughput': format_throughput(match.group(1)),
+                    'pps': (float(match.group(3)) - float(match.group(2)))/duration,
+                    'jitter': format_latency(match.group(4)),
                 }
             )
         elif protocol.lower() == 'tcp':
@@ -151,7 +171,7 @@ class FunethPerformanceBase(FunTestCase):
 
             result.update(
                 {
-                    'throughput': match.group(1),
+                    'throughput': format_throughput(match.group(1)),
                     #'pps': (int(match.group(3)) - int(match.group(2))) / duration,
                 }
             )
@@ -175,7 +195,7 @@ class FunethPerformanceBase(FunTestCase):
                 k = 'latency_max'
             elif i[0] == 'Mean':
                 k = 'latency_mean'
-            result.update({k: i[1]})
+            result.update({k: format_latency(i[1])})
 
         result.update(
             {'timestamp': '%s' % get_current_time(),
@@ -196,97 +216,97 @@ class FunethPerformanceBase(FunTestCase):
 class FunethPerformance_NU_HU_64B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Do throughput and latency test of NU -> HU with 64B frames",
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 64B frames",
                               steps="""
         1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', frame_size=64)
 
 
 class FunethPerformance_NU_HU_1500B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Do throughput and latency test of NU -> HU with 1500B frames",
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 1500B frames",
                               steps="""
         1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', frame_size=1500)
 
 
 class FunethPerformance_NU_HU_64B_TCP(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Do TCP throughput and latency test of NU -> HU with 64B frames",
+                              summary="Do TCP throughput and latency test of NU -> HU Non-FCP with 64B frames",
                               steps="""
         1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU', protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', protocol='tcp', frame_size=64)
 
 
 class FunethPerformance_NU_HU_1500B_TCP(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Do TCP throughput and latency test of NU -> HU with 1500B frames",
+                              summary="Do TCP throughput and latency test of NU -> HU Non-FCP with 1500B frames",
                               steps="""
         1. Connect to NU host, and run pscheduler throughput/latency test with HU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU', protocol='tcp', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', protocol='tcp', frame_size=1500)
 
 
 class FunethPerformance_HU_NU_64B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Do throughput and latency test of NU <- HU with 64B frames",
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 64B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', frame_size=64)
 
 
 class FunethPerformance_HU_NU_1500B(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Do throughput and latency test of NU <- HU with 1500B frames",
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 1500B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', frame_size=1500)
 
 
 class FunethPerformance_HU_NU_64B_TCP(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=7,
-                              summary="Do TCP throughput and latency test of NU <- HU with 64B frames",
+                              summary="Do TCP throughput and latency test of NU <- HU Non-FCP with 64B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', protocol='tcp', frame_size=64)
 
 
 class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=8,
-                              summary="Do TCP throughput and latency test of NU <- HU with 1500B frames",
+                              summary="Do TCP throughput and latency test of NU <- HU Non-FCP with 1500B frames",
                               steps="""
         1. Connect to HU host, and run pscheduler throughput/latency test with NU host interface as destination
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU', protocol='tcp', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', protocol='tcp', frame_size=1500)
 
 
 if __name__ == "__main__":
