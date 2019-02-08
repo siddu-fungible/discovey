@@ -7,7 +7,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -29,7 +28,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -51,7 +49,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -73,7 +70,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -95,7 +91,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -107,17 +102,17 @@
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
     "input_file_size": "1m",
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 16,
+    "create_fs_timeout": 120
   },
   "BTRFSOnBLT": {
     "volumes": ["blt"],
     "volume_params": {
       "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
       "volume_block": {"blt": 4096},
-      "volume_capacity": {"blt": 268435456} //btrfs needs minimum 41943040 size'/dev/nvme0n1' is too small to make a usable filesystem Minimum size for each btrfs device is 41943040.
+      "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -139,7 +134,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -161,7 +155,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -184,7 +177,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,
@@ -208,7 +200,6 @@
       "volume_capacity": {"blt": 268435456}
     },
     "ns_id": 1,
-    // timeout used for the storage controller
     "command_timeout": 5,
     "iter_interval": 2,
     "reload_after_config": true,

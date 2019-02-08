@@ -137,6 +137,8 @@ class FSOnBLTTestcase(FunTestCase):
             self.readonly_filesystem = False
         if not hasattr(self, "remount_as_readonly"):
             self.remount_as_readonly = False
+        if not hasattr(self, "create_fs_timeout"):
+            self.create_fs_timeout = 60
 
         self.topology = fun_test.shared_variables["topology"]
         self.dut = self.topology.get_dut_instance(index=0)
@@ -207,7 +209,7 @@ class FSOnBLTTestcase(FunTestCase):
         if self.fs_type == "f2fs":
             install_status = self.host.install_package("f2fs-tools")
             fun_test.test_assert(install_status, "Installed f2fs-tools Package")
-        fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device, timeout=120)
+        fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device, timeout=self.create_fs_timeout)
         fun_test.test_assert(fs_status, "Creating {} filesystem on BLT volume {}".format(self.fs_type,
                                                                                         self.volume_name))
         command_result = self.host.create_directory(self.mount_point)
