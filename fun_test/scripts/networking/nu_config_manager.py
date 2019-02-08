@@ -358,6 +358,7 @@ class NuConfigManager(object):
     def get_dut_type(self):
         try:
             job_environment = fun_test.get_job_environment()
+            print job_environment
             job_inputs = fun_test.get_job_inputs()
             if job_environment and ("EMULATION_TARGET" in job_environment or "RUN_TARGET" in job_environment):
                 if job_environment['EMULATION_TARGET'] == self.DUT_TYPE_PALLADIUM:
