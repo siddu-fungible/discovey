@@ -79,7 +79,7 @@ class NuConfigManager(object):
                 if config["type"] == self.DUT_TYPE:
                     result = config
                     job_environment = fun_test.get_job_environment()
-                    if type(result) == unicode:
+                    if type(job_environment) == unicode:
                         job_environment = json.loads(result)
                     if 'UART_HOST' in job_environment and 'UART_TCP_PORT_0' in job_environment:
                         result['dpcsh_tcp_proxy_ip'] = job_environment['UART_HOST']
