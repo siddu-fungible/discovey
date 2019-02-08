@@ -159,7 +159,6 @@ class BLTCryptoVolumeTestCase(FunTestCase):
             initial_filter_values = {}
             for filter_param in self.filter_params:
                 crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", filter_param)
-                command_result = {}
                 command_result = self.storage_controller.peek(crypto_props_tree)
                 if command_result["data"] is None:
                     command_result["data"] = 0
@@ -293,7 +292,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     diff_filter_values[filter_param] = \
                         final_filter_values[filter_param] - initial_filter_values[filter_param]
                     fun_test.test_assert_expected(evalue, diff_filter_values[filter_param],
-                                                  message="Comparing crypto filter {} count".format(filter_param))
+                                                  message="Comparing crypto filter : {} count".format(filter_param))
 
     def run(self):
 
