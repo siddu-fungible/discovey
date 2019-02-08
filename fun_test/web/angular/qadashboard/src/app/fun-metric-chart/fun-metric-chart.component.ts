@@ -539,12 +539,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             //comparing two date objects to get the f1 milestone incase of date mismatch
             let compareDate =  new Date(originalKeyList[startIndex]);
              if (originalKeyList[startIndex].includes(markerDate)) { // Tape-out and F1
-              if (!this.mileStoneIndices[mileStone]) {
+              if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
                 this.mileStoneIndices[mileStone] = startIndex;
               }
           } else if(compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
                if (mileStone === "F1") {
-                 if (!this.mileStoneIndices[mileStone]) {
+                 if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
                 this.mileStoneIndices[mileStone] = startIndex;
               }
                }
