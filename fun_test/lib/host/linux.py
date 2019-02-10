@@ -468,12 +468,17 @@ class Linux(object, ToDictMixin):
              dst,
              count=5,
              max_percentage_loss=50,
-             timeout=30):
+             timeout=30,
+             interval=1,
+             sudo=False):
         result = False
         percentage_loss = 100
         try:
-            command = 'ping %s -c %d' % (str(dst), count)
-            output = self.command(command, timeout=timeout)
+            command = 'sudo ping %s -c %d -i %s' % (str(dst), count, interval)
+            if sudo:
+                output = self.sudo_command(command, timeout=timeout)
+            else:
+                output = self.command(command, timeout=timeout)
             m = re.search(r'(\d+)%\s+packet\s+loss', output)
             if m:
                 percentage_loss = int(m.group(1))
@@ -481,7 +486,7 @@ class Linux(object, ToDictMixin):
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
-        if percentage_loss < max_percentage_loss:
+        if percentage_loss <= max_percentage_loss:
             result = True
         return result
 

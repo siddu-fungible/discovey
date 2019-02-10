@@ -120,8 +120,10 @@ class Funeth:
             fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
             self.linux_obj_dict['hu'].command('ifconfig -a')
 
-        output = self.linux_obj_dict['hu'].command('ifconfig %s' % self.pf_intf)
-        return re.search(r'Device not found', output, re.IGNORECASE) is None
+        output1 = self.linux_obj_dict['hu'].command('lsmod')
+        output2 = self.linux_obj_dict['hu'].command('ifconfig %s' % self.pf_intf)
+        return re.search(r'funeth', output1) is not None and re.search(
+            r'Device not found', output2, re.IGNORECASE) is None
 
     def configure_intfs(self, nu_or_hu):
         """Configure interface."""
@@ -158,9 +160,11 @@ class Funeth:
     def loopback_test(self, packet_count=100):
         """Do loopback test between PF and VF via NU."""
         ip_addr = self.tb_config_obj.get_interface_ipv4_addr('hu', self.vf_intf)
-        output = self.linux_obj_dict['hu'].command('sudo ping -c {} -i 0.1 {}'.format(packet_count, ip_addr))
-        return re.search(r'{0} packets transmitted, {0} received, 0% packet loss'.format(packet_count),
-                         output) is not None
+        #output = self.linux_obj_dict['hu'].command('sudo ping -c {} -i 0.01 {}'.format(packet_count, ip_addr))
+        #return re.search(r'{0} packets transmitted, {0} received, 0% packet loss'.format(packet_count),
+        #                 output) is not None
+        return self.linux_obj_dict['hu'].ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.01,
+                                              sudo=True)
 
     def configure_ipv4_route(self, nu_or_hu):
         """Configure IP routes to NU."""
@@ -200,7 +204,9 @@ class Funeth:
 
     def unload(self):
         """Unload driver."""
-        self.linux_obj_dict['hu'].command('sudo rmmod funeth')
+        self.linux_obj_dict['hu'].command('sudo rmmod funeth; lsmod')
+        output = self.linux_obj_dict['hu'].command('lsmod')
+        return re.search(r'funeth', output) is None
 
     def ifdown(self, intf):
         """Shut down interface."""
