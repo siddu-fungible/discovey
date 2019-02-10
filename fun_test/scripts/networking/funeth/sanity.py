@@ -122,7 +122,8 @@ class FunethTestScpNU2HUPF(FunTestCase):
                           target_ip=tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf),
                           target_file_path='/tmp/nufilepf',
                           target_username=tb_config_obj.get_username('hu'),
-                          target_password=tb_config_obj.get_password('hu')),
+                          target_password=tb_config_obj.get_password('hu'),
+                          timeout=300),
             'Scp a file from NU to HU host via PF.')
 
 
@@ -166,7 +167,8 @@ class FunethTestScpNU2HUVF(FunTestCase):
                           target_ip=tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf),
                           target_file_path='/tmp/nufilevf',
                           target_username=tb_config_obj.get_username('hu'),
-                          target_password=tb_config_obj.get_password('hu')),
+                          target_password=tb_config_obj.get_password('hu'),
+                          timeout=300),
             'Scp a file from NU to HU host via VF.')
 
 
@@ -201,7 +203,8 @@ class FunethTestScpHU2NU(FunTestCase):
                           target_ip=tb_config_obj.get_interface_ipv4_addr('nu', tb_config_obj.get_a_nu_interface()),
                           target_file_path='/tmp',
                           target_username=tb_config_obj.get_username('nu'),
-                          target_password=tb_config_obj.get_password('nu')),
+                          target_password=tb_config_obj.get_password('nu'),
+                          timeout=300),
             'Scp a file from HU to NU host.')
 
 
@@ -256,9 +259,9 @@ if __name__ == "__main__":
     for tc in (
             FunethTestNUPingHU,
             #FunethTestPacketSweep,
-            #FunethTestScpNU2HUPF,
-            #FunethTestScpNU2HUVF,
-            #FunethTestScpHU2NU,
+            FunethTestScpNU2HUPF,
+            FunethTestScpNU2HUVF,
+            FunethTestScpHU2NU,
             #FunethTestInterfaceFlap,
             FunethTestUnloadDriver,
     ):

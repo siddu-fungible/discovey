@@ -163,7 +163,7 @@ class Funeth:
         #output = self.linux_obj_dict['hu'].command('sudo ping -c {} -i 0.01 {}'.format(packet_count, ip_addr))
         #return re.search(r'{0} packets transmitted, {0} received, 0% packet loss'.format(packet_count),
         #                 output) is not None
-        return self.linux_obj_dict['hu'].ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.01,
+        return self.linux_obj_dict['hu'].ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
                                               sudo=True)
 
     def configure_ipv4_route(self, nu_or_hu):
