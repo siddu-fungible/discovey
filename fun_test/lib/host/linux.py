@@ -470,11 +470,12 @@ class Linux(object, ToDictMixin):
              max_percentage_loss=50,
              timeout=30,
              interval=1,
+             size=56,
              sudo=False):
         result = False
         percentage_loss = 100
         try:
-            command = 'sudo ping %s -c %d -i %s' % (str(dst), count, interval)
+            command = 'sudo ping %s -c %d -i %s -s %s' % (str(dst), count, interval, size)
             if sudo:
                 output = self.sudo_command(command, timeout=timeout)
             else:
