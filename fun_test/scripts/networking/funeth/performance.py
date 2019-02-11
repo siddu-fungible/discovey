@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
 from scripts.networking.tb_configs import tb_configs
-import funeth, sanity
+from scripts.networking.funeth import funeth, sanity
 import json
 import re
 
