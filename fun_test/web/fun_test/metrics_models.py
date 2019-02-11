@@ -945,6 +945,30 @@ class NuTransitPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class HuFunethPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    interpolated = models.BooleanField(default=False)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_frame_size = models.IntegerField(verbose_name="Fixed Frame Size Test", choices=[(0, 1500), (1, 1000), (2, 200), (3, 9000), (4, 16380), (5, 64)])
+    output_throughput = models.FloatField(verbose_name="Throughput in Mbps")
+    output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
+    output_latency_max = models.FloatField(verbose_name="Latency Max in us")
+    output_latency_min = models.FloatField(verbose_name="Latency Min in us")
+    output_jitter_min = models.FloatField(verbose_name="Jitter min in us", default=0)
+    output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
+    output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
+    output_pps = models.IntegerField(verbose_name="Packets per sec", default=0)
+    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, choices=[(0, "25G"), (1, "50G"), (2, "100G")])
+    input_version = models.CharField(verbose_name="Version", max_length=50)
+    input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 
 class VoltestPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)

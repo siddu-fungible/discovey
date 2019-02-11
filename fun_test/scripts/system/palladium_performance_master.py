@@ -123,9 +123,7 @@ class PalladiumPerformanceTc(FunTestCase):
             d[key] = value
         return d
 
-    def validate_json_file(self, validation_required=True):
-        log_dir = LOGS_DIR
-        file_path = log_dir + "/nu_rfc2544_performance.json"
+    def validate_json_file(self, validation_required=True, file_path):
         data = {}
         fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
         fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
@@ -1518,7 +1516,50 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
         metrics = collections.OrderedDict()
         try:
 
-            fun_test.test_assert(self.validate_json_file(), "validate json file and output")
+            fun_test.test_assert(self.validate_json_file(file_path = LOGS_DIR + "/nu_rfc2544_performance.json"), "validate json file and output")
+            for line in self.lines:
+                if "flow_type" in line:
+                    if line["flow_type"] in nu_transit_flow_types:
+                        line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
+                    metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
+                    metrics["input_mode"] = line["mode"]
+                    metrics["input_version"] = line["version"]
+                    metrics["input_frame_size"] = line["frame_size"]
+                    date_time = get_time_from_timestamp(line["timestamp"])
+                    metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
+                    metrics["output_pps"] = line["pps"] if "pps" in line else -1
+                    metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
+                    metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
+                    metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
+                    metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
+                    metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
+                    metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
+                    fun_test.log("flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"], metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    d["input_date_time"] = date_time
+                    if date_time.year >= 2019:
+                        MetricHelper(model=NuTransitPerformance).add_entry(**d)
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                     git_commit="", model_name="NuTransitPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="TeraMark NU Transit Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+
+            fun_test.test_assert(self.validate_json_file(file_path = LOGS_DIR + "/hu_funeth_performance_data.json"), "validate json file and output")
             for line in self.lines:
                 if "flow_type" in line:
                     if line["flow_type"] in nu_transit_flow_types:
