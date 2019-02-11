@@ -124,14 +124,13 @@ class SiteState():
                                 leaf=False, metric_id=LastMetricId.get_next_id(),
                                 description=description)
                 m.save()
-        if ("reference" in metric and metric["reference"]) or "extensible_references" in metric:
+        if ("reference" in metric and metric["reference"]):
             pass
         else:
             try:
                 m.children = "[]"
             except Exception as ex:
                 pass
-
             m.children_weights = "{}"
             m.save()
             for child in children:
