@@ -31,8 +31,8 @@
           "cc_glean_ip": "32.1.1.1",
           "hnu_destination_ip1": "51.1.1.4",
           "hnu_destination_ip2": "52.1.1.4",
-          "hnu_fcp_destination_ip1": "51.1.1.1",
-          "hnu_fcp_destination_ip2": "52.1.1.1"
+          "hnu_fcp_destination_ip1": "52.1.1.1",
+          "hnu_fcp_destination_ip2": "51.1.1.1"
         },
         "ipv6": {
           "destination_ip1": "2001::50:0:1:1",
