@@ -125,35 +125,42 @@ class Funeth:
         return re.search(r'funeth', output1) is not None and re.search(
             r'Device not found', output2, re.IGNORECASE) is None
 
-    def configure_intfs(self, nu_or_hu):
-        """Configure interface."""
+    def configure_namespace_interfaces(self, nu_or_hu, ns):
+        """Configure interfaces in a namespace."""
+        result = True
+        for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            mac_addr = self.tb_config_obj.get_interface_mac_addr(nu_or_hu, intf)
+            ipv4_addr = self.tb_config_obj.get_interface_ipv4_addr(nu_or_hu, intf)
+            ipv4_netmask = self.tb_config_obj.get_interface_ipv4_netmask(nu_or_hu, intf)
+            cmds = [
+                'ifconfig {} hw ether {}'.format(intf, mac_addr),
+                'ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
+                'ifconfig {} up'.format(intf),
+                'ifconfig {}'.format(intf),
+            ]
+            if ns != 'default':
+                cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
+            for cmd in cmds:
+                if ns == 'default' or 'netns' in cmd:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                else:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+            # Ubuntu 16.04
+            match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
+                              output, re.DOTALL)
+            if not match:
+                # Ubuntu 18.04
+                match = re.search(r'inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                                  output, re.DOTALL)
+            result &= match is not None
+
+        return result
+
+    def configure_interfaces(self, nu_or_hu):
+        """Configure all the interfaces."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
-                mac_addr = self.tb_config_obj.get_interface_mac_addr(nu_or_hu, intf)
-                ipv4_addr = self.tb_config_obj.get_interface_ipv4_addr(nu_or_hu, intf)
-                ipv4_netmask = self.tb_config_obj.get_interface_ipv4_netmask(nu_or_hu, intf)
-                cmds = [
-                    'ifconfig {} hw ether {}'.format(intf, mac_addr),
-                    'ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
-                    'ifconfig {} up'.format(intf),
-                    'ifconfig {}'.format(intf),
-                ]
-                if ns != 'default':
-                    cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
-                for cmd in cmds:
-                    if ns == 'default' or 'netns' in cmd:
-                        output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
-                    else:
-                        output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
-                # Ubuntu 16.04
-                match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
-                                  output, re.DOTALL)
-                if not match:
-                    # Ubuntu 18.04
-                    match = re.search(r'inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
-                                    output, re.DOTALL)
-                result &= match is not None
+            result &= self.configure_namespace_interfaces(nu_or_hu, ns)
 
         return result
 
@@ -166,39 +173,46 @@ class Funeth:
         return self.linux_obj_dict['hu'].ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
                                               sudo=True)
 
-    def configure_ipv4_route(self, nu_or_hu):
+    def configure_namespace_ipv4_routes(self, nu_or_hu, ns):
+        """Configure a namespace's IP routes to NU."""
+        result = True
+        for route in self.tb_config_obj.get_ipv4_routes(nu_or_hu, ns):
+            prefix = route['prefix']
+            nexthop = route['nexthop']
+
+            # Route
+            cmds = (
+                'ip route delete {}'.format(prefix),
+                'ip route add {} via {}'.format(prefix, nexthop),
+                'ip route',
+            )
+            for cmd in cmds:
+                if ns == 'default':
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                else:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+            result &= re.search(r'{} via {}'.format(prefix, nexthop), output) is not None
+
+            # ARP
+            router_mac = self.tb_config_obj.get_router_mac()
+            cmds = (
+                'arp -s {} {}'.format(nexthop, router_mac),
+                'arp -na',
+            )
+            for cmd in cmds:
+                if ns == 'default':
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
+                else:
+                    output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
+            result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(nexthop, router_mac), output) is not None
+
+        return result
+
+    def configure_ipv4_routes(self, nu_or_hu):
         """Configure IP routes to NU."""
         result = True
         for ns in self.tb_config_obj.get_namespaces(nu_or_hu):
-            for route in self.tb_config_obj.get_ipv4_routes(nu_or_hu, ns):
-                prefix = route['prefix']
-                nexthop = route['nexthop']
-
-                # Route
-                cmds = (
-                    'ip route delete {}'.format(prefix),
-                    'ip route add {} via {}'.format(prefix, nexthop),
-                    'ip route',
-                )
-                for cmd in cmds:
-                    if ns == 'default':
-                        output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
-                    else:
-                        output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
-                result &= re.search(r'{} via {}'.format(prefix, nexthop), output) is not None
-
-                # ARP
-                router_mac = self.tb_config_obj.get_router_mac()
-                cmds = (
-                    'arp -s {} {}'.format(nexthop, router_mac),
-                    'arp -na',
-                )
-                for cmd in cmds:
-                    if ns == 'default':
-                        output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
-                    else:
-                        output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
-                result &= re.search(r'\({}\) at {} \[ether\] PERM'.format(nexthop, router_mac), output) is not None
+            result &= self.configure_namespace_ipv4_routes(nu_or_hu, ns)
 
         return result
 
