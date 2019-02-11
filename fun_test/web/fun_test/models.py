@@ -13,7 +13,7 @@ from web.fun_test.demo1_models import *
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from datetime import datetime, timedelta
-from scheduler.scheduler_states import SchedulerStates
+from scheduler.scheduler_types import SchedulerStates, SuiteType
 import json
 from rest_framework.serializers import ModelSerializer
 
@@ -101,6 +101,8 @@ class SuiteExecution(models.Model):
     finalized = models.BooleanField(default=False)
     banner = models.TextField(default="")
     suite_container_execution_id = models.IntegerField(default=-1)
+    suite_type = models.TextField(default=SuiteType.STATIC)
+    test_bed_type = models.TextField(default="")
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
@@ -136,14 +138,23 @@ class TestCaseExecution(models.Model):
     log_prefix = models.TextField(default="")
     tags = models.TextField(default="[]")
     inputs = models.TextField(default="{}")
+    re_run_history = models.TextField(default="[]")
+    re_run_state = models.TextField(default="")
 
     def __str__(self):
-        s = "E: {} S: {} T: {} R: {} P: {}".format(self.execution_id,
+        s = "E: {} S: {} T: {} R: {} P: {} Re: {} Reh: {}".format(self.execution_id,
                                                    self.suite_execution_id,
                                                    self.test_case_id,
                                                    self.result,
-                                                   self.script_path)
+                                                   self.script_path,
+                                                          self.re_run_state,
+                                                          self.re_run_history)
         return s
+
+    def add_re_run_entry(self, entry):
+        current_history = json.loads(self.re_run_history)
+        current_history.append(entry)
+        self.re_run_history = json.dumps(current_history)
 
 class TestCaseExecutionSerializer(ModelSerializer):
     started_time = serializers.DateTimeField()
@@ -260,6 +271,12 @@ class SchedulerInfo(models.Model):
     last_restart_request_time = models.DateTimeField(default=datetime.now)
     main_loop_heartbeat = models.IntegerField(default=0)
 
+class SuiteReRunInfo(models.Model):
+    """
+    Suite execution id to re-run suite id mappings
+    """
+    original_suite_execution_id = models.IntegerField()
+    re_run_suite_execution_id = models.IntegerField()
 
 if is_performance_server():
     from web.fun_test.metrics_models import *

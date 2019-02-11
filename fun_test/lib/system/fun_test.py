@@ -142,6 +142,7 @@ class FunTest:
                             default=None)
         parser.add_argument('--environment', dest="environment", default=None)
         parser.add_argument('--inputs', dest="inputs", default=None)
+        parser.add_argument('--re_run_info', dest="re_run_info", default=None)
         args = parser.parse_args()
         if args.disable_fun_test:
             self.fun_test_disabled = True
@@ -159,6 +160,7 @@ class FunTest:
         self.abort_requested = False
         self.environment = args.environment
         self.inputs = args.inputs
+        self.re_run_info = args.re_run_info
         self.local_settings = {}
         if self.suite_execution_id:
             self.suite_execution_id = int(self.suite_execution_id)
@@ -167,6 +169,9 @@ class FunTest:
 
         if args.test_case_ids:
             self.selected_test_case_ids = [int(x) for x in args.test_case_ids.split(",")]
+        re_run_info = self.get_re_run_info()
+        if re_run_info:
+            self.selected_test_case_ids = [int(x) for x in re_run_info.keys()]
             # print("***" + str(self.selected_test_case_ids))
         if not self.logs_dir:
             self.logs_dir = LOGS_DIR
@@ -230,20 +235,19 @@ class FunTest:
     def get_job_environment(self):
         result = {}
         if self.environment:
-            try:
-                result = json.loads(self.environment)
-            except Exception as ex:
-                self.critical("Invalid JSON format: %s " % str(ex))
+            result = self.parse_string_to_json(self.environment)
         return result
 
     def get_job_inputs(self):
         result = None
         if self.inputs:
-            try:
-                result = json.loads(self.inputs)
-            except Exception as ex:
-                self.critical("Invalid JSON format: %s " % str(ex))
+            result = self.parse_string_to_json(self.inputs)
+        return result
 
+    def get_re_run_info(self):
+        result = None
+        if self.re_run_info:
+            result = self.parse_string_to_json(self.re_run_info)
         return result
 
     def get_local_setting(self, setting):
@@ -340,15 +344,20 @@ class FunTest:
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
 
+    def parse_string_to_json(self, string):
+        result = None
+        try:
+            result = json.loads(string)
+        except Exception as ex:
+            raise Exception("{} has an invalid json format".format(string))
+        return result
+
     def parse_file_to_json(self, file_name):
         result = None
         if os.path.exists(file_name):
-            try:
-                with open(file_name, "r") as infile:
-                    contents = infile.read()
-                    result = json.loads(contents)
-            except Exception as ex:
-                raise Exception("{} has an invalid json format".format(file_name))
+            with open(file_name, "r") as infile:
+                contents = infile.read()
+                result = self.parse_string_to_json(contents)
         else:
             raise Exception("{} path does not exist".format(file_name))
         return result
@@ -711,7 +720,8 @@ class FunTest:
         self.traces[self.current_test_case_id][id] += log
 
     def set_suite_execution_banner(self, banner):
-        models_helper.set_suite_execution_banner(suite_execution_id=self.suite_execution_id, banner=banner)
+        if fun_test.suite_execution_id:
+            models_helper.set_suite_execution_banner(suite_execution_id=self.suite_execution_id, banner=banner)
 
     def get_suite_execution_banner(self):
         return models_helper.get_suite_execution_banner(suite_execution_id=self.suite_execution_id)
@@ -1107,6 +1117,11 @@ class FunTestScript(object):
             exit_code = 127
         sys.exit(exit_code)
 
+    def _check_abort(self, test_case):
+        if test_case.abort_on_failure:
+            fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
+            fun_test.abort()
+
     def run(self):
         self.describe()
         try:
@@ -1130,11 +1145,13 @@ class FunTestScript(object):
                                                                      result=fun_test.IN_PROGRESS)
                         test_case.setup()
                         test_case.run()
-                        # We should not call the test case cleanup here, because if there is error or exception occurs
-                        # in the cleanup section, then the same cleanup section will be called once again in the below
-                        # except clause
-                        # test_case.cleanup()
-                        # test_result = FunTest.PASSED
+
+                        try:
+                            test_case.cleanup()
+                            test_result = FunTest.PASSED
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
                     except TestException:
                         try:
                             test_case.cleanup()
@@ -1143,6 +1160,7 @@ class FunTestScript(object):
                         if test_case.abort_on_failure:
                             fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
                             fun_test.abort()
+                        self._check_abort(test_case)
                     except Exception as ex:
                         fun_test.critical(str(ex))
                         fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
@@ -1150,34 +1168,15 @@ class FunTestScript(object):
                             test_case.cleanup()
                         except Exception as ex:
                             fun_test.critical(str(ex))
-                        if test_case.abort_on_failure:
-                            fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
-                            fun_test.abort()
-                    # If the test case setup & run completes properly run the test case's cleanup
-                    else:
-                        try:
-                            test_case.cleanup()
-                            test_result = FunTest.PASSED
-                        except TestException as ex:
-                            fun_test.critical(str(ex))
-                            if test_case.abort_on_failure:
-                                fun_test.log("Abort requested for Test-case {}: {}".format(test_case.id,
-                                                                                           test_case.summary))
-                                fun_test.abort()
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
-                            fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
-                            if test_case.abort_on_failure:
-                                fun_test.log(
-                                    "Abort requested for Test-case {}: {}".format(test_case.id, test_case.summary))
-                                fun_test.abort()
+                        self._check_abort(test_case)
 
                     fun_test._add_xml_trace()
                     fun_test.print_test_case_summary(fun_test.current_test_case_id)
                     fun_test._end_test(result=test_result)
                     if fun_test.suite_execution_id:
                         models_helper.report_test_case_execution_result(execution_id=test_case.execution_id,
-                                                                        result=test_result)
+                                                                        result=test_result,
+                                                                        re_run_info=fun_test.get_re_run_info())
 
                     if test_result == FunTest.FAILED:
                         self.at_least_one_failed = True
