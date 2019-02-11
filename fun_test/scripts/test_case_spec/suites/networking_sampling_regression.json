@@ -1,5 +1,4 @@
 [
   {"path": "networking/sample/test_sample.py", "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/sample/test_advanced_sampling.py", "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/sample/test_sample_fpg_to_epg.py"}
+  {"path": "networking/sample/test_advanced_sampling.py", "inputs": {"speed": "SPEED_25G"}}
 ]
