@@ -1,5 +1,5 @@
 import {NgModule} from '@angular/core';
-import {RouterModule, Routes} from '@angular/router';
+import {RouterModule, Routes, UrlSegment} from '@angular/router';
 
 import {DashboardComponent} from './dashboard/dashboard.component';
 import {PerformanceComponent} from "./performance/performance.component";
@@ -12,6 +12,12 @@ import {SuiteDetailComponent} from "./regression/suite-detail/suite-detail.compo
 import {RegressionAdminComponent} from "./regression/regression-admin/regression-admin.component";
 import {RegressionSummaryComponent} from "./regression/regression-summary/regression-summary.component";
 import {ScriptHistoryComponent} from "./regression/script-history/script-history.component";
+import {NotFoundComponent} from "./not-found/not-found.component";
+
+export function regressionHome(url: UrlSegment[]) {
+  return url[0].path.endsWith("regression");
+}
+
 
 const routes: Routes = [
   {path: '', component: DashboardComponent},
@@ -33,7 +39,8 @@ const routes: Routes = [
   {path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent},
   {path: 'regression/:filterString', component: RegressionComponent},
   {path: 'upgrade/test', component: TestComponent},
-  {path: 'upgrade/demo1', component: Demo1Component}
+  {path: 'upgrade/demo1', component: Demo1Component},
+  {path: '*', component: NotFoundComponent}
 ];
 
 @NgModule({

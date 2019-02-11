@@ -22,6 +22,7 @@
       "routermac": "00:DE:AD:BE:EF:00",
       "routes": {
         "ipv4": {
+          "source_ip1": "192.85.1.2",
           "destination_ip1": "50.0.1.1",
           "destination_ip2": "75.0.0.5",
           "destination_ip3": "75.0.0.3",
@@ -31,10 +32,11 @@
           "cc_glean_ip": "32.1.1.1",
           "hnu_destination_ip1": "51.1.1.4",
           "hnu_destination_ip2": "52.1.1.4",
-          "hnu_fcp_destination_ip1": "51.1.1.1",
-          "hnu_fcp_destination_ip2": "52.1.1.1"
+          "hnu_fcp_destination_ip1": "52.1.1.1",
+          "hnu_fcp_destination_ip2": "51.1.1.1"
         },
         "ipv6": {
+          "source_ip1": "2000::2",
           "destination_ip1": "2001::50:0:1:1",
           "destination_ip2": "2001::50:0:2:1",
           "hnu_destination_ip1": "2001::51:1:1:4",
@@ -56,12 +58,14 @@
       "routermac": "00:DE:AD:BE:EF:00",
       "routes": {
         "ipv4": {
+          "source_ip1": "192.85.1.2",
           "destination_ip1": "20.1.1.1",
           "destination_ip2": "19.1.1.1",
           "destination_ip3": "60.1.1.1",
           "destination_ip4": "61.1.1.1"
         },
         "ipv6": {
+          "source_ip1": "2000::2",
           "destination_ip1": "2001::20:1:1:1"
         }
       }
