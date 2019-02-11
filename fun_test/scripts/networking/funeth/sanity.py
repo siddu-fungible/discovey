@@ -345,7 +345,7 @@ class FunethTestInterfaceFlapVF(FunethTestInterfaceFlapBase):
         """)
 
     def run(self):
-        FunethTestInterfaceFlapBase._run(self, 'pf')
+        FunethTestInterfaceFlapBase._run(self, 'vf')
 
 
 class FunethTestUnloadDriver(FunTestCase):
