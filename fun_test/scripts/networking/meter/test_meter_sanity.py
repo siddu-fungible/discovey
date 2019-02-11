@@ -87,7 +87,7 @@ class SpirentSetup(FunTestScript):
         dut_config = nu_config_obj.read_dut_config(flow_type=NuConfigManager.ACL_FLOW_TYPE,
                                                    flow_direction=NuConfigManager.FLOW_DIRECTION_ALL)
 
-        template_obj = SpirentEthernetTrafficTemplate(session_name="acl", spirent_config=spirent_config,
+        template_obj = SpirentEthernetTrafficTemplate(session_name="meter", spirent_config=spirent_config,
                                                       chassis_type=nu_config_obj.CHASSIS_TYPE)
         result = template_obj.setup(no_of_ports_needed=NUM_PORTS, flow_type=NuConfigManager.ACL_FLOW_TYPE,
                                     flow_direction=NuConfigManager.FLOW_DIRECTION_ALL)
@@ -133,7 +133,7 @@ class SpirentSetup(FunTestScript):
 
 class MeterBase(FunTestCase):
     stream_obj = None
-    load_type = "KILOBITS_PER_SECOND"
+    load_type = "MEGABITS_PER_SECOND"
     load = test_config['load_kbps']
     dport = meter_bps['dport']
     meter_id = meter_bps['meter_id']
@@ -186,10 +186,12 @@ class MeterBase(FunTestCase):
         fun_test.simple_assert(expression=result, message=checkpoint)
         checkpoint = "Validate Tx and Rx Rate"
         fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
+        stream_objs = []
+        stream_objs.append(self.stream_obj)
         rate_result = template_obj.validate_traffic_rate_results(
             rx_summary_subscribe_handle=subscribed_results['rx_summary_subscribe'],
             tx_summary_subscribe_handle=subscribed_results['tx_stream_subscribe'],
-            stream_objects=self.stream_obj)
+            stream_objects=stream_objs)
         fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
 
         fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
