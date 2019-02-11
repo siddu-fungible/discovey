@@ -1,4 +1,4 @@
-from funeth import Funeth
+from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
 from lib.system.fun_test import *
 from lib.host.network_controller import NetworkController

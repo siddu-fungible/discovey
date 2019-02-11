@@ -69,12 +69,23 @@
                   </table>
                 </div>
                 <div class="card-body">
-                  <b><span *ngIf="numBugs > 0" class="no-padding text-color-red">Bugs<sup><span
-                    class="text-color-red">{{ numBugs }}</span></sup></span></b>&nbsp;
-                  <u (click)="showGlobalBugPanel = !showGlobalBugPanel"
-                     class="anchor-button pseudo-anchor">details</u>
-                  <jira-info *ngIf="showGlobalBugPanel" [apiUrl]="'/regression/all_jiras'" [allowDelete]="false"
-                             [allowAdd]="false" (numBugs)="updateGlobalNumBugs($event)"></jira-info>
+                  <b>
+                    <span *ngIf="numBugs > 0" class="no-padding text-color-red">Bugs
+                      <sup><span class="text-color-red">{{ numBugs }}</span></sup>
+                    </span>
+                  </b>&nbsp;
+                  <span><span style="color: red">Active </span>- {{ numBugsActive }}
+                  <span style="color: green">Resolved </span> - {{ numBugsResolved }}</span>
+                  &nbsp;
+                  <u (click)="showGlobalBugPanel = !showGlobalBugPanel" class="anchor-button pseudo-anchor">details</u>
+                  <jira-info [ngClass]='{hidden: !showGlobalBugPanel}'
+                             [apiUrl]="'/regression/all_jiras'"
+                             [allowDelete]="false"
+                             [allowAdd]="false"
+                             (numBugs)="updateNumBugs($event)"
+                             (numActive)="updateNumBugsActive($event)"
+                             (numResolved)="updateNumBugsResolved($event)">
+                  </jira-info>
                 </div>
               </div>
             </div>
@@ -124,11 +135,20 @@
             <tr *ngIf="scriptInfo.value.historyResults">
               <td>
                 {{ scriptInfo.key }}
-                <b><span *ngIf="scriptInfo.value.numBugs > 0" (click)="scriptInfo.value.showingDetails = true"
-                         class="no-padding text-color-red">Bugs<sup><span
-                  class="text-color-red">{{ scriptInfo.value.numBugs }}</span></sup>&nbsp;</span></b>
-                <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
-                   class="anchor-button pseudo-anchor">details</u>
+                  <span *ngIf="scriptInfo.value.numBugs > 0"
+                        (click)="scriptInfo.value.showingDetails = true"
+                         class="no-padding text-color-red">Bugs
+                    <sup>
+                      <span class="text-color-red">{{ scriptInfo.value.numBugs }}</span>
+                    </sup>&nbsp;
+                  </span>
+                  <ng-container *ngIf="scriptInfo.value.numBugs > 0">
+                    <span style="color: red">A({{ scriptInfo.value.numBugsActive }})</span>
+                    <span style="color: green">R({{ scriptInfo.value.numBugsResolved }})</span>
+                  </ng-container>
+
+
+
                 &nbsp;<label class="badge badge-history pseudo-anchor" data-placement="top" data-toggle="tooltip"
                              title="history" (click)="clickHistory(scriptInfo.key)">history</label>
                 &nbsp;
@@ -145,6 +165,9 @@
                 <ng-template #noBaseline>
                   <label class="badge badge-danger">No baseline</label>
                 </ng-template>
+                &nbsp;
+                <u (click)="scriptInfo.value.showingDetails = !scriptInfo.value.showingDetails"
+                   class="anchor-button pseudo-anchor">details</u>
               </td>
               <td>{{ scriptInfo.value.historyResults.numPassed }}</td>
               <td>{{ scriptInfo.value.historyResults.numFailed }}</td>
@@ -152,13 +175,17 @@
 
             </tr>
 
-            <tr *ngIf="scriptInfo.value.showingDetails">
+            <tr [ngClass]='{hidden: !scriptInfo.value.showingDetails}' *ngIf="scriptInfo.value">
               <ng-container *ngIf="scriptInfo.value.mismatchMessage">
                 <code>{{ scriptInfo.value.mismatchMessage }}</code>
               </ng-container>
 
-              <jira-info [apiUrl]="'/regression/jiras/' + scriptPathToPk(scriptInfo.key)"
-                         (numBugs)="updateNumBugs($event, scriptInfo.value)"></jira-info>
+              <jira-info  [ngClass]='{hidden: !scriptInfo.value.showingDetails}'
+                         [apiUrl]="'/regression/jiras/' + scriptPathToPk(scriptInfo.key)"
+                         (numBugs)="updateNumBugs($event, scriptInfo.value)"
+                         (numResolved)="updateNumBugsResolved($event, scriptInfo.value)"
+                         (numActive)="updateNumBugsActive($event, scriptInfo.value)">
+              </jira-info>
 
             </tr>
             <ng-container *ngIf="scriptInfo.value.showingDetails">

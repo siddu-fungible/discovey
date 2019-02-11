@@ -19,6 +19,8 @@ export class JiraInfoComponent implements OnInit {
   showJiraInfo: boolean = false;
   @Output() numBugs: EventEmitter<number> = new EventEmitter();
   @Output() close: EventEmitter<boolean> = new EventEmitter();
+  @Output() numActive: EventEmitter<number> = new EventEmitter();
+  @Output() numResolved: EventEmitter<number> = new EventEmitter();
   status: string = null;
   activeBugs: number = 0;
   resolvedBugs: number = 0;
@@ -49,12 +51,14 @@ export class JiraInfoComponent implements OnInit {
 
   setActiveResolvedBugs(): void {
     for (let info of this.jiraInfo) {
-          if (info['status'] !== "Resolved" && info['status'] !== "Done" && info['status'] !== "Closed") {
-            this.activeBugs += 1;
-          } else {
-            this.resolvedBugs += 1;
-          }
-        }
+      if (info['status'] !== "Resolved" && info['status'] !== "Done" && info['status'] !== "Closed") {
+        this.activeBugs += 1;
+      } else {
+        this.resolvedBugs += 1;
+      }
+    }
+    this.numResolved.emit(this.resolvedBugs);
+    this.numActive.emit(this.activeBugs);
   }
 
   closePanel(): void {

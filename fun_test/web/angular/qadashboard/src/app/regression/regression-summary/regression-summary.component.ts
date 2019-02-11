@@ -28,6 +28,8 @@ export class RegressionSummaryComponent implements OnInit {
   testCaseExecutions: any = null;
   scriptInfoMap = {};
   numBugs = 0;
+  numBugsActive = 0;
+  numBugsResolved = 0;
   showGlobalBugPanel = false;
   scriptSuiteBaselineMap = {};
 
@@ -364,6 +366,8 @@ export class RegressionSummaryComponent implements OnInit {
     scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
     scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
     scriptDetailedInfo[scriptPath].numBugs = 0;
+    scriptDetailedInfo[scriptPath].numBugsActive = 0;
+    scriptDetailedInfo[scriptPath].numBugsResolved = 0;
     try {
       scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].entry.bugs.length;
 
@@ -396,12 +400,29 @@ export class RegressionSummaryComponent implements OnInit {
     return summary;
   }
 
-  updateGlobalNumBugs(numBugs) {
-    this.numBugs = numBugs;
+  updateNumBugs(numBugs, node) {
+    if (node) {
+      node.numBugs = numBugs;
+    } else {
+      this.numBugs = numBugs;
+    }
   }
 
-  updateNumBugs(numBugs, node) {
-    node.numBugs = numBugs;
+
+  updateNumBugsActive(numBugs, node) {
+    if (node) {
+      node.numBugsActive = numBugs;
+    } else {
+      this.numBugsActive = numBugs;
+    }
+  }
+
+  updateNumBugsResolved(numBugs, node) {
+    if (node) {
+      node.numBugsResolved = numBugs;
+    } else {
+      this.numBugsResolved =  numBugs;
+    }
   }
 
   addHistoryToSoftwareVersion(index, history, softwareVersion) {

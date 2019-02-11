@@ -839,12 +839,13 @@ class FunTest:
                         try:
                             o = klass()
                             o.describe()
-                        except:
+                            result["classes"].append({"name": o.__class__.__name__, "summary": o.summary, "id": o.id})
+
+                        except Exception as ex:
                             pass
                         # print o.id
                         # print o.summary
                         # print o.steps
-                        result["classes"].append({"name": o.__class__.__name__, "summary": o.summary, "id": o.id})
                         test_cases.append(klass)
 
                 if issubclass(klass, FunTestScript):
