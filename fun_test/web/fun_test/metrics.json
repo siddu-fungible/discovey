@@ -900,20 +900,20 @@
                 "weight": 1,
                 "children": [
                   {
-                    "info": "ECDHE_RSA X25519 RSA 2K",
+                    "info": "ECDHE RSA X25519 RSA 2K",
                     "metric_model_name": "PkeX25519TlsSoakPerformance",
                     "leaf": true,
                     "name": "ECDHE_RSA X25519 RSA 2K",
-                    "label": "ECDHE_RSA X25519 RSA 2K",
+                    "label": "ECDHE RSA X25519 RSA 2K",
                     "children": [],
                     "weight": 1
                   },
                   {
-                    "info": "ECDHE_RSA P256 RSA 2K",
+                    "info": "ECDHE RSA P256 RSA 2K",
                     "metric_model_name": "PkeP256TlsSoakPerformance",
                     "leaf": true,
                     "name": "ECDHE_RSA P256 RSA 2K",
-                    "label": "ECDHE_RSA P256 RSA 2K",
+                    "label": "ECDHE RSA P256 RSA 2K",
                     "children": [],
                     "weight": 1
                   }

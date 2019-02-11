@@ -124,7 +124,7 @@ class SiteState():
                                 leaf=False, metric_id=LastMetricId.get_next_id(),
                                 description=description)
                 m.save()
-        if ("reference" in metric and metric["reference"]):
+        if "reference" in metric and metric["reference"]:
             pass
         else:
             try:
