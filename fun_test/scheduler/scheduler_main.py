@@ -354,7 +354,7 @@ class SuiteWorker(Thread):
                 queue_job2(job_spec=self.job_spec)
             if self.job_spec["scheduling_type"] in [SchedulingType.TODAY, SchedulingType.REPEAT]:
                 remove_scheduled_job(self.job_id)
-                if "repeat_in_minutes" in self.job_spec:
+                if "repeat_in_minutes" in self.job_spec and self.job_spec["repeat_in_minutes"] >= 0:
                     new_spec = dict(self.job_spec)
                     new_spec["scheduling_type"] = SchedulingType.REPEAT
                     queue_job2(job_spec=new_spec)
