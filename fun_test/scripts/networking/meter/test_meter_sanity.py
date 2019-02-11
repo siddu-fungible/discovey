@@ -18,6 +18,9 @@ analyzer_port_obj_dict = {}
 meter_json_file = fun_test.get_script_parent_directory() + '/meter.json'
 meter_json_output = fun_test.parse_file_to_json(meter_json_file)
 meter_bps = meter_json_output[0]['bps_meter']
+meter_pps = meter_json_output[0]['pps_meter']
+METER_MODE_BPS=0
+METER_MODE_PPS=1
 
 
 def create_streams(tx_port, dip, dmac, load=test_config['load_pps'], load_type = test_config['fill_type'], sip="192.168.1.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
@@ -137,6 +140,7 @@ class MeterBase(FunTestCase):
     meter_interval = meter_bps['meter_interval']
     meter_credit = meter_bps['meter_credit']
     commit_rate = meter_bps['commit_rate']
+    mode=METER_MODE_BPS
 
     def describe(self):
         self.set_test_details(id=1, summary="Test SrTC meter transit for bps",
@@ -173,7 +177,8 @@ class MeterBase(FunTestCase):
         tx_port = nu_ing_port
         rx_port = nu_eg_port
         result = network_controller_obj.update_meter(index=self.meter_id, interval=self.meter_interval,
-                                                     crd=self.meter_credit, commit_rate=self.commit_rate, pps_mode=0)
+                                                     crd=self.meter_credit, commit_rate=self.commit_rate,
+                                                     pps_mode=self.mode)
 
         meter_before =  network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
@@ -221,7 +226,19 @@ class MeterBase(FunTestCase):
         fun_test.add_checkpoint(checkpoint)
 
 
+class MeterPps(MeterBase):
+    load_type = "FRAMES_PER_SECOND"
+    load = test_config['load_pps']
+    dport = meter_pps['dport']
+    meter_id = meter_pps['meter_id']
+    meter_interval = meter_pps['meter_interval']
+    meter_credit = meter_pps['meter_credit']
+    commit_rate = meter_pps['commit_rate']
+    mode = METER_MODE_PPS
+
+
 if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(MeterBase())
+    ts.add_test_case(MeterPps())
     ts.run()

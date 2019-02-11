@@ -6,6 +6,14 @@
       "meter_interval" : 14,
       "meter_credit" : 82,
       "commit_rate" : 4
+    },
+    "pps_meter":
+    {
+      "dport" : 1166,
+      "meter_id" : 60,
+      "meter_interval" : 14,
+      "meter_credit" : 82,
+      "commit_rate" : 4
     }
   }
 ]
