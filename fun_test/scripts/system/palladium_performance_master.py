@@ -30,6 +30,7 @@ TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
 TERAMARK_EC = "ec_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
+SOAK_DMA = "soak_funos"
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
                    "Accelerator Compression throughput": "Compression Accelerator throughput",
@@ -1552,16 +1553,16 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class SoakDmaPerformanceTC(PalladiumPerformanceTc):
+    tag = SOAK_DMA
     def describe(self):
-        self.set_test_details(id=25,
+        self.set_test_details(id=27,
                               summary="Soak DMA memcpy and memset Performance Test",
                               steps="Steps 1")
 
     def run(self):
         metrics = collections.OrderedDict()
         try:
-
-            fun_test.test_assert(self.validate_json_file(), "validate json file and output")
+            fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
                     r'Bandwidth\s+for\s+DMA\s+(?P<operation>\S+)\s+for\s+size\s+(?P<size>\S+):\s+(?P<bandwidth>\S+)(?P<units>MB/sec)\s+\[(?P<metric_name>\S+)\]',
