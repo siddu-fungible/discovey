@@ -1980,6 +1980,43 @@ class Linux(object, ToDictMixin):
             pass
         return c
 
+    @fun_test.safe
+    def set_mtu(self, interface, mtu, ns=None):
+        # Configure
+        cmd = "ifconfig {} mtu {}".format(interface, mtu)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+        self.sudo_command(cmd)
+
+        # Check
+        cmd = 'ifconfig {}'.format(interface)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+        output = self.sudo_command(cmd)
+        match = re.search(r'mtu (\d+)', output)
+        if match:
+            return int(match.group(1)) == mtu
+
+    @fun_test.safe
+    def ifconfig_up_down(self, interface, action, ns=None):
+        # Configure
+        cmd = "ifconfig {} {}".format(interface, action)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+        self.sudo_command(cmd)
+
+        # Check
+        cmd = 'ifconfig {}'.format(interface)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+        output = self.sudo_command(cmd)
+        match = re.search(r'{}.*UP'.format(interface), output)
+        if action == 'up':
+            return match is not None
+        else:
+            return match is None
+
+
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
         self.linux_obj = linux_obj
