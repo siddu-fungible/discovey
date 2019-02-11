@@ -840,6 +840,7 @@ class TestCcFlows(FunTestCase):
         # DUT stats validation
         if self.dut_config['enable_dpcsh']:
             checkpoint = "Validate Tx and Rx on DUT"
+            # TODO: skip DUT port stats validation
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
                                                             stat_type=FRAMES_RECEIVED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
@@ -1258,6 +1259,11 @@ class TestVpFlows(FunTestCase):
             mtu_2 = dpcsh_obj.set_port_mtu(port_num=dut_port_2, mtu_value=self.mtu, shape=shape)
             fun_test.test_assert(mtu_2, " Set mtu on DUT port %s" % dut_port_2)
 
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+                for port in [1, 2, 17]:
+                    mtu = dpcsh_obj.set_port_mtu(port_num=port, shape=0, mtu_value=self.mtu)
+                    fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
+
     def run(self):
         vp_pkts_stats_1 = None
         erp_stats_1 = None
@@ -1634,6 +1640,8 @@ class VPPathIPv4TCPFCP(TestVpFlows):
         flow_type = NuConfigManager.VP_FLOW_TYPE
         self.fps = 100
 
+        self.max_frame_size = 8800
+        self.generator_step_size = self.max_frame_size
         self.configure_cadence_pcs_for_fcp()
         self.configure_ports()
         self.detach_ports = False
@@ -1650,7 +1658,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
                                              load=self.fps, fill_type=StreamBlock.FILL_TYPE_PRBS,
                                              insert_signature=True,
                                              frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_INCR,
-                                             min_frame_length=self.min_frame_size, max_frame_length=MAX_FRAME_SIZE,
+                                             min_frame_length=self.min_frame_size, max_frame_length=self.max_frame_size,
                                              step_frame_length=1)
         streamblock1 = template_obj.configure_stream_block(self.streamblock_obj_1, self.port_1)
         fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % self.port_1)

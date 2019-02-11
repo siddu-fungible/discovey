@@ -111,6 +111,10 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
+        for port in [1, 2, 17]:
+            mtu = network_controller_obj.set_port_mtu(port_num=port, shape=0, mtu_value=9000)
+            fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
+
         self._setup_fcp_external_routes()
 
         TIMESTAMP = get_current_time()
