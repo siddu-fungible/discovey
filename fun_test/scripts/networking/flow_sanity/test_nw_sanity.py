@@ -840,10 +840,11 @@ class TestCcFlows(FunTestCase):
         # DUT stats validation
         if self.dut_config['enable_dpcsh']:
             checkpoint = "Validate Tx and Rx on DUT"
+            # TODO: skip DUT port stats validation
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
                                                             stat_type=FRAMES_RECEIVED_OK)
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                         stat_type=FRAMES_TRANSMITTED_OK)
+                                                         stat_type=IF_OUT_BROADCAST_PKTS)
             fun_test.log("DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted),
                                                                           str(frames_received)))
             # fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
@@ -1153,8 +1154,8 @@ class TestVpFlows(FunTestCase):
         pc_4_password = "fun123"
         cadence_pc_3 = "cadence-pc-3"
         cadence_pc_4 = "cadence-pc-4"
-        pc_3_config_dir = fun_test.get_helper_dir_path() + "/pc_3_fcp_configs"
-        pc_4_config_dir = fun_test.get_helper_dir_path() + "/pc_4_fcp_configs"
+        pc_3_config_dir = fun_test.get_helper_dir_path() + "/pc_3_configs"
+        pc_4_config_dir = fun_test.get_helper_dir_path() + "/pc_4_configs"
 
         # Copy req files to cadence pc 3
         target_file_path = "/tmp"
@@ -1171,6 +1172,9 @@ class TestVpFlows(FunTestCase):
             cmd = "sh /tmp/%s" % file_name
             pc_3_obj.command(command=cmd)
 
+        fun_test.log("========= IP Routes on cadence-pc-3 =========")
+        pc_3_obj.get_ip_route()
+
         # Copy req files to cadence pc 4
         pc_4_obj = Linux(host_ip=cadence_pc_4, ssh_username=username, ssh_password=pc_4_password)
         for file_name in ['nh_fcp.sh']:
@@ -1184,6 +1188,8 @@ class TestVpFlows(FunTestCase):
             fun_test.log("Executing %s cadence pc 4" % file_name)
             cmd = "sh /tmp/%s" % file_name
             pc_4_obj.command(command=cmd)
+        fun_test.log("========= IP Routes on cadence-pc-4 =========")
+        pc_4_obj.get_ip_route()
 
     def setup(self):
         pass
@@ -1253,6 +1259,11 @@ class TestVpFlows(FunTestCase):
             mtu_2 = dpcsh_obj.set_port_mtu(port_num=dut_port_2, mtu_value=self.mtu, shape=shape)
             fun_test.test_assert(mtu_2, " Set mtu on DUT port %s" % dut_port_2)
 
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+                for port in [1, 2, 17]:
+                    mtu = dpcsh_obj.set_port_mtu(port_num=port, shape=0, mtu_value=self.mtu)
+                    fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
+
     def run(self):
         vp_pkts_stats_1 = None
         erp_stats_1 = None
@@ -1281,6 +1292,15 @@ class TestVpFlows(FunTestCase):
             erp_stats_1 = get_erp_stats_values(network_controller_obj=dpcsh_obj, hnu=self.hnu)
             psw_stats_1 = dpcsh_obj.peek_psw_global_stats(hnu=self.hnu)
             dpcsh_obj.peek_wro_global_stats()
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+                fun_test.log("========== FCP NU stats before traffic ==========")
+                dpcsh_obj.peek_fcp_global_stats(mode='nu')
+                fun_test.log("========== FCP HNU stats before traffic ==========")
+                dpcsh_obj.peek_fcp_global_stats(mode='hnu')
+                fun_test.log("========== ETP NU stats before traffic ==========")
+                dpcsh_obj.peek_etp_stats(mode='nu')
+                fun_test.log("========== ETP HNU stats before traffic ==========")
+                dpcsh_obj.peek_etp_stats(mode='hnu')
 
         # Execute traffic
         start = template_obj.enable_generator_configs(generator_configs=[self.generator_handle])
@@ -1338,7 +1358,15 @@ class TestVpFlows(FunTestCase):
             vp_pkts_stats_2 = get_vp_pkts_stats_values(network_controller_obj=dpcsh_obj)
             dpcsh_obj.peek_parser_stats()
             dpcsh_obj.peek_wro_global_stats()
-
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+                fun_test.log("========== FCP NU stats after traffic ==========")
+                dpcsh_obj.peek_fcp_global_stats(mode='nu')
+                fun_test.log("========== FCP HNU stats after traffic ==========")
+                dpcsh_obj.peek_fcp_global_stats(mode='hnu')
+                fun_test.log("========== ETP NU stats after traffic ==========")
+                dpcsh_obj.peek_etp_stats(mode='nu')
+                fun_test.log("========== ETP HNU stats after traffic ==========")
+                dpcsh_obj.peek_etp_stats(mode='hnu')
             dut_port_2_fpg_value = get_fpg_port_value(dut_port_2)
             dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
             frv_error = 'frv_error'
@@ -1610,8 +1638,10 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
-        self.fps = 50
+        self.fps = 100
 
+        self.max_frame_size = 8800
+        self.generator_step_size = self.max_frame_size
         self.configure_cadence_pcs_for_fcp()
         self.configure_ports()
         self.detach_ports = False
@@ -1628,7 +1658,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
                                              load=self.fps, fill_type=StreamBlock.FILL_TYPE_PRBS,
                                              insert_signature=True,
                                              frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_INCR,
-                                             min_frame_length=self.min_frame_size, max_frame_length=MAX_FRAME_SIZE,
+                                             min_frame_length=self.min_frame_size, max_frame_length=self.max_frame_size,
                                              step_frame_length=1)
         streamblock1 = template_obj.configure_stream_block(self.streamblock_obj_1, self.port_1)
         fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % self.port_1)

@@ -5,8 +5,9 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
-from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, queue_job, re_queue_job, queue_job2, queue_suite_container
+from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
+from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job2, queue_suite_container
+from scheduler.scheduler_helper import queue_dynamic_suite, get_archived_job_spec
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, \
     get_test_case_details, get_all_test_cases
@@ -23,6 +24,7 @@ from datetime import datetime, timedelta
 from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
+from web.fun_test.models import SuiteReRunInfo
 import logging
 import dateutil.parser
 import re
@@ -112,7 +114,22 @@ def submit_job(request):
         if "script_pk" in request_json:
             script_pk = request_json["script_pk"]
 
-        build_url = request_json["build_url"]
+        # dynamic suite spec
+        original_suite_execution_id = None
+        dynamic_suite_spec = None
+        if "dynamic_suite_spec" in request_json:
+            dynamic_suite_spec = request_json["dynamic_suite_spec"]
+            original_suite_execution_id = request_json["original_suite_execution_id"]
+
+        build_url = None
+        if "build_url" in request_json:
+            build_url = request_json["build_url"]
+        if not build_url:
+            build_url = DEFAULT_BUILD_URL.replace("latest", request_json["version"])
+
+        test_bed_type = None
+        if "test_bed_type" in request_json:
+            test_bed_type = request_json["test_bed_type"]
 
         suite_type = "static"
         if "suite_type" in request_json:
@@ -159,6 +176,7 @@ def submit_job(request):
                                                email_list=email_list,
                                                email_on_fail_only=email_on_fail_only,
                                                environment=environment,
+                                               test_bed_type=test_bed_type,
                                                scheduling_type=scheduling_type,
                                                tz_string=tz,
                                                requested_hour=requested_hour,
@@ -170,6 +188,7 @@ def submit_job(request):
                                     build_url=build_url,
                                     tags=tags,
                                     email_list=email_list,
+                                    test_bed_type=test_bed_type,
                                     email_on_fail_only=email_on_fail_only,
                                     environment=environment,
                                     scheduling_type=scheduling_type,
@@ -184,6 +203,7 @@ def submit_job(request):
                                 build_url=build_url,
                                 tags=tags,
                                 email_list=email_list,
+                                test_bed_type=test_bed_type,
                                 email_on_fail_only=email_on_fail_only,
                                 environment=environment,
                                 scheduling_type=scheduling_type,
@@ -192,7 +212,13 @@ def submit_job(request):
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
                                 repeat_in_minutes=repeat_in_minutes)
-
+        elif dynamic_suite_spec:
+            queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
+                                email_list=email_list,
+                                environment=environment,
+                                test_bed_type=test_bed_type,
+                                original_suite_execution_id=original_suite_execution_id,
+)
     return job_id
 
 
@@ -238,9 +264,20 @@ def parse_suite(suite_file):
 @csrf_exempt
 @api_safe_json_response
 def suites(request):
+    suite_path = None
+    if request.method == 'POST':
+        if request.body:
+            request_json = json.loads(request.body)
+            suite_path = request_json["suite_path"]
+            if not suite_path.endswith(".json"):
+                suite_path += ".json"
+
     suites_info = collections.OrderedDict()
     suite_files = glob.glob(SUITES_DIR + "/*.json")
     for suite_file in suite_files:
+        if suite_path:
+            if not suite_file.endswith("/{}".format(suite_path)):
+                continue
         try:
             if suite_file.endswith("container.json"):
                 suites_info[os.path.basename(suite_file)] = []
@@ -255,7 +292,7 @@ def suites(request):
                 # suites_info.extend(items)
 
         except Exception as ex:
-            pass
+            logging.error("suites: {}".format(str(ex)))
     return suites_info
 
 
@@ -288,7 +325,7 @@ def suite_executions(request, records_per_page=10, page=None, filter_string="ALL
                                              records_per_page=records_per_page,
                                              filter_string=filter_string,
                                              tags=tags)
-    return json.dumps(all_objects_dict)
+    return all_objects_dict
     # return all_objects_dict
 
 
@@ -868,4 +905,45 @@ def script_execution(request, pk):
                                                         "result": test_case_execution.result}
     except ObjectDoesNotExist:
         raise Exception("Script with pk: {} does not exist".format(pk))
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def job_spec(request, job_id):
+    archived_job_spec = get_archived_job_spec(job_id=job_id)
+    return archived_job_spec
+
+
+def _get_attributes(suite_execution):
+    attributes = {"result": suite_execution.result, "scheduled_time": str(suite_execution.scheduled_time),
+                  "completed_time": str(suite_execution.completed_time)}
+    return attributes
+
+@csrf_exempt
+@api_safe_json_response
+def re_run_info(request):
+    result = None
+    q = Q()
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        original_suite_execution_id = request_json["original_suite_execution_id"] if "original_suite_execution_id" in request_json else None
+        if original_suite_execution_id:
+            q = q & Q(original_suite_execution_id=original_suite_execution_id)
+        re_run_suite_execution_id = request_json["re_run_suite_execution_id"] if "re_run_suite_execution_id" in request_json else None
+        if re_run_suite_execution_id:
+            q = q & Q(re_run_suite_execution_id=re_run_suite_execution_id)
+    entries = SuiteReRunInfo.objects.filter(q)
+    if (entries.count):
+        result = []
+    for entry in entries:
+        original_suite_execution = {}
+        original_suite_execution["suite_execution_id"] = entry.original_suite_execution_id
+        suite_execution = SuiteExecution.objects.get(execution_id=entry.original_suite_execution_id)
+        original_suite_execution["attributes"] = _get_attributes(suite_execution=suite_execution)
+
+        re_run_suite_execution = {}
+        re_run_suite_execution["suite_execution_id"] = entry.re_run_suite_execution_id
+        suite_execution = SuiteExecution.objects.get(execution_id=entry.re_run_suite_execution_id)
+        re_run_suite_execution["attributes"] = _get_attributes(suite_execution=suite_execution)
+        result.append({"original": original_suite_execution, "re_run": re_run_suite_execution})
     return result

@@ -360,16 +360,15 @@ class NuConfigManager(object):
 
     def get_dut_type(self):
         try:
-            result = fun_test.get_job_environment()
+            job_environment = fun_test.get_job_environment()
             # job_environment = {"EMULATION_TARGET": "F1", "UART_HOST": "10.1.40.21", "UART_TCP_PORT_0": "40221"}
-            job_environment = None
-            if type(result) == unicode:
-                job_environment = json.loads(result)
-                print job_environment
+            if type(job_environment) == unicode:
+                job_environment = json.loads(job_environment)
+                fun_test.log(job_environment)
 
             job_inputs = fun_test.get_job_inputs()
-            if job_environment and ("EMULATION_TARGET" in job_environment or "RUN_TARGET" in job_environment):
-                if job_environment["EMULATION_TARGET"] == self.DUT_TYPE_PALLADIUM:
+            if job_environment and "RUN_TARGET" in job_environment:
+                if job_environment["RUN_TARGET"] == self.DUT_TYPE_PALLADIUM:
                     self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
                 elif job_environment["EMULATION_TARGET"] == self.DUT_TYPE_F1.upper():
                     self.DUT_TYPE = self.DUT_TYPE_F1

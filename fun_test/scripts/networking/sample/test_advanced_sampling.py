@@ -4427,9 +4427,9 @@ if __name__ == '__main__':
     ts = SpirentSetup()
 
     ts.add_test_case(SampleIngressFPGtoFPGIPv6())
-    ts.add_test_case(SampleIngressDropIpChecksumError())
+    # ts.add_test_case(SampleIngressDropIpChecksumError())
     ts.add_test_case(SampleSourceMultiDestination())
-    ts.add_test_case(SampleFlagMaskTTL0Packets())
+    # ts.add_test_case(SampleFlagMaskTTL0Packets())
     ts.add_test_case(SampleMultiSourceSameDestination())
 
     ts.add_test_case(SampleIngressEgressMTUCase())
@@ -4439,11 +4439,11 @@ if __name__ == '__main__':
     ts.add_test_case(SampleIngressEgressSamePacket())
 
     ts.add_test_case(SampleACLtoFPG())  # Failing due to SWOS-3682
-    ts.add_test_case(SampleIngressARPRequest())
+    # ts.add_test_case(SampleIngressARPRequest())
     
-    ts.add_test_case(SampleIngressLLDP())
+    # ts.add_test_case(SampleIngressLLDP())
 
-    ts.add_test_case(SampleIngressDropIPv4VerError())
+    # ts.add_test_case(SampleIngressDropIPv4VerError())
     ts.add_test_case(SampleIngressDropFwdErrorWrongDIP())
 
     ts.add_test_case(SampleEgressMTUCase())
