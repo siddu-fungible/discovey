@@ -1113,10 +1113,10 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_fcp_global_stats(self):
+    def peek_fcp_global_stats(self, mode='nu'):
         stats = None
         try:
-            stats_cmd = "stats/fcp/global"
+            stats_cmd = "stats/fcp/%s/global" % mode
             fun_test.debug("Getting FCP global stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get FCP global stats")
@@ -1454,8 +1454,8 @@ class NetworkController(DpcshClient):
         return stats
 
     def peek_fwd_flex_stats(self, counter_num):
+        stats = None
         try:
-            stats = None
             stats_cmd = "stats/fwd/flex/[%d]" % counter_num
             fun_test.debug("Getting counter stats for counter %d" % counter_num)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
@@ -1468,14 +1468,27 @@ class NetworkController(DpcshClient):
         return stats
 
     def peek_erp_flex_stats(self, counter_num):
+        stats = None
         try:
-            stats = None
             stats_cmd = "stats/erp/flex/[%d]" % counter_num
             fun_test.debug("Getting counter stats for counter %d" % counter_num)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'],
                                    message="Getting counter stats for counter %d" % counter_num)
             fun_test.debug("Counter %d stats: %s" % (counter_num, result['data']))
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_etp_stats(self, mode='nu'):
+        stats = None
+        try:
+            cmd = "stats/etp/%s" % mode
+            fun_test.debug("Getting ETP stats for %s" % mode)
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Getting ETP stats for %s" % mode)
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))
