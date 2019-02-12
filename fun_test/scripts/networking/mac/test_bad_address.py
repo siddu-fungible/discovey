@@ -24,7 +24,10 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, subscribe_results, network_controller_obj, dut_port_1, dut_port_2, \
-            ethernet, ipv4, source_mac1, destination_mac1, destination_ip1, streamblock_1, duration_seconds, shape, hnu
+            ethernet, ipv4, source_mac1, destination_mac1, destination_ip1, streamblock_1, duration_seconds, shape, hnu, flow_direction
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
+
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type)
 
@@ -38,7 +41,7 @@ class SpirentSetup(FunTestScript):
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames2", chassis_type=chassis_type,
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_bad_address", chassis_type=nu_config_obj.FLOW_DIRECTION_NU_NU,
                                                       spirent_config=spirent_config)
         fun_test.test_assert(template_obj, "Create template object")
 
@@ -54,9 +57,11 @@ class SpirentSetup(FunTestScript):
         port_1 = port_obj_list[0]
         port_2 = port_obj_list[1]
 
-        source_mac1 = spirent_config['l2_config']['source_mac']
-        destination_mac1 = spirent_config['l2_config']['destination_mac']
-        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+        destination_ip1 = ul_ipv4_routes_config['l3_config']['destination_ip1']
+
+        destination_mac1 = ul_ipv4_routes_config['routermac']
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
 
@@ -394,8 +399,6 @@ class TestCase3(FunTestCase):
         '''
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())

@@ -68,7 +68,9 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config, l2_config, l3_config, dut_port_3, port_3, gen_obj_3, dut_type
+            dut_config, spirent_config, l2_config, l3_config, dut_port_3, port_3, gen_obj_3, dut_type, flow_direction, destination_mac
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
 
         dut_type = nu_config_obj.get_dut_type()
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type,
@@ -80,7 +82,7 @@ class SpirentSetup(FunTestScript):
 
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="vp-negative-stream", spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
 
         result = template_obj.setup(no_of_ports_needed=num_ports, flow_type=NuConfigManager.VP_FLOW_TYPE,
@@ -95,8 +97,13 @@ class SpirentSetup(FunTestScript):
         dut_port_2 = dut_config['ports'][1]
         dut_port_3 = dut_config['ports'][2]
 
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(routes_config, "Ensure routes config fetched")
+        l3_config = routes_config['l3_config']
+
+        destination_mac = routes_config['routermac']
+
         l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv4"]
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
 
         # Configure Generator
@@ -167,8 +174,7 @@ class UlBadIpLenErrorIncremental(FunTestCase):
         # MAC
         configure_mac = template_obj.stc_manager.configure_mac_address(
             streamblock=self.current_streamblock_obj._spirent_handle,
-            source_mac=l2_config['source_mac'],
-            destination_mac=l2_config['destination_mac'])
+            destination_mac=destination_mac)
         fun_test.test_assert(configure_mac, "Configure mac address")
 
         # delete ipv4 header
@@ -378,14 +384,9 @@ class UlBadUdpXsum(UlBadIpLenErrorIncremental):
         # MAC
         configure_mac = template_obj.stc_manager.configure_mac_address(
             streamblock=self.current_streamblock_obj._spirent_handle,
-            source_mac=l2_config['source_mac'],
-            destination_mac=l2_config['destination_mac'])
+            destination_mac=destination_mac)
         fun_test.test_assert(configure_mac, "Configure mac address")
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-            destination = l3_config['hnu_destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip1']
+        destination = l3_config['hnu_destination_ip2']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -496,14 +497,9 @@ class UlBadTcpXsum(UlBadIpLenErrorIncremental):
         # MAC
         configure_mac = template_obj.stc_manager.configure_mac_address(
             streamblock=self.current_streamblock_obj._spirent_handle,
-            source_mac=l2_config['source_mac'],
-            destination_mac=l2_config['destination_mac'])
+            destination_mac=destination_mac)
         fun_test.test_assert(configure_mac, "Configure mac address")
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-            destination = l3_config['hnu_destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip1']
+        destination = l3_config['hnu_destination_ip2']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -568,14 +564,9 @@ class OlVxlanBadIpLenErrorIncr(UlBadIpLenErrorIncremental):
         # MAC
         configure_mac = template_obj.stc_manager.configure_mac_address(
             streamblock=self.current_streamblock_obj._spirent_handle,
-            source_mac=l2_config['source_mac'],
-            destination_mac=l2_config['destination_mac'])
+            destination_mac=destination_mac)
         fun_test.test_assert(configure_mac, "Configure mac address")
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-            destination = l3_config['hnu_destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip1']
+        destination = l3_config['hnu_destination_ip2']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -668,14 +659,9 @@ class OlVxlanBadUdpXsum(UlBadIpLenErrorIncremental):
         # MAC
         configure_mac = template_obj.stc_manager.configure_mac_address(
             streamblock=self.current_streamblock_obj._spirent_handle,
-            source_mac=l2_config['source_mac'],
-            destination_mac=l2_config['destination_mac'])
+            destination_mac=destination_mac)
         fun_test.test_assert(configure_mac, "Configure mac address")
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-            destination = l3_config['hnu_destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip1']
+        destination = l3_config['hnu_destination_ip2']
         ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                       self.current_streamblock_obj._spirent_handle,
@@ -764,11 +750,7 @@ class OlVxlanBadTcpXsum(UlBadIpLenErrorIncremental):
     def create_streamblock(self):
         output = template_obj.configure_overlay_frame_stack(port=port_1)
         self.current_streamblock_obj = output['streamblock_obj']
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-            destination = l3_config['hnu_destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip1']
+        destination = l3_config['hnu_destination_ip2']
         ip_header = Ipv4Header()
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=ip_header, overlay=False,
@@ -888,11 +870,7 @@ class OlMplsBadUdpXsum(UlBadIpLenErrorIncremental):
         self.current_streamblock_obj = output['streamblock_obj']
 
         ip_header = Ipv4Header()
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-            destination = l3_config['hnu_destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip1']
+        destination = l3_config['hnu_destination_ip2']
         update = template_obj.update_overlay_frame_header(streamblock_obj=output['streamblock_obj'],
                                                           header_obj=ip_header, overlay=False,
                                                           updated_header_attributes_dict=
@@ -1010,17 +988,12 @@ class GoodBad(FunTestCase):
         # MAC
         configure_mac = template_obj.stc_manager.configure_mac_address(
             streamblock=self.current_streamblock_obj._spirent_handle,
-            source_mac=l2_config['source_mac'],
-            destination_mac=l2_config['destination_mac'])
+            destination_mac=destination_mac)
         fun_test.test_assert(configure_mac, "Configure mac address")
         protocol = Ipv4Header.PROTOCOL_TYPE_UDP
         if protocol_tcp:
             protocol = Ipv4Header.PROTOCOL_TYPE_TCP
-        destination = l3_config['hu_destination_ip1']
-        if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-            destination = l3_config['hnu_destination_ip2']
-        elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-            destination = l3_config['destination_ip1']
+        destination = l3_config['hnu_destination_ip2']
         ip_header = Ipv4Header(destination_address=destination,
                                protocol=protocol)
         configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
@@ -1142,14 +1115,9 @@ class GoodBad(FunTestCase):
             # MAC
             configure_mac = template_obj.stc_manager.configure_mac_address(
                 streamblock=self.current_streamblock_obj._spirent_handle,
-                source_mac=l2_config['source_mac'],
-                destination_mac=l2_config['destination_mac'])
+                destination_mac=destination_mac)
             fun_test.test_assert(configure_mac, "Configure mac address")
-            destination = l3_config['hu_destination_ip1']
-            if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
-                destination = l3_config['hnu_destination_ip2']
-            elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-                destination = l3_config['destination_ip1']
+            destination = l3_config['hnu_destination_ip2']
             ip_obj = Ipv4Header(destination_address=destination, protocol=Ipv4Header.PROTOCOL_TYPE_TCP)
             configure_ip = template_obj.stc_manager.configure_frame_stack(stream_block_handle=
                                                                           self.current_streamblock_obj._spirent_handle,
@@ -1606,8 +1574,6 @@ class GoodBad(FunTestCase):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
     ts = SpirentSetup()
     ts.add_test_case(UlBadIpLenErrorIncremental())
     ts.add_test_case(UlBadUdpXsum())

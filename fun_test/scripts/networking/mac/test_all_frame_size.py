@@ -61,7 +61,9 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, \
             gen_obj_1, gen_obj_2, duration_seconds, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config, gen_config_obj, shape, hnu, template_obj
+            dut_config, spirent_config, gen_config_obj, shape, hnu, template_obj, flow_direction
+        
+        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
@@ -77,7 +79,7 @@ class SpirentSetup(FunTestScript):
 
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_frame_size", spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.FLOW_DIRECTION_NU_NU)
         fun_test.test_assert(template_obj, "Create template object")
 
         result = template_obj.setup(no_of_ports_needed=num_ports)
@@ -190,8 +192,12 @@ class IPv4IncrementalTestCase1(FunTestCase):
         file_path = loads_file
         output = fun_test.parse_file_to_json(file_path)
         load = output[dut_config['interface_mode']]["incremental_load_mbps"]
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv4"]
+
+        ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+        l3_config = ul_ipv4_routes_config['l3_config']
+        destination_mac = ul_ipv4_routes_config['routermac']
+        
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
 
         # Create streamblock 1
@@ -210,16 +216,14 @@ class IPv4IncrementalTestCase1(FunTestCase):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
                                                            source=l3_config['source_ip1'],
-                                                           destination=l3_config['destination_ip1'],
-                                                           gateway=l3_config['gateway'])
+                                                           destination=l3_config['destination_ip1'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
         # Create streamblock 2
@@ -238,16 +242,14 @@ class IPv4IncrementalTestCase1(FunTestCase):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_2.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
-                                                           source=l3_config['source_ip2'],
-                                                           destination=l3_config['destination_ip2'],
-                                                           gateway=l3_config['gateway'])
+                                                           source=l3_config['source_ip1'],
+                                                           destination=l3_config['destination_ip2'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
     def cleanup(self):
@@ -552,8 +554,12 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
         file_path = loads_file
         output = fun_test.parse_file_to_json(file_path)
         load = output[dut_config['interface_mode']]["incremental_load_mbps"]
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv6"]
+
+        ul_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, ip_version="ipv6")
+        fun_test.simple_assert(ul_ipv6_routes_config, "Ensure routes config fetched")
+        l3_config = ul_ipv6_routes_config['l3_config']
+        destination_mac = ul_ipv6_routes_config['routermac']
+        
         ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
 
         # Create streamblock 1
@@ -573,8 +579,7 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
@@ -601,14 +606,13 @@ class IPv6IncrementalTestCase1(IPv4IncrementalTestCase1):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_2.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
-                                                           source=l3_config['source_ip2'],
+                                                           source=l3_config['source_ip1'],
                                                            destination=l3_config['destination_ip2'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
@@ -667,8 +671,10 @@ class IPv4RandomTestCase2(FunTestCase):
         file_path = loads_file
         output = fun_test.parse_file_to_json(file_path)
         load = output[dut_config['interface_mode']]["incremental_load_mbps"]
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv4"]
+        ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+        l3_config = ul_ipv4_routes_config['l3_config']
+        destination_mac = ul_ipv4_routes_config['routermac']
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
 
         # Create streamblock 1
@@ -686,16 +692,14 @@ class IPv4RandomTestCase2(FunTestCase):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
                                                            source=l3_config['source_ip1'],
-                                                           destination=l3_config['destination_ip1'],
-                                                           gateway=l3_config['gateway'])
+                                                           destination=l3_config['destination_ip1'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
         # Create streamblock 2
@@ -713,16 +717,14 @@ class IPv4RandomTestCase2(FunTestCase):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_2.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
-                                                           source=l3_config['source_ip2'],
-                                                           destination=l3_config['destination_ip2'],
-                                                           gateway=l3_config['gateway'])
+                                                           source=l3_config['source_ip1'],
+                                                           destination=l3_config['destination_ip2'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
         # Setting generator config
@@ -916,8 +918,12 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
         file_path = loads_file
         output = fun_test.parse_file_to_json(file_path)
         load = output[dut_config['interface_mode']]["incremental_load_mbps"]
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv6"]
+        
+        ul_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, ip_version="ipv6")
+        fun_test.simple_assert(ul_ipv6_routes_config, "Ensure routes config fetched")
+        l3_config = ul_ipv6_routes_config['l3_config']
+        destination_mac = ul_ipv6_routes_config['routermac']
+        
         ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
 
         # Create streamblock 1
@@ -936,8 +942,7 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
@@ -963,14 +968,13 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_2.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
         # Adding Ip address and gateway
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_2.spirent_handle,
-                                                           source=l3_config['source_ip2'],
+                                                           source=l3_config['source_ip1'],
                                                            destination=l3_config['destination_ip2'])
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
 
@@ -994,8 +998,6 @@ class IPv6RandomTestCase2(IPv4RandomTestCase2):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(IPv4IncrementalTestCase1())
     ts.add_test_case(IPv4RandomTestCase2())

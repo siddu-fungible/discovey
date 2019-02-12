@@ -34,7 +34,9 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, shape, hnu
+            dut_port_1, shape, hnu, flow_direction
+        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
+
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
 
@@ -1123,8 +1125,6 @@ class TestCase5(FunTestCase):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())

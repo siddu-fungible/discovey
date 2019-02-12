@@ -79,7 +79,9 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, pause_obj, dut_port_list, pause_streamblock, interface_obj_list
+            dut_port_1, hnu, shape, pause_obj, dut_port_list, pause_streamblock, interface_obj_list, flow_direction
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
@@ -98,11 +100,15 @@ class SpirentSetup(FunTestScript):
         pause_load = 60
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_multi_stream", spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
 
-        destination_mac1 = spirent_config['l2_config']['destination_mac']
-        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+        ul_ipv4_l3_config = ul_ipv4_routes_config['l3_config']
+
+        destination_ip1 = ul_ipv4_l3_config['destination_ip1']
+        destination_mac1 = ul_ipv4_routes_config['routermac']
         dut_port_list = []
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
@@ -1802,10 +1808,9 @@ class TestCase20(TestCase18):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
+    '''
     ts.add_test_case(TestCase2())
     ts.add_test_case(TestCase3())
     ts.add_test_case(TestCase4())
@@ -1825,4 +1830,5 @@ if __name__ == "__main__":
     ts.add_test_case(TestCase18())
     ts.add_test_case(TestCase19())
     ts.add_test_case(TestCase20())
+    '''
     ts.run()
