@@ -9,7 +9,6 @@ from web.fun_test.metrics_models import MetricsGlobalSettings
 from django.apps import apps
 from web.fun_test.metrics_models import MetricChart, LastMetricId
 import json
-import ast
 
 site_state = None
 
@@ -145,23 +144,17 @@ class SiteState():
                         all_metrics_chart.add_child(child_id=c.metric_id)
                         all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
         if "extensible_references" in metric:
-            references = []
             references = metric["extensible_references"]
             if len(references):
                 for reference in references:
                     try:
                         reference_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name=reference)
-                        reference_children = []
-                        reference_children = reference_chart.children
-                        reference_children = ast.literal_eval(reference_children)
-                        reference_weights = ast.literal_eval(reference_chart.children_weights)
+                        reference_children = json.loads(reference_chart.children)
+                        reference_weights = json.loads(reference_chart.children_weights)
                         for child in reference_children:
-                            c = MetricChart.objects.get(metric_id=child)
-                            if c:
-                                m.add_child(child_id=c.metric_id)
-                        for weight in reference_weights:
-                            if reference_weights[str(child)]:
-                                m.add_child_weight(child_id=c.metric_id, weight=reference_weights[str(child)])
+                            m.add_child(child_id=child)
+                        for child_weight in reference_weights:
+                            m.add_child_weight(child_id=child_weight, weight=reference_weights[child_weight])
                         m.save()
                     except:
                         pass
