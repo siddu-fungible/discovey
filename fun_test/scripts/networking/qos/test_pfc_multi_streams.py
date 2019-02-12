@@ -1810,7 +1810,6 @@ class TestCase20(TestCase18):
 if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
-    '''
     ts.add_test_case(TestCase2())
     ts.add_test_case(TestCase3())
     ts.add_test_case(TestCase4())
@@ -1830,5 +1829,4 @@ if __name__ == "__main__":
     ts.add_test_case(TestCase18())
     ts.add_test_case(TestCase19())
     ts.add_test_case(TestCase20())
-    '''
     ts.run()
