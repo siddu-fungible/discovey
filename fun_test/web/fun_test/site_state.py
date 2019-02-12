@@ -123,7 +123,6 @@ class SiteState():
                                 leaf=False, metric_id=LastMetricId.get_next_id(),
                                 description=description)
                 m.save()
-
         if "reference" in metric and metric["reference"]:
             pass
         else:
@@ -131,7 +130,6 @@ class SiteState():
                 m.children = "[]"
             except Exception as ex:
                 pass
-
             m.children_weights = "{}"
             m.save()
             for child in children:
@@ -145,6 +143,21 @@ class SiteState():
                     if "leaf" in child and child["leaf"]:
                         all_metrics_chart.add_child(child_id=c.metric_id)
                         all_metrics_chart.add_child_weight(child_id=c.metric_id, weight=1)
+        if "extensible_references" in metric:
+            references = metric["extensible_references"]
+            if len(references):
+                for reference in references:
+                    try:
+                        reference_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name=reference)
+                        reference_children = json.loads(reference_chart.children)
+                        reference_weights = json.loads(reference_chart.children_weights)
+                        for child in reference_children:
+                            m.add_child(child_id=child)
+                        for child_weight in reference_weights:
+                            m.add_child_weight(child_id=child_weight, weight=reference_weights[child_weight])
+                        m.save()
+                    except:
+                        pass
 
         return m
 

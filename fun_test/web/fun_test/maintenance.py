@@ -608,6 +608,22 @@ if __name__ == "__main_milestone__":
             mmf.save()
     print "MileStone Complete"
 
+if __name__ == "__main_PKE__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    model_names = ["PkeX25519TlsSoakPerformance", "PkeP256TlsSoakPerformance"]
+    for entry in entries:
+        if entry.metric_model_name in model_names:
+            base_line_date = datetime(year=2019, month=2, day=8, minute=0, hour=0, second=0)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
+                                   milestone_name="F1")
+            mmf.save()
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+    print "Milestone and Baseline Setting Complete"
+
 if __name__ == "__main__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()

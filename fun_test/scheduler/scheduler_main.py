@@ -521,6 +521,7 @@ def revive_scheduled_jobs(job_ids=None):
 
     for job_file in job_files:
         job_spec = parse_file_to_json(file_name=job_file)
+        job_spec["suite_type"] = SuiteType.STATIC
         if job_ids:
             job_id = job_spec["job_id"]
             if job_id not in job_ids:

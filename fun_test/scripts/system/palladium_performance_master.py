@@ -1,7 +1,7 @@
 from lib.system.fun_test import *
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
-from web.fun_test.metrics_models import BcopyFloodDmaPerformance
+from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSoakPerformance, PkeP256TlsSoakPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
@@ -1549,6 +1549,83 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                                      git_commit="", model_name="NuTransitPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="ECDHE_RSA X25519 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+X25519\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_x25519_2k_tls_soak"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=PkeX25519TlsSoakPerformance).add_entry(**d)
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="PkeX25519TlsSoakPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="ECDHE_RSA P256 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_p256_2k_tls_soak"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=PkeP256TlsSoakPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="PkeP256TlsSoakPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
 class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
     def describe(self):
         self.set_test_details(id=27,
@@ -1559,7 +1636,8 @@ class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
         metrics = collections.OrderedDict()
         try:
 
-            fun_test.test_assert(self.validate_json_file(file_path = LOGS_DIR + "/hu_funeth_performance_data.json"), "validate json file and output")
+            fun_test.test_assert(self.validate_json_file(file_path=LOGS_DIR + "/hu_funeth_performance_data.json"),
+                                 "validate json file and output")
             for line in self.lines:
                 if "flow_type" in line:
                     metrics["input_flow_type"] = line["flow_type"]
@@ -1575,7 +1653,10 @@ class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
                     metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
                     metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
                     metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
-                    fun_test.log("flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"], metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
+                    fun_test.log(
+                        "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
+                            metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"],
+                            metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     d["input_date_time"] = date_time
                     MetricHelper(model=HuFunethPerformance).add_entry(**d)
@@ -1588,6 +1669,7 @@ class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
                                      test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
                                      git_commit="", model_name="HuFunethPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1609,31 +1691,33 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
     
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # myscript.add_test_case(FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkZipPerformanceTC())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJpegPerformanceTC())
     myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
     myscript.add_test_case(TeraMarkHuFunethPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

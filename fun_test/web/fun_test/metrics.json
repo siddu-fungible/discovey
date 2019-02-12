@@ -898,7 +898,37 @@
             "name": "PKE",
             "label": "PKE",
             "weight": 1,
-            "reference": true
+            "extensible_references": ["TeraMark PKE"],
+            "children": [
+              {
+                "info": "PKE soak",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "PKE soak",
+                "label": "Soak",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "ECDHE RSA X25519 RSA 2K",
+                    "metric_model_name": "PkeX25519TlsSoakPerformance",
+                    "leaf": true,
+                    "name": "ECDHE_RSA X25519 RSA 2K",
+                    "label": "ECDHE RSA X25519 RSA 2K",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "ECDHE RSA P256 RSA 2K",
+                    "metric_model_name": "PkeP256TlsSoakPerformance",
+                    "leaf": true,
+                    "name": "ECDHE_RSA P256 RSA 2K",
+                    "label": "ECDHE RSA P256 RSA 2K",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -911,10 +941,10 @@
         "weight": 1,
         "children": [
           {
-            "info": "PKE",
+            "info": "TeraMark PKE",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "PKE",
+            "name": "TeraMark PKE",
             "label": "PKE",
             "weight": 1,
             "children": [

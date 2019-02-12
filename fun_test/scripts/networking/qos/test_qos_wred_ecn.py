@@ -75,7 +75,9 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, port_3, pfc_stream, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, port_obj_list, dut_port_list, normal_stream, subscribe_results
+            dut_port_1, hnu, shape, port_obj_list, dut_port_list, normal_stream, subscribe_results, flow_direction
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
@@ -92,11 +94,17 @@ class SpirentSetup(FunTestScript):
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_qos_wred_ecn",
                                                       spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
 
-        destination_mac1 = spirent_config['l2_config']['destination_mac']
-        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(routes_config, "Ensure routes config fetched")
+        l3_config = routes_config['l3_config']
+
+        destination_mac1 = routes_config['routermac']
+        destination_ip1 = l3_config['destination_ip1']
+        if hnu:
+            destination_ip1 = l3_config['hnu_destination_ip1']
 
         dut_port_list = []
         dut_port_1 = dut_config['ports'][0]
@@ -693,8 +701,6 @@ class ECN_10_10(ECN_10_00):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(Wred_Q0())
     ts.add_test_case(ECN_10())
