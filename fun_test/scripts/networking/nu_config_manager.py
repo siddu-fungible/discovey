@@ -370,7 +370,7 @@ class NuConfigManager(object):
             if job_environment and "RUN_TARGET" in job_environment:
                 if job_environment["RUN_TARGET"] == self.DUT_TYPE_PALLADIUM:
                     self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
-                elif job_environment["EMULATION_TARGET"] == self.DUT_TYPE_F1.upper():
+                elif job_environment["RUN_TARGET"] == self.DUT_TYPE_F1.upper():
                     self.DUT_TYPE = self.DUT_TYPE_F1
             else:
                 if job_inputs and "speed" in job_inputs:
