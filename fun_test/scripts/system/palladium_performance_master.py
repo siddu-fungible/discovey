@@ -5,7 +5,7 @@ from web.fun_test.metrics_models import BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
-    SoakClassicMallocPerformance
+    SoakClassicMallocPerformance, HuFunethPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
@@ -123,7 +123,7 @@ class PalladiumPerformanceTc(FunTestCase):
             d[key] = value
         return d
 
-    def validate_json_file(self, validation_required=True, file_path):
+    def validate_json_file(self, file_path, validation_required=True):
         data = {}
         fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
         fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
@@ -1552,7 +1552,7 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
 class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
     def describe(self):
         self.set_test_details(id=27,
-                              summary="TeraMark NU Transit Performance Test",
+                              summary="TeraMark HU Funeth Performance Test",
                               steps="Steps 1")
 
     def run(self):
@@ -1562,10 +1562,7 @@ class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_json_file(file_path = LOGS_DIR + "/hu_funeth_performance_data.json"), "validate json file and output")
             for line in self.lines:
                 if "flow_type" in line:
-                    if line["flow_type"] in nu_transit_flow_types:
-                        line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
-                    metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                    metrics["input_mode"] = line["mode"]
+                    metrics["input_flow_type"] = line["flow_type"]
                     metrics["input_version"] = line["version"]
                     metrics["input_frame_size"] = line["frame_size"]
                     date_time = get_time_from_timestamp(line["timestamp"])
@@ -1573,15 +1570,15 @@ class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
                     metrics["output_pps"] = line["pps"] if "pps" in line else -1
                     metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
                     metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
-                    metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
+                    metrics["output_latency_avg"] = line["latency_mean"] if "latency_mean" in line else -1
+                    metrics["output_latency_median"] = line["latency_median"] if "latency_median" in line else -1
                     metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
                     metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
                     metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
                     fun_test.log("flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"], metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     d["input_date_time"] = date_time
-                    if date_time.year >= 2019:
-                        MetricHelper(model=NuTransitPerformance).add_entry(**d)
+                    MetricHelper(model=HuFunethPerformance).add_entry(**d)
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -1589,7 +1586,7 @@ class TeraMarkHuFunethPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                     git_commit="", model_name="NuTransitPerformance")
+                                     git_commit="", model_name="HuFunethPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class PrepareDbTc(FunTestCase):
@@ -1612,30 +1609,31 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
     
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    myscript.add_test_case(FlowTestPerformanceTC())
-    myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(EcVolPerformanceTc())
+    # myscript.add_test_case(VoltestPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(BootTimingPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    # myscript.add_test_case(FlowTestPerformanceTC())
+    # myscript.add_test_case(TeraMarkZipPerformanceTC())
+    # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    # myscript.add_test_case(TeraMarkJpegPerformanceTC())
     myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(TeraMarkHuFunethPerformanceTC())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
