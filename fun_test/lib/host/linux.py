@@ -1740,12 +1740,9 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def isHostUp(self, timeout=5, retries=6):
-
+    def is_host_up(self, timeout=5, retries=6):
         result = True
-
         for i in range(retries):
-            command_output = ""
             try:
                 command_output = self.command(command="pwd", timeout=timeout)
                 if command_output:
@@ -1840,6 +1837,12 @@ class Linux(object, ToDictMixin):
             fs_command = "mkfs.ext2 -F {}".format(device)
         elif fs_type == "xfs":
             fs_command = "mkfs.xfs -f {}".format(device)
+        elif fs_type == "ntfs":
+            fs_command = "mkfs.ntfs -F {}".format(device)
+        elif fs_type == "btrfs":
+            fs_command = "mkfs.btrfs {}".format(device)
+        elif fs_type == "f2fs":
+            fs_command = "mkfs.f2fs {}".format(device)
         else:
             fun_test.critical("Creation of {} filesystem is not yet supported".format(fs_type))
             result = False
@@ -1849,7 +1852,7 @@ class Linux(object, ToDictMixin):
             fs_command += " -b {}".format(sector_size)
 
         try:
-            output = self.sudo_command(fs_command)
+            output = self.sudo_command(fs_command, timeout=timeout)
             match = re.findall(r"done", output, re.M)
             if match:
                 if fs_type == "ext2":
@@ -1867,6 +1870,24 @@ class Linux(object, ToDictMixin):
                     match = re.search(r"bsize=(\d+)\s+blocks=(\d+)", output, re.MULTILINE)
                     if match:
                         result = match.group(2)
+                    else:
+                        result = False
+                elif fs_type == "ntfs":
+                    match = re.search(r"mkntfs\scompleted\ssuccessfully", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
+                    else:
+                        result = False
+                elif fs_type == "btrfs":
+                    match = re.search(r"Number\sof\sdevices:", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
+                    else:
+                        result = False
+                elif fs_type == "f2fs":
+                    match = re.search(r"Info:\sformat\ssuccessful", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
                     else:
                         result = False
                 else:
@@ -1900,10 +1921,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def mount_volume(self, volume, directory):
+    def mount_volume(self, volume, directory, readonly=False):
         result = True
         try:
             mnt_cmd = "mount {} {}".format(volume, directory)
+            if readonly:
+                mnt_cmd += " --read-only"
             mnt_out = self.sudo_command(mnt_cmd)
             if not mnt_out:
                 pattern = r'.*{}.*'.format(directory)
@@ -2015,6 +2038,30 @@ class Linux(object, ToDictMixin):
             return match is not None
         else:
             return match is None
+
+    def is_mount_ro(self, mnt):
+        """
+        Method to validate if filesystem mounted is Read-only filesystem
+        :param mnt: mount partition
+        :return: boolean, if mount filesystem is Read-only filesystem, return True
+        """
+        result = True
+        try:
+            cmd = "grep '\sro[\s,]' /proc/mounts"
+            output = self.sudo_command(cmd)
+            lines = output.split("\n")
+            for line in lines:
+                if mnt in line:
+                    result = True
+                else:
+                    result = False
+        except Exception as ex:
+            result = False
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+
+        return result
 
 
 class LinuxBackup:
