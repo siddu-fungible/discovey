@@ -627,9 +627,9 @@ if __name__ == "__main_PKE__":
 if __name__ == "__main__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
-    model_names = ["HuFunethPerformance"]
+    chart_names = ["HU_NU_NFCP_output_latency_avg", "HU_NU_NFCP_output_throughput", "HU_NU_NFCP", "TeraMark PKE", "PKE soak"]
     for entry in entries:
-        if entry.metric_model_name in model_names:
+        if entry.internal_chart_name in chart_names:
             base_line_date = datetime(year=2019, month=2, day=8, minute=0, hour=0, second=0)
             mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
                                    milestone_name="Tape-out")

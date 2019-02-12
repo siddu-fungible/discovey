@@ -119,7 +119,7 @@
             "leaf": false,
             "name": "HU_NU_NFCP",
             "weight": 1,
-            "label": "HU_NU_NFCP Flow",
+            "label": "HU->NU NFCP Flow",
             "reference": true
           }
         ],
@@ -1534,11 +1534,11 @@
                 "leaf": false,
                 "name": "HU_NU_NFCP",
                 "weight": 1,
-                "label": "HU_NU_NFCP Flow",
+                "label": "HU->NU NFCP Flow",
                 "children": [
                   {
                     "info": "HU_NU_NFCP_output_throughput",
-                    "metric_model_name": "HuFunethPerformance",
+                    "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
                     "name": "HU_NU_NFCP_output_throughput",
                     "weight": 1,
@@ -1546,7 +1546,7 @@
                   },
                   {
                     "info": "HU_NU_NFCP_output_latency_avg",
-                    "metric_model_name": "HuFunethPerformance",
+                    "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
                     "name": "HU_NU_NFCP_output_latency_avg",
                     "weight": 1,
