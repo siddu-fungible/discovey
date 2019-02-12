@@ -1132,6 +1132,38 @@ class TeraMarkPkeEcdh25519Performance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class PkeX25519TlsSoakPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="pke_x25519_2k_tls_soak", choices=[(0, "pke_x25519_2k_tls_soak")])
+    input_metric_name = models.CharField(max_length=40, default="ECDHE_RSA X25519 RSA 2K", choices=[(0, "ECDHE_RSA X25519 RSA 2K")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class PkeP256TlsSoakPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="pke_p256_2k_tls_soak", choices=[(0, "pke_p256_2k_tls_soak")])
+    input_metric_name = models.CharField(max_length=40, default="ECDHE_RSA P256 RSA 2K", choices=[(0, "ECDHE_RSA P256 RSA 2K")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class TeraMarkCryptoPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
