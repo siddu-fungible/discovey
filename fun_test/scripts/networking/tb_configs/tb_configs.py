@@ -41,8 +41,24 @@ class TBConfigs:
     def get_namespaces(self, nu_or_hu):
         return self.configs[nu_or_hu]['namespaces'].keys()
 
+    def get_hu_pf_namespace(self):
+        for ns in self.get_namespaces('hu'):
+            if self.get_hu_pf_interface() in self.get_interfaces('hu', ns):
+                return ns
+
+    def get_hu_vf_namespace(self):
+        for ns in self.get_namespaces('hu'):
+            if self.get_hu_vf_interface() in self.get_interfaces('hu', ns):
+                return ns
+
     def get_interfaces(self, nu_or_hu, ns):
         return self.configs[nu_or_hu]['namespaces'][ns]['interfaces'].keys()
+
+    def get_all_interfaces(self, nu_or_hu):
+        interfaces = []
+        for namespace in self.get_namespaces(nu_or_hu):
+            interfaces.extend(self.get_interfaces(nu_or_hu, namespace))
+        return interfaces
 
     def get_interface_mac_addr(self, nu_or_hu, intf):
         for namespace in self.get_namespaces(nu_or_hu):

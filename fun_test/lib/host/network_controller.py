@@ -1113,10 +1113,10 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
-    def peek_fcp_global_stats(self):
+    def peek_fcp_global_stats(self, mode='nu'):
         stats = None
         try:
-            stats_cmd = "stats/fcp/global"
+            stats_cmd = "stats/fcp/%s/global" % mode
             fun_test.debug("Getting FCP global stats")
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'], message="Get FCP global stats")
@@ -1411,13 +1411,13 @@ class NetworkController(DpcshClient):
         result = None
         try:
             cmd_arg_dict = {"id": id, "mode": 2, "dest": dest}
-            if fpg:
+            if fpg is not None:
                 cmd_arg_dict['fpg'] = fpg
-            if acl:
+            if acl is not None:
                 cmd_arg_dict['acl'] = acl
-            if flag_mask:
+            if flag_mask is not None:
                 cmd_arg_dict['flag_mask'] = flag_mask
-            if hu:
+            if hu is not None:
                 cmd_arg_dict['hu'] = hu
             if psw_drop is not None:
                 cmd_arg_dict['psw_drop'] = psw_drop
@@ -1425,13 +1425,13 @@ class NetworkController(DpcshClient):
                 cmd_arg_dict['pps_en'] = pps_en
             if pps_interval is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
-            if pps_burst:
+            if pps_burst is not None:
                 cmd_arg_dict['pps_burst'] = pps_burst
             if sampler_en is not None:
                 cmd_arg_dict['sampler_en'] = sampler_en
-            if sampler_rate:
+            if sampler_rate is not None:
                 cmd_arg_dict['sampler_rate'] = sampler_rate
-            if sampler_run_sz:
+            if sampler_run_sz is not None:
                 cmd_arg_dict['sampler_run_sz'] = sampler_run_sz
             if first_cell_only is not None:
                 cmd_arg_dict['first_cell_only'] = first_cell_only
@@ -1454,8 +1454,8 @@ class NetworkController(DpcshClient):
         return stats
 
     def peek_fwd_flex_stats(self, counter_num):
+        stats = None
         try:
-            stats = None
             stats_cmd = "stats/fwd/flex/[%d]" % counter_num
             fun_test.debug("Getting counter stats for counter %d" % counter_num)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
@@ -1468,14 +1468,27 @@ class NetworkController(DpcshClient):
         return stats
 
     def peek_erp_flex_stats(self, counter_num):
+        stats = None
         try:
-            stats = None
             stats_cmd = "stats/erp/flex/[%d]" % counter_num
             fun_test.debug("Getting counter stats for counter %d" % counter_num)
             result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=stats_cmd, command_duration=self.COMMAND_DURATION)
             fun_test.simple_assert(expression=result['status'],
                                    message="Getting counter stats for counter %d" % counter_num)
             fun_test.debug("Counter %d stats: %s" % (counter_num, result['data']))
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_etp_stats(self, mode='nu'):
+        stats = None
+        try:
+            cmd = "stats/etp/%s" % mode
+            fun_test.debug("Getting ETP stats for %s" % mode)
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'],
+                                   message="Getting ETP stats for %s" % mode)
             stats = result['data']
         except Exception as ex:
             fun_test.critical(str(ex))

@@ -22,6 +22,7 @@ IF_IN_ERRORS = "ifInErrors"
 IF_IN_UCAST_PKTS = "ifInUcastPkts"
 IF_OUT_ERRORS = "ifOutErrors"
 IF_OUT_UCAST_PKTS = "ifOutUcastPkts"
+IF_OUT_BROADCAST_PKTS = "ifOutBroadcastPkts"
 IF_IN_BROADCAST_PKTS = "ifInBroadcastPkts"
 CBFC_PAUSE_FRAMES_RECEIVED = "CBFCPAUSEFramesReceived"
 CBFC_PAUSE_FRAMES_TRANSMITTED = "CBFCPAUSEFramesTransmitted"
@@ -736,15 +737,13 @@ def ensure_dpcsh_ready(network_controller_obj, max_time=180):
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
             fun_test.sleep("DPCsh to come up", seconds=30)
-            result = network_controller_obj.echo_hello()
-            if result['status']:
-                raw_output = result['raw_output']
-                if raw_output != 'null':
-                    fun_test.log("dpcsh echoed hello output: %s" % raw_output)
-                    level_changed = network_controller_obj.set_syslog_level(level=3)
-                    fun_test.simple_assert(level_changed, "Changed Syslog level to 3")
-                    status = True
-                    break
+            mtu = network_controller_obj.get_port_mtu(port_num=1, shape=0)
+            if mtu:
+                fun_test.log("MTU set on port 1: %s" % mtu)
+                level_changed = network_controller_obj.set_syslog_level(level=3)
+                fun_test.simple_assert(level_changed, "Changed Syslog level to 3")
+                status = True
+                break
     except Exception as ex:
         fun_test.critical(str(ex))
     return status

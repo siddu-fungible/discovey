@@ -157,7 +157,7 @@ class TestCcIPv4ICMP(FunTestCase):
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
         ipv4_header_obj = Ipv4Header(protocol=Ipv4Header.PROTOCOL_TYPE_ICMP,
-                                     destination_address=l3_config['cc_destination_ip1'])
+                                     destination_address=l3_config['cc_destination_ip'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Update IPv4 header under %s" % self.stream_obj.spirent_handle)
@@ -578,7 +578,7 @@ class TestCcIpv4BGP(TestCcIPv4ICMP):
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
         ipv4_header_obj = Ipv4Header(protocol=Ipv4Header.PROTOCOL_TYPE_TCP,
-                                     destination_address=l3_config['cc_destination_ip1'])
+                                     destination_address=l3_config['cc_destination_ip'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Update IPv4 header under %s" % self.stream_obj.spirent_handle)
@@ -641,7 +641,7 @@ class TestCcIpv4Igmp(TestCcIPv4ICMP):
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
         ipv4_header_obj = Ipv4Header(protocol=Ipv4Header.PROTOCOL_TYPE_IGMP,
-                                     destination_address=l3_config['cc_destination_ip1'])
+                                     destination_address=l3_config['cc_destination_ip'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Update IPv4 header under %s" % self.stream_obj.spirent_handle)
@@ -704,7 +704,7 @@ class TestCcIPv4ForUs(TestCcIPv4ICMP):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'])
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
@@ -762,7 +762,7 @@ class TestCcIPv4PTP1(TestCcIPv4ICMP):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'],
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip'],
                                      protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
@@ -831,7 +831,7 @@ class TestCcIPv4PTP2(TestCcIPv4ICMP):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'],
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip'],
                                      protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
@@ -1179,7 +1179,7 @@ class TestCcMtuCaseForUs(TestCcIPv4ICMP):
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'])
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)

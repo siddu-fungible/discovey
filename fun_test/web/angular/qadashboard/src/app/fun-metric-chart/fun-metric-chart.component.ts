@@ -42,7 +42,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   chart1XaxisTitle: any;
   chart1YaxisTitle: any;
   y1AxisTitle: any;
-  mileStoneIndex: number = null;
   chartName: string;
   internalChartName: string;
   modelName: string;
@@ -51,6 +50,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   buildProps: any;
   showBuildProps: boolean = false;
   paddingNeeded: boolean = false;
+  mileStoneMarkers: any = {}; // fetch the milestones for each chart from backend and save it
+  mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
 
   public formatter: Function;
   public tooltip: Function;
@@ -111,7 +112,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["metric_id"] = this.id;
     this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
       this.chartName = data.data["chart_name"];
-      this.internalChartName = data.data["internal_chart_name"]
+      this.internalChartName = data.data["internal_chart_name"];
       this.modelName = data.data["metric_model_name"];
       this.setDefault();
       this.fetchInfo();
@@ -259,6 +260,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
         this.inner.leaf = this.leaf;
+        this.mileStoneMarkers = this.chartInfo.milestone_markers;
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -271,7 +273,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //sets the state of the component to default values
   setDefault(): void {
     this.timeMode = "all";
-    this.mileStoneIndex = null;
+    this.mileStoneIndices = {};
     this.showingTable = false;
     this.showingConfigure = false;
     this.pointClicked = false;
@@ -532,9 +534,23 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let endIndex = keyList[i][1];
           let matchingDateFound = false;
           seriesDates.push(originalKeyList[startIndex]);
-          if (originalKeyList[startIndex].includes("2018-09-16")) { // Tape-out
-            this.mileStoneIndex = startIndex;
-          }
+          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0]; // removing the time to check if the milestone date exists
+            //comparing two date objects to get the f1 milestone incase of date mismatch
+            let compareDate =  new Date(originalKeyList[startIndex]);
+             if (originalKeyList[startIndex].includes(markerDate)) { // Tape-out and F1
+              if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+                this.mileStoneIndices[mileStone] = startIndex;
+              }
+          } else if(compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
+               if (mileStone === "F1") {
+                 if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+                this.mileStoneIndices[mileStone] = startIndex;
+              }
+               }
+             }
+          });
+
           while (startIndex >= endIndex) {
             if (keyValue[j][originalKeyList[startIndex]]) {
               let oneRecord = keyValue[j][originalKeyList[startIndex]];
@@ -645,9 +661,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let count = 0;
           let total = 0;
           dateSeries.push(series[startIndex]);
-          if (series[startIndex].includes("2018-09-16")) { // Tape-out
-            this.mileStoneIndex = startIndex;
+          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0];
+             if (series[startIndex].includes(markerDate)) { // Tape-out and F1
+            this.mileStoneIndices[mileStone] = startIndex;
           }
+          });
           while (startIndex >= endIndex) {
             if (keyValue[series[startIndex]] != -1) {
               total += keyValue[series[startIndex]];

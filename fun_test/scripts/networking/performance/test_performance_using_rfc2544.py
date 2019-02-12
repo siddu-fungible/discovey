@@ -29,7 +29,7 @@ class ScriptSetup(FunTestScript):
         # Copy req files to cadence pc 3
         target_file_path = "/tmp"
         pc_3_obj = Linux(host_ip=cadence_pc_3, ssh_username=username, ssh_password=pc_3_password)
-        for file_name in ['unnh.sh', 'nofcp.sh', 'nh_fcp.sh']:
+        for file_name in ['nh_fcp.sh']:
             fun_test.log("Coping %s file to cadence pc 3 in /tmp dir" % file_name)
             transfer_success = fun_test.scp(source_file_path=pc_3_config_dir + "/%s" % file_name,
                                             target_file_path=target_file_path, target_ip=cadence_pc_3,
@@ -41,9 +41,12 @@ class ScriptSetup(FunTestScript):
             cmd = "sh /tmp/%s" % file_name
             pc_3_obj.command(command=cmd)
 
+        fun_test.log("========= IP Routes on cadence-pc-3 =========")
+        pc_3_obj.get_ip_route()
+
         # Copy req files to cadence pc 4
         pc_4_obj = Linux(host_ip=cadence_pc_4, ssh_username=username, ssh_password=pc_4_password)
-        for file_name in ['nh_fcp.sh', 'unnh.sh']:
+        for file_name in ['nh_fcp.sh']:
             fun_test.log("Coping %s file to cadence pc 4 in /tmp dir" % file_name)
             transfer_success = fun_test.scp(source_file_path=pc_4_config_dir + "/%s" % file_name,
                                             target_file_path=target_file_path, target_ip=cadence_pc_4,
@@ -54,6 +57,8 @@ class ScriptSetup(FunTestScript):
             fun_test.log("Executing %s cadence pc 4" % file_name)
             cmd = "sh /tmp/%s" % file_name
             pc_4_obj.command(command=cmd)
+        fun_test.log("========= IP Routes on cadence-pc-4 =========")
+        pc_4_obj.get_ip_route()
 
     def setup(self):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
@@ -106,8 +111,11 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        # TODO: Configure cadence-pc-3 and pc-4 for FCP test
-        # self._setup_fcp_external_routes()
+        for port in [1, 2, 17]:
+            mtu = network_controller_obj.set_port_mtu(port_num=port, shape=0, mtu_value=9000)
+            fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
+
+        self._setup_fcp_external_routes()
 
         TIMESTAMP = get_current_time()
 

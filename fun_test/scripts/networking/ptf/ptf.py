@@ -1,13 +1,21 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+from scripts.networking.funeth import sanity
 from scripts.networking.lib_nw import funcp
+from scripts.networking.tb_configs import tb_configs
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 import re
 
 
-PTF_SERVER = 'cadence-pc-5'
-PTF_SERVER_USERNAME = 'localadmin'
-PTF_SERVER_PASSWD = 'Precious1*'
+try:
+    tb_config_obj = tb_configs.TBConfigs(sanity.TB)
+    PTF_SERVER = tb_config_obj.get_hostname('hu')
+    PTF_SERVER_USERNAME = tb_config_obj.get_username('hu')
+    PTF_SERVER_PASSWD = tb_config_obj.get_password('hu')
+except:
+    PTF_SERVER = 'cadence-pc-5'
+    PTF_SERVER_USERNAME = 'localadmin'
+    PTF_SERVER_PASSWD = 'Precious1*'
 
 
 class PTFTestSuite(FunTestScript):

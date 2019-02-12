@@ -1,5 +1,5 @@
 [
-  {"path": "scratch/sanity.py", "disabled": true},
+  {"path": "scratch/sanity.py"},
   {"path": "examples/vanilla.py"}
 
 ]
