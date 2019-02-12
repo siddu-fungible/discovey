@@ -410,7 +410,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                              passwd=tb_config["tg_info"][0]["ipmi_passwd"],
                                                              interval=self.command_timeout)
             fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(tb_config["tg_info"][0]["ip"]))
-            host_up_status = self.end_host.isHostUp(timeout=self.command_timeout)
+            host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
             fun_test.test_assert(host_up_status, "End Host {} is up".format(tb_config["tg_info"][0]["ip"]))
 
             # Checking that the above created BLT volume is visible to the end host

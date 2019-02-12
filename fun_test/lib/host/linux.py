@@ -1740,12 +1740,9 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def isHostUp(self, timeout=5, retries=6):
-
+    def is_host_up(self, timeout=5, retries=6):
         result = True
-
         for i in range(retries):
-            command_output = ""
             try:
                 command_output = self.command(command="pwd", timeout=timeout)
                 if command_output:
