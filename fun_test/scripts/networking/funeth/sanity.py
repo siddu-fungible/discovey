@@ -89,7 +89,7 @@ def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces
 class FunethTestNUPingHU(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="From NU host ping HU host.",
+                              summary="From NU host ping HU host PF/VF interfaces.",
                               steps="""
         1. Ping PF interface, e.g. 53.1.1.5
         2. Ping VF interface, e.g. 53.1.9.5
@@ -108,7 +108,7 @@ class FunethTestNUPingHU(FunTestCase):
 class FunethTestPacketSweep(FunTestCase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="From NU host, ping HU host PF/VF with all available packet sizes.",
+                              summary="From NU host ping HU host PF/VF interfaces with all supported packet sizes.",
                               steps="""
         1. Set NU host interface , HU host interface, and NU FPG interface MTU to max
         2. From NU host, ping HU host PF/VF intefaces with all packet size from min to max.
@@ -325,7 +325,7 @@ class FunethTestInterfaceFlapBase(FunTestCase):
 class FunethTestInterfaceFlapPF(FunethTestInterfaceFlapBase):
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Shut and no shut PF interface.",
+                              summary="Shut and no shut HU host PF interface.",
                               steps="""
         1. In HU host, shut down PF interface
         2. From NU host, ping all other PF/VF interfaces
@@ -338,7 +338,7 @@ class FunethTestInterfaceFlapPF(FunethTestInterfaceFlapBase):
 class FunethTestInterfaceFlapVF(FunethTestInterfaceFlapBase):
     def describe(self):
         self.set_test_details(id=7,
-                              summary="Shut and no shut VF interface.",
+                              summary="Shut and no shut HU host VF interface.",
                               steps="""
         1. In HU host, shut down VF interface
         2. From NU host, ping all other PF/VF interfaces
@@ -377,7 +377,7 @@ class FunethTestUnloadDriver(FunTestCase):
 class FunethTestReboot(FunTestCase):
     def describe(self):
         self.set_test_details(id=9,
-                              summary="Test NU host ping HU host PF/VF interfaces after HU host reboot.",
+                              summary="Reboot HU host.",
                               steps="""
         1. Reboot HU host.
         2. Load funeth driver and configure interfaces/routes/arps.
