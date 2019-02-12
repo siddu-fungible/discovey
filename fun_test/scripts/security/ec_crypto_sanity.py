@@ -762,12 +762,12 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                             "value {}".format(ekey, actual, x, evalue))
                         else:
                             if vol_type == "ec":
-                                expected_vol_stats[mode] = expected_ec_stats[mode]
+                                expected_vol_stats = expected_ec_stats[mode]
                                 threshold_check = self.ec_pass_threshold
                             elif vol_type == "lsv":
-                                expected_vol_stats[mode] = expected_lsv_stats[mode]
+                                expected_vol_stats = expected_lsv_stats[mode]
                                 threshold_check = self.lsv_pass_threshold
-                            for ekey, evalue in expected_vol_stats[mode].items():
+                            for ekey, evalue in expected_vol_stats.items():
                                 actual = diff_vol_stats[combo][mode][vol_type][ekey]
                                 if actual != evalue:
                                     if (actual < evalue) and ((evalue - actual) <= threshold_check):
