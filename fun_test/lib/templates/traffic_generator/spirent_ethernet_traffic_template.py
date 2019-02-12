@@ -1292,6 +1292,20 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 underlay_list = header_list[0:header_list.index(CustomBytePatternHeader)]
                 overlay_list = header_list[header_list.index(CustomBytePatternHeader):]
             spirent_configs = self.spirent_config
+            spirent_config = nu_config_obj.read_traffic_generator_config()
+            ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+            fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+
+            ol_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, overlay=True)
+            fun_test.simple_assert(ol_ipv4_routes_config, "Ensure ipv4 overlay routes config fetched")
+
+            ul_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, ip_version="ipv6")
+            fun_test.simple_assert(ul_ipv6_routes_config, "Ensure ipv6 routes config fetched")
+
+            ol_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, ip_version="ipv6", overlay=True)
+            fun_test.simple_assert(ol_ipv6_routes_config, "Ensure routes config fetched")
+
+            destination_mac1 = ul_ipv4_routes_config['routermac']
 
             if headers_created:
                 header_obj_list = header_list
@@ -1301,17 +1315,17 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
                         if 'ipv6' in underlay_list[1].HEADER_TYPE.lower():
                             ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
-                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'],
+                        eth_obj = Ethernet2Header(destination_mac=destination_mac1,
                                                   ether_type=ether_type)
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
-                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_config']['ipv4']['destination_ip1'])
+                        ipv4_obj = Ipv4Header(destination_address=ul_ipv4_routes_config['l3_config']['destination_ip1'])
                         current_index = header_list.index(header)
                         ipv4_obj.protocol = ipv4_obj.PROTOCOL_TYPE_TCP if 'tcp' in header_list[
                             current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
                         header_obj_list.append(ipv4_obj)
                     elif header == Ipv6Header:
-                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_config']['ipv6']['destination_ip1'])
+                        ipv6_obj = Ipv6Header(destination_address=ul_ipv6_routes_config['l3_config']['destination_ip1'])
                         current_index = header_list.index(header)
                         ipv6_obj.nextHeader = ipv6_obj.NEXT_HEADER_TCP if 'tcp' in header_list[
                             current_index + 1].HEADER_TYPE.lower() else ipv6_obj.NEXT_HEADER_UDP
@@ -1330,11 +1344,11 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
                         if 'ipv6' in overlay_list[2].HEADER_TYPE.lower():
                             ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
-                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'],
+                        eth_obj = Ethernet2Header(destination_mac=destination_mac1,
                                                   ether_type=ether_type)
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
-                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip2'])
+                        ipv4_obj = Ipv4Header(destination_address=ol_ipv4_routes_config['l3_config']['destination_ip2'])
                         index_list = [i for i, n in enumerate(header_list) if n == header]
                         current_index = index_list[0]
                         if len(index_list) == 2:
@@ -1343,7 +1357,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                             current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
                         header_obj_list.append(ipv4_obj)
                     elif header == Ipv6Header:
-                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_overlay_config']['ipv6']['destination_ip2'])
+                        ipv6_obj = Ipv6Header(destination_address=ol_ipv6_routes_config['l3_config']['destination_ip2'])
                         index_list = [i for i, n in enumerate(header_list) if n == header]
                         current_index = index_list[0]
                         if len(index_list) == 2:

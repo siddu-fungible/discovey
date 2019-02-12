@@ -582,7 +582,10 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
 
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
+        no_errors_seen = False
+        if 'DroppedFrameCount' in result and result['DroppedFrameCount'] > 0:
+            no_errors_seen = True
+        fun_test.test_assert(no_errors_seen, checkpoint)
 
         checkpoint = "Ensure all the fields in a packet is correct"
         parser_obj = PcapParser(filename=self.capture_results['pcap_file_path'])
@@ -1092,8 +1095,10 @@ class SamplePPStoFPG(FunTestCase):
 
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
-
+        no_errors_seen = False
+        if 'DroppedFrameCount' in result and result['DroppedFrameCount'] > 0:
+            no_errors_seen = True
+        fun_test.test_assert(no_errors_seen, checkpoint)
         checkpoint = "Ensure all the fields in a packet is correct"
         parser_obj = PcapParser(filename=self.capture_results['pcap_file_path'])
         packets = parser_obj.get_captures_from_file()

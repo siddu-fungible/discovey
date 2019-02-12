@@ -55,8 +55,9 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, duration_seconds, subscribe_results, port_obj_list, bad_frame_load, \
-            good_frame_load, interface_obj_list, network_controller_obj, dut_port_1, dut_port_2, shape, hnu
+            good_frame_load, interface_obj_list, network_controller_obj, dut_port_1, dut_port_2, shape, hnu, flow_direction
 
+        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
 
@@ -70,7 +71,7 @@ class SpirentSetup(FunTestScript):
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames", chassis_type=chassis_type,
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames", chassis_type=nu_config_obj.FLOW_DIRECTION_NU_NU,
                                                       spirent_config=spirent_config)
         fun_test.test_assert(template_obj, "Create template object")
 
@@ -85,16 +86,19 @@ class SpirentSetup(FunTestScript):
         port_obj_list = result['port_list']
         interface_obj_list = result['interface_obj_list']
 
-        source_mac1 = spirent_config['l2_config']['source_mac']
-        destination_mac1 = spirent_config['l2_config']['destination_mac']
-        source_ip1 = spirent_config['l3_config']['ipv4']['source_ip1']
-        source_ip2 = spirent_config['l3_config']['ipv4']['source_ip2']
-        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+        l3_config = ul_ipv4_routes_config['l3_config']
+
+        destination_mac1 = ul_ipv4_routes_config['routermac']
+        source_ip1 = l3_config['source_ip1']
+        source_ip2 = "192.168.1.3"
+        destination_ip1 = l3_config['destination_ip1']
         if hnu:
-            destination_ip1 = spirent_config['l3_config']['ipv4']['hnu_destination_ip1']
-        destination_ip2 = spirent_config['l3_config']['ipv4']['destination_ip2']
+            destination_ip1 = l3_config['hnu_destination_ip1']
+        destination_ip2 = l3_config['destination_ip2']
         if hnu:
-            destination_ip2 = spirent_config['l3_config']['ipv4']['hnu_destination_ip2']
+            destination_ip2 = l3_config['hnu_destination_ip2']
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
         interface_mode = dut_config['interface_mode']
@@ -121,7 +125,7 @@ class SpirentSetup(FunTestScript):
                 current_streamblock_obj.Load = 0.5
                 current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_MEGABITS_PER_SECOND
                 current_streamblock_obj.FillType = current_streamblock_obj.FILL_TYPE_PRBS
-                current_ethernet_obj = Ethernet2Header(destination_mac=destination_mac1, source_mac=source_mac1)
+                current_ethernet_obj = Ethernet2Header(destination_mac=destination_mac1)
                 current_ipv4_obj = Ipv4Header(destination_address=current_destination_ip,
                                               source_address=current_source_ip)
 
@@ -1346,8 +1350,6 @@ class TestCase9(FunTestCase):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())

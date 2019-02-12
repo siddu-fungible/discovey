@@ -1,7 +1,7 @@
 from lib.system.fun_test import *
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
-from web.fun_test.metrics_models import BcopyFloodDmaPerformance
+from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSoakPerformance, PkeP256TlsSoakPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
@@ -1557,6 +1557,84 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                                      git_commit="", model_name="NuTransitPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="ECDHE_RSA X25519 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+X25519\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_x25519_2k_tls_soak"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=PkeX25519TlsSoakPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="PkeX25519TlsSoakPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="ECDHE_RSA P256 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_p256_2k_tls_soak"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=PkeP256TlsSoakPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="PkeP256TlsSoakPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -1601,6 +1679,8 @@ if __name__ == "__main__":
     # myscript.add_test_case(TeraMarkDfaPerformanceTC())
     myscript.add_test_case(TeraMarkJpegPerformanceTC())
     myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

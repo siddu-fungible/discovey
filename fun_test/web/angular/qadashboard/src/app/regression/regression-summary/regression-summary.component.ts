@@ -178,24 +178,32 @@ export class RegressionSummaryComponent implements OnInit {
       //console.log("Recent suite: " + mostRecentSuite);
       //console.log("Baseline results: " + baselineResults);
       let baselineResultKeys = Object.keys(baselineResults);
-      for (let index = 0; index < baselineResultKeys.length; index++) {
-        let baselineTestCaseId = baselineResultKeys[index];
-        let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
-        if (!history.hasOwnProperty(parseInt(baselineTestCaseId))) {
-          let errorMessage = "Baseline TC: " + baselineTestCaseId + " not found";
-          //console.log(errorMessage);
-          result.matches = false;
-          result.message = errorMessage;
-          break;
-        }
-        let historyResult = history[parseInt(baselineTestCaseId)].result;
-        if (historyResult !== "IN_PROGRESS") {
-          if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
-            let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
+      let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
+
+      if (baselineResultKeys.length !== Object.keys(history).length) {
+        result.matches = false;
+        result.message = "The number of test cases mismatch with the baseline";
+      } else {
+
+
+        for (let index = 0; index < baselineResultKeys.length; index++) {
+          let baselineTestCaseId = baselineResultKeys[index];
+          if (!history.hasOwnProperty(parseInt(baselineTestCaseId))) {
+            let errorMessage = "Baseline TC: " + baselineTestCaseId + " not found";
             //console.log(errorMessage);
             result.matches = false;
             result.message = errorMessage;
             break;
+          }
+          let historyResult = history[parseInt(baselineTestCaseId)].result;
+          if (historyResult !== "IN_PROGRESS") {
+            if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
+              let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
+              //console.log(errorMessage);
+              result.matches = false;
+              result.message = errorMessage;
+              break;
+            }
           }
         }
 
