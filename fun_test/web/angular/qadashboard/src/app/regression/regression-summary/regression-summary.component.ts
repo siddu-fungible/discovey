@@ -178,9 +178,14 @@ export class RegressionSummaryComponent implements OnInit {
       //console.log("Recent suite: " + mostRecentSuite);
       //console.log("Baseline results: " + baselineResults);
       let baselineResultKeys = Object.keys(baselineResults);
+      let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
+
+      if (baselineResultKeys.length !== Object.keys(history).length) {
+        result.matches = false;
+        result.message = "The number of test cases mismatch with the baseline";
+      }
       for (let index = 0; index < baselineResultKeys.length; index++) {
         let baselineTestCaseId = baselineResultKeys[index];
-        let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
         if (!history.hasOwnProperty(parseInt(baselineTestCaseId))) {
           let errorMessage = "Baseline TC: " + baselineTestCaseId + " not found";
           //console.log(errorMessage);
@@ -198,6 +203,7 @@ export class RegressionSummaryComponent implements OnInit {
             break;
           }
         }
+
 
         //console.log(baselineResults[baselineResultKeys[index]].result);
 
