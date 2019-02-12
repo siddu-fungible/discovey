@@ -899,11 +899,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                   message="{} : {} stats for {} mode & {} combo on {}".
                                                                   format(x, ekey, mode, combo, self.attach_type))
                                 else:
-                                    fun_test.critical("{} is not found in {} stats".format(ekey, x))
-                                    fun_test.add_checkpoint("{} is not found in {} stats".format(ekey, x),
-                                                            "FAILED",
-                                                            ekey,
-                                                            "Not found")
+                                    fun_test.simple_assert(False,
+                                                           message="{} is not found in {} stats".format(ekey, x))
 
     def cleanup(self):
         if hasattr(self, "host_disconnect") and self.host_disconnect:
