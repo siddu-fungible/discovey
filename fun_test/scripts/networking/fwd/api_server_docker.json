@@ -1,0 +1,7 @@
+{
+  "docker_host": "10.1.23.163",
+  "docker_user": "cmukherjee",
+  "docker_password": "QWER@1234",
+  "dpc_cli_machine_ip": "10.1.21.120",
+  "dpc_cli_port": 40221
+}
