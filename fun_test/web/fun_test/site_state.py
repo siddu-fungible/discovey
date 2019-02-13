@@ -177,12 +177,12 @@ class SiteState():
             for metric in metrics:
                 self._do_register_metric(metric=metric)
 
-        total_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
-                                                            internal_chart_name="Total")
-        all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
-                                                    internal_chart_name="All metrics")
-        if total_chart.chart_name == "Total":
-            total_chart.add_child(all_metrics_chart.metric_id)
+        # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
+        #                                                     internal_chart_name="Total")
+        # all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer",
+        #                                             internal_chart_name="All metrics")
+        # if total_chart.chart_name == "Total":
+        #     total_chart.add_child(all_metrics_chart.metric_id)
 
     def set_metrics_settings(self):
         if MetricsGlobalSettings.objects.count() == 0:

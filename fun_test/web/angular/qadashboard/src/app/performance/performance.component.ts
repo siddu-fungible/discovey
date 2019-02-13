@@ -189,8 +189,7 @@ export class PerformanceComponent implements OnInit {
       this.dag = response.data;
       let lineage = [];
       this.walkDag(this.dag, lineage);
-      this.updateUpDownSincePrevious(true);
-      this.updateUpDownSincePrevious(false);
+
       //total container should always appear
       this.flatNodes[0].hide = false;
       this.expandNode(this.flatNodes[0]);//expand total container on page load
@@ -424,6 +423,11 @@ export class PerformanceComponent implements OnInit {
       let newNode = this.getNodeFromEntry(numMetricId, dagEntry[numMetricId]);
       this.addNodeToMap(numMetricId, newNode);
       thisFlatNode = this.getNewFlatNode(newNode, indent);
+       if (newNode.chartName === "All metrics") {
+        thisFlatNode.hide = false;
+        this.updateUpDownSincePrevious(true);
+        this.updateUpDownSincePrevious(false);
+      }
       this.flatNodes.push(thisFlatNode);
       //this.loggerService.log('Node:' + nodeInfo.chart_name);
       let parentsGuid = {};
