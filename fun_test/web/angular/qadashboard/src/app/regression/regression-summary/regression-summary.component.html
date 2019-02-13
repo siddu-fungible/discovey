@@ -82,9 +82,9 @@
                              [apiUrl]="'/regression/all_jiras'"
                              [allowDelete]="false"
                              [allowAdd]="false"
-                             (numBugs)="updateNumBugs($event)"
-                             (numActive)="updateNumBugsActive($event)"
-                             (numResolved)="updateNumBugsResolved($event)">
+                             (numBugs)="updateNumBugs($event, null)"
+                             (numActive)="updateNumBugsActive($event, null)"
+                             (numResolved)="updateNumBugsResolved($event, null)">
                   </jira-info>
                 </div>
               </div>

@@ -42,7 +42,7 @@
           <th class="text-center">Today</th>
           <!--<th class="text-center">     </th>-->
         </tr>
-        <ng-container *ngFor="let flatNode of getVisibleNodes(flatNodes)">
+        <ng-container *ngFor="let flatNode of getVisibleNodes()">
           <tr class="fade-element-in">
             <td id="{{ flatNode.gUid }}" class="child-transition">
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
