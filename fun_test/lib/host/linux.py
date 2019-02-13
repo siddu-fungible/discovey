@@ -2012,13 +2012,19 @@ class Linux(object, ToDictMixin):
         self.sudo_command(cmd)
 
         # Check
+        return self.get_mtu(interface, ns=ns) == mtu
+
+    @fun_test.safe
+    def get_mtu(self, interface, ns=None):
         cmd = 'ifconfig {}'.format(interface)
         if ns:
             cmd = 'ip netns exec {} {}'.format(ns, cmd)
-        output = self.sudo_command(cmd)
+            output = self.sudo_command(cmd)
+        else:
+            output = self.command(cmd)
         match = re.search(r'mtu (\d+)', output)
         if match:
-            return int(match.group(1)) == mtu
+            return int(match.group(1))
 
     @fun_test.safe
     def ifconfig_up_down(self, interface, action, ns=None):
@@ -2062,6 +2068,41 @@ class Linux(object, ToDictMixin):
             self.logger.critical(critical_str)
 
         return result
+
+    @fun_test.safe
+    def get_mgmt_interface(self):
+        """Get mgmt interface name. Below is an example output.
+
+        user@cadence-pc-3:~$ ip address show | grep 10.1.20.246 -A2 -B2
+        2: enp10s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+            link/ether 0c:c4:7a:84:eb:70 brd ff:ff:ff:ff:ff:ff
+            inet 10.1.20.246/22 brd 10.1.23.255 scope global enp10s0
+                valid_lft forever preferred_lft forever
+            inet6 fe80::ec4:7aff:fe84:eb70/64 scope link
+        """
+        output = self.command('ip address show | grep {} -A2 -B2'.format(self.host_ip))
+        match = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(self.host_ip), output, re.DOTALL)
+        if match:
+            return match.group(1)
+
+    @fun_test.safe
+    def get_interface_to_route(self, ip, ns=None):
+        """Get interface name, via which the ip route point to the destination IP. In below example, it returns 'fpg1'.
+
+        localadmin@nu-lab-01:~$ ip route show to match 29.1.1.2
+        default via 10.1.40.1 dev enp96s0f0 proto static
+        29.1.1.0/24 via 21.1.1.2 dev fpg1
+        localadmin@nu-lab-01:~$
+        """
+        cmd = 'ip route show to match {}'.format(ip)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+            output = self.sudo_command(cmd)
+        else:
+            output = self.command(cmd)
+        match = re.search(r'\d+\.\d+\.\d+\.\d+/\d+ via.*dev (\w+)', output)
+        if match:
+            return match.group(1)
 
 
 class LinuxBackup:

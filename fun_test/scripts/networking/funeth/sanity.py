@@ -406,13 +406,13 @@ if __name__ == "__main__":
     for tc in (
             FunethTestNUPingHU,
             #FunethTestPacketSweep,
-            FunethTestScpNU2HUPF,
-            FunethTestScpNU2HUVF,
-            FunethTestScpHU2NU,
-            FunethTestInterfaceFlapPF,
-            FunethTestInterfaceFlapVF,
-            FunethTestUnloadDriver,
-            FunethTestReboot,
+            #FunethTestScpNU2HUPF,
+            #FunethTestScpNU2HUVF,
+            #FunethTestScpHU2NU,
+            #FunethTestInterfaceFlapPF,
+            #FunethTestInterfaceFlapVF,
+            #FunethTestUnloadDriver,
+            #FunethTestReboot,
     ):
         ts.add_test_case(tc())
     ts.run()
