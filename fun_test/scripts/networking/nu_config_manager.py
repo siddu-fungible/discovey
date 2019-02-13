@@ -40,7 +40,7 @@ class NuConfigManager(object):
     DUT_TYPE = None
     CHASSIS_TYPE = None
 
-    def __int__(self):
+    def __init__(self):
         self.get_dut_type()
         self.get_chassis_type()
 
@@ -397,8 +397,3 @@ class NuConfigManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-
-
-nu_config_obj = NuConfigManager()
-nu_config_obj.get_dut_type()
-nu_config_obj.get_chassis_type()
