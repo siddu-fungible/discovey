@@ -1494,8 +1494,7 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                                 metrics["output_max_latency"] = d['Stats']['_max_latency']
                                 metrics["output_min_latency"] = d['Stats']['_min_latency']
                                 metrics["output_average_latency"] = d['Stats']['_avg_latency']
-                                metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_kbps']
-                                metrics["output_total_bandwidth"] = d['Stats']['_total_bw_kbps']
+                                metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_gbps']
                             else:
                                 if d["Operation"] in jpeg_operations:
                                     metrics["input_operation"] = jpeg_operations[d["Operation"]]
@@ -1677,32 +1676,32 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    myscript.add_test_case(FlowTestPerformanceTC())
-    myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(EcVolPerformanceTc())
+    # myscript.add_test_case(VoltestPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(BootTimingPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    # myscript.add_test_case(FlowTestPerformanceTC())
+    # myscript.add_test_case(TeraMarkZipPerformanceTC())
+    # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
     myscript.add_test_case(TeraMarkJpegPerformanceTC())
-    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
