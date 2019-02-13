@@ -53,7 +53,7 @@
     // Filter & crypto operations parameters for verifying stats
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     // Expected LSV stats and threshold for acceptance
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
@@ -130,7 +130,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -205,7 +205,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -280,7 +280,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
@@ -357,7 +357,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
@@ -432,7 +432,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -507,7 +507,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -582,7 +582,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
@@ -634,6 +634,7 @@
     "zip_filter": "FILTER_TYPE_DEFLATE",
     "zip_effort": "ZIP_EFFORT_AUTO",
     "key_size": "random",
+    "key_range": [32, 64],
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
@@ -662,7 +663,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
@@ -726,6 +727,7 @@
     "zip_filter": "FILTER_TYPE_DEFLATE",
     "zip_effort": "ZIP_EFFORT_AUTO",
     "key_size": "random",
+    "key_range": [32, 64],
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
@@ -752,7 +754,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -798,7 +800,6 @@
       "jvol": "VOL_TYPE_BLK_NV_MEMORY",
       "lsv": "VOL_TYPE_BLK_LSV"
     },
-    // BLT details used for configuring
     "blt_details": {
       "capacity": 268435456,
       "block_size": 4096
@@ -817,6 +818,7 @@
     "zip_filter": "FILTER_TYPE_DEFLATE",
     "zip_effort": "ZIP_EFFORT_AUTO",
     "key_size": "random",
+    "key_range": [32, 64],
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
@@ -842,7 +844,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
@@ -888,7 +890,6 @@
       "jvol": "VOL_TYPE_BLK_NV_MEMORY",
       "lsv": "VOL_TYPE_BLK_LSV"
     },
-    // BLT details used for configuring
     "blt_details": {
       "capacity": 268435456,
       "block_size": 4096
@@ -904,6 +905,7 @@
     "ns_id": 1,
     "encrypt": true,
     "key_size": "random",
+    "key_range": [32, 64],
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
@@ -931,7 +933,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
@@ -972,6 +974,7 @@
     "ns_id": 1,
     "encrypt": true,
     "key_size": "random",
+    "key_range": [32, 64],
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
@@ -999,7 +1002,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
@@ -1040,6 +1043,7 @@
     "ns_id": 1,
     "encrypt": true,
     "key_size": "random",
+    "key_range": [32, 64],
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
@@ -1069,7 +1073,7 @@
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done"],
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},

@@ -124,7 +124,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                 fun_test.critical("Expected internal uncompression stats needed for this {} testcase is not available "
                                   "in the {} file".format(testcase, testcase_dict))
 
-        if self.encrypt:
+        if hasattr(self, "encrypt") and self.encrypt:
             if ('expected_decryption_stats' not in testcase_dict[testcase] or
                     not testcase_dict[testcase]['expected_decryption_stats']):
                 benchmark_parsing = False
@@ -146,11 +146,12 @@ class LsvCryptoVolumeTestCase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         key256_count = 0
+        key384_count = 0
         key512_count = 0
         self.blt_capacity = 0
         self.blt_creation_fail = None
 
-        if self.encrypt:
+        if hasattr(self, "encrypt") and self.encrypt:
             # Getting initial crypto filter stats
             initial_filter_values = {}
             for filter_param in self.filter_params:
@@ -196,23 +197,28 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                name="thin_block1",
                                                                uuid=self.uuid["blt"],
                                                                command_duration=self.command_timeout)
-
-        fun_test.test_assert(command_result["status"], "BLT creation with uuid {} & capacity {}".
-                             format(self.uuid["blt"], self.blt_capacity))
+        if not command_result["status"]:
+            self.blt_creation_fail = True
+            fun_test.test_assert(command_result["status"], "BLT creation with uuid {} & capacity {}".
+                                 format(self.uuid["blt"], self.blt_capacity))
         self.volume_list.append("blt")
         self.all_volume.append("blt")
 
         # Key generation for encryption based on size or input is random or alternate
         if self.key_size == "random":
-            key_range = [32, 64]
-            rand_key = random.choice(key_range)
+            rand_key = random.choice(self.key_range)
+            key_size = rand_key
             self.xts_key = utils.generate_key(rand_key)
             if rand_key == 32:
                 key256_count += 1
+            elif rand_key == 48:
+                key384_count += 1
             else:
                 key512_count += 1
         else:
+            key_size = self.key_size
             self.xts_key = utils.generate_key(self.key_size)
+
         self.xts_tweak = utils.generate_key(self.xtweak_size)
 
         self.attach_type = "VOL_TYPE_BLK_LSV"
@@ -241,7 +247,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                    capacity=self.lsv_capacity,
                                                                    block_size=self.lsv_blocksize,
                                                                    name="lsv1",
-                                                                   uuid=self.uuid["lsv"],
+                                                                   uuid=self.attach_uuid,
                                                                    jvol_uuid=self.uuid["jvol"],
                                                                    pvol_id=[self.uuid["blt"]],
                                                                    group=1,
@@ -253,14 +259,15 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                    zip_effort=self.zip_effort,
                                                                    command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {} with compression".
-                                 format(self.attach_uuid, self.lsv_capacity))
+            fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {} with compression "
+                                                           "using {} byte key".
+                                 format(self.attach_uuid, self.lsv_capacity, key_size))
         else:
             command_result = self.storage_controller.create_volume(type=self.vol_types["lsv"],
                                                                    capacity=self.lsv_capacity,
                                                                    block_size=self.lsv_blocksize,
                                                                    name="lsv1",
-                                                                   uuid=self.uuid["lsv"],
+                                                                   uuid=self.attach_uuid,
                                                                    jvol_uuid=self.uuid["jvol"],
                                                                    pvol_id=[self.uuid["blt"]],
                                                                    group=1,
@@ -269,10 +276,10 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                    xtweak=self.xts_tweak,
                                                                    command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {}".
-                                 format(self.attach_uuid, self.lsv_capacity))
+            fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {} using {} byte key".
+                                 format(self.attach_uuid, self.lsv_capacity, key_size))
 
-        if self.traffic_parallel:
+        if hasattr(self, "traffic_parallel") and self.traffic_parallel:
             attach_count = 0
             for x in range(1, self.parallel_count + 1, 1):
                 command_result = self.storage_controller.volume_attach_remote(
@@ -312,7 +319,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                 if filter_param != "vol_decrypt_filter_added" and filter_param != "vol_encrypt_filter_added":
                     evalue = 2 * multiplier
                 else:
-                    evalue = 1 * multiplier
+                    evalue = multiplier
                 diff_filter_values[filter_param] = \
                     final_filter_values[filter_param] - initial_filter_values[filter_param]
                 fun_test.test_assert_expected(evalue, diff_filter_values[filter_param],
@@ -372,7 +379,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                 else:
                     expected_uncompression_stats = self.expected_uncompression_stats
 
-            if self.encrypt:
+            if hasattr(self, "encrypt") and self.encrypt:
                 if combo in self.expected_decryption_stats:
                     expected_decryption_stats = self.expected_decryption_stats[combo]
                 else:
@@ -408,7 +415,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                         fun_test.log(initial_vol_stats[combo][mode][vol_type])
 
                     # Use this check as without encrypt flag the stats are not enabled.
-                    if self.encrypt:
+                    if hasattr(self, "encrypt") and self.encrypt:
                         initial_crypto_stats[combo][mode] = {}
                         self.crypto_ops = ["encryption", "decryption"]
                         for x in self.crypto_ops:
@@ -454,11 +461,6 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                                  rwmixread=self.fio_rwmixread,
                                                                                  nsid=self.ns_id,
                                                                                  **self.fio_cmd_args)
-                            fun_test.test_assert(fio_output[combo][mode], "Fio test completed for {} mode & {} combo".
-                                                 format(mode, combo))
-                            fun_test.log("FIO Command Output:")
-                            fun_test.log(fio_output[combo][mode])
-                            self.linux_host.disconnect()
                         else:
                             fio_output[combo][mode] = {}
                             fio_output[combo][mode] = self.linux_host.remote_fio(destination_ip=destination_ip,
@@ -467,11 +469,11 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                                  iodepth=fio_iodepth,
                                                                                  nsid=self.ns_id,
                                                                                  **self.fio_cmd_args)
-                            fun_test.test_assert(fio_output[combo][mode], "Fio test completed for {} mode & {} combo".
-                                                 format(mode, combo))
-                            fun_test.log("FIO Command Output:")
-                            fun_test.log(fio_output[combo][mode])
-                            self.linux_host.disconnect()
+                        fun_test.test_assert(fio_output[combo][mode], "Fio test completed for {} mode & {} combo".
+                                             format(mode, combo))
+                        fun_test.log("FIO Command Output:")
+                        fun_test.log(fio_output[combo][mode])
+                        self.linux_host.disconnect()
                     else:
                         fun_test.log("Running fio test is threaded mode...")
                         thread_id = {}
@@ -492,7 +494,6 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                              iodepth=fio_iodepth,
                                                                              nsid=x,
                                                                              **self.fio_cmd_args)
-                                fun_test.sleep("Fio threadzz", seconds=1)
                             else:
                                 wait_time = self.attach_count - x
                                 fio_output[combo][mode] = {}
@@ -506,7 +507,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                              iodepth=fio_iodepth,
                                                                              nsid=x,
                                                                              **self.fio_cmd_args)
-                                fun_test.sleep("Fio Threadzz", seconds=1)
+                            fun_test.sleep("Fio Threadzz", seconds=1)
 
                         fun_test.sleep("Sleeping between thread join...", seconds=10)
                         for x in range(1, self.attach_count, 1):
@@ -552,6 +553,11 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                             if fkey in initial_vol_stats[combo][mode][vol_type]:
                                 ivalue = initial_vol_stats[combo][mode][vol_type][fkey]
                                 diff_vol_stats[combo][mode][vol_type][fkey] = fvalue - ivalue
+                            else:
+                                fun_test.simple_assert(False,
+                                                       message="{} key not found in vol_type {} initial stat {}".
+                                                       format(fkey,
+                                                              vol_type, initial_vol_stats[combo][mode][vol_type]))
                         fun_test.log("Difference of {} stats before and after the test:".format(vol_type))
                         fun_test.log(diff_vol_stats[combo][mode][vol_type])
 
@@ -602,7 +608,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                 if vol_type == "lsv":
                                     total_diff_stats += diff_vol_stats[combo][mode][vol_type][ekey]
 
-                    if self.encrypt:
+                    if hasattr(self, "encrypt") and self.encrypt:
                         final_crypto_stats[combo][mode] = {}
                         diff_crypto_stats[combo][mode] = {}
                         for x in self.crypto_ops:
@@ -631,6 +637,10 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                 if fkey in initial_crypto_stats[combo][mode][x]:
                                     ivalue = initial_crypto_stats[combo][mode][x][fkey]
                                     diff_crypto_stats[combo][mode][x][fkey] = fvalue - ivalue
+                                else:
+                                    fun_test.simple_assert(False,
+                                                           message="{} key not found in initial stat {}".
+                                                           format(fkey, initial_crypto_stats[combo][mode][x]))
                             fun_test.log("Difference of LSV {} stats before and after the test: {}".
                                          format(x, diff_crypto_stats[combo][mode][x]))
 
@@ -641,11 +651,9 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                   message="{} : {} stats for {} mode & {} combo on "
                                                                           "LSV".format(x, ekey, mode, combo))
                                 else:
-                                    fun_test.critical("{} is not found in LSV {} stats".format(ekey, x))
-                                    fun_test.add_checkpoint("{} not found in LSV {} stats".format(ekey, x),
-                                                            "FAILED",
-                                                            ekey,
-                                                            "Not found")
+                                    fun_test.simple_assert(False,
+                                                           message="{} key not found in diff stat {}".
+                                                           format(ekey, diff_crypto_stats[combo][mode][x]))
                         if hasattr(self, "crypto_ops_params"):
                             filter_values = []
                             for i in self.crypto_ops_params:
@@ -653,7 +661,7 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                 command_result = self.storage_controller.peek(crypto_props_tree)
                                 filter_values.append(command_result["data"])
 
-                            fun_test.simple_assert(expression=len(filter_values) != len(set(filter_values)),
+                            fun_test.simple_assert(expression=len(set(filter_values)) == 1,
                                                    message="There seems to be difference in crypto filter stats {}".
                                                    format(filter_values))
 
@@ -687,6 +695,10 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                 if fkey in initial_zip_stats[combo][mode][x]:
                                     ivalue = initial_zip_stats[combo][mode][x][fkey]
                                     diff_zip_stats[combo][mode][x][fkey] = fvalue - ivalue
+                                else:
+                                    fun_test.simple_assert(False,
+                                                           message="{} key not found in initial stat {}".
+                                                           format(fkey, initial_zip_stats[combo][mode][x]))
                             fun_test.log("Difference of LSV {} stats before and after the test: {}".
                                          format(x, diff_zip_stats[combo][mode][x]))
 
@@ -697,11 +709,9 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                                                                   message="{} : {} stats for {} mode & {} combo on "
                                                                           "LSV".format(x, ekey, mode, combo))
                                 else:
-                                    fun_test.critical("{} is not found in LSV {} stats".format(ekey, x))
-                                    fun_test.add_checkpoint("{} not found in LSV {} stats".format(ekey, x),
-                                                            "FAILED",
-                                                            ekey,
-                                                            "Not found")
+                                    fun_test.simple_assert(False,
+                                                           message="{} key not found in diff stat {}".
+                                                           format(ekey, diff_zip_stats[combo][mode][x]))
 
     def cleanup(self):
         if hasattr(self, "host_disconnect") and self.host_disconnect:
