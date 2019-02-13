@@ -855,9 +855,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                 command_result = self.storage_controller.peek(crypto_props_tree)
                                 filter_values.append(command_result["data"])
                                 
-                            fun_test.simple_assert(expression=len(set(filter_values)) == 1,
-                                                   message="There seems to be difference in crypto filter stats {}".
-                                                   format(filter_values))
+                            fun_test.test_assert(expression=len(set(filter_values)) == 1,
+                                                 message="All filter counter stats {} match".format(filter_values))
 
                     if hasattr(self, "compress") and self.compress:
                         final_zip_stats[combo][mode] = {}
