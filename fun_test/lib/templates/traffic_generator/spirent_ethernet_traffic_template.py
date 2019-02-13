@@ -1459,9 +1459,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 self.stc_connected = True
 
             offline_ports = {}
-            ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
-                                                                  flow_type=flow_type,
-                                                                  flow_direction=flow_direction)
+            ports_map = self.nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
+                                                                       flow_type=flow_type,
+                                                                       flow_direction=flow_direction)
             existing_ports = self.stc_manager.get_port_list()
             for port_handle in existing_ports:
                 port_info = self.stc_manager.get_port_details(port=port_handle)
