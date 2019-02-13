@@ -1769,17 +1769,9 @@ class SampleIngressEgressMTUCase(FunTestCase):
                                       message=checkpoint)
 
         # Validate Spirent stats
-        checkpoint = "Ensure on spirent Rx port frame count is 0"
-        fun_test.test_assert_expected(expected=0,
-                                      actual=rx_port_result['TotalFrameCount'], message=checkpoint)
-
         checkpoint = "Ensure spirent sample port should not receive any frames"
         fun_test.test_assert_expected(expected=0,
                                       actual=sample_port_result['TotalFrameCount'], message=checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Rx spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
 
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
@@ -1925,23 +1917,6 @@ class SampleIngressEgressMTUCase(FunTestCase):
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
-
-        # Validate Spirent stats
-        checkpoint = "Ensure on spirent Rx port frame count is 0"
-        fun_test.test_assert_expected(expected=0,
-                                      actual=rx_port_result_egress['TotalFrameCount'], message=checkpoint)
-
-        checkpoint = "Ensure spirent sample port should not receive any frames"
-        fun_test.test_assert_expected(expected=0,
-                                      actual=sample_port_result_egress['TotalFrameCount'], message=checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Rx spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result_egress)
-        fun_test.test_assert(result['result'], checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Sample spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=sample_port_result_egress)
-        fun_test.test_assert(result['result'], checkpoint)
 
     def cleanup(self):
         dut_rx_port = dut_config['ports'][0]
@@ -3997,17 +3972,9 @@ class SampleEgressMTUCase(FunTestCase):
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
         # Validate Spirent stats
-        checkpoint = "Ensure Packets are getting dropped on spirent Rx port %s" % rx_port
-        fun_test.test_assert_expected(expected=0,
-                                      actual=rx_port_result['TotalFrameCount'], message=checkpoint)
-
         checkpoint = "Ensure packets are getting received on sample spirent port %s" % sample_port
         fun_test.test_assert_expected(expected=tx_port_result['GeneratorFrameCount'],
                                       actual=sample_port_result['TotalFrameCount'], message=checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Rx spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
 
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
@@ -4142,16 +4109,8 @@ class SampleEgressMTUCase(FunTestCase):
         fun_test.test_assert_expected(expected=tx_port_result['GeneratorFrameCount'],
                                       actual=rx_port_result['TotalFrameCount'], message=checkpoint)
 
-        checkpoint = "Ensure packets are getting received on sample spirent port %s" % sample_port
-        fun_test.test_assert_expected(expected=0,
-                                      actual=sample_port_result['TotalFrameCount'], message=checkpoint)
-
         checkpoint = "Ensure no errors are seen on Rx spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Sample spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
         fun_test.test_assert(result['result'], checkpoint)
 
     def cleanup(self):
@@ -4192,7 +4151,7 @@ class SampleEgressDropACL(FunTestCase):
     load = 10
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
     stream_obj = None
-    sample_id = 62
+    sample_id = 61
     header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
     captured_results = None
     routes_config = None
@@ -4250,7 +4209,7 @@ class SampleEgressDropACL(FunTestCase):
         fun_test.simple_assert(result, checkpoint)
 
         checkpoint = "Add TCP Header"
-        tcp_obj = TCP(destination_port=960)
+        tcp_obj = TCP(destination_port=960, source_port=1234)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=tcp_obj, update=False)
         fun_test.simple_assert(result, checkpoint)
