@@ -468,12 +468,18 @@ class Linux(object, ToDictMixin):
              dst,
              count=5,
              max_percentage_loss=50,
-             timeout=30):
+             timeout=30,
+             interval=1,
+             size=56,
+             sudo=False):
         result = False
         percentage_loss = 100
         try:
-            command = 'ping %s -c %d' % (str(dst), count)
-            output = self.command(command, timeout=timeout)
+            command = 'ping %s -c %d -i %s -s %s' % (str(dst), count, interval, size)
+            if sudo:
+                output = self.sudo_command(command, timeout=timeout)
+            else:
+                output = self.command(command, timeout=timeout)
             m = re.search(r'(\d+)%\s+packet\s+loss', output)
             if m:
                 percentage_loss = int(m.group(1))
@@ -481,7 +487,7 @@ class Linux(object, ToDictMixin):
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
-        if percentage_loss < max_percentage_loss:
+        if percentage_loss <= max_percentage_loss:
             result = True
         return result
 
@@ -1734,12 +1740,9 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def isHostUp(self, timeout=5, retries=6):
-
+    def is_host_up(self, timeout=5, retries=6):
         result = True
-
         for i in range(retries):
-            command_output = ""
             try:
                 command_output = self.command(command="pwd", timeout=timeout)
                 if command_output:
@@ -1834,6 +1837,12 @@ class Linux(object, ToDictMixin):
             fs_command = "mkfs.ext2 -F {}".format(device)
         elif fs_type == "xfs":
             fs_command = "mkfs.xfs -f {}".format(device)
+        elif fs_type == "ntfs":
+            fs_command = "mkfs.ntfs -F {}".format(device)
+        elif fs_type == "btrfs":
+            fs_command = "mkfs.btrfs {}".format(device)
+        elif fs_type == "f2fs":
+            fs_command = "mkfs.f2fs {}".format(device)
         else:
             fun_test.critical("Creation of {} filesystem is not yet supported".format(fs_type))
             result = False
@@ -1843,7 +1852,7 @@ class Linux(object, ToDictMixin):
             fs_command += " -b {}".format(sector_size)
 
         try:
-            output = self.sudo_command(fs_command)
+            output = self.sudo_command(fs_command, timeout=timeout)
             match = re.findall(r"done", output, re.M)
             if match:
                 if fs_type == "ext2":
@@ -1861,6 +1870,24 @@ class Linux(object, ToDictMixin):
                     match = re.search(r"bsize=(\d+)\s+blocks=(\d+)", output, re.MULTILINE)
                     if match:
                         result = match.group(2)
+                    else:
+                        result = False
+                elif fs_type == "ntfs":
+                    match = re.search(r"mkntfs\scompleted\ssuccessfully", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
+                    else:
+                        result = False
+                elif fs_type == "btrfs":
+                    match = re.search(r"Number\sof\sdevices:", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
+                    else:
+                        result = False
+                elif fs_type == "f2fs":
+                    match = re.search(r"Info:\sformat\ssuccessful", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
                     else:
                         result = False
                 else:
@@ -1894,10 +1921,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def mount_volume(self, volume, directory):
+    def mount_volume(self, volume, directory, readonly=False):
         result = True
         try:
             mnt_cmd = "mount {} {}".format(volume, directory)
+            if readonly:
+                mnt_cmd += " --read-only"
             mnt_out = self.sudo_command(mnt_cmd)
             if not mnt_out:
                 pattern = r'.*{}.*'.format(directory)
@@ -1973,6 +2002,67 @@ class Linux(object, ToDictMixin):
         except:
             pass
         return c
+
+    @fun_test.safe
+    def set_mtu(self, interface, mtu, ns=None):
+        # Configure
+        cmd = "ifconfig {} mtu {}".format(interface, mtu)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+        self.sudo_command(cmd)
+
+        # Check
+        cmd = 'ifconfig {}'.format(interface)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+        output = self.sudo_command(cmd)
+        match = re.search(r'mtu (\d+)', output)
+        if match:
+            return int(match.group(1)) == mtu
+
+    @fun_test.safe
+    def ifconfig_up_down(self, interface, action, ns=None):
+        # Configure
+        cmd = "ifconfig {} {}".format(interface, action)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+        self.sudo_command(cmd)
+
+        # Check
+        cmd = 'ifconfig {}'.format(interface)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+        output = self.sudo_command(cmd)
+        match = re.search(r'{}.*UP'.format(interface), output)
+        if action == 'up':
+            return match is not None
+        else:
+            return match is None
+
+    def is_mount_ro(self, mnt):
+        """
+        Method to validate if filesystem mounted is Read-only filesystem
+        :param mnt: mount partition
+        :return: boolean, if mount filesystem is Read-only filesystem, return True
+        """
+        result = True
+        try:
+            cmd = "grep '\sro[\s,]' /proc/mounts"
+            output = self.sudo_command(cmd)
+            lines = output.split("\n")
+            for line in lines:
+                if mnt in line:
+                    result = True
+                else:
+                    result = False
+        except Exception as ex:
+            result = False
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+
+        return result
+
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):

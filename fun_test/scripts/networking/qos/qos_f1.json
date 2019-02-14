@@ -1,6 +1,6 @@
 {
   "load_unit": "Mbps",
-  "max_egress_load": 6.44,
+  "max_egress_load": 25000,
   "strict_priority": {
     "sp_traffic_time": 15,
     "channel_0": {

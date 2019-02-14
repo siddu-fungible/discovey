@@ -28,6 +28,8 @@ export class RegressionSummaryComponent implements OnInit {
   testCaseExecutions: any = null;
   scriptInfoMap = {};
   numBugs = 0;
+  numBugsActive = 0;
+  numBugsResolved = 0;
   showGlobalBugPanel = false;
   scriptSuiteBaselineMap = {};
 
@@ -176,24 +178,32 @@ export class RegressionSummaryComponent implements OnInit {
       //console.log("Recent suite: " + mostRecentSuite);
       //console.log("Baseline results: " + baselineResults);
       let baselineResultKeys = Object.keys(baselineResults);
-      for (let index = 0; index < baselineResultKeys.length; index++) {
-        let baselineTestCaseId = baselineResultKeys[index];
-        let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
-        if (!history.hasOwnProperty(parseInt(baselineTestCaseId))) {
-          let errorMessage = "Baseline TC: " + baselineTestCaseId + " not found";
-          //console.log(errorMessage);
-          result.matches = false;
-          result.message = errorMessage;
-          break;
-        }
-        let historyResult = history[parseInt(baselineTestCaseId)].result;
-        if (historyResult !== "IN_PROGRESS") {
-          if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
-            let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
+      let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
+
+      if (baselineResultKeys.length !== Object.keys(history).length) {
+        result.matches = false;
+        result.message = "The number of test cases mismatch with the baseline";
+      } else {
+
+
+        for (let index = 0; index < baselineResultKeys.length; index++) {
+          let baselineTestCaseId = baselineResultKeys[index];
+          if (!history.hasOwnProperty(parseInt(baselineTestCaseId))) {
+            let errorMessage = "Baseline TC: " + baselineTestCaseId + " not found";
             //console.log(errorMessage);
             result.matches = false;
             result.message = errorMessage;
             break;
+          }
+          let historyResult = history[parseInt(baselineTestCaseId)].result;
+          if (historyResult !== "IN_PROGRESS") {
+            if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
+              let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
+              //console.log(errorMessage);
+              result.matches = false;
+              result.message = errorMessage;
+              break;
+            }
           }
         }
 
@@ -364,6 +374,8 @@ export class RegressionSummaryComponent implements OnInit {
     scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
     scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
     scriptDetailedInfo[scriptPath].numBugs = 0;
+    scriptDetailedInfo[scriptPath].numBugsActive = 0;
+    scriptDetailedInfo[scriptPath].numBugsResolved = 0;
     try {
       scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].entry.bugs.length;
 
@@ -396,12 +408,29 @@ export class RegressionSummaryComponent implements OnInit {
     return summary;
   }
 
-  updateGlobalNumBugs(numBugs) {
-    this.numBugs = numBugs;
+  updateNumBugs(numBugs, node) {
+    if (node) {
+      node.numBugs = numBugs;
+    } else {
+      this.numBugs = numBugs;
+    }
   }
 
-  updateNumBugs(numBugs, node) {
-    node.numBugs = numBugs;
+
+  updateNumBugsActive(numBugs, node) {
+    if (node) {
+      node.numBugsActive = numBugs;
+    } else {
+      this.numBugsActive = numBugs;
+    }
+  }
+
+  updateNumBugsResolved(numBugs, node) {
+    if (node) {
+      node.numBugsResolved = numBugs;
+    } else {
+      this.numBugsResolved =  numBugs;
+    }
   }
 
   addHistoryToSoftwareVersion(index, history, softwareVersion) {

@@ -1,2 +1,24 @@
 [
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 64,
+        "latency_max": 72000.0,
+        "latency_mean": 63560.0,
+        "latency_median": 62900.0,
+        "latency_min": 60500.0,
+        "throughput": 0.45158,
+        "timestamp": "2019-02-09 07:29:07.497590-08:00",
+        "version": 5216
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 1500,
+        "latency_max": 112020.0,
+        "latency_mean": 71230.0,
+        "latency_median": 66720.0,
+        "latency_min": 64900.00000000001,
+        "throughput": 0.44989,
+        "timestamp": "2019-02-09 07:30:25.499637-08:00",
+        "version": 5216
+    }
 ]

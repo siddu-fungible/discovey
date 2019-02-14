@@ -50,6 +50,8 @@ class SpirentSetup(FunTestScript):
             flow_type
 
         chassis_type = fun_test.get_local_setting(setting="chassis_type")
+        nu_config_obj = NuConfigManager()
+        fun_test.shared_variables['nu_config_obj'] = nu_config_obj
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         session_name = "short-sanity"
@@ -120,6 +122,7 @@ class TransitSweep(FunTestCase):
                               """)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         global flow_direction, flow_type
         flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
         flow_type = NuConfigManager.TRANSIT_FLOW_TYPE
@@ -545,6 +548,7 @@ class TransitV6Sweep(TransitSweep):
                               """)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         global flow_direction, flow_type
         flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
         flow_type = NuConfigManager.TRANSIT_FLOW_TYPE
@@ -666,6 +670,7 @@ class TestCcFlows(FunTestCase):
         pass
 
     def configure_ports(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         global cc_port_list, flow_direction, flow_type
 
         self.dut_config = nu_config_obj.read_dut_config(dut_type=NuConfigManager.DUT_TYPE_PALLADIUM,
@@ -696,47 +701,43 @@ class TestCcFlows(FunTestCase):
         fun_test.test_assert(self.generator_handle, checkpoint)
 
     def run(self):
-        vp_stats_before = None
-        erp_stats_before = None
-        wro_stats_before = None
         meter_stats_before = None
-        if self.dut_config['enable_dpcsh']:
-            checkpoint = "Clear FPG stats on all DUT ports"
-            for port in self.dut_config['ports']:
-                shape = 0
-                if port == 1 or port == 2:
-                    shape = 1
-                clear_stats = dpcsh_obj.clear_port_stats(port_num=port, shape=shape)
-                fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
-            fun_test.add_checkpoint(checkpoint)
+        checkpoint = "Clear FPG stats on all DUT ports"
+        for port in self.dut_config['ports']:
+            shape = 0
+            if port == 1 or port == 2:
+                shape = 1
+            clear_stats = dpcsh_obj.clear_port_stats(port_num=port, shape=shape)
+            fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
+        fun_test.add_checkpoint(checkpoint)
 
-            checkpoint = "Get PSW and Parser NU stats before traffic"
-            psw_stats = dpcsh_obj.peek_psw_global_stats()
-            parser_stats = dpcsh_obj.peek_parser_stats()
-            fun_test.log("PSW Stats: %s \n" % psw_stats)
-            fun_test.log("Parser stats: %s \n" % parser_stats)
-            fun_test.add_checkpoint(checkpoint)
+        checkpoint = "Get PSW and Parser NU stats before traffic"
+        psw_stats = dpcsh_obj.peek_psw_global_stats()
+        parser_stats = dpcsh_obj.peek_parser_stats()
+        fun_test.log("PSW Stats: %s \n" % psw_stats)
+        fun_test.log("Parser stats: %s \n" % parser_stats)
+        fun_test.add_checkpoint(checkpoint)
 
-            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=dpcsh_obj)
+        vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=dpcsh_obj)
 
-            erp_stats_before = get_erp_stats_values(network_controller_obj=dpcsh_obj)
+        erp_stats_before = get_erp_stats_values(network_controller_obj=dpcsh_obj)
 
-            wro_stats_before = get_wro_global_stats_values(network_controller_obj=dpcsh_obj)
+        wro_stats_before = get_wro_global_stats_values(network_controller_obj=dpcsh_obj)
 
-            if self.meter_id:
-                meter_stats_before = dpcsh_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=self.erp)
+        if self.meter_id:
+            meter_stats_before = dpcsh_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=self.erp)
 
-            fun_test.log("VP stats: %s" % vp_stats_before)
-            fun_test.log("ERP stats: %s" % erp_stats_before)
-            fun_test.log("WRO stats: %s" % wro_stats_before)
-            if meter_stats_before:
-                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats_before))
+        fun_test.log("VP stats: %s" % vp_stats_before)
+        fun_test.log("ERP stats: %s" % erp_stats_before)
+        fun_test.log("WRO stats: %s" % wro_stats_before)
+        if meter_stats_before:
+            fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats_before))
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
         result = template_obj.enable_generator_configs([self.generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 10)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
 
         '''
         checkpoint = "Ensure Spirent stats fetched"
@@ -765,58 +766,50 @@ class TestCcFlows(FunTestCase):
         fun_test.log("Rx Port Stats: %s" % rx_port_results)
         fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
         '''
-        dut_tx_port_stats = None
-        dut_rx_port_stats = None
-        vp_stats = None
-        erp_stats = None
-        wro_stats = None
         meter_stats = None
-        if self.dut_config['enable_dpcsh']:
-            checkpoint = "Fetch PSW and Parser DUT stats after traffic"
-            psw_stats = dpcsh_obj.peek_psw_global_stats()
-            parser_stats = dpcsh_obj.peek_parser_stats()
-            fun_test.log("PSW Stats: %s \n" % psw_stats)
-            fun_test.log("Parser stats: %s \n" % parser_stats)
-            fun_test.add_checkpoint(checkpoint)
+        checkpoint = "Fetch PSW and Parser DUT stats after traffic"
+        psw_stats = dpcsh_obj.peek_psw_global_stats()
+        parser_stats = dpcsh_obj.peek_parser_stats()
+        fun_test.log("PSW Stats: %s \n" % psw_stats)
+        fun_test.log("Parser stats: %s \n" % parser_stats)
+        fun_test.add_checkpoint(checkpoint)
 
-            checkpoint = "Get FPG port stats for all ports"
-            dut_port_1 = self.dut_config['ports'][0]
-            dut_port_2 = self.dut_config['ports'][2]
-            hnu = False
-            if dut_port_1 == 1 or dut_port_1 == 2:
-                hnu = True
-            dut_tx_port_stats = dpcsh_obj.peek_fpg_port_stats(port_num=dut_port_1, hnu=hnu)
-            hnu = False
-            if dut_port_2 == 1 or dut_port_2 == 2:
-                hnu = True
-            dut_rx_port_stats = dpcsh_obj.peek_fpg_port_stats(port_num=dut_port_2, hnu=hnu)
-            fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
+        checkpoint = "Get FPG port stats for all ports"
+        dut_port_1 = self.dut_config['ports'][0]
+        dut_port_2 = self.dut_config['ports'][2]
+        hnu = False
+        if dut_port_1 == 1 or dut_port_1 == 2:
+            hnu = True
+        dut_rx_port_stats = dpcsh_obj.peek_fpg_port_stats(port_num=dut_port_1, hnu=hnu)
+        hnu = False
+        if dut_port_2 == 1 or dut_port_2 == 2:
+            hnu = True
+        dut_tx_port_stats = dpcsh_obj.peek_fpg_port_stats(port_num=dut_port_2, hnu=hnu)
+        fun_test.simple_assert(dut_rx_port_stats and dut_tx_port_stats, checkpoint)
 
-            fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
-            fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
+        fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
+        fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
 
-            checkpoint = "Fetch VP stats"
-            vp_stats = get_vp_pkts_stats_values(network_controller_obj=dpcsh_obj)
-            fun_test.simple_assert(vp_stats, checkpoint)
+        checkpoint = "Fetch VP stats"
+        vp_stats = get_vp_pkts_stats_values(network_controller_obj=dpcsh_obj)
+        fun_test.simple_assert(vp_stats, checkpoint)
 
-            checkpoint = "Fetch ERP NU stats"
-            erp_stats = get_erp_stats_values(network_controller_obj=dpcsh_obj)
-            fun_test.simple_assert(erp_stats, checkpoint)
+        checkpoint = "Fetch ERP NU stats"
+        erp_stats = get_erp_stats_values(network_controller_obj=dpcsh_obj)
+        fun_test.simple_assert(erp_stats, checkpoint)
 
-            checkpoint = "Fetch WRO NU stats"
-            wro_stats = get_wro_global_stats_values(network_controller_obj=dpcsh_obj)
-            fun_test.simple_assert(wro_stats, checkpoint)
+        checkpoint = "Fetch WRO NU stats"
+        wro_stats = get_wro_global_stats_values(network_controller_obj=dpcsh_obj)
+        fun_test.simple_assert(wro_stats, checkpoint)
 
-            if self.meter_id:
-                checkpoint = "Fetch Meter stats for meter id: %s" % str(self.meter_id)
-                meter_stats = dpcsh_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=self.erp)
-                fun_test.simple_assert(meter_stats, checkpoint)
+        checkpoint = "Fetch Meter stats for meter id: %s" % str(self.meter_id)
+        meter_stats = dpcsh_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=self.erp)
+        fun_test.simple_assert(meter_stats, checkpoint)
 
-            fun_test.log("VP stats: %s" % vp_stats)
-            fun_test.log("ERP stats: %s" % erp_stats)
-            fun_test.log("WRO stats: %s" % wro_stats)
-            if meter_stats:
-                fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats))
+        fun_test.log("VP stats: %s" % vp_stats)
+        fun_test.log("ERP stats: %s" % erp_stats)
+        fun_test.log("WRO stats: %s" % wro_stats)
+        fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats))
 
         # validation asserts
         # Spirent stats validation
@@ -838,138 +831,136 @@ class TestCcFlows(FunTestCase):
         fun_test.test_assert(expression=result['result'], message=checkpoint)
         '''
         # DUT stats validation
-        if self.dut_config['enable_dpcsh']:
-            checkpoint = "Validate Tx and Rx on DUT"
-            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
-                                                            stat_type=FRAMES_RECEIVED_OK)
-            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                         stat_type=FRAMES_TRANSMITTED_OK)
-            fun_test.log("DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted),
-                                                                          str(frames_received)))
-            # fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
-            #                      checkpoint)
-            # VP stats validation
-            checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
-            vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
-                                           stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
-                                                       VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                               actual=vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT],
-            #                               message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]))
-            checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                              actual=vp_stats_diff[VP_PACKETS_CC_OUT],
-            #                              message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CC_OUT]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, vp_stats_diff[VP_PACKETS_CC_OUT]))
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
+                                                     stat_type=FRAMES_RECEIVED_OK, tx=False)
+        frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
+                                                        stat_type=IF_OUT_BROADCAST_PKTS)
+        fun_test.log("DUT Rx FrameCount on Port FPG%d: %s DUT Tx FrameCount on POrt FPG%d: %s" % (
+            dut_port_1, str(frames_transmitted), dut_port_2, str(frames_received)))
 
-            checkpoint = "Ensure VP total packets IN == VP total packets OUT"
-            fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
-                                          actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
-                                          message=checkpoint)
-            # ERP stats validation
-            checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
-            erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats,
-                                            stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED,
-                                                        ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT,
-                                                        ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
-                                                        ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
-                                                        ERP_COUNT_FOR_EFP_FCP_VLD])
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                               actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE],
-            #                               message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]))
-            checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                              actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT],
-            #                                message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]))
+        checkpoint = "Validate meter stats ensure frames_received on FPG%d == (green pkts + yellow pkts + " \
+                     "red_pkts)" % dut_port_1
+        meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
+        green_pkts = int(meter_stats_diff['green']['pkts'])
+        yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
+        red_pkts = int(meter_stats_diff['red']['pkts'])
+        fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
+        fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts + red_pkts),
+                                      message=checkpoint)
+        total_packets_punted_cc = green_pkts + yellow_pkts
 
-            checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                               actual=erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS],
-            #                               message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]))
+        # VP stats validation
+        checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
+        vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
+                                       stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
+                                                   VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                               actual=vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT],
+        #                               message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]))
+        checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                              actual=vp_stats_diff[VP_PACKETS_CC_OUT],
+        #                              message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CC_OUT]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, vp_stats_diff[VP_PACKETS_CC_OUT]))
 
-            checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                               actual=erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED],
-            #                              message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]))
+        checkpoint = "Ensure VP total packets IN == VP total packets OUT"
+        fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
+                                      actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
+                                      message=checkpoint)
+        # ERP stats validation
+        checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
+        erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats,
+                                        stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED,
+                                                    ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT,
+                                                    ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
+                                                    ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
+                                                    ERP_COUNT_FOR_EFP_FCP_VLD])
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                               actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE],
+        #                               message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]))
+        checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                              actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT],
+        #                                message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]))
 
-            checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                              actual=erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD],
-            #                               message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]))
-            # WRO stats validation
-            checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
-            wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                              actual=wro_stats_diff['global'][WRO_IN_PKTS],
-            #                               message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(wro_stats_diff['global'][WRO_IN_PKTS]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, wro_stats_diff['global'][WRO_IN_PKTS]))
+        checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                               actual=erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS],
+        #                               message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]))
 
-            checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                               actual=wro_stats_diff['global'][WRO_IN_NFCP_PKTS],
-            #                               message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(wro_stats_diff['global'][WRO_IN_NFCP_PKTS]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, wro_stats_diff['global'][WRO_IN_NFCP_PKTS]))
+        checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                               actual=erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED],
+        #                              message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]))
 
-            checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                               actual=wro_stats_diff['global'][WRO_OUT_WUS],
-            #                               message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(wro_stats_diff['global'][WRO_OUT_WUS]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, wro_stats_diff['global'][WRO_OUT_WUS]))
+        checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                              actual=erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD],
+        #                               message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]))
+        # WRO stats validation
+        checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
+        wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                              actual=wro_stats_diff['global'][WRO_IN_PKTS],
+        #                               message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_IN_PKTS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_IN_PKTS]))
 
-            checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
-            # fun_test.test_assert_expected(expected=frames_received,
-            #                               actual=wro_stats_diff['global'][WRO_WU_COUNT_VPP],
-            #                               message=checkpoint)
-            # To avoid false failure due to stray traffic in system change assert like below
-            fun_test.test_assert(int(wro_stats_diff['global'][WRO_WU_COUNT_VPP]) >= int(frames_received),
-                                 message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                     frames_received, wro_stats_diff['global'][WRO_WU_COUNT_VPP]))
+        checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                               actual=wro_stats_diff['global'][WRO_IN_NFCP_PKTS],
+        #                               message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_IN_NFCP_PKTS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_IN_NFCP_PKTS]))
 
-            if self.validate_meter_stats:
-                checkpoint = "Validate meter stats ensure frames_received == (green pkts + yellow pkts)"
-                meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
-                green_pkts = int(meter_stats_diff['green']['pkts'])
-                yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
-                red_pkts = int(meter_stats_diff['red']['pkts'])
-                fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
-                fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts),
-                                              message=checkpoint)
+        checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                               actual=wro_stats_diff['global'][WRO_OUT_WUS],
+        #                               message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_OUT_WUS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_OUT_WUS]))
+
+        checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
+        # fun_test.test_assert_expected(expected=frames_received,
+        #                               actual=wro_stats_diff['global'][WRO_WU_COUNT_VPP],
+        #                               message=checkpoint)
+        # To avoid false failure due to stray traffic in system change assert like below
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_WU_COUNT_VPP]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_WU_COUNT_VPP]))
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
@@ -1146,23 +1137,33 @@ class TestVpFlows(FunTestCase):
                                                                          header_attribute=modify_attribute)
         fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
                              % (tcp._spirent_handle, modify_attribute))
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+            range_obj = RangeModifier(recycle_count=MAX_FRAME_SIZE, step_value=1, data=1024)
+            modify_attribute = 'destPort'
+            create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
+                                                                             streamblock_obj=self.streamblock_obj_1,
+                                                                             header_obj=tcp,
+                                                                             header_attribute=modify_attribute)
+            fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
+                                 % (tcp._spirent_handle, modify_attribute))
 
     def configure_cadence_pcs_for_fcp(self):
         username = 'root'
-        password = 'fun123'
+        pc_3_password = 'Precious1*'
+        pc_4_password = "fun123"
         cadence_pc_3 = "cadence-pc-3"
         cadence_pc_4 = "cadence-pc-4"
-        pc_3_config_dir = fun_test.get_helper_dir_path() + "/pc_3_fcp_configs"
-        pc_4_config_dir = fun_test.get_helper_dir_path() + "/pc_4_fcp_configs"
+        pc_3_config_dir = fun_test.get_helper_dir_path() + "/pc_3_configs"
+        pc_4_config_dir = fun_test.get_helper_dir_path() + "/pc_4_configs"
 
         # Copy req files to cadence pc 3
         target_file_path = "/tmp"
-        pc_3_obj = Linux(host_ip=cadence_pc_3, ssh_username=username, ssh_password=password)
-        for file_name in ['unnh.sh', 'nofcp.sh', 'nh_fcp.sh']:
+        pc_3_obj = Linux(host_ip=cadence_pc_3, ssh_username=username, ssh_password=pc_3_password)
+        for file_name in ['nh_fcp.sh']:
             fun_test.log("Coping %s file to cadence pc 3 in /tmp dir" % file_name)
             transfer_success = fun_test.scp(source_file_path=pc_3_config_dir + "/%s" % file_name,
                                             target_file_path=target_file_path, target_ip=cadence_pc_3,
-                                            target_username=username, target_password=password)
+                                            target_username=username, target_password=pc_3_password)
             fun_test.simple_assert(transfer_success, "Ensure file is transferred")
 
             # Configure cadence pc 3 for FCP traffic
@@ -1170,25 +1171,31 @@ class TestVpFlows(FunTestCase):
             cmd = "sh /tmp/%s" % file_name
             pc_3_obj.command(command=cmd)
 
+        fun_test.log("========= IP Routes on cadence-pc-3 =========")
+        pc_3_obj.get_ip_route()
+
         # Copy req files to cadence pc 4
-        pc_4_obj = Linux(host_ip=cadence_pc_4, ssh_username=username, ssh_password=password)
-        for file_name in ['nh_fcp.sh', 'unnh.sh']:
+        pc_4_obj = Linux(host_ip=cadence_pc_4, ssh_username=username, ssh_password=pc_4_password)
+        for file_name in ['nh_fcp.sh']:
             fun_test.log("Coping %s file to cadence pc 4 in /tmp dir" % file_name)
             transfer_success = fun_test.scp(source_file_path=pc_4_config_dir + "/%s" % file_name,
                                             target_file_path=target_file_path, target_ip=cadence_pc_4,
-                                            target_username=username, target_password=password)
+                                            target_username=username, target_password=pc_4_password)
             fun_test.simple_assert(transfer_success, "Ensure file is transferred")
 
-            # Configure cadence pc 3 for FCP traffic
+            # Configure cadence pc 4 for FCP traffic
             fun_test.log("Executing %s cadence pc 4" % file_name)
             cmd = "sh /tmp/%s" % file_name
             pc_4_obj.command(command=cmd)
+        fun_test.log("========= IP Routes on cadence-pc-4 =========")
+        pc_4_obj.get_ip_route()
 
     def setup(self):
         pass
 
     def configure_ports(self):
         global vp_port_list
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         self.dut_config = nu_config_obj.read_dut_config(dut_type=NuConfigManager.DUT_TYPE_PALLADIUM,
                                                         flow_type=flow_type,
@@ -1252,6 +1259,11 @@ class TestVpFlows(FunTestCase):
             mtu_2 = dpcsh_obj.set_port_mtu(port_num=dut_port_2, mtu_value=self.mtu, shape=shape)
             fun_test.test_assert(mtu_2, " Set mtu on DUT port %s" % dut_port_2)
 
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+                for port in [1, 2, 17]:
+                    mtu = dpcsh_obj.set_port_mtu(port_num=port, shape=0, mtu_value=self.mtu)
+                    fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
+
     def run(self):
         vp_pkts_stats_1 = None
         erp_stats_1 = None
@@ -1280,6 +1292,15 @@ class TestVpFlows(FunTestCase):
             erp_stats_1 = get_erp_stats_values(network_controller_obj=dpcsh_obj, hnu=self.hnu)
             psw_stats_1 = dpcsh_obj.peek_psw_global_stats(hnu=self.hnu)
             dpcsh_obj.peek_wro_global_stats()
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+                fun_test.log("========== FCP NU stats before traffic ==========")
+                dpcsh_obj.peek_fcp_global_stats(mode='nu')
+                fun_test.log("========== FCP HNU stats before traffic ==========")
+                dpcsh_obj.peek_fcp_global_stats(mode='hnu')
+                fun_test.log("========== ETP NU stats before traffic ==========")
+                dpcsh_obj.peek_etp_stats(mode='nu')
+                fun_test.log("========== ETP HNU stats before traffic ==========")
+                dpcsh_obj.peek_etp_stats(mode='hnu')
 
         # Execute traffic
         start = template_obj.enable_generator_configs(generator_configs=[self.generator_handle])
@@ -1337,7 +1358,15 @@ class TestVpFlows(FunTestCase):
             vp_pkts_stats_2 = get_vp_pkts_stats_values(network_controller_obj=dpcsh_obj)
             dpcsh_obj.peek_parser_stats()
             dpcsh_obj.peek_wro_global_stats()
-
+            if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
+                fun_test.log("========== FCP NU stats after traffic ==========")
+                dpcsh_obj.peek_fcp_global_stats(mode='nu')
+                fun_test.log("========== FCP HNU stats after traffic ==========")
+                dpcsh_obj.peek_fcp_global_stats(mode='hnu')
+                fun_test.log("========== ETP NU stats after traffic ==========")
+                dpcsh_obj.peek_etp_stats(mode='nu')
+                fun_test.log("========== ETP HNU stats after traffic ==========")
+                dpcsh_obj.peek_etp_stats(mode='hnu')
             dut_port_2_fpg_value = get_fpg_port_value(dut_port_2)
             dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
             frv_error = 'frv_error'
@@ -1367,14 +1396,11 @@ class TestVpFlows(FunTestCase):
             if flow_direction != NuConfigManager.FLOW_DIRECTION_HNU_FPG:
                 diff_stats_erp = get_diff_stats(old_stats=erp_stats_1, new_stats=erp_stats_2,
                                                 stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
-                diff_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) - int(tx_results_1['FrameCount'])
-                expected_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
-                if diff_stats == 1:
-                    expected_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) - 1
-
-                fun_test.test_assert_expected(expected=expected_erp_stats,
-                                              actual=(int(tx_results_1['FrameCount'])),
-                                              message="Check non fcp packets counter from erp stats")
+                actual_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
+                fun_test.test_assert(actual_erp_stats >= dut_port_1_receive,
+                                     message="Validate NU ERP NON FCP Packets received count."
+                                             "Pass criteria: actual count >= expected count"
+                                             "Expected: %s Found: %s" % (dut_port_1_receive, actual_erp_stats))
 
             stats_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE]
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HU_FPG or \
@@ -1419,16 +1445,22 @@ class TestVpFlows(FunTestCase):
                                              "Pass criteria actual > expected Expected: %s Found: %s" % (
                                          tx_results_1['FrameCount'], psw_diff_stats[epg0_pkt]))
             else:
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[ifpg],
-                                              message="Check ifpg counter in psw nu stats in input")
+                fun_test.test_assert(int(psw_diff_stats[ifpg]) >= int(tx_results_1['FrameCount']),
+                                     message="Check ifpg counter in psw nu stats in input. "
+                                             "Pass criteria actual > expected Expected: %s Found: %s" % (
+                                                 psw_diff_stats[epg0_pkt], tx_results_1['FrameCount']))
             # Check psw nu output stats
             psw_diff_stats = get_diff_stats(old_stats=parsed_output_1, new_stats=parsed_output_2)
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[fpg1_pkt],
-                                              message="Check FPG1 counter in psw nu stats in output")
+                fun_test.test_assert(int(psw_diff_stats[fpg1_pkt]) >= int(tx_results_1['FrameCount']),
+                                     message="Check epg_pkt counter in psw nu stats in output. "
+                                             "Pass criteria actual > expected Expected: %s Found: %s" % (
+                                                 psw_diff_stats[fpg1_pkt], tx_results_1['FrameCount']))
             else:
-                fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']), actual=psw_diff_stats[epg0_pkt],
-                                              message="Check epg_pkt counter in psw nu stats in output")
+                fun_test.test_assert(int(psw_diff_stats[epg0_pkt]) >= int(tx_results_1['FrameCount']),
+                                     message="Check epg_pkt counter in psw nu stats in output. "
+                                             "Pass criteria actual > expected Expected: %s Found: %s" % (
+                                         psw_diff_stats[epg0_pkt], tx_results_1['FrameCount']))
 
         # SPIRENT ASSERTS
         if int(tx_results_1['FrameCount']) == int(rx_results_1['FrameCount']):
@@ -1480,6 +1512,7 @@ class VPPathIPv4TCP(TestVpFlows):
 
     def setup(self):
         global flow_direction, flow_type
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -1538,6 +1571,7 @@ class VPPathIPv4TCPNFCP(TestVpFlows):
 
     def setup(self):
         global flow_direction, flow_type
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -1603,12 +1637,15 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 
     def setup(self):
         global flow_direction, flow_type
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
         self.fps = 50
 
-        # self.configure_cadence_pcs_for_fcp()
+        self.max_frame_size = 8000
+        self.generator_step_size = self.max_frame_size
+        self.configure_cadence_pcs_for_fcp()
         self.configure_ports()
         self.detach_ports = False
 
@@ -1616,7 +1653,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
 
         routermac = self.routes_config["routermac"]
-        l3_config = spirent_config["l3_config"]
+        l3_config = self.routes_config["l3_config"]
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
 
         # Create streamblock 1
@@ -1624,7 +1661,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
                                              load=self.fps, fill_type=StreamBlock.FILL_TYPE_PRBS,
                                              insert_signature=True,
                                              frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_INCR,
-                                             min_frame_length=self.min_frame_size, max_frame_length=MAX_FRAME_SIZE,
+                                             min_frame_length=self.min_frame_size, max_frame_length=self.max_frame_size,
                                              step_frame_length=1)
         streamblock1 = template_obj.configure_stream_block(self.streamblock_obj_1, self.port_1)
         fun_test.test_assert(streamblock1, "Creating streamblock on port %s" % self.port_1)
@@ -1640,6 +1677,18 @@ class VPPathIPv4TCPFCP(TestVpFlows):
         ip = template_obj.stc_manager.configure_ip_address(streamblock=self.streamblock_obj_1.spirent_handle,
                                                            destination=destination)
         fun_test.test_assert(ip, "Adding source ip, dest ip and gateway")
+
+        checkpoint = "Configure IP range modifier"
+        src_ip = "192.85.1.2"
+        ip_obj = Ipv4Header(destination_address=destination, source_address=src_ip)
+        modifier_obj = RangeModifier(modifier_mode=RangeModifier.INCR, recycle_count=100,
+                                     step_value="0.0.0.1", mask="255.255.255.255",
+                                     data=src_ip)
+        result = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=modifier_obj,
+                                                                   header_obj=ip_obj,
+                                                                   streamblock_obj=self.streamblock_obj_1,
+                                                                   header_attribute="sourceAddr")
+        fun_test.simple_assert(result, checkpoint)
 
 
 class VpPathIpv4HnuNu(TestVpFlows):
@@ -1663,6 +1712,7 @@ class VpPathIpv4HnuNu(TestVpFlows):
 
     def setup(self):
         global flow_direction, flow_type
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
         flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -1718,9 +1768,9 @@ if __name__ == "__main__":
     # VP HNU --> HNU (NFCP) Flow
     ts.add_test_case(VPPathIPv4TCPNFCP())
 
-    # VP HNU --> HNU (FCP) Flow
-    ts.add_test_case(VPPathIPv4TCPFCP())
-
     # VP HNU --> NU Flow
     ts.add_test_case(VpPathIpv4HnuNu())
+
+    # VP HNU --> HNU (FCP) Flow
+    ts.add_test_case(VPPathIPv4TCPFCP())
     ts.run()

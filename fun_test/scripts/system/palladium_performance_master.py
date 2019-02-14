@@ -1,7 +1,7 @@
 from lib.system.fun_test import *
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
-from web.fun_test.metrics_models import BcopyFloodDmaPerformance
+from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSoakPerformance, PkeP256TlsSoakPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
@@ -128,14 +128,21 @@ class PalladiumPerformanceTc(FunTestCase):
         return d
 
     def validate_json_file(self, validation_required=True):
-        log_dir = LOGS_DIR
-        file_path = log_dir + "/nu_rfc2544_performance.json"
         data = {}
+        self.lines = []
+        file_path = LOGS_DIR + "/nu_rfc2544_performance.json"
         fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
         fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
         with open(file_path) as fp:
             data = json.loads(fp.read())
-        self.lines = data
+            self.lines.append(data)
+
+        file_path = LOGS_DIR + "/hu_funeth_performance_data.json"
+        fun_test.test_assert(os.path.isfile(file_path), "Ensure Hu Funeth Performance Data Json exists")
+        fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
+        with open(file_path) as fp:
+            data = json.loads(fp.read())
+            self.lines.append(data)
         return True
 
 
@@ -268,13 +275,19 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
         average_bandwidth_perf_name = ""
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
+            m = None
+            n = None
 
             for line in self.lines:
-                m = re.search(
-                    r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>.*)\];\s+average bandwidth: (?P<average_bandwidth>\S+) \[(?P<average_bandwidth_perf_name>.*)\]',
-                    line)
-
-                if m:
+                if not m:
+                    m = re.search(
+                        r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>.*)\]',
+                        line)
+                if not n:
+                    n = re.search(
+                        r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>.*)\]',
+                        line)
+                if m and n:
                     stats_found = True
                     coherent = "Coherent"
                     if m.group("coherent") != "coherent":
@@ -299,14 +312,15 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                     latency_max = latency_json["max"]
                     latency_avg = latency_json["avg"]
                     latency_perf_name = m.group("latency_perf_name")
-                    average_bandwidth = m.group("average_bandwidth")
+                    bandwidth_json = json.loads(n.group("bandwidth_json"))
+                    average_bandwidth_unit = bandwidth_json["unit"]
                     try:
-                        fun_test.test_assert(average_bandwidth.endswith("Gbps"), "Avg bw should be Gbps")
-                        average_bandwidth = int(average_bandwidth.replace("Gbps", ""))
+                        fun_test.test_assert(average_bandwidth_unit.endswith("Gbps"), "Avg bw should be Gbps")
+                        average_bandwidth = int(bandwidth_json["value"])
                     except Exception as ex:
                         fun_test.critical(str(ex))
 
-                    average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
+                    average_bandwidth_perf_name = n.group("average_bandwidth_perf_name")
                     MetricHelper(model=BcopyPerformance).add_entry(status=self.result,
                                                                    input_date_time=self.dt,
                                                                    input_plain=plain,
@@ -320,6 +334,8 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                                                                    input_latency_perf_name=latency_perf_name,
                                                                    output_average_bandwith=average_bandwidth,
                                                                    input_average_bandwith_perf_name=average_bandwidth_perf_name)
+                    m = None
+                    n = None
             self.result = fun_test.PASSED
             # if self.result == fun_test.PASSED:
 
@@ -347,7 +363,7 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'bcopy flood with dma \((?P<N>\d+)\)\s+(?P<size>\S+);\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>\S+)\];\s+average bandwidth: (?P<average_bandwidth>\S+) \[(?P<average_bandwidth_perf_name>\S+)\]',
+                    r'bcopy flood with dma \((?P<N>\d+)\)\s+(?P<size>\S+);\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>\S+)\];\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>\S+)\]',
                     line)
                 if m:
                     n = m.group("N")
@@ -366,10 +382,11 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
                     latency_max = latency_json["max"]
                     latency_avg = latency_json["avg"]
                     latency_perf_name = m.group("latency_perf_name")
-                    average_bandwidth = m.group("average_bandwidth")
+                    bandwidth_json = json.loads(m.group("bandwidth_json"))
+                    average_bandwidth_unit = bandwidth_json["unit"]
                     try:
-                        fun_test.test_assert(average_bandwidth.endswith("Gbps"), "Avg bw should be Gbps")
-                        average_bandwidth = int(average_bandwidth.replace("Gbps", ""))
+                        fun_test.test_assert(average_bandwidth_unit.endswith("Gbps"), "Avg bw should be Gbps")
+                        average_bandwidth = int(bandwidth_json["value"])
                     except Exception as ex:
                         fun_test.critical(str(ex))
 
@@ -1556,7 +1573,7 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
 class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
     def describe(self):
         self.set_test_details(id=24,
-                              summary="TeraMark NU Transit Performance Test",
+                              summary="TeraMark NU Transit and HU Funeth Performance Test",
                               steps="Steps 1")
 
     def run(self):
@@ -1564,31 +1581,41 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
         try:
 
             fun_test.test_assert(self.validate_json_file(), "validate json file and output")
-            for line in self.lines:
-                if "flow_type" in line:
-                    if line["flow_type"] in nu_transit_flow_types:
-                        line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
-                    metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                    metrics["input_mode"] = line["mode"]
-                    metrics["input_version"] = line["version"]
-                    metrics["input_frame_size"] = line["frame_size"]
-                    date_time = get_time_from_timestamp(line["timestamp"])
-                    metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
-                    metrics["output_pps"] = line["pps"] if "pps" in line else -1
-                    metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
-                    metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
-                    metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
-                    metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
-                    metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
-                    metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
-                    fun_test.log(
-                        "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
-                            metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"],
-                            metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    d["input_date_time"] = date_time
-                    if date_time.year >= 2019:
-                        MetricHelper(model=NuTransitPerformance).add_entry(**d)
+            for lines in self.lines:
+                for line in lines:
+                    if "flow_type" in line:
+                        if line["flow_type"] in nu_transit_flow_types:
+                            line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
+                        metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
+                        metrics["input_mode"] = line["mode"] if "mode" in line else ""
+                        metrics["input_version"] = line["version"]
+                        metrics["input_frame_size"] = line["frame_size"]
+                        date_time = get_time_from_timestamp(line["timestamp"])
+                        metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
+                        metrics["output_pps"] = line["pps"] if "pps" in line else -1
+                        metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
+                        metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
+                        if "latency_avg" in line:
+                            metrics["output_latency_avg"] = line["latency_avg"]
+                            metrics["output_latency_median"] = -1
+                        elif "latency_mean" in line:
+                            metrics["output_latency_avg"] = line["latency_mean"]
+                            metrics["output_latency_median"] = line["latency_median"]
+                        else:
+                            metrics["output_latency_avg"] = -1
+                            metrics["output_latency_median"] = -1
+
+                        metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
+                        metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
+                        metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
+                        fun_test.log(
+                            "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
+                                metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"],
+                                metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
+                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                        d["input_date_time"] = date_time
+                        if date_time.year >= 2019:
+                            MetricHelper(model=NuTransitPerformance).add_entry(**d)
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -1597,6 +1624,83 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
                                      git_commit="", model_name="NuTransitPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="ECDHE_RSA X25519 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+X25519\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_x25519_2k_tls_soak"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=PkeX25519TlsSoakPerformance).add_entry(**d)
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="PkeX25519TlsSoakPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="ECDHE_RSA P256 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_p256_2k_tls_soak"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=PkeP256TlsSoakPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="PkeP256TlsSoakPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1644,6 +1748,8 @@ if __name__ == "__main__":
     # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
     # myscript.add_test_case(TeraMarkJpegPerformanceTC())
     # myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
     # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

@@ -1,0 +1,219 @@
+{
+  "Ext2OnBLT": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext2",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "test_timeout_ratio": 16
+  },
+  "Ext3OnBLT": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext3",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "test_timeout_ratio": 16
+  },
+  "Ext4OnBLT": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext4",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "test_timeout_ratio": 16
+  },
+  "XFSOnBLT": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "xfs",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "test_timeout_ratio": 16
+  },
+  "NTFSOnBLT": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ntfs",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "test_timeout_ratio": 16,
+    "create_fs_timeout": 120
+  },
+  "BTRFSOnBLT": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "btrfs",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "test_timeout_ratio": 16
+  },
+  "F2FSOnBLT": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "f2fs",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "test_timeout_ratio": 16
+  },
+  "Ext4OnBLTWithRemount": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext4",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "remount_filesystem": true,
+    "test_timeout_ratio": 16
+  },
+  "Ext4OnBLTWithReadOnlyFS": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "ext4",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "remount_filesystem": false,
+    "readonly_filesystem": true,
+    "test_timeout_ratio": 16
+  },
+  "XFSOnBLTWithRemountAsReadOnlyFS": {
+    "volumes": ["blt"],
+    "volume_params": {
+      "volume_types": {"blt": "VOL_TYPE_BLK_LOCAL_THIN"},
+      "volume_block": {"blt": 4096},
+      "volume_capacity": {"blt": 268435456}
+    },
+    "ns_id": 1,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "reload_after_config": true,
+    "delete_before_detach": false,
+    "nvme_device": "/dev/nvme0",
+    "mount_point": "/mnt/ssd",
+    "fs_type": "xfs",
+    "dataset_size_pct": 0.5,
+    "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
+    "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "input_file_size": "1m",
+    "remount_filesystem": true,
+    "readonly_filesystem": false,
+    "remount_as_readonly": true,
+    "test_timeout_ratio": 16
+  }
+}
