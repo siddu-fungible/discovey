@@ -260,7 +260,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                 target_bw_val = (left + right) / 2
 
             # If tested throughput is less than targeted bw for more than 0.1Mbps, no need to try further
-            if throughput < target_bw_val - 0.1:
+            if throughput < abs(target_bw_val - 0.1):
                 fun_test.sleep("Waiting for buffer drain..", seconds=60)
                 break
         else:
