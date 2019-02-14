@@ -110,8 +110,6 @@ def get_tolerance():
     return global_settings.tolerance_percentage/100
 
 def prepare_status(chart, purge_old_status=False):
-    if chart.chart_name == "All metrics":
-        fixup_results_cache = {}
     metric_id = chart.metric_id
     chart_name = chart.chart_name
     result = {}
