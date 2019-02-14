@@ -931,11 +931,12 @@ class NuTransitPerformance(models.Model):
     output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
     output_latency_max = models.FloatField(verbose_name="Latency Max in us")
     output_latency_min = models.FloatField(verbose_name="Latency Min in us")
+    output_latency_median = models.FloatField(verbose_name="Latency Median in us", default=-1)
     output_jitter_min = models.FloatField(verbose_name="Jitter min in us", default=0)
     output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
     output_pps = models.IntegerField(verbose_name="Packets per sec", default=0)
-    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, choices=[(0, "25G"), (1, "50G"), (2, "100G")])
+    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
 

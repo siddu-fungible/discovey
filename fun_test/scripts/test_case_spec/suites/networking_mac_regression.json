@@ -3,5 +3,5 @@
   {"path": "networking/mac/test_good_bad_frames2.py"},
   {"path": "networking/mac/test_bad_address.py", "test_case_ids": [1, 2]},
   {"path": "networking/mac/test_mac_sanity_create_stream.py", "test_case_ids": [3, 4]},
-  {"path": "networking/mac/test_all_frame_size.py", "test_case_ids": [3, 4]}
+  {"path": "networking/mac/test_all_frame_size.py", "test_case_ids": [2, 4]}
 ]

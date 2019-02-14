@@ -1,5 +1,6 @@
-{
-
+[{
+"name": "palladium_test_config",
+"dut_type": "palladium",
 "intfs" : {
      "fpg0" : {
         "description" : "Used as traffic input interface",
@@ -433,5 +434,5 @@
             ]
         }  
 }
-}
+}]
 
