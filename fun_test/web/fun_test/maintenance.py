@@ -653,5 +653,20 @@ if __name__ == "__main__":
             mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
                                    milestone_name="F1")
             mmf.save()
-            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+            if entry.chart_name == "Bandwidth":
+                print entry.chart_name
+                y1_axis_title = "Gbps"
+            elif entry.chart_name == "Latency":
+                print entry.chart_name
+                y1_axis_title = "ns"
+            elif entry.chart_name == "IOPS":
+                print entry.chart_name
+                y1_axis_title = "ops/sec"
+            elif entry.chart_name == "Compression-ratio":
+                print entry.chart_name
+                y1_axis_title = "number"
+            else:
+                y1_axis_title = None
+
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
     print "Milestone and Baseline Setting Complete"
