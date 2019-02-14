@@ -20,7 +20,8 @@ class IPerfManager:
                     result &= linux_obj.install_package(pkg)
 
             # Start ptp4l for PTP clock, and phy2c for sync system clock to PTP clock
-            if not linux_obj.get_process_id_by_pattern('ptp4l') or linux_obj.get_process_id_by_pattern('phc2sys'):
+            if (linux_obj.get_process_id_by_pattern('ptp4l') is None or
+                        linux_obj.get_process_id_by_pattern('phc2sys') is None):
                 cmds = (
                     'ptp4l -i {} -2 &'.format(linux_obj.get_mgmt_interface()),
                     'phc2sys -a -rr &',
@@ -34,7 +35,7 @@ class IPerfManager:
             for pkg in ('iperf', 'iperf3'):
                 if not linux_obj.check_package(pkg):
                     result &= linux_obj.install_package(pkg)
-                if not linux_obj.get_process_id_by_pattern(pkg):
+                if linux_obj.get_process_id_by_pattern(pkg) is None:
                     linux_obj.command('{} -sD'.format(pkg))
                     for ns in linux_obj.get_namespaces():
                         linux_obj.sudo_command('ip netns exec {} {} -sD'.format(ns, pkg))
@@ -52,7 +53,7 @@ class IPerfManager:
                     result &= linux_obj.install_package(pkg)
 
             # Start owampd server
-            if not linux_obj.get_process_id_by_pattern('owampd'):
+            if linux_obj.get_process_id_by_pattern('owampd') is None:
                 cmd = '/usr/sbin/owampd -c /etc/owamp-server -R /var/run'
                 linux_obj.sudo_command(cmd)
                 for ns in linux_obj.get_namespaces():
