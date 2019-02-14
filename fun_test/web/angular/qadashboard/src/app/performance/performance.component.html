@@ -1,8 +1,8 @@
 <fun-spinner [status]="status"></fun-spinner>
-<div class="container">
-  <div class="row">
+<div class="container container-fluid">
+  <div class="row both-cols">
     <!-- left side of the performance page containing tree structure -->
-    <div class="col-lg-5 col-md-5 col-xxl-4 col-xl-5">
+    <div class="col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col">
       <table class="table table-nonfluid">
         <tr>
           <th class="text-center">Aspect</th>
@@ -200,7 +200,7 @@
       </table>
     </div>
     <!-- right side of the perf page dispalying the charts -->
-    <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7">
+    <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col">
       <div *ngIf="mode === modeType.ShowingBugPanel && showBugPanel">
         <summary-jira-info [summaryInfo]="'/common/bug_info'" [data]="jiraList"
                            [allowDelete]="false" [allowContext]="true" [allowAdd]="false"
