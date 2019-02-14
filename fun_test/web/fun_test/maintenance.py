@@ -29,7 +29,7 @@ from web.fun_test.metrics_models import VoltestPerformance
 from web.fun_test.set_base_line import SetBaseLine
 
 from web.fun_test.analytics_models_helper import MetricChartHelper
-from web.fun_test.metrics_models import MetricChartStatus
+from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
 from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
 
 
@@ -624,7 +624,7 @@ if __name__ == "__main_PKE__":
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_HU_NU__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
     chart_names = ["HU_NU_NFCP_output_latency_avg", "HU_NU_NFCP_output_throughput", "HU_NU_NFCP", "TeraMark PKE", "PKE soak"]
@@ -638,4 +638,35 @@ if __name__ == "__main__":
                                    milestone_name="F1")
             mmf.save()
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+    print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    model_names = ["TeraMarkJpegPerformance"]
+    for entry in entries:
+        if entry.metric_model_name in model_names:
+            base_line_date = datetime(year=2019, month=2, day=12, minute=0, hour=0, second=0)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
+                                   milestone_name="F1")
+            mmf.save()
+            if entry.chart_name == "Bandwidth":
+                print entry.chart_name
+                y1_axis_title = "Gbps"
+            elif entry.chart_name == "Latency":
+                print entry.chart_name
+                y1_axis_title = "ns"
+            elif entry.chart_name == "IOPS":
+                print entry.chart_name
+                y1_axis_title = "ops/sec"
+            elif entry.chart_name == "Compression-ratio":
+                print entry.chart_name
+                y1_axis_title = "number"
+            else:
+                y1_axis_title = None
+
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
     print "Milestone and Baseline Setting Complete"
