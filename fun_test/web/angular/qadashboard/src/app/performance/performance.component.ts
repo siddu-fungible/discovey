@@ -876,8 +876,9 @@ export class PerformanceComponent implements OnInit {
       for (let index = 0; index < topLineage.length - 1; index++) {
         //this.expandNode(topLineage[index]);
         let thisNode = this.guIdFlatNodeMap[topLineage[index].guid];
-        thisNode.hide = false;
-        thisNode.collapsed = false;
+        this.expandNode(thisNode);
+        //thisNode.hide = false;
+        //thisNode.collapsed = false;
       }
     }
 
