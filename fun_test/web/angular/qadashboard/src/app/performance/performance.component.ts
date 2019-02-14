@@ -5,6 +5,7 @@ import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
 import {ClipboardService} from 'ngx-clipboard';
 import {Location} from '@angular/common';
+import {ActivatedRoute} from "@angular/router";
 
 
 class ChildInfo {
@@ -84,7 +85,9 @@ export class PerformanceComponent implements OnInit {
   inner: any;
   childData: any;
   dag: any = null;
-  nodeMap: Map<number, Node> = new Map<number, Node>();
+  nodeMap: Map<number, Node> = new Map<number, Node>();  // Metric Id to node
+  guIdFlatNodeMap = {};
+
   lastGuid: number = 0;
   flatNodes: FlatNode[] = [];
   currentFlatNode: FlatNode = null;
@@ -132,22 +135,27 @@ export class PerformanceComponent implements OnInit {
   jiraList: any = {};
   showBugPanel: boolean = false;
 
+  queryPath: string = null;
+  gotoQueryBaseUrl: string = "/performance?goto=";
+
 
   constructor(
     private apiService: ApiService,
     private loggerService: LoggerService,
     private title: Title,
     private commonService: CommonService,
-    private clipboardService: ClipboardService
+    private clipboardService: ClipboardService,
+    private activatedRoute: ActivatedRoute
   ) {
   }
 
   ngOnInit() {
+    console.log("Component Init");
     this.title.setTitle('Performance');
     this.status = "Loading";
-    let myMap = new Map().set('a', 1).set('b', 2);
-    let keys = Array.from(myMap.keys());
-    console.log(keys);
+    //let myMap = new Map().set('a', 1).set('b', 2);
+    //let keys = Array.from(myMap.keys());
+    //console.log(keys);
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
     this.miniGridMaxHeight = '50%';
@@ -158,6 +166,20 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxHeight = '25%';
     }
     this.status = null;
+    console.log("Here");
+    this.getQueryPath();
+  }
+
+  getQueryPath() {
+    this.activatedRoute.queryParams.subscribe(params => {
+      if (params.hasOwnProperty('goto')) {
+        this.queryPath = params['goto'];
+        console.log("QueryPath: " + this.queryPath);
+      }
+      if (!this.dag) {
+        this.fetchDag();
+      }
+    });
   }
 
   getGuid(): number {
@@ -176,7 +198,6 @@ export class PerformanceComponent implements OnInit {
   fetchGlobalSettings(): void {
     this.apiService.get("/metrics/global_settings").subscribe(response => {
       this.globalSettings = response.data;
-      this.fetchDag();
     }, error => {
       this.loggerService.error("fetchGlobalSettings");
     });
@@ -189,12 +210,25 @@ export class PerformanceComponent implements OnInit {
       this.dag = response.data;
       let lineage = [];
       this.walkDag(this.dag, lineage);
-      this.updateUpDownSincePrevious(true);
-      this.updateUpDownSincePrevious(false);
+      if (!this.queryPath) {
+        this.updateUpDownSincePrevious(true);
+        this.updateUpDownSincePrevious(false);
+      }
       //total container should always appear
       this.flatNodes[0].hide = false;
-      this.expandNode(this.flatNodes[0]);//expand total container on page load
       let i = 0;
+      if (this.queryPath) {
+        let pathGuid = this.pathToGuid(this.queryPath);
+        let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
+        this.expandNode(targetFlatNode);
+        if (targetFlatNode.node.leaf) {
+          this.showAtomicMetric(targetFlatNode);
+        } else {
+          this.showNonAtomicMetric(targetFlatNode);
+        }
+      } else {
+        this.expandNode(this.flatNodes[0]);//expand total container on page load
+      }
     }, error => {
       this.loggerService.error("fetchDag");
     });
@@ -261,6 +295,14 @@ export class PerformanceComponent implements OnInit {
 
   }
 
+  lineageToPath(lineage) {
+    let s = "";
+    lineage.forEach(part => {
+      s += "/" + encodeURI(part.chartName);
+    });
+    s = s.slice(1, s.length); // Remove leading slash
+    return s;
+  }
   expandFromLineage(parent): void {
     this.chartReady = false;
     for (let flatNode of this.flatNodes) {
@@ -424,6 +466,15 @@ export class PerformanceComponent implements OnInit {
       let newNode = this.getNodeFromEntry(numMetricId, dagEntry[numMetricId]);
       this.addNodeToMap(numMetricId, newNode);
       thisFlatNode = this.getNewFlatNode(newNode, indent);
+      if (newNode.chartName === "All metrics") {
+        thisFlatNode.hide = false;
+        if (!this.queryPath) {
+          this.updateUpDownSincePrevious(true);
+          this.updateUpDownSincePrevious(false);
+        }
+
+      }
+      this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
       this.flatNodes.push(thisFlatNode);
       //this.loggerService.log('Node:' + nodeInfo.chart_name);
       let parentsGuid = {};
@@ -439,6 +490,7 @@ export class PerformanceComponent implements OnInit {
           let childEntry = {[cId]: nodeInfo.children_info[Number(cId)]};
           let childFlatNode = this.walkDag(childEntry, lineage.slice(), indent + 1);
           this.addUpDownStatusNumbers(childFlatNode, thisFlatNode);
+
           thisFlatNode.addChild(childFlatNode);
         });
       } else {
@@ -498,6 +550,13 @@ export class PerformanceComponent implements OnInit {
     }
   }
 
+  getFlatNodeByGuid(guId) {
+    let result = null;
+    if (this.guIdFlatNodeMap.hasOwnProperty(guId)) {
+      result = this.guIdFlatNodeMap[guId];
+    }
+    return result;
+  }
   addUpgradeDegradeNodes(thisFlatNode, dagEntry): void {
     let leafNode = thisFlatNode.node;
     if (leafNode.trend > 0) {
@@ -800,6 +859,21 @@ export class PerformanceComponent implements OnInit {
   };
 
   expandNode = (flatNode, all = false) => {
+    let topLineage = null;
+    if (flatNode.hasOwnProperty("lineage")) {
+      if (flatNode.lineage.length > 0) {
+        topLineage = flatNode.lineage[0];
+      }
+    }
+    if (topLineage) {
+      for (let index = 0; index < topLineage.length - 1; index++) {
+        //this.expandNode(topLineage[index]);
+        let thisNode = this.guIdFlatNodeMap[topLineage[index].guid];
+        thisNode.hide = false;
+        thisNode.collapsed = false;
+      }
+    }
+
     flatNode.collapsed = false;
     flatNode.hide = false;
     flatNode.children.forEach((child) => {
@@ -823,6 +897,8 @@ export class PerformanceComponent implements OnInit {
     this.expandNode(flatNode);
     this.commonService.scrollTo("chart-info");
     this.chartReady = true;
+    let path = this.lineageToPath(flatNode.lineage[0]);
+    window.history.pushState(null, "Performance: " + path, this.gotoQueryBaseUrl + path);
 
   };
 
@@ -848,8 +924,40 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.chartReady = true;
     }
-
+    let path = this.lineageToPath(flatNode.lineage[0]);
+    window.history.pushState(null, "Performance: " + path, this.gotoQueryBaseUrl + path);
   };
+
+  pathToGuid(path) {
+    let result = null;
+    let parts = path.split("/");
+    result = this._doPathToGuid(this.flatNodes[0], parts);
+    console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
+    return result;
+  }
+
+  _doPathToGuid(flatNode, remainingParts) {
+    let result = null;
+    if (remainingParts.length > 0) {
+      if (flatNode.node.chartName === remainingParts[0]) {
+        // match found
+
+        if (remainingParts.length > 1) {
+          remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
+          for (let index = 0; index < flatNode.children.length; index++) {
+            let childFlatNode = flatNode.children[index];
+            if (remainingParts[0] === childFlatNode.node.chartName) {
+              return this._doPathToGuid(childFlatNode, remainingParts);
+            }
+          }
+        } else {
+          result = flatNode.gUid;
+        }
+      }
+    }
+    return result;
+  }
+
 
   submitWeightClick = (node, childId, info) => {
     let payload: { [i: string]: string } = {
@@ -887,8 +995,8 @@ export class PerformanceComponent implements OnInit {
   //copy atomic URL to clipboard
   copyAtomicUrl(): string {
     let baseUrl = window.location.protocol +
-      '//' + window.location.hostname ;
-    if (window.location.port !== "")  {
+      '//' + window.location.hostname;
+    if (window.location.port !== "") {
       baseUrl += ':' + window.location.port;
     }
 
