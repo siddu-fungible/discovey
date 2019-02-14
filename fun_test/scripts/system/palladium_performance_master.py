@@ -275,13 +275,19 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
         average_bandwidth_perf_name = ""
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
+            m = None
+            n = None
 
             for line in self.lines:
-                m = re.search(
-                    r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>.*)\];\s+average bandwidth: (?P<average_bandwidth>\S+) \[(?P<average_bandwidth_perf_name>.*)\]',
-                    line)
-
-                if m:
+                if not m:
+                    m = re.search(
+                        r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>.*)\]',
+                        line)
+                if not n:
+                    n = re.search(
+                        r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>.*)\]',
+                        line)
+                if m and n:
                     stats_found = True
                     coherent = "Coherent"
                     if m.group("coherent") != "coherent":
@@ -306,14 +312,15 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                     latency_max = latency_json["max"]
                     latency_avg = latency_json["avg"]
                     latency_perf_name = m.group("latency_perf_name")
-                    average_bandwidth = m.group("average_bandwidth")
+                    bandwidth_json = json.loads(n.group("bandwidth_json"))
+                    average_bandwidth_unit = bandwidth_json["unit"]
                     try:
-                        fun_test.test_assert(average_bandwidth.endswith("Gbps"), "Avg bw should be Gbps")
-                        average_bandwidth = int(average_bandwidth.replace("Gbps", ""))
+                        fun_test.test_assert(average_bandwidth_unit.endswith("Gbps"), "Avg bw should be Gbps")
+                        average_bandwidth = int(bandwidth_json["value"])
                     except Exception as ex:
                         fun_test.critical(str(ex))
 
-                    average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
+                    average_bandwidth_perf_name = n.group("average_bandwidth_perf_name")
                     MetricHelper(model=BcopyPerformance).add_entry(status=self.result,
                                                                    input_date_time=self.dt,
                                                                    input_plain=plain,
@@ -327,6 +334,8 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                                                                    input_latency_perf_name=latency_perf_name,
                                                                    output_average_bandwith=average_bandwidth,
                                                                    input_average_bandwith_perf_name=average_bandwidth_perf_name)
+                    m = None
+                    n = None
             self.result = fun_test.PASSED
             # if self.result == fun_test.PASSED:
 
@@ -354,7 +363,7 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'bcopy flood with dma \((?P<N>\d+)\)\s+(?P<size>\S+);\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>\S+)\];\s+average bandwidth: (?P<average_bandwidth>\S+) \[(?P<average_bandwidth_perf_name>\S+)\]',
+                    r'bcopy flood with dma \((?P<N>\d+)\)\s+(?P<size>\S+);\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>\S+)\];\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>\S+)\]',
                     line)
                 if m:
                     n = m.group("N")
@@ -373,10 +382,11 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
                     latency_max = latency_json["max"]
                     latency_avg = latency_json["avg"]
                     latency_perf_name = m.group("latency_perf_name")
-                    average_bandwidth = m.group("average_bandwidth")
+                    bandwidth_json = json.loads(m.group("bandwidth_json"))
+                    average_bandwidth_unit = bandwidth_json["unit"]
                     try:
-                        fun_test.test_assert(average_bandwidth.endswith("Gbps"), "Avg bw should be Gbps")
-                        average_bandwidth = int(average_bandwidth.replace("Gbps", ""))
+                        fun_test.test_assert(average_bandwidth_unit.endswith("Gbps"), "Avg bw should be Gbps")
+                        average_bandwidth = int(bandwidth_json["value"])
                     except Exception as ex:
                         fun_test.critical(str(ex))
 

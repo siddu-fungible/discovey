@@ -50,6 +50,8 @@ class SpirentSetup(FunTestScript):
             flow_type
 
         chassis_type = fun_test.get_local_setting(setting="chassis_type")
+        nu_config_obj = NuConfigManager()
+        fun_test.shared_variables['nu_config_obj'] = nu_config_obj
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         session_name = "short-sanity"
@@ -120,6 +122,7 @@ class TransitSweep(FunTestCase):
                               """)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         global flow_direction, flow_type
         flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
         flow_type = NuConfigManager.TRANSIT_FLOW_TYPE
@@ -545,6 +548,7 @@ class TransitV6Sweep(TransitSweep):
                               """)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         global flow_direction, flow_type
         flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
         flow_type = NuConfigManager.TRANSIT_FLOW_TYPE
@@ -666,6 +670,7 @@ class TestCcFlows(FunTestCase):
         pass
 
     def configure_ports(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         global cc_port_list, flow_direction, flow_type
 
         self.dut_config = nu_config_obj.read_dut_config(dut_type=NuConfigManager.DUT_TYPE_PALLADIUM,
@@ -1190,6 +1195,7 @@ class TestVpFlows(FunTestCase):
 
     def configure_ports(self):
         global vp_port_list
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         self.dut_config = nu_config_obj.read_dut_config(dut_type=NuConfigManager.DUT_TYPE_PALLADIUM,
                                                         flow_type=flow_type,
@@ -1506,6 +1512,7 @@ class VPPathIPv4TCP(TestVpFlows):
 
     def setup(self):
         global flow_direction, flow_type
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -1564,6 +1571,7 @@ class VPPathIPv4TCPNFCP(TestVpFlows):
 
     def setup(self):
         global flow_direction, flow_type
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -1629,6 +1637,7 @@ class VPPathIPv4TCPFCP(TestVpFlows):
 
     def setup(self):
         global flow_direction, flow_type
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU
         flow_type = NuConfigManager.VP_FLOW_TYPE
@@ -1703,6 +1712,7 @@ class VpPathIpv4HnuNu(TestVpFlows):
 
     def setup(self):
         global flow_direction, flow_type
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
 
         flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
         flow_type = NuConfigManager.VP_FLOW_TYPE

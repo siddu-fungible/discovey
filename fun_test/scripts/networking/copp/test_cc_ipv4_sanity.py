@@ -44,6 +44,8 @@ class SetupSpirent(FunTestScript):
         global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE, MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT, TRAFFIC_DURATION
 
         dut_type = fun_test.get_local_setting('dut_type')
+        nu_config_obj = NuConfigManager()
+        fun_test.shared_variables['nu_config_obj'] = nu_config_obj
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_type=NuConfigManager.CC_FLOW_TYPE,
                                                    flow_direction=FLOW_DIRECTION)
 
@@ -133,6 +135,7 @@ class TestCcIPv4ICMP(FunTestCase):
                                   port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
 

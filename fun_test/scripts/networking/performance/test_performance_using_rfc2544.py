@@ -64,6 +64,7 @@ class ScriptSetup(FunTestScript):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
         dut_type = NuConfigManager.DUT_TYPE_PALLADIUM
+        nu_config_obj = NuConfigManager()
         spirent_config = nu_config_obj.read_traffic_generator_config()
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
