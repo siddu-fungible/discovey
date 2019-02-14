@@ -3,7 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import *
+from scripts.networking.nu_config_manager import NuConfigManager
 
 
 num_ports = 2
@@ -24,8 +24,9 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, subscribe_results, network_controller_obj, dut_port_1, dut_port_2, \
-            ethernet, ipv4, source_mac1, destination_mac1, destination_ip1, streamblock_1, duration_seconds, shape, hnu, flow_direction
+            ethernet, ipv4, source_mac1, destination_mac1, destination_ip1, streamblock_1, duration_seconds, shape, hnu, flow_direction, nu_config_obj
 
+        nu_config_obj = NuConfigManager()
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
         dut_type = fun_test.get_local_setting(setting="dut_type")
@@ -201,6 +202,7 @@ class TestCase1(FunTestCase):
                                                               dut_port_2)
 
         for key in fetch_list:
+            fun_test.log("Check psw stats for key %s" % key)
             fun_test.test_assert_expected(expected=int(spirent_tx_counter), actual=psw_fetched_output_after['input'][key] - psw_fetched_output_before['input'][key],
                                           message="Check counter %s in psw global stats" % key)
 

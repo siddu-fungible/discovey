@@ -40,6 +40,9 @@ class SpirentSetup(FunTestScript):
         global spirent_config, subscribed_results, dut_config, template_obj, network_controller_obj, tx_port, rx_port, \
             sample_port, generator_port_obj_dict, analyzer_port_obj_dict, generator_config, analyzer_config
 
+        nu_config_obj = NuConfigManager()
+        fun_test.shared_variables['nu_config_obj'] = nu_config_obj
+
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         dut_config = nu_config_obj.read_dut_config(dut_type=None, flow_type=NuConfigManager.SAMPLE_FLOW_TYPE,
@@ -155,6 +158,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -207,6 +211,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -396,6 +401,7 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -450,6 +456,7 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -648,6 +655,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
                                   """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -701,6 +709,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -906,6 +915,7 @@ class SamplePPStoFPG(FunTestCase):
                                       """)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -968,6 +978,7 @@ class SamplePPStoFPG(FunTestCase):
         fun_test.simple_assert(expression=result, message=checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -1106,6 +1117,7 @@ class SamplePPStoFPG(FunTestCase):
         fun_test.test_assert(result, checkpoint)
 
     def cleanup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
 
@@ -1169,6 +1181,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
                                       """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -1232,6 +1245,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -1428,6 +1442,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
                               """ % (TRAFFIC_DURATION, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -1477,6 +1492,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]

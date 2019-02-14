@@ -1,8 +1,8 @@
 <fun-spinner [status]="status"></fun-spinner>
-<div class="container">
-  <div class="row">
+<div class="container container-fluid">
+  <div class="row both-cols">
     <!-- left side of the performance page containing tree structure -->
-    <div class="col-lg-5 col-md-5 col-xxl-4 col-xl-5">
+    <div class="col-lg-5 col-md-5 col-xxl-4 col-xl-5 left-col">
       <table class="table table-nonfluid">
         <tr>
           <th class="text-center">Aspect</th>
@@ -102,18 +102,10 @@
             </td>
 
             <td *ngIf="!flatNode.node.leaf && !flatNode.special">
-              <span [innerHTML]="getStatusHtml(flatNode) | safeHtml"></span>
-              <span *ngIf="flatNode.node.failures.size !== 0 || flatNode.node.degrades.size !== 0">&nbsp;</span>
-              <ng-container *ngIf="getJiraListLength(flatNode.jiraList) as length">
-                <span *ngIf="flatNode.jiraList !== null && length !== 0">
-                  <a [routerLink]="" (click)="openBugPanel(flatNode)"><span
-                    class="badge no-padding badge-light bug-badge">Bugs
-                    <sup><span class="text-color-red">{{ length }}</span>
-              </sup>
-                  </span>
-                </a>
-                </span>
-              </ng-container>
+              <span *ngIf="flatNode.node.degrades.size !== 0"><i class='fa fa-arrow-down aspect-trend-icon fa-icon-red'>:</i>{{ flatNode.node.degrades.size }}</span>
+              <a *ngIf="flatNode.node.failures.size !== 0" style="color: black; cursor: pointer">
+                <span *ngIf="flatNode.node.degrades.size !== 0">&nbsp;</span><span (click)="openBugPanel(flatNode)"><i
+                class='fa fa-times fa-icon-red'>:</i>{{ flatNode.node.failures.size }}</span></a>
             </td>
             <td *ngIf="flatNode.node.leaf && flatNode.node.lastNumBuildFailed > 0 && !flatNode.special">
               Bld:<label data-placement="right" (click)="openTooltip(flatNode.node)" triggers="click"
@@ -208,7 +200,7 @@
       </table>
     </div>
     <!-- right side of the perf page dispalying the charts -->
-    <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7">
+    <div class="col-lg-7 col-md-7 col-xxl-5 col-xl-7 right-col">
       <div *ngIf="mode === modeType.ShowingBugPanel && showBugPanel">
         <summary-jira-info [summaryInfo]="'/common/bug_info'" [data]="jiraList"
                            [allowDelete]="false" [allowContext]="true" [allowAdd]="false"
