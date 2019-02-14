@@ -58,6 +58,13 @@
         <br>
     </div>
       <br>
+      <div *ngIf="modelName != 'MetricContainer'">
+        <i *ngIf="!editingSource" class="grey-text">Source: <span (click)="editingSource = true">{{ inner.currentSource }}</span></i>
+        <i *ngIf="editingSource" style="font-size: 95%;">Source: <input type="text" class="owner-text" [(ngModel)]="inner.currentSource">
+          <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
+          <span><i class="fa fa-times fa-fw close-color" (click)="editingSource = false"></i></span></i>
+        <br>
+      </div>
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
         <br>

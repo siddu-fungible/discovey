@@ -23,9 +23,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   metricId: number;
   editingDescription: boolean = false;
   editingOwner: boolean = false;
+  editingSource: boolean = false;
   inner: any = {};
   currentDescription: string;
   currentOwner: string;
+  currentSource: string;
   waitTime: number = 0;
   values: any;
   charting: any;
@@ -69,9 +71,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.metricId = -1;
     this.editingDescription = false;
     this.editingOwner = false;
+    this.editingSource = false;
     this.inner = {};
     this.inner.currentDescription = "TBD";
     this.inner.currentOwner = "Unknown";
+    this.currentOwner = "Unknown";
+    this.inner.currentSource = "Unknown";
     this.currentOwner = "Unknown";
     this.currentDescription = "---";
     this.values = null;
