@@ -1186,7 +1186,7 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def command_exists(self, command):
         self.command("which " + command)
-        exit_status = self.get_exit_status()  #TODO
+        exit_status = self.exit_status()  #TODO
         return exit_status == 0
 
     @fun_test.safe
@@ -2080,8 +2080,17 @@ class Linux(object, ToDictMixin):
                 valid_lft forever preferred_lft forever
             inet6 fe80::ec4:7aff:fe84:eb70/64 scope link
         """
-        output = self.command('ip address show | grep {} -A2 -B2'.format(self.host_ip))
-        match = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(self.host_ip), output, re.DOTALL)
+        if re.search(r'\d+\.\d+\.\d+\.\d+', self.host_ip):
+            ip_addr = self.host_ip
+        else:
+            output = self.command('nslookup {}'.format(self.host_ip))
+            match = re.search(r'Address: (\d+\.\d+\.\d+\.\d+)', output)
+            if match:
+                ip_addr = match.group(1)
+            else:
+                return None
+        output = self.command('ip address show | grep {} -A2 -B2'.format(ip_addr))
+        match = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(ip_addr), output, re.DOTALL)
         if match:
             return match.group(1)
 
@@ -2089,10 +2098,10 @@ class Linux(object, ToDictMixin):
     def get_interface_to_route(self, ip, ns=None):
         """Get interface name, via which the ip route point to the destination IP. In below example, it returns 'fpg1'.
 
-        localadmin@nu-lab-01:~$ ip route show to match 29.1.1.2
-        default via 10.1.40.1 dev enp96s0f0 proto static
-        29.1.1.0/24 via 21.1.1.2 dev fpg1
-        localadmin@nu-lab-01:~$
+        root@cadence-pc-5:~# ip route show to match 19.1.1.1
+        default via 10.1.20.1 dev eth0 onlink
+        19.1.1.0/24 via 53.1.1.1 dev hu3-f0
+        root@cadence-pc-5:~#
         """
         cmd = 'ip route show to match {}'.format(ip)
         if ns:
@@ -2100,9 +2109,39 @@ class Linux(object, ToDictMixin):
             output = self.sudo_command(cmd)
         else:
             output = self.command(cmd)
-        match = re.search(r'\d+\.\d+\.\d+\.\d+/\d+ via.*dev (\w+)', output)
+        match = re.search(r'\d+\.\d+\.\d+\.\d+/\d+ via.*dev (\S+)', output)
         if match:
             return match.group(1)
+
+    @fun_test.safe
+    def get_namespaces(self):
+        """Get all the namespaces.
+
+        localadmin@hu-lab-01:~$ ip netns list
+        n9 (id: 2)
+        n8 (id: 1)
+        n1 (id: 0)
+        localadmin@hu-lab-01:~$
+        """
+        cmd = 'ip netns list'
+        output = self.command(cmd)
+        if output:
+            return [i.split()[0] for i in output.strip().split('\n')]
+        else:
+            return []
+
+    @fun_test.safe
+    def get_hostname(self):
+        """Get hostname."""
+        cmd = 'hostname'
+        output = self.command(cmd)
+        return output.split('.')[0]
+
+    @fun_test.safe
+    def pkill(self, process_name):
+        """sudo pkill one or multiple processes which match the given name."""
+        cmd = 'pkill {}'.format(process_name)
+        self.sudo_command(cmd)
 
 
 class LinuxBackup:
