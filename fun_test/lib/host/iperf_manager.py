@@ -82,7 +82,7 @@ class IPerfManager:
         else:
             for arg_dict in arg_dicts:
                 linux_obj = arg_dict.get('linux_obj')
-                hostname = linux_obj.get_hostname()
+                hostname = linux_obj.hostname()
                 result.update({hostname: {}})
                 dip = arg_dict.get('dip')
                 tool = arg_dict.get('tool', 'iperf3')
