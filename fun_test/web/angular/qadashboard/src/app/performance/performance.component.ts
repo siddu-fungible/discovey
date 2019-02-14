@@ -423,7 +423,7 @@ export class PerformanceComponent implements OnInit {
       let newNode = this.getNodeFromEntry(numMetricId, dagEntry[numMetricId]);
       this.addNodeToMap(numMetricId, newNode);
       thisFlatNode = this.getNewFlatNode(newNode, indent);
-       if (newNode.chartName === "All metrics") {
+      if (newNode.chartName === "All metrics") {
         thisFlatNode.hide = false;
         this.updateUpDownSincePrevious(true);
         this.updateUpDownSincePrevious(false);
@@ -891,8 +891,8 @@ export class PerformanceComponent implements OnInit {
   //copy atomic URL to clipboard
   copyAtomicUrl(): string {
     let baseUrl = window.location.protocol +
-      '//' + window.location.hostname ;
-    if (window.location.port !== "")  {
+      '//' + window.location.hostname;
+    if (window.location.port !== "") {
       baseUrl += ':' + window.location.port;
     }
 

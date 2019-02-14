@@ -109,7 +109,7 @@ def get_tolerance():
     global_settings = MetricsGlobalSettings.objects.first()
     return global_settings.tolerance_percentage/100
 
-def prepare_status(chart, purge_old_status=False):
+def prepar e_status(chart, purge_old_status=False):
     metric_id = chart.metric_id
     chart_name = chart.chart_name
     result = {}
@@ -415,7 +415,8 @@ if __name__ == "__main__":
 
     # total_chart = MetricChart.objects.get(metric_model_name="WuSendSpeedTestPerformance", chart_name="Average WU send ungated cycles")
     prepare_status(chart=total_chart, purge_old_status=False)
-
+    all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
+    prepare_status(chart=all_metrics_chart, purge_old_status=False)
 
 if __name__ == "__main2__":
     pass
