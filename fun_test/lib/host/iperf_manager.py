@@ -1,4 +1,4 @@
-from lib.host.linux import Linux
+from fun_global import get_current_time
 from lib.system.fun_test import fun_test
 import pprint
 import re
@@ -74,7 +74,7 @@ class IPerfManager:
 
     def run(self, *arg_dicts):
         result = {}
-        concurrent=False
+        concurrent = False  # TODO: pass this arg in func
         if concurrent:
             # TODO: run test concurrently
             pass
@@ -318,9 +318,11 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
             {'jitter': round(jitter, 1)}
         )
 
+    result.update(
+        {'timestamp': '%s' % get_current_time(),
+         'version': fun_test.get_version(),
+        }
+    )
     fun_test.log('\n{}'.format(pprint.pformat(result)))
     return result
-
-
-
 
