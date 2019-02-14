@@ -251,23 +251,22 @@ if __name__ == "__main__":
     FunethScript = FunethPerformance()
 
     # NU -> HU
-    #FunethScript.add_test_case(FunethPerformance_NU_HU_64B_UDP())
-    #FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_UDP())
-    #FunethScript.add_test_case(FunethPerformance_NU_HU_64B_TCP())
-    #FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_TCP())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_64B_UDP())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_UDP())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_64B_TCP())
+    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_TCP())
 
     # HU -> NU
-    # TODO: Below throughput result is too small in SN2, need further investigation
     FunethScript.add_test_case(FunethPerformance_HU_NU_64B_UDP())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_UDP())
     FunethScript.add_test_case(FunethPerformance_HU_NU_64B_TCP())
     FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_TCP())
 
     # HU -> NU
-    #FunethScript.add_test_case(FunethPerformance_HU_HU_64B_UDP())
-    #FunethScript.add_test_case(FunethPerformance_HU_HU_1500B_UDP())
-    #FunethScript.add_test_case(FunethPerformance_HU_HU_64B_TCP())
-    #FunethScript.add_test_case(FunethPerformance_HU_HU_1500B_TCP())
+    FunethScript.add_test_case(FunethPerformance_HU_HU_64B_UDP())
+    FunethScript.add_test_case(FunethPerformance_HU_HU_1500B_UDP())
+    FunethScript.add_test_case(FunethPerformance_HU_HU_64B_TCP())
+    FunethScript.add_test_case(FunethPerformance_HU_HU_1500B_TCP())
 
     FunethScript.run()
     fun_test.log('Performance results:\n{}'.format(RESULT_FILE))
