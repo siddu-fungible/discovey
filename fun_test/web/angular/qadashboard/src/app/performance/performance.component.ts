@@ -210,10 +210,6 @@ export class PerformanceComponent implements OnInit {
       this.dag = response.data;
       let lineage = [];
       this.walkDag(this.dag, lineage);
-      if (!this.queryPath) {
-        this.updateUpDownSincePrevious(true);
-        this.updateUpDownSincePrevious(false);
-      }
       //total container should always appear
       this.flatNodes[0].hide = false;
       let i = 0;
