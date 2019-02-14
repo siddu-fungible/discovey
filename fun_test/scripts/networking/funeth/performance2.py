@@ -77,7 +77,7 @@ class FunethPerformanceBase(FunTestCase):
              }
         ]
         result = iperf_manager_obj.run(*arg_dicts).values()[0]
-        fun_test.test_assert(not all(i == -1 for i in result.values()), 'Get throughput/latency test result')
+        fun_test.test_assert(not any(i == -1 for i in result.values()), 'Get throughput/latency test result')
         result.update(
             {'flow_type': flow_type}
         )

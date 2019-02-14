@@ -2080,19 +2080,19 @@ class Linux(object, ToDictMixin):
                 valid_lft forever preferred_lft forever
             inet6 fe80::ec4:7aff:fe84:eb70/64 scope link
         """
+        result = None
         if re.search(r'\d+\.\d+\.\d+\.\d+', self.host_ip):
-            ip_addr = self.host_ip
+            result = self.host_ip
         else:
-            output = self.command('nslookup {}'.format(self.host_ip))
-            match = re.search(r'Address: (\d+\.\d+\.\d+\.\d+)', output)
-            if match:
-                ip_addr = match.group(1)
-            else:
-                return None
-        output = self.command('ip address show | grep {} -A2 -B2'.format(ip_addr))
-        match = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(ip_addr), output, re.DOTALL)
-        if match:
-            return match.group(1)
+            result = self.nslookup(self.host_ip)
+            if result:
+                ip_addr = result['ip_address']
+                output = self.command('ip address show | grep {} -A2 -B2'.format(ip_addr))
+                match2 = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(ip_addr), output, re.DOTALL)
+                if match2:
+                    result = match2.group(1)
+
+        return result
 
     @fun_test.safe
     def get_interface_to_route(self, ip, ns=None):
@@ -2131,7 +2131,7 @@ class Linux(object, ToDictMixin):
             return []
 
     @fun_test.safe
-    def get_hostname(self):
+    def hostname(self):
         """Get hostname."""
         cmd = 'hostname'
         output = self.command(cmd)
@@ -2141,7 +2141,7 @@ class Linux(object, ToDictMixin):
     def pkill(self, process_name):
         """sudo pkill one or multiple processes which match the given name."""
         cmd = 'pkill {}'.format(process_name)
-        self.sudo_command(cmd)
+        return self.sudo_command(cmd)
 
 
 class LinuxBackup:

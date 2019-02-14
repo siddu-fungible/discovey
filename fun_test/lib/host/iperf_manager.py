@@ -257,8 +257,8 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                 throughput = (rate * time - retry * payload_size * 8 / 1000000) / (float(payload_size) / frame_size)
                 pps = throughput * 1000000 / (frame_size * 8)
 
-                left = target_bw_val
-                target_bw_val = (left + right) / 2
+            left = target_bw_val
+            target_bw_val = (left + right) / 2
 
             # If tested throughput is less than targeted bw for more than 0.1Mbps, no need to try further
             if throughput < abs(target_bw_val - 0.1):
