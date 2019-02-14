@@ -221,6 +221,11 @@ export class PerformanceComponent implements OnInit {
         let pathGuid = this.pathToGuid(this.queryPath);
         let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
         this.expandNode(targetFlatNode);
+        if (targetFlatNode.node.leaf) {
+          this.showAtomicMetric(targetFlatNode);
+        } else {
+          this.showNonAtomicMetric(targetFlatNode);
+        }
       } else {
         this.expandNode(this.flatNodes[0]);//expand total container on page load
       }
