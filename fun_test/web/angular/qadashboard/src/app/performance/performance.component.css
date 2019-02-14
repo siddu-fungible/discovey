@@ -225,7 +225,7 @@ sup {
   color: black !important;
   font-weight: 600;
 }
-.right-col{
+.right-col {
   height: 100%;
   overflow-y: scroll;
 }
@@ -234,7 +234,7 @@ sup {
   overflow-y: scroll;
 }
 /*Set the row height to the viewport*/
-.both-cols{
+.both-cols {
   height: 100vh;
 }
 /*Remove the scrollbar from Chrome, Safari, Edge and IE*/
