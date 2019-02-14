@@ -626,7 +626,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //fetching container data
   fetchContainerData(payload): void {
-    console.log("Fetch Scores");
+    //console.log("Fetch Scores");
     this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
       if (response.data.length === 0) {
         this.values = null;
