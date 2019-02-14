@@ -626,6 +626,8 @@ def dag(request):
     chart_name = request_json["chart_name"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False)
+    chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="All metrics")
+    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=True)
     return result
 
 @csrf_exempt
