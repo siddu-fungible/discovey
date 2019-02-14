@@ -109,7 +109,7 @@ def get_tolerance():
     global_settings = MetricsGlobalSettings.objects.first()
     return global_settings.tolerance_percentage/100
 
-def prepar e_status(chart, purge_old_status=False):
+def prepare_status(chart, purge_old_status=False):
     metric_id = chart.metric_id
     chart_name = chart.chart_name
     result = {}
