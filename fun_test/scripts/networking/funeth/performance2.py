@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
 from lib.host.iperf_manager import IPerfManager
 from scripts.networking.tb_configs import tb_configs
@@ -8,9 +9,9 @@ import json
 
 TB = sanity.TB
 if TB == 'SN2':
-    BW_LIMIT = '3M'
+    BW_LIMIT = '10M'
 else:
-    BW_LIMIT = '15G'
+    BW_LIMIT = '25G'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
 
@@ -80,26 +81,20 @@ class FunethPerformanceBase(FunTestCase):
         result.update(
             {'flow_type': flow_type,
              'frame_size': frame_size,
+             'timestamp': '%s' % get_current_time(),
+             'version': fun_test.get_version(),
              }
         )
 
-        # Pop out 'nan'
-        passed = True
-        for k, v in result.items():
-            if v == float('nan'):
-                result.pop(k)
-                passed = False
+        fun_test.test_assert(result, 'Get throughput/latency test result')
 
         # Update file with result
-        if result:
-            with open(RESULT_FILE) as f:
-                r = json.load(f)
-                r.append(result)
+        with open(RESULT_FILE) as f:
+            r = json.load(f)
+            r.append(result)
 
-            with open(RESULT_FILE, 'w') as f:
-                json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
-
-        fun_test.test_assert(passed, 'Get throughput/latency test result')
+        with open(RESULT_FILE, 'w') as f:
+            json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
 
 class FunethPerformance_NU_HU_64B_UDP(FunethPerformanceBase):
