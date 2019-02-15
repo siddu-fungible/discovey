@@ -98,16 +98,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     self.pointInfo = [];
     self.buildProps = [];
     Object.keys(pointInfo).forEach((key) => {
-        if(key === "Build Properties") {
-          let properties = pointInfo[key];
-          self.buildProps["name"] = key;
-          self.buildProps["value"] = properties;
-        } else {
-          let property = [];
-          property["name"] = key;
-          property["value"] = pointInfo[key];
-          self.pointInfo.push(property);
-        }
+      if (key === "Build Properties") {
+        let properties = pointInfo[key];
+        self.buildProps["name"] = key;
+        self.buildProps["value"] = properties;
+      } else {
+        let property = [];
+        property["name"] = key;
+        property["value"] = pointInfo[key];
+        self.pointInfo.push(property);
+      }
     });
     self.pointClicked = true;
   }
@@ -295,6 +295,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.pointClicked = false;
     this.showBuildProps = false;
   }
+
   getPreviewDataSets(): any {
     return this.chartInfo.data_sets;
   }
@@ -364,6 +365,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   openSource(url): void {
     window.open(url, '_blank');
+  }
+
+  openScores(): void {
+    window.open('/metrics/score_table/' + this.metricId, '_blank');
   }
 
   getAppName(source): string {
@@ -558,18 +563,18 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
             let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0]; // removing the time to check if the milestone date exists
             //comparing two date objects to get the f1 milestone incase of date mismatch
-            let compareDate =  new Date(originalKeyList[startIndex]);
-             if (originalKeyList[startIndex].includes(markerDate)) { // Tape-out and F1
+            let compareDate = new Date(originalKeyList[startIndex]);
+            if (originalKeyList[startIndex].includes(markerDate)) { // Tape-out and F1
               if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
                 this.mileStoneIndices[mileStone] = startIndex;
               }
-          } else if(compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
-               if (mileStone === "F1") {
-                 if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
-                this.mileStoneIndices[mileStone] = startIndex;
+            } else if (compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
+              if (mileStone === "F1") {
+                if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+                  this.mileStoneIndices[mileStone] = startIndex;
+                }
               }
-               }
-             }
+            }
           });
 
           while (startIndex >= endIndex) {
@@ -684,9 +689,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           dateSeries.push(series[startIndex]);
           Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
             let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0];
-             if (series[startIndex].includes(markerDate)) { // Tape-out and F1
-            this.mileStoneIndices[mileStone] = startIndex;
-          }
+            if (series[startIndex].includes(markerDate)) { // Tape-out and F1
+              this.mileStoneIndices[mileStone] = startIndex;
+            }
           });
           while (startIndex >= endIndex) {
             if (keyValue[series[startIndex]] != -1) {
