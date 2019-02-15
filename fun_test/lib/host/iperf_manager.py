@@ -214,7 +214,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     linux_obj.sudo_command('ethtool --offload {} rx off tx off sg off tso off gso off gro off'.format(interface))
 
     result = {}
-    deviation = 0.01  # 0.1 K/M/Gbps
+    deviation = 0.05  # 5%
     throughput = pps = jitter = float('nan')
     bw_unit = bw[-1]
     factor = get_rate_factor(bw_unit)
@@ -222,7 +222,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     left, right = 0.0, bw_val
     target_bw_val = (left + right) / 2  # Start test from 1/2 of target bindwidth
-    while (right - left) >= deviation:
+    while (left / right) >= (1 - deviation):
         target_bw = '{}{}'.format(target_bw_val, bw_unit)
 
         if protocol.lower() == 'udp':
@@ -264,7 +264,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                     float(payload_size) / frame_size)
                 pps = throughput * 1000000 / (frame_size * 8)
 
-            if data_throughput < abs(target_bw_val - deviation):
+            if data_throughput < target_bw_val*(1-deviation):
                 break
 
             left = target_bw_val
