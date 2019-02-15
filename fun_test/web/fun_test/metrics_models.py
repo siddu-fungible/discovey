@@ -1273,7 +1273,7 @@ class TeraMarkJpegPerformance(models.Model):
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_operation = models.TextField(verbose_name="Operation")
-    output_average_bandwidth = models.IntegerField(verbose_name="Average bandwidth", default=-1)
+    output_average_bandwidth = models.FloatField(verbose_name="Average bandwidth", default=-1)
     output_total_bandwidth = models.IntegerField(verbose_name="Total bandwidth", default=-1)
     input_count = models.IntegerField(verbose_name="Count", default=0)
     input_image = models.TextField(verbose_name="Image", default="None")
