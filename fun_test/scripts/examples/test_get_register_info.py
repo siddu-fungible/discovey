@@ -1,0 +1,17 @@
+from scripts.examples.register_controller import RegisterController
+
+rc = RegisterController(dpc_server_ip='10.1.40.22', dpc_server_port=40221, verbose=False)
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_test_in, rinst=3, field="test_in")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_tl_pm_event0, rinst=3, field="tl_pm_event")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_tl_pm_event1, rinst=3, field="tl_pm_event")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_tl_pm_event2, rinst=3, field="tl_pm_event")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_tl_pm_event3, rinst=3, field="tl_pm_event")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_l1ss_sup")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_asl11_sup")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_asl12_sup")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_pml11_sup")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_pml12_sup")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_link_aspml1")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_link_aspml0s")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_test_outl, rinst=3, field="csr_test_outl")
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=3, field="apb")
