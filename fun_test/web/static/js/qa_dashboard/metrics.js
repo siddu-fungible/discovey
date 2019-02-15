@@ -107,6 +107,8 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
         $scope.showOutputSelection = true;
         $scope.negativeGradient = null;
         $scope.metricId = metricId;
+        $scope.owner = "Unknown";
+        $scope.source = "Unknown";
 
 
         let payload = {};

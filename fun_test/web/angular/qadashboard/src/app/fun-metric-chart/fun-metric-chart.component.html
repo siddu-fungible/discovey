@@ -73,7 +73,7 @@
       </div>
       <div *ngIf="modelName !== 'MetricContainer'">
         <span *ngIf="!editingSource"><i class="grey-text">Source: </i><span *ngIf="inner.currentSource === 'Unknown'">{{ inner.currentSource }}</span>
-          <a *ngIf="inner.currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(inner.currentSource)">{{ inner.currentSource }}</a>&nbsp;
+          <a *ngIf="inner.currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(inner.currentSource)">{{ getAppName(inner.currentSource) }}</a>&nbsp;
           <a (click)="editingSource = true"><i class="fa fa-pencil"></i></a></span>
         <i *ngIf="editingSource" style="font-size: 95%;">Source: <input type="text" class="owner-text"
                                                                         [(ngModel)]="inner.currentSource">

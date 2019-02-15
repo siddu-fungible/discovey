@@ -366,6 +366,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     window.open(url, '_blank');
   }
 
+  getAppName(source): string {
+    let s = "Unknown";
+    let sourceSplits = source.split("/");
+    s = sourceSplits[sourceSplits.length - 1];
+    return s;
+  }
+
   //opens and closes the show tables panel
   showTables(): void {
     this.showingTable = !this.showingTable;
