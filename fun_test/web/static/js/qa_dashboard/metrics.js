@@ -151,7 +151,7 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
                 //$scope.copyChartInfo = angular.copy($scope.chartInfo);
                 $scope.previewDataSets = $scope.chartInfo.data_sets;
                 $scope.negativeGradient = !$scope.chartInfo.positive;
-                $scope.owner = $scope.chartInfo.owner;
+                $scope.owner = $scope.chartInfo.owner_info;
                 $scope.source = $scope.chartInfo.source;
 
             });
