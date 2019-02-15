@@ -1,5 +1,5 @@
-from fun_global import get_current_time
 from lib.system.fun_test import fun_test
+import math
 import pprint
 import re
 
@@ -290,7 +290,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     latency_min = latency_median = latency_max = jitter = latency_percentile = float('nan')
 
     packet_count = int(pps*duration)
-    cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, frame_size-18-20-8-14, 1.0/pps, percentile, dip)
+    cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, frame_size-18-20-8-14, 1.0/int(pps), percentile, dip)
     output = linux_obj.command(cmd, timeout=duration+30)
     pat = r'from.*?to.*?{}.*?{} sent, (\d+) lost.*?(\d+) duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, packet_count, percentile)
     match = re.search(pat, output, re.DOTALL)
@@ -313,16 +313,15 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
          }
     )
 
-    if result.get('jitter', 0) in (float('nan'), 0):
+    if result.get('jitter', 0.0) == 0 or math.isnan(result.get('jitter', 0.0)):
         result.update(
             {'jitter': round(jitter, 1)}
         )
 
-    result.update(
-        {'timestamp': '%s' % get_current_time(),
-         'version': fun_test.get_version(),
-        }
-    )
+    # Pop out 'nan'
+    for k, v in result.items():
+        if math.isnan(v):
+            result.pop(k)
 
     fun_test.log('\n{}'.format(pprint.pformat(result)))
     return result
