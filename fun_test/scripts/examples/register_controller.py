@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.host.dpcsh_client import DpcshClient
+import time
 
 class RegisterController(DpcshClient):
     VERB_TYPE_PEEK = 'peek'
@@ -22,6 +23,7 @@ class RegisterController(DpcshClient):
         self.server_port = dpc_server_port
         self.verbose = verbose
         self.command(command="enable_counters", legacy=True)
+        time.sleep(1)
 
     def peek_csr(self, args):
         result = None
@@ -46,6 +48,6 @@ class RegisterController(DpcshClient):
         fun_test.log("\n############################")
         output = self.peek_csr(args)
         if field:
-            fun_test.log("Output seen for register %s with field %s is %s" % (register_name, field, output['data']))
+            fun_test.log("Output seen for register '%s' with field '%s' is '%s'" % (register_name, field, output['data']))
         else:
-            fun_test.log("Output seen for register %s is %s" % (register_name, output['data']))
+            fun_test.log("Output seen for register '%s' is '%s'" % (register_name, output['data']))
