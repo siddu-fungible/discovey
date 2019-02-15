@@ -3,11 +3,11 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import *
+from helper import *
 
 
 num_ports = 2
-loads_file = "interface_loads.json"
 streamblock_objects = {}
 generator_list = []
 generator_config_list = []
@@ -20,26 +20,25 @@ IHL_ERROR = 'IHL_ERROR'
 IP_VERSION_ERROR = 'IP_VERSION_ERROR'
 TTL_ERROR = 'TTL_ERROR'
 GOOD_FRAME = 'GOOD_FRAME'
-MIN_FRAME_LENGTH = 64
-MAX_FRAME_LENGTH = 1500
 OVERSIZED_FRAME_LENGTH = 2000
 MTU_TEST_FRAME_LENGTH = 1400
 PREAMBLE_ERROR = '55555555556655d5'
 SFD_ERROR = '55555555555555d6'
+TO_BE_RUN = False
+
 cushion_sleep = 5
-is_test_physical = True
 
-stream_list = [CRC_64B, CRC_1500B, PREAMBLE, SFD, CHECKSUM_ERROR,
-               IHL_ERROR, IP_VERSION_ERROR, TTL_ERROR, GOOD_FRAME]
 
-dut_type = nu_config_obj.get_dut_type()
-to_be_run = True
-if is_test_physical and (dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
-    to_be_run = False
-    stream_list = [CHECKSUM_ERROR, IHL_ERROR, IP_VERSION_ERROR, TTL_ERROR, GOOD_FRAME]
+def get_stream_list(dut_type):
+    global TO_BE_RUN
+    stream_list = [CRC_64B, CRC_1500B, PREAMBLE, SFD, CHECKSUM_ERROR,
+                   IHL_ERROR, IP_VERSION_ERROR, TTL_ERROR, GOOD_FRAME]
 
-for stream in stream_list:
-    streamblock_objects[stream] = {}
+    TO_BE_RUN = True
+    if dut_type is NuConfigManager.DUT_TYPE_PALLADIUM:
+        TO_BE_RUN = False
+        stream_list = [CHECKSUM_ERROR, IHL_ERROR, IP_VERSION_ERROR, TTL_ERROR, GOOD_FRAME]
+    return stream_list
 
 
 class SpirentSetup(FunTestScript):
@@ -54,24 +53,28 @@ class SpirentSetup(FunTestScript):
                 """)
 
     def setup(self):
-        global template_obj, port_1, port_2, duration_seconds, subscribe_results, port_obj_list, bad_frame_load, \
-            good_frame_load, interface_obj_list, network_controller_obj, dut_port_1, dut_port_2, shape, hnu, flow_direction
+        global template_obj, port_1, port_2, duration_seconds, subscribe_results, port_obj_list, interface_obj_list, \
+            network_controller_obj, dut_port_1, dut_port_2, shape, hnu, \
+            flow_direction, streamblock_objects
 
-        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
+        nu_config_obj = NuConfigManager()
+        fun_test.shared_variables['nu_config_obj'] = nu_config_obj
 
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+        flow_direction = NuConfigManager.FLOW_DIRECTION_NU_NU
+
+        dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE, flow_direction=flow_direction)
 
         shape = 0
         hnu = False
-        if flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_HNU:
+        if flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_HNU:
             shape = 1
             hnu = True
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames", chassis_type=nu_config_obj.FLOW_DIRECTION_NU_NU,
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames",
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE,
                                                       spirent_config=spirent_config)
         fun_test.test_assert(template_obj, "Create template object")
 
@@ -101,17 +104,21 @@ class SpirentSetup(FunTestScript):
             destination_ip2 = l3_config['hnu_destination_ip2']
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
-        interface_mode = dut_config['interface_mode']
-
-        #  Read loads from file
-        file_path = SCRIPTS_DIR + "/networking" + "/" + loads_file
-        output = fun_test.parse_file_to_json(file_path)
-        bad_frame_load = output[interface_mode]["bad_frame_load_mbps"]
-        good_frame_load = output[interface_mode]["good_frame_load_mbps"]
 
         port_1 = port_obj_list[0]
         port_2 = port_obj_list[1]
 
+        config_name = "palladium_good_bad_frames_config"
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            config_name = "f1_good_bad_frames_config"
+
+        test_config = get_test_config_by_dut_type(nu_config_obj=nu_config_obj, name=config_name)
+        fun_test.simple_assert(test_config, "Ensure test config fetched")
+        fun_test.shared_variables['test_config'] = test_config
+
+        stream_list = get_stream_list(nu_config_obj.DUT_TYPE)
+        for stream in stream_list:
+            streamblock_objects[stream] = {}
         # Configure streams
         for port in port_obj_list:
             current_source_ip = source_ip2
@@ -122,18 +129,18 @@ class SpirentSetup(FunTestScript):
                 current_destination_ip = destination_ip1
             for stream_type in stream_list:
                 current_streamblock_obj = StreamBlock()
-                current_streamblock_obj.Load = 0.5
-                current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_MEGABITS_PER_SECOND
-                current_streamblock_obj.FillType = current_streamblock_obj.FILL_TYPE_PRBS
+                current_streamblock_obj.Load = test_config['load']
+                current_streamblock_obj.LoadUnit = test_config['load_type']
+                current_streamblock_obj.FillType = test_config['fill_type']
                 current_ethernet_obj = Ethernet2Header(destination_mac=destination_mac1)
                 current_ipv4_obj = Ipv4Header(destination_address=current_destination_ip,
                                               source_address=current_source_ip)
 
                 if stream_type == CRC_64B:
-                    current_streamblock_obj.FixedFrameLength = MIN_FRAME_LENGTH
+                    current_streamblock_obj.FixedFrameLength = test_config['min_frame_size']
                     current_streamblock_obj.EnableFcsErrorInsertion = True
                 elif stream_type == CRC_1500B:
-                    current_streamblock_obj.FixedFrameLength = MAX_FRAME_LENGTH
+                    current_streamblock_obj.FixedFrameLength = test_config['max_frame_size']
                     current_streamblock_obj.EnableFcsErrorInsertion = True
                 elif stream_type == PREAMBLE:
                     current_ethernet_obj.preamble = PREAMBLE_ERROR
@@ -149,9 +156,9 @@ class SpirentSetup(FunTestScript):
                 elif stream_type == TTL_ERROR:
                     current_ipv4_obj.ttl = '0'
                 elif stream_type == GOOD_FRAME:
-                    current_streamblock_obj.FrameLengthMode = current_streamblock_obj.FRAME_LENGTH_MODE_RANDOM
-                    current_streamblock_obj.MinFrameLength = MIN_FRAME_LENGTH
-                    current_streamblock_obj.MaxFrameLength = MAX_FRAME_LENGTH
+                    current_streamblock_obj.FrameLengthMode = test_config['frame_length_mode']
+                    current_streamblock_obj.MinFrameLength = test_config['min_frame_size']
+                    current_streamblock_obj.MaxFrameLength = test_config['max_frame_size']
                 else:
                     raise Exception("Stream %s not found" % stream_type)
 
@@ -162,22 +169,22 @@ class SpirentSetup(FunTestScript):
 
                 configure_ethernet = template_obj.stc_manager.configure_frame_stack(
                     stream_block_handle=current_streamblock_obj.spirent_handle, header_obj=current_ethernet_obj,
-                delete_header=[Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE])
+                    delete_header=[Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE])
                 fun_test.simple_assert(configure_ethernet,
                                        "Ensure ethernet frame is configured for stream %s on port %s and "
                                        "streamblock %s" % (
-                                       stream_type, port, current_streamblock_obj.spirent_handle))
+                                           stream_type, port, current_streamblock_obj.spirent_handle))
 
                 configure_ip4 = template_obj.stc_manager.configure_frame_stack(
                     stream_block_handle=current_streamblock_obj.spirent_handle, header_obj=current_ipv4_obj)
                 fun_test.simple_assert(configure_ip4, "Ensure ethernet frame is configured for stream %s on "
-                                                      "port %s and streamblock %s" % (
-                                       stream_type, port, current_streamblock_obj.spirent_handle))
+                                                      "port %s and streamblock %s" %
+                                       (stream_type, port, current_streamblock_obj.spirent_handle))
 
                 streamblock_objects[stream_type][port] = current_streamblock_obj
 
             # Configure Generator
-            duration_seconds = 10
+            duration_seconds = test_config['duration']
             gen_config_obj = GeneratorConfig()
             gen_config_obj.Duration = duration_seconds
             gen_config_obj.SchedulingMode = gen_config_obj.SCHEDULING_MODE_RATE_BASED
@@ -214,7 +221,7 @@ class TestCase1(FunTestCase):
                         """)
 
     def setup(self):
-        if to_be_run:
+        if TO_BE_RUN:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivating all streamblock")
@@ -227,15 +234,15 @@ class TestCase1(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if to_be_run:
+        if TO_BE_RUN:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if to_be_run:
+        if TO_BE_RUN:
             # Activate streams having CRC error and 64B frame size
-            activate = template_obj.activate_stream_blocks([streamblock_objects[CRC_64B][str(port_1)],
-                                                            streamblock_objects[CRC_64B][str(port_2)]])
+            activate = template_obj.activate_stream_blocks([streamblock_objects[CRC_64B][port_1],
+                                                            streamblock_objects[CRC_64B][port_2]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % CRC_64B)
 
             # Execute traffic
@@ -248,30 +255,30 @@ class TestCase1(FunTestCase):
             # Get results for streamblock 1
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[CRC_64B][
-                                                                                    str(port_1)].spirent_handle))
+                                                                                streamblock_objects[CRC_64B]
+                                                                                [port_1].spirent_handle))
             tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[CRC_64B][str(port_1)].spirent_handle,
+                stream_block_handle=streamblock_objects[CRC_64B][port_1].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             fun_test.log(
                 "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                                streamblock_objects[CRC_64B][
-                                                                                    str(port_1)].spirent_handle))
+                                                                                streamblock_objects[CRC_64B]
+                                                                                [port_1].spirent_handle))
 
             # Get streambllock 2 results
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[CRC_64B][
-                                                                                    str(port_2)].spirent_handle))
+                                                                                streamblock_objects[CRC_64B]
+                                                                                [port_2].spirent_handle))
             tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[CRC_64B][str(port_2)].spirent_handle,
+                stream_block_handle=streamblock_objects[CRC_64B][port_2].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             fun_test.log(
                 "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                                streamblock_objects[CRC_64B][
-                                                                                    str(port_2)].spirent_handle))
+                                                                                streamblock_objects[CRC_64B]
+                                                                                [port_2].spirent_handle))
 
             fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
             rx_port_analyzer_results_1 = template_obj.stc_manager.get_rx_port_analyzer_results(
@@ -382,7 +389,7 @@ class TestCase2(FunTestCase):
                         """)
 
     def setup(self):
-        if to_be_run:
+        if TO_BE_RUN:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivating all streamblocks")
@@ -395,15 +402,15 @@ class TestCase2(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if to_be_run:
+        if TO_BE_RUN:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if to_be_run:
+        if TO_BE_RUN:
             # Activate streams having CRC error and 64B frame size
-            activate = template_obj.activate_stream_blocks([streamblock_objects[CRC_1500B][str(port_1)],
-                                                            streamblock_objects[CRC_1500B][str(port_2)]])
+            activate = template_obj.activate_stream_blocks([streamblock_objects[CRC_1500B][port_1],
+                                                            streamblock_objects[CRC_1500B][port_2]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % CRC_1500B)
 
             # Execute traffic
@@ -416,35 +423,35 @@ class TestCase2(FunTestCase):
             # Get results for streamblock 1
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[CRC_1500B][
-                                                                                    str(port_1)].spirent_handle))
+                                                                                streamblock_objects[CRC_1500B]
+                                                                                [port_1].spirent_handle))
             tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[CRC_1500B][str(port_1)].spirent_handle,
+                stream_block_handle=streamblock_objects[CRC_1500B][port_1].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             fun_test.log(
                 "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                                streamblock_objects[CRC_1500B][
-                                                                                    str(port_1)].spirent_handle))
+                                                                                streamblock_objects[CRC_1500B]
+                                                                                [port_1].spirent_handle))
             rx_results_1 = template_obj.stc_manager.get_rx_stream_block_results(
-                stream_block_handle=streamblock_objects[CRC_1500B][str(port_1)].spirent_handle,
+                stream_block_handle=streamblock_objects[CRC_1500B][port_1].spirent_handle,
                 subscribe_handle=subscribe_results['rx_subscribe'])
 
             # Get streambllock 2 results
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[CRC_1500B][
-                                                                                    str(port_2)].spirent_handle))
+                                                                                streamblock_objects[CRC_1500B]
+                                                                                [port_2].spirent_handle))
             tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[CRC_1500B][str(port_2)].spirent_handle,
+                stream_block_handle=streamblock_objects[CRC_1500B][port_2].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             fun_test.log(
                 "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                                streamblock_objects[CRC_1500B][
-                                                                                    str(port_2)].spirent_handle))
+                                                                                streamblock_objects[CRC_1500B]
+                                                                                [port_2].spirent_handle))
             rx_results_2 = template_obj.stc_manager.get_rx_stream_block_results(
-                stream_block_handle=streamblock_objects[CRC_1500B][str(port_2)].spirent_handle,
+                stream_block_handle=streamblock_objects[CRC_1500B][port_2].spirent_handle,
                 subscribe_handle=subscribe_results['rx_subscribe'])
 
             fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -571,6 +578,7 @@ class TestCase2(FunTestCase):
                 fun_test.test_assert(not dut_port_2_transmit, message="Ensure no frame is transmitted from DUT port 2")
                 fun_test.test_assert(not dut_port_1_transmit, message="Ensure no frame is transmitted from DUT port 1")
 
+
 class TestCase3(FunTestCase):
     def describe(self):
         self.set_test_details(id=3,
@@ -583,7 +591,7 @@ class TestCase3(FunTestCase):
                         """)
 
     def setup(self):
-        if to_be_run:
+        if TO_BE_RUN:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivating all streamblock")
@@ -596,15 +604,15 @@ class TestCase3(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if to_be_run:
+        if TO_BE_RUN:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if to_be_run:
+        if TO_BE_RUN:
             # Activate streams having CRC error and 64B frame size
-            activate = template_obj.activate_stream_blocks([streamblock_objects[PREAMBLE][str(port_1)],
-                                                            streamblock_objects[PREAMBLE][str(port_2)]])
+            activate = template_obj.activate_stream_blocks([streamblock_objects[PREAMBLE][port_1],
+                                                            streamblock_objects[PREAMBLE][port_2]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % PREAMBLE)
 
             # Execute traffic
@@ -617,19 +625,19 @@ class TestCase3(FunTestCase):
             # Get results for streamblock 1
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[PREAMBLE][
-                                                                                    str(port_1)].spirent_handle))
+                                                                                streamblock_objects[PREAMBLE]
+                                                                                [port_1].spirent_handle))
             tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[PREAMBLE][str(port_1)].spirent_handle,
+                stream_block_handle=streamblock_objects[PREAMBLE][port_1].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             # Get streambllock 2 results
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[PREAMBLE][
-                                                                                    str(port_2)].spirent_handle))
+                                                                                streamblock_objects[PREAMBLE]
+                                                                                [port_2].spirent_handle))
             tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[PREAMBLE][str(port_2)].spirent_handle,
+                stream_block_handle=streamblock_objects[PREAMBLE][port_2].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -679,7 +687,7 @@ class TestCase4(FunTestCase):
                         """)
 
     def setup(self):
-        if to_be_run:
+        if TO_BE_RUN:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivating all streamblock")
@@ -692,15 +700,15 @@ class TestCase4(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if to_be_run:
+        if TO_BE_RUN:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if to_be_run:
+        if TO_BE_RUN:
             # Activate streams having CRC error and 64B frame size
-            activate = template_obj.activate_stream_blocks([streamblock_objects[SFD][str(port_1)],
-                                                            streamblock_objects[SFD][str(port_2)]])
+            activate = template_obj.activate_stream_blocks([streamblock_objects[SFD][port_1],
+                                                            streamblock_objects[SFD][port_2]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % SFD)
 
             # Execute traffic
@@ -713,19 +721,19 @@ class TestCase4(FunTestCase):
             # Get results for streamblock 1
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[SFD][
-                                                                                    str(port_1)].spirent_handle))
+                                                                                streamblock_objects[SFD]
+                                                                                [port_1].spirent_handle))
             tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[SFD][str(port_1)].spirent_handle,
+                stream_block_handle=streamblock_objects[SFD][port_1].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             # Get streambllock 2 results
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[SFD][
-                                                                                    str(port_2)].spirent_handle))
+                                                                                streamblock_objects[SFD]
+                                                                                [port_2].spirent_handle))
             tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[SFD][str(port_2)].spirent_handle,
+                stream_block_handle=streamblock_objects[SFD][port_2].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -792,8 +800,8 @@ class TestCase5(FunTestCase):
 
     def run(self):
         # Activate streams having CRC error and 64B frame size
-        activate = template_obj.activate_stream_blocks([streamblock_objects[CHECKSUM_ERROR][str(port_1)],
-                                                        streamblock_objects[CHECKSUM_ERROR][str(port_2)]])
+        activate = template_obj.activate_stream_blocks([streamblock_objects[CHECKSUM_ERROR][port_1],
+                                                        streamblock_objects[CHECKSUM_ERROR][port_2]])
         fun_test.test_assert(activate, "Activate streamblocks for %s " % CHECKSUM_ERROR)
 
         # Execute traffic
@@ -806,19 +814,19 @@ class TestCase5(FunTestCase):
         # Get results for streamblock 1
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[CHECKSUM_ERROR][
-                                                                                str(port_1)].spirent_handle))
+                                                                            streamblock_objects[CHECKSUM_ERROR]
+                                                                            [port_1].spirent_handle))
         tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[CHECKSUM_ERROR][str(port_1)].spirent_handle,
+            stream_block_handle=streamblock_objects[CHECKSUM_ERROR][port_1].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         # Get streambllock 2 results
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[CHECKSUM_ERROR][
-                                                                                str(port_2)].spirent_handle))
+                                                                            streamblock_objects[CHECKSUM_ERROR]
+                                                                            [port_2].spirent_handle))
         tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[CHECKSUM_ERROR][str(port_2)].spirent_handle,
+            stream_block_handle=streamblock_objects[CHECKSUM_ERROR][port_2].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -892,8 +900,8 @@ class TestCase6(FunTestCase):
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        activate = template_obj.activate_stream_blocks([streamblock_objects[IHL_ERROR][str(port_1)],
-                                                        streamblock_objects[IHL_ERROR][str(port_2)]])
+        activate = template_obj.activate_stream_blocks([streamblock_objects[IHL_ERROR][port_1],
+                                                        streamblock_objects[IHL_ERROR][port_2]])
         fun_test.test_assert(activate, "Activate streamblocks for %s " % IHL_ERROR)
 
         # Execute traffic
@@ -906,19 +914,19 @@ class TestCase6(FunTestCase):
         # Get results for streamblock 1
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[IHL_ERROR][
-                                                                                str(port_1)].spirent_handle))
+                                                                            streamblock_objects[IHL_ERROR]
+                                                                            [port_1].spirent_handle))
         tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[IHL_ERROR][str(port_1)].spirent_handle,
+            stream_block_handle=streamblock_objects[IHL_ERROR][port_1].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         # Get streambllock 2 results
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[IHL_ERROR][
-                                                                                str(port_2)].spirent_handle))
+                                                                            streamblock_objects[IHL_ERROR]
+                                                                            [port_2].spirent_handle))
         tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[IHL_ERROR][str(port_2)].spirent_handle,
+            stream_block_handle=streamblock_objects[IHL_ERROR][port_2].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -992,8 +1000,8 @@ class TestCase7(FunTestCase):
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        activate = template_obj.activate_stream_blocks([streamblock_objects[IP_VERSION_ERROR][str(port_1)],
-                                                        streamblock_objects[IP_VERSION_ERROR][str(port_2)]])
+        activate = template_obj.activate_stream_blocks([streamblock_objects[IP_VERSION_ERROR][port_1],
+                                                        streamblock_objects[IP_VERSION_ERROR][port_2]])
         fun_test.test_assert(activate, "Activate streamblocks for %s " % IP_VERSION_ERROR)
 
         # Execute traffic
@@ -1006,19 +1014,19 @@ class TestCase7(FunTestCase):
         # Get results for streamblock 1
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[IP_VERSION_ERROR][
-                                                                                str(port_1)].spirent_handle))
+                                                                            streamblock_objects[IP_VERSION_ERROR]
+                                                                            [port_1].spirent_handle))
         tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[IP_VERSION_ERROR][str(port_1)].spirent_handle,
+            stream_block_handle=streamblock_objects[IP_VERSION_ERROR][port_1].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         # Get streambllock 2 results
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[IP_VERSION_ERROR][
-                                                                                str(port_2)].spirent_handle))
+                                                                            streamblock_objects[IP_VERSION_ERROR]
+                                                                            [port_2].spirent_handle))
         tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[IP_VERSION_ERROR][str(port_2)].spirent_handle,
+            stream_block_handle=streamblock_objects[IP_VERSION_ERROR][port_2].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -1093,8 +1101,8 @@ class TestCase8(FunTestCase):
             template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        activate = template_obj.activate_stream_blocks([streamblock_objects[TTL_ERROR][str(port_1)],
-                                                        streamblock_objects[TTL_ERROR][str(port_2)]])
+        activate = template_obj.activate_stream_blocks([streamblock_objects[TTL_ERROR][port_1],
+                                                        streamblock_objects[TTL_ERROR][port_2]])
         fun_test.test_assert(activate, "Activate streamblocks for %s " % TTL_ERROR)
 
         # Execute traffic
@@ -1107,19 +1115,19 @@ class TestCase8(FunTestCase):
         # Get results for streamblock 1
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[TTL_ERROR][
-                                                                                str(port_1)].spirent_handle))
+                                                                            streamblock_objects[TTL_ERROR]
+                                                                            [port_1].spirent_handle))
         tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[TTL_ERROR][str(port_1)].spirent_handle,
+            stream_block_handle=streamblock_objects[TTL_ERROR][port_1].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         # Get streambllock 2 results
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[TTL_ERROR][
-                                                                                str(port_2)].spirent_handle))
+                                                                            streamblock_objects[TTL_ERROR]
+                                                                            [port_2].spirent_handle))
         tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[TTL_ERROR][str(port_2)].spirent_handle,
+            stream_block_handle=streamblock_objects[TTL_ERROR][port_2].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log("Fetching rx port results for subscribed object %s" % subscribe_results['analyzer_subscribe'])
@@ -1189,20 +1197,20 @@ class TestCase9(FunTestCase):
         pass
 
     def run(self):
-        duration = 20
-
+        test_config = fun_test.shared_variables['test_config']
+        duration = test_config['duration']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         # Activate streams
         activate = template_obj.activate_stream_blocks()
         fun_test.test_assert(activate, "Activate all streamblocks")
 
         # Apply correct loads
+        stream_list = []
         for port in port_obj_list:
+            stream_list = get_stream_list(dut_type=nu_config_obj.DUT_TYPE)
             for stream in stream_list:
                 current_stream_obj = streamblock_objects[stream][port]
-                if stream == GOOD_FRAME:
-                    current_load = good_frame_load
-                else:
-                    current_load = bad_frame_load
+                current_load = test_config['load']
                 configure_stream = template_obj.stc_manager.stc.config(current_stream_obj.spirent_handle,
                                                                        Load=current_load)
                 fun_test.log("Updating streamblock %s on port %s" % (current_stream_obj.spirent_handle, port))
@@ -1227,35 +1235,35 @@ class TestCase9(FunTestCase):
         # Get results for streamblock 1
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[GOOD_FRAME][
-                                                                                str(port_1)].spirent_handle))
+                                                                            streamblock_objects[GOOD_FRAME]
+                                                                            [port_1].spirent_handle))
         tx_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[GOOD_FRAME][str(port_1)].spirent_handle,
+            stream_block_handle=streamblock_objects[GOOD_FRAME][port_1].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log(
             "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                            streamblock_objects[GOOD_FRAME][
-                                                                                str(port_1)].spirent_handle))
+                                                                            streamblock_objects[GOOD_FRAME]
+                                                                            [port_1].spirent_handle))
         rx_results_1 = template_obj.stc_manager.get_rx_stream_block_results(
-            stream_block_handle=streamblock_objects[GOOD_FRAME][str(port_1)].spirent_handle,
+            stream_block_handle=streamblock_objects[GOOD_FRAME][port_1].spirent_handle,
             subscribe_handle=subscribe_results['rx_subscribe'])
 
         # Get streambllock 2 results
         fun_test.log(
             "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                            streamblock_objects[GOOD_FRAME][
-                                                                                str(port_2)].spirent_handle))
+                                                                            streamblock_objects[GOOD_FRAME]
+                                                                            [port_2].spirent_handle))
         tx_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-            stream_block_handle=streamblock_objects[GOOD_FRAME][str(port_2)].spirent_handle,
+            stream_block_handle=streamblock_objects[GOOD_FRAME][port_2].spirent_handle,
             subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log(
             "Fetching rx results for subscribed object %s for stream %s" % (subscribe_results['rx_subscribe'],
-                                                                            streamblock_objects[GOOD_FRAME][
-                                                                                str(port_2)].spirent_handle))
+                                                                            streamblock_objects[GOOD_FRAME]
+                                                                            [port_2].spirent_handle))
         rx_results_2 = template_obj.stc_manager.get_rx_stream_block_results(
-            stream_block_handle=streamblock_objects[GOOD_FRAME][str(port_2)].spirent_handle,
+            stream_block_handle=streamblock_objects[GOOD_FRAME][port_2].spirent_handle,
             subscribe_handle=subscribe_results['rx_subscribe'])
 
         fun_test.log(
@@ -1269,21 +1277,23 @@ class TestCase9(FunTestCase):
             port_handle=port_1, subscribe_handle=subscribe_results['analyzer_subscribe'])
 
         # Get results for streamblock 1
+        tx_crc_results_1 = None
+        tx_crc_results_2 = None
         if CRC_1500B in stream_list:
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[CRC_1500B][
-                                                                                    str(port_1)].spirent_handle))
+                                                                                streamblock_objects[CRC_1500B]
+                                                                                [port_1].spirent_handle))
             tx_crc_results_1 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[CRC_1500B][str(port_1)].spirent_handle,
+                stream_block_handle=streamblock_objects[CRC_1500B][port_1].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
             fun_test.log(
                 "Fetching tx results for subscribed object %s for stream %s" % (subscribe_results['tx_subscribe'],
-                                                                                streamblock_objects[CRC_1500B][
-                                                                                    str(port_2)].spirent_handle))
+                                                                                streamblock_objects[CRC_1500B]
+                                                                                [port_2].spirent_handle))
             tx_crc_results_2 = template_obj.stc_manager.get_tx_stream_block_results(
-                stream_block_handle=streamblock_objects[CRC_1500B][str(port_2)].spirent_handle,
+                stream_block_handle=streamblock_objects[CRC_1500B][port_2].spirent_handle,
                 subscribe_handle=subscribe_results['tx_subscribe'])
 
         fun_test.log("Tx 1 Results %s " % tx_results_1)
