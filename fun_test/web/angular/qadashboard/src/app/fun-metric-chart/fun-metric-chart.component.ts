@@ -77,7 +77,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.inner.currentOwner = "Unknown";
     this.currentOwner = "Unknown";
     this.inner.currentSource = "Unknown";
-    this.currentOwner = "Unknown";
+    this.currentSource = "Unknown";
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
@@ -260,7 +260,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
         this.currentOwner = this.chartInfo.owner_info;
+        this.currentSource = this.chartInfo.source;
         this.inner.currentOwner = this.currentOwner;
+        this.inner.currentSource = this.currentSource;
         this.negativeGradient = !this.chartInfo.positive;
         this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
@@ -284,6 +286,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.pointClicked = false;
     this.showBuildProps = false;
     this.editingOwner = false;
+    this.editingSource = false;
     this.editingDescription = false;
     this.chart1YaxisTitle = "";
   }
@@ -333,6 +336,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["data_sets"] = this.previewDataSets;
     payload["description"] = this.inner.currentDescription;
     payload["owner_info"] = this.inner.currentOwner;
+    payload["source"] = this.inner.currentSource;
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
@@ -346,6 +350,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     });
     this.editingDescription = false;
     this.editingOwner = false;
+    this.editingSource = false;
   }
 
   //populates buildInfo
