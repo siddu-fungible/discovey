@@ -78,18 +78,28 @@ class FunethPerformanceBase(FunTestCase):
         ]
         result = iperf_manager_obj.run(*arg_dicts).values()[0]
         result.update(
-            {'flow_type': flow_type}
+            {'flow_type': flow_type,
+             'frame_size': frame_size,
+             }
         )
 
+        # Pop out 'nan'
+        passed = True
+        for k, v in result.items():
+            if v == float('nan'):
+                result.pop(k)
+                passed = False
+
         # Update file with result
-        with open(RESULT_FILE) as f:
-            r = json.load(f)
-            r.append(result)
+        if result:
+            with open(RESULT_FILE) as f:
+                r = json.load(f)
+                r.append(result)
 
-        with open(RESULT_FILE, 'w') as f:
-            json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
+            with open(RESULT_FILE, 'w') as f:
+                json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
-        fun_test.test_assert(not any(i == float('nan') for i in result.values()), 'Get throughput/latency test result')
+        fun_test.test_assert(passed, 'Get throughput/latency test result')
 
 
 class FunethPerformance_NU_HU_64B_UDP(FunethPerformanceBase):
@@ -102,7 +112,7 @@ class FunethPerformance_NU_HU_64B_UDP(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU_PF_NFCP', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', frame_size=64)
 
 
 class FunethPerformance_NU_HU_1500B_UDP(FunethPerformanceBase):
@@ -254,19 +264,19 @@ if __name__ == "__main__":
             # NU -> HU Non-FCP
             FunethPerformance_NU_HU_64B_UDP,
             FunethPerformance_NU_HU_1500B_UDP,
-            #FunethPerformance_NU_HU_146B_TCP,
+            FunethPerformance_NU_HU_146B_TCP,
             FunethPerformance_NU_HU_1500B_TCP,
 
             # HU -> NU Non-FCP
             FunethPerformance_HU_NU_64B_UDP,
             FunethPerformance_HU_NU_1500B_UDP,
-            #FunethPerformance_HU_NU_146B_TCP,
+            FunethPerformance_HU_NU_146B_TCP,
             FunethPerformance_HU_NU_1500B_TCP,
 
             # HU -> NU Non-FCP
             FunethPerformance_HU_HU_64B_UDP,
             FunethPerformance_HU_HU_1500B_UDP,
-            #FunethPerformance_HU_HU_146B_TCP,
+            FunethPerformance_HU_HU_146B_TCP,
             FunethPerformance_HU_HU_1500B_TCP,
 
             # TODO: Add HU -> NU FCP
