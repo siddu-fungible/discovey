@@ -4,38 +4,10 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
 from scripts.networking.nu_config_manager import *
+from helper import *
 
 
 num_ports = 2
-TEST_CONFIG_FILE = SCRIPTS_DIR + "/networking/mac/test_configs.json"
-
-
-def get_nearest_key(dict, max_frame_length):
-    nearest_small_key = 0
-    for key in dict.keys():
-
-        if key != 'max' and int(key) < max_frame_length:
-            current_difference = max_frame_length - int(key)
-            if current_difference < max_frame_length - nearest_small_key:
-                nearest_small_key = int(key)
-    return nearest_small_key
-
-
-def get_modified_dictionary(dict, nearest_key, max_frame_length):
-    output_dict = {}
-    if nearest_key == 1518:
-        output_dict = dict
-        output_dict['max'] = max_frame_length - 1518
-    else:
-        for key, val in dict.iteritems():
-            if key == 'max':
-                pass
-            elif int(key) < nearest_key:
-                output_dict[key] = val
-            elif int(key) == nearest_key:
-                new_val = max_frame_length - int(key)
-                output_dict[key] = new_val
-    return output_dict
 
 
 class SpirentSetup(FunTestScript):
@@ -90,7 +62,11 @@ class SpirentSetup(FunTestScript):
         if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpcsh_server_ip, dpc_server_port=dpcsh_server_port)
 
-        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        config_name = "palladium_all_frame_size_config"
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            config_name = "f1_all_frame_size_config"
+
+        test_config = get_test_config_by_dut_type(nu_config_obj, config_name)
         fun_test.simple_assert(test_config, "Config Fetched")
         fun_test.shared_variables['test_config'] = test_config
 
