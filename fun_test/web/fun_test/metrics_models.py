@@ -104,6 +104,7 @@ class MetricChart(models.Model):
     last_lsf_job_id = models.IntegerField(default=-1)
     last_git_commit = models.TextField(default="")
     owner_info = models.TextField(default="UNKNOWN")
+    source = models.TextField(default="Unknown")
     jira_ids = models.TextField(default="[]")
     base_line_date = models.DateTimeField(verbose_name="base_line_date", default=datetime.now)
 

@@ -130,7 +130,8 @@ def chart_info(request):
                   "last_suite_execution_id": chart.last_suite_execution_id,
                   "last_lsf_job_id": chart.last_lsf_job_id,
                   "last_git_commit": chart.last_git_commit,
-                  "owner_info": chart.owner_info}
+                  "owner_info": chart.owner_info,
+                  "source": chart.source}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict
@@ -396,6 +397,9 @@ def update_chart(request):
     owner_info = "Unknown"
     if "owner_info" in request_json:
         owner_info = request_json["owner_info"]
+    source = "Unknown"
+    if "source" in request_json:
+        source = request_json["source"]
 
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
@@ -413,6 +417,8 @@ def update_chart(request):
             c.leaf = leaf
         if owner_info:
             c.owner_info = owner_info
+        if source:
+            c.source = source
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,
