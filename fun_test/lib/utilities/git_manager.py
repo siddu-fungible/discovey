@@ -58,7 +58,15 @@ class GitManager:
         # logs = repo.git.log('master', '{}...{}'.format(faulty_commit, success_commit)) #always returns from the latest commit and does not include merge commits and goes beyond the end commit
         return commits_list
 
+    def get_diff(self, repo, faulty_commit, success_commit):
+        commits_list = list(repo.iter_commits('master'))
+        # logs = repo.git.log('master', '{}...{}'.format(faulty_commit, success_commit)) #always returns from the latest commit and does not include merge commits and goes beyond the end commit
+        return commits_list
+
 if __name__ == "__main__":
      m = GitManager()
-     list = m.get_commits_between('cee548b56f7ab19165473a2eee74d9b757cb4b6c', '651641b62b6e14a50f14a449a2144b7220dae6ca')
+     list = m.get_commits_between('5d3c45dd24f5154b689f3876cb048184b6de9db9','09fc91e7aa029925324667553b48834bc54bea17')
+
+     for l in list["commits"]:
+         print l["hexsha"], l["date"]
      print "Completed"
