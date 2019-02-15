@@ -309,7 +309,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         {'latency_min': round(latency_min, 1),
          'latency_median': round(latency_median, 1),
          'latency_max': round(latency_max, 1),
-         'latency_{}_percentile'.format(percentile): round(latency_percentile, 1),
+         'latency_p{}'.format(percentile): round(latency_percentile, 1),
          }
     )
 
