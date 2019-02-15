@@ -8,9 +8,9 @@ import json
 
 TB = sanity.TB
 if TB == 'SN2':
-    BW_LIMIT = '2M'
+    BW_LIMIT = '3M'
 else:
-    BW_LIMIT = '10G'
+    BW_LIMIT = '15G'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 
 
