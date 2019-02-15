@@ -667,22 +667,24 @@ def get_test_case_executions_by_time(request):
         q = q & Q(script_path=request_json["script_path"])
 
     test_case_executions = TestCaseExecution.objects.filter(q)
-
+    re_run_info = {}
     for te in test_case_executions:
         if scripts_for_module:
             if te.script_path not in scripts_for_module:
                 continue
+        if te.suite_execution_id not in re_run_info:
+            if SuiteReRunInfo.objects.filter(re_run_suite_execution_id=te.suite_execution_id).count() > 0:
+                re_run_info[te.suite_execution_id] = True
+            else:
+                re_run_info[te.suite_execution_id] = False
 
-        is_re_run = False
-        if SuiteReRunInfo.objects.filter(re_run_suite_execution_id=te.suite_execution_id).count() > 0:
-            is_re_run = True
         one_entry = {"execution_id": te.execution_id,
                      "suite_execution_id": te.suite_execution_id,
                      "script_path": te.script_path,
                      "test_case_id": te.test_case_id,
                      "result": te.result,
                      "started_time": te.started_time,
-                     "is_re_run": is_re_run}
+                     "is_re_run": re_run_info[te.suite_execution_id]}
         tes.append(one_entry)
 
     return tes
