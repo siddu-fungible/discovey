@@ -212,7 +212,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     result = {}
     deviation = 0.01  # 0.1 K/M/Gbps
-    throughput = pps = jitter = -1
+    throughput = pps = jitter = float('nan')
     bw_unit = bw[-1]
     factor = get_rate_factor(bw_unit)
     bw_val = float(bw.rstrip('kmgKMG')) * factor  # Convert bandwidth to Mbps
@@ -284,7 +284,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     # Latency test
     percentile = 99.0
-    latency_min = latency_median = latency_max = jitter = latency_percentile = -1
+    latency_min = latency_median = latency_max = jitter = latency_percentile = float('nan')
 
     packet_count = int(pps*duration)
     cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, frame_size-18-20-8-14, 1.0/pps, percentile, dip)
@@ -299,8 +299,8 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         latency_min = float(match.group(3)) * factor
         latency_median = float(match.group(4)) * factor
         latency_max = float(match.group(5)) * factor
-        jitter = float(match.group(7)) * factor if match.group(7) != 'nan' else -1
-        latency_percentile = float(match.group(8)) * factor if match.group(8) != 'nan' else -1
+        jitter = float(match.group(7)) * factor
+        latency_percentile = float(match.group(8)) * factor
 
     result.update(
         {'latency_min': round(latency_min, 1),
@@ -310,7 +310,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
          }
     )
 
-    if result.get('jitter', 0) in (-1, 0):
+    if result.get('jitter', 0) in (float('nan'), 0):
         result.update(
             {'jitter': round(jitter, 1)}
         )

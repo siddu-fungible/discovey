@@ -89,7 +89,7 @@ class FunethPerformanceBase(FunTestCase):
         with open(RESULT_FILE, 'w') as f:
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
-        fun_test.test_assert(not any(i == -1 for i in result.values()), 'Get throughput/latency test result')
+        fun_test.test_assert(not any(i == float('nan') for i in result.values()), 'Get throughput/latency test result')
 
 
 class FunethPerformance_NU_HU_64B_UDP(FunethPerformanceBase):
