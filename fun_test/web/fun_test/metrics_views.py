@@ -394,8 +394,10 @@ def update_chart(request):
         description = request_json["description"]
     if "leaf" in request_json:
         leaf = request_json["leaf"]
+    owner_info = "Unknown"
     if "owner_info" in request_json:
         owner_info = request_json["owner_info"]
+    source = "Unknown"
     if "source" in request_json:
         source = request_json["source"]
 

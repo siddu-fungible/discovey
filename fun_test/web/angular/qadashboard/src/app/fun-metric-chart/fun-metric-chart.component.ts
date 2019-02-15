@@ -362,6 +362,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     });
   }
 
+  openSource(url): void {
+    window.open(url, '_blank');
+  }
+
   //opens and closes the show tables panel
   showTables(): void {
     this.showingTable = !this.showingTable;

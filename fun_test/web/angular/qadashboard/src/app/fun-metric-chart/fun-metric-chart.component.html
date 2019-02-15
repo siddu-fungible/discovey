@@ -26,7 +26,7 @@
                [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"
                [pointClickCallback]="pointClickCallback" (pointInfo)="showPointDetails($event)"></fun-chart>
     <!--showing clicked point details when selected on a chart-->
-    <div class="card" *ngIf="pointClicked && modelName!='MetricContainer'">
+    <div class="card" *ngIf="pointClicked && modelName!=='MetricContainer'">
       <div class="properties-margin">
         <table>
           <tr *ngFor="let point of pointInfo">
@@ -50,7 +50,7 @@
     </div>
     <!-- showing owner info and description only when leaf charts are clicked -->
     <div *ngIf="!minimal">
-      <div *ngIf="modelName != 'MetricContainer'" style="float: right">
+      <div *ngIf="modelName !== 'MetricContainer'" style="float: right">
         <i *ngIf="!editingOwner" class="grey-text">Owner: <span (click)="editingOwner = true">{{ inner.currentOwner }}</span></i>
         <i *ngIf="editingOwner" style="font-size: 95%;">Owner: <input type="text" class="owner-text" [(ngModel)]="inner.currentOwner">
           <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
@@ -58,13 +58,6 @@
         <br>
     </div>
       <br>
-      <div *ngIf="modelName != 'MetricContainer'">
-        <i *ngIf="!editingSource" class="grey-text">Source: <span (click)="editingSource = true">{{ inner.currentSource }}</span></i>
-        <i *ngIf="editingSource" style="font-size: 95%;">Source: <input type="text" class="owner-text" [(ngModel)]="inner.currentSource">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
-          <span><i class="fa fa-times fa-fw close-color" (click)="editingSource = false"></i></span></i>
-        <br>
-      </div>
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
         <br>
@@ -75,6 +68,15 @@
           <button class="btn btn-success" (click)="submit()">Submit</button>
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
+      </div>
+      <div *ngIf="modelName !== 'MetricContainer'">
+        <span *ngIf="!editingSource"><i class="grey-text">Source: </i><span *ngIf="inner.currentSource === 'Unknown'">{{ inner.currentSource }}</span>
+          <a *ngIf="inner.currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(inner.currentSource)">{{ inner.currentSource }}</a>&nbsp;
+          <a (click)="editingSource = true"><i class="fa fa-pencil"></i></a></span>
+        <i *ngIf="editingSource" style="font-size: 95%;">Source: <input type="text" class="owner-text" [(ngModel)]="inner.currentSource">
+          <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
+          <span><i class="fa fa-times fa-fw close-color" (click)="editingSource = false"></i></span></i>
+        <br>
       </div>
     <br>
   </div>
