@@ -45,7 +45,7 @@ class FunethPerformanceBase(FunTestCase):
         pass
 
     def cleanup(self):
-        fun_test.sleep("Waiting for buffer drain", seconds=60)
+        fun_test.sleep("Waiting for buffer drain to run next test case", seconds=60)
 
     def _run(self, flow_type, tool='iperf3', protocol='udp', parallel=1, duration=10, frame_size=1500, bw=BW_LIMIT):
 
@@ -77,7 +77,6 @@ class FunethPerformanceBase(FunTestCase):
              }
         ]
         result = iperf_manager_obj.run(*arg_dicts).values()[0]
-        fun_test.test_assert(not any(i == -1 for i in result.values()), 'Get throughput/latency test result')
         result.update(
             {'flow_type': flow_type}
         )
@@ -89,6 +88,8 @@ class FunethPerformanceBase(FunTestCase):
 
         with open(RESULT_FILE, 'w') as f:
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
+
+        fun_test.test_assert(not any(i == -1 for i in result.values()), 'Get throughput/latency test result')
 
 
 class FunethPerformance_NU_HU_64B_UDP(FunethPerformanceBase):
@@ -179,7 +180,7 @@ class FunethPerformance_HU_NU_146B_TCP(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', protocol='tcp', frame_size=146)
 
 
 class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
@@ -231,7 +232,7 @@ class FunethPerformance_HU_HU_146B_TCP(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', protocol='tcp', frame_size=146)
 
 
 class FunethPerformance_HU_HU_1500B_TCP(FunethPerformanceBase):
@@ -248,27 +249,29 @@ class FunethPerformance_HU_HU_1500B_TCP(FunethPerformanceBase):
 
 
 if __name__ == "__main__":
-    FunethScript = FunethPerformance()
+    ts = FunethPerformance()
+    for tc in (
+            # NU -> HU Non-FCP
+            FunethPerformance_NU_HU_64B_UDP,
+            FunethPerformance_NU_HU_1500B_UDP,
+            #FunethPerformance_NU_HU_146B_TCP,
+            FunethPerformance_NU_HU_1500B_TCP,
 
-    # NU -> HU Non-FCP
-    FunethScript.add_test_case(FunethPerformance_NU_HU_64B_UDP())
-    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_UDP())
-    FunethScript.add_test_case(FunethPerformance_NU_HU_146B_TCP())
-    FunethScript.add_test_case(FunethPerformance_NU_HU_1500B_TCP())
+            # HU -> NU Non-FCP
+            FunethPerformance_HU_NU_64B_UDP,
+            FunethPerformance_HU_NU_1500B_UDP,
+            #FunethPerformance_HU_NU_146B_TCP,
+            FunethPerformance_HU_NU_1500B_TCP,
 
-    # HU -> NU Non-FCP
-    FunethScript.add_test_case(FunethPerformance_HU_NU_64B_UDP())
-    FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_UDP())
-    FunethScript.add_test_case(FunethPerformance_HU_NU_146B_TCP())
-    FunethScript.add_test_case(FunethPerformance_HU_NU_1500B_TCP())
+            # HU -> NU Non-FCP
+            FunethPerformance_HU_HU_64B_UDP,
+            FunethPerformance_HU_HU_1500B_UDP,
+            #FunethPerformance_HU_HU_146B_TCP,
+            FunethPerformance_HU_HU_1500B_TCP,
 
-    # HU -> NU Non-FCP
-    FunethScript.add_test_case(FunethPerformance_HU_HU_64B_UDP())
-    FunethScript.add_test_case(FunethPerformance_HU_HU_1500B_UDP())
-    FunethScript.add_test_case(FunethPerformance_HU_HU_146B_TCP())
-    FunethScript.add_test_case(FunethPerformance_HU_HU_1500B_TCP())
+            # TODO: Add HU -> NU FCP
+    ):
+        ts.add_test_case(tc())
+    ts.run()
 
-    # TODO: Add HU -> NU FCP
-
-    FunethScript.run()
     fun_test.log('Performance results:\n{}'.format(RESULT_FILE))

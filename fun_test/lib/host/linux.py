@@ -1208,7 +1208,7 @@ class Linux(object, ToDictMixin):
             command = "nslookup  %s | grep -A2 Name | grep Address " % dns_name
             output = self.sudo_command(command=command)
             output_lines = output.split('\n')
-            obj = re.match('(.*):(.*)', output_lines[1])
+            obj = re.match('(.*):(.*)', output_lines[0])
             result['ip_address'] = obj.group(2).strip()
         except Exception as ex:
             critical_str = str(ex)

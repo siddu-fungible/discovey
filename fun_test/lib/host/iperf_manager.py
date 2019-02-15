@@ -211,6 +211,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         return None
 
     result = {}
+    deviation = 0.01  # 0.1 K/M/Gbps
     throughput = pps = jitter = -1
     bw_unit = bw[-1]
     factor = get_rate_factor(bw_unit)
@@ -218,15 +219,15 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     left, right = 0.0, bw_val
     target_bw_val = (left + right) / 2  # Start test from 1/2 of target bindwidth
-    while (right - left) >= 0.01:
+    while (right - left) >= deviation:
         target_bw = '{}{}'.format(target_bw_val, bw_unit)
 
         if protocol.lower() == 'udp':
             payload_size = frame_size-18-20-8
             cmd = '{} -c {} -i 1 -P {} -u -t {} -l {} -b {}'.format(tool, dip, parallel, duration, payload_size, target_bw)
-            pat = r'Lost/Total.*?0.00-(\S+)\s+sec.*?(\S+ [K|M|G]bits/sec)\s+(\S+) ([m|u|n]s).*?(\d+)/(\d+).*?sender'
+            pat = r'Lost/Total.*?0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+(\S+) ([m|u|n]s).*?(\d+)/(\d+).*?sender'
         elif protocol.lower() == 'tcp':
-            payload_size = frame_size - 18 - 20 - 20
+            payload_size = frame_size-18-20-20
             cmd = '{} -c {} -i 1 -P {} -t {} -M {} -b {}'.format(tool, dip, parallel, duration, payload_size, target_bw)
             pat = r'0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+(\d+)\s+sender'
 
@@ -236,12 +237,14 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         if match:
             if protocol.lower() == 'udp':
                 time = float(match.group(1))
-                #throughput = format_throughput(match.group(2))  # UDP throughput
-                jitter_unit = match.group(4)
+                rate_unit = match.group(3)
+                factor = get_rate_factor(rate_unit)
+                data_throughput = float(match.group(2)) * factor  # UDP throughput
+                jitter_unit = match.group(5)
                 factor = get_time_factor(jitter_unit)
-                jitter = float(match.group(3)) * factor
-                lost = int(match.group(5))
-                total = int(match.group(6))
+                jitter = float(match.group(4)) * factor
+                lost = int(match.group(6))
+                total = int(match.group(7))
 
                 packet_count = total - lost
                 throughput = float(packet_count) * frame_size * 8 / 1000000 / time  # Ethernet throughput in Mbps
@@ -251,24 +254,24 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                 time = float(match.group(1))
                 rate_unit = match.group(3)
                 factor = get_rate_factor(rate_unit)
-                rate = float(match.group(2)) * factor  # TCP throughput
+                data_throughput = float(match.group(2)) * factor  # TCP throughput
                 retry = int(match.group(4))
 
-                throughput = (rate * time - retry * payload_size * 8 / 1000000) / (float(payload_size) / frame_size)
+                throughput = (data_throughput * time - retry * payload_size * 8 / 1000000) / (
+                    float(payload_size) / frame_size)
                 pps = throughput * 1000000 / (frame_size * 8)
+
+            if data_throughput < abs(target_bw_val - deviation):
+                break
 
             left = target_bw_val
             target_bw_val = (left + right) / 2
+            fun_test.sleep("Waiting for buffer drain..", seconds=30)
 
-            # If tested throughput is less than targeted bw for more than 0.1Mbps, no need to try further
-            if throughput < abs(target_bw_val - 0.1):
-                fun_test.sleep("Waiting for buffer drain..", seconds=60)
-                break
         else:
             right = target_bw_val
             target_bw_val = (left + right) / 2
-
-        fun_test.sleep("Waiting for buffer drain..", seconds=120)
+            fun_test.sleep("Waiting for buffer drain..", seconds=120)
 
     result.update(
         {'throughput': round(throughput, 3),
@@ -283,7 +286,8 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     percentile = 99.0
     latency_min = latency_median = latency_max = jitter = latency_percentile = -1
 
-    cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(int(pps*duration), frame_size-18-20-8-14, 1.0/pps, percentile, dip)
+    packet_count = int(pps*duration)
+    cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, frame_size-18-20-8-14, 1.0/pps, percentile, dip)
     output = linux_obj.command(cmd, timeout=duration+30)
     pat = r'from.*?to.*?{}.*?{} sent, (\d+) lost.*?(\d+) duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, packet_count, percentile)
     match = re.search(pat, output, re.DOTALL)
@@ -295,8 +299,8 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         latency_min = float(match.group(3)) * factor
         latency_median = float(match.group(4)) * factor
         latency_max = float(match.group(5)) * factor
-        jitter = float(match.group(7)) * factor
-        latency_percentile = float(match.group(8)) * factor
+        jitter = float(match.group(7)) * factor if match.group(7) != 'nan' else -1
+        latency_percentile = float(match.group(8)) * factor if match.group(8) != 'nan' else -1
 
     result.update(
         {'latency_min': round(latency_min, 1),
@@ -306,7 +310,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
          }
     )
 
-    if result.get('jitter', 0) == 0:
+    if result.get('jitter', 0) in (-1, 0):
         result.update(
             {'jitter': round(jitter, 1)}
         )
