@@ -210,6 +210,9 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         fun_test.log('Frame size {} is larger than interface {} mtu {}'.format(frame_size, interface, mtu))
         return None
 
+    # Turn off offload
+    linux_obj.sudo_command('ethtool --offload {} rx off tx off sg off tso off gso off gro off'.format(interface))
+
     result = {}
     deviation = 0.01  # 0.1 K/M/Gbps
     throughput = pps = jitter = float('nan')
