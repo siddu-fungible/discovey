@@ -71,6 +71,7 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
+      <br>
       <div *ngIf="modelName !== 'MetricContainer'">
         <span *ngIf="!editingSource"><i class="grey-text">Source: </i><span *ngIf="inner.currentSource === 'Unknown'">{{ inner.currentSource }}</span>
           <a *ngIf="inner.currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(inner.currentSource)">{{ getAppName(inner.currentSource) }}</a>&nbsp;
