@@ -39,15 +39,19 @@ class RegisterController(DpcshClient):
             fun_test.critical(str(ex))
         return result
 
-    def form_args(self, register_name, rinst, ring="hsu", field=None):
-        args = "{name: %s, ring:%s, rinst:%s" % (register_name, ring, rinst)
-        if field:
+    def form_args(self, register_name, rinst, ring="hsu", field=None, inst=None, index=None):
+        args = "{name: %s,ring:%s, rinst:%s" % (register_name, ring, rinst)
+        if field is not None:
             args = args + ", field:%s" % field
+        if inst is not None:
+            args = args + ", inst:%s" % inst
+        if index is not None:
+            args = args + ", index:%s" % index
         args = args + "}"
         return args
 
-    def peek_register(self, register_name, rinst, ring="hsu", field=None):
-        args = self.form_args(register_name,rinst,ring, field)
+    def peek_register(self, register_name, rinst, ring="hsu", field=None, inst=None, index=None):
+        args = self.form_args(register_name, rinst, ring, field, inst, index)
         fun_test.log("\n############################")
         output = self.peek_csr(args)
         if field:
@@ -56,6 +60,8 @@ class RegisterController(DpcshClient):
             fun_test.log("Output seen for register '%s' is '%s'" % (register_name, output['data']))
         if register_name == self.hsu_pwp_core0_csr_test_outl and rinst == 3 and field == "csr_test_outl":
             self.print_simplified_data(register_name, output['data'][2], hsu_pwp_core0_csr_test_outl_dict)
+        if register_name == self.hsu_pwp_core0_csr_apb and (inst is not None) and (index is not None) and (int(output['data'][0]) != 0):
+            self.print_hsu_pwp_core0_csr_apb_byte0(output['data'][0], rinst, inst, index)
 
     def _convert_decimal_to_binary(self, decimal, zfill_val):
         result = None
@@ -88,3 +94,12 @@ class RegisterController(DpcshClient):
                     end_index = val[1] - zfill_val + 1
                 binary_bits = self.extract_value(binary_output, start_index,end_index)
                 fun_test.log("Output for %s in range %s in binary bits is %s" % (key, val[::-1], binary_bits[::-1]))
+
+    def print_hsu_pwp_core0_csr_apb_byte0(self, decimal_data, rinst, inst, index):
+        zfill_val = 64
+        binary_output = self._convert_decimal_to_binary(decimal_data, zfill_val)
+        byte0 = binary_output[56:]
+        fun_test.log("Byte0 info for hsu_pwp_core0_csr_apb register with "
+                     "rinst '%s' and inst '%s' and index '%s' is [7:0] '%s'" % (rinst, inst, index,
+                                                                                byte0))
+        fun_test.log("Value of D3 on state is '%s'" % byte0[6:])

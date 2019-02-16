@@ -3,11 +3,15 @@ import sys
 
 rc = RegisterController(dpc_server_ip='10.1.40.22', dpc_server_port=40221, verbose=False)
 while True:
-    name = raw_input("\nRegister name: ")
+    inst = None
+    index = None
+    name = raw_input("\nRegister name: ") or None
     if name == "exit":
         sys.exit()
-    rinst = raw_input("Rinst: ")
-    field = raw_input("Field: ")
+    rinst = raw_input("Rinst: ") or None
+    field = raw_input("Field: ") or None
+    if name == rc.hsu_pwp_core0_csr_apb or name == 'hsu_pwp_core0_csr_pmlut':
+        inst = raw_input("inst: ") or None
+        index = raw_input("index: ") or None
 
-    rc.peek_register(register_name=name,rinst=rinst, field=field)
-    enable_counter_execute = 0
+    rc.peek_register(register_name=name,rinst=rinst, field=field, inst=inst, index=index)

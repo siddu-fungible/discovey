@@ -14,4 +14,15 @@ rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="k
 rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_link_aspml1")
 rc.peek_register(register_name=rc.hsu_pwp_core0_csr_k_pexconf, rinst=3, field="kpexconf_link_aspml0s")
 rc.peek_register(register_name=rc.hsu_pwp_core0_csr_test_outl, rinst=3, field="csr_test_outl")
-rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=3, field="apb")
+
+# rinst is 0 and inst is 0-3
+rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=0, inst=0, index=63)
+#rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=0, inst=1, index=63)
+#rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=0, inst=2, index=63)
+#rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=0, inst=3, index=63)
+
+# rinst is 3 and inst is 0-3
+#rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=3, inst=0, index=63)
+#rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=3, inst=1, index=63)
+#rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=3, inst=2, index=63)
+#rc.peek_register(register_name=rc.hsu_pwp_core0_csr_apb, rinst=3, inst=3, index=63)
