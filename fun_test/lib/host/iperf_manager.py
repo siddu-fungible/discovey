@@ -96,7 +96,7 @@ class IPerfManager:
         return result
 
 
-def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=10, frame_size=1518, bw='5m'):
+def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=10, frame_size=1518, bw='10m'):
     """Use iperf2/iperf3 to measure TCP/UDP throughput, and use owping by sending UDP packets to measure latency.
 
     Here are iperf3 and owping output examples.
@@ -222,7 +222,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     left, right = 0.0, bw_val
     target_bw_val = (left + right) / 2  # Start test from 1/2 of target bindwidth
-    while (left / right) >= (1 - deviation):
+    while right - left >= right * deviation:
         target_bw = '{}{}'.format(target_bw_val, bw_unit)
 
         if protocol.lower() == 'udp':
