@@ -228,7 +228,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         if protocol.lower() == 'udp':
             payload_size = frame_size-18-20-8
             cmd = '{} -c {} -i 1 -P {} -u -t {} -l {} -b {}'.format(tool, dip, parallel, duration, payload_size, target_bw)
-            pat = r'Lost/Total.*?0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+(\S+) ([m|u|n]s).*?(\d+)/(\d+).*?sender'
+            pat = r'Lost/Total.*?0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+(\S+) ([m|u|n]s).*?(\d+)/(\d+).*?receiver'
         elif protocol.lower() == 'tcp':
             payload_size = frame_size-18-20-20
             cmd = '{} -c {} -i 1 -P {} -t {} -M {} -b {}'.format(tool, dip, parallel, duration, payload_size, target_bw)
@@ -292,9 +292,9 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     packet_count = int(pps*duration)
     left, right = 0, packet_count
     target_packet_count = packet_count  # Start from most right instead of middle
+    padding_size = frame_size-18-20-8-14
     while left <= right * (1 - deviation):
-        padding_size = frame_size-18-20-8-14
-        interval = duration / target_packet_count
+        interval = float(duration) / float(target_packet_count)
         cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(target_packet_count, padding_size, interval, percentile, dip)
         output = linux_obj.command(cmd, timeout=duration+30)
         pat = r'from.*?to.*?{}.*?{} sent, 0 lost.*?0 duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, packet_count, percentile)
