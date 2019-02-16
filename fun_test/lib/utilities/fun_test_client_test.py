@@ -21,6 +21,8 @@ def worker(fun_test_client):
 
 if __name__ == "__main__":
     fun_test_client = FunTestClient(base_url=BASE_URL)
+
+    '''
     fun_test_client.DEBUG = False
     data = {"script_path": "/networking/qos/test_pir.py"}
     data = {"script_path": "/storage/thin_block_volume_performance.py"}
@@ -31,13 +33,14 @@ if __name__ == "__main__":
             "to_time": to_time,
             "module": "networking",
             "test_case_execution_tags": test_case_execution_tags}
-
+    '''
     '''threads = []
     for i in range(50):
         t = threading.Thread(target=worker, args=(fun_test_client, ))
         threads.append(t)
         t.start()'''
 
+    '''
     for i in range(1):
         o = fun_test_client._do_post(url="/regression/get_test_case_executions_by_time", data=json.dumps(data))
 
@@ -45,3 +48,6 @@ if __name__ == "__main__":
             print a
 
     h = 0
+    '''
+    data = {"test_case_execution_tags": ["palladium-apps"]}
+    fun_test_client._do_post(url="/regression/get_test_case_executions_by_time", data=json.dumps(data))

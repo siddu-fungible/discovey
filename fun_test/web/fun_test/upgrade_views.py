@@ -12,4 +12,4 @@ app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 @csrf_exempt
 def home(request):
-    return render(request, 'qa_dashboard/angular_home.html', locals())
+    return render(request, 'qa_dashboard/angular_home_development.html', locals())

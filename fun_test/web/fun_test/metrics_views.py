@@ -233,10 +233,11 @@ def update_child_weight(request):
     invalidate_goodness_cache()
 
 
+'''
 @csrf_exempt
 def summary_page(request):
     return render(request, 'qa_dashboard/angular_home.html', locals())
-
+'''
 
 @csrf_exempt
 def initialize(request):
