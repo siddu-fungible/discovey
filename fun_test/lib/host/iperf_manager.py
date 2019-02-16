@@ -291,11 +291,11 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     packet_count = int(pps*duration)
     left, right = 0, packet_count
-    target_packet_count = (left + right) / 2
+    target_packet_count = packet_count  # Start from most right instead of middle
     while left <= right * (1 - deviation):
         padding_size = frame_size-18-20-8-14
-        interval = target_packet_count / duration
-        cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, padding_size, interval, percentile, dip)
+        interval = duration / target_packet_count
+        cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(target_packet_count, padding_size, interval, percentile, dip)
         output = linux_obj.command(cmd, timeout=duration+30)
         pat = r'from.*?to.*?{}.*?{} sent, 0 lost.*?0 duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, packet_count, percentile)
         match = re.search(pat, output, re.DOTALL)
