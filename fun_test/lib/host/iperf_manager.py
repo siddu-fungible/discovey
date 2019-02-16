@@ -216,6 +216,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     result = {}
     deviation = 0.02  # 2%
     throughput = pps = jitter = float('nan')
+    max_data_throughput = 0.0
     bw_unit = bw[-1]
     factor = get_rate_factor(bw_unit)
     bw_val = float(bw.rstrip('kmgKMG')) * factor  # Convert bandwidth to Mbps
@@ -249,9 +250,11 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                 lost = int(match.group(6))
                 total = int(match.group(7))
 
-                packet_count = total - lost
-                throughput = float(packet_count) * frame_size * 8 / 1000000 / actual_duration  # Ethernet throughput in Mbps
-                pps = float(packet_count) / actual_duration
+                if data_throughput > max_data_throughput:
+                    max_data_throughput = data_throughput
+                    packet_count = total - lost
+                    throughput = float(packet_count) * frame_size * 8 / 1000000 / actual_duration  # Ethernet throughput in Mbps
+                    pps = float(packet_count) / actual_duration
 
             elif protocol.lower() == 'tcp':
                 actual_duration = float(match.group(1))
@@ -259,8 +262,10 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                 factor = get_rate_factor(rate_unit)
                 data_throughput = float(match.group(2)) * factor  # TCP throughput
 
-                throughput = data_throughput / (float(payload_size) / frame_size)  # Ethernet throughput in Mbps
-                pps = throughput * 1000000 / (frame_size * 8)
+                if data_throughput > max_data_throughput:
+                    max_data_throughput = data_throughput
+                    throughput = data_throughput / (float(payload_size) / frame_size)  # Ethernet throughput in Mbps
+                    pps = throughput * 1000000 / (frame_size * 8)
 
             fun_test.log('{} traffic duration: {} sec, throughput: {} Mbits/sec'.format(
                 protocol.upper(), actual_duration, data_throughput))
