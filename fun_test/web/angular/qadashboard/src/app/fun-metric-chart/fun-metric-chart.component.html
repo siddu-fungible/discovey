@@ -60,6 +60,18 @@
         <br>
       </div>
       <br>
+      <div *ngIf="modelName !== 'MetricContainer'" style="float: right">
+        <span *ngIf="!editingSource"><i class="grey-text">Source: </i><i class="grey-text"
+                                                                         *ngIf="inner.currentSource === 'Unknown'">{{ inner.currentSource }}</i>
+          <a *ngIf="inner.currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(inner.currentSource)">{{ getAppName(inner.currentSource) }}</a>&nbsp;
+          <a (click)="editingSource = true"><i class="fa fa-pencil"></i></a></span>
+        <i *ngIf="editingSource" style="font-size: 95%;">Source: <input type="text" class="owner-text"
+                                                                        [(ngModel)]="inner.currentSource">
+          <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
+          <span><i class="fa fa-times fa-fw close-color" (click)="editingSource = false"></i></span></i>
+        <br>
+      </div>
+      <br>
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
         <br>
@@ -71,17 +83,9 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
-      <br>
-      <div *ngIf="modelName !== 'MetricContainer'">
-        <span *ngIf="!editingSource"><i class="grey-text">Source: </i><span *ngIf="inner.currentSource === 'Unknown'">{{ inner.currentSource }}</span>
-          <a *ngIf="inner.currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(inner.currentSource)">{{ getAppName(inner.currentSource) }}</a>&nbsp;
-          <a (click)="editingSource = true"><i class="fa fa-pencil"></i></a></span>
-        <i *ngIf="editingSource" style="font-size: 95%;">Source: <input type="text" class="owner-text"
-                                                                        [(ngModel)]="inner.currentSource">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
-          <span><i class="fa fa-times fa-fw close-color" (click)="editingSource = false"></i></span></i>
-        <br>
-      </div>
+      <!--<span style="float: right;">-->
+        <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
+      <!--</span>-->
       <br>
     </div>
     <div class="closed-section"></div>

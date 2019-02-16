@@ -1,5 +1,5 @@
-from fun_global import get_current_time
 from lib.system.fun_test import fun_test
+import math
 import pprint
 import re
 
@@ -96,7 +96,7 @@ class IPerfManager:
         return result
 
 
-def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=10, frame_size=1518, bw='5m'):
+def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=10, frame_size=1518, bw='10m'):
     """Use iperf2/iperf3 to measure TCP/UDP throughput, and use owping by sending UDP packets to measure latency.
 
     Here are iperf3 and owping output examples.
@@ -214,7 +214,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     linux_obj.sudo_command('ethtool --offload {} rx off tx off sg off tso off gso off gro off'.format(interface))
 
     result = {}
-    deviation = 0.01  # 0.1 K/M/Gbps
+    deviation = 0.05  # 5%
     throughput = pps = jitter = float('nan')
     bw_unit = bw[-1]
     factor = get_rate_factor(bw_unit)
@@ -222,7 +222,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     left, right = 0.0, bw_val
     target_bw_val = (left + right) / 2  # Start test from 1/2 of target bindwidth
-    while (right - left) >= deviation:
+    while right - left >= right * deviation:
         target_bw = '{}{}'.format(target_bw_val, bw_unit)
 
         if protocol.lower() == 'udp':
@@ -264,7 +264,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                     float(payload_size) / frame_size)
                 pps = throughput * 1000000 / (frame_size * 8)
 
-            if data_throughput < abs(target_bw_val - deviation):
+            if data_throughput < target_bw_val*(1-deviation):
                 break
 
             left = target_bw_val
@@ -290,7 +290,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     latency_min = latency_median = latency_max = jitter = latency_percentile = float('nan')
 
     packet_count = int(pps*duration)
-    cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, frame_size-18-20-8-14, 1.0/pps, percentile, dip)
+    cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, frame_size-18-20-8-14, 1.0/int(pps), percentile, dip)
     output = linux_obj.command(cmd, timeout=duration+30)
     pat = r'from.*?to.*?{}.*?{} sent, (\d+) lost.*?(\d+) duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, packet_count, percentile)
     match = re.search(pat, output, re.DOTALL)
@@ -309,20 +309,19 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         {'latency_min': round(latency_min, 1),
          'latency_median': round(latency_median, 1),
          'latency_max': round(latency_max, 1),
-         'latency_{}_percentile'.format(percentile): round(latency_percentile, 1),
+         'latency_p{}'.format(percentile): round(latency_percentile, 1),
          }
     )
 
-    if result.get('jitter', 0) in (float('nan'), 0):
+    if result.get('jitter', 0.0) == 0 or math.isnan(result.get('jitter', 0.0)):
         result.update(
             {'jitter': round(jitter, 1)}
         )
 
-    result.update(
-        {'timestamp': '%s' % get_current_time(),
-         'version': fun_test.get_version(),
-        }
-    )
+    # Pop out 'nan'
+    for k, v in result.items():
+        if math.isnan(v):
+            result.pop(k)
 
     fun_test.log('\n{}'.format(pprint.pformat(result)))
     return result
