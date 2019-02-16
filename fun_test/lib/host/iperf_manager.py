@@ -232,14 +232,14 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         elif protocol.lower() == 'tcp':
             payload_size = frame_size-18-20-20
             cmd = '{} -c {} -i 1 -P {} -t {} -M {} -b {}'.format(tool, dip, parallel, duration, payload_size, target_bw)
-            pat = r'sender.*?0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+(\d+)\s+receiver'
+            pat = r'sender.*?0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+receiver'
 
         output = linux_obj.command(cmd, timeout=duration+30)
         match = re.search(pat, output, re.DOTALL)
 
         if match:
             if protocol.lower() == 'udp':
-                time = float(match.group(1))
+                actual_duration = float(match.group(1))
                 rate_unit = match.group(3)
                 factor = get_rate_factor(rate_unit)
                 data_throughput = float(match.group(2)) * factor  # UDP throughput
@@ -250,19 +250,20 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                 total = int(match.group(7))
 
                 packet_count = total - lost
-                throughput = float(packet_count) * frame_size * 8 / 1000000 / time  # Ethernet throughput in Mbps
-                pps = float(packet_count) / time
+                throughput = float(packet_count) * frame_size * 8 / 1000000 / actual_duration  # Ethernet throughput in Mbps
+                pps = float(packet_count) / actual_duration
 
             elif protocol.lower() == 'tcp':
-                time = float(match.group(1))
+                actual_duration = float(match.group(1))
                 rate_unit = match.group(3)
                 factor = get_rate_factor(rate_unit)
                 data_throughput = float(match.group(2)) * factor  # TCP throughput
-                retry = int(match.group(4))
 
-                throughput = (data_throughput * time - retry * payload_size * 8 / 1000000) / (
-                    float(payload_size) / frame_size)
+                throughput = (data_throughput * actual_duration / 1000000) / (float(payload_size) / frame_size)
                 pps = throughput * 1000000 / (frame_size * 8)
+
+            fun_test.log('{} traffic duration: {} sec, throughput: {} {}bits/sec'.format(
+                protocol.upper(), actual_duration, data_throughput, rate_unit))
 
             if data_throughput < target_bw_val*(1-deviation):
                 break
@@ -289,12 +290,12 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     percentile = 99.0
     latency_min = latency_avg = latency_max = jitter = latency_percentile = float('nan')
 
-    packet_count = int(pps*duration)
+    packet_count = int(pps*actual_duration)
     left, right = 0, packet_count
     target_packet_count = packet_count  # Start from most right instead of middle
     padding_size = frame_size-18-20-8-14
     while left <= right * (1 - deviation):
-        interval = float(duration) / float(target_packet_count)
+        interval = float(actual_duration) / float(target_packet_count)
         cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(target_packet_count, padding_size, interval, percentile, dip)
         output = linux_obj.command(cmd, timeout=duration+30)
         pat = r'from.*?to.*?{}.*?{} sent, 0 lost.*?0 duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, target_packet_count, percentile)
