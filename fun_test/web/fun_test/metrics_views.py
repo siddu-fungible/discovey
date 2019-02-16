@@ -264,6 +264,7 @@ def metric_info(request):
     serialized_data["children_info"] = result["children_info"]
     return serialized_data
 
+
 @csrf_exempt
 @api_safe_json_response
 def global_settings(request):
@@ -276,14 +277,23 @@ def global_settings(request):
 @api_safe_json_response
 def scores(request):
     result = {}
-    date_range = None
     request_json = json.loads(request.body)
     metric_id = int(request_json["metric_id"])
-    if "date_range" in request_json:
-        date_range = request_json["date_range"]
-        date_range = [parser.parse(x) for x in date_range]
+    chart = None
+    try:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+    except:
+        pass
+    if chart:
+        date_range = [chart.base_line_date, datetime.now()]
         entries = MetricChartStatus.objects.filter(date_time__range=date_range,
                                                    metric_id=metric_id)
+
+    # if "date_range" in request_json:
+    #     date_range = request_json["date_range"]
+    #     date_range = [parser.parse(x) for x in date_range]
+    #     entries = MetricChartStatus.objects.filter(date_time__range=date_range,
+    #                                                metric_id=metric_id)
     # chart_name = request_json["chart_name"]
     else:
         entries = MetricChartStatus.objects.filter(metric_id=metric_id)
@@ -431,7 +441,6 @@ def update_chart(request):
         c.save()
         invalidate_goodness_cache()
     return "Ok"
-
 
 
 @csrf_exempt
@@ -619,7 +628,8 @@ def traverse_dag(metric_id, sort_by_name=True):
             child_chart = MetricChart.objects.get(metric_id=child_id)
             children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
         if sort_by_name:
-            result["children"] = map(lambda item: item[0], sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
+            result["children"] = map(lambda item: item[0],
+                                     sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
     return result
 
 
@@ -635,6 +645,7 @@ def dag(request):
     chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="All metrics")
     result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=True)
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -655,6 +666,7 @@ def update_jira_info(request, metric_id, jira_id):
         logger.critical("No data found - updating jira ids for metric id {}".format(metric_id))
         return obj.response.status_code
     return "OK"
+
 
 def validate_jira(jira_id):
     project_name, id = jira_id.split('-')
@@ -684,6 +696,7 @@ def delete_jira_info(request, metric_id, jira_id):
     except ObjectDoesNotExist:
         logger.critical("No data found - Deleting jira ids for metric id {}".format(metric_id))
     return "Ok"
+
 
 @csrf_exempt
 @api_safe_json_response
