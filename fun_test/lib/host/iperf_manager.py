@@ -222,7 +222,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     left, right = 0.0, bw_val
     target_bw_val = (left + right) / 2  # Start test from 1/2 of target bindwidth
-    while right - left >= right * deviation:
+    while left <= right * (1 - deviation):
         target_bw = '{}{}'.format(target_bw_val, bw_unit)
 
         if protocol.lower() == 'udp':
@@ -287,29 +287,41 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     # Latency test
     percentile = 99.0
-    latency_min = latency_median = latency_max = jitter = latency_percentile = float('nan')
+    latency_min = latency_avg = latency_max = jitter = latency_percentile = float('nan')
 
     packet_count = int(pps*duration)
-    cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, frame_size-18-20-8-14, 1.0/int(pps), percentile, dip)
-    output = linux_obj.command(cmd, timeout=duration+30)
-    pat = r'from.*?to.*?{}.*?{} sent, (\d+) lost.*?(\d+) duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, packet_count, percentile)
-    match = re.search(pat, output, re.DOTALL)
-    if match:
-        lost = int(match.group(1))  # TODO: Add check if needed
-        duplicates = int(match.group(2))
-        unit = match.group(6)
-        factor = get_time_factor(unit)
-        latency_min = float(match.group(3)) * factor
-        latency_median = float(match.group(4)) * factor
-        latency_max = float(match.group(5)) * factor
-        jitter = float(match.group(7)) * factor
-        latency_percentile = float(match.group(8)) * factor
+    left, right = 0, packet_count
+    target_packet_count = (left + right) / 2
+    while left <= right * (1 - deviation):
+        padding_size = frame_size-18-20-8-14
+        interval = target_packet_count / duration
+        cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, padding_size, interval, percentile, dip)
+        output = linux_obj.command(cmd, timeout=duration+30)
+        pat = r'from.*?to.*?{}.*?{} sent, 0 lost.*?0 duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, packet_count, percentile)
+        match = re.search(pat, output, re.DOTALL)
+        if match:
+            unit = match.group(4)
+            factor = get_time_factor(unit)
+            latency_min = float(match.group(1)) * factor
+            latency_avg = float(match.group(2)) * factor
+            latency_max = float(match.group(3)) * factor
+            jitter = float(match.group(5)) * factor
+            latency_percentile = float(match.group(6)) * factor
+
+            left = target_packet_count
+            target_packet_count = (left + right) / 2
+            fun_test.sleep("Waiting for buffer drain..", seconds=30)
+
+        else:
+            right = target_packet_count
+            target_packet_count = (left + right) / 2
+            fun_test.sleep("Waiting for buffer drain..", seconds=120)
 
     result.update(
         {'latency_min': round(latency_min, 1),
-         'latency_median': round(latency_median, 1),
+         'latency_avg': round(latency_avg, 1),
          'latency_max': round(latency_max, 1),
-         'latency_p{}'.format(percentile): round(latency_percentile, 1),
+         'latency_P{}'.format(percentile): round(latency_percentile, 1),
          }
     )
 
@@ -317,11 +329,6 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         result.update(
             {'jitter': round(jitter, 1)}
         )
-
-    # Pop out 'nan'
-    for k, v in result.items():
-        if math.isnan(v):
-            result.pop(k)
 
     fun_test.log('\n{}'.format(pprint.pformat(result)))
     return result
