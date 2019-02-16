@@ -41,8 +41,6 @@ INSTALLED_APPS = [
     'web.tools',
 ]
 
-# if is_development_mode():
-#    INSTALLED_APPS.append('debug_toolbar')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,10 +51,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-# if is_development_mode():
-#    MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
-
 
 ROOT_URLCONF = 'fun_test.urls'
 
@@ -196,5 +190,3 @@ CSRF_COOKIE_SECURE = False
 # SESSION_ENGINE = "django.contrib.sessions.backends.file"
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
-
-INTERNAL_IPS = ('127.0.0.1', '0.0.0.0')
