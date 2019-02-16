@@ -214,32 +214,33 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     linux_obj.sudo_command('ethtool --offload {} rx off tx off sg off tso off gso off gro off'.format(interface))
 
     result = {}
-    deviation = 0.05  # 5%
+    deviation = 0.02  # 2%
     throughput = pps = jitter = float('nan')
+    max_data_throughput = 0.0
     bw_unit = bw[-1]
     factor = get_rate_factor(bw_unit)
     bw_val = float(bw.rstrip('kmgKMG')) * factor  # Convert bandwidth to Mbps
 
     left, right = 0.0, bw_val
     target_bw_val = (left + right) / 2  # Start test from 1/2 of target bindwidth
-    while right - left >= right * deviation:
+    while left <= right * (1 - deviation):
         target_bw = '{}{}'.format(target_bw_val, bw_unit)
 
         if protocol.lower() == 'udp':
             payload_size = frame_size-18-20-8
             cmd = '{} -c {} -i 1 -P {} -u -t {} -l {} -b {}'.format(tool, dip, parallel, duration, payload_size, target_bw)
-            pat = r'Lost/Total.*?0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+(\S+) ([m|u|n]s).*?(\d+)/(\d+).*?sender'
+            pat = r'sender.*?0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+(\S+) ([m|u|n]s).*?(\d+)/(\d+).*?receiver'
         elif protocol.lower() == 'tcp':
             payload_size = frame_size-18-20-20
             cmd = '{} -c {} -i 1 -P {} -t {} -M {} -b {}'.format(tool, dip, parallel, duration, payload_size, target_bw)
-            pat = r'0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+(\d+)\s+sender'
+            pat = r'sender.*?0.00-(\S+)\s+sec.*?(\S+) ([K|M|G])bits/sec\s+receiver'
 
         output = linux_obj.command(cmd, timeout=duration+30)
         match = re.search(pat, output, re.DOTALL)
 
         if match:
             if protocol.lower() == 'udp':
-                time = float(match.group(1))
+                actual_duration = float(match.group(1))
                 rate_unit = match.group(3)
                 factor = get_rate_factor(rate_unit)
                 data_throughput = float(match.group(2)) * factor  # UDP throughput
@@ -249,20 +250,27 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                 lost = int(match.group(6))
                 total = int(match.group(7))
 
-                packet_count = total - lost
-                throughput = float(packet_count) * frame_size * 8 / 1000000 / time  # Ethernet throughput in Mbps
-                pps = float(packet_count) / time
+                if data_throughput > max_data_throughput:
+                    max_data_throughput = data_throughput
+                    packet_count = total - lost
+                    throughput = float(packet_count) * frame_size * 8 / 1000000 / actual_duration  # Ethernet throughput in Mbps
+                    pps = float(packet_count) / actual_duration
 
             elif protocol.lower() == 'tcp':
-                time = float(match.group(1))
+                actual_duration = float(match.group(1))
                 rate_unit = match.group(3)
                 factor = get_rate_factor(rate_unit)
                 data_throughput = float(match.group(2)) * factor  # TCP throughput
-                retry = int(match.group(4))
 
-                throughput = (data_throughput * time - retry * payload_size * 8 / 1000000) / (
-                    float(payload_size) / frame_size)
-                pps = throughput * 1000000 / (frame_size * 8)
+                if data_throughput > max_data_throughput:
+                    max_data_throughput = data_throughput
+                    throughput = data_throughput / (float(payload_size) / frame_size)  # Ethernet throughput in Mbps
+                    pps = throughput * 1000000 / (frame_size * 8)
+
+            fun_test.log('{} traffic duration: {} sec, throughput: {} Mbits/sec'.format(
+                protocol.upper(), actual_duration, data_throughput))
+            fun_test.log('{} traffic pps: {}, Ethernet throughput: {} Mbits/sec'.format(
+                protocol.upper(), pps, throughput))
 
             if data_throughput < target_bw_val*(1-deviation):
                 break
@@ -287,29 +295,41 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
 
     # Latency test
     percentile = 99.0
-    latency_min = latency_median = latency_max = jitter = latency_percentile = float('nan')
+    latency_min = latency_avg = latency_max = jitter = latency_percentile = float('nan')
 
-    packet_count = int(pps*duration)
-    cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(packet_count, frame_size-18-20-8-14, 1.0/int(pps), percentile, dip)
-    output = linux_obj.command(cmd, timeout=duration+30)
-    pat = r'from.*?to.*?{}.*?{} sent, (\d+) lost.*?(\d+) duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, packet_count, percentile)
-    match = re.search(pat, output, re.DOTALL)
-    if match:
-        lost = int(match.group(1))  # TODO: Add check if needed
-        duplicates = int(match.group(2))
-        unit = match.group(6)
-        factor = get_time_factor(unit)
-        latency_min = float(match.group(3)) * factor
-        latency_median = float(match.group(4)) * factor
-        latency_max = float(match.group(5)) * factor
-        jitter = float(match.group(7)) * factor
-        latency_percentile = float(match.group(8)) * factor
+    packet_count = int(pps*actual_duration)
+    left, right = 0, packet_count
+    target_packet_count = packet_count  # Start from most right instead of middle
+    padding_size = frame_size-18-20-8-14
+    while left <= right * (1 - deviation):
+        interval = float(actual_duration) / float(target_packet_count)
+        cmd = 'owping -c {} -s {} -i {} -a {} {}'.format(target_packet_count, padding_size, interval, percentile, dip)
+        output = linux_obj.command(cmd, timeout=duration+30)
+        pat = r'from.*?to.*?{}.*?{} sent, 0 lost.*?0 duplicates.*?min/median/max = (\S+)/(\S+)/(\S+) ([mun]s).*?jitter = (\S+) [mun]s.*?Percentiles.*?{}: (\S+) [mun]s.*?no reordering'.format(dip, target_packet_count, percentile)
+        match = re.search(pat, output, re.DOTALL)
+        if match:
+            unit = match.group(4)
+            factor = get_time_factor(unit)
+            latency_min = float(match.group(1)) * factor
+            latency_avg = float(match.group(2)) * factor
+            latency_max = float(match.group(3)) * factor
+            jitter = float(match.group(5)) * factor
+            latency_percentile = float(match.group(6)) * factor
+
+            left = target_packet_count
+            target_packet_count = (left + right) / 2
+            fun_test.sleep("Waiting for buffer drain..", seconds=30)
+
+        else:
+            right = target_packet_count
+            target_packet_count = (left + right) / 2
+            fun_test.sleep("Waiting for buffer drain..", seconds=120)
 
     result.update(
         {'latency_min': round(latency_min, 1),
-         'latency_median': round(latency_median, 1),
+         'latency_avg': round(latency_avg, 1),
          'latency_max': round(latency_max, 1),
-         'latency_p{}'.format(percentile): round(latency_percentile, 1),
+         'latency_P{}'.format(percentile): round(latency_percentile, 1),
          }
     )
 
@@ -317,11 +337,6 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         result.update(
             {'jitter': round(jitter, 1)}
         )
-
-    # Pop out 'nan'
-    for k, v in result.items():
-        if math.isnan(v):
-            result.pop(k)
 
     fun_test.log('\n{}'.format(pprint.pformat(result)))
     return result

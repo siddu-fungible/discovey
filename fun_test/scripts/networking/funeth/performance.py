@@ -5,11 +5,12 @@ from lib.host.iperf_manager import IPerfManager
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity
 import json
+import math
 
 
 TB = sanity.TB
 if TB == 'SN2':
-    BW_LIMIT = '10M'
+    BW_LIMIT = '7M'
 else:
     BW_LIMIT = '25G'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
@@ -78,6 +79,14 @@ class FunethPerformanceBase(FunTestCase):
              }
         ]
         result = iperf_manager_obj.run(*arg_dicts).values()[0]
+
+        # check for 'nan'
+        passed = True
+        for k, v in result.items():
+            if math.isnan(v):
+                result = False
+                break
+
         result.update(
             {'flow_type': flow_type,
              'frame_size': frame_size,
@@ -86,8 +95,6 @@ class FunethPerformanceBase(FunTestCase):
              }
         )
 
-        fun_test.test_assert(result, 'Get throughput/latency test result')
-
         # Update file with result
         with open(RESULT_FILE) as f:
             r = json.load(f)
@@ -95,6 +102,8 @@ class FunethPerformanceBase(FunTestCase):
 
         with open(RESULT_FILE, 'w') as f:
             json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
+
+        fun_test.test_assert(passed, 'Get throughput/latency test result')
 
 
 class FunethPerformance_NU_HU_64B_UDP(FunethPerformanceBase):
