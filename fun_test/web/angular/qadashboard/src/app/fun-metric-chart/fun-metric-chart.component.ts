@@ -367,10 +367,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     window.open(url, '_blank');
   }
 
-  openScores(): void {
-    window.open('/metrics/score_table/' + this.metricId, '_blank');
-  }
-
   getAppName(source): string {
     let s = "Unknown";
     let sourceSplits = source.split("/");
