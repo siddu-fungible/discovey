@@ -214,7 +214,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
     linux_obj.sudo_command('ethtool --offload {} rx off tx off sg off tso off gso off gro off'.format(interface))
 
     result = {}
-    deviation = 0.05  # 5%
+    deviation = 0.02  # 2%
     throughput = pps = jitter = float('nan')
     bw_unit = bw[-1]
     factor = get_rate_factor(bw_unit)
@@ -259,11 +259,13 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
                 factor = get_rate_factor(rate_unit)
                 data_throughput = float(match.group(2)) * factor  # TCP throughput
 
-                throughput = (data_throughput * actual_duration / 1000000) / (float(payload_size) / frame_size)
+                throughput = data_throughput / (float(payload_size) / frame_size)  # Ethernet throughput in Mbps
                 pps = throughput * 1000000 / (frame_size * 8)
 
-            fun_test.log('{} traffic duration: {} sec, throughput: {} {}bits/sec'.format(
-                protocol.upper(), actual_duration, data_throughput, rate_unit))
+            fun_test.log('{} traffic duration: {} sec, throughput: {} Mbits/sec'.format(
+                protocol.upper(), actual_duration, data_throughput))
+            fun_test.log('{} traffic pps: {}, Ethernet throughput: {} Mbits/sec'.format(
+                protocol.upper(), pps, throughput))
 
             if data_throughput < target_bw_val*(1-deviation):
                 break

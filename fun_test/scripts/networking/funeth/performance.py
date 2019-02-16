@@ -10,7 +10,7 @@ import math
 
 TB = sanity.TB
 if TB == 'SN2':
-    BW_LIMIT = '10M'
+    BW_LIMIT = '7M'
 else:
     BW_LIMIT = '25G'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
