@@ -11,6 +11,7 @@ class IPerfManager:
         self.linux_objs = linux_objs
 
     def setup(self):
+        self.cleanup()
         result = True
         for linux_obj in self.linux_objs:
 
