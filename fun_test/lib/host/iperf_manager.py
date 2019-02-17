@@ -320,6 +320,8 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
             target_packet_count = (left + right) / 2
             fun_test.sleep("Waiting for buffer drain..", seconds=30)
 
+        elif not re.search(r'owping statistics from.*?to{}'.format(dip), output):  # Error
+            break
         else:
             right = target_packet_count
             target_packet_count = (left + right) / 2
