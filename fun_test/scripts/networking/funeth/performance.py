@@ -84,7 +84,7 @@ class FunethPerformanceBase(FunTestCase):
         passed = True
         for k, v in result.items():
             if math.isnan(v):
-                result = False
+                passed = False
                 break
 
         result.update(
