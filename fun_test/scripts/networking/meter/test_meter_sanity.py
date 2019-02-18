@@ -8,6 +8,7 @@ from scripts.networking.helper import *
 from lib.utilities.pcap_parser import *
 
 spirent_config = {}
+nu_config_obj = NuConfigManager()
 TEST_CONFIG_FILE = fun_test.get_script_parent_directory() + "/meter_dut_configs.json"
 test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
 TRAFFIC_DURATION = test_config['traffic_duration']
@@ -19,10 +20,10 @@ meter_json_file = fun_test.get_script_parent_directory() + '/meter.json'
 meter_json_output = fun_test.parse_file_to_json(meter_json_file)
 meter_bps = meter_json_output[0]['bps_meter']
 meter_pps = meter_json_output[0]['pps_meter']
-METER_MODE_BPS=0
-METER_MODE_PPS=1
-TWO_COLOR_METER=0
-THREE_COLOR_METER=1
+METER_MODE_BPS = 0
+METER_MODE_PPS = 1
+TWO_COLOR_METER = 0
+THREE_COLOR_METER = 1
 
 
 def create_streams(tx_port, dip, dmac, load=test_config['load_pps'], load_type = test_config['fill_type'], sip="192.168.1.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
@@ -144,6 +145,7 @@ class MeterBase(FunTestCase):
     commit_rate = meter_bps['commit_rate']
     mode = METER_MODE_BPS
     rate_mode= TWO_COLOR_METER
+
     def describe(self):
         self.set_test_details(id=1, summary="Test SrTC meter transit for bps",
                               steps="""
@@ -180,7 +182,7 @@ class MeterBase(FunTestCase):
         rx_port = nu_eg_port
         result = network_controller_obj.update_meter(index=self.meter_id, interval=self.meter_interval,
                                                      crd=self.meter_credit, commit_rate=self.commit_rate,
-                                                     pps_mode=self.mode, rate_mode=rate_mode)
+                                                     pps_mode=self.mode, rate_mode=self.rate_mode)
 
         meter_before =  network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
