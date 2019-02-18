@@ -9,6 +9,7 @@ from lib.utilities.pcap_parser import *
 
 
 spirent_config = {}
+nu_config_obj = NuConfigManager()
 TEST_CONFIG_FILE = fun_test.get_script_parent_directory() + "/dut_configs.json"
 test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
 subscribed_results = None
