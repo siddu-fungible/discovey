@@ -179,6 +179,8 @@ def get_fpg_port_value(dut_port_number):
             result = (int(dut_port_number) / operator_value) - 1
         else:
             result = int(dut_port_number) / operator_value
+        if result < 0:
+            result = 0
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
