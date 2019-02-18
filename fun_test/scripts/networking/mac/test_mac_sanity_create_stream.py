@@ -129,8 +129,8 @@ class IPv4RuntTestCase2(FunTestCase):
                                                fill_type=test_config['fill_type'],
                                                insert_signature=test_config['insert_signature'],
                                                frame_length_mode=test_config['frame_length_mode'],
-                                               min_frame_length=test_config['min_frame_length'],
-                                               max_frame_length=test_config['max_frame_length'])
+                                               min_frame_length=test_config['min_frame_size'],
+                                               max_frame_length=test_config['max_frame_size'])
             ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
             fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
             l3_config = ul_ipv4_routes_config['l3_config']
@@ -288,8 +288,8 @@ class IPv6RuntTestCase2(IPv4RuntTestCase2):
                                                fill_type=test_config['fill_type'],
                                                insert_signature=test_config['insert_signature'],
                                                frame_length_mode=test_config['frame_length_mode'],
-                                               min_frame_length=test_config['min_frame_length_ipv6'],
-                                               max_frame_length=test_config['max_frame_length_ipv6'])
+                                               min_frame_length=test_config['min_frame_size_ipv6'],
+                                               max_frame_length=test_config['max_frame_size_ipv6'])
             ul_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
                                                                                      ip_version="ipv6")
             fun_test.simple_assert(ul_ipv6_routes_config, "Ensure routes config fetched")
