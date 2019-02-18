@@ -29,7 +29,7 @@ def api_safe_json_response(the_function):
         try:
             result["data"] = the_function(*args, **kwargs)
             result["status"] = True
-        except Exception as ex:
+        except Exception as ex: #TODO: Enhance to support 404, 403 etc
             result["error_message"] = "Exception: {}\n {}".format(str(ex), traceback.format_exc())
         return HttpResponse(json.dumps(result, cls=DatetimeEncoder))
     return inner

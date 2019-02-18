@@ -107,6 +107,8 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
         $scope.showOutputSelection = true;
         $scope.negativeGradient = null;
         $scope.metricId = metricId;
+        $scope.owner = "Unknown";
+        $scope.source = "Unknown";
 
 
         let payload = {};
@@ -151,6 +153,8 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
                 //$scope.copyChartInfo = angular.copy($scope.chartInfo);
                 $scope.previewDataSets = $scope.chartInfo.data_sets;
                 $scope.negativeGradient = !$scope.chartInfo.positive;
+                $scope.owner = $scope.chartInfo.owner_info;
+                $scope.source = $scope.chartInfo.source;
 
             });
         } else {
@@ -252,6 +256,8 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
             payload["negative_gradient"] = $scope.negativeGradient;
             payload["y1_axis_title"] = $scope.y1AxisTitle;
             payload["y2_axis_title"] = $scope.y2AxisTitle;
+            payload["source"] = $scope.source;
+            payload["owner"] = $scope.owner;
             payload["leaf"] = true;
 
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {

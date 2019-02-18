@@ -2,9 +2,8 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
-import { Subscription } from 'rxjs';
 import { of } from 'rxjs';
-import { delay, share } from 'rxjs/operators';
+import {ReRunService} from "../re-run.service";
 
 @Component({
   selector: 'app-regression-summary',
@@ -16,7 +15,10 @@ export class RegressionSummaryComponent implements OnInit {
   info = {};
   suiteExectionVersionMap = {};
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService) {
+  constructor(private apiService: ApiService,
+              private loggerService: LoggerService,
+              private commonService: CommonService,
+              private reRunService: ReRunService) {
   }
 
   xValues: any [] = [];
@@ -28,6 +30,8 @@ export class RegressionSummaryComponent implements OnInit {
   testCaseExecutions: any = null;
   scriptInfoMap = {};
   numBugs = 0;
+  numBugsActive = 0;
+  numBugsResolved = 0;
   showGlobalBugPanel = false;
   scriptSuiteBaselineMap = {};
 
@@ -176,24 +180,32 @@ export class RegressionSummaryComponent implements OnInit {
       //console.log("Recent suite: " + mostRecentSuite);
       //console.log("Baseline results: " + baselineResults);
       let baselineResultKeys = Object.keys(baselineResults);
-      for (let index = 0; index < baselineResultKeys.length; index++) {
-        let baselineTestCaseId = baselineResultKeys[index];
-        let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
-        if (!history.hasOwnProperty(parseInt(baselineTestCaseId))) {
-          let errorMessage = "Baseline TC: " + baselineTestCaseId + " not found";
-          //console.log(errorMessage);
-          result.matches = false;
-          result.message = errorMessage;
-          break;
-        }
-        let historyResult = history[parseInt(baselineTestCaseId)].result;
-        if (historyResult !== "IN_PROGRESS") {
-          if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
-            let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
+      let history = scriptInfo.bySuiteExecution[mostRecentSuite].history;
+
+      if (baselineResultKeys.length !== Object.keys(history).length) {
+        result.matches = false;
+        result.message = "The number of test cases mismatch with the baseline";
+      } else {
+
+
+        for (let index = 0; index < baselineResultKeys.length; index++) {
+          let baselineTestCaseId = baselineResultKeys[index];
+          if (!history.hasOwnProperty(parseInt(baselineTestCaseId))) {
+            let errorMessage = "Baseline TC: " + baselineTestCaseId + " not found";
             //console.log(errorMessage);
             result.matches = false;
             result.message = errorMessage;
             break;
+          }
+          let historyResult = history[parseInt(baselineTestCaseId)].result;
+          if (historyResult !== "IN_PROGRESS") {
+            if (historyResult !== baselineResults[parseInt(baselineResultKeys[index])].result) {
+              let errorMessage = "Latest suite: " + mostRecentSuite + " Baseline TC: " + baselineTestCaseId + " result mismatched, baseline result: " + baselineResults[baselineResultKeys[index]].result + ", current result: " + historyResult;
+              //console.log(errorMessage);
+              result.matches = false;
+              result.message = errorMessage;
+              break;
+            }
           }
         }
 
@@ -364,6 +376,8 @@ export class RegressionSummaryComponent implements OnInit {
     scriptDetailedInfo[scriptPath].historyResults.numFailed += historyResults.numFailed;
     scriptDetailedInfo[scriptPath].historyResults.numNotRun += historyResults.numNotRun;
     scriptDetailedInfo[scriptPath].numBugs = 0;
+    scriptDetailedInfo[scriptPath].numBugsActive = 0;
+    scriptDetailedInfo[scriptPath].numBugsResolved = 0;
     try {
       scriptDetailedInfo[scriptPath].numBugs = this.scriptInfoMap[scriptPath].entry.bugs.length;
 
@@ -396,12 +410,29 @@ export class RegressionSummaryComponent implements OnInit {
     return summary;
   }
 
-  updateGlobalNumBugs(numBugs) {
-    this.numBugs = numBugs;
+  updateNumBugs(numBugs, node) {
+    if (node) {
+      node.numBugs = numBugs;
+    } else {
+      this.numBugs = numBugs;
+    }
   }
 
-  updateNumBugs(numBugs, node) {
-    node.numBugs = numBugs;
+
+  updateNumBugsActive(numBugs, node) {
+    if (node) {
+      node.numBugsActive = numBugs;
+    } else {
+      this.numBugsActive = numBugs;
+    }
+  }
+
+  updateNumBugsResolved(numBugs, node) {
+    if (node) {
+      node.numBugsResolved = numBugs;
+    } else {
+      this.numBugsResolved =  numBugs;
+    }
   }
 
   addHistoryToSoftwareVersion(index, history, softwareVersion) {
@@ -501,10 +532,13 @@ export class RegressionSummaryComponent implements OnInit {
       this.filters[index].testCaseExecutions = response.data;
       this.filters[index].testCaseExecutions.forEach((historyElement) => {
         //console.log(historyElement);
-        let elementSuiteExecutionId = historyElement.suite_execution_id;
-        let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
-        this.addHistoryToSoftwareVersion(index, historyElement, matchingSoftwareVersion);
-        this.addHistoryToDateTimeBuckets(index, historyElement);
+        if (!historyElement.is_re_run) {
+          let elementSuiteExecutionId = historyElement.suite_execution_id;
+          let matchingSoftwareVersion = this.suiteExectionVersionMap[elementSuiteExecutionId];
+          this.addHistoryToSoftwareVersion(index, historyElement, matchingSoftwareVersion);
+          this.addHistoryToDateTimeBuckets(index, historyElement);
+        }
+
       });
       this.prepareVersionList(index);
       this.prepareBucketList(index);

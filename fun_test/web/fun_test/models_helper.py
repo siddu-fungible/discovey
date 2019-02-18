@@ -11,6 +11,7 @@ import dateutil.parser
 from django.db.models import Q
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
+from scheduler.scheduler_types import SuiteType
 from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
@@ -27,7 +28,8 @@ from web.fun_test.models import (
     RESULT_CHOICES,
     TestCaseExecution,
     JenkinsJobIdMap,
-    SuiteContainerExecution
+    SuiteContainerExecution,
+    SuiteReRunInfo
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -36,6 +38,9 @@ SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
 
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
+class TestCaseReRunState:
+    RE_RUN_IN_PROGRESS = "re_run_in_progress"
+    RE_RUN_COMPLETE = "re_run_complete"
 
 def _is_sub_class(base_class, mros):
     result = None
@@ -181,12 +186,16 @@ def add_suite_execution(submitted_time,
                         suite_path="unknown",
                         tags=None,
                         catalog_reference="",
-                        suite_container_execution_id=-1):
+                        suite_container_execution_id=-1,
+                        suite_type=SuiteType.STATIC,
+                        test_bed_type=None):
 
     if tags:
         tags = json.dumps(tags)
     else:
         tags = "[]"
+    if not test_bed_type:
+        test_bed_type = ""
 
     for i in xrange(4):
         try:
@@ -198,11 +207,14 @@ def add_suite_execution(submitted_time,
                                result="QUEUED",
                                tags=tags,
                                catalog_reference=catalog_reference,
-                               suite_container_execution_id=suite_container_execution_id)
+                               suite_container_execution_id=suite_container_execution_id,
+                               suite_type=suite_type,
+                               test_bed_type=test_bed_type)
             s.save()
 
             break
-        except:
+        except Exception as ex:
+            print "Error: add_suite_execution: {}".format(str(ex))
             time.sleep(random.uniform(0.1, 1.0))
     return s
 
@@ -273,10 +285,10 @@ def add_test_case_execution(test_case_id,
             te.save()
             add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                        test_case_execution_id=te.execution_id)
+            break
         except Exception as ex:
             time.sleep(random.uniform(0.1, 3.0))
             print "Error: add_test_case_execution: {} index: {}".format(str(ex), index)
-        break
 
 
     return te
@@ -288,12 +300,33 @@ def update_test_case_execution(test_case_execution_id, suite_execution_id, resul
     te.save()
     return te
 
-def report_test_case_execution_result(execution_id, result):
+def report_test_case_execution_result(execution_id, result, re_run_info=None):
     test_execution = get_test_case_execution(execution_id=execution_id)
     # fun_test.simple_assert(test_execution, "Test-execution") # TODO
     test_execution.result = result
     test_execution.end_time = get_current_time()#timezone.now()
     test_execution.save()
+    if re_run_info:
+        if str(test_execution.test_case_id) in re_run_info.keys():
+            info = re_run_info[str(test_execution.test_case_id)]
+            original_test_case_execution_id = info["test_case_execution_id"]
+            original_test_case_execution = get_test_case_execution(execution_id=original_test_case_execution_id)
+            re_run_entry = {"started_time": str(original_test_case_execution.started_time),
+                            "result": original_test_case_execution.result,
+                            "re_run_suite_execution_id": test_execution.suite_execution_id}
+            original_test_case_execution.result = test_execution.result
+            # original_test_case_execution.suite_execution_id = test_execution.suite_execution_id
+            original_test_case_execution.started_time = test_execution.started_time
+            original_test_case_execution.end_time = test_execution.end_time
+            # original_test_case_execution.log_prefix = test_execution.log_prefix
+            original_test_case_execution.add_re_run_entry(re_run_entry)
+            original_test_case_execution.re_run_state = TestCaseReRunState.RE_RUN_COMPLETE
+            original_test_case_execution.save()
+            original_suite_execution = get_suite_execution(suite_execution_id=original_test_case_execution.suite_execution_id)
+            original_suite_execution.finalized = False
+            original_suite_execution.save()
+            finalize_suite_execution(suite_execution_id=original_suite_execution.execution_id)
+
 
 def get_test_case_executions_by_suite_execution(suite_execution_id):
     results = TestCaseExecution.objects.filter(suite_execution_id=suite_execution_id)
@@ -439,12 +472,6 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
     print"Hardware_version: {}".format(hardware_version)
     try:
         entry = JenkinsJobIdMap.objects.get(completion_date=completion_date)
-        entry.fun_sdk_branch = fun_sdk_branch
-        entry.git_commit = git_commit
-        entry.software_date = software_date
-        entry.hardware_version = hardware_version
-        entry.build_properties = build_properties
-        entry.save()
     except ObjectDoesNotExist:
         entry = JenkinsJobIdMap(completion_date=completion_date,
                                 jenkins_job_id=jenkins_job_id,
@@ -468,3 +495,8 @@ def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes.append({"name": "In Progress", "value": suite_execution["num_in_progress"]})
     suite_execution_attributes.append({"name": "Skipped", "value": suite_execution["num_skipped"]})
     return suite_execution_attributes
+
+
+def set_suite_re_run_info(original_suite_execution_id, re_run_suite_execution_id):
+    re_run = SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id, re_run_suite_execution_id=re_run_suite_execution_id)
+    re_run.save()

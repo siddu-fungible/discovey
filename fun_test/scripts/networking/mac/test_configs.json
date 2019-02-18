@@ -1,0 +1,97 @@
+[
+  {
+    "name": "palladium_all_frame_size_config",
+    "dut_type": "palladium",
+    "min_frame_size_ipv4": 64,
+    "min_frame_size_ipv6": 78,
+    "max_frame_size": 9000,
+    "mtu": 9000,
+    "duration": 240,
+    "load_type": "MEGABITS_PER_SECOND",
+    "load": 5,
+    "insert_signature": true,
+    "fill_type": "PRBS",
+    "frame_step_size": 1,
+    "frame_length_mode": "INCR"
+  },
+  {
+    "name": "palladium_good_bad_frames_config",
+    "dut_type": "palladium",
+    "min_frame_size": 64,
+    "max_frame_size": 1500,
+    "mtu": 1500,
+    "duration": 10,
+    "load_type": "MEGABITS_PER_SECOND",
+    "load": 0.5,
+    "insert_signature": true,
+    "fill_type": "PRBS",
+    "frame_step_size": 1,
+    "frame_length_mode": "random"
+  },
+  {
+    "name": "palladium_bad_address_config",
+    "dut_type": "palladium",
+    "duration": 10,
+    "load_type": "FRAMES_PER_SECOND",
+    "load": 100,
+    "bad_destination_ip": "99.1.1.99",
+    "bad_destination_mac": "00:DE:AD:BE:EF:01",
+    "bad_source_mac": "01:DE:OR:AD:EF:00"
+  },
+  {
+    "name": "palladium_runt_frames_config",
+    "dut_type": "palladium",
+    "duration": 30,
+    "load_type": "FRAMES_PER_SECOND",
+    "load": 500,
+    "min_frame_size": 40,
+    "max_frame_size": 60,
+    "min_frame_size_ipv6": 58,
+    "max_frame_size_ipv6": 75,
+    "fill_type": "PRBS",
+    "insert_signature": true,
+    "frame_length_mode": "random"
+  },
+  {
+    "name": "palladium_good_bad_frames_config1",
+    "dut_type": "palladium",
+    "padding": {
+      "straight": {
+        "positive": "4500001400000000fffdb5e8cf0101023200030100",
+        "1k": "450003e800000000fffdb214cf01010232000301",
+        "100B": "4500006400000000fffdb598cf01010232000301"
+      },
+      "reverse":{
+        "positive": "4500001400000000FFFDB6E8CF01010232000201",
+        "1k": "450003E800000000FFFDB314CF01010232000201",
+        "100B": "4500006400000000FFFDB698CF01010232000201"
+      }
+    },
+    "min_frame_size": 64,
+    "max_frame_size": 1500,
+    "oversize_frame_size": 2000,
+    "mtu_test_frame_size": 1400,
+    "mtu": 1500,
+    "duration": 10,
+    "load_type": "MEGABITS_PER_SECOND",
+    "load": 0.5,
+    "insert_signature": true,
+    "fill_type": "PRBS",
+    "frame_step_size": 1,
+    "frame_length_mode": "random"
+
+  },
+  {
+    "name": "f1_test_config",
+    "dut_type": "f1",
+    "min_frame_size": 78,
+    "max_frame_size": 1500,
+    "fixed_frame_size": 128,
+    "load_type": "PERCENT_LINE_RATE",
+    "load": 1,
+    "insert_signature": true,
+    "fill_type": "PRBS",
+    "soc_clk_in_khz": 1000000,
+    "frame_length_mode": "RANDOM"
+  }
+]

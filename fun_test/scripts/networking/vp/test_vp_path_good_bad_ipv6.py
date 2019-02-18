@@ -50,12 +50,10 @@ custom_headers = {UL_GOOD_UDP_ZERO_XSUM: ['00010001006E0000'],
                   }
 
 
-def create_underlay_stream(template_obj, port, spirent_config, l4_header_type='UDP', l4_checksum=None,
+def create_underlay_stream(template_obj, port, l3_config, l4_header_type='UDP', l4_checksum=None,
                            ip_len_error=False, fixed_frame_length=300, load=bad_load):
     result = None
     try:
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv6"]
         ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
         streamblock_obj = StreamBlock(fixed_frame_length=fixed_frame_length, fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=load,
@@ -66,8 +64,7 @@ def create_underlay_stream(template_obj, port, spirent_config, l4_header_type='U
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=streamblock_obj.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Configured mac address on stream")
 
@@ -108,15 +105,13 @@ def create_underlay_stream(template_obj, port, spirent_config, l4_header_type='U
     return result
 
 
-def create_overlay_stream(template_obj, port, overlay_type, spirent_config, ul_ip_type=4, ul_l4_checksum=None, ol_l4_header='UDP',
+def create_overlay_stream(template_obj, port, overlay_type, l3_config, ul_ip_type=4, ul_l4_checksum=None, ol_l4_header='UDP',
                           ol_l4_checksum=None, ol_ip_len_error=False):
     result = None
     try:
         if ul_ip_type == 4:
-            l3_config = spirent_config["l3_config"]["ipv4"]
             ip_header = Ipv4Header()
         else:
-            l3_config = spirent_config["l3_config"]["ipv6"]
             ip_header = Ipv6Header()
 
         output = template_obj.configure_overlay_frame_stack(port=port,
@@ -190,7 +185,10 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config, l2_config, l3_config, dut_port_3, port_3, gen_obj_3, dut_type
+            dut_config, spirent_config, l3_config, dut_port_3, port_3, gen_obj_3, dut_type, l3_config, destination_mac, ul_ipv4_l3_config, \
+            ul_ipv6_l3_config, ol_ipv4_l3_config, ol_ipv6_l3_config, flow_direction
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
 
         dut_type = nu_config_obj.get_dut_type()
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type,
@@ -202,12 +200,29 @@ class SpirentSetup(FunTestScript):
 
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="vp-negative-stream-ipv6", spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
 
         result = template_obj.setup(no_of_ports_needed=num_ports, flow_type=NuConfigManager.VP_FLOW_TYPE,
                                     flow_direction=flow_direction)
         fun_test.test_assert(result['result'], "Configure setup")
+
+        ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+        ul_ipv4_l3_config = ul_ipv4_routes_config['l3_config']
+
+        ul_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, ip_version="ipv6")
+        fun_test.simple_assert(ul_ipv6_routes_config, "Ensure routes config fetched")
+        ul_ipv6_l3_config = ul_ipv6_routes_config['l3_config']
+
+        ol_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, overlay=True)
+        fun_test.simple_assert(ol_ipv4_routes_config, "Ensure routes config fetched")
+        ol_ipv4_l3_config = ol_ipv4_routes_config['l3_config']
+
+        ol_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, ip_version="ipv6",
+                                                                                 overlay=True)
+        fun_test.simple_assert(ol_ipv6_routes_config, "Ensure routes config fetched")
+        ol_ipv6_l3_config = ol_ipv6_routes_config['l3_config']
 
         port_1 = result['port_list'][0]
         port_2 = result['port_list'][1]
@@ -217,8 +232,9 @@ class SpirentSetup(FunTestScript):
         dut_port_2 = dut_config['ports'][1]
         dut_port_3 = dut_config['ports'][2]
 
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv6"]
+        destination_mac = ul_ipv4_routes_config['routermac']
+        l3_config = ul_ipv6_l3_config
+        print destination_mac, l3_config
 
         # Configure Generator
         gen_config_obj = GeneratorConfig()
@@ -280,7 +296,7 @@ class Ulv6BadUdpXsum(FunTestCase):
             fun_test.test_assert(deactivate, "Deactivated all streamblocks")
 
         self.current_streamblock_obj = create_underlay_stream(template_obj=template_obj, port=port_1,
-                                                              spirent_config=spirent_config, l4_checksum='error')
+                                                              l3_config=l3_config, l4_checksum='error')
         fun_test.test_assert(self.current_streamblock_obj, "Stream %s created" % self.current_stream)
         stream_objs['bad'][self.current_stream] = self.current_streamblock_obj
 
@@ -357,14 +373,14 @@ class Ulv6BadUdpXsum(FunTestCase):
 
             # Check VP pkts
             vp_check_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE,
-                             VP_PACKETS_OUT_HNU_ETP, VP_NO_DROP_PACKETS_TO_HNU_ETP]
+                             VP_PACKETS_OUT_HNU_ETP]
             for stat in vp_check_list:
                 count = int(vp_pkts_stats_2[stat])
                 if stat in vp_pkts_stats_1:
                     count = int(vp_pkts_stats_2[stat]) - int(vp_pkts_stats_1[stat])
                 fun_test.test_assert(int(tx_results_1['FrameCount']) > count,
                                      message="Verify vp block did not receive %s for frames. Expected %s. "
-                                             "Actual seen %s" % (stat, tx_results_1['FrameCount'], count))
+                                             "Actual seen %s" % (stat, 0, count))
 
         # ASSERTS
         # Spirent asserts
@@ -448,7 +464,7 @@ class Ulv6BadUdpZeroXsum(Ulv6BadUdpXsum):
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
 
         self.current_streamblock_obj = create_underlay_stream(template_obj=template_obj, port=port_1,
-                                                              spirent_config=spirent_config,
+                                                              l3_config=l3_config,
                                                               l4_checksum=self.checksum)
         fun_test.test_assert(self.current_streamblock_obj, "Stream %s created" % self.current_stream)
         stream_objs['bad'][self.current_stream] = self.current_streamblock_obj
@@ -479,7 +495,7 @@ class Ulv6BadTcpXsum(Ulv6BadUdpXsum):
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
 
         self.current_streamblock_obj = create_underlay_stream(template_obj=template_obj, port=port_1,
-                                                              spirent_config=spirent_config,
+                                                              l3_config=l3_config,
                                                               l4_header_type='TCP', l4_checksum='error')
         fun_test.test_assert(self.current_streamblock_obj, "Stream %s created" % self.current_stream)
         stream_objs['bad'][self.current_stream] = self.current_streamblock_obj
@@ -511,7 +527,7 @@ class Ulv4Olv6BadUdpXsum(Ulv6BadUdpXsum):
 
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                                         overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV6_UDP,
-                                                                        spirent_config=spirent_config, ol_l4_checksum='error')
+                                                                        l3_config=l3_config, ol_l4_checksum='error')
         fun_test.test_assert(self.current_streamblock_obj, "Stream %s created" % self.current_stream)
         stream_objs['bad'][self.current_stream] = self.current_streamblock_obj
 
@@ -543,7 +559,7 @@ class Ulv4ZeroUdpXsumOlv6ZeroUdpXsum(Ulv6BadUdpXsum):
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV6_UDP,
                                                              ul_l4_checksum='0',
-                                                             spirent_config=spirent_config,
+                                                             l3_config=l3_config,
                                                              ol_l4_checksum='0')
         fun_test.test_assert(self.current_streamblock_obj, "Stream %s created" % self.current_stream)
         stream_objs['bad'][self.current_stream] = self.current_streamblock_obj
@@ -576,7 +592,7 @@ class Ulv4ZeroUdpXsumOlv6BadTcpXsum(Ulv6BadUdpXsum):
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV6_TCP,
                                                              ul_l4_checksum='0',
-                                                             spirent_config=spirent_config,
+                                                             l3_config=l3_config,
                                                              ol_l4_checksum='error',
                                                              ol_l4_header='TCP')
         fun_test.test_assert(self.current_streamblock_obj, "Stream %s created" % self.current_stream)
@@ -609,7 +625,7 @@ class Ulv6Olv6BadUdpXsum(Ulv6BadUdpXsum):
 
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP,
-                                                             spirent_config=spirent_config,
+                                                             l3_config=l3_config,
                                                              ol_l4_checksum='error',
                                                              ul_ip_type=6)
         fun_test.test_assert(self.current_streamblock_obj, "Stream %s created" % self.current_stream)
@@ -642,7 +658,7 @@ class Ulv6Olv6BadTcpXsum(Ulv6BadUdpXsum):
 
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP,
-                                                             spirent_config=spirent_config,
+                                                             l3_config=l3_config,
                                                              ol_l4_checksum='error',
                                                              ol_l4_header='TCP',
                                                              ul_ip_type=6)
@@ -676,7 +692,7 @@ class Ulv6ZeroUdpXsumOlv6GoodUdpXsum(Ulv6BadUdpXsum):
 
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP,
-                                                             spirent_config=spirent_config,
+                                                             l3_config=l3_config,
                                                              ol_l4_checksum=None,
                                                              ul_ip_type=6,
                                                              ul_l4_checksum='0')
@@ -710,7 +726,7 @@ class Ulv6ZeroUdpXsumOlv6GoodTcpXsum(Ulv6BadUdpXsum):
 
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP,
-                                                             spirent_config=spirent_config,
+                                                             l3_config=l3_config,
                                                              ol_l4_checksum=None,
                                                              ul_ip_type=6,
                                                              ul_l4_checksum='0',
@@ -744,7 +760,7 @@ class UlIpv6LenError(Ulv6BadUdpXsum):
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
 
         self.current_streamblock_obj = create_underlay_stream(template_obj=template_obj, port=port_1,
-                                                              spirent_config=spirent_config, ip_len_error=True,
+                                                              l3_config=l3_config, ip_len_error=True,
                                                               l4_checksum=None)
         fun_test.test_assert(self.current_streamblock_obj, "Stream %s created" % self.current_stream)
         stream_objs['bad'][self.current_stream] = self.current_streamblock_obj
@@ -776,7 +792,7 @@ class Ulv4Olv6IpLenError(Ulv6BadUdpXsum):
 
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV6_TCP,
-                                                             spirent_config=spirent_config,
+                                                             l3_config=l3_config,
                                                              ol_l4_checksum=None,
                                                              ul_ip_type=4,
                                                              ul_l4_checksum='0',
@@ -811,7 +827,7 @@ class Ulv6Olv6IpLenError(Ulv6BadUdpXsum):
 
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP,
-                                                             spirent_config=spirent_config,
+                                                             l3_config=l3_config,
                                                              ol_l4_checksum=None,
                                                              ul_ip_type=6,
                                                              ol_ip_len_error=True)
@@ -861,14 +877,13 @@ class GoodBad(FunTestCase):
         # MAC
         configure_mac = template_obj.stc_manager.configure_mac_address(
             streamblock=self.current_streamblock_obj._spirent_handle,
-            source_mac=l2_config['source_mac'],
-            destination_mac=l2_config['destination_mac'])
+            destination_mac=destination_mac)
         fun_test.test_assert(configure_mac, "Configure mac address")
 
         protocol = Ipv4Header.PROTOCOL_TYPE_UDP
         if protocol_tcp:
             protocol = Ipv4Header.PROTOCOL_TYPE_TCP
-        l3_config = spirent_config["l3_config"]["ipv4"]
+        l3_config = ul_ipv4_l3_config
         if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
             destination = l3_config['hnu_destination_ip2']
         elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
@@ -998,7 +1013,7 @@ class GoodBad(FunTestCase):
             fun_test.log("Create stream %s" % OL_VXLAN_GOOD_UDP_ZERO_XSUM)
             output = template_obj.configure_overlay_frame_stack(port=port_3,
                                                                 overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP)
-            l3_config = spirent_config["l3_config"]["ipv4"]
+            l3_config = ul_ipv4_l3_config
             ip_header = Ipv4Header()
             destination = l3_config['hu_destination_ip1']
             if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
@@ -1086,7 +1101,7 @@ class GoodBad(FunTestCase):
             fun_test.log("Create stream %s" % OL_VXLAN_GOOD_TCP_XSUM)
             output = template_obj.configure_overlay_frame_stack(port=port_3,
                                                                 overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV4_TCP)
-            l3_config = spirent_config["l3_config"]["ipv4"]
+            l3_config = ul_ipv4_l3_config
             ip_header = Ipv4Header()
             if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
                 destination = l3_config['hnu_destination_ip2']
@@ -1159,7 +1174,7 @@ class GoodBad(FunTestCase):
             output = template_obj.configure_overlay_frame_stack(port=port_3,
                                                                 overlay_type=template_obj.MPLS_ETH_IPV4_UDP_CUST_IPV4_UDP,
                                                                 mpls=True)
-            l3_config = spirent_config["l3_config"]["ipv4"]
+            l3_config = ul_ipv4_l3_config
             ip_header = Ipv4Header()
             destination = l3_config['hu_destination_ip1']
             if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
@@ -1214,7 +1229,7 @@ class GoodBad(FunTestCase):
             output = template_obj.configure_overlay_frame_stack(port=port_3,
                                                                 overlay_type=template_obj.MPLS_ETH_IPV4_UDP_CUST_IPV4_TCP,
                                                                 mpls=True)
-            l3_config = spirent_config["l3_config"]["ipv4"]
+            l3_config = ul_ipv4_l3_config
             ip_header = Ipv4Header()
             if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
                 destination = l3_config['hnu_destination_ip2']
@@ -1371,8 +1386,6 @@ class GoodBad(FunTestCase):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(Ulv6BadUdpXsum())
     ts.add_test_case(Ulv6BadUdpZeroXsum())
