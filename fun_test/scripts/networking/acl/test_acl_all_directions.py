@@ -2612,7 +2612,6 @@ class AclIPv6HNUtoNU(FunTestCase):
 
     def cleanup(self):
         dut_rx_port = dut_config['ports'][0]
-
         checkpoint = "Delete the streams"
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sport.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dport.spirent_handle])
