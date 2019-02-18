@@ -686,13 +686,13 @@ class AclIPv6NUtoNU(FunTestCase):
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
             counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                             counter_id=acl_fields_dict_ipv6_nu_nu['counter_id'])
+                                                  counter_id=acl_fields_dict_ipv6_nu_nu['counter_id'])
 
             checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 1)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_drop.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -702,7 +702,7 @@ class AclIPv6NUtoNU(FunTestCase):
                 stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
 
             counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                               counter_id=acl_fields_dict_ipv6_nu_nu['counter_id'])
+                                                    counter_id=acl_fields_dict_ipv6_nu_nu['counter_id'])
 
             fun_test.log("tx_streamcount" + str(tx_stream_result_framecount_drop))
             checkpoint="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted"
@@ -2556,13 +2556,13 @@ class AclIPv6HNUtoNU(FunTestCase):
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_ecn.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
-            tx_stream_result_framecount_ecn = int(
-                stream_results[self.stream_obj_ecn.spirent_handle]["tx_result"]["FrameCount"])
-            rx_stream_result_framecount_ecn = int(
-                stream_results[self.stream_obj_ecn.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_ecn,
-                                          actual=rx_stream_result_framecount_ecn,
-                                          message="Comparing tx and rx frame count on Spirent for stream tcpflag")
+            # tx_stream_result_framecount_ecn = int(
+            #     stream_results[self.stream_obj_ecn.spirent_handle]["tx_result"]["FrameCount"])
+            # rx_stream_result_framecount_ecn = int(
+            #     stream_results[self.stream_obj_ecn.spirent_handle]["rx_result"]["FrameCount"])
+            # fun_test.test_assert_expected(expected=tx_stream_result_framecount_ecn,
+            #                               actual=rx_stream_result_framecount_ecn,
+            #                               message="Comparing tx and rx frame count on Spirent for stream ecn")
 
             acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
             acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
