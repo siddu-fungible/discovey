@@ -340,23 +340,23 @@
     "lsv_pass_threshold": 50,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
-      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
-      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
-      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 543}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 504}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 547}}
     },
     "ec_pass_threshold": 100,
     "expected_ec_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 207}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 993, "num_writes": 198}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1023, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 144}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 754, "num_writes": 153}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 862, "num_writes": 144}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 935, "num_writes": 153}}
     },
     "blt_pass_threshold": 100,
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 275, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 320, "num_writes": 207}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 350, "num_writes": 198}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 350, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 193, "num_writes": 148}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 257, "num_writes": 153}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 303, "num_writes": 144}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 323, "num_writes": 153}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -365,10 +365,10 @@
       "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
     },
     "expected_encryption_stats": {
-      "(4, 1)": {"randrw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
-      "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
-      "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
-      "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+      "(4, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}},
+      "(8, 1)": {"randrw": {"encrypt_done": 540, "encrypt_fails": 0, "encrypt_reqs": 540}},
+      "(16, 1)": {"randrw": {"encrypt_done": 496, "encrypt_fails": 0, "encrypt_reqs": 496}},
+      "(32, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}}
     }
   },
   "ECKey512": {
@@ -706,23 +706,23 @@
     "lsv_pass_threshold": 50,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
-      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
-      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
-      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 543}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 504}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 547}}
     },
     "ec_pass_threshold": 100,
     "expected_ec_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 207}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 993, "num_writes": 198}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1023, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 144}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 754, "num_writes": 153}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 862, "num_writes": 144}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 935, "num_writes": 153}}
     },
     "blt_pass_threshold": 100,
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 275, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 320, "num_writes": 207}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 350, "num_writes": 198}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 350, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 193, "num_writes": 148}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 257, "num_writes": 153}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 303, "num_writes": 144}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 323, "num_writes": 153}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -731,10 +731,10 @@
       "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
     },
     "expected_encryption_stats": {
-      "(4, 1)": {"randrw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
-      "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
-      "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
-      "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+      "(4, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}},
+      "(8, 1)": {"randrw": {"encrypt_done": 540, "encrypt_fails": 0, "encrypt_reqs": 540}},
+      "(16, 1)": {"randrw": {"encrypt_done": 496, "encrypt_fails": 0, "encrypt_reqs": 496}},
+      "(32, 1)": {"randrw": {"encrypt_done": 528, "encrypt_fails": 0, "encrypt_reqs": 528}}
     }
   },
   "ECEncCompress": {
@@ -806,9 +806,9 @@
     },
     "ec_pass_threshold": 100,
     "expected_ec_stats": {
-      "write": {"fault_injection": 0,"num_reads": 910, "num_writes": 279},
+      "write": {"fault_injection": 0,"num_reads": 910, "num_writes": 63},
       "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 912, "num_writes": 279},
+      "randwrite": {"fault_injection": 0,"num_reads": 912, "num_writes": 63},
       "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
     },
     "blt_pass_threshold": 100,
