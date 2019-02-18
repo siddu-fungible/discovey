@@ -240,6 +240,7 @@ class TestCase1(FunTestCase):
 
     def run(self):
         if TO_BE_RUN:
+            psw_stats_before = network_controller_obj.peek_psw_global_stats(hnu=hnu)
             # Activate streams having CRC error and 64B frame size
             activate = template_obj.activate_stream_blocks([streamblock_objects[CRC_64B][port_1],
                                                             streamblock_objects[CRC_64B][port_2]])
@@ -344,6 +345,7 @@ class TestCase1(FunTestCase):
             # Fetch psw global stats
             psw_stats = network_controller_obj.peek_psw_global_stats(hnu=hnu)
             fun_test.simple_assert(psw_stats, message="Ensure psw stats are received")
+            psw_stats_diff = get_diff_stats(old_stats=psw_stats_before, new_stats=psw_stats)
             fetch_list = []
             different = False
             fwd_frv = 'fwd_frv'
@@ -361,9 +363,8 @@ class TestCase1(FunTestCase):
                 fetch_list.extend(fetch_list_1)
             else:
                 fetch_list.append('ifpg' + str(dut_port_1_fpg_value) + '_pkt')
-                fetch_list.append('fpg' + str(dut_port_1_fpg_value) + '_pkt')
-
-            psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+            psw_fetched_output = get_psw_global_stats_values(psw_stats_output=psw_stats_diff,
+                                                             input_key_list=fetch_list, input=True)
             if different:
                 ifpg = int(psw_fetched_output[ifpg1]) + int(psw_fetched_output[ifpg2])
                 del psw_fetched_output[ifpg1]
@@ -372,7 +373,7 @@ class TestCase1(FunTestCase):
 
             for key in fetch_list:
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                              actual=psw_fetched_output[key],
+                                              actual=psw_fetched_output['input'][key],
                                               message="Check counter %s in psw global stats" % key)
 
 
@@ -408,6 +409,7 @@ class TestCase2(FunTestCase):
 
     def run(self):
         if TO_BE_RUN:
+            psw_stats_before = network_controller_obj.peek_psw_global_stats(hnu=hnu)
             # Activate streams having CRC error and 64B frame size
             activate = template_obj.activate_stream_blocks([streamblock_objects[CRC_1500B][port_1],
                                                             streamblock_objects[CRC_1500B][port_2]])
@@ -519,6 +521,7 @@ class TestCase2(FunTestCase):
                 # Fetch psw global stats
 
                 psw_stats = network_controller_obj.peek_psw_global_stats(hnu=hnu)
+                psw_stats_diff = get_diff_stats(old_stats=psw_stats_before, new_stats=psw_stats)
                 fetch_list = []
                 different = False
                 fwd_frv = 'fwd_frv'
@@ -542,7 +545,8 @@ class TestCase2(FunTestCase):
                     fetch_list.append('fpg' + str(dut_port_1_fpg_value) + '_pkt')
                     fetch_list.append('fpg' + str(dut_port_1_fpg_value) + '_err_pkt')
 
-                psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
+                psw_fetched_output = get_psw_global_stats_values(psw_stats_output=psw_stats_diff,
+                                                                 input_key_list=fetch_list, input=True)
                 if different:
                     ifpg = int(psw_fetched_output[ifpg1]) + int(psw_fetched_output[ifpg2])
                     del psw_fetched_output[ifpg1]
@@ -557,7 +561,7 @@ class TestCase2(FunTestCase):
 
                 for key in fetch_list:
                     fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']) + int(tx_results_2['FrameCount']),
-                                                  actual=psw_fetched_output[key],
+                                                  actual=psw_fetched_output['input'][key],
                                                   message="Check counter %s in psw global stats" % key)
             else:
                 fun_test.test_assert_expected(expected=0,
@@ -654,11 +658,13 @@ class TestCase3(FunTestCase):
             expected_rx_count = 0
             fun_test.test_assert(tx_results_1["FrameCount"] > 0,
                                  message="Ensure some frames were sent from %s" % str(port_1))
-            fun_test.test_assert_expected(actual=rx_port_analyzer_results_1["TotalFrameCount"], expected=expected_rx_count,
+            fun_test.test_assert_expected(actual=rx_port_analyzer_results_1["TotalFrameCount"],
+                                          expected=expected_rx_count,
                                           message="Ensure packets are dropped as PREAMBLE is incorrect")
             fun_test.test_assert(tx_results_2["FrameCount"] > 0,
                                  message="Ensure some frames were sent from %s" % str(port_1))
-            fun_test.test_assert_expected(actual=rx_port_analyzer_results_2["TotalFrameCount"], expected=expected_rx_count,
+            fun_test.test_assert_expected(actual=rx_port_analyzer_results_2["TotalFrameCount"],
+                                          expected=expected_rx_count,
                                           message="Ensure packets are dropped as PREAMBLE is incorrect")
 
             # Check from dut
@@ -750,11 +756,13 @@ class TestCase4(FunTestCase):
             expected_rx_count = 0
             fun_test.test_assert(tx_results_1["FrameCount"] > 0,
                                  message="Ensure some frames were sent from %s" % str(port_1))
-            fun_test.test_assert_expected(actual=rx_port_analyzer_results_1["TotalFrameCount"], expected=expected_rx_count,
+            fun_test.test_assert_expected(actual=rx_port_analyzer_results_1["TotalFrameCount"],
+                                          expected=expected_rx_count,
                                           message="Ensure packets are dropped as SFD is incorrect")
             fun_test.test_assert(tx_results_2["FrameCount"] > 0,
                                  message="Ensure some frames were sent from %s" % str(port_1))
-            fun_test.test_assert_expected(actual=rx_port_analyzer_results_2["TotalFrameCount"], expected=expected_rx_count,
+            fun_test.test_assert_expected(actual=rx_port_analyzer_results_2["TotalFrameCount"],
+                                          expected=expected_rx_count,
                                           message="Ensure packets are dropped as SFD is incorrect")
 
             # Check from dut
@@ -1328,12 +1336,13 @@ class TestCase9(FunTestCase):
                                       message="Ensure frames received on DUT port %s are transmitted by DUT port %s" %
                                               (dut_port_2, dut_port_1))
         '''
-
-        fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_1['FrameCount']),
+        dut_port_1_transmit = get_dut_output_stats_value(dut_port_1_results, IF_IN_ERRORS, tx=False)
+        dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, IF_IN_ERRORS, tx=False)
+        fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_1['FrameCount']),
                                       message="Ensure frames transmitted from DUT port %s matches spirent %s port" %
                                               (dut_port_2, port_2))
 
-        fun_test.test_assert_expected(expected=int(dut_port_1_transmit), actual=int(rx_results_2['FrameCount']),
+        fun_test.test_assert_expected(expected=int(dut_port_2_transmit), actual=int(rx_results_2['FrameCount']),
                                       message="Ensure frames transmitted from DUT port %s matches spirent %s port" %
                                               (dut_port_1, port_1))
 

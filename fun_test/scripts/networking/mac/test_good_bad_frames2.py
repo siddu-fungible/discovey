@@ -49,7 +49,7 @@ class SpirentSetup(FunTestScript):
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
         dut_type = nu_config_obj.DUT_TYPE
-        if nu_config_obj.DUT_TYPE is nu_config_obj.DUT_TYPE_PALLADIUM:
+        if nu_config_obj.DUT_TYPE is not nu_config_obj.DUT_TYPE_PALLADIUM:
             dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE, flow_direction=flow_direction)
 
             shape = 0
@@ -807,10 +807,6 @@ class TestCase4(FunTestCase):
 
             fun_test.test_assert(tx_results_2["FrameCount"] > 0,
                                  message="Ensure some frames were sent from %s" % str(port_1))
-            fun_test.test_assert_expected(actual=rx_port_analyzer_results_2["TotalFrameCount"],
-                                          expected=expected_rx,
-                                          message="Ensure all frames are dropped")
-
             # Check from dut
             dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
             fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
