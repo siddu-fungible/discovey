@@ -9,7 +9,7 @@ from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMall
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
-    TeraMarkCryptoPerformance
+    TeraMarkCryptoPerformance, SoakDmaMemcpyCoherentPerformance, SoakDmaMemcpyNonCoherentPerformance, SoakDmaMemsetPerformance
 from web.fun_test.metrics_models import TeraMarkLookupEnginePerformance, FlowTestPerformance, \
     TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance, TeraMarkJpegPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
@@ -30,6 +30,9 @@ TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
 TERAMARK_EC = "ec_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
+SOAK_DMA_MEMCPY_COH = "soak_funos_memcpy_coh"
+SOAK_DMA_MEMCPY_NON_COH = "soak_funos_memcpy_non_coh"
+SOAK_DMA_MEMSET = "soak_funos_memset"
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
                    "Accelerator Compression throughput": "Compression Accelerator throughput",
@@ -90,6 +93,7 @@ class MyScript(FunTestScript):
 
 class PalladiumPerformanceTc(FunTestCase):
     tag = ALLOC_SPEED_TEST_TAG
+    model = None
     result = fun_test.FAILED
     dt = get_rounded_time()
 
@@ -1588,7 +1592,6 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                                      git_commit="", model_name="NuTransitPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-
 class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
 
@@ -1639,7 +1642,6 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
         metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-
             for line in self.lines:
                 m = re.search(
                     r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
@@ -1664,6 +1666,68 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
                                      git_commit=self.git_commit, model_name="PkeP256TlsSoakPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
+    tag = SOAK_DMA_MEMCPY_COH
+    model = SoakDmaMemcpyCoherentPerformance
+
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="Soak DMA memcpy coherent Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            for line in self.lines:
+                m = re.search(
+                    r'Bandwidth\s+for\s+DMA\s+(?P<operation>\S+)\s+for\s+size\s+(?P<size>\S+):\s+(?P<bandwidth_json>.*)\s+\[(?P<metric_name>\S+)\]',
+                    line)
+                if m:
+                    input_operation = m.group("operation")
+                    input_size = m.group("size")
+                    bandwidth_json = json.loads(m.group("bandwidth_json"))
+                    output_bandwidth = float(bandwidth_json["value"])
+                    input_unit = bandwidth_json["unit"]
+                    input_log_size = bandwidth_json["log_size"]
+                    metric_name = m.group("metric_name")
+                    metrics["input_size"] = input_size
+                    metrics["input_operation"] = input_operation
+                    metrics["output_bandwidth"] = output_bandwidth
+                    metrics["input_unit"] = input_unit
+                    metrics["input_log_size"] = input_log_size
+                    metrics["input_metric_name"] = metric_name
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=self.model).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name=str(self.model))
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
+    tag = SOAK_DMA_MEMCPY_NON_COH
+    model = SoakDmaMemcpyNonCoherentPerformance
+
+    def describe(self):
+        self.set_test_details(id=28,
+                              summary="Soak DMA memcpy Non coherent Performance Test",
+                              steps="Steps 1")
+
+class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
+    tag = SOAK_DMA_MEMSET
+    model = SoakDmaMemsetPerformance
+
+    def describe(self):
+        self.set_test_details(id=29,
+                              summary="Soak DMA memset Performance Test",
+                              steps="Steps 1")
 
 
 class PrepareDbTc(FunTestCase):
@@ -1712,6 +1776,9 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
     myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
     myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
