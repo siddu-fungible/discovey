@@ -1181,6 +1181,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
 
 class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO
+    model = TeraMarkCryptoPerformance
 
     def describe(self):
         self.set_test_details(id=18,
@@ -1198,36 +1199,56 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                     metrics = collections.OrderedDict()
                     crypto_json = json.loads(m.group("crypto_json"))
                     input_test = crypto_json["test"]
-                    input_algorithm = crypto_json["algorithm"]
-                    input_operation = crypto_json["operation"]
-                    input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
-                    pkt_size_json = json.loads(crypto_json["pktsize"])
-                    ops_json = json.loads(crypto_json["ops"]) if "ops" in crypto_json else None
-                    bandwidth_json = json.loads(crypto_json["throughput"])
+                    if self.model == TeraMarkCryptoPerformance:
+                        if "api" in input_test:
+                            input_app = "crypto_api_perf"
+                            input_algorithm = crypto_json["alg"]
+                            input_operation = crypto_json["operation"]
+                            pkt_size_json = crypto_json["pktsize"]
+                            ops_json = crypto_json["ops"] if "ops" in crypto_json else None
+                            bandwidth_json = crypto_json["throughput"]
 
-                    input_pkt_size = int(pkt_size_json["value"])
-                    output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
-                    output_throughput = float(bandwidth_json["value"])
+                            input_pkt_size = int(pkt_size_json["value"])
+                            output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
+                            output_throughput = float(bandwidth_json["value"])
 
-                    if "api" in input_test:
-                        input_app = "crypto_api_perf"
-                        model = TeraMarkCryptoPerformance
-                    else:
-                        input_app = "crypto_raw_speed"
-                        metrics["input_key_size"] = input_key_size
-                        model = TeraMarkMultiClusterCryptoPerformance
+                            metrics["input_app"] = input_app
+                            metrics["input_algorithm"] = input_algorithm
+                            metrics["input_operation"] = input_operation
+                            metrics["input_pkt_size"] = input_pkt_size
+                            metrics["output_ops_per_sec"] = output_ops_per_sec
+                            metrics["output_throughput"] = output_throughput
+                            # metrics["output_latency_min"] = output_latency_min
+                            # metrics["output_latency_avg"] = output_latency_avg
+                            # metrics["output_latency_max"] = output_latency_max
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            MetricHelper(model=self.model).add_entry(**d)
+                    elif self.model == TeraMarkMultiClusterCryptoPerformance:
+                        if "raw" in input_test:
+                            input_app = "crypto_raw_speed"
+                            input_algorithm = crypto_json["alg"]
+                            input_operation = crypto_json["operation"]
+                            input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
+                            pkt_size_json = crypto_json["pktsize"]
+                            ops_json = crypto_json["ops"] if "ops" in crypto_json else None
+                            bandwidth_json = crypto_json["throughput"]
 
-                    metrics["input_app"] = input_app
-                    metrics["input_algorithm"] = input_algorithm
-                    metrics["input_operation"] = input_operation
-                    metrics["input_pkt_size"] = input_pkt_size
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_throughput"] = output_throughput
-                    # metrics["output_latency_min"] = output_latency_min
-                    # metrics["output_latency_avg"] = output_latency_avg
-                    # metrics["output_latency_max"] = output_latency_max
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=model).add_entry(**d)
+                            input_pkt_size = int(pkt_size_json["value"])
+                            output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
+                            output_throughput = float(bandwidth_json["value"])
+
+                            metrics["input_app"] = input_app
+                            metrics["input_key_size"] = input_key_size
+                            metrics["input_algorithm"] = input_algorithm
+                            metrics["input_operation"] = input_operation
+                            metrics["input_pkt_size"] = input_pkt_size
+                            metrics["output_ops_per_sec"] = output_ops_per_sec
+                            metrics["output_throughput"] = output_throughput
+                            # metrics["output_latency_min"] = output_latency_min
+                            # metrics["output_latency_avg"] = output_latency_avg
+                            # metrics["output_latency_max"] = output_latency_max
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            MetricHelper(model=self.model).add_entry(**d)
 
             self.result = fun_test.PASSED
 
@@ -1236,10 +1257,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                              test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                             git_commit=self.git_commit, model_name="TeraMarkCryptoPerformance")
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkMultiClusterCryptoPerformance")
+                             git_commit=self.git_commit, model_name=str(self.model))
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1735,6 +1753,15 @@ class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
                               summary="Soak DMA memset Performance Test",
                               steps="Steps 1")
 
+class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
+    tag = TERAMARK_CRYPTO
+    model = TeraMarkMultiClusterCryptoPerformance
+
+    def describe(self):
+        self.set_test_details(id=30,
+                              summary="TeraMark Multi Cluster Crypto Performance Test",
+                              steps="Steps 1")
+
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1785,6 +1812,7 @@ if __name__ == "__main__":
     # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
     # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
     # myscript.add_test_case(SoakDmaMemsetPerformanceTC())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
     # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
