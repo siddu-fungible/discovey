@@ -927,8 +927,8 @@ class LsvEncDeadBeef(LsvCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=12,
-                              summary="LSV with random key and run diff FIO RW pattern(write,read "
-                                      "randwrite,randread), with different block size & depth & deadbeef "
+                              summary="LSV with random key and run diff FIO RW pattern(write,"
+                                      "randwrite), with different block size & depth & deadbeef "
                                       "pattern in parallel",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
@@ -941,8 +941,8 @@ class LsvEncZeroPattern(LsvCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=13,
-                              summary="LSV with random key and run diff FIO RW pattern(write,read,"
-                                      "randwrite,randread), with different block size & depth & 0x000000000 string "
+                              summary="LSV with random key and run diff FIO RW pattern(write,"
+                                      "randwrite), with different block size & depth & 0x000000000 string "
                                       "pattern in parallel",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
