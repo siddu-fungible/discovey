@@ -1689,13 +1689,13 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     input_size = m.group("size")
                     bandwidth_json = json.loads(m.group("bandwidth_json"))
                     output_bandwidth = float(bandwidth_json["value"])
-                    output_unit = bandwidth_json["unit"]
+                    input_unit = bandwidth_json["unit"]
                     input_log_size = bandwidth_json["log_size"]
                     metric_name = m.group("metric_name")
                     metrics["input_size"] = input_size
                     metrics["input_operation"] = input_operation
                     metrics["output_bandwidth"] = output_bandwidth
-                    metrics["output_unit"] = output_unit
+                    metrics["input_unit"] = input_unit
                     metrics["input_log_size"] = input_log_size
                     metrics["input_metric_name"] = metric_name
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
@@ -1711,7 +1711,7 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name=str(self.model))
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
-class SoakDmaMemcpyNonCohPerformanceTC(PalladiumPerformanceTc, SoakDmaMemcpyCohPerformanceTC):
+class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
     tag = SOAK_DMA_MEMCPY_NON_COH
     model = SoakDmaMemcpyNonCoherentPerformance
 
@@ -1720,7 +1720,7 @@ class SoakDmaMemcpyNonCohPerformanceTC(PalladiumPerformanceTc, SoakDmaMemcpyCohP
                               summary="Soak DMA memcpy Non coherent Performance Test",
                               steps="Steps 1")
 
-class SoakDmaMemsetPerformanceTC(PalladiumPerformanceTc, SoakDmaMemcpyCohPerformanceTC):
+class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
     tag = SOAK_DMA_MEMSET
     model = SoakDmaMemsetPerformance
 
@@ -1750,35 +1750,35 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # myscript.add_test_case(FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJpegPerformanceTC())
-    # myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkZipPerformanceTC())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
     myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
     myscript.add_test_case(SoakDmaMemsetPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

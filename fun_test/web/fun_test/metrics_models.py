@@ -1171,9 +1171,12 @@ class SoakDmaMemcpyCoherentPerformance(models.Model):
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_app = models.CharField(max_length=30, default="pke_p256_2k_tls_soak", choices=[(0, "pke_p256_2k_tls_soak")])
-    input_metric_name = models.CharField(max_length=40, default="ECDHE_RSA P256 RSA 2K", choices=[(0, "ECDHE_RSA P256 RSA 2K")])
-    output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
+    input_size = models.TextField(verbose_name="Size")
+    input_operation = models.TextField(verbose_name="Operation")
+    input_log_size = models.TextField(verbose_name="Log Size")
+    input_unit = models.TextField(verbose_name="Unit")
+    input_metric_name = models.TextField(verbose_name="Metric Name", default="")
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     tag = "analytics"
 
     def __str__(self):
@@ -1187,9 +1190,12 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_app = models.CharField(max_length=30, default="pke_p256_2k_tls_soak", choices=[(0, "pke_p256_2k_tls_soak")])
-    input_metric_name = models.CharField(max_length=40, default="ECDHE_RSA P256 RSA 2K", choices=[(0, "ECDHE_RSA P256 RSA 2K")])
-    output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
+    input_size = models.TextField(verbose_name="Size")
+    input_operation = models.TextField(verbose_name="Operation")
+    input_log_size = models.TextField(verbose_name="Log Size")
+    input_unit = models.TextField(verbose_name="Unit")
+    input_metric_name = models.TextField(verbose_name="Metric Name", default="")
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     tag = "analytics"
 
     def __str__(self):
@@ -1203,9 +1209,12 @@ class SoakDmaMemsetPerformance(models.Model):
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_app = models.CharField(max_length=30, default="pke_p256_2k_tls_soak", choices=[(0, "pke_p256_2k_tls_soak")])
-    input_metric_name = models.CharField(max_length=40, default="ECDHE_RSA P256 RSA 2K", choices=[(0, "ECDHE_RSA P256 RSA 2K")])
-    output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
+    input_size = models.TextField(verbose_name="Size")
+    input_operation = models.TextField(verbose_name="Operation")
+    input_log_size = models.TextField(verbose_name="Log Size")
+    input_unit = models.TextField(verbose_name="Unit")
+    input_metric_name = models.TextField(verbose_name="Metric Name", default="")
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     tag = "analytics"
 
     def __str__(self):
