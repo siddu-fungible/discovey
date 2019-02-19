@@ -172,6 +172,7 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     def launch_dut_instance(self,
                             dpcsh_only,
                             external_dpcsh_port):
+        """
         f1_obj = F1(host_ip=self.host_ip,
                     ssh_username=self.ssh_username,
                     ssh_password=self.ssh_password,
@@ -182,6 +183,8 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                                           dpcsh_only=dpcsh_only),
                              "SimulationOrchestrator: Start FunOS")
         return f1_obj
+        """
+        fun_test.test_assert(False, "Not implemented")
 
     @fun_test.safe
     def launch_docker_instances(self,
