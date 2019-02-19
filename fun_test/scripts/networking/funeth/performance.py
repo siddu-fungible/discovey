@@ -262,9 +262,155 @@ class FunethPerformance_HU_HU_1500B_TCP(FunethPerformanceBase):
         FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', protocol='tcp', frame_size=1500)
 
 
+class FunethPerformance_NU_HU_64B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=21,
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 64B frames of UDP",
+                              steps="""
+        1. From NU host, run netperf to HU host PF interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', frame_size=64)
+
+
+class FunethPerformance_NU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=22,
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 1500B frames of UDP",
+                              steps="""
+        1. From NU host, run netperf to HU host PF interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', frame_size=1500)
+
+
+class FunethPerformance_NU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=23,
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 64B frames of TCP",
+                              steps="""
+        1. From NU host, run netperf to HU host PF interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=64)
+
+
+class FunethPerformance_NU_HU_1500B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=24,
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 1500B frames of TCP",
+                              steps="""
+        1. From NU host, run netperf to HU host PF interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=1500)
+
+
+class FunethPerformance_HU_NU_64B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 64B frames of UDP",
+                              steps="""
+        1. From HU host, run netperf to NU host interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', frame_size=64)
+
+
+class FunethPerformance_HU_NU_1500B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 1500B frames of UDP",
+                              steps="""
+        1. From HU host, run netperf to NU host interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', frame_size=1500)
+
+
+class FunethPerformance_HU_NU_64B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 64B frames of TCP",
+                              steps="""
+        1. From HU host, run netperf to NU host interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', frame_size=64)
+
+
+class FunethPerformance_HU_NU_1500B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=28,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 1500B frames of TCP",
+                              steps="""
+        1. From HU host, run netperf to NU host interface as destination
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', frame_size=1500)
+
+
+class FunethPerformance_HU_HU_64B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=29,
+                              summary="Do throughput and latency test of HU -> HU Non-FCP with 64B frames of UDP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via NU loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', frame_size=64)
+
+
+class FunethPerformance_HU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=30,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 1500B frames of UDP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via NU loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', frame_size=1500)
+
+
+class FunethPerformance_HU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=31,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 64B frames of TCP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via NU loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=64)
+
+
+class FunethPerformance_HU_HU_1500B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=32,
+                              summary="Do throughput and latency test of NU <- HU Non-FCP with 1500B frames of TCP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via NU loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=1500)
+
+
 if __name__ == "__main__":
     ts = FunethPerformance()
     for tc in (
+            # iperf3/owping
+
             # NU -> HU Non-FCP
             FunethPerformance_NU_HU_64B_UDP,
             FunethPerformance_NU_HU_1500B_UDP,
@@ -282,6 +428,28 @@ if __name__ == "__main__":
             FunethPerformance_HU_HU_1500B_UDP,
             FunethPerformance_HU_HU_146B_TCP,
             FunethPerformance_HU_HU_1500B_TCP,
+
+            # TODO: Add HU -> NU FCP
+
+            # netperf
+
+            # NU -> HU Non-FCP
+            FunethPerformance_NU_HU_64B_UDP_NETPERF,
+            FunethPerformance_NU_HU_1500B_UDP_NETPERF,
+            FunethPerformance_NU_HU_64B_TCP_NETPERF,
+            FunethPerformance_NU_HU_1500B_TCP_NETPERF,
+
+            # HU -> NU Non-FCP
+            FunethPerformance_HU_NU_64B_UDP_NETPERF,
+            FunethPerformance_HU_NU_1500B_UDP_NETPERF,
+            FunethPerformance_HU_NU_64B_TCP_NETPERF,
+            FunethPerformance_HU_NU_1500B_TCP_NETPERF,
+
+            # HU -> NU Non-FCP
+            FunethPerformance_HU_HU_64B_UDP_NETPERF,
+            FunethPerformance_HU_HU_1500B_UDP_NETPERF,
+            FunethPerformance_HU_HU_64B_TCP_NETPERF,
+            FunethPerformance_HU_HU_1500B_TCP_NETPERF,
 
             # TODO: Add HU -> NU FCP
     ):
