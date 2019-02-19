@@ -695,7 +695,7 @@ if __name__ == "__main_rebasing__":
 if __name__ == "__main__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
-    chart_names = ["Bcopy", "DMA", "MovingBits"]
+    chart_names = ["DMA", "MovingBits"]
     for entry in entries:
         if "memcpy" in entry.internal_chart_name or "memset" in entry.internal_chart_name:
             base_line_date = datetime(year=2019, month=2, day=17, minute=0, hour=0, second=0)
