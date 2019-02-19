@@ -9,7 +9,7 @@ from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMall
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
-    TeraMarkCryptoPerformance
+    TeraMarkCryptoPerformance, TeraMarkMultiClusterCryptoPerformance
 from web.fun_test.metrics_models import TeraMarkLookupEnginePerformance, FlowTestPerformance, \
     TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance, TeraMarkJpegPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
@@ -1204,97 +1204,34 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                     output_ops_per_sec = int(ops_json["value"])
                     output_throughput = float(bandwidth_json["value"])
 
+                    if "api" in input_test:
+                        input_app = "crypto_api_perf"
+                        model = TeraMarkCryptoPerformance
+                    else:
+                        input_app = "crypto_raw_speed"
+                        model = TeraMarkMultiClusterCryptoPerformance
+
                     metrics["input_app"] = input_app
                     metrics["input_algorithm"] = input_algorithm
                     metrics["input_operation"] = input_operation
                     metrics["input_pkt_size"] = input_pkt_size
                     metrics["output_ops_per_sec"] = output_ops_per_sec
                     metrics["output_throughput"] = output_throughput
-                    metrics["output_latency_min"] = output_latency_min
-                    metrics["output_latency_avg"] = output_latency_avg
-                    metrics["output_latency_max"] = output_latency_max
+                    # metrics["output_latency_min"] = output_latency_min
+                    # metrics["output_latency_avg"] = output_latency_avg
+                    # metrics["output_latency_max"] = output_latency_max
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=TeraMarkCryptoPerformance).add_entry(**d)
+                    MetricHelper(model=model).add_entry(**d)
 
-        # if "******" in line:
-        #     raw_throughput = not raw_throughput
-        # if raw_throughput:
-        #     m = re.search(
-        #         r'{"alg":\s+"(?P<algorithm>\S+)",\s+"operation":\s+"(?P<operation>\S+)",\s+"results":\[(?P<results>.*)\]}',
-        #         line)
-        #     if m:
-        #         input_app = "crypto_test_perf"
-        #         input_algorithm = m.group("algorithm")
-        #         input_operation = m.group("operation")
-        #         output_results = json.loads(m.group("results"))
-        #         input_pkt_size = int(output_results['pktsize']['value'])
-        #
-        #         output_ops_unit = "ops/sec"
-        #         output_ops_per_sec = int(output_results['ops']['value'])
-        #
-        #         output_throughput_unit = "Mbps"
-        #         output_throughput = int(output_results['throughput']['value'])
-        #
-        #         output_latency_unit = "ns"
-        #         output_latency_min = int(output_results['latency']['value']['min'])
-        #         output_latency_avg = int(output_results['latency']['value']['avg'])
-        #         output_latency_max = int(output_results['latency']['value']['max'])
-        #
-        #         metrics["input_app"] = input_app
-        #         metrics["input_algorithm"] = input_algorithm
-        #         metrics["input_operation"] = input_operation
-        #         metrics["input_pkt_size"] = input_pkt_size
-        #         metrics["output_ops_per_sec"] = output_ops_per_sec
-        #         metrics["output_throughput"] = output_throughput
-        #         metrics["output_latency_min"] = output_latency_min
-        #         metrics["output_latency_avg"] = output_latency_avg
-        #         metrics["output_latency_max"] = output_latency_max
-        #         d = self.metrics_to_dict(metrics, fun_test.PASSED)
-        #         MetricHelper(model=TeraMarkCryptoPerformance).add_entry(**d)
-        # else:
-        m = re.search(
-            r'{"alg":\s+"(?P<algorithm>\S+)",\s+"operation":\s+"(?P<operation>\S+)",\s+"results":\s+\[(?P<results>.*)\]}',
-            line)
-        if m:
-            input_app = "crypto_test_perf"
-            input_algorithm = m.group("algorithm")
-            input_operation = m.group("operation")
-            output_results = m.group("results")
-            input_pkt_size = int(output_results['pktsize']['value'])
+            self.result = fun_test.PASSED
 
-            output_ops_unit = "ops/sec"
-            output_ops_per_sec = int(output_results['ops']['value'])
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
-            output_throughput_unit = "Mbps"
-            output_throughput = int(output_results['throughput']['value'])
-
-            output_latency_unit = "ns"
-            if output_results['latency']:
-                output_latency_min = int(output_results['latency']['value']['min'])
-                output_latency_avg = int(output_results['latency']['value']['avg'])
-                output_latency_max = int(output_results['latency']['value']['max'])
-
-            metrics["input_app"] = input_app
-            metrics["input_algorithm"] = input_algorithm
-            metrics["input_operation"] = input_operation
-            metrics["input_pkt_size"] = input_pkt_size
-            metrics["output_ops_per_sec"] = output_ops_per_sec
-            metrics["output_throughput"] = output_throughput
-            metrics["output_latency_min"] = output_latency_min
-            metrics["output_latency_avg"] = output_latency_avg
-            metrics["output_latency_max"] = output_latency_max
-            d = self.metrics_to_dict(metrics, fun_test.PASSED)
-            MetricHelper(model=TeraMarkCryptoPerformance).add_entry(**d)
-
-    self.result = fun_test.PASSED
-
-except Exception as ex:
-fun_test.critical(str(ex))
-
-set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                              test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
                              git_commit=self.git_commit, model_name="TeraMarkCryptoPerformance")
-fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
 class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
