@@ -48,8 +48,8 @@
           "source_ip1": "2000::2",
           "destination_ip1": "2001::50:0:1:1",
           "destination_ip2": "2001::50:0:2:1",
-          "hnu_destination_ip1": "2001::51:1:1:4",
-          "hnu_destination_ip2": "2001::52:1:1:4"
+          "hnu_destination_ip1": "2001::51:1:1:1",
+          "hnu_destination_ip2": "2001::52:1:1:1"
         }
       },
       "overlay_routes": {
@@ -75,7 +75,8 @@
         },
         "ipv6": {
           "source_ip1": "2000::2",
-          "destination_ip1": "2001::20:1:1:1"
+          "destination_ip1": "2001::20:1:1:1",
+          "destination_ip2": "2001::19:1:1:1"
         }
       }
     }

@@ -1,7 +1,7 @@
 import os
 import django
 import json
-import random
+import random, pytz
 import re
 from fun_global import get_current_time
 from datetime import datetime
@@ -29,7 +29,7 @@ from web.fun_test.metrics_models import VoltestPerformance
 from web.fun_test.set_base_line import SetBaseLine
 
 from web.fun_test.analytics_models_helper import MetricChartHelper
-from web.fun_test.metrics_models import MetricChartStatus
+from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
 from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
 
 
@@ -624,10 +624,11 @@ if __name__ == "__main_PKE__":
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_HU_NU__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
-    chart_names = ["HU_NU_NFCP_output_latency_avg", "HU_NU_NFCP_output_throughput", "HU_NU_NFCP", "TeraMark PKE", "PKE soak"]
+    chart_names = ["HU_NU_NFCP_output_latency_avg", "HU_NU_NFCP_output_throughput", "HU_NU_NFCP", "TeraMark PKE",
+                   "PKE soak"]
     for entry in entries:
         if entry.internal_chart_name in chart_names:
             base_line_date = datetime(year=2019, month=2, day=8, minute=0, hour=0, second=0)
@@ -637,5 +638,56 @@ if __name__ == "__main__":
             mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
                                    milestone_name="F1")
             mmf.save()
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+    print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main_JPEG_gbps__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    model_names = ["TeraMarkJpegPerformance"]
+    for entry in entries:
+        if entry.metric_model_name in model_names:
+            base_line_date = datetime(year=2019, month=2, day=12, minute=0, hour=0, second=0)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
+                                   milestone_name="F1")
+            mmf.save()
+            if entry.chart_name == "Bandwidth":
+                print entry.chart_name
+                y1_axis_title = "Gbps"
+            elif entry.chart_name == "Latency":
+                print entry.chart_name
+                y1_axis_title = "ns"
+            elif entry.chart_name == "IOPS":
+                print entry.chart_name
+                y1_axis_title = "ops/sec"
+            elif entry.chart_name == "Compression-ratio":
+                print entry.chart_name
+                y1_axis_title = "number"
+            else:
+                y1_axis_title = None
+
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
+    print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    internal_chart_names_zip = ["Deflate", "Lzma", "Zip"]
+    internal_chart_names_jpeg = ["JPEG", "Decompression Accelerator throughput", "JPEG Decompress",
+                                 "Compression Accelerator throughput", "Compression throughput with Driver",
+                                 "Compression-ratio"]
+    internal_chart_names_crypto = ["Crypto", "Crypto Accelerator"]
+    for entry in entries:
+        if entry.internal_chart_name in internal_chart_names_zip:
+            base_line_date = datetime(year=2019, month=1, day=31, minute=0, hour=0, second=0)
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+        if entry.internal_chart_name in internal_chart_names_jpeg:
+            base_line_date = datetime(year=2019, month=2, day=13, minute=0, hour=0, second=0)
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+        if entry.internal_chart_name in internal_chart_names_crypto:
+            base_line_date = datetime(year=2019, month=1, day=30, minute=0, hour=0, second=0)
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Milestone and Baseline Setting Complete"

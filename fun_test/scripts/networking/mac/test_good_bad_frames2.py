@@ -3,7 +3,8 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header, CustomBytePatternHeader
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import *
+from helper import *
 
 num_ports = 2
 loads_file = "interface_loads.json"
@@ -18,19 +19,13 @@ TOTAL_LENGTH_ERROR_1K = 'TOTAL_LENGTH_ERROR_1K'
 TOTAL_LENGTH_ERROR_100B = 'TOTAL_LENGTH_ERROR_100B'
 PADDED = 'PADDED'
 GOOD_FRAME = 'GOOD_FRAME'
-MIN_FRAME_LENGTH = 64
-MAX_FRAME_LENGTH = 1500
-OVERSIZED_FRAME_LENGTH = 2000
-MTU_TEST_FRAME_LENGTH = 1400
 cushion_sleep = 5
-is_test_physical = True
 
 
-stream_list = [OVERSIZED, CRC_OVERSIZED, TOTAL_LENGTH_ERROR, TOTAL_LENGTH_ERROR_1K, TOTAL_LENGTH_ERROR_100B, MTU_EGRESS,
-               PADDED, GOOD_FRAME]
-
-for stream in stream_list:
-    streamblock_objects[stream] = {}
+def get_stream_list():
+    stream_list = [OVERSIZED, CRC_OVERSIZED, TOTAL_LENGTH_ERROR, TOTAL_LENGTH_ERROR_1K, TOTAL_LENGTH_ERROR_100B,
+                   MTU_EGRESS,PADDED, GOOD_FRAME]
+    return stream_list
 
 
 class SpirentSetup(FunTestScript):
@@ -46,13 +41,16 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, duration_seconds, subscribe_results, port_obj_list, bad_frame_load, \
-            good_frame_load, interface_obj_list, network_controller_obj, dut_port_1, dut_port_2, shape, hnu, dut_type, flow_direction
+            good_frame_load, interface_obj_list, network_controller_obj, dut_port_1, dut_port_2, shape, hnu, dut_type, \
+            flow_direction
+
+        nu_config_obj = NuConfigManager()
+        fun_test.shared_variables['nu_config_obj'] = nu_config_obj
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
-        dut_type = nu_config_obj.get_dut_type()
-
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
-            dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+        dut_type = nu_config_obj.DUT_TYPE
+        if nu_config_obj.DUT_TYPE is not nu_config_obj.DUT_TYPE_PALLADIUM:
+            dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE, flow_direction=flow_direction)
 
             shape = 0
             hnu = False
@@ -60,11 +58,11 @@ class SpirentSetup(FunTestScript):
                 shape = 1
                 hnu = True
 
-            chassis_type = fun_test.get_local_setting(setting="chassis_type")
             spirent_config = nu_config_obj.read_traffic_generator_config()
 
             fun_test.log("Creating Template object")
-            template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames", chassis_type=nu_config_obj.FLOW_DIRECTION_NU_NU,
+            template_obj = SpirentEthernetTrafficTemplate(session_name="test_good_bad_frames",
+                                                          chassis_type=nu_config_obj.CHASSIS_TYPE,
                                                           spirent_config=spirent_config)
             fun_test.test_assert(template_obj, "Create template object")
 
@@ -97,31 +95,39 @@ class SpirentSetup(FunTestScript):
                 destination_ip2 = l3_config['hnu_destination_ip2']
             dut_port_1 = dut_config['ports'][0]
             dut_port_2 = dut_config['ports'][1]
-            interface_mode = dut_config['interface_mode']
 
             #  Read loads from file
-            file_path = SCRIPTS_DIR + "/networking" + "/" + loads_file
-            output = fun_test.parse_file_to_json(file_path)
-            bad_frame_load = output[interface_mode]["bad_frame_load_mbps"]
-            good_frame_load = output[interface_mode]["good_frame_load_mbps"]
+            config_name = "palladium_good_bad_frames_config1"
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                config_name = "f1_good_bad_frames_config1"
+
+            test_config = get_test_config_by_dut_type(nu_config_obj=nu_config_obj, name=config_name)
+            fun_test.simple_assert(test_config, "Ensure test config fetched")
+            fun_test.shared_variables['test_config'] = test_config
 
             port_1 = port_obj_list[0]
             port_2 = port_obj_list[1]
 
+            stream_list = get_stream_list()
+
+            for stream in stream_list:
+                streamblock_objects[stream] = {}
+
             # Configure streams
+            custom_header_obj = None
             for port in port_obj_list:
                 current_source_ip = source_ip2
                 current_destination_ip = destination_ip2
-                current_positive = output["padding"]["reverse"]["positive"]
-                current_1k = output["padding"]["reverse"]["1k"]
-                current_100B = output["padding"]["reverse"]["100B"]
+                current_positive = test_config["padding"]["reverse"]["positive"]
+                current_1k = test_config["padding"]["reverse"]["1k"]
+                current_100_b = test_config["padding"]["reverse"]["100B"]
 
                 if str(port) == str(port_1):
                     current_source_ip = source_ip1
                     current_destination_ip = destination_ip1
-                    current_positive = output["padding"]["straight"]["positive"]
-                    current_1k = output["padding"]["straight"]["1k"]
-                    current_100B = output["padding"]["straight"]["100B"]
+                    current_positive = test_config["padding"]["straight"]["positive"]
+                    current_1k = test_config["padding"]["straight"]["1k"]
+                    current_100_b = test_config["padding"]["straight"]["100B"]
                     port_1 = port
                 else:
                     port_2 = port
@@ -139,12 +145,12 @@ class SpirentSetup(FunTestScript):
                                                       source_address=current_source_ip)
 
                     if stream_type == OVERSIZED:
-                        current_streamblock_obj.FixedFrameLength = OVERSIZED_FRAME_LENGTH
+                        current_streamblock_obj.FixedFrameLength = test_config['oversize_frame_size']
                     elif stream_type == CRC_OVERSIZED:
                         current_streamblock_obj.EnableFcsErrorInsertion = True
-                        current_streamblock_obj.FixedFrameLength = OVERSIZED_FRAME_LENGTH
+                        current_streamblock_obj.FixedFrameLength = test_config['oversize_frame_size']
                     elif stream_type == MTU_EGRESS:
-                        current_streamblock_obj.FixedFrameLength = MTU_TEST_FRAME_LENGTH
+                        current_streamblock_obj.FixedFrameLength = test_config['mtu_test_frame_size']
                     elif stream_type == TOTAL_LENGTH_ERROR:
                         current_ipv4_obj.totalLength = current_ipv4_obj.TOTAL_HEADER_LENGTH_ERROR
                     elif stream_type == TOTAL_LENGTH_ERROR_1K:
@@ -156,20 +162,20 @@ class SpirentSetup(FunTestScript):
                         current_streamblock_obj.Load = 10
                         current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
                         current_streamblock_obj.FrameLengthMode = current_streamblock_obj.FRAME_LENGTH_MODE_RANDOM
-                        current_streamblock_obj.MinFrameLength = MIN_FRAME_LENGTH
-                        current_streamblock_obj.MaxFrameLength = MAX_FRAME_LENGTH
-                        custom_header_obj = CustomBytePatternHeader(byte_pattern=current_100B)
+                        current_streamblock_obj.MinFrameLength = test_config['min_frame_size']
+                        current_streamblock_obj.MaxFrameLength = test_config['max_frame_size']
+                        custom_header_obj = CustomBytePatternHeader(byte_pattern=current_100_b)
                     elif stream_type == PADDED:
                         current_streamblock_obj.FrameLengthMode = current_streamblock_obj.FRAME_LENGTH_MODE_INCR
-                        current_streamblock_obj.MinFrameLength = MIN_FRAME_LENGTH
-                        current_streamblock_obj.MaxFrameLength = MAX_FRAME_LENGTH
+                        current_streamblock_obj.MinFrameLength = test_config['min_frame_size']
+                        current_streamblock_obj.MaxFrameLength = test_config['max_frame_size']
                         current_streamblock_obj.Load = 100
                         current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
                         custom_header_obj = CustomBytePatternHeader(byte_pattern=current_positive)
                     elif stream_type == GOOD_FRAME:
                         current_streamblock_obj.FrameLengthMode = current_streamblock_obj.FRAME_LENGTH_MODE_RANDOM
-                        current_streamblock_obj.MinFrameLength = MIN_FRAME_LENGTH
-                        current_streamblock_obj.MaxFrameLength = MAX_FRAME_LENGTH
+                        current_streamblock_obj.MinFrameLength = test_config['min_frame_size']
+                        current_streamblock_obj.MaxFrameLength = test_config['max_frame_size']
                     else:
                         raise Exception("Stream %s not found" % stream_type)
 
@@ -182,27 +188,30 @@ class SpirentSetup(FunTestScript):
                         stream_block_handle=current_streamblock_obj.spirent_handle, header_obj=current_ethernet_obj,
                         delete_header=[Ethernet2Header.HEADER_TYPE, Ipv4Header.HEADER_TYPE])
                     fun_test.simple_assert(configure_ethernet,
-                                           "Ensure ethernet frame is configured for stream %s on port %s and streamblock %s" % (
-                                               stream_type, port, current_streamblock_obj.spirent_handle))
+                                           "Ensure ethernet frame is configured for stream %s on port %s "
+                                           "and streamblock %s" % (stream_type, port,
+                                                                   current_streamblock_obj.spirent_handle))
 
                     if stream_type == TOTAL_LENGTH_ERROR_100B or stream_type == TOTAL_LENGTH_ERROR_1K or \
                             stream_type == PADDED:
                         configure_custom = template_obj.stc_manager.configure_frame_stack(
                             stream_block_handle=current_streamblock_obj.spirent_handle, header_obj=custom_header_obj)
                         fun_test.simple_assert(configure_custom,
-                                               "Ensure custom header is configured for stream %s on port %s and streamblock %s" % (
-                                                   stream_type, port, current_streamblock_obj.spirent_handle))
+                                               "Ensure custom header is configured for stream %s on port %s "
+                                               "and streamblock %s" % (stream_type, port,
+                                                                       current_streamblock_obj.spirent_handle))
                     else:
                         configure_ip4 = template_obj.stc_manager.configure_frame_stack(
                             stream_block_handle=current_streamblock_obj.spirent_handle, header_obj=current_ipv4_obj)
                         fun_test.simple_assert(configure_ip4,
-                                               "Ensure ipv4 is configured for stream %s on port %s and streamblock %s" % (
-                                                   stream_type, port, current_streamblock_obj.spirent_handle))
+                                               "Ensure ipv4 is configured for stream %s on port %s "
+                                               "and streamblock %s" % (stream_type, port,
+                                                                       current_streamblock_obj.spirent_handle))
 
                     streamblock_objects[stream_type][port] = current_streamblock_obj
 
                 # Configure Generator
-                duration_seconds = 10
+                duration_seconds = test_config['duration']
                 gen_config_obj = GeneratorConfig()
                 gen_config_obj.Duration = duration_seconds
                 gen_config_obj.SchedulingMode = gen_config_obj.SCHEDULING_MODE_RATE_BASED
@@ -222,7 +231,8 @@ class SpirentSetup(FunTestScript):
             del subscribe_results['result']
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             fun_test.test_assert(template_obj.cleanup(), "Cleaning up session")
 
 
@@ -240,7 +250,8 @@ class TestCase1(FunTestCase):
                         """)
 
     def setup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivating all streamblocks")
@@ -259,12 +270,14 @@ class TestCase1(FunTestCase):
             fun_test.test_assert(set_mtu, "Set mtu to 1500 on port %s" % dut_port_2)
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             activate = template_obj.activate_stream_blocks([streamblock_objects[OVERSIZED][str(port_1)],
                                                             streamblock_objects[OVERSIZED][str(port_2)]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % OVERSIZED)
@@ -439,6 +452,7 @@ class TestCase1(FunTestCase):
                                               message="Check counter %s in psw global stats" % key)
             '''
 
+
 class TestCase2(FunTestCase):
     def describe(self):
         self.set_test_details(id=2,
@@ -452,7 +466,8 @@ class TestCase2(FunTestCase):
                         """)
 
     def setup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivating all streamblocks")
@@ -465,12 +480,14 @@ class TestCase2(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             activate = template_obj.activate_stream_blocks([streamblock_objects[CRC_OVERSIZED][str(port_1)],
                                                             streamblock_objects[CRC_OVERSIZED][str(port_2)]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % CRC_OVERSIZED)
@@ -600,7 +617,8 @@ class TestCase3(FunTestCase):
                         """)
 
     def setup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivating all streamblocks")
@@ -613,7 +631,8 @@ class TestCase3(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
@@ -626,7 +645,8 @@ class TestCase3(FunTestCase):
             fun_test.simple_assert(mtu_update_result, "Set spirent mtu to %s" % self.DEFAULT_MTU_VALUE)
 
     def run(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Activate streams with 1400B
             activate = template_obj.activate_stream_blocks([streamblock_objects[MTU_EGRESS][str(port_1)],
                                                             streamblock_objects[MTU_EGRESS][str(port_2)]])
@@ -714,7 +734,8 @@ class TestCase4(FunTestCase):
                         """)
 
     def setup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivated all streamblocks")
@@ -727,12 +748,14 @@ class TestCase4(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             activate = template_obj.activate_stream_blocks([streamblock_objects[TOTAL_LENGTH_ERROR][str(port_1)],
                                                             streamblock_objects[TOTAL_LENGTH_ERROR][str(port_2)]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % TOTAL_LENGTH_ERROR)
@@ -784,10 +807,6 @@ class TestCase4(FunTestCase):
 
             fun_test.test_assert(tx_results_2["FrameCount"] > 0,
                                  message="Ensure some frames were sent from %s" % str(port_1))
-            fun_test.test_assert_expected(actual=rx_port_analyzer_results_2["TotalFrameCount"],
-                                          expected=expected_rx,
-                                          message="Ensure all frames are dropped")
-
             # Check from dut
             dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1, hnu=hnu)
             fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
@@ -823,7 +842,8 @@ class TestCase5(FunTestCase):
                         """)
 
     def setup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivated all streamblocks")
@@ -836,12 +856,14 @@ class TestCase5(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             activate = template_obj.activate_stream_blocks([streamblock_objects[TOTAL_LENGTH_ERROR_1K][str(port_1)],
                                                             streamblock_objects[TOTAL_LENGTH_ERROR_1K][str(port_2)]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % TOTAL_LENGTH_ERROR_1K)
@@ -932,7 +954,8 @@ class TestCase6(FunTestCase):
                         """)
 
     def setup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivated all streamblocks")
@@ -945,12 +968,14 @@ class TestCase6(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             activate = template_obj.activate_stream_blocks([streamblock_objects[TOTAL_LENGTH_ERROR_100B][str(port_1)],
                                                             streamblock_objects[TOTAL_LENGTH_ERROR_100B][str(port_2)]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % TOTAL_LENGTH_ERROR_100B)
@@ -1041,7 +1066,8 @@ class TestCase7(FunTestCase):
                         """)
 
     def setup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Deactivate all streamblocks
             deactivate = template_obj.deactivate_stream_blocks()
             fun_test.test_assert(deactivate, "Deactivated all streamblocks")
@@ -1054,12 +1080,14 @@ class TestCase7(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             for key in subscribe_results.iterkeys():
                 template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
 
     def run(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             activate = template_obj.activate_stream_blocks([streamblock_objects[PADDED][str(port_1)],
                                                             streamblock_objects[PADDED][str(port_2)]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % PADDED)
@@ -1150,7 +1178,8 @@ class TestCase8(FunTestCase):
                         """)
 
     def setup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             # Clear port results on DUT
             clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
@@ -1159,11 +1188,11 @@ class TestCase8(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
     def cleanup(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
-            pass
+        pass
 
     def run(self):
-        if is_test_physical and (not dut_type is nu_config_obj.DUT_TYPE_PALLADIUM):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
             duration = 20
 
             # Activate streams
@@ -1171,6 +1200,7 @@ class TestCase8(FunTestCase):
             fun_test.test_assert(activate, "Activate all streamblocks")
 
             # Apply correct loads
+            stream_list = get_stream_list()
             for port in port_obj_list:
                 for stream in stream_list:
                     current_stream_obj = streamblock_objects[stream][port]
@@ -1297,12 +1327,12 @@ class TestCase8(FunTestCase):
 
             if TOTAL_LENGTH_ERROR_100B in stream_list:
                 fun_test.log("Fetch results of %s to be added to final good frame" % TOTAL_LENGTH_ERROR_100B)
-                tx_results_total_len_100B_1 = template_obj.stc_manager.get_tx_stream_block_results(
+                tx_results_total_len_100_b_1 = template_obj.stc_manager.get_tx_stream_block_results(
                     stream_block_handle=streamblock_objects[TOTAL_LENGTH_ERROR_100B][str(port_1)].spirent_handle,
                     subscribe_handle=subscribe_results['tx_subscribe'])
 
                 fun_test.log("Fetch results of %s to be added to final good frame" % TOTAL_LENGTH_ERROR_100B)
-                tx_results_total_len_100B_2 = template_obj.stc_manager.get_tx_stream_block_results(
+                tx_results_total_len_100_b_2 = template_obj.stc_manager.get_tx_stream_block_results(
                     stream_block_handle=streamblock_objects[TOTAL_LENGTH_ERROR_100B][str(port_2)].spirent_handle,
                     subscribe_handle=subscribe_results['tx_subscribe'])
 
@@ -1412,11 +1442,11 @@ class TestCase8(FunTestCase):
             dut_port_2_good_transmit = int(dut_port_2_transmit) - (int(tx_results_total_len_1k_1['FrameCount']) +
                                                                    int(tx_results_mtu_1['FrameCount']) +
                                                                    int(tx_results_total_len_padded_1['FrameCount']) +
-                                                                   int(tx_results_total_len_100B_1['FrameCount']))
+                                                                   int(tx_results_total_len_100_b_1['FrameCount']))
             dut_port_1_good_transmit = int(dut_port_1_transmit) - (int(tx_results_total_len_1k_2['FrameCount']) +
                                                                    int(tx_results_mtu_2['FrameCount']) +
                                                                    int(tx_results_total_len_padded_2['FrameCount']) +
-                                                                   int(tx_results_total_len_100B_2['FrameCount']))
+                                                                   int(tx_results_total_len_100_b_2['FrameCount']))
 
             fun_test.test_assert_expected(expected=int(dut_port_1_good_received),
                                           actual=int(dut_port_2_transmit),

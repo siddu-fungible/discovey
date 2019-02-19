@@ -23,9 +23,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   metricId: number;
   editingDescription: boolean = false;
   editingOwner: boolean = false;
+  editingSource: boolean = false;
   inner: any = {};
   currentDescription: string;
   currentOwner: string;
+  currentSource: string;
   waitTime: number = 0;
   values: any;
   charting: any;
@@ -69,10 +71,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.metricId = -1;
     this.editingDescription = false;
     this.editingOwner = false;
+    this.editingSource = false;
     this.inner = {};
     this.inner.currentDescription = "TBD";
     this.inner.currentOwner = "Unknown";
     this.currentOwner = "Unknown";
+    this.inner.currentSource = "Unknown";
+    this.currentSource = "Unknown";
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
@@ -93,16 +98,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     self.pointInfo = [];
     self.buildProps = [];
     Object.keys(pointInfo).forEach((key) => {
-        if(key === "Build Properties") {
-          let properties = pointInfo[key];
-          self.buildProps["name"] = key;
-          self.buildProps["value"] = properties;
-        } else {
-          let property = [];
-          property["name"] = key;
-          property["value"] = pointInfo[key];
-          self.pointInfo.push(property);
-        }
+      if (key === "Build Properties") {
+        let properties = pointInfo[key];
+        self.buildProps["name"] = key;
+        self.buildProps["value"] = properties;
+      } else {
+        let property = [];
+        property["name"] = key;
+        property["value"] = pointInfo[key];
+        self.pointInfo.push(property);
+      }
     });
     self.pointClicked = true;
   }
@@ -255,7 +260,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
         this.currentOwner = this.chartInfo.owner_info;
+        this.currentSource = this.chartInfo.source;
         this.inner.currentOwner = this.currentOwner;
+        this.inner.currentSource = this.currentSource;
         this.negativeGradient = !this.chartInfo.positive;
         this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
@@ -279,6 +286,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.pointClicked = false;
     this.showBuildProps = false;
     this.editingOwner = false;
+    this.editingSource = false;
     this.editingDescription = false;
     this.chart1YaxisTitle = "";
   }
@@ -287,6 +295,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.pointClicked = false;
     this.showBuildProps = false;
   }
+
   getPreviewDataSets(): any {
     return this.chartInfo.data_sets;
   }
@@ -328,6 +337,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["data_sets"] = this.previewDataSets;
     payload["description"] = this.inner.currentDescription;
     payload["owner_info"] = this.inner.currentOwner;
+    payload["source"] = this.inner.currentSource;
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
@@ -341,6 +351,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     });
     this.editingDescription = false;
     this.editingOwner = false;
+    this.editingSource = false;
   }
 
   //populates buildInfo
@@ -350,6 +361,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }, error => {
       this.loggerService.error("regression/build_to_date_map");
     });
+  }
+
+  openSource(url): void {
+    window.open(url, '_blank');
+  }
+
+  getAppName(source): string {
+    let s = "Unknown";
+    let sourceSplits = source.split("/");
+    s = sourceSplits[sourceSplits.length - 1];
+    return s;
   }
 
   //opens and closes the show tables panel
@@ -537,18 +559,18 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
             let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0]; // removing the time to check if the milestone date exists
             //comparing two date objects to get the f1 milestone incase of date mismatch
-            let compareDate =  new Date(originalKeyList[startIndex]);
-             if (originalKeyList[startIndex].includes(markerDate)) { // Tape-out and F1
+            let compareDate = new Date(originalKeyList[startIndex]);
+            if (originalKeyList[startIndex].includes(markerDate)) { // Tape-out and F1
               if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
                 this.mileStoneIndices[mileStone] = startIndex;
               }
-          } else if(compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
-               if (mileStone === "F1") {
-                 if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
-                this.mileStoneIndices[mileStone] = startIndex;
+            } else if (compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
+              if (mileStone === "F1") {
+                if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+                  this.mileStoneIndices[mileStone] = startIndex;
+                }
               }
-               }
-             }
+            }
           });
 
           while (startIndex >= endIndex) {
@@ -663,9 +685,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           dateSeries.push(series[startIndex]);
           Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
             let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0];
-             if (series[startIndex].includes(markerDate)) { // Tape-out and F1
-            this.mileStoneIndices[mileStone] = startIndex;
-          }
+            if (series[startIndex].includes(markerDate)) { // Tape-out and F1
+              this.mileStoneIndices[mileStone] = startIndex;
+            }
           });
           while (startIndex >= endIndex) {
             if (keyValue[series[startIndex]] != -1) {

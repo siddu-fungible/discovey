@@ -3,7 +3,8 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import NuConfigManager
+from scripts.networking.nu_config_manager import *
+from helper import *
 
 
 num_ports = 2
@@ -24,7 +25,8 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, subscribe_results, network_controller_obj, dut_port_1, dut_port_2, \
-            ethernet, ipv4, source_mac1, destination_mac1, destination_ip1, streamblock_1, duration_seconds, shape, hnu, flow_direction, nu_config_obj
+            ethernet, ipv4, source_mac1, destination_mac1, destination_ip1, streamblock_1, duration_seconds, shape, hnu, \
+            flow_direction, nu_config_obj
 
         nu_config_obj = NuConfigManager()
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
@@ -38,11 +40,11 @@ class SpirentSetup(FunTestScript):
             shape = 1
             hnu = True
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_bad_address", chassis_type=nu_config_obj.FLOW_DIRECTION_NU_NU,
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_bad_address",
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE,
                                                       spirent_config=spirent_config)
         fun_test.test_assert(template_obj, "Create template object")
 
@@ -66,7 +68,15 @@ class SpirentSetup(FunTestScript):
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
 
-        streamblock_1 = StreamBlock(load_unit=StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND, load=100)
+        config_name = "palladium_bad_address_config"
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            config_name = "f1_bad_address_config"
+
+        test_config = get_test_config_by_dut_type(nu_config_obj=nu_config_obj, name=config_name)
+        fun_test.simple_assert(test_config, "Ensure test config fetched")
+        fun_test.shared_variables['test_config'] = test_config
+
+        streamblock_1 = StreamBlock(load_unit=test_config['load_type'], load=test_config['load'])
         create_streamblock_1 = template_obj.configure_stream_block(streamblock_1, port_handle=port_1)
         fun_test.test_assert(create_streamblock_1, " Creating streamblock on port %s" % port_1)
 
@@ -81,7 +91,7 @@ class SpirentSetup(FunTestScript):
             stream_block_handle=streamblock_1._spirent_handle, header_obj=ipv4)
         fun_test.test_assert(frame_stack, "Added ipv4 header to stream %s" % streamblock_1._spirent_handle)
 
-        duration_seconds = 10
+        duration_seconds = test_config['duration']
         gen_config_obj = GeneratorConfig()
         gen_config_obj.Duration = duration_seconds
         gen_config_obj.SchedulingMode = gen_config_obj.SCHEDULING_MODE_RATE_BASED
@@ -134,7 +144,8 @@ class TestCase1(FunTestCase):
         fun_test.test_assert(output, message="Changed destination ip to correct ip")
 
     def run(self):
-        bad_destination_ip = '99.1.1.99'
+        test_config = fun_test.shared_variables['test_config']
+        bad_destination_ip = test_config['bad_destination_ip']
 
         # Modify destination ip to bad destination ip
         ipv4.destAddr = bad_destination_ip
@@ -184,7 +195,7 @@ class TestCase1(FunTestCase):
         ifpg_pkt = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
         frv_error = 'frv_error'
         fwd_frv = 'fwd_frv'
-        fwd_main_pkt_drop ='fwd_main_pkt_drop'
+        fwd_main_pkt_drop = 'fwd_main_pkt_drop'
         main_pkt_drop_eop = 'main_pkt_drop_eop'
         fetch_list = [frv_error, fwd_frv, fwd_main_pkt_drop, main_pkt_drop_eop, ifpg_pkt]
 
@@ -203,8 +214,10 @@ class TestCase1(FunTestCase):
 
         for key in fetch_list:
             fun_test.log("Check psw stats for key %s" % key)
-            fun_test.test_assert_expected(expected=int(spirent_tx_counter), actual=psw_fetched_output_after['input'][key] - psw_fetched_output_before['input'][key],
-                                          message="Check counter %s in psw global stats" % key)
+            fun_test.test_assert_expected(
+                expected=int(spirent_tx_counter),
+                actual=psw_fetched_output_after['input'][key] - psw_fetched_output_before['input'][key],
+                message="Check counter %s in psw global stats" % key)
 
 
 class TestCase2(FunTestCase):
@@ -238,7 +251,8 @@ class TestCase2(FunTestCase):
         fun_test.test_assert(output, message="Changed destination mac to correct mac")
 
     def run(self):
-        bad_destination_mac = '00:DE:AD:BE:EF:01'
+        test_config = fun_test.shared_variables['test_config']
+        bad_destination_mac = test_config['bad_destination_mac']
 
         # Modify destination ip to bad destination ip
         ethernet.dstMac = bad_destination_mac
@@ -306,103 +320,14 @@ class TestCase2(FunTestCase):
                                                               dut_port_2)
 
         for key in fetch_list:
-            fun_test.test_assert_expected(expected=int(spirent_tx_counter), actual=psw_fetched_output_after['input'][key] - psw_fetched_output_before['input'][key],
-                                          message="Check counter %s in psw global stats" % key)
+            fun_test.test_assert_expected(
+                expected=int(spirent_tx_counter),
+                actual=psw_fetched_output_after['input'][key] - psw_fetched_output_before['input'][key],
+                message="Check counter %s in psw global stats" % key)
 
-
-class TestCase3(FunTestCase):
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Test bad source mac address",
-                              steps="""
-                        1. Modify source mac to bad one.
-                        2. Start traffic from spirent
-                        3. ensure there is no rx on spirent
-                        4. Ensure no rx on dut
-                        5. Check psw global stats ct_pkt, fwd_frv, ifpg_pkt, fpg_pkt
-                        """)
-
-    def setup(self):
-        # Clear port results on DUT
-        clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1, shape=shape)
-        fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
-
-        clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
-        fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
-
-    def cleanup(self):
-        for key in subscribe_results.iterkeys():
-            template_obj.stc_manager.clear_results_view_command(result_dataset=subscribe_results[key])
-
-        ethernet.srcMac = source_mac1
-        fun_test.log("Modifying source mac to correct source mac")
-        output = template_obj.stc_manager.configure_frame_stack(stream_block_handle=streamblock_1._spirent_handle,
-                                                                header_obj=ethernet, update=True)
-        fun_test.test_assert(output, message="Changed source mac to source mac")
-
-    def run(self):
-        bad_source_mac = '01:DE:OR:AD:EF:00'
-
-        # Modify destination ip to bad destination ip
-        ethernet.srcMac = bad_source_mac
-
-        fun_test.log("Modifying source mac to bad source mac")
-        output = template_obj.stc_manager.configure_frame_stack(stream_block_handle=streamblock_1._spirent_handle,
-                                                                header_obj=ethernet, update=True)
-        fun_test.test_assert(output, message="Changed source mac to bad source mac")
-
-        start = template_obj.enable_generator_configs(generator_configs=generator_list)
-        fun_test.test_assert(start, "Starting generator config")
-
-        # Sleep until traffic is executed
-        fun_test.sleep("Sleeping for executing traffic", seconds=duration_seconds + cushion_sleep)
-
-        # Fetch spirent results
-        result_dict = template_obj.stc_manager.fetch_streamblock_results(subscribe_result=subscribe_results,
-                                                                         streamblock_handle_list=[
-                                                                             streamblock_1._spirent_handle],
-                                                                         tx_result=True, rx_result=True)
-
-        spirent_tx_counter = int(result_dict[streamblock_1._spirent_handle]['tx_result']['FrameCount'])
-        spirent_rx_counter = int(result_dict[streamblock_1._spirent_handle]['rx_result']['FrameCount'])
-
-        # Fetch dut results
-        dut_results = get_dut_fpg_port_stats(network_controller_obj=network_controller_obj, dut_port_list=[dut_port_1,
-                                                                                                           dut_port_2],
-                                             hnu=hnu)
-        dut_port_1_receive = get_dut_output_stats_value(dut_results[dut_port_1], FRAMES_RECEIVED_OK, tx=False)
-        dut_port_2_transmit = get_dut_output_stats_value(dut_results[dut_port_2], FRAMES_TRANSMITTED_OK)
-
-        # Fetch psw global stats
-        psw_stats = network_controller_obj.peek_psw_global_stats(hnu=hnu)
-        dut_port_1_fpg_value = get_fpg_port_value(dut_port_1)
-        ifpg_pkt = 'ifpg' + str(dut_port_1_fpg_value) + '_pkt'
-        fpg_pkt = 'fpg' + str(dut_port_1_fpg_value) + '_pkt'
-        fwd_frv = 'fwd_frv'
-        ct_pkt = 'ct_pkt'
-        fetch_list = [fwd_frv, fpg_pkt, ct_pkt, ifpg_pkt]
-
-        psw_fetched_output = get_psw_global_stats_values(psw_stats, fetch_list)
-
-        expected_rx_count = 0
-        fun_test.test_assert_expected(expected=expected_rx_count, actual=spirent_rx_counter,
-                                      message="Ensure frames are not received when bad source mac is "
-                                              "present in packet")
-
-        fun_test.test_assert_expected(actual=int(dut_port_1_receive), expected=spirent_tx_counter,
-                                      message="Ensure frames are received in dut stats")
-
-        fun_test.test_assert(not dut_port_2_transmit, message=" Ensure no frames are transmitted by dut port %s" %
-                                                              dut_port_2)
-        '''
-        for key in fetch_list:
-            fun_test.test_assert_expected(expected=int(spirent_tx_counter), actual=psw_fetched_output[key],
-                                          message="Check counter %s in psw global stats" % key)
-        '''
 
 if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.add_test_case(TestCase2())
-    #ts.add_test_case(TestCase3())
     ts.run()

@@ -4,8 +4,9 @@ import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
 import {ClipboardService} from 'ngx-clipboard';
-import {Location} from '@angular/common';
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
+import {of} from "rxjs";
+import {switchMap} from "rxjs/operators";
 
 
 class ChildInfo {
@@ -121,7 +122,6 @@ export class PerformanceComponent implements OnInit {
   regressionUrl: string = "/regression/suite_detail/";
 
   globalSettings: any = null;
-  private location: Location;
   toolTipMessage: string = null;
   @ViewChild('copyUrlTooltip') copyUrlTooltip;
   chartReady: boolean = false;
@@ -135,8 +135,8 @@ export class PerformanceComponent implements OnInit {
   jiraList: any = {};
   showBugPanel: boolean = false;
 
-  queryPath: string = null;
   gotoQueryBaseUrl: string = "/performance?goto=";
+  queryPath: string = null;  // includes gotoQueryBaseUrl and a query
 
 
   constructor(
@@ -145,7 +145,8 @@ export class PerformanceComponent implements OnInit {
     private title: Title,
     private commonService: CommonService,
     private clipboardService: ClipboardService,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private router: Router
   ) {
   }
 
@@ -166,20 +167,32 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxHeight = '25%';
     }
     this.status = null;
-    console.log("Here");
-    this.getQueryPath();
+    this.fetchDag();
+
+    /*
+    fromEvent(window, 'popstate')
+  .subscribe((e) => {
+    console.log(e, 'back button: ' + this.location.path());
+  });*/
+
+  }
+
+  getDefaultQueryPath() {
+    return "Total";
   }
 
   getQueryPath() {
-    this.activatedRoute.queryParams.subscribe(params => {
+    return this.activatedRoute.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('goto')) {
-        this.queryPath = params['goto'];
+        let queryPath = params['goto'];
         console.log("QueryPath: " + this.queryPath);
+        return of(queryPath);
       }
-      if (!this.dag) {
-        this.fetchDag();
+      else {
+        return of(null);
       }
-    });
+    }))
+
   }
 
   getGuid(): number {
@@ -212,19 +225,29 @@ export class PerformanceComponent implements OnInit {
       this.walkDag(this.dag, lineage);
       //total container should always appear
       this.flatNodes[0].hide = false;
-      let i = 0;
-      if (this.queryPath) {
-        let pathGuid = this.pathToGuid(this.queryPath);
-        let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
-        this.expandNode(targetFlatNode);
-        if (targetFlatNode.node.leaf) {
-          this.showAtomicMetric(targetFlatNode);
+      this.getQueryPath().subscribe(queryPath => {
+        let queryExists = false;
+        if (!queryPath) {
+          queryPath = this.getDefaultQueryPath();
         } else {
-          this.showNonAtomicMetric(targetFlatNode);
+          queryExists = true;
         }
-      } else {
-        this.expandNode(this.flatNodes[0]);//expand total container on page load
-      }
+        if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
+          this.queryPath = this.gotoQueryBaseUrl + queryPath;
+          let pathGuid = this.pathToGuid(this.queryPath);
+          let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
+          this.expandNode(targetFlatNode);
+
+          if (queryExists) {
+            if (targetFlatNode.node.leaf) {
+              this.showAtomicMetric(targetFlatNode);
+            } else {
+              this.showNonAtomicMetric(targetFlatNode);
+            }
+          }
+
+        }
+      })
     }, error => {
       this.loggerService.error("fetchDag");
     });
@@ -294,11 +317,12 @@ export class PerformanceComponent implements OnInit {
   lineageToPath(lineage) {
     let s = "";
     lineage.forEach(part => {
-      s += "/" + encodeURI(part.chartName);
+      s += "/" + encodeURIComponent(part.chartName);
     });
     s = s.slice(1, s.length); // Remove leading slash
     return s;
   }
+
   expandFromLineage(parent): void {
     this.chartReady = false;
     for (let flatNode of this.flatNodes) {
@@ -553,6 +577,7 @@ export class PerformanceComponent implements OnInit {
     }
     return result;
   }
+
   addUpgradeDegradeNodes(thisFlatNode, dagEntry): void {
     let leafNode = thisFlatNode.node;
     if (leafNode.trend > 0) {
@@ -625,10 +650,6 @@ export class PerformanceComponent implements OnInit {
   setValues(pageNumber): void {
   }
 
-  goBack(): void {
-    this.location.back();
-  }
-
   getLastStatusUpdateTime() {
     this.apiService.get('/common/time_keeper/' + "last_status_update").subscribe((data) => {
       this.lastStatusUpdateTime = data;
@@ -636,16 +657,6 @@ export class PerformanceComponent implements OnInit {
 
     });
   }
-
-  /*
-  fetchRootMetricInfo(chartName, metricModelName): any {
-    let payload = {"metric_model_name": metricModelName, chart_name: chartName};
-    this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
-      return data;
-    }, error => {
-      this.loggerService.error("fetchRootMetricInfo");
-    });
-  } */
 
   populateNodeInfoCache(data) {
     if (!(data.metric_id in this.cachedNodeInfo)) {
@@ -865,8 +876,9 @@ export class PerformanceComponent implements OnInit {
       for (let index = 0; index < topLineage.length - 1; index++) {
         //this.expandNode(topLineage[index]);
         let thisNode = this.guIdFlatNodeMap[topLineage[index].guid];
-        thisNode.hide = false;
-        thisNode.collapsed = false;
+        this.expandNode(thisNode);
+        //thisNode.hide = false;
+        //thisNode.collapsed = false;
       }
     }
 
@@ -893,8 +905,7 @@ export class PerformanceComponent implements OnInit {
     this.expandNode(flatNode);
     this.commonService.scrollTo("chart-info");
     this.chartReady = true;
-    let path = this.lineageToPath(flatNode.lineage[0]);
-    window.history.pushState(null, "Performance: " + path, this.gotoQueryBaseUrl + path);
+    this.navigateByQuery(flatNode);
 
   };
 
@@ -920,29 +931,41 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.chartReady = true;
     }
-    let path = this.lineageToPath(flatNode.lineage[0]);
-    window.history.pushState(null, "Performance: " + path, this.gotoQueryBaseUrl + path);
+    if (!flatNode.special)
+      this.navigateByQuery(flatNode);
   };
+
+  navigateByQuery(flatNode) {
+    let path = this.lineageToPath(flatNode.lineage[0]);
+    let queryPath = this.gotoQueryBaseUrl + path;
+    this.router.navigateByUrl(queryPath);
+  }
 
   pathToGuid(path) {
     let result = null;
-    let parts = path.split("/");
-    result = this._doPathToGuid(this.flatNodes[0], parts);
-    console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
+    try {
+      path = path.replace(this.gotoQueryBaseUrl, "");
+      let parts = path.split("/");
+      result = this._doPathToGuid(this.flatNodes[0], parts);
+      console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
+
+    } catch (e) {
+
+    }
     return result;
   }
 
   _doPathToGuid(flatNode, remainingParts) {
     let result = null;
     if (remainingParts.length > 0) {
-      if (flatNode.node.chartName === remainingParts[0]) {
+      if (flatNode.node.chartName === decodeURIComponent(remainingParts[0])) {
         // match found
 
         if (remainingParts.length > 1) {
           remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
           for (let index = 0; index < flatNode.children.length; index++) {
             let childFlatNode = flatNode.children[index];
-            if (remainingParts[0] === childFlatNode.node.chartName) {
+            if (decodeURIComponent(remainingParts[0]) === childFlatNode.node.chartName) {
               return this._doPathToGuid(childFlatNode, remainingParts);
             }
           }

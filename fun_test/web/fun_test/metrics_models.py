@@ -104,6 +104,7 @@ class MetricChart(models.Model):
     last_lsf_job_id = models.IntegerField(default=-1)
     last_git_commit = models.TextField(default="")
     owner_info = models.TextField(default="UNKNOWN")
+    source = models.TextField(default="Unknown")
     jira_ids = models.TextField(default="[]")
     base_line_date = models.DateTimeField(verbose_name="base_line_date", default=datetime.now)
 
@@ -1295,7 +1296,7 @@ class TeraMarkJpegPerformance(models.Model):
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_operation = models.TextField(verbose_name="Operation")
-    output_average_bandwidth = models.IntegerField(verbose_name="Average bandwidth", default=-1)
+    output_average_bandwidth = models.FloatField(verbose_name="Average bandwidth", default=-1)
     output_total_bandwidth = models.IntegerField(verbose_name="Total bandwidth", default=-1)
     input_count = models.IntegerField(verbose_name="Count", default=0)
     input_image = models.TextField(verbose_name="Image", default="None")

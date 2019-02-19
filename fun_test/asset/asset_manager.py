@@ -83,14 +83,13 @@ class AssetManager:
     @fun_test.safe
     def get_any_docker_host(self):
         docker_hosts_spec_file = self.DOCKER_HOSTS_ASSET_SPEC
-        if (not is_regression_server()) and (not is_performance_server()):
+        if is_lite_mode():
             docker_hosts_spec_file = fun_test.get_environment_variable("DOCKER_HOSTS_SPEC_FILE")
             if not docker_hosts_spec_file:
-                # This is probably for script development
+                # This is probably for script development, let try development spec
                 docker_hosts_spec_file = self.DOCKER_HOSTS_DEVELOPMENT_ASSET_SPEC
-        if is_regression_server():
+        if is_development_mode():
             docker_hosts_spec_file = self.DOCKER_HOSTS_DEVELOPMENT_ASSET_SPEC
-                # raise FunTestSystemException("Please set the environment variable:\nDOCKER_HOSTS_SPEC_FILE=<my-docker.hosts.json>")
         local_setting_docker_host_spec_file = fun_test.get_local_setting(setting="DOCKER_HOSTS_SPEC_FILE")
         if local_setting_docker_host_spec_file:
             docker_hosts_spec_file = local_setting_docker_host_spec_file
@@ -98,8 +97,8 @@ class AssetManager:
         docker_hosts = parse_file_to_json(docker_hosts_spec_file)
         fun_test.simple_assert(docker_hosts, "At least one docker host")
         index = 0
-        if (is_performance_server()):
-            index = 1
+        if (is_production_mode()):
+            index = 1  #TODO: this should go away when we have asset management
         asset = DockerHost.get(docker_hosts[index])
         return asset
 

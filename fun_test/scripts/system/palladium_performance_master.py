@@ -1568,8 +1568,7 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                                 metrics["output_max_latency"] = d['Stats']['_max_latency']
                                 metrics["output_min_latency"] = d['Stats']['_min_latency']
                                 metrics["output_average_latency"] = d['Stats']['_avg_latency']
-                                metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_kbps']
-                                metrics["output_total_bandwidth"] = d['Stats']['_total_bw_kbps']
+                                metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_gbps']
                             else:
                                 if d["Operation"] in jpeg_operations:
                                     metrics["input_operation"] = jpeg_operations[d["Operation"]]
