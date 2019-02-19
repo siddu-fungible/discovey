@@ -39,7 +39,9 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list
+            dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list, flow_direction
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
         min_frame_length = 64
         max_frame_length = 1500
@@ -59,11 +61,17 @@ class SpirentSetup(FunTestScript):
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_ingress_qos",
                                                       spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
 
-        destination_mac1 = spirent_config['l2_config']['destination_mac']
-        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(routes_config, "Ensure routes config fetched")
+        l3_config = routes_config['l3_config']
+
+        destination_mac1 = routes_config['routermac']
+        destination_ip1 = l3_config['destination_ip1']
+        if hnu:
+            destination_ip1 = l3_config['hnu_destination_ip1']
 
         dut_port_list = []
         dut_port_1 = dut_config['ports'][0]
@@ -369,8 +377,6 @@ class SP_Shaper_All_SP(SP_Shaper_Q0_SP):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(SP_Shaper_Q0_SP())
     ts.add_test_case(SP_Shaper_Q0_Q2_SP())

@@ -1,0 +1,438 @@
+[{
+"name": "palladium_test_config",
+"dut_type": "palladium",
+"intfs" : {
+     "fpg0" : {
+        "description" : "Used as traffic input interface",
+        "logicport" : 0,
+        "intfindex" : 0,
+        "qos_label" : 3,
+        "acl_label" : 3,
+        "eg_label" : 3,
+        "vrf" : 1,
+        "bandwidth" : 25,
+        "Interface_type": "spine_facing",
+            "spine_index" : 0,
+            "gph_index" : [
+                 { "index" : 0  }
+            ],
+        "ingress_qos_profile_id" : 1,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 1,
+        "trust_cos" : 0
+    },
+    "fpg1" : {
+        "description" : "Used as fabric interface, input or output",
+        "logicport" : 1,
+        "intfindex" : 1,
+        "eg_label" : 3,
+        "vrf" : 1,
+        "bandwidth" : 25,
+        "Interface_type": "fabric_facing",
+        "remote_f1_id" : 1,
+        "gph_index" : [
+        { "index" : 3  },
+        { "index" : 4  }
+        ],
+        "ingress_qos_profile_id" : 0,
+        "egress_qos_profile_id" : 1,
+        "trust_dscp" : 0,
+        "trust_cos" : 0
+    },
+    "fpg2" : {
+        "description" : "Used as fabric interface, input or output",
+        "logicport" : 2,
+        "intfindex" : 2,
+        "vrf" : 1,
+        "bandwidth" : 25,
+        "Interface_type": "fabric_facing",
+        "remote_f1_id" : 2,
+        "gph_index" : [
+        { "index" : 5  },
+        { "index" : 6  }
+        ],
+        "ingress_qos_profile_id" : 0,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 1,
+        "trust_cos" : 0
+    },
+    "fpg3" : {
+        "description" : "Used as fabric interface, put one gph in down state to simulate remote F1's spine link",
+        "logicport" : 3,
+        "intfindex" : 3,
+        "vrf" : 4,
+        "bandwidth" : 25,
+        "mtu" : 1410,
+        "Interface_type": "fabric_facing",
+        "remote_f1_id" : 3,
+        "gph_index" : [
+        { "index" : 7 },
+        { "index" : 8 }
+        ],
+        "gph_down" : 8,
+        "ingress_qos_profile_id" : 1,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 0,
+        "trust_cos" : 0
+    },
+    "fpg4" : {
+        "description" : "Used as spine interface, input or output",
+        "logicport" : 4,
+        "intfindex" : 4,
+        "vrf" : 4,
+        "bandwidth" : 25,
+        "Interface_type": "spine_facing",
+        "spine_index" : 1,
+        "gph_index" : [
+        { "index" : 1  }
+        ],
+        "ingress_qos_profile_id" : 0,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 0,
+        "trust_cos" : 0
+    },
+    "fpg14" : {
+        "description" : "Used as fabric interface, put it in down state to simulate fabric link fail",
+        "status"    : "down",
+        "logicport" : 14,
+        "intfindex" : 14,
+        "vrf" : 4,
+        "bandwidth" : 25,
+        "Interface_type": "fabric_facing",
+        "remote_f1_id" : 4,
+        "status" : "down",
+        "gph_index" : [
+        { "index" : 9  },
+        { "index" : 10 }
+        ],
+        "ingress_qos_profile_id" : 0,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 0,
+        "trust_cos" : 0,
+        "meter_id" : "meter0"
+    },
+    "fpg16" : {
+        "description" : "Used as spine interface, put it in down state to simulate local spine link fail",
+        "status"    : "down",
+        "logicport" : 16,
+        "intfindex" : 16,
+        "vrf" : 4,
+        "bandwidth" : 25,
+        "Interface_type": "spine_facing",
+        "spine_index" : 2,
+        "gph_index" : [
+        { "index" : 2  }
+        ],
+        "ingress_qos_profile_id" : 0,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 0,
+        "trust_cos" : 0
+    },
+    "fpg5" : {
+            "description" : "vSpirent-1",
+            "logicport" : 5,
+            "intfindex" : 5,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+    },
+    "fpg6" : {
+            "description" : "pSpirent-1",
+            "logicport" : 6,
+            "intfindex" : 6,
+            "acl_label" : 3,
+            "qos_label" : 3,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 5,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+     },
+     "fpg7" : {
+            "description" : "pSpirent-2",
+            "logicport" : 7,
+            "intfindex" : 7,
+            "eg_label" : 3,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 0,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg8" : {
+            "description" : "CC/pSpirent-4",
+            "logicport" : 8,
+            "intfindex" : 8,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 0,
+            "egress_qos_profile_id" : 5,
+            "trust_dscp" : 0,
+            "trust_cos" : 0
+        },
+        "fpg9" : {
+            "description" : "unused",
+            "logicport" : 9,
+            "intfindex" : 9,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 0,
+            "egress_qos_profile_id" : 5,
+            "trust_dscp" : 0,
+            "trust_cos" : 0
+        },
+        "fpg10":{
+            "description" : "pSpirent-3",
+            "logicport" : 10,
+            "intfindex" : 10,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 0,
+            "egress_qos_profile_id" : 5,
+            "trust_dscp" : 0,
+            "trust_cos" : 0
+        },
+        "fpg11":{
+            "description" : "vSpirent-2",
+            "logicport" : 11,
+            "intfindex" : 11,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 0,
+            "egress_qos_profile_id" : 5,
+            "trust_dscp" : 0,
+            "trust_cos" : 0
+        },
+        "fpg12":{
+            "description" : "pSpirent-3",
+            "logicport" : 12,
+            "intfindex" : 12,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg13":{
+            "description" : "pSpirent-3",
+            "logicport" : 13,
+            "intfindex" : 13,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 3,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 2,
+            "trust_cos" : 0
+        },
+        "fpg15": {
+            "description" : "pSpirent-3",
+            "logicport" : 15,
+            "intfindex" : 15,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 3,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg17":{
+            "description" : "pSpirent-3",
+            "logicport" : 17,
+            "intfindex" : 17,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "spine_facing",
+            "spine_index" : 4,
+            "gph_index" : [
+                { "index" : 4  }
+            ],
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg18":{
+            "description" : "pSpirent-3",
+            "logicport" : 18,
+            "intfindex" : 18,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "fabric_facing",
+            "remote_f1_id" : 5,
+            "gph_index" : [
+                { "index" : 11  },
+                { "index" : 12  }
+            ],
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg19":{
+            "description" : "pSpirent-3",
+            "logicport" : 19,
+            "intfindex" : 19,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "spine_facing",
+            "spine_index" : 3,
+            "gph_index" : [
+                { "index" : 3  }
+            ],
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg20":{
+            "description" : "pSpirent-3",
+            "logicport" : 20,
+            "intfindex" : 20,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg21":{
+            "description" : "pSpirent-3",
+            "logicport" : 21,
+            "intfindex" : 21,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg22":{
+            "description" : "pSpirent-3",
+            "logicport" : 22,
+            "intfindex" : 22,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+        "fpg23":{
+            "description" : "pSpirent-3",
+            "logicport" : 23,
+            "intfindex" : 23,
+            "vrf" : 1,
+            "bandwidth" : 25,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        }
+},
+
+"interracks" : {
+        "interrack1" : {
+            "ecmpmember" : {
+            "weight" : 2,
+            "members" : [
+                { "nhip" : "201.1.1.2", "outgoingif" : 2 },
+                { "nhip" : "202.1.1.2", "outgoingif" : 3 }
+        ]
+        },
+        "onepathmembers" : [
+            { "nhip" : "199.1.1.2", "outgoingif" : 0, "weight" : 1 },
+            { "nhip" : "200.1.1.2", "outgoingif" : 1, "weight" : 3 }
+        ] 
+        },
+        "interrack2" : {
+            "description" : "Enable GPH test",
+            "gph_en"      : 1,
+            "ecmpmember" : {
+            "weight" : 2,
+            "members" : [
+                { "nhip" : "204.1.1.2", "outgoingif" : 4 }
+            ]
+        },
+        "onepathmembers" : [
+            { "nhip" : "201.1.1.2", "outgoingif" : 2, "weight" : 1 },
+            { "nhip" : "202.1.1.2", "outgoingif" : 3, "weight" : 1 }
+        ] 
+        },
+        "fcp_interrack1" : {
+            "gph_en"  : 1,
+            "ecmpmember" : {
+                "weight" : 1,
+                "members" : [
+                    { "nhip" : "195.0.5.1", "outgoingif" : 17 }
+                ]
+            },
+            "onepathmembers" : [
+                { "nhip" : "200.1.1.2", "outgoingif" : 1, "weight" : 4 },
+                { "nhip" : "201.1.1.2", "outgoingif" : 2, "weight" : 4 }
+            ]
+       },
+       "interrack-auto" : {
+            "ecmpmember" : {
+                "weight" : 2,
+                "members" : [
+                    { "nhip" : "195.0.5.1", "outgoingif" : 17 },
+                    { "nhip" : "195.0.7.1", "outgoingif" : 19 }
+                ]
+            },
+            "onepathmembers" : [
+                { "nhip" : "199.1.1.2", "outgoingif" : 0, "weight" : 1 },
+                { "nhip" : "201.1.1.2", "outgoingif" : 2, "weight" : 2 },
+                { "nhip" : "200.1.1.2", "outgoingif" : 1, "weight" : 3 },
+                { "nhip" : "195.0.6.1", "outgoingif" : 18, "weight" : 4 }
+            ]
+        }    
+},
+
+"intraracks" : {
+        "intrarack1" : {
+            "spf_intf": 1,
+            "members" : [
+                  { "nhip" : "200.1.1.2", "outgoingif" : 1 },
+                  { "nhip" : "202.1.1.2", "outgoingif" : 3 }
+        ]
+        },
+        "fcp_intrarack1" : {
+            "consistent_hash" : "true",
+            "spf_intf": 2,
+            "members" : [
+                { "nhip" : "200.1.1.2", "outgoingif" : 1 },
+                { "nhip" : "201.1.1.2", "outgoingif" : 2 }
+            ]
+        },
+        "intrarack-auto": {
+            "spf_intf": 1,
+            "members" : [
+                { "nhip" : "200.1.1.2", "outgoingif" : 1 },
+                { "nhip" : "202.1.1.2", "outgoingif" : 3 },
+                { "nhip" : "201.1.1.2", "outgoingif" : 2 },
+                { "nhip" : "195.0.6.1", "outgoingif" : 18}
+            ]
+        }  
+}
+}]
+

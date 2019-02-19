@@ -3,7 +3,7 @@ from lib.host.spirent_manager import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
 from prettytable import PrettyTable
 # Currently Nu Config manager is in scripts dir we will move it later to proper place
-from scripts.networking.nu_config_manager import nu_config_obj, NuConfigManager
+from scripts.networking.nu_config_manager import NuConfigManager
 
 
 class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
@@ -22,6 +22,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         SpirentTrafficGeneratorTemplate.__init__(self, spirent_config=spirent_config, chassis_type=chassis_type)
         self.session_name = session_name
         self.stc_connected = False
+        self.nu_config_obj = NuConfigManager()
 
     def setup(self, no_of_ports_needed, flow_type=NuConfigManager.TRANSIT_FLOW_TYPE,
               flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU, ports_map={}):
@@ -29,8 +30,6 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
         project_handle = self.stc_manager.create_project(project_name=self.session_name)
         fun_test.test_assert(project_handle, "Create %s Project" % self.session_name)
-        physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
-
         if not self.stc_connected:
             fun_test.test_assert(expression=self.stc_manager.health(session_name=self.session_name)['result'],
                                  message="Health of Spirent Test Center")
@@ -38,7 +37,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
 
         try:
             if not ports_map:
-                ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
+                ports_map = self.nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
                                                                       flow_type=flow_type,
                                                                       flow_direction=flow_direction)
             else:
@@ -50,14 +49,32 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 port_handle = self.stc_manager.create_port(location=val)
                 fun_test.test_assert(port_handle, "Create Port: %s" % val)
                 result['port_list'].append(port_handle)
-                interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
-                                                               port_handle=port_handle)
-                fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
-                                                                                         port_handle))
+
+                interface_obj = self.create_physical_interface(port_handle=port_handle)
+                fun_test.simple_assert(interface_obj, "Create Physical Interface: %s" % str(interface_obj))
                 result['interface_obj_list'].append(interface_obj)
 
+            self.stc_manager.apply_configuration()
+
             # Attach ports method take care of applying configuration
-            fun_test.test_assert(self.stc_manager.attach_ports(), message="Attach Ports")
+            fun_test.test_assert(self.stc_manager.attach_ports(port_list=result['port_list']), message="Attach Ports")
+
+            fec_disable = self._ensure_fec_disabled(port_list=result['port_list'])
+            fun_test.test_assert(fec_disable, "Ensure FEC disable on interfaces")
+
+            # Update Spirent handle for each interface
+            count = 0
+            for port_handle in result['port_list']:
+                handle = self.stc_manager.get_activephy_targets_under_port(port_handle=port_handle)
+                fun_test.log("Chassis Type: %s Link Status: %s Interface: %s Port: %s" % (
+                    self.chassis_type, self.stc_manager.get_interface_link_status(handle=handle), handle, port_handle))
+                fun_test.log("Chassis Type: %s Auto Negotiation Status: %s Interface: %s Port: %s" % (
+                    self.chassis_type, self.stc_manager.get_auto_negotiation_status(handle=handle), handle,
+                    port_handle))
+                fun_test.log("Chassis Type: %s FEC Status: %s Interface: %s Port: %s" % (
+                    self.chassis_type, self.stc_manager.get_fec_status(handle=handle), handle, port_handle))
+                result['interface_obj_list'][count].spirent_handle = handle
+                count += 1
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -73,23 +90,56 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return True
 
-    def create_physical_interface(self, interface_type, port_handle):
+    def create_physical_interface(self, port_handle):
         result = None
         try:
-            interface_class = None
-            if interface_type == self.stc_manager.ETHERNET_COPPER_INTERFACE:
-                interface_class = EthernetCopperInterface
-            elif interface_type == self.stc_manager.ETHERNET_10GIG_FIBER_INTERFACE:
-                interface_class = Ethernnet10GigFiberInterface
-
-            interface_obj = interface_class()
-            attributes = interface_obj.get_attributes_dict()
-            spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
-                                                                        interface_type=str(interface_obj),
-                                                                        attributes=attributes)
-            fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
-            interface_obj._spirent_handle = spirent_handle
+            interface_obj = None
+            if self.chassis_type == SpirentManager.PHYSICAL_CHASSIS_TYPE:
+                job_inputs = fun_test.get_job_inputs()
+                fun_test.simple_assert(job_inputs, "Job inputs are not found")
+                if job_inputs['speed'] == SpirentManager.SPEED_100G:
+                    interface_obj = Ethernet100GigFiberInterface(line_speed=Ethernet100GigFiberInterface.SPEED_100G,
+                                                                 auto_negotiation=False,
+                                                                 forward_error_correction=False)
+                elif job_inputs['speed'] == SpirentManager.SPEED_25G:
+                    interface_obj = Ethernet25GigFiberInterface(auto_negotiation=False,
+                                                                line_speed=Ethernet25GigFiberInterface.SPEED_25G)
+                attributes = interface_obj.get_attributes_dict()
+                spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
+                                                                            interface_type=str(interface_obj),
+                                                                            attributes=attributes)
+                fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
+                interface_obj.spirent_handle = spirent_handle
+            else:
+                interface_obj = EthernetCopperInterface()
+                attributes = interface_obj.get_attributes_dict()
+                spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
+                                                                            interface_type=str(interface_obj),
+                                                                            attributes=attributes)
+                fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
+                interface_obj.spirent_handle = spirent_handle
             result = interface_obj
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _ensure_fec_disabled(self, port_list):
+        result = False
+        try:
+            if self.chassis_type == SpirentManager.PHYSICAL_CHASSIS_TYPE:
+                for port_handle in port_list:
+                    handle = self.stc_manager.get_activephy_targets_under_port(port_handle=port_handle)
+                    fec_status = self.stc_manager.get_fec_status(handle=handle)
+                    if fec_status == 'true':
+                        fun_test.log("Disabling FEC on %s" % handle)
+                        status_updated = self.stc_manager.update_physical_interface(
+                            interface_handle=handle, update_attributes={"ForwardErrorCorrection": False})
+                        fun_test.simple_assert(status_updated, "Ensure Interface config updated")
+                        handle = self.stc_manager.get_activephy_targets_under_port(port_handle=port_handle)
+                        fec_status = self.stc_manager.get_fec_status(handle=handle)
+                        fun_test.simple_assert(fec_status == 'false', "Ensure FEC disable for %s under %s" % (
+                            handle, port_handle))
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -98,9 +148,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         result = False
         try:
             attributes = interface_obj.get_attributes_dict()
-            result = self.stc_manager.update_physical_interface(interface_handle=interface_obj._spirent_handle,
+            result = self.stc_manager.update_physical_interface(interface_handle=interface_obj.spirent_handle,
                                                                 update_attributes=attributes)
-            fun_test.test_assert(result, "Update %s physical interface" % interface_obj._spirent_handle)
+            fun_test.test_assert(result, "Update %s physical interface" % interface_obj.spirent_handle)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1243,6 +1293,20 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 underlay_list = header_list[0:header_list.index(CustomBytePatternHeader)]
                 overlay_list = header_list[header_list.index(CustomBytePatternHeader):]
             spirent_configs = self.spirent_config
+            spirent_config = self.nu_config_obj.read_traffic_generator_config()
+            ul_ipv4_routes_config = self.nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+            fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+
+            ol_ipv4_routes_config = self.nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, overlay=True)
+            fun_test.simple_assert(ol_ipv4_routes_config, "Ensure ipv4 overlay routes config fetched")
+
+            ul_ipv6_routes_config = self.nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, ip_version="ipv6")
+            fun_test.simple_assert(ul_ipv6_routes_config, "Ensure ipv6 routes config fetched")
+
+            ol_ipv6_routes_config = self.nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config, ip_version="ipv6", overlay=True)
+            fun_test.simple_assert(ol_ipv6_routes_config, "Ensure routes config fetched")
+
+            destination_mac1 = ul_ipv4_routes_config['routermac']
 
             if headers_created:
                 header_obj_list = header_list
@@ -1252,17 +1316,17 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
                         if 'ipv6' in underlay_list[1].HEADER_TYPE.lower():
                             ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
-                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'],
+                        eth_obj = Ethernet2Header(destination_mac=destination_mac1,
                                                   ether_type=ether_type)
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
-                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_config']['ipv4']['destination_ip1'])
+                        ipv4_obj = Ipv4Header(destination_address=ul_ipv4_routes_config['l3_config']['destination_ip1'])
                         current_index = header_list.index(header)
                         ipv4_obj.protocol = ipv4_obj.PROTOCOL_TYPE_TCP if 'tcp' in header_list[
                             current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
                         header_obj_list.append(ipv4_obj)
                     elif header == Ipv6Header:
-                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_config']['ipv6']['destination_ip1'])
+                        ipv6_obj = Ipv6Header(destination_address=ul_ipv6_routes_config['l3_config']['destination_ip1'])
                         current_index = header_list.index(header)
                         ipv6_obj.nextHeader = ipv6_obj.NEXT_HEADER_TCP if 'tcp' in header_list[
                             current_index + 1].HEADER_TYPE.lower() else ipv6_obj.NEXT_HEADER_UDP
@@ -1281,11 +1345,11 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
                         if 'ipv6' in overlay_list[2].HEADER_TYPE.lower():
                             ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
-                        eth_obj = Ethernet2Header(destination_mac=spirent_configs['l2_config']['destination_mac'],
+                        eth_obj = Ethernet2Header(destination_mac=destination_mac1,
                                                   ether_type=ether_type)
                         header_obj_list.append(eth_obj)
                     elif header == Ipv4Header:
-                        ipv4_obj = Ipv4Header(destination_address=spirent_configs['l3_overlay_config']['ipv4']['destination_ip2'])
+                        ipv4_obj = Ipv4Header(destination_address=ol_ipv4_routes_config['l3_config']['destination_ip2'])
                         index_list = [i for i, n in enumerate(header_list) if n == header]
                         current_index = index_list[0]
                         if len(index_list) == 2:
@@ -1294,7 +1358,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                             current_index + 1].HEADER_TYPE.lower() else ipv4_obj.PROTOCOL_TYPE_UDP
                         header_obj_list.append(ipv4_obj)
                     elif header == Ipv6Header:
-                        ipv6_obj = Ipv6Header(destination_address=spirent_configs['l3_overlay_config']['ipv6']['destination_ip2'])
+                        ipv6_obj = Ipv6Header(destination_address=ol_ipv6_routes_config['l3_config']['destination_ip2'])
                         index_list = [i for i, n in enumerate(header_list) if n == header]
                         current_index = index_list[0]
                         if len(index_list) == 2:
@@ -1395,10 +1459,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 self.stc_connected = True
 
             offline_ports = {}
-            ports_map = nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
-                                                                  flow_type=flow_type,
-                                                                  flow_direction=flow_direction)
-            physical_interface_type = str(self.spirent_config[self.chassis_type]['interface_type'])
+            ports_map = self.nu_config_obj.get_spirent_dut_port_mapper(no_of_ports_needed=no_of_ports_needed,
+                                                                       flow_type=flow_type,
+                                                                       flow_direction=flow_direction)
             existing_ports = self.stc_manager.get_port_list()
             for port_handle in existing_ports:
                 port_info = self.stc_manager.get_port_details(port=port_handle)
@@ -1412,17 +1475,31 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     port_handle = self.stc_manager.create_port(location=val)
                     fun_test.test_assert(port_handle, "Create Port: %s" % val)
                     result['port_list'].append(port_handle)
-                    interface_obj = self.create_physical_interface(interface_type=physical_interface_type,
-                                                                   port_handle=port_handle)
-                    fun_test.test_assert(interface_obj, "Create %s Interface for Port %s" % (physical_interface_type,
-                                                                                             port_handle))
+                    interface_obj = self.create_physical_interface(port_handle=port_handle)
+                    fun_test.simple_assert(interface_obj, "Create %s Interface for Port %s" % (str(interface_obj),
+                                                                                               port_handle))
                     result['interface_obj_list'].append(interface_obj)
 
             ports_attached = self.stc_manager.attach_ports_by_command(port_handles=result['port_list'],
                                                                       auto_connect_chassis=True)
             fun_test.test_assert(ports_attached, "%s ports attached successfully" % result['port_list'])
+
+            fec_disable = self._ensure_fec_disabled(port_list=result['port_list'])
+            fun_test.test_assert(fec_disable, "Ensure FEC disable on interfaces")
+
+            # Update Spirent handle for each interface
+            count = 0
+            for port_handle in result['port_list']:
+                handle = self.stc_manager.get_activephy_targets_under_port(port_handle=port_handle)
+                fun_test.log("Chassis Type: %s Link Status: %s Interface: %s Port: %s" % (
+                    self.chassis_type, self.stc_manager.get_interface_link_status(handle=handle), handle, port_handle))
+                fun_test.log("Chassis Type: %s Auto Negotiation Status: %s Interface: %s Port: %s" % (
+                    self.chassis_type, self.stc_manager.get_auto_negotiation_status(handle=handle), handle,
+                    port_handle))
+                fun_test.log("Chassis Type: %s FEC Status: %s Interface: %s Port: %s" % (
+                    self.chassis_type, self.stc_manager.get_fec_status(handle=handle), handle, port_handle))
+                count += 1
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-

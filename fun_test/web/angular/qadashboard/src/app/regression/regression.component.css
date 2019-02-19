@@ -17,3 +17,12 @@ a {
 .table-danger {
   background-color: #fbe9eb;
 }
+
+.active {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.tag-link {
+  color: white;
+}

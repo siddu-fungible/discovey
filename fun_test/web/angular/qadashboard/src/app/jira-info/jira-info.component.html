@@ -1,9 +1,9 @@
 <div class="card">
   <div class="card card-primary">
     <div class="card-header min-padding"><b>Bugs </b>
-      <span><span style="color: red">Active </span>- {{ activeBugs }}
-      <span style="color: green">Resolved </span> - {{ resolvedBugs }}</span>
-      <button class="btn-sm btn-primary close-button" (click)="closePanel()">close <b style="color: white;">X</b></button>
+      <!--span><span style="color: red">Active </span>- {{ activeBugs }}
+      <span style="color: green">Resolved </span> - {{ resolvedBugs }}</span-->
+      <button *ngIf="close.observers.length > 0" class="btn-sm btn-primary close-button" (click)="closePanel()">close <b style="color: white;">X</b></button>
     </div>
     <div class="card-body min-padding">
       <div class="min-padding">

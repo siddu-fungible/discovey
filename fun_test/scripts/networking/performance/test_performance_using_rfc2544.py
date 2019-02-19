@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_rfc2544_template import *
 from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
+from scripts.networking.helper import *
 
 
 network_controller_obj = None
@@ -28,7 +29,7 @@ class ScriptSetup(FunTestScript):
         # Copy req files to cadence pc 3
         target_file_path = "/tmp"
         pc_3_obj = Linux(host_ip=cadence_pc_3, ssh_username=username, ssh_password=pc_3_password)
-        for file_name in ['unnh.sh', 'nofcp.sh', 'nh_fcp.sh']:
+        for file_name in ['nh_fcp.sh']:
             fun_test.log("Coping %s file to cadence pc 3 in /tmp dir" % file_name)
             transfer_success = fun_test.scp(source_file_path=pc_3_config_dir + "/%s" % file_name,
                                             target_file_path=target_file_path, target_ip=cadence_pc_3,
@@ -40,9 +41,12 @@ class ScriptSetup(FunTestScript):
             cmd = "sh /tmp/%s" % file_name
             pc_3_obj.command(command=cmd)
 
+        fun_test.log("========= IP Routes on cadence-pc-3 =========")
+        pc_3_obj.get_ip_route()
+
         # Copy req files to cadence pc 4
         pc_4_obj = Linux(host_ip=cadence_pc_4, ssh_username=username, ssh_password=pc_4_password)
-        for file_name in ['nh_fcp.sh', 'unnh.sh']:
+        for file_name in ['nh_fcp.sh']:
             fun_test.log("Coping %s file to cadence pc 4 in /tmp dir" % file_name)
             transfer_success = fun_test.scp(source_file_path=pc_4_config_dir + "/%s" % file_name,
                                             target_file_path=target_file_path, target_ip=cadence_pc_4,
@@ -53,15 +57,21 @@ class ScriptSetup(FunTestScript):
             fun_test.log("Executing %s cadence pc 4" % file_name)
             cmd = "sh /tmp/%s" % file_name
             pc_4_obj.command(command=cmd)
+        fun_test.log("========= IP Routes on cadence-pc-4 =========")
+        pc_4_obj.get_ip_route()
 
     def setup(self):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
         dut_type = NuConfigManager.DUT_TYPE_PALLADIUM
+        nu_config_obj = NuConfigManager()
         spirent_config = nu_config_obj.read_traffic_generator_config()
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
+
+        fun_test.simple_assert(ensure_dpcsh_ready(network_controller_obj=network_controller_obj),
+                               "Ensure DPCsh ready to process commands")
 
         checkpoint = "Configure QoS settings"
         enable_pfc = network_controller_obj.enable_qos_pfc()
@@ -102,8 +112,11 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        # TODO: Configure cadence-pc-3 and pc-4 for FCP test
-        # self._setup_fcp_external_routes()
+        for port in [1, 2, 17]:
+            mtu = network_controller_obj.set_port_mtu(port_num=port, shape=0, mtu_value=9000)
+            fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
+
+        self._setup_fcp_external_routes()
 
         TIMESTAMP = get_current_time()
 
@@ -297,5 +310,4 @@ if __name__ == '__main__':
     # FCP cases
     ts.add_test_case(TestHnuHnuFcpPerformance())
     ts.add_test_case(TestHnuHnuFcpPerformanceSingleFlow())
-
     ts.run()

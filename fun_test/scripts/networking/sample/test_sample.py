@@ -24,6 +24,7 @@ TRAFFIC_DURATION = 30
 NUM_PORTS = 3
 generator_port_obj_dict = {}
 analyzer_port_obj_dict = {}
+TEST_CONFIG_FILE = SCRIPTS_DIR + "/networking/sample/test_configs.json"
 
 
 class SpirentSetup(FunTestScript):
@@ -39,15 +40,16 @@ class SpirentSetup(FunTestScript):
         global spirent_config, subscribed_results, dut_config, template_obj, network_controller_obj, tx_port, rx_port, \
             sample_port, generator_port_obj_dict, analyzer_port_obj_dict, generator_config, analyzer_config
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
+        nu_config_obj = NuConfigManager()
+        fun_test.shared_variables['nu_config_obj'] = nu_config_obj
+
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
-        dut_config = nu_config_obj.read_dut_config(dut_type=NuConfigManager.DUT_TYPE_PALLADIUM,
-                                                   flow_type=NuConfigManager.SAMPLE_FLOW_TYPE,
+        dut_config = nu_config_obj.read_dut_config(dut_type=None, flow_type=NuConfigManager.SAMPLE_FLOW_TYPE,
                                                    flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU)
 
         template_obj = SpirentEthernetTrafficTemplate(session_name="sample", spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         result = template_obj.setup(no_of_ports_needed=NUM_PORTS, flow_type=NuConfigManager.SAMPLE_FLOW_TYPE,
                                     flow_direction=NuConfigManager.FLOW_DIRECTION_NU_NU)
         fun_test.test_assert(result['result'], "Ensure Setup is done")
@@ -88,6 +90,7 @@ class SpirentSetup(FunTestScript):
 
         if dut_config['enable_dpcsh']:
             network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
+
             checkpoint = "Configure QoS settings"
             enable_pfc = network_controller_obj.enable_qos_pfc()
             fun_test.simple_assert(enable_pfc, "Enable QoS PFC")
@@ -124,7 +127,7 @@ class SpirentSetup(FunTestScript):
 
 
 class SampleIngressFPGtoFPG(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 1
     load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
@@ -155,21 +158,27 @@ class SampleIngressFPGtoFPG(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
+
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
 
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
-                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
-                                      min_frame_length=78, max_frame_length=1500)
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
+                                      frame_length_mode=test_config['frame_length_mode'],
+                                      min_frame_length=test_config['min_frame_size'],
+                                      max_frame_length=test_config['max_frame_size'])
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -195,7 +204,6 @@ class SampleIngressFPGtoFPG(FunTestCase):
 
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
-
         checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d" % (dut_rx_port,
                                                                                              dut_sample_port)
         result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
@@ -203,19 +211,23 @@ class SampleIngressFPGtoFPG(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
 
+        # TODO: Need to figure out better approach to determine if dut port is FPG or HNU
         checkpoint = "Clear FPG port stats on DUT"
         for port_num in dut_config['ports']:
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
-
+        
         checkpoint = "Get PSW stats before traffic"
         psw_stats_before = network_controller_obj.peek_psw_global_stats()
         fun_test.test_assert(psw_stats_before, checkpoint)
@@ -233,7 +245,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
                                                                                sleep_time=10)
         fun_test.test_assert(self.capture_results['result'], checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
 
         # Getting Spirent results
         checkpoint = "Fetch Tx Port Results for %s" % tx_port
@@ -358,7 +370,7 @@ class SampleIngressFPGtoFPG(FunTestCase):
 
 
 class SampleIngressFPGtoFPGWithRate(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 100
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -389,21 +401,27 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
+
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
 
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
-                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
-                                      min_frame_length=78, max_frame_length=1500)
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
+                                      frame_length_mode=test_config['frame_length_mode'],
+                                      min_frame_length=test_config['min_frame_size'],
+                                      max_frame_length=test_config['max_frame_size'])
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -438,6 +456,7 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -447,6 +466,8 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -568,7 +589,10 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
 
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
+        no_errors_seen = False
+        if 'DroppedFrameCount' in result and result['DroppedFrameCount'] > 0:
+            no_errors_seen = True
+        fun_test.test_assert(no_errors_seen, checkpoint)
 
         checkpoint = "Ensure all the fields in a packet is correct"
         parser_obj = PcapParser(filename=self.capture_results['pcap_file_path'])
@@ -598,7 +622,7 @@ class SampleIngressFPGtoFPGWithRate(FunTestCase):
 
 
 class SampleFCOIngressFPGtoFPG(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 1
     load_type = StreamBlock.LOAD_UNIT_MEGABITS_PER_SECOND
@@ -631,21 +655,26 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
                                   """ % TRAFFIC_DURATION)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
+
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
 
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
                                       frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_FIXED,
                                       fixed_frame_length=500)
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -680,6 +709,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -689,6 +719,8 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -814,7 +846,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
         errors_seen = False
-        if result['TcpChecksumErrorCount'] > 0 and result['PrbsErrorFrameCount'] > 0:
+        if 'TcpChecksumErrorCount'in result and result['TcpChecksumErrorCount'] > 0:
             errors_seen = True
         fun_test.test_assert(errors_seen, checkpoint)
 
@@ -846,7 +878,7 @@ class SampleFCOIngressFPGtoFPG(FunTestCase):
 
 
 class SamplePPStoFPG(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 100
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -883,21 +915,26 @@ class SamplePPStoFPG(FunTestCase):
                                       """)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
+
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
 
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
                                       frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_FIXED,
-                                      fixed_frame_length=128)
+                                      fixed_frame_length=test_config['fixed_frame_size'])
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -923,12 +960,14 @@ class SamplePPStoFPG(FunTestCase):
 
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
+        pps_tick = test_config['soc_clk_in_khz']
 
         checkpoint = "Add Ingress Sampling rule Ingress Port: FPG%d and dest port: FPG%d with pps_burst as 1 " \
                      "and pps_interval as 10000 and pps_tick as 256 " % (dut_rx_port, dut_sample_port)
         result = network_controller_obj.add_ingress_sample_rule(id=self.sample_id,
                                                                 fpg=dut_rx_port, dest=dut_sample_port,
-                                                                pps_burst=1, pps_interval=10000, pps_en=1, pps_tick=256)
+                                                                pps_burst=1, pps_interval=10000, pps_en=1,
+                                                                pps_tick=pps_tick)
         fun_test.test_assert(result['status'], checkpoint)
 
         generator_config.Duration = 60
@@ -939,6 +978,7 @@ class SamplePPStoFPG(FunTestCase):
         fun_test.simple_assert(expression=result, message=checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -949,6 +989,8 @@ class SamplePPStoFPG(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -1064,8 +1106,10 @@ class SamplePPStoFPG(FunTestCase):
 
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
-
+        no_errors_seen = False
+        if 'DroppedFrameCount' in result and result['DroppedFrameCount'] > 0:
+            no_errors_seen = True
+        fun_test.test_assert(no_errors_seen, checkpoint)
         checkpoint = "Ensure all the fields in a packet is correct"
         parser_obj = PcapParser(filename=self.capture_results['pcap_file_path'])
         packets = parser_obj.get_captures_from_file()
@@ -1073,12 +1117,16 @@ class SamplePPStoFPG(FunTestCase):
         fun_test.test_assert(result, checkpoint)
 
     def cleanup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
 
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        pps_tick = test_config['soc_clk_in_khz']
+
         checkpoint = "Delete sample rule for id: %d" % self.sample_id
         network_controller_obj.disable_sample_rule(id=self.sample_id, fpg=dut_rx_port, dest=dut_sample_port,
-                                                   pps_burst=0, pps_interval=10000, pps_en=0, pps_tick=256)
+                                                   pps_burst=0, pps_interval=10000, pps_en=0, pps_tick=pps_tick)
         fun_test.add_checkpoint(checkpoint)
 
         generator_config.Duration = TRAFFIC_DURATION
@@ -1102,7 +1150,7 @@ class SamplePPStoFPG(FunTestCase):
 
 
 class SampleEgressFPGtoFPG(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 100
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -1133,21 +1181,27 @@ class SampleEgressFPGtoFPG(FunTestCase):
                                       """ % TRAFFIC_DURATION)
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
+
+        test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(test_config, "Config Fetched")
 
         checkpoint = "Create stream on %s port" % tx_port
-        self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
-                                      insert_signature=True,
-                                      load=self.load,
-                                      load_unit=self.load_type,
-                                      frame_length_mode=StreamBlock.FRAME_LENGTH_MODE_RANDOM,
-                                      min_frame_length=78, max_frame_length=1500)
+        self.stream_obj = StreamBlock(fill_type=test_config['fill_type'],
+                                      insert_signature=test_config['insert_signature'],
+                                      load=test_config['load'],
+                                      load_unit=test_config['load_type'],
+                                      frame_length_mode=test_config['frame_length_mode'],
+                                      min_frame_length=test_config['min_frame_size'],
+                                      max_frame_length=test_config['max_frame_size'])
         stream_created = template_obj.configure_stream_block(stream_block_obj=self.stream_obj,
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -1167,8 +1221,11 @@ class SampleEgressFPGtoFPG(FunTestCase):
                                                                 header_obj=tcp_header_obj, update=False)
         fun_test.simple_assert(result, checkpoint)
 
-        ethernet_obj.srcMac = self.l2_config['destination_mac']
-        ethernet_obj.dstMac = "fe:dc:ba:44:55:99"  # Destination mac of spirent port
+        ethernet_obj.srcMac = self.routes_config['routermac']
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            ethernet_obj.dstMac = "fe:dc:ba:44:55:77"
+        else:
+            ethernet_obj.dstMac = "fe:dc:ba:44:55:99"  # Destination mac of spirent port
         ip_header_obj.ttl = 254
 
         self.header_objs['eth_obj'] = ethernet_obj
@@ -1188,6 +1245,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -1197,6 +1255,8 @@ class SampleEgressFPGtoFPG(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -1344,7 +1404,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
 
 
 class SampleIngressFPGtoFPGDisable(FunTestCase):
-    l2_config = None
+    routes_config = None
     l3_config = None
     load = 100
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
@@ -1382,8 +1442,10 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
                               """ % (TRAFFIC_DURATION, TRAFFIC_DURATION))
 
     def setup(self):
-        self.l2_config = spirent_config['l2_config']
-        self.l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        self.l3_config = self.routes_config['l3_config']
 
         checkpoint = "Create stream on %s port" % tx_port
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_PRBS,
@@ -1396,7 +1458,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
                                                              port_handle=tx_port)
         fun_test.test_assert(stream_created, checkpoint)
 
-        ethernet_obj = Ethernet2Header(destination_mac=self.l2_config['destination_mac'],
+        ethernet_obj = Ethernet2Header(destination_mac=self.routes_config['routermac'],
                                        ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         checkpoint = "Configure Mac address for %s " % self.stream_obj.spirent_handle
@@ -1430,6 +1492,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -1439,6 +1502,8 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -1568,6 +1633,8 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
             shape = 0
             if port_num == 1 or port_num == 2:
                 shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
@@ -1592,7 +1659,7 @@ class SampleIngressFPGtoFPGDisable(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=40)
+        fun_test.sleep("Traffic to complete", seconds=45)
 
         # Getting Spirent results
         checkpoint = "Fetch Tx Port Results for %s" % tx_port
@@ -1718,5 +1785,4 @@ if __name__ == '__main__':
     ts.add_test_case(SamplePPStoFPG())
     ts.add_test_case(SampleEgressFPGtoFPG())
     ts.add_test_case(SampleIngressFPGtoFPGDisable())
-
     ts.run()

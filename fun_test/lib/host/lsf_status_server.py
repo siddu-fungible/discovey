@@ -27,7 +27,7 @@ class LsfStatusServer:
                     response_dict = json.loads(past_jobs)
                     fun_test.log(json.dumps(response_dict, indent=4))
                     past_jobs = response_dict["past_jobs"]
-                for past_job in past_jobs:
+                for past_job in [past_jobs[0]]:
                     job_id = past_job["job_id"]
                     response = self.get_job_by_id(job_id=job_id)
                     response = self.get_job_by_id(job_id=job_id)
@@ -97,7 +97,7 @@ class LsfStatusServer:
             past_jobs = response_dict["past_jobs"]
 
         if add_info_to_db:
-            for past_job in past_jobs:
+            for past_job in [past_jobs[0]]:
                 job_info = past_job
                 if "completion_date" not in job_info:
                     fun_test.critical("Job: {} has no field named completion_date".format(job_info["job_id"]))
@@ -128,14 +128,15 @@ class LsfStatusServer:
         response = self.get_job_by_id(job_id=job_id)
         try:
             response_dict = json.loads(response)
-            logs = response_dict["logs"]
+            logs = response_dict["basic_outputs"]
             for item in logs:
                 for name in item:
-                    if file_name in name:
-                        log = name
-                        url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log)
-                        result = self._get(url=url)
-                        break
+                    if 'basename' in name:
+                        if file_name in name['basename']:
+                            log = name['basename']
+                            url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log)
+                            result = self._get(url=url)
+                            break
         except Exception as ex:
             fun_test.log("Actual response:" + response)
             fun_test.critical(str(ex))

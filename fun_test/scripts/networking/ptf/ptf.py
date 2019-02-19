@@ -1,14 +1,21 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+from scripts.networking.funeth import sanity
 from scripts.networking.lib_nw import funcp
+from scripts.networking.tb_configs import tb_configs
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
-import os
 import re
 
 
-PTF_SERVER = 'cadence-pc-5'
-PTF_SERVER_USERNAME = 'localadmin'
-PTF_SERVER_PASSWD = 'Precious1*'
+try:
+    tb_config_obj = tb_configs.TBConfigs(sanity.TB)
+    PTF_SERVER = tb_config_obj.get_hostname('hu')
+    PTF_SERVER_USERNAME = tb_config_obj.get_username('hu')
+    PTF_SERVER_PASSWD = tb_config_obj.get_password('hu')
+except:
+    PTF_SERVER = 'cadence-pc-5'
+    PTF_SERVER_USERNAME = 'localadmin'
+    PTF_SERVER_PASSWD = 'Precious1*'
 
 
 class PTFTestSuite(FunTestScript):
@@ -23,37 +30,29 @@ class PTFTestSuite(FunTestScript):
                               """)
 
     def setup(self):
-        linux_obj = Linux(host_ip='localhost', ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        workspace = '%s/tmp/' % os.getenv('HOME')
+        linux_obj = Linux(host_ip='localhost', ssh_username=REGRESSION_USER, ssh_password=REGRESSION_USER_PASSWORD)
+        workspace = '/tmp'
         linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
         funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
         funsdk_obj = funcp.FunSDK(linux_obj, ws=workspace)
 
         # Get FunControlPlane
-        done_list = re.findall(r'done', funcp_obj.clone())
-        fun_test.test_assert(done_list == ['done'] * 5 or done_list == ['done'] * 6,
-                             'git clone FunControlPlane repo')
-        fun_test.test_assert(re.search(r'Already up[-| ]to[-| ]date.', funcp_obj.pull()),
-                             'git pull FunControlPlane repo')
-        fun_test.test_assert(re.search(r'funnel_gen.py', funcp_obj.get_prebuilt(), re.DOTALL),
-                             'Get FunControlPlane prebuilt pkg')
+        fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
+        fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')
+        fun_test.test_assert(funcp_obj.get_prebuilt(), 'Get FunControlPlane prebuilt pkg')
 
         # Get FunSDK
-        done_list = re.findall(r'done', funsdk_obj.clone())
-        fun_test.test_assert(done_list == ['done'] * 5 or done_list == ['done'] * 6,
-                             'git clone FunSDK repo')
-        fun_test.test_assert(re.search(r'Updating current build number', funsdk_obj.sdkup()),
-                             'FunSDK script/bob --sdkup')
+        fun_test.test_assert(funsdk_obj.clone(), 'git clone FunSDK repo')
+        fun_test.test_assert(funsdk_obj.sdkup(), 'FunSDK script/bob --sdkup')
 
         # Set up PTF server
         output = funcp_obj.setup_traffic_server('hu')
-        fun_test.test_assert(re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output,
-                                                                            re.IGNORECASE),
-                             'Set up PTF traffic server')
+        fun_test.test_assert(
+            re.search(r'pipenv', output) and not re.search(r'fail|error|abort|assert', output, re.IGNORECASE),
+            'Set up PTF traffic server')
 
         fun_test.shared_variables['linux_obj'] = linux_obj
         fun_test.shared_variables['funcp_obj'] = funcp_obj
-
 
     def cleanup(self):
         linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
@@ -64,16 +63,31 @@ class PTFTestSuite(FunTestScript):
 
 def run_ptf_test(tc, server, timeout, tc_desc):
     """Run PTF test cases."""
+
+    job_environment = fun_test.get_job_environment()
+    dpc_proxy_ip = str(job_environment['UART_HOST'])
+    dpc_proxy_port = int(job_environment['UART_TCP_PORT_0'])
+
     funcp_obj = fun_test.shared_variables['funcp_obj']
-    output = funcp_obj.send_traffic(tc, server=server, timeout=timeout)
-    failed = re.search(r'FAILED (failures=\d+)', output)
-    match = re.search(r'The following tests failed:\n(.*?)', output, re.DOTALL)
-    if match:
-        failed_cases = match.group(1).split(',')
+    output = funcp_obj.send_traffic(tc, server=server, dpc_proxy_ip=dpc_proxy_ip, dpc_proxy_port=dpc_proxy_port,
+                                    timeout=timeout)
+    not_pass = re.search(r'FAILED|ERROR|ATTENTION: SOME TESTS DID NOT PASS!!!', output)
+
+    # Failed cases
+    failed_match = re.search(r'The following tests failed:\n(.*)', output, re.DOTALL)
+    if failed_match:
+        failed_cases = failed_match.group(1).split(',')
     else:
         failed_cases = []
 
-    # TODO: Remove below workaround after SWOS-2890 is fixed
+    # Errored cases
+    errored_match = re.search(r'The following tests errored:\n(.*)', output, re.DOTALL)
+    if errored_match:
+        errored_cases = errored_match.group(1).split(',')
+    else:
+        errored_cases = []
+
+    # TODO: Remove below workaround after EM-820 is fixed
     if tc == 'etp':
         for tc in failed_cases:
             if '2mss' in tc or '3mss' in tc or 'chksum' in tc:
@@ -82,7 +96,21 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     if failed_cases:
         fun_test.log('Failed cases: %s' % '\n'.join(sorted(failed_cases)))
 
-    fun_test.test_assert(not failed and len(failed_cases) == 0, tc_desc)
+    if errored_cases:
+        fun_test.log('Errored cases: %s' % '\n'.join(sorted(errored_cases)))
+
+    fun_test.test_assert(not not_pass and not failed_cases and not errored_cases, tc_desc)
+
+
+def get_ptf_log():
+    for log_file in ('ptf.log',):
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name=log_file)
+        fun_test.scp(source_ip=PTF_SERVER,
+                     source_file_path="/home/{}/FunControlPlane/{}".format(PTF_SERVER_USERNAME, log_file),
+                     source_username=PTF_SERVER_USERNAME,
+                     source_password=PTF_SERVER_PASSWD,
+                     target_file_path=artifact_file_name)
+        fun_test.add_auxillary_file(description="{} Log".format(log_file.split('.')[0]), filename=artifact_file_name)
 
 
 class EtpTest(FunTestCase):
@@ -95,15 +123,15 @@ class EtpTest(FunTestCase):
 
     def setup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
-        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        linux_obj_ptf.command('nohup ping 19.1.1.1 -i 100 &')
+        #linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        #linux_obj_ptf.command('nohup ping 19.1.1.1 -i 100 &')
         pass
 
     def cleanup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
-        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        linux_obj_ptf.command('pkill ping')
-        pass
+        #linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        #linux_obj_ptf.command('pkill ping')
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('etp', server='hu', timeout=6000, tc_desc='ETP test')
@@ -121,7 +149,7 @@ class ErpTest(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('erp', server='hu', timeout=1800, tc_desc='ERP test')
@@ -139,7 +167,7 @@ class ParserTest(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('prv', server='hu', timeout=7200, tc_desc='Parser test')
@@ -157,7 +185,7 @@ class FCPTest(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('fcp_palladium', server='nu', timeout=1800, tc_desc='FCP loopback test')
@@ -175,7 +203,7 @@ class OtherPalladiumTest(FunTestCase):
         pass
 
     def cleanup(self):
-        pass
+        get_ptf_log()
 
     def run(self):
         run_ptf_test('palladium', server='nu', timeout=1800,
@@ -187,8 +215,8 @@ if __name__ == "__main__":
     for tc in (
             EtpTest,
             ErpTest,
-            #ParserTest,  # TODO: Enable these tests
-            #FCPTest,
+            ParserTest,
+            #FCPTest,  # TODO: Enable these tests
             #OtherPalladiumTest,
     ):
         ts.add_test_case(tc())

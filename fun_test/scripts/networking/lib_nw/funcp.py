@@ -1,5 +1,5 @@
-from lib.host.linux import Linux
 import os
+import re
 
 
 class FunControlPlane:
@@ -13,12 +13,16 @@ class FunControlPlane:
 
     def clone(self, git_base='git@github.com:fungible-inc', repo_name='FunControlPlane'):
         """git clone."""
-        return self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
-                                      timeout=120)
+        output = self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
+                                        timeout=120)
+        done_list = re.findall(r'done', output)
+        return done_list == ['done'] * 5 or done_list == ['done'] * 6
 
     def pull(self, branch='master'):
         """git pull."""
-        return self.linux_obj.command('cd %s/%s; git pull; git checkout %s' % (self.ws, self.name, branch), timeout=120)
+        output = self.linux_obj.command('cd %s/%s; git pull; git checkout %s' % (self.ws, self.name, branch),
+                                        timeout=120)
+        return re.search(r'Already up[-| ]to[-| ]date.', output) is not None
 
     def get_prebuilt(self):
         """Get prebuilt FunControlPlane, which has funnel_gen.py, needed to run test."""
@@ -29,7 +33,8 @@ class FunControlPlane:
             'wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/%s' % filename,
             'tar xzvf %s' % filename,
         )
-        return self.linux_obj.command(';'.join(cmds), timeout=120)
+        output = self.linux_obj.command(';'.join(cmds), timeout=120)
+        return re.search(r'funnel_gen.py', output, re.DOTALL) is not None
 
     def setup_traffic_server(self, server='nu'):
         """Set up PTF traffic server."""
@@ -38,10 +43,10 @@ class FunControlPlane:
         else:
             return 'error'
 
-    def send_traffic(self, test, server='nu', timeout=60):
+    def send_traffic(self, test, server, dpc_proxy_ip, dpc_proxy_port, timeout=60):
         """Run the given test by sending traffic."""
-        return self.linux_obj.command('%s/send_traffic %s %s' % (self.palladium_test_path, server, test),
-                                      timeout=timeout)
+        return self.linux_obj.command('%s/send_traffic %s -dpc_proxy_ip %s -dpc_proxy_port %s %s' % (
+            self.palladium_test_path, server, dpc_proxy_ip, dpc_proxy_port, test), timeout=timeout)
 
     def cleanup(self):
         """Remove worksapce."""
@@ -58,9 +63,12 @@ class FunSDK:
 
     def clone(self, git_base='git@github.com:fungible-inc', repo_name='FunSDK-small'):
         """git clone."""
-        return self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
-                                      timeout=120)
+        output = self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
+                                        timeout=120)
+        done_list = re.findall(r'done', output)
+        return done_list == ['done'] * 5 or done_list == ['done'] * 6
 
     def sdkup(self):
         """Update SDK."""
-        return self.linux_obj.command('cd %s/%s; ./scripts/bob --sdkup' % (self.ws, self.name))
+        output = self.linux_obj.command('cd %s/%s; ./scripts/bob --sdkup' % (self.ws, self.name))
+        return re.search(r'Updating current build number', output) is not None

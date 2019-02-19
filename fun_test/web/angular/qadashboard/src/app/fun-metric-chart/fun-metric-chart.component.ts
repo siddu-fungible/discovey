@@ -23,9 +23,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   metricId: number;
   editingDescription: boolean = false;
   editingOwner: boolean = false;
+  editingSource: boolean = false;
   inner: any = {};
   currentDescription: string;
   currentOwner: string;
+  currentSource: string;
   waitTime: number = 0;
   values: any;
   charting: any;
@@ -42,7 +44,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   chart1XaxisTitle: any;
   chart1YaxisTitle: any;
   y1AxisTitle: any;
-  mileStoneIndex: number = null;
   chartName: string;
   internalChartName: string;
   modelName: string;
@@ -51,6 +52,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   buildProps: any;
   showBuildProps: boolean = false;
   paddingNeeded: boolean = false;
+  mileStoneMarkers: any = {}; // fetch the milestones for each chart from backend and save it
+  mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
 
   public formatter: Function;
   public tooltip: Function;
@@ -68,10 +71,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.metricId = -1;
     this.editingDescription = false;
     this.editingOwner = false;
+    this.editingSource = false;
     this.inner = {};
     this.inner.currentDescription = "TBD";
     this.inner.currentOwner = "Unknown";
     this.currentOwner = "Unknown";
+    this.inner.currentSource = "Unknown";
+    this.currentSource = "Unknown";
     this.currentDescription = "---";
     this.values = null;
     this.charting = true;
@@ -92,16 +98,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     self.pointInfo = [];
     self.buildProps = [];
     Object.keys(pointInfo).forEach((key) => {
-        if(key === "Build Properties") {
-          let properties = pointInfo[key];
-          self.buildProps["name"] = key;
-          self.buildProps["value"] = properties;
-        } else {
-          let property = [];
-          property["name"] = key;
-          property["value"] = pointInfo[key];
-          self.pointInfo.push(property);
-        }
+      if (key === "Build Properties") {
+        let properties = pointInfo[key];
+        self.buildProps["name"] = key;
+        self.buildProps["value"] = properties;
+      } else {
+        let property = [];
+        property["name"] = key;
+        property["value"] = pointInfo[key];
+        self.pointInfo.push(property);
+      }
     });
     self.pointClicked = true;
   }
@@ -111,7 +117,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["metric_id"] = this.id;
     this.apiService.post('/metrics/metric_by_id', payload).subscribe((data) => {
       this.chartName = data.data["chart_name"];
-      this.internalChartName = data.data["internal_chart_name"]
+      this.internalChartName = data.data["internal_chart_name"];
       this.modelName = data.data["metric_model_name"];
       this.setDefault();
       this.fetchInfo();
@@ -254,11 +260,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.currentDescription = this.chartInfo.description;
         this.inner.currentDescription = this.currentDescription;
         this.currentOwner = this.chartInfo.owner_info;
+        this.currentSource = this.chartInfo.source;
         this.inner.currentOwner = this.currentOwner;
+        this.inner.currentSource = this.currentSource;
         this.negativeGradient = !this.chartInfo.positive;
         this.inner.negativeGradient = this.negativeGradient;
         this.leaf = this.chartInfo.leaf;
         this.inner.leaf = this.leaf;
+        this.mileStoneMarkers = this.chartInfo.milestone_markers;
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -271,12 +280,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //sets the state of the component to default values
   setDefault(): void {
     this.timeMode = "all";
-    this.mileStoneIndex = null;
+    this.mileStoneIndices = {};
     this.showingTable = false;
     this.showingConfigure = false;
     this.pointClicked = false;
     this.showBuildProps = false;
     this.editingOwner = false;
+    this.editingSource = false;
     this.editingDescription = false;
     this.chart1YaxisTitle = "";
   }
@@ -285,6 +295,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.pointClicked = false;
     this.showBuildProps = false;
   }
+
   getPreviewDataSets(): any {
     return this.chartInfo.data_sets;
   }
@@ -326,6 +337,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["data_sets"] = this.previewDataSets;
     payload["description"] = this.inner.currentDescription;
     payload["owner_info"] = this.inner.currentOwner;
+    payload["source"] = this.inner.currentSource;
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
@@ -339,6 +351,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     });
     this.editingDescription = false;
     this.editingOwner = false;
+    this.editingSource = false;
   }
 
   //populates buildInfo
@@ -348,6 +361,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }, error => {
       this.loggerService.error("regression/build_to_date_map");
     });
+  }
+
+  openSource(url): void {
+    window.open(url, '_blank');
+  }
+
+  getAppName(source): string {
+    let s = "Unknown";
+    let sourceSplits = source.split("/");
+    s = sourceSplits[sourceSplits.length - 1];
+    return s;
   }
 
   //opens and closes the show tables panel
@@ -532,9 +556,23 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let endIndex = keyList[i][1];
           let matchingDateFound = false;
           seriesDates.push(originalKeyList[startIndex]);
-          if (originalKeyList[startIndex].includes("2018-09-16")) { // Tape-out
-            this.mileStoneIndex = startIndex;
-          }
+          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0]; // removing the time to check if the milestone date exists
+            //comparing two date objects to get the f1 milestone incase of date mismatch
+            let compareDate = new Date(originalKeyList[startIndex]);
+            if (originalKeyList[startIndex].includes(markerDate)) { // Tape-out and F1
+              if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+                this.mileStoneIndices[mileStone] = startIndex;
+              }
+            } else if (compareDate >= new Date(this.mileStoneMarkers[mileStone])) {
+              if (mileStone === "F1") {
+                if (!this.mileStoneIndices.hasOwnProperty(mileStone)) {
+                  this.mileStoneIndices[mileStone] = startIndex;
+                }
+              }
+            }
+          });
+
           while (startIndex >= endIndex) {
             if (keyValue[j][originalKeyList[startIndex]]) {
               let oneRecord = keyValue[j][originalKeyList[startIndex]];
@@ -610,7 +648,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //fetching container data
   fetchContainerData(payload): void {
-    console.log("Fetch Scores");
+    //console.log("Fetch Scores");
     this.apiService.post('/metrics/scores', payload).subscribe((response: any) => {
       if (response.data.length === 0) {
         this.values = null;
@@ -645,9 +683,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let count = 0;
           let total = 0;
           dateSeries.push(series[startIndex]);
-          if (series[startIndex].includes("2018-09-16")) { // Tape-out
-            this.mileStoneIndex = startIndex;
-          }
+          Object.keys(this.mileStoneMarkers).forEach((mileStone) => {
+            let markerDate = this.mileStoneMarkers[mileStone].split(" ")[0];
+            if (series[startIndex].includes(markerDate)) { // Tape-out and F1
+              this.mileStoneIndices[mileStone] = startIndex;
+            }
+          });
           while (startIndex >= endIndex) {
             if (keyValue[series[startIndex]] != -1) {
               total += keyValue[series[startIndex]];
@@ -662,7 +703,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             values.push(null);
           }
         }
-        this.chart1YaxisTitle = "Scores";
         this.values = [{data: values, name: "Scores"}];
         this.series = dateSeries;
       }

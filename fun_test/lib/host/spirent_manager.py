@@ -12,6 +12,11 @@ class SpirentManager(object):
     ETHERNET_COPPER_INTERFACE = "EthernetCopper"
     ETHERNET_10GIG_FIBER_INTERFACE = "Ethernet10GigFiber"
     ETHERNET_100GIG_FIBER_INTERFACE = "Ethernet100GigFiber"
+    ETHERNET_25GIG_FIBER_INTERFACE = "Ethernet25GigFiber"
+    ETHERNET_40GIG_FIBER_INTERFACE = "Ethernet40GigFiber"
+    SPEED_100G = "SPEED_100G"
+    SPEED_25G = "SPEED_25G"
+    SPEED_40G = "SPEED_40G"
     LOCAL_EXPERIMENTAL_ETHERTYPE = "88B5"
     ETHERNETII_FRAME = "ethernet:EthernetII"
     ETHERNET_PAUSE_FRAME = "ethernetpause:EthernetPause"
@@ -249,14 +254,15 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return self.project_handle
 
-    def create_port(self, location, use_default_host=False):
+    def create_port(self, location, use_default_host=False, apply_config=False):
         port = None
         try:
             if not self.project_handle:
                 raise Exception("Please Create Project First")
             port = self.stc.create('port', under=self.project_handle, location=location,
                                    useDefaultHost=use_default_host)
-            self.apply_configuration()
+            if apply_config:
+                self.apply_configuration()
         except Exception as ex:
             fun_test.critical(str(ex))
         return port
@@ -294,12 +300,10 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def attach_ports(self):
+    def attach_ports(self, port_list, auto_connect=True, revoke_user=True):
         result = False
         try:
-            output = self.stc.perform("AttachPorts")
-            # if re.search(r'ERROR', output):
-            #    raise FunTestLibException("Failed to Attach Ports: %s" % output)
+            self.stc.perform("attachPorts", portList=port_list, autoConnect=auto_connect, RevokeOwner=revoke_user)
             if self.apply_configuration():
                 for port in self.get_port_list():
                     if self.get_port_details(port=port)['Online'] == "false":
@@ -325,7 +329,7 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_mac_address(self, streamblock, source_mac, destination_mac, ethernet_type='0800',
+    def configure_mac_address(self, streamblock, destination_mac, source_mac=None,  ethernet_type='0800',
                               frame_type=ETHERNETII_FRAME):
         result = False
         try:
@@ -337,7 +341,10 @@ class SpirentManager(object):
                     fun_test.log("Handle Fetched: %s" % handle)
                     ethernet_handle = handle
                     break
-            self.stc.config(ethernet_handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
+            if source_mac:
+                self.stc.config(ethernet_handle, srcMac=source_mac, dstMac=destination_mac, etherType=ethernet_type)
+            else:
+                self.stc.config(ethernet_handle, dstMac=destination_mac, etherType=ethernet_type)
             # self.stc.create(frame_type, under=streamblock, srcMac=source_mac, dstMac=destination_mac,
             #                etherType=ethernet_type)
             result = True
@@ -345,7 +352,7 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def configure_ip_address(self, streamblock, source, destination, gateway=None, ip_version=IP_VERSION_4):
+    def configure_ip_address(self, streamblock, destination, source=None, gateway=None, ip_version=IP_VERSION_4):
         result = False
         try:
             handles = self.get_object_children(handle=streamblock)
@@ -358,7 +365,10 @@ class SpirentManager(object):
             if gateway:
                 self.stc.config(ip_handle, sourceAddr=source, destAddr=destination, gateway=gateway)
             else:
-                self.stc.config(ip_handle, sourceAddr=source, destAddr=destination)
+                if source:
+                    self.stc.config(ip_handle, sourceAddr=source, destAddr=destination)
+                else:
+                    self.stc.config(ip_handle, destAddr=destination)
             result = True
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1100,13 +1110,14 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def attach_ports_by_command(self, port_handles, auto_connect_chassis=True):
+    def attach_ports_by_command(self, port_handles, auto_connect_chassis=True, revoke_user=True):
         result = False
         try:
             if type(port_handles) == list:
                 port_handles = ' '.join(port_handles)
             fun_test.debug("Releasing %s from project" % port_handles)
-            output = self.stc.perform("AttachPortsCommand", PortList=port_handles, AutoConnect=auto_connect_chassis)
+            output = self.stc.perform("AttachPortsCommand", PortList=port_handles, AutoConnect=auto_connect_chassis,
+                                      RevokeOwner=revoke_user)
             fun_test.simple_assert(output['State'] == 'COMPLETED', "%s attached" % port_handles)
             if re.search(r'Reserving.*.*', output['Status'], re.IGNORECASE):
                 if self.apply_configuration():
@@ -1218,6 +1229,72 @@ class SpirentManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def configure_speed_config(self, interface_handle, line_speed, auto_negotiation=False,
+                               forward_error_correction=False):
+        result = False
+        try:
+            self.stc.config(interface_handle, linespeed=line_speed, AutoNegotiation=auto_negotiation,
+                            ForwardErrorCorrection=forward_error_correction)
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_interface_handle(self, port_handle, interface_type):
+        handle = None
+        try:
+            children = self.get_object_children(handle=port_handle)
+            for child in children:
+                if interface_type.lower() in child:
+                    fun_test.debug(child)
+                    handle = child
+                    break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return handle
+
+    def get_interface_details(self, interface_handle):
+        result = {}
+        try:
+            result = self.stc.get(interface_handle)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_activephy_targets_under_port(self, port_handle):
+        result = None
+        try:
+            result = self.stc.get(port_handle, 'activephy-Targets')
+            fun_test.debug(result)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_fec_status(self, handle):
+        status = None
+        try:
+            status = self.stc.get(handle, 'ForwardErrorCorrection')
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return status
+
+    def get_auto_negotiation_status(self, handle):
+        status = None
+        try:
+            status = self.stc.get(handle, 'AutoNegotiation')
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return status
+
+    def get_interface_link_status(self, handle):
+        status = None
+        try:
+            status = self.stc.get(handle, 'LinkStatus')
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return status
 
 
 if __name__ == "__main__":

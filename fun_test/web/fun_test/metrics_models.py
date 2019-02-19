@@ -104,6 +104,7 @@ class MetricChart(models.Model):
     last_lsf_job_id = models.IntegerField(default=-1)
     last_git_commit = models.TextField(default="")
     owner_info = models.TextField(default="UNKNOWN")
+    source = models.TextField(default="Unknown")
     jira_ids = models.TextField(default="[]")
     base_line_date = models.DateTimeField(verbose_name="base_line_date", default=datetime.now)
 
@@ -931,11 +932,12 @@ class NuTransitPerformance(models.Model):
     output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
     output_latency_max = models.FloatField(verbose_name="Latency Max in us")
     output_latency_min = models.FloatField(verbose_name="Latency Min in us")
+    output_latency_median = models.FloatField(verbose_name="Latency Median in us", default=-1)
     output_jitter_min = models.FloatField(verbose_name="Jitter min in us", default=0)
     output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
     output_pps = models.IntegerField(verbose_name="Packets per sec", default=0)
-    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, choices=[(0, "25G"), (1, "50G"), (2, "100G")])
+    input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
 
@@ -1132,6 +1134,38 @@ class TeraMarkPkeEcdh25519Performance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class PkeX25519TlsSoakPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="pke_x25519_2k_tls_soak", choices=[(0, "pke_x25519_2k_tls_soak")])
+    input_metric_name = models.CharField(max_length=40, default="ECDHE_RSA X25519 RSA 2K", choices=[(0, "ECDHE_RSA X25519 RSA 2K")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class PkeP256TlsSoakPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="pke_p256_2k_tls_soak", choices=[(0, "pke_p256_2k_tls_soak")])
+    input_metric_name = models.CharField(max_length=40, default="ECDHE_RSA P256 RSA 2K", choices=[(0, "ECDHE_RSA P256 RSA 2K")])
+    output_ops_per_sec = models.IntegerField(verbose_name="ops/sec", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class TeraMarkCryptoPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
@@ -1142,7 +1176,7 @@ class TeraMarkCryptoPerformance(models.Model):
     input_operation = models.CharField(max_length=30, default="", choices=[(0, "Encryption"), (1, "Decryption")])
     input_pkt_size = models.IntegerField(verbose_name="bytes", default=-1, choices=[(0, "16"), (1, "256"), (2, "512"), (3, "1024"), (4, "4096"), (5, "8192"), (6, "16000")])
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
-    output_throughput = models.IntegerField(verbose_name="Gbps", default=-1)
+    output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
     output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
     output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
     output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
@@ -1180,7 +1214,7 @@ class TeraMarkZipDeflatePerformance(models.Model):
     input_type = models.CharField(max_length=30, default="", choices=[(0, "Deflate")])
     input_operation = models.CharField(max_length=30, default="", choices=[(0, "Compress"), (1, "Decompress")])
     input_effort = models.CharField(max_length=30, default="", choices=[(0, "0"), (1, "3"), (2, "4"), (3, "5"), (4, "8"), (5, "9"), (6, "10"), (7, "11")])
-    output_bandwidth_avg = models.IntegerField(verbose_name="Gbps", default=-1)
+    output_bandwidth_avg = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
     output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
     output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
@@ -1202,7 +1236,7 @@ class TeraMarkZipLzmaPerformance(models.Model):
     input_type = models.CharField(max_length=30, default="", choices=[(0, "LZMA")])
     input_operation = models.CharField(max_length=30, default="", choices=[(0, "Compress"), (1, "Decompress")])
     input_effort = models.CharField(max_length=30, default="", choices=[(0, "8"), (1, "9"), (2, "10"), (3, "11")])
-    output_bandwidth_avg = models.IntegerField(verbose_name="Gbps", default=-1)
+    output_bandwidth_avg = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
     output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
     output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
@@ -1240,7 +1274,7 @@ class TeraMarkJpegPerformance(models.Model):
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_operation = models.TextField(verbose_name="Operation")
-    output_average_bandwidth = models.IntegerField(verbose_name="Average bandwidth", default=-1)
+    output_average_bandwidth = models.FloatField(verbose_name="Average bandwidth", default=-1)
     output_total_bandwidth = models.IntegerField(verbose_name="Total bandwidth", default=-1)
     input_count = models.IntegerField(verbose_name="Count", default=0)
     input_image = models.TextField(verbose_name="Image", default="None")
@@ -1348,6 +1382,19 @@ class WuStackSpeedTestPerformance(models.Model):
         for key, value in self.__dict__.iteritems():
             s += "{}:{} ".format(key, value)
         return s
+
+class MileStoneMarkers(models.Model):
+    metric_id = models.IntegerField(default=-1)
+    milestone_date = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    milestone_name = models.TextField(default="")
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 
 class ShaxPerformanceSerializer(ModelSerializer):
     input_date_time = serializers.DateTimeField()

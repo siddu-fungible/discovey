@@ -43,6 +43,9 @@ import { ClipboardModule } from 'ngx-clipboard';
 import { RegressionSummaryChartComponent } from './regression/regression-summary/regression-summary-chart/regression-summary-chart.component';
 import { ScriptHistoryComponent } from './regression/script-history/script-history.component';
 import { SummaryJiraInfoComponent } from "./jira-info/summary-jira-info.component";
+import { ScriptSelectorComponent } from './regression/script-selector/script-selector.component';
+import { NotFoundComponent } from './not-found/not-found.component';
+import { ReRunPanelComponent } from './regression/re-run-panel/re-run-panel.component';
 
 
 @NgModule({
@@ -72,7 +75,10 @@ import { SummaryJiraInfoComponent } from "./jira-info/summary-jira-info.componen
     GitHistoryComponent,
     RegressionSummaryChartComponent,
     ScriptHistoryComponent,
-    SummaryJiraInfoComponent
+    SummaryJiraInfoComponent,
+    ScriptSelectorComponent,
+    NotFoundComponent,
+    ReRunPanelComponent
   ],
   imports: [
     BsDropdownModule,
