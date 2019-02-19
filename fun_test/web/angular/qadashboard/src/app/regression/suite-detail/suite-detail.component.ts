@@ -4,6 +4,7 @@ import { ActivatedRoute } from "@angular/router";
 import {hasOwnProperty} from "tslint/lib/utils";
 import {ReRunService} from "../re-run.service";
 import {LoggerService} from '../../services/logger/logger.service';
+import {RegressionService} from "../regression.service";
 
 @Component({
   selector: 'app-suite-detail',
@@ -20,7 +21,7 @@ export class SuiteDetailComponent implements OnInit {
   scriptExecutionsMap: any = {};
   attributes: any;
 
-  constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService) {
+  constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService) {
   }
 
   ngOnInit() {
@@ -162,6 +163,14 @@ export class SuiteDetailComponent implements OnInit {
 
   showDetailsClick(item) {
     item["showingDetails"] = !item["showingDetails"];
+  }
+
+  getSchedulerLog(suiteId) {
+    return this.regressionService.getSchedulerLog(suiteId);
+  }
+
+  getSchedulerLogDir(suiteId) {
+    return this.regressionService.getSchedulerLogDir(suiteId);
   }
 
   /*

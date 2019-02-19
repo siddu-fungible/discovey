@@ -4,8 +4,8 @@
       Suite info
       <ng-container *ngIf="suiteExecution && suiteExecution.fields.suite_type ==='regular'">
         &nbsp;(<span data-placement="top" data-toggle="tooltip" title="Re-run all"
-                    (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path)"
-                    class="anchor-button pseudo-anchor">Re-run all</span>
+                     (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path)"
+                     class="anchor-button pseudo-anchor">Re-run all</span>
         <span data-placement="top" data-toggle="tooltip" title="Re-run failed"
               (click)="reRunClick(suiteExecution.fields.execution_id, suiteExecution.fields.suite_path, ['FAILED', 'NOT_RUN'])"
               class="anchor-button pseudo-anchor">
@@ -22,13 +22,21 @@
             {{ attribute.value }}
           </td>
         </tr>
+        <tr>
+          <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler
+            log</a></td>
+        </tr>
+        <tr>
+          <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log
+            directory</a>
+        </tr>
       </table>
     </div>
   </div>
 
+
   <div *ngIf="suiteExecution" [innerHTML]="suiteExecution.fields.banner | safeHtml">
   </div>
-
 
 
   <div *ngIf="suiteExecution?.reRunInfo?.reRunInfo.length > 0">Re-run info:
