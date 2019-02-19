@@ -386,7 +386,7 @@ class FSOnECTestcase(FunTestCase):
                     install_status = self.host.install_package("xfsprogs")
                     fun_test.test_assert(install_status, "Installing XFS Package")
                 # Set the timeout for the filesystem create command based on its size
-                fs_create_timeout = (size / 1073741824) * 90
+                fs_create_timeout = (size / 1073741824) * 120
                 if not fs_create_timeout:
                     fs_create_timeout = 60
                 fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device, timeout=fs_create_timeout)
