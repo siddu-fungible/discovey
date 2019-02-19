@@ -256,6 +256,16 @@
     "queue_id": 6,
     "counter_id": 106
   },
+    "range_test_nu_nu": {
+    "source_port": 1234,
+    "range_boundary_high_port": 240,
+    "range_boundary_low_port": 230,
+    "in_range_port": 235,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "source_ip": "192.85.1.10",
+    "counter_id": 110
+  },
     "nu_nu_v6_test": {
     "source_ip": "3000::1",
     "wrong_dip": "2001::20:1:1:1",
