@@ -1211,8 +1211,8 @@ class ECEncDeadBeef(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=14,
-                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read,"
-                                      "randwrite,randread), with different block size & depth & deadbeef "
+                              summary="4:2 EC with random key and run diff FIO RW pattern(write,"
+                                      "randwrite, with different block size & depth & deadbeef "
                                       "pattern with fault injected on two random plexes",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
@@ -1225,8 +1225,8 @@ class ECEncZeroPattern(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=15,
-                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read,"
-                                      "randwrite,randread), with different block size & depth & 0x000000000 string "
+                              summary="4:2 EC with random key and run diff FIO RW pattern(write,"
+                                      "randwrite), with different block size & depth & 0x000000000 string "
                                       "pattern with fault injected on two random plexes",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
