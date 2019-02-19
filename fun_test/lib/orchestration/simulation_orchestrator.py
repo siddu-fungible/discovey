@@ -157,10 +157,11 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                 i.command("rm -rf /lib/modules")
                 i.command("tar -xf {} -C /".format(self.QEMU_MODULES_TGZ))
                 i.command("depmod -a")
-            i.command("modprobe -r nvme")
-            fun_test.sleep("modprobe -r nvme")
-            i.command("modprobe nvme")
+            # i.command("modprobe -r nvme")
+            # fun_test.sleep("modprobe -r nvme")
+            # i.command("modprobe nvme")
             i.exit_sudo()
+            i.nvme_restart()
             instance = i
         except Exception as ex:
             fun_test.critical(str(ex))
