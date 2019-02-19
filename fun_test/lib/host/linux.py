@@ -1168,11 +1168,11 @@ class Linux(object, ToDictMixin):
         return transfer_complete
 
     @fun_test.safe
-    def md5sum(self, file_name):
+    def md5sum(self, file_name, timeout=60):
         result = None
         command = "md5sum " + file_name + " | cut -d ' ' -f 1"
         try:
-            output = self.sudo_command(command)
+            output = self.sudo_command(command, timeout=timeout)
             fun_test.debug(output)
             output_lines = output.split('\n')
             fun_test.debug(output_lines)
