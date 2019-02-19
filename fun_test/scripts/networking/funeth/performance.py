@@ -96,12 +96,13 @@ class FunethPerformanceBase(FunTestCase):
         )
 
         # Update file with result
-        with open(RESULT_FILE) as f:
-            r = json.load(f)
-            r.append(result)
+        if tool != 'netperf':  # TODO: Remove the check
+            with open(RESULT_FILE) as f:
+                r = json.load(f)
+                r.append(result)
 
-        with open(RESULT_FILE, 'w') as f:
-            json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
+            with open(RESULT_FILE, 'w') as f:
+                json.dump(r, f, indent=4, separators=(',', ': '), sort_keys=True)
 
         fun_test.test_assert(passed, 'Get throughput/latency test result')
 
