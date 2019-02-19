@@ -1,7 +1,7 @@
 import os
 import django
 import json
-import random
+import random, pytz
 import re
 from fun_global import get_current_time
 from datetime import datetime
@@ -12,7 +12,6 @@ from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 import logging
 from fun_settings import MAIN_WEB_APP
 
-
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 from datetime import datetime, timedelta
 
@@ -22,14 +21,15 @@ from web.fun_test.metrics_models import Performance1, PerformanceIkv, Performanc
 from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart, ShaxPerformance
-from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance, NuTransitPerformance
+from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, AllocSpeedPerformance, \
+    NuTransitPerformance
 from web.fun_test.metrics_models import WuDispatchTestPerformance, WuSendSpeedTestPerformance, HuRawVolumePerformance
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import VoltestPerformance
 from web.fun_test.set_base_line import SetBaseLine
 
 from web.fun_test.analytics_models_helper import MetricChartHelper
-from web.fun_test.metrics_models import MetricChartStatus
+from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
 from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
 
 
@@ -397,8 +397,8 @@ if __name__ == "__jpegmain__":
                         "output_iops": "IOPS",
                         "output_average_latency": "Latency"}
     yaxis_title_map = {"output_average_bandwidth": "kbps",
-                        "output_iops": "ops/sec",
-                        "output_average_latency": "ns"}
+                       "output_iops": "ops/sec",
+                       "output_average_latency": "ns"}
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
     outputs = ["output_average_bandwidth", "output_iops", "output_average_latency"]
@@ -435,11 +435,11 @@ if __name__ == "__jpegmain__":
             chart_internal_name = "{}_{}".format(input_operation_choice, output_choice)
             chart_display_name = display_name_map[output_choice]
             new_output_entry = {"info": chart_internal_name,
-                               "metric_model_name": model_name,
-                               "leaf": True,
-                               "name": chart_internal_name,
-                               "label": chart_internal_name,
-                               "weight": 1}
+                                "metric_model_name": model_name,
+                                "leaf": True,
+                                "name": chart_internal_name,
+                                "label": chart_internal_name,
+                                "weight": 1}
             operation_children.append(new_output_entry)
             print "This chart: {}, {}".format(chart_display_name, chart_internal_name)
             for input_image_choice in input_choices["input_image"]:
@@ -454,7 +454,6 @@ if __name__ == "__jpegmain__":
             if "latency" in output_choice.lower():
                 positive = False
 
-
             MetricChart(chart_name=chart_display_name,
                         metric_id=LastMetricId.get_next_id(),
                         internal_chart_name=chart_internal_name,
@@ -465,8 +464,6 @@ if __name__ == "__jpegmain__":
                         positive=positive,
                         y1_axis_title=yaxis_title_map[output_choice],
                         metric_model_name=model_name).save()
-
-
 
     # for input_operation_choice in input_choices["input_operation"]:
 
@@ -486,9 +483,9 @@ if __name__ == "__networking_main__":
                         "output_jitter_avg": "Jitter",
                         "output_pps": "PPS"}
     yaxis_title_map = {"output_throughput": "Mbps",
-                        "output_latency_avg": "us",
-                        "output_jitter_avg": "us",
-                        "output_pps": "packets per second"}
+                       "output_latency_avg": "us",
+                       "output_jitter_avg": "us",
+                       "output_pps": "packets per second"}
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
     outputs = ["output_throughput", "output_latency_avg", "output_jitter_avg", "output_pps"]
@@ -513,11 +510,11 @@ if __name__ == "__networking_main__":
                 input_flow_type = input_flow_type.replace("FCP_", "")
                 input_flow_type = input_flow_type + "_FCP"
             new_operation_entry = {"info": input_flow_type,
-                               "metric_model_name": "MetricContainer",
-                               "leaf": False,
-                               "name": input_flow_type,
-                               "label": input_flow_type,
-                               "weight": 1, "children": []}
+                                   "metric_model_name": "MetricContainer",
+                                   "leaf": False,
+                                   "name": input_flow_type,
+                                   "label": input_flow_type,
+                                   "weight": 1, "children": []}
             networking_children.append(new_operation_entry)
             operation_children = new_operation_entry["children"]
             for output_choice in outputs:
@@ -527,11 +524,11 @@ if __name__ == "__networking_main__":
                 chart_internal_name = "{}_{}".format(input_flow_type, output_choice)
                 chart_display_name = display_name_map[output_choice]
                 new_output_entry = {"info": chart_internal_name,
-                                   "metric_model_name": model_name,
-                                   "leaf": True,
-                                   "name": chart_internal_name,
-                                   "label": chart_internal_name,
-                                   "weight": 1}
+                                    "metric_model_name": model_name,
+                                    "leaf": True,
+                                    "name": chart_internal_name,
+                                    "label": chart_internal_name,
+                                    "weight": 1}
                 operation_children.append(new_output_entry)
                 print "This chart: {}, {}".format(chart_display_name, chart_internal_name)
                 for input_frame_size in input_choices["input_frame_size"]:
@@ -559,8 +556,6 @@ if __name__ == "__networking_main__":
                             positive=positive,
                             y1_axis_title=yaxis_title_map[output_choice],
                             metric_model_name=model_name).save()
-
-
 
     # for input_operation_choice in input_choices["input_operation"]:
 
@@ -601,12 +596,98 @@ if __name__ == "__main_zip__":
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_milestone__":
     entries = MetricChart.objects.all()
     for entry in entries:
         if entry.metric_id:
-            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16), milestone_name="Tape-out")
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
             mmt.save()
-            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24), milestone_name="F1")
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
+                                   milestone_name="F1")
             mmf.save()
     print "MileStone Complete"
+
+if __name__ == "__main_PKE__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    model_names = ["PkeX25519TlsSoakPerformance", "PkeP256TlsSoakPerformance"]
+    for entry in entries:
+        if entry.metric_model_name in model_names:
+            base_line_date = datetime(year=2019, month=2, day=8, minute=0, hour=0, second=0)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
+                                   milestone_name="F1")
+            mmf.save()
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+    print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main_HU_NU__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    chart_names = ["HU_NU_NFCP_output_latency_avg", "HU_NU_NFCP_output_throughput", "HU_NU_NFCP", "TeraMark PKE",
+                   "PKE soak"]
+    for entry in entries:
+        if entry.internal_chart_name in chart_names:
+            base_line_date = datetime(year=2019, month=2, day=8, minute=0, hour=0, second=0)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
+                                   milestone_name="F1")
+            mmf.save()
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+    print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main_JPEG_gbps__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    model_names = ["TeraMarkJpegPerformance"]
+    for entry in entries:
+        if entry.metric_model_name in model_names:
+            base_line_date = datetime(year=2019, month=2, day=12, minute=0, hour=0, second=0)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+            mmf = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2019, month=1, day=24),
+                                   milestone_name="F1")
+            mmf.save()
+            if entry.chart_name == "Bandwidth":
+                print entry.chart_name
+                y1_axis_title = "Gbps"
+            elif entry.chart_name == "Latency":
+                print entry.chart_name
+                y1_axis_title = "ns"
+            elif entry.chart_name == "IOPS":
+                print entry.chart_name
+                y1_axis_title = "ops/sec"
+            elif entry.chart_name == "Compression-ratio":
+                print entry.chart_name
+                y1_axis_title = "number"
+            else:
+                y1_axis_title = None
+
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
+    print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    internal_chart_names_zip = ["Deflate", "Lzma", "Zip"]
+    internal_chart_names_jpeg = ["JPEG", "Decompression Accelerator throughput", "JPEG Decompress",
+                                 "Compression Accelerator throughput", "Compression throughput with Driver",
+                                 "Compression-ratio"]
+    internal_chart_names_crypto = ["Crypto", "Crypto Accelerator"]
+    for entry in entries:
+        if entry.internal_chart_name in internal_chart_names_zip:
+            base_line_date = datetime(year=2019, month=1, day=31, minute=0, hour=0, second=0)
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+        if entry.internal_chart_name in internal_chart_names_jpeg:
+            base_line_date = datetime(year=2019, month=2, day=13, minute=0, hour=0, second=0)
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+        if entry.internal_chart_name in internal_chart_names_crypto:
+            base_line_date = datetime(year=2019, month=1, day=30, minute=0, hour=0, second=0)
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+    print "Milestone and Baseline Setting Complete"

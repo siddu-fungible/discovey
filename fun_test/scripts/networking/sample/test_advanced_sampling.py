@@ -50,6 +50,9 @@ class SpirentSetup(FunTestScript):
         global spirent_config, subscribed_results, dut_config, template_obj, network_controller_obj, tx_port, rx_port, \
             sample_port, generator_port_obj_dict, analyzer_port_obj_dict, port4, cc_port, NUM_PORTS
 
+        nu_config_obj = NuConfigManager()
+        fun_test.shared_variables['nu_config_obj'] = nu_config_obj
+
         chassis_type = nu_config_obj.CHASSIS_TYPE
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
@@ -176,6 +179,8 @@ class SampleIngressFPGtoFPGIPv6(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
                                                                               ip_version="ipv6")
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
@@ -232,6 +237,7 @@ class SampleIngressFPGtoFPGIPv6(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -429,6 +435,7 @@ class SampleIngressDropIpChecksumError(FunTestCase):
                               """ % TRAFFIC_DURATION)
     
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -482,6 +489,7 @@ class SampleIngressDropIpChecksumError(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
     
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
         dut_cc_port = None
@@ -708,6 +716,7 @@ class SampleSourceMultiDestination(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -767,6 +776,7 @@ class SampleSourceMultiDestination(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port1 = dut_config['ports'][2]
@@ -997,6 +1007,7 @@ class SampleFlagMaskTTL0Packets(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -1050,6 +1061,7 @@ class SampleFlagMaskTTL0Packets(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_cc_port = None
         if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_PALLADIUM:
@@ -1254,6 +1266,7 @@ class SampleMultiSourceSameDestination(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -1350,6 +1363,7 @@ class SampleMultiSourceSameDestination(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port1 = dut_config['ports'][0]
         dut_rx_port2 = dut_config['ports'][1]
         dut_tx_port1 = dut_config['ports'][1]
@@ -1607,6 +1621,7 @@ class SampleIngressEgressMTUCase(FunTestCase):
                               """ % (TRAFFIC_DURATION, TRAFFIC_DURATION, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -1671,6 +1686,7 @@ class SampleIngressEgressMTUCase(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -1769,17 +1785,9 @@ class SampleIngressEgressMTUCase(FunTestCase):
                                       message=checkpoint)
 
         # Validate Spirent stats
-        checkpoint = "Ensure on spirent Rx port frame count is 0"
-        fun_test.test_assert_expected(expected=0,
-                                      actual=rx_port_result['TotalFrameCount'], message=checkpoint)
-
         checkpoint = "Ensure spirent sample port should not receive any frames"
         fun_test.test_assert_expected(expected=0,
                                       actual=sample_port_result['TotalFrameCount'], message=checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Rx spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
 
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
@@ -1926,23 +1934,6 @@ class SampleIngressEgressMTUCase(FunTestCase):
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
 
-        # Validate Spirent stats
-        checkpoint = "Ensure on spirent Rx port frame count is 0"
-        fun_test.test_assert_expected(expected=0,
-                                      actual=rx_port_result_egress['TotalFrameCount'], message=checkpoint)
-
-        checkpoint = "Ensure spirent sample port should not receive any frames"
-        fun_test.test_assert_expected(expected=0,
-                                      actual=sample_port_result_egress['TotalFrameCount'], message=checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Rx spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result_egress)
-        fun_test.test_assert(result['result'], checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Sample spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=sample_port_result_egress)
-        fun_test.test_assert(result['result'], checkpoint)
-
     def cleanup(self):
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
@@ -1997,6 +1988,7 @@ class SampleSamePortIngressEgress(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -2093,6 +2085,7 @@ class SampleSamePortIngressEgress(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port1 = dut_config['ports'][2]
@@ -2378,6 +2371,7 @@ class SampleIngressEgressSamePacket(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -2438,6 +2432,7 @@ class SampleIngressEgressSamePacket(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port1 = dut_config['ports'][2]
@@ -2716,6 +2711,7 @@ class SampleACLtoFPG(FunTestCase):
                               """ % (TRAFFIC_DURATION, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -2765,6 +2761,7 @@ class SampleACLtoFPG(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
         dut_sample_port = dut_config['ports'][2]
@@ -3028,6 +3025,7 @@ class SampleIngressARPRequest(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -3069,6 +3067,7 @@ class SampleIngressARPRequest(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
         dut_cc_port = None
@@ -3266,6 +3265,7 @@ class SampleIngressLLDP(SampleIngressARPRequest):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
         fun_test.simple_assert(test_config, "Config Fetched")
 
@@ -3336,6 +3336,7 @@ class SampleIngressDropIPv4VerError(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -3379,6 +3380,7 @@ class SampleIngressDropIPv4VerError(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
         dut_cc_port = None
@@ -3586,6 +3588,7 @@ class SampleIngressDropFwdErrorWrongDIP(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -3629,6 +3632,7 @@ class SampleIngressDropFwdErrorWrongDIP(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
         dut_tx_port = dut_config['ports'][1]
@@ -3821,6 +3825,7 @@ class SampleEgressMTUCase(FunTestCase):
                               """ % (TRAFFIC_DURATION, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -3884,6 +3889,7 @@ class SampleEgressMTUCase(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
         dut_tx_port = dut_config['ports'][1]
@@ -3997,17 +4003,9 @@ class SampleEgressMTUCase(FunTestCase):
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
         # Validate Spirent stats
-        checkpoint = "Ensure Packets are getting dropped on spirent Rx port %s" % rx_port
-        fun_test.test_assert_expected(expected=0,
-                                      actual=rx_port_result['TotalFrameCount'], message=checkpoint)
-
         checkpoint = "Ensure packets are getting received on sample spirent port %s" % sample_port
         fun_test.test_assert_expected(expected=tx_port_result['GeneratorFrameCount'],
                                       actual=sample_port_result['TotalFrameCount'], message=checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Rx spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
 
         checkpoint = "Ensure no errors are seen on Sample spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
@@ -4142,16 +4140,8 @@ class SampleEgressMTUCase(FunTestCase):
         fun_test.test_assert_expected(expected=tx_port_result['GeneratorFrameCount'],
                                       actual=rx_port_result['TotalFrameCount'], message=checkpoint)
 
-        checkpoint = "Ensure packets are getting received on sample spirent port %s" % sample_port
-        fun_test.test_assert_expected(expected=0,
-                                      actual=sample_port_result['TotalFrameCount'], message=checkpoint)
-
         checkpoint = "Ensure no errors are seen on Rx spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
-        fun_test.test_assert(result['result'], checkpoint)
-
-        checkpoint = "Ensure no errors are seen on Sample spirent port"
-        result = template_obj.check_non_zero_error_count(rx_results=sample_port_result)
         fun_test.test_assert(result['result'], checkpoint)
 
     def cleanup(self):
@@ -4192,7 +4182,7 @@ class SampleEgressDropACL(FunTestCase):
     load = 10
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
     stream_obj = None
-    sample_id = 62
+    sample_id = 61
     header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
     captured_results = None
     routes_config = None
@@ -4218,6 +4208,7 @@ class SampleEgressDropACL(FunTestCase):
                               """ % TRAFFIC_DURATION)
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
@@ -4250,7 +4241,7 @@ class SampleEgressDropACL(FunTestCase):
         fun_test.simple_assert(result, checkpoint)
 
         checkpoint = "Add TCP Header"
-        tcp_obj = TCP(destination_port=960)
+        tcp_obj = TCP(destination_port=960, source_port=1234)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=tcp_obj, update=False)
         fun_test.simple_assert(result, checkpoint)
@@ -4267,6 +4258,7 @@ class SampleEgressDropACL(FunTestCase):
         fun_test.test_assert(result['status'], checkpoint)
 
     def run(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
         dut_tx_port = dut_config['ports'][1]
@@ -4425,11 +4417,13 @@ class SampleEgressDropACL(FunTestCase):
 
 if __name__ == '__main__':
     ts = SpirentSetup()
-
+    '''
     ts.add_test_case(SampleIngressFPGtoFPGIPv6())
-    # ts.add_test_case(SampleIngressDropIpChecksumError())
+    ts.add_test_case(SampleIngressDropIpChecksumError())
+    '''
     ts.add_test_case(SampleSourceMultiDestination())
-    # ts.add_test_case(SampleFlagMaskTTL0Packets())
+    '''
+    ts.add_test_case(SampleFlagMaskTTL0Packets())
     ts.add_test_case(SampleMultiSourceSameDestination())
 
     ts.add_test_case(SampleIngressEgressMTUCase())
@@ -4439,15 +4433,15 @@ if __name__ == '__main__':
     ts.add_test_case(SampleIngressEgressSamePacket())
 
     ts.add_test_case(SampleACLtoFPG())  # Failing due to SWOS-3682
-    # ts.add_test_case(SampleIngressARPRequest())
+    ts.add_test_case(SampleIngressARPRequest())
     
-    # ts.add_test_case(SampleIngressLLDP())
+    ts.add_test_case(SampleIngressLLDP())
 
-    # ts.add_test_case(SampleIngressDropIPv4VerError())
+    ts.add_test_case(SampleIngressDropIPv4VerError())
     ts.add_test_case(SampleIngressDropFwdErrorWrongDIP())
 
     ts.add_test_case(SampleEgressMTUCase())
 
     ts.add_test_case(SampleEgressDropACL())
-
+    '''
     ts.run()

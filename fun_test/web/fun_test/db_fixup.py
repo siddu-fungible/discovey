@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from web.web_global import PRIMARY_SETTINGS_FILE
 from fun_global import get_localized_time, get_current_time
 from fun_settings import MAIN_WEB_APP
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
@@ -18,6 +19,7 @@ from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack, A
 from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import MetricChartStatus, MetricChartStatusSerializer
 from web.fun_test.metrics_models import MetricsGlobalSettings
+
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 start_year = 2018
@@ -27,17 +29,20 @@ minute = 59
 hour = 23
 second = 59
 
+
 def get_rounded_time(dt):
     rounded_d = dt.replace(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=0, microsecond=0)
     # rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=hour, minute=minute, second=second)
     # rounded_d = get_localized_time(rounded_d)
     return rounded_d
 
+
 def get_day_bounds(dt):
     d = get_rounded_time(dt)
     start = d.replace(hour=0, minute=0, second=0, year=dt.year)
     end = d.replace(hour=23, minute=59, second=59, year=dt.year)
     return start, end
+
 
 def get_entries_for_day(model, day, data_set):
     bounds = get_day_bounds(day)
@@ -51,6 +56,7 @@ def get_entries_for_day(model, day, data_set):
     order_by = "-input_date_time"
     result = model.objects.filter(**d).order_by(order_by)
     return result
+
 
 def get_first_record(model, data_set):
     inputs = data_set["inputs"]
@@ -81,7 +87,6 @@ def fixup_expected_values(chart, model, data_set):
 
 
 def interpolate(chart, model, from_date, to_date):
-
     data_sets = json.loads(chart.data_sets)
 
     for data_set in data_sets:
@@ -105,9 +110,11 @@ def interpolate(chart, model, from_date, to_date):
 
 fixup_results_cache = {}
 
+
 def get_tolerance():
     global_settings = MetricsGlobalSettings.objects.first()
-    return global_settings.tolerance_percentage/100
+    return global_settings.tolerance_percentage / 100
+
 
 def prepare_status(chart, purge_old_status=False):
     metric_id = chart.metric_id
@@ -146,11 +153,14 @@ def prepare_status(chart, purge_old_status=False):
     today = datetime.now(pytz.timezone('US/Pacific'))
 
     # from_date = datetime(year=today.year, month=start_month, day=start_day, minute=minute, hour=hour, second=second)
-    from_date = today.replace(year=start_year, month=start_month, day=start_day, minute=minute, hour=hour, second=0, microsecond=0)
+    # from_date = today.replace(year=start_year, month=start_month, day=start_day, minute=minute, hour=hour, second=0, microsecond=0)
     # from_date = get_localized_time(from_date)
+    from_date = chart.base_line_date
+    from_date = from_date.replace(tzinfo=pytz.timezone('US/Pacific'))
+    from_date = get_rounded_time(from_date)
 
     # yesterday = today - timedelta(days=0) # Just use today
-    yesterday = today # - timedelta(days=0) # Just use today
+    yesterday = today  # - timedelta(days=0) # Just use today
 
     yesterday = get_rounded_time(yesterday)
     to_date = yesterday
@@ -175,7 +185,8 @@ def prepare_status(chart, purge_old_status=False):
                         result["num_leaves"] += 1
                     else:
                         if chart_name == "Total":
-                            print "XXXX Child: chart Name: {}, num_leaves: {}".format(child_metric.chart_name, child_result["num_leaves"])
+                            print "XXXX Child: chart Name: {}, num_leaves: {}".format(child_metric.chart_name,
+                                                                                      child_result["num_leaves"])
                         result["num_leaves"] += child_result["num_leaves"]
 
                 child_result_scores = child_result["scores"]
@@ -193,7 +204,6 @@ def prepare_status(chart, purge_old_status=False):
                     result["num_degrades"] += child_result["num_degrades"]
                     result["num_build_failed"] += child_result["num_build_failed"]
                 for date_time, child_score in child_result_scores.iteritems():
-
                     scores.setdefault(date_time, 0)
                     scores[date_time] += child_score * child_weight
                     # print "Child: {} Score: {} Datetime: {}".format(child_metric.chart_name, child_score, date_time)
@@ -271,7 +281,8 @@ def prepare_status(chart, purge_old_status=False):
                                 print ("Fixing expected values")
                                 data_set_mofified = data_set_mofified or chart.fixup_expected_values(
                                     data_set=data_set)
-                                expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else None # expected is set in fixup_expected_values
+                                expected_value = data_set["output"]["expected"] if "expected" in data_set[
+                                    "output"] else None  # expected is set in fixup_expected_values
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
 
@@ -355,14 +366,16 @@ def prepare_status(chart, purge_old_status=False):
                     result["num_degrades"] = 1
                 current_date = current_date + timedelta(days=1)
 
-
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
         result["valid_dates"] = valid_dates
         if not result["last_build_status"]:
             result["num_build_failed"] = 1
         if valid_dates:
-            print "Chart: {} num_degrades: {}, last_score: {}, num_leaves: {}".format(chart.chart_name, result["num_degrades"], result["scores"][valid_dates[-1]], result["num_leaves"])
+            print "Chart: {} num_degrades: {}, last_score: {}, num_leaves: {}".format(chart.chart_name,
+                                                                                      result["num_degrades"],
+                                                                                      result["scores"][valid_dates[-1]],
+                                                                                      result["num_leaves"])
         if chart_name == "Networking":
             j = 0
         chart.save()
@@ -403,19 +416,23 @@ def prepare_status(chart, purge_old_status=False):
     chart.copied_score_disposition = result["copied_score_disposition"]
     if chart.leaf:
         print "Leaf Chart: {} num_degrades: {} score: {} penultimate_score: {} build date: {}".format(chart.chart_name,
-                                                                                       result["num_degrades"],
-                                                                                       chart.last_good_score,
-                                                                                       chart.penultimate_good_score, chart.last_build_date)
+                                                                                                      result[
+                                                                                                          "num_degrades"],
+                                                                                                      chart.last_good_score,
+                                                                                                      chart.penultimate_good_score,
+                                                                                                      chart.last_build_date)
     chart.save()
     return result
 
+
 if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="Security")
+    # prepare_status(chart=total_chart, purge_old_status=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-
-    # total_chart = MetricChart.objects.get(metric_model_name="WuSendSpeedTestPerformance", chart_name="Average WU send ungated cycles")
     prepare_status(chart=total_chart, purge_old_status=False)
-
+    all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
+    prepare_status(chart=all_metrics_chart, purge_old_status=False)
 
 if __name__ == "__main2__":
     pass

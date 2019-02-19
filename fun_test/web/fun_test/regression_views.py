@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
+from fun_global import is_production_mode
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job2, queue_suite_container
 from scheduler.scheduler_helper import queue_dynamic_suite, get_archived_job_spec
@@ -71,7 +72,10 @@ def jobs_by_tag(request, tag):
     filter_string = SUITE_EXECUTION_FILTERS["ALL"]
     tags = json.dumps([tag])
     # tags = json.dumps(["none"])
-    return render(request, 'qa_dashboard/angular_home.html', locals())
+    angular_home = 'qa_dashboard/angular_home_development.html'
+    if is_production_mode():
+        angular_home = 'qa_dashboard/angular_home_production.html'
+    return render(request, angular_home, locals())
 
 
 def submit_job_page(request):
@@ -124,7 +128,7 @@ def submit_job(request):
         build_url = None
         if "build_url" in request_json:
             build_url = request_json["build_url"]
-        if not build_url:
+        if not build_url and ("version" in request_json and request_json["version"]):
             build_url = DEFAULT_BUILD_URL.replace("latest", request_json["version"])
 
         test_bed_type = None
@@ -353,7 +357,10 @@ def suite_detail(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=execution_id)
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
-    return render(request, 'qa_dashboard/angular_home.html', locals())
+    angular_home = 'qa_dashboard/angular_home_development.html'
+    if is_production_mode():
+        angular_home = 'qa_dashboard/angular_home_production.html'
+    return render(request, angular_home, locals())
 
 
 @csrf_exempt
@@ -638,7 +645,7 @@ def get_suite_executions_by_time(request):
 @api_safe_json_response
 def get_test_case_executions_by_time(request):
     request_json = json.loads(request.body)
-    from_time = 1541030400 * 1000
+    from_time = 1546581539 * 1000
     # from_time = int(request_json["from_time"])
     # to_time = request_json["to_time"]
     from_time = get_datetime_from_epoch_time(from_time)
@@ -667,17 +674,24 @@ def get_test_case_executions_by_time(request):
         q = q & Q(script_path=request_json["script_path"])
 
     test_case_executions = TestCaseExecution.objects.filter(q)
-
+    re_run_info = {}
     for te in test_case_executions:
         if scripts_for_module:
             if te.script_path not in scripts_for_module:
                 continue
+        if te.suite_execution_id not in re_run_info:
+            if SuiteReRunInfo.objects.filter(re_run_suite_execution_id=te.suite_execution_id).count() > 0:
+                re_run_info[te.suite_execution_id] = True
+            else:
+                re_run_info[te.suite_execution_id] = False
+
         one_entry = {"execution_id": te.execution_id,
                      "suite_execution_id": te.suite_execution_id,
                      "script_path": te.script_path,
                      "test_case_id": te.test_case_id,
                      "result": te.result,
-                     "started_time": te.started_time}
+                     "started_time": te.started_time,
+                     "is_re_run": re_run_info[te.suite_execution_id]}
         tes.append(one_entry)
 
     return tes

@@ -46,10 +46,13 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2, gen_obj_2
+            dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2, gen_obj_2, flow_direction, fps
 
         nonfcp_xoff_thr = 16384
         fcp_xoff_thr = 16384
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
+        fps = 100
 
         output = set_shape_hnu(flow_direction=flow_direction)
         shape_1 = output["shape_1"]
@@ -69,7 +72,7 @@ class SpirentSetup(FunTestScript):
 
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_vp_pkt_spray", spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
 
         result = template_obj.setup(no_of_ports_needed=num_ports, flow_type=NuConfigManager.VP_FLOW_TYPE,
@@ -81,6 +84,8 @@ class SpirentSetup(FunTestScript):
 
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
+
+
 
         if dut_config['enable_dpcsh']:
             # Create network controller object
@@ -183,12 +188,13 @@ class CLBP_NU_HNU(FunTestCase):
         create_stream =template_obj.configure_stream_block(stream_block_obj=self.streamblock_obj, port_handle=port)
         fun_test.test_assert(create_stream, "Create streamblock")
 
-        l2_config = spirent_config["l2_config"]
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(routes_config, "Ensure routes config fetched")
+        l3_config = routes_config['l3_config']
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
 
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=routes_config['routermac'],
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
@@ -200,7 +206,6 @@ class CLBP_NU_HNU(FunTestCase):
         ip_header = Ipv4Header()
 
         # Vary source ip
-        l3_config = spirent_config["l3_config"]["ipv4"]
         src_ip = l3_config['source_ip1']
         dest_ip = l3_config['hnu_destination_ip2']
         if self.flow_direction == nu_config_obj.FLOW_DIRECTION_HNU_FPG:
@@ -382,9 +387,6 @@ class CLBP_NU_HNU(FunTestCase):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
-    fps = 100
     ts = SpirentSetup()
     ts.add_test_case(CLBP_NU_HNU())
     ts.run()

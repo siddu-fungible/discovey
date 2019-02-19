@@ -4,7 +4,9 @@ import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
 import {ClipboardService} from 'ngx-clipboard';
-import {Location} from '@angular/common';
+import {ActivatedRoute, Router} from "@angular/router";
+import {of} from "rxjs";
+import {switchMap} from "rxjs/operators";
 
 
 class ChildInfo {
@@ -84,7 +86,9 @@ export class PerformanceComponent implements OnInit {
   inner: any;
   childData: any;
   dag: any = null;
-  nodeMap: Map<number, Node> = new Map<number, Node>();
+  nodeMap: Map<number, Node> = new Map<number, Node>();  // Metric Id to node
+  guIdFlatNodeMap = {};
+
   lastGuid: number = 0;
   flatNodes: FlatNode[] = [];
   currentFlatNode: FlatNode = null;
@@ -118,7 +122,6 @@ export class PerformanceComponent implements OnInit {
   regressionUrl: string = "/regression/suite_detail/";
 
   globalSettings: any = null;
-  private location: Location;
   toolTipMessage: string = null;
   @ViewChild('copyUrlTooltip') copyUrlTooltip;
   chartReady: boolean = false;
@@ -132,22 +135,28 @@ export class PerformanceComponent implements OnInit {
   jiraList: any = {};
   showBugPanel: boolean = false;
 
+  gotoQueryBaseUrl: string = "/performance?goto=";
+  queryPath: string = null;  // includes gotoQueryBaseUrl and a query
+
 
   constructor(
     private apiService: ApiService,
     private loggerService: LoggerService,
     private title: Title,
     private commonService: CommonService,
-    private clipboardService: ClipboardService
+    private clipboardService: ClipboardService,
+    private activatedRoute: ActivatedRoute,
+    private router: Router
   ) {
   }
 
   ngOnInit() {
+    console.log("Component Init");
     this.title.setTitle('Performance');
     this.status = "Loading";
-    let myMap = new Map().set('a', 1).set('b', 2);
-    let keys = Array.from(myMap.keys());
-    console.log(keys);
+    //let myMap = new Map().set('a', 1).set('b', 2);
+    //let keys = Array.from(myMap.keys());
+    //console.log(keys);
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
     this.miniGridMaxHeight = '50%';
@@ -158,6 +167,32 @@ export class PerformanceComponent implements OnInit {
       this.miniGridMaxHeight = '25%';
     }
     this.status = null;
+    this.fetchDag();
+
+    /*
+    fromEvent(window, 'popstate')
+  .subscribe((e) => {
+    console.log(e, 'back button: ' + this.location.path());
+  });*/
+
+  }
+
+  getDefaultQueryPath() {
+    return "Total";
+  }
+
+  getQueryPath() {
+    return this.activatedRoute.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('goto')) {
+        let queryPath = params['goto'];
+        console.log("QueryPath: " + this.queryPath);
+        return of(queryPath);
+      }
+      else {
+        return of(null);
+      }
+    }))
+
   }
 
   getGuid(): number {
@@ -176,7 +211,6 @@ export class PerformanceComponent implements OnInit {
   fetchGlobalSettings(): void {
     this.apiService.get("/metrics/global_settings").subscribe(response => {
       this.globalSettings = response.data;
-      this.fetchDag();
     }, error => {
       this.loggerService.error("fetchGlobalSettings");
     });
@@ -189,12 +223,31 @@ export class PerformanceComponent implements OnInit {
       this.dag = response.data;
       let lineage = [];
       this.walkDag(this.dag, lineage);
-      this.updateUpDownSincePrevious(true);
-      this.updateUpDownSincePrevious(false);
       //total container should always appear
       this.flatNodes[0].hide = false;
-      this.expandNode(this.flatNodes[0]);//expand total container on page load
-      let i = 0;
+      this.getQueryPath().subscribe(queryPath => {
+        let queryExists = false;
+        if (!queryPath) {
+          queryPath = this.getDefaultQueryPath();
+        } else {
+          queryExists = true;
+        }
+        if (this.queryPath !== (this.gotoQueryBaseUrl + queryPath)) {
+          this.queryPath = this.gotoQueryBaseUrl + queryPath;
+          let pathGuid = this.pathToGuid(this.queryPath);
+          let targetFlatNode = this.guIdFlatNodeMap[pathGuid];
+          this.expandNode(targetFlatNode);
+
+          if (queryExists) {
+            if (targetFlatNode.node.leaf) {
+              this.showAtomicMetric(targetFlatNode);
+            } else {
+              this.showNonAtomicMetric(targetFlatNode);
+            }
+          }
+
+        }
+      })
     }, error => {
       this.loggerService.error("fetchDag");
     });
@@ -259,6 +312,15 @@ export class PerformanceComponent implements OnInit {
       return parent[key];
     }
 
+  }
+
+  lineageToPath(lineage) {
+    let s = "";
+    lineage.forEach(part => {
+      s += "/" + encodeURIComponent(part.chartName);
+    });
+    s = s.slice(1, s.length); // Remove leading slash
+    return s;
   }
 
   expandFromLineage(parent): void {
@@ -424,6 +486,15 @@ export class PerformanceComponent implements OnInit {
       let newNode = this.getNodeFromEntry(numMetricId, dagEntry[numMetricId]);
       this.addNodeToMap(numMetricId, newNode);
       thisFlatNode = this.getNewFlatNode(newNode, indent);
+      if (newNode.chartName === "All metrics") {
+        thisFlatNode.hide = false;
+        if (!this.queryPath) {
+          this.updateUpDownSincePrevious(true);
+          this.updateUpDownSincePrevious(false);
+        }
+
+      }
+      this.guIdFlatNodeMap[thisFlatNode.gUid] = thisFlatNode;
       this.flatNodes.push(thisFlatNode);
       //this.loggerService.log('Node:' + nodeInfo.chart_name);
       let parentsGuid = {};
@@ -439,6 +510,7 @@ export class PerformanceComponent implements OnInit {
           let childEntry = {[cId]: nodeInfo.children_info[Number(cId)]};
           let childFlatNode = this.walkDag(childEntry, lineage.slice(), indent + 1);
           this.addUpDownStatusNumbers(childFlatNode, thisFlatNode);
+
           thisFlatNode.addChild(childFlatNode);
         });
       } else {
@@ -496,6 +568,14 @@ export class PerformanceComponent implements OnInit {
         }
       });
     }
+  }
+
+  getFlatNodeByGuid(guId) {
+    let result = null;
+    if (this.guIdFlatNodeMap.hasOwnProperty(guId)) {
+      result = this.guIdFlatNodeMap[guId];
+    }
+    return result;
   }
 
   addUpgradeDegradeNodes(thisFlatNode, dagEntry): void {
@@ -570,10 +650,6 @@ export class PerformanceComponent implements OnInit {
   setValues(pageNumber): void {
   }
 
-  goBack(): void {
-    this.location.back();
-  }
-
   getLastStatusUpdateTime() {
     this.apiService.get('/common/time_keeper/' + "last_status_update").subscribe((data) => {
       this.lastStatusUpdateTime = data;
@@ -581,16 +657,6 @@ export class PerformanceComponent implements OnInit {
 
     });
   }
-
-  /*
-  fetchRootMetricInfo(chartName, metricModelName): any {
-    let payload = {"metric_model_name": metricModelName, chart_name: chartName};
-    this.apiService.post('/metrics/chart_info', payload).subscribe((data) => {
-      return data;
-    }, error => {
-      this.loggerService.error("fetchRootMetricInfo");
-    });
-  } */
 
   populateNodeInfoCache(data) {
     if (!(data.metric_id in this.cachedNodeInfo)) {
@@ -800,6 +866,22 @@ export class PerformanceComponent implements OnInit {
   };
 
   expandNode = (flatNode, all = false) => {
+    let topLineage = null;
+    if (flatNode.hasOwnProperty("lineage")) {
+      if (flatNode.lineage.length > 0) {
+        topLineage = flatNode.lineage[0];
+      }
+    }
+    if (topLineage) {
+      for (let index = 0; index < topLineage.length - 1; index++) {
+        //this.expandNode(topLineage[index]);
+        let thisNode = this.guIdFlatNodeMap[topLineage[index].guid];
+        this.expandNode(thisNode);
+        //thisNode.hide = false;
+        //thisNode.collapsed = false;
+      }
+    }
+
     flatNode.collapsed = false;
     flatNode.hide = false;
     flatNode.children.forEach((child) => {
@@ -823,6 +905,7 @@ export class PerformanceComponent implements OnInit {
     this.expandNode(flatNode);
     this.commonService.scrollTo("chart-info");
     this.chartReady = true;
+    this.navigateByQuery(flatNode);
 
   };
 
@@ -848,8 +931,51 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.chartReady = true;
     }
-
+    this.navigateByQuery(flatNode);
   };
+
+  navigateByQuery(flatNode) {
+    let path = this.lineageToPath(flatNode.lineage[0]);
+    let queryPath = this.gotoQueryBaseUrl + path;
+    this.router.navigateByUrl(queryPath);
+  }
+
+  pathToGuid(path) {
+    let result = null;
+    try {
+      path = path.replace(this.gotoQueryBaseUrl, "");
+      let parts = path.split("/");
+      result = this._doPathToGuid(this.flatNodes[0], parts);
+      console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
+
+    } catch (e) {
+
+    }
+    return result;
+  }
+
+  _doPathToGuid(flatNode, remainingParts) {
+    let result = null;
+    if (remainingParts.length > 0) {
+      if (flatNode.node.chartName === decodeURIComponent(remainingParts[0])) {
+        // match found
+
+        if (remainingParts.length > 1) {
+          remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
+          for (let index = 0; index < flatNode.children.length; index++) {
+            let childFlatNode = flatNode.children[index];
+            if (decodeURIComponent(remainingParts[0]) === childFlatNode.node.chartName) {
+              return this._doPathToGuid(childFlatNode, remainingParts);
+            }
+          }
+        } else {
+          result = flatNode.gUid;
+        }
+      }
+    }
+    return result;
+  }
+
 
   submitWeightClick = (node, childId, info) => {
     let payload: { [i: string]: string } = {
@@ -887,8 +1013,8 @@ export class PerformanceComponent implements OnInit {
   //copy atomic URL to clipboard
   copyAtomicUrl(): string {
     let baseUrl = window.location.protocol +
-      '//' + window.location.hostname ;
-    if (window.location.port !== "")  {
+      '//' + window.location.hostname;
+    if (window.location.port !== "") {
       baseUrl += ':' + window.location.port;
     }
 

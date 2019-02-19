@@ -51,7 +51,11 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2, gen_obj_2, dut_type
+            dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2, gen_obj_2, dut_type, destination_mac, \
+            ul_ipv4_l3_config, ul_ipv6_l3_config, ol_ipv4_l3_config, ol_ipv6_l3_config, flow_direction, fps
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
+        fps = 100
 
         output = set_shape_hnu(flow_direction=flow_direction)
         shape_1 = output["shape_1"]
@@ -84,6 +88,28 @@ class SpirentSetup(FunTestScript):
 
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
+
+        ul_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(ul_ipv4_routes_config, "Ensure routes config fetched")
+        ul_ipv4_l3_config = ul_ipv4_routes_config['l3_config']
+
+        ul_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
+                                                                                 ip_version="ipv6")
+        fun_test.simple_assert(ul_ipv6_routes_config, "Ensure routes config fetched")
+        ul_ipv6_l3_config = ul_ipv6_routes_config['l3_config']
+
+        ol_ipv4_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
+                                                                                 overlay=True)
+        fun_test.simple_assert(ol_ipv4_routes_config, "Ensure routes config fetched")
+        ol_ipv4_l3_config = ol_ipv4_routes_config['l3_config']
+
+        ol_ipv6_routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
+                                                                                 ip_version="ipv6",
+                                                                                 overlay=True)
+        fun_test.simple_assert(ol_ipv6_routes_config, "Ensure routes config fetched")
+        ol_ipv6_l3_config = ol_ipv6_routes_config['l3_config']
+
+        destination_mac = ul_ipv4_routes_config["routermac"]
 
         # Set Mtu
         interface_1_obj = result['interface_obj_list'][0]
@@ -207,10 +233,8 @@ class VPPathIPv4TCP(FunTestCase):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
-        file_path = SCRIPTS_DIR + "/networking" + "/" + loads_file
-        output = fun_test.parse_file_to_json(file_path)
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv4"]
+
+        l3_config = ul_ipv4_l3_config
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
         
         if self.flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
@@ -237,8 +261,7 @@ class VPPathIPv4TCP(FunTestCase):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
         
@@ -557,10 +580,8 @@ class VPPathIPv6TCP(VPPathIPv4TCP):
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
         #  Read loads from file
-        file_path = SCRIPTS_DIR + "/networking" "/" + loads_file
-        output = fun_test.parse_file_to_json(file_path)
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv6"]
+
+        l3_config = ul_ipv6_l3_config
         ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
 
         if self.flow_direction == nu_config_obj.FLOW_DIRECTION_FPG_HNU:
@@ -584,8 +605,7 @@ class VPPathIPv6TCP(VPPathIPv4TCP):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
@@ -653,11 +673,7 @@ class VPPathIPv6UDP(VPPathIPv6TCP):
             clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape_2)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
-        #  Read loads from file
-        file_path = SCRIPTS_DIR + "/networking" "/" + loads_file
-        output = fun_test.parse_file_to_json(file_path)
-        l2_config = spirent_config["l2_config"]
-        l3_config = spirent_config["l3_config"]["ipv6"]
+        l3_config = ul_ipv6_l3_config
         ether_type = Ethernet2Header.INTERNET_IPV6_ETHERTYPE
 
         if self.flow_direction == nu_config_obj.FLOW_DIRECTION_FPG_HNU:
@@ -681,8 +697,7 @@ class VPPathIPv6UDP(VPPathIPv6TCP):
 
         # Adding source and destination ip
         ether = template_obj.stc_manager.configure_mac_address(streamblock=self.streamblock_obj_1.spirent_handle,
-                                                               source_mac=l2_config['source_mac'],
-                                                               destination_mac=l2_config['destination_mac'],
+                                                               destination_mac=destination_mac,
                                                                ethernet_type=ether_type)
         fun_test.test_assert(ether, "Adding source and destination mac")
 
@@ -758,7 +773,7 @@ class OverlayIpv4TCP(VPPathIPv4TCP):
             fun_test.test_assert(configure_overlay['result'], message="Configure overlay stream")
             self.streamblock_obj_1 = configure_overlay['streamblock_obj']
 
-            l3_config = spirent_config["l3_config"]["ipv4"]
+            l3_config = ul_ipv4_l3_config
             update_header = Ipv4Header()
             # Adding Ip address and gateway
             if self.flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
@@ -903,7 +918,7 @@ class OverlayMPLSTCP(OverlayIpv4TCP):
             fun_test.test_assert(configure_overlay['result'], message="Configure overlay stream")
             self.streamblock_obj_1 = configure_overlay['streamblock_obj']
 
-            l3_config = spirent_config["l3_config"]["ipv4"]
+            l3_config = ul_ipv4_l3_config
             # Adding Ip address and gateway
             if self.flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
                 destination = l3_config['hnu_destination_ip2']
@@ -1043,10 +1058,6 @@ class VPPathIPv4UDP_HNU_FPG(VPPathIPv4UDP):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
-    ip_version = local_settings[nu_config_obj.IP_VERSION]
-    fps = 100
     ts=SpirentSetup()
     ts.add_test_case(VPPathIPv4TCP())
     ts.add_test_case(VPPathIPv4UDP())

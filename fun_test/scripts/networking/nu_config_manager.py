@@ -34,13 +34,15 @@ class NuConfigManager(object):
     FLOW_DIRECTION_HNU_HNU = "HNU_HNU_NFCP"
     FLOW_DIRECTION_ALL = "ALL"
     FLOW_DIRECTION = "flow_direction"
+    ECMP_FLOW_TYPE='ecmp_flow'
+    FLOW_DIRECTION_ECMP = "FPG_ECMP"
     IP_VERSION = "ip_version"
     SPRAY_ENABLE = "spray_enable"
     INTEGRATION_FLOW_TYPE = "integration_flow"
     DUT_TYPE = None
     CHASSIS_TYPE = None
 
-    def __int__(self):
+    def __init__(self):
         self.get_dut_type()
         self.get_chassis_type()
 
@@ -111,7 +113,7 @@ class NuConfigManager(object):
                     m = re.search(r'(\d+)', key)
                     if m:
                         result['ports'].append(int(m.group(1)))
-            elif flow_type == self.SAMPLE_FLOW_TYPE or flow_type == self.ACL_FLOW_TYPE:
+            elif flow_type == self.SAMPLE_FLOW_TYPE or flow_type == self.ACL_FLOW_TYPE or flow_type == self.ECMP_FLOW_TYPE:
                 for key, value in (dut_spirent_map[flow_type][flow_direction].iteritems()):
                     m = re.search(r'(\d+)', key)
                     if m:
@@ -334,6 +336,21 @@ class NuConfigManager(object):
                         raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
                     result[key] = value
                     count += 1
+            
+            elif flow_type == self.ECMP_FLOW_TYPE:
+                fun_test.log("Fetching NU VP path map. Traffic Direction: %s" % flow_direction)
+                fun_test.simple_assert(len(dut_spirent_map[flow_type][flow_direction]) >= no_of_ports_needed,
+                                       "Ensure No of ports needed are available in config. Needed: %d Available: %d" %
+                                       (no_of_ports_needed, len(dut_spirent_map[flow_type][flow_direction])))
+                count = 0
+                for key, value in dut_spirent_map[flow_type][flow_direction].iteritems():
+                    if count == no_of_ports_needed:
+                        break
+                    chassis_ip = value.split('/')[0]
+                    if chassis_ip not in spirent_assets['chassis_ips']:
+                        raise Exception("Chassis IP: %s not found in Spirent Asset. Ensure Chassis exists" % chassis_ip)
+                    result[key] = value
+                    count += 1  
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -370,7 +387,7 @@ class NuConfigManager(object):
             if job_environment and "RUN_TARGET" in job_environment:
                 if job_environment["RUN_TARGET"] == self.DUT_TYPE_PALLADIUM:
                     self.DUT_TYPE = self.DUT_TYPE_PALLADIUM
-                elif job_environment["EMULATION_TARGET"] == self.DUT_TYPE_F1.upper():
+                elif job_environment["RUN_TARGET"] == self.DUT_TYPE_F1.upper():
                     self.DUT_TYPE = self.DUT_TYPE_F1
             else:
                 if job_inputs and "speed" in job_inputs:
@@ -397,8 +414,3 @@ class NuConfigManager(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-
-
-nu_config_obj = NuConfigManager()
-nu_config_obj.get_dut_type()
-nu_config_obj.get_chassis_type()

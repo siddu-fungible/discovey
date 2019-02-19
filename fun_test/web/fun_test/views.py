@@ -63,7 +63,10 @@ def get_script_content(request):
 
 @csrf_exempt
 def angular_home(request):
-    return render(request, 'qa_dashboard/angular_home.html', locals())
+    angular_home = 'qa_dashboard/angular_home_development.html'
+    if is_production_mode():
+        angular_home = 'qa_dashboard/angular_home_production.html'
+    return render(request, angular_home, locals())
 
 def index(request):
     request.session.clear()

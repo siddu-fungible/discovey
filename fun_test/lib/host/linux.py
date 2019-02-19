@@ -475,7 +475,7 @@ class Linux(object, ToDictMixin):
         result = False
         percentage_loss = 100
         try:
-            command = 'sudo ping %s -c %d -i %s -s %s' % (str(dst), count, interval, size)
+            command = 'ping %s -c %d -i %s -s %s' % (str(dst), count, interval, size)
             if sudo:
                 output = self.sudo_command(command, timeout=timeout)
             else:
@@ -1186,7 +1186,7 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def command_exists(self, command):
         self.command("which " + command)
-        exit_status = self.get_exit_status()  #TODO
+        exit_status = self.exit_status()  #TODO
         return exit_status == 0
 
     @fun_test.safe
@@ -1208,7 +1208,7 @@ class Linux(object, ToDictMixin):
             command = "nslookup  %s | grep -A2 Name | grep Address " % dns_name
             output = self.sudo_command(command=command)
             output_lines = output.split('\n')
-            obj = re.match('(.*):(.*)', output_lines[1])
+            obj = re.match('(.*):(.*)', output_lines[0])
             result['ip_address'] = obj.group(2).strip()
         except Exception as ex:
             critical_str = str(ex)
@@ -1740,12 +1740,9 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def isHostUp(self, timeout=5, retries=6):
-
+    def is_host_up(self, timeout=5, retries=6):
         result = True
-
         for i in range(retries):
-            command_output = ""
             try:
                 command_output = self.command(command="pwd", timeout=timeout)
                 if command_output:
@@ -1840,6 +1837,12 @@ class Linux(object, ToDictMixin):
             fs_command = "mkfs.ext2 -F {}".format(device)
         elif fs_type == "xfs":
             fs_command = "mkfs.xfs -f {}".format(device)
+        elif fs_type == "ntfs":
+            fs_command = "mkfs.ntfs -F {}".format(device)
+        elif fs_type == "btrfs":
+            fs_command = "mkfs.btrfs {}".format(device)
+        elif fs_type == "f2fs":
+            fs_command = "mkfs.f2fs {}".format(device)
         else:
             fun_test.critical("Creation of {} filesystem is not yet supported".format(fs_type))
             result = False
@@ -1849,7 +1852,7 @@ class Linux(object, ToDictMixin):
             fs_command += " -b {}".format(sector_size)
 
         try:
-            output = self.sudo_command(fs_command)
+            output = self.sudo_command(fs_command, timeout=timeout)
             match = re.findall(r"done", output, re.M)
             if match:
                 if fs_type == "ext2":
@@ -1867,6 +1870,24 @@ class Linux(object, ToDictMixin):
                     match = re.search(r"bsize=(\d+)\s+blocks=(\d+)", output, re.MULTILINE)
                     if match:
                         result = match.group(2)
+                    else:
+                        result = False
+                elif fs_type == "ntfs":
+                    match = re.search(r"mkntfs\scompleted\ssuccessfully", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
+                    else:
+                        result = False
+                elif fs_type == "btrfs":
+                    match = re.search(r"Number\sof\sdevices:", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
+                    else:
+                        result = False
+                elif fs_type == "f2fs":
+                    match = re.search(r"Info:\sformat\ssuccessful", output, re.MULTILINE)
+                    if match:
+                        result = match.group(0)
                     else:
                         result = False
                 else:
@@ -1900,10 +1921,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def mount_volume(self, volume, directory):
+    def mount_volume(self, volume, directory, readonly=False):
         result = True
         try:
             mnt_cmd = "mount {} {}".format(volume, directory)
+            if readonly:
+                mnt_cmd += " --read-only"
             mnt_out = self.sudo_command(mnt_cmd)
             if not mnt_out:
                 pattern = r'.*{}.*'.format(directory)
@@ -1989,13 +2012,19 @@ class Linux(object, ToDictMixin):
         self.sudo_command(cmd)
 
         # Check
+        return self.get_mtu(interface, ns=ns) == mtu
+
+    @fun_test.safe
+    def get_mtu(self, interface, ns=None):
         cmd = 'ifconfig {}'.format(interface)
         if ns:
             cmd = 'ip netns exec {} {}'.format(ns, cmd)
-        output = self.sudo_command(cmd)
+            output = self.sudo_command(cmd)
+        else:
+            output = self.command(cmd)
         match = re.search(r'mtu (\d+)', output)
         if match:
-            return int(match.group(1)) == mtu
+            return int(match.group(1))
 
     @fun_test.safe
     def ifconfig_up_down(self, interface, action, ns=None):
@@ -2015,6 +2044,104 @@ class Linux(object, ToDictMixin):
             return match is not None
         else:
             return match is None
+
+    def is_mount_ro(self, mnt):
+        """
+        Method to validate if filesystem mounted is Read-only filesystem
+        :param mnt: mount partition
+        :return: boolean, if mount filesystem is Read-only filesystem, return True
+        """
+        result = True
+        try:
+            cmd = "grep '\sro[\s,]' /proc/mounts"
+            output = self.sudo_command(cmd)
+            lines = output.split("\n")
+            for line in lines:
+                if mnt in line:
+                    result = True
+                else:
+                    result = False
+        except Exception as ex:
+            result = False
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+
+        return result
+
+    @fun_test.safe
+    def get_mgmt_interface(self):
+        """Get mgmt interface name. Below is an example output.
+
+        user@cadence-pc-3:~$ ip address show | grep 10.1.20.246 -A2 -B2
+        2: enp10s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+            link/ether 0c:c4:7a:84:eb:70 brd ff:ff:ff:ff:ff:ff
+            inet 10.1.20.246/22 brd 10.1.23.255 scope global enp10s0
+                valid_lft forever preferred_lft forever
+            inet6 fe80::ec4:7aff:fe84:eb70/64 scope link
+        """
+        result = None
+        if re.search(r'\d+\.\d+\.\d+\.\d+', self.host_ip):
+            result = self.host_ip
+        else:
+            result = self.nslookup(self.host_ip)
+            if result:
+                ip_addr = result['ip_address']
+                output = self.command('ip address show | grep {} -A2 -B2'.format(ip_addr))
+                match2 = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(ip_addr), output, re.DOTALL)
+                if match2:
+                    result = match2.group(1)
+
+        return result
+
+    @fun_test.safe
+    def get_interface_to_route(self, ip, ns=None):
+        """Get interface name, via which the ip route point to the destination IP. In below example, it returns 'fpg1'.
+
+        root@cadence-pc-5:~# ip route show to match 19.1.1.1
+        default via 10.1.20.1 dev eth0 onlink
+        19.1.1.0/24 via 53.1.1.1 dev hu3-f0
+        root@cadence-pc-5:~#
+        """
+        cmd = 'ip route show to match {}'.format(ip)
+        if ns:
+            cmd = 'ip netns exec {} {}'.format(ns, cmd)
+            output = self.sudo_command(cmd)
+        else:
+            output = self.command(cmd)
+        match = re.search(r'\d+\.\d+\.\d+\.\d+/\d+ via.*dev (\S+)', output)
+        if match:
+            return match.group(1)
+
+    @fun_test.safe
+    def get_namespaces(self):
+        """Get all the namespaces.
+
+        localadmin@hu-lab-01:~$ ip netns list
+        n9 (id: 2)
+        n8 (id: 1)
+        n1 (id: 0)
+        localadmin@hu-lab-01:~$
+        """
+        cmd = 'ip netns list'
+        output = self.command(cmd)
+        if output:
+            return [i.split()[0] for i in output.strip().split('\n')]
+        else:
+            return []
+
+    @fun_test.safe
+    def hostname(self):
+        """Get hostname."""
+        cmd = 'hostname'
+        output = self.command(cmd)
+        return output.split('.')[0]
+
+    @fun_test.safe
+    def pkill(self, process_name):
+        """sudo pkill one or multiple processes which match the given name."""
+        cmd = 'pkill {}'.format(process_name)
+        return self.sudo_command(cmd)
 
 
 class LinuxBackup:

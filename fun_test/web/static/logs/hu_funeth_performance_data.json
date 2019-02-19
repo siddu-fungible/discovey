@@ -1,27 +1,5 @@
 [
     {
-        "flow_type": "HU_NU",
-        "frame_size": 64,
-        "latency_max": "157.59 ms",
-        "latency_mean": "76.44 ms",
-        "latency_median": "66.44 ms",
-        "latency_min": "63.84 ms",
-        "throughput": "497.66 Kbps",
-        "timestamp": "2019-02-07 00:50:35.875534-08:00",
-        "version": 5195
-    },
-    {
-        "flow_type": "HU_NU",
-        "frame_size": 1500,
-        "latency_max": "149.77 ms",
-        "latency_mean": "78.25 ms",
-        "latency_median": "70.73 ms",
-        "latency_min": "68.53 ms",
-        "throughput": "484.50 Kbps",
-        "timestamp": "2019-02-07 00:51:54.877368-08:00",
-        "version": 5195
-    },
-    {
         "flow_type": "HU_NU_NFCP",
         "frame_size": 64,
         "latency_max": 72000.0,
@@ -42,5 +20,28 @@
         "throughput": 0.44989,
         "timestamp": "2019-02-09 07:30:25.499637-08:00",
         "version": 5216
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 64,
+        "jitter": 190000.0,
+        "latency_99.0_percentile": 401000.0,
+        "latency_max": 417000.0,
+        "latency_median": 197000.0,
+        "latency_min": 14300.0,
+        "pps": 339.1,
+        "throughput": 0.174,
+        "timestamp": "2019-02-15 15:02:19.755051-08:00",
+        "version": 5287
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "latency_max": 1820000.0,
+        "latency_min": 16500.0,
+        "pps": 424.6,
+        "throughput": 5.095,
+        "timestamp": "2019-02-15 15:03:52.208184-08:00",
+        "version": 5287
     }
 ]

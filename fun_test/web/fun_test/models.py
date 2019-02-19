@@ -1,16 +1,14 @@
 # import django
 import os
-# import fun_test
 
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 # django.setup()
 from fun_settings import COMMON_WEB_LOGGER_NAME
 from django.db import models
 from fun_global import RESULTS
-from fun_global import is_performance_server, get_current_time
+from fun_global import is_lite_mode, get_current_time
 from web.fun_test.jira_models import *
 from web.fun_test.demo1_models import *
-from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from datetime import datetime, timedelta
 from scheduler.scheduler_types import SchedulerStates, SuiteType
@@ -88,7 +86,7 @@ class SuiteContainerExecution(models.Model):
 
 
 class SuiteExecution(models.Model):
-    execution_id = models.IntegerField(unique=True)
+    execution_id = models.IntegerField(unique=True, db_index=True)
     suite_path = models.CharField(max_length=100)
     submitted_time = models.DateTimeField()
     scheduled_time = models.DateTimeField()
@@ -108,6 +106,11 @@ class SuiteExecution(models.Model):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
         return s
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['execution_id'])
+        ]
+
 class SuiteExecutionSerializer(serializers.Serializer):
     version = serializers.CharField(max_length=50)
     execution_id = serializers.IntegerField()
@@ -126,9 +129,9 @@ class LastTestCaseExecution(models.Model):
 
 class TestCaseExecution(models.Model):
     script_path = models.CharField(max_length=128)
-    execution_id = models.IntegerField(unique=True)
+    execution_id = models.IntegerField(unique=True, db_index=True)
     test_case_id = models.IntegerField()
-    suite_execution_id = models.IntegerField()
+    suite_execution_id = models.IntegerField(db_index=True)
     result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="NOTRUN")
     started_time = models.DateTimeField()
     end_time = models.DateTimeField(null=True)
@@ -140,6 +143,12 @@ class TestCaseExecution(models.Model):
     inputs = models.TextField(default="{}")
     re_run_history = models.TextField(default="[]")
     re_run_state = models.TextField(default="")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['execution_id']),
+            models.Index(fields=['suite_execution_id'])
+        ]
 
     def __str__(self):
         s = "E: {} S: {} T: {} R: {} P: {} Re: {} Reh: {}".format(self.execution_id,
@@ -278,7 +287,7 @@ class SuiteReRunInfo(models.Model):
     original_suite_execution_id = models.IntegerField()
     re_run_suite_execution_id = models.IntegerField()
 
-if is_performance_server():
+if not is_lite_mode():
     from web.fun_test.metrics_models import *
 
 

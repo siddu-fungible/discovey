@@ -9,6 +9,7 @@ from lib.utilities.pcap_parser import *
 
 
 spirent_config = {}
+nu_config_obj = NuConfigManager()
 TEST_CONFIG_FILE = fun_test.get_script_parent_directory() + "/dut_configs.json"
 test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
 subscribed_results = None
@@ -2154,17 +2155,17 @@ class AclIPv6HNUtoHNU(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 3)
 
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
         rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
         fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
 
-        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
         fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
-        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
         fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
 
         fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
@@ -2633,7 +2634,7 @@ if __name__ == '__main__':
     ts.add_test_case(AclEgressDropNUtoHNU())
     ts.add_test_case(AclIngressDropHNUtoHNU())
     ts.add_test_case(AclEgressDropHNUtoNU())
-    # ts.add_test_case(AclIPv6NUtoHNU())
-    # ts.add_test_case(AclIPv6HNUtoHNU())
-    # ts.add_test_case(AclIPv6HNUtoNU())
+    ts.add_test_case(AclIPv6NUtoHNU())
+    ts.add_test_case(AclIPv6HNUtoHNU())
+    ts.add_test_case(AclIPv6HNUtoNU())
     ts.run()
