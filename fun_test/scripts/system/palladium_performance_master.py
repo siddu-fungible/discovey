@@ -1188,24 +1188,25 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            raw_throughput = False
             for line in self.lines:
                 m = re.search(
-                    r'{"test":\s+"(?P<test>\S+)",\s+"alg":\s+"(?P<algorithm>\S+)",\s+"operation":\s+"(?P<operation>\S+)",\s+"pktsize":\s+(?P<pktsize_json>{.*}),\s+"ops":\s+(?P<ops_json>{.*}),\s+"throughput":\s+(?P<bandwidth_json>{.*})}',
+                    r'(?P<crypto_json>{"test".*})',
                     line)
                 if m:
-                    input_test = m.group("test")
-                    input_algorithm = m.group("algorithm")
-                    input_operation = m.group("operation")
-                    pkt_size_json = json.loads(m.group("pktsize_json"))
-                    ops_json = json.loads(m.group("ops_json"))
-                    bandwidth_json = json.loads(m.group("bandwidth_json"))
+                    metrics = collections.OrderedDict()
+                    crypto_json = json.loads(m.group("crypto_json"))
+                    input_test = crypto_json["test"]
+                    input_algorithm = crypto_json["algorithm"]
+                    input_operation = crypto_json["operation"]
+                    input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
+                    pkt_size_json = json.loads(crypto_json["pktsize"])
+                    ops_json = json.loads(crypto_json["ops"]) if "ops" in crypto_json else None
+                    bandwidth_json = json.loads(crypto_json["throughput"])
 
                     input_pkt_size = int(pkt_size_json["value"])
-                    output_ops_per_sec = int(ops_json["value"])
+                    output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
                     output_throughput = float(bandwidth_json["value"])
 
                     if "api" in input_test:
@@ -1213,6 +1214,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                         model = TeraMarkCryptoPerformance
                     else:
                         input_app = "crypto_raw_speed"
+                        metrics["input_key_size"] = input_key_size
                         model = TeraMarkMultiClusterCryptoPerformance
 
                     metrics["input_app"] = input_app
@@ -1235,6 +1237,9 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                              test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
                              git_commit=self.git_commit, model_name="TeraMarkCryptoPerformance")
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="TeraMarkMultiClusterCryptoPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
