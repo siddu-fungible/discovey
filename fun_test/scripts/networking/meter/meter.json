@@ -1,11 +1,14 @@
 [
   {
     "bps_meter":{
+      "sport" : 1234,
       "dport" : 1666,
       "meter_id" : 60,
-      "meter_interval" : 14,
-      "meter_credit" : 82,
-      "commit_rate" : 4
+      "meter_interval" : 13,
+      "meter_credit" : 4,
+      "commit_rate" : 51,
+      "commit_burst" : 82,
+      "excess_burst" : 1
     },
     "pps_meter":
     {

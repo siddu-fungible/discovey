@@ -1493,3 +1493,30 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return stats
+
+    def update_meter(self, index, interval, crd, commit_rate, pps_mode, excess_rate=0, commit_burst=82, excess_burst=1,
+                     dir=0,
+                     len_mode=1, rate_mode=0, color_aware=0, unit=0, rsvd=0,
+                     op="FUN_NU_OP_SFG_METER_CFG_W", len8=3, common={}, inst=0, bank=0, ):
+        result = None
+        try:
+            cmd_arg_dict = {"": op, "len8": len8, "common": common, "inst": inst, "bank": bank, "index": index,
+                            "interval": interval, "crd": crd, "commit_rate": commit_rate, "excess_rate": excess_rate,
+                            "commit_burst": commit_burst, "excess_burst": excess_burst, "dir": dir,
+                            "len_mode": len_mode, "rate_mode": rate_mode, "pps_mode": pps_mode,
+                            "color_aware": color_aware, "unit": unit, "rsvd": rsvd}
+
+            result_index = self._update_meter(cmd_arg_dict)
+            if result_index == 0:
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _update_meter(self, *args):
+        result = None
+        try:
+            result = self.json_execute(verb='req', data=args[0])
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
