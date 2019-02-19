@@ -75,7 +75,8 @@
         },
         "ipv6": {
           "source_ip1": "2000::2",
-          "destination_ip1": "2001::20:1:1:1"
+          "destination_ip1": "2001::20:1:1:1",
+          "destination_ip2": "2001::19:1:1:1"
         }
       }
     }
