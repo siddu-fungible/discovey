@@ -931,7 +931,8 @@ export class PerformanceComponent implements OnInit {
       this.expandNode(flatNode);
       this.chartReady = true;
     }
-    this.navigateByQuery(flatNode);
+    if (!flatNode.special)
+      this.navigateByQuery(flatNode);
   };
 
   navigateByQuery(flatNode) {
