@@ -157,10 +157,11 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                 i.command("rm -rf /lib/modules")
                 i.command("tar -xf {} -C /".format(self.QEMU_MODULES_TGZ))
                 i.command("depmod -a")
-            i.command("modprobe -r nvme")
-            fun_test.sleep("modprobe -r nvme")
-            i.command("modprobe nvme")
+            # i.command("modprobe -r nvme")
+            # fun_test.sleep("modprobe -r nvme")
+            # i.command("modprobe nvme")
             i.exit_sudo()
+            i.nvme_restart()
             instance = i
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -171,6 +172,7 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     def launch_dut_instance(self,
                             dpcsh_only,
                             external_dpcsh_port):
+        """
         f1_obj = F1(host_ip=self.host_ip,
                     ssh_username=self.ssh_username,
                     ssh_password=self.ssh_password,
@@ -181,6 +183,8 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                                           dpcsh_only=dpcsh_only),
                              "SimulationOrchestrator: Start FunOS")
         return f1_obj
+        """
+        fun_test.test_assert(False, "Not implemented")
 
     @fun_test.safe
     def launch_docker_instances(self,
