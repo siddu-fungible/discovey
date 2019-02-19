@@ -7,7 +7,6 @@ from scripts.networking.nu_config_manager import *
 from scripts.networking.helper import *
 from lib.utilities.pcap_parser import *
 
-
 spirent_config = {}
 nu_config_obj = NuConfigManager()
 TEST_CONFIG_FILE = fun_test.get_script_parent_directory() + "/dut_configs.json"
