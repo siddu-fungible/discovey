@@ -25,11 +25,12 @@ class F1(Linux, ToDictMixin):
 
     CONNECT_RETRY_TIMEOUT_DEFAULT = 90
 
-    def __init__(self, host_ip,
-                          ssh_username,
-                          ssh_password,
-                          ssh_port,
-                          external_dpcsh_port,
+    def __init__(self,
+                 host_ip,
+                 ssh_username,
+                 ssh_password,
+                 ssh_port,
+                 external_dpcsh_port,
                  spec=None):
         super(F1, self).__init__(host_ip=host_ip,
                                  ssh_username=ssh_username,
@@ -270,11 +271,11 @@ class DockerF1(F1, ToDictMixin):
     data_plane_ip = None
 
     def __init__(self, host_ip,
-                          ssh_username,
-                          ssh_password,
-                          ssh_port,
-                          external_dpcsh_port,
-                    spec=None):
+                 ssh_username,
+                 ssh_password,
+                 ssh_port,
+                 external_dpcsh_port,
+                 spec=None):
         super(DockerF1, self).__init__(host_ip=host_ip,
                                        ssh_username=ssh_username,
                                        ssh_port=ssh_port,

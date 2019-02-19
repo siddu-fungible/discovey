@@ -1264,14 +1264,14 @@ class Linux(object, ToDictMixin):
         return self.sudo_command(command)
 
     @fun_test.safe
-    def nvme_restart(self):
+    def nvme_restart(self, reload_interval=10):
         result = True
         # Unloading the nvme driver
         unload_status = self.rmmod("nvme")
         if not unload_status:
-            fun_test.sleep("Waiting for nvme driver unload to complete")
+            fun_test.sleep("Waiting for nvme driver unload to complete", seconds=reload_interval)
             load_status = self.modprobe("nvme")
-            fun_test.sleep("Waiting for nvme driver load to complete", seconds=2)
+            # fun_test.sleep("Waiting for nvme driver load to complete", seconds=reload_interval)
             if load_status:
                 result = False
         else:

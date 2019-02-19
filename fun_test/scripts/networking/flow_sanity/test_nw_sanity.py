@@ -1114,7 +1114,7 @@ class TestVpFlows(FunTestCase):
     sleep_duration_seconds = None
     generator_handle = None
     detach_ports = True
-    fps = 120
+    fps = 85
     mtu = max_frame_size
     hnu = False
     routes_config = None
@@ -1129,7 +1129,7 @@ class TestVpFlows(FunTestCase):
                                                                  header_obj=tcp)
         fun_test.test_assert(add_tcp, "Adding tcp header to frame")
 
-        range_obj = RangeModifier(recycle_count=MAX_FRAME_SIZE, step_value=1, data=1024)
+        range_obj = RangeModifier(recycle_count=20000, step_value=1, data=10000)
         modify_attribute = 'sourcePort'
         create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
                                                                          streamblock_obj=self.streamblock_obj_1,
