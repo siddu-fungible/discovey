@@ -5,6 +5,7 @@ import {ActivatedRoute} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {ReRunService} from "./re-run.service";
 import {LoggerService} from '../services/logger/logger.service';
+import {RegressionService} from "./regression.service";
 
 enum Filter {
     All = "ALL",
@@ -28,8 +29,13 @@ export class RegressionComponent implements OnInit {
   logDir: any;
   status: string = "Fetching Data";
 
-  constructor(private pagerService: PagerService, private apiService: ApiService, private route: ActivatedRoute,
-              private title: Title, private reRunService: ReRunService, private logger: LoggerService) {
+  constructor(private pagerService: PagerService,
+              private apiService: ApiService,
+              private route: ActivatedRoute,
+              private title: Title,
+              private reRunService: ReRunService,
+              private logger: LoggerService,
+              private regressionService: RegressionService) {
   }
 
   ngOnInit() {
@@ -135,15 +141,19 @@ export class RegressionComponent implements OnInit {
   }
 
   getSchedulerLog(suiteId) {
+    return this.regressionService.getSchedulerLog(suiteId);
+    /*
     if (this.logDir) {
       return this.logDir + suiteId + "/scheduler.log.txt"; // TODO
-    }
+    }*/
   }
 
   getSchedulerLogDir(suiteId) {
+    return this.regressionService.getSchedulerLogDir(suiteId);
+    /*
     if (this.logDir) {
       return "/regression/static_serve_log_directory/" + suiteId;
-    }
+    }*/
   }
 
   reRunClick(suiteExecutionId, suitePath, resultFilter=null) {

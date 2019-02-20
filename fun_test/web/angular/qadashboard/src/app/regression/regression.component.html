@@ -72,8 +72,8 @@
           <td>{{ suiteExecution.fields.version }}</td>
           <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
           <td>{{ suiteExecution.fields.suite_path === 'dynamic'? 'N/A': suiteExecution.fields.suite_path }}</td>
-          <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) }}">Log</a></td>
-          <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) }}">s_{{suiteExecution.fields.execution_id}}</a>
+          <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Log</a></td>
+          <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">s_{{suiteExecution.fields.execution_id}}</a>
           </td>
           <td>
             <ng-container *ngIf="suiteExecution.fields.suite_type ==='regular'">
