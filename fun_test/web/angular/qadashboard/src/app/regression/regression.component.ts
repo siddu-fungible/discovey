@@ -3,6 +3,9 @@ import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
 import {ActivatedRoute} from "@angular/router";
 import {Title} from "@angular/platform-browser";
+import {ReRunService} from "./re-run.service";
+import {LoggerService} from '../services/logger/logger.service';
+import {RegressionService} from "./regression.service";
 
 enum Filter {
     All = "ALL",
@@ -26,8 +29,13 @@ export class RegressionComponent implements OnInit {
   logDir: any;
   status: string = "Fetching Data";
 
-  constructor(private pagerService: PagerService, private apiService: ApiService, private route: ActivatedRoute,
-              private title: Title) {
+  constructor(private pagerService: PagerService,
+              private apiService: ApiService,
+              private route: ActivatedRoute,
+              private title: Title,
+              private reRunService: ReRunService,
+              private logger: LoggerService,
+              private regressionService: RegressionService) {
   }
 
   ngOnInit() {
@@ -85,10 +93,38 @@ export class RegressionComponent implements OnInit {
     }
     this.status = "Fetching Data";
     this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + this.filterString, payload).subscribe(result => {
-      this.items = JSON.parse(result.data);
+      this.items = result.data;
+      this.items.map(item => this.applyAdditionalAttributes(item));
+      this.items
+        .map(item => this.getReRunInfo(item));
       this.status = null;
     });
     
+  }
+
+  applyAdditionalAttributes(item) {
+    item["showingDetails"] = false;
+  }
+
+  showDetailsClick(item) {
+    item["showingDetails"] = !item["showingDetails"];
+  }
+
+  getReRunInfo(suiteExecution) {
+    if (suiteExecution.fields.suite_type === 'regular') {
+      this.reRunService.getOriginalSuiteReRunInfo(suiteExecution.fields.execution_id).subscribe(response => {
+      suiteExecution["reRunInfo"] = response;
+      }, error => {
+
+      })
+    } else if (suiteExecution.fields.suite_type === 'dynamic') {
+        this.reRunService.getReRunSuiteInfo(suiteExecution.fields.execution_id).subscribe(response => {
+        suiteExecution["reRunInfo"] = response;
+        }, error => {
+
+        })
+    }
+
   }
 
   testCaseLength = function (testCases) {
@@ -105,22 +141,27 @@ export class RegressionComponent implements OnInit {
   }
 
   getSchedulerLog(suiteId) {
+    return this.regressionService.getSchedulerLog(suiteId);
+    /*
     if (this.logDir) {
       return this.logDir + suiteId + "/scheduler.log.txt"; // TODO
-    }
+    }*/
   }
 
   getSchedulerLogDir(suiteId) {
+    return this.regressionService.getSchedulerLogDir(suiteId);
+    /*
     if (this.logDir) {
       return "/regression/static_serve_log_directory/" + suiteId;
-    }
+    }*/
   }
 
-  rerunClick(suiteId) {
-    this.apiService.get("/regression/suite_re_run/" + suiteId).subscribe(function (result) {
-      let jobId = parseInt(result.data);
-      alert("Rerun Successful");
+  reRunClick(suiteExecutionId, suitePath, resultFilter=null) {
+    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter).subscribe(response => {
+      alert("Re-run submitted");
       window.location.href = "/regression";
+    }, error => {
+      this.logger.error("Error submitting re-run");
     });
   }
 
@@ -155,6 +196,10 @@ export class RegressionComponent implements OnInit {
       klass = "blocked";
     }
     return klass;
+  }
+
+  testClick(suiteExecutionId, suitePath) {
+    this.reRunService.submitReRun(suiteExecutionId, suitePath);
   }
 
 }

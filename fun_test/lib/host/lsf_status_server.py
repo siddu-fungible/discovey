@@ -128,14 +128,15 @@ class LsfStatusServer:
         response = self.get_job_by_id(job_id=job_id)
         try:
             response_dict = json.loads(response)
-            logs = response_dict["logs"]
+            logs = response_dict["basic_outputs"]
             for item in logs:
                 for name in item:
-                    if file_name in name:
-                        log = name
-                        url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log)
-                        result = self._get(url=url)
-                        break
+                    if 'basename' in name:
+                        if file_name in name['basename']:
+                            log = name['basename']
+                            url = "{}/job/{}/raw_file/{}".format(self.base_url, job_id, log)
+                            result = self._get(url=url)
+                            break
         except Exception as ex:
             fun_test.log("Actual response:" + response)
             fun_test.critical(str(ex))

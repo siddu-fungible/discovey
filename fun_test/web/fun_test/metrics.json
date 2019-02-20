@@ -112,6 +112,15 @@
             "weight": 1,
             "label": "HNU_NU",
             "reference": true
+          },
+          {
+            "info": "HU_NU_NFCP",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "HU_NU_NFCP",
+            "weight": 1,
+            "label": "HU->NU NFCP Flow",
+            "reference": true
           }
         ],
         "weight": 1
@@ -383,11 +392,75 @@
         "label": "Accelerators",
         "children": [
           {
+            "info": "Lookup-engine",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Lookup-engine",
+            "label": "Lookup-engine",
+            "weight": 1,
+            "children": [
+              {
+                "info": "HT HBM non-coherent - FP HBM non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM non-coherent - FP HBM non-coherent",
+                "label": "HT HBM non-coherent - FP HBM non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT HBM coherent - FP HBM coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT HBM coherent - FP HBM coherent",
+                "label": "HT HBM coherent - FP HBM coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR non-coherent - FP DDR non-coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR non-coherent - FP DDR non-coherent",
+                "label": "HT DDR non-coherent - FP DDR non-coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "HT DDR coherent - FP DDR coherent",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "HT DDR coherent - FP DDR coherent",
+                "label": "HT DDR coherent - FP DDR coherent",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "TCAM",
+                "metric_model_name": "TeraMarkLookupEnginePerformance",
+                "leaf": true,
+                "name": "TCAM",
+                "label": "TCAM",
+                "children": [],
+                "weight": 1
+              }
+            ]
+          },
+          {
             "info": "EC",
             "metric_model_name": "MetricContainer",
             "leaf": false,
             "name": "EC",
             "label": "EC",
+            "weight": 1,
+            "reference": true
+          },
+          {
+            "info": "DMA",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "DMA",
+            "label": "DMA",
             "weight": 1,
             "reference": true
           },
@@ -689,24 +762,6 @@
                 "weight": 1
               },
               {
-                "info": "Average dispatch WU cycles",
-                "metric_model_name": "WuDispatchTestPerformance",
-                "leaf": true,
-                "name": "Average dispatch WU cycles",
-                "label": "Average dispatch WU cycles",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "Average WU send ungated cycles",
-                "metric_model_name": "WuSendSpeedTestPerformance",
-                "leaf": true,
-                "name": "Average WU send ungated cycles",
-                "label": "Average WU send ungated cycles",
-                "children": [],
-                "weight": 1
-              },
-              {
                 "info": "Malloc agent rate",
                 "metric_model_name": "FunMagentPerformanceTest",
                 "leaf": true,
@@ -807,6 +862,173 @@
                 "weight": 1
               }
             ]
+          },
+          {
+            "info": "MovingBits",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "MovingBits",
+            "label": "MovingBits",
+            "weight": 1,
+            "children": [
+              {
+                "info": "DMA",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "DMA",
+                "label": "DMA",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "memcpy",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "memcpy",
+                    "label": "Memcpy",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "memcpy_non_coherent_output_bandwidth_64B_2048B",
+                        "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                        "leaf": true,
+                        "name": "memcpy_non_coherent_output_bandwidth_64B_2048B",
+                        "label": "Non coherent: Bandwidth (64B-2048B)",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "memcpy_non_coherent_output_bandwidth_4096B_64KB",
+                        "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                        "leaf": true,
+                        "name": "memcpy_non_coherent_output_bandwidth_4096B_64KB",
+                        "label": "Non coherent: Bandwidth (4096B-64KB)",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "memcpy_non_coherent_output_bandwidth_128KB_512KB",
+                        "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                        "leaf": true,
+                        "name": "memcpy_non_coherent_output_bandwidth_128KB_512KB",
+                        "label": "Non coherent: Bandwidth (128KB-512KB)",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "memcpy_non_coherent_output_bandwidth_1024KB_2048KB",
+                        "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                        "leaf": true,
+                        "name": "memcpy_non_coherent_output_bandwidth_1024KB_2048KB",
+                        "label": "Non coherent: Bandwidth (1024KB-2048KB)",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  },
+                  {
+                    "info": "memset",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "memset",
+                    "label": "Memset",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "memset_output_bandwidth_64B_256B",
+                        "metric_model_name": "SoakDmaMemsetPerformance",
+                        "leaf": true,
+                        "name": "memset_output_bandwidth_64B_256B",
+                        "label": "Bandwidth (64B-256B)",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "memset_output_bandwidth_1024B_16KB",
+                        "metric_model_name": "SoakDmaMemsetPerformance",
+                        "leaf": true,
+                        "name": "memset_output_bandwidth_1024B_16KB",
+                        "label": "Bandwidth (1024B-16KB)",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "memset_output_bandwidth_64KB_256KB",
+                        "metric_model_name": "SoakDmaMemsetPerformance",
+                        "leaf": true,
+                        "name": "memset_output_bandwidth_64KB_256KB",
+                        "label": "Bandwidth (64KB-256KB)",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "info": "Bcopy",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Bcopy",
+                "label": "Bcopy",
+                "weight": 1,
+                "children": [
+                  {
+                    "name": "Bcopy: Plain: Avg Bandwidth",
+                    "label": "Bcopy: Plain: Avg Bandwidth",
+                    "info": "Bcopy: Plain: Avg Bandwidth",
+                    "metric_model_name": "BcopyPerformance",
+                    "children": [],
+                    "leaf": true,
+                    "weight": 1
+                  },
+                  {
+                    "name": "Bcopy: Plain: Avg Latency",
+                    "label": "Bcopy: Plain: Avg Latency",
+                    "info": "Bcopy: Plain: Avg Latency",
+                    "metric_model_name": "BcopyPerformance",
+                    "children": [],
+                    "leaf": true,
+                    "weight": 1
+                  },
+                  {
+                    "name": "Bcopy: DMA: Avg Bandwidth",
+                    "label": "Bcopy: DMA: Avg Bandwidth",
+                    "info": "Bcopy: DMA: Avg Bandwidth",
+                    "metric_model_name": "BcopyPerformance",
+                    "children": [],
+                    "leaf": true,
+                    "weight": 1
+                  },
+                  {
+                    "name": "Bcopy: DMA: Avg Latency",
+                    "label": "Bcopy: DMA: Avg Latency",
+                    "info": "Bcopy: DMA: Avg Latency",
+                    "metric_model_name": "BcopyPerformance",
+                    "children": [],
+                    "leaf": true,
+                    "weight": 1
+                  },
+                  {
+                    "name": "Bcopy: Flood DMA: Avg Bandwidth",
+                    "label": "Bcopy: Flood DMA: Avg Bandwidth",
+                    "info": "Bcopy: Flood DMA: Avg Bandwidth",
+                    "metric_model_name": "BcopyFloodDmaPerformance",
+                    "children": [],
+                    "leaf": true,
+                    "weight": 1
+                  },
+                  {
+                    "name": "Bcopy: Flood DMA: Avg Latency",
+                    "label": "Bcopy: Flood DMA: Avg Latency",
+                    "info": "Bcopy: Flood DMA: Avg Latency",
+                    "metric_model_name": "BcopyFloodDmaPerformance",
+                    "children": [],
+                    "leaf": true,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -883,11 +1105,48 @@
         "weight": 1,
         "children": [
           {
-            "info": "PKE",
+            "info": "TeraMark PKE",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "PKE",
+            "name": "TeraMark PKE",
             "label": "PKE",
+            "weight": 1,
+            "reference": true
+          },
+          {
+            "info": "PKE TLS",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "PKE TLS",
+            "label": "TLS",
+            "weight": 1,
+            "children": [
+              {
+                "info": "ECDHE RSA X25519 RSA 2K",
+                "metric_model_name": "PkeX25519TlsSoakPerformance",
+                "leaf": true,
+                "name": "ECDHE_RSA X25519 RSA 2K",
+                "label": "ECDHE RSA X25519 RSA 2K",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "ECDHE RSA P256 RSA 2K",
+                "metric_model_name": "PkeP256TlsSoakPerformance",
+                "leaf": true,
+                "name": "ECDHE_RSA P256 RSA 2K",
+                "label": "ECDHE RSA P256 RSA 2K",
+                "children": [],
+                "weight": 1
+              }
+            ]
+          },
+          {
+            "info": "Crypto",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Crypto",
+            "label": "Crypto",
             "weight": 1,
             "reference": true
           }
@@ -902,10 +1161,10 @@
         "weight": 1,
         "children": [
           {
-            "info": "PKE",
+            "info": "TeraMark PKE",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "PKE",
+            "name": "TeraMark PKE",
             "label": "PKE",
             "weight": 1,
             "children": [
@@ -1025,61 +1284,6 @@
                 "leaf": true,
                 "name": "EC 8:4 Throughput",
                 "label": "EC 8:4 Throughput",
-                "children": [],
-                "weight": 1
-              }
-            ]
-          },
-          {
-            "info": "Lookup-engine",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "Lookup-engine",
-            "label": "Lookup-engine",
-            "weight": 1,
-            "children": [
-              {
-                "info": "HT HBM non-coherent - FP HBM non-coherent",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "HT HBM non-coherent - FP HBM non-coherent",
-                "label": "HT HBM non-coherent - FP HBM non-coherent",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "HT HBM coherent - FP HBM coherent",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "HT HBM coherent - FP HBM coherent",
-                "label": "HT HBM coherent - FP HBM coherent",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "HT DDR non-coherent - FP DDR non-coherent",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "HT DDR non-coherent - FP DDR non-coherent",
-                "label": "HT DDR non-coherent - FP DDR non-coherent",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "HT DDR coherent - FP DDR coherent",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "HT DDR coherent - FP DDR coherent",
-                "label": "HT DDR coherent - FP DDR coherent",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "TCAM",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "TCAM",
-                "label": "TCAM",
                 "children": [],
                 "weight": 1
               }
@@ -1486,6 +1690,32 @@
                     "name": "HNU_NU_output_pps",
                     "weight": 1,
                     "label": "HNU_NU_output_pps"
+                  }
+                ]
+              },
+              {
+                "info": "HU_NU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_NU_NFCP",
+                "weight": 1,
+                "label": "HU->NU NFCP Flow",
+                "children": [
+                  {
+                    "info": "HU_NU_NFCP_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_NU_NFCP_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "HU_NU_NFCP_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_NU_NFCP_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
                   }
                 ]
               }

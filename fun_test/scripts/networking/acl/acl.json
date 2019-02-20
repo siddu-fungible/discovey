@@ -1,0 +1,280 @@
+{
+"palladium" : {
+  "sanity_test_nu_nu": {
+    "source_ip": "192.85.1.10",
+    "wrong_dip": "50.0.1.2",
+    "source_port": 1234,
+    "dest_port": 666,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 103
+  },
+  "nu_nu_v6_test": {
+    "source_ip": "3000::1",
+    "wrong_dip": "2001::50:0:1:1",
+    "source_port": 1234,
+    "dest_port": 777,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "counter_id": 130
+  },
+  "nu_nu_v6_range_test": {
+    "source_ip": "3000::1",
+    "range_boundary_high_port": 255,
+    "range_boundary_low_port": 245,
+    "in_range_port": 251,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "counter_id": 131
+  },
+  "v6_nu_hnu_test": {
+    "source_ip": "2002::1",
+    "wrong_dip": "2001::52:1:1:1",
+    "source_port": 1234,
+    "dest_port": 797,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 132
+  },
+  "hnu_hnu_v6_range_test": {
+    "source_ip": "3000::1",
+    "range_boundary_high_port": 255,
+    "range_boundary_low_port": 245,
+    "in_range_port": 251,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "counter_id": 131
+  },
+  "nu_hnu_v6_range_test": {
+    "source_ip": "3000::1",
+    "range_boundary_high_port": 300,
+    "range_boundary_low_port": 287,
+    "in_range_port": 299,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "counter_id": 133
+  },
+  "hnu_hnu_v6_drop": {
+    "source_ip": "3003::1",
+    "wrong_dip": "2001::52:1:1:1",
+    "source_port": 1214,
+    "dest_port": 812,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 135
+  },
+  "hnu_nu_v6_drop": {
+    "source_ip": "2300::1",
+    "wrong_dip": "2001::50:0:1:1",
+    "source_port": 1123,
+    "dest_port": 727,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 99
+  },
+  "nu_nu_egress_drop_test": {
+    "source_ip": "192.85.1.11",
+    "wrong_dip": "50.0.1.3",
+    "source_port": 1224,
+    "dest_port": 686,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 110
+  },
+  "nu_hnu_egress_drop_test": {
+    "source_ip": "192.85.1.12",
+    "wrong_dip": "52.1.1.5",
+    "source_port": 1224,
+    "dest_port": 686,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 111
+  },
+  "hnu_hnu_drop_test": {
+    "source_ip": "192.85.1.1",
+    "wrong_dip": "52.1.1.4",
+    "source_port": 1424,
+    "dest_port": 696,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 112
+  },
+  "hnu_nu_drop_test": {
+    "source_ip": "192.85.1.20",
+    "wrong_dip": "50.0.1.3",
+    "source_port": 1422,
+    "dest_port": 681,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 113
+  },
+  "range_test_nu_nu": {
+    "source_port": 1234,
+    "range_boundary_high_port": 240,
+    "range_boundary_low_port": 230,
+    "in_range_port": 235,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "source_ip": "192.85.1.10",
+    "counter_id": 110
+  },
+  "nu_nu_eg_range_test": {
+    "source_port": 1224,
+    "range_boundary_high_port": 340,
+    "range_boundary_low_port": 330,
+    "in_range_port": 335,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "source_ip": "192.85.1.11",
+    "counter_id": 110,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0"
+  },
+  "nu_hnu_eg_range_test": {
+    "source_port": 1224,
+    "range_boundary_high_port": 340,
+    "range_boundary_low_port": 330,
+    "in_range_port": 335,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "source_ip": "192.85.1.11",
+    "counter_id": 121
+  },
+  "hnu_hnu_ing_range_test": {
+    "source_port": 1424,
+    "range_boundary_high_port": 360,
+    "range_boundary_low_port": 370,
+    "in_range_port": 363,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "source_ip": "192.85.1.12",
+    "counter_id": 117
+  },
+  "hnu_nu_ing_range_test": {
+    "source_port": 1422,
+    "range_boundary_high_port": 390,
+    "range_boundary_low_port": 380,
+    "in_range_port": 388,
+    "lower_range_port": 260,
+    "higher_range_port": 458,
+    "source_ip": "192.85.1.12",
+    "counter_id": 113
+  },
+  "sample_test": {
+    "source_port": 1234,
+    "dest_port": 966,
+    "sample_id_ingress": 61,
+    "sample_id_egress": 62,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ing_counter_id": 105,
+    "eg_counter_id": 155
+  },
+  "sample_test_nu_hnu": {
+    "source_port": 1234,
+    "dest_port": 966,
+    "sample_id": 63,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "counter_id": 112
+  },
+  "log_test": {
+    "counter_id": 125,
+    "dest_port": 669
+  },
+  "frag_test": {
+    "counter_id_1": 107,
+    "counter_id_2": 108,
+    "source_port": 1234,
+    "dest_port": 1118
+  },
+  "qos_nu_nu": {
+    "dest_port": 670,
+    "ecn_bits": 10,
+    "ecn_tc": 2,
+    "queue_id": 6,
+    "counter_id": 106
+  },
+  "qos_hnu_hnu": {
+    "dest_port": 670,
+    "ecn_bits": 10,
+    "ecn_tc": 2,
+    "queue_id": 6,
+    "counter_id": 106
+  },
+  "qos_nu_hnu": {
+    "source_port": 1234,
+    "dest_port": 897,
+    "ecn_bits": 10,
+    "ecn_tc": 2,
+    "queue_id": 8,
+    "counter_id": 121
+  },
+  "qos_hnu_nu": {
+    "source_port": 1234,
+    "dest_port": 867,
+    "queue_id": 8,
+    "default_queue": 0
+  }
+},
+  "f1" : {
+     "sanity_test_nu_nu": {
+    "source_ip": "192.85.1.10",
+    "wrong_dip": "20.1.1.2",
+    "source_port": 1234,
+    "dest_port": 666,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 103
+  },
+    "qos_nu_nu": {
+    "dest_port": 670,
+    "ecn_bits": 10,
+    "ecn_tc": 2,
+    "queue_id": 6,
+    "counter_id": 106
+  },
+    "range_test_nu_nu": {
+    "source_port": 1234,
+    "range_boundary_high_port": 240,
+    "range_boundary_low_port": 230,
+    "in_range_port": 235,
+    "lower_range_port": 160,
+    "higher_range_port": 458,
+    "source_ip": "192.85.1.10",
+    "counter_id": 110
+  },
+    "nu_nu_v6_test": {
+    "source_ip": "3000::1",
+    "wrong_dip": "2001::20:1:1:1",
+    "source_port": 1234,
+    "dest_port": 777,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "counter_id": 130
+  }
+  }
+}

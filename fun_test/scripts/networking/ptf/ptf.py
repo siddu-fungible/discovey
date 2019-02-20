@@ -1,13 +1,21 @@
 from lib.system.fun_test import *
 from lib.host.linux import Linux
+from scripts.networking.funeth import sanity
 from scripts.networking.lib_nw import funcp
+from scripts.networking.tb_configs import tb_configs
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 import re
 
 
-PTF_SERVER = 'cadence-pc-5'
-PTF_SERVER_USERNAME = 'localadmin'
-PTF_SERVER_PASSWD = 'Precious1*'
+try:
+    tb_config_obj = tb_configs.TBConfigs(sanity.TB)
+    PTF_SERVER = tb_config_obj.get_hostname('hu')
+    PTF_SERVER_USERNAME = tb_config_obj.get_username('hu')
+    PTF_SERVER_PASSWD = tb_config_obj.get_password('hu')
+except:
+    PTF_SERVER = 'cadence-pc-5'
+    PTF_SERVER_USERNAME = 'localadmin'
+    PTF_SERVER_PASSWD = 'Precious1*'
 
 
 class PTFTestSuite(FunTestScript):
@@ -79,7 +87,7 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     else:
         errored_cases = []
 
-    # TODO: Remove below workaround after SWOS-2890 is fixed
+    # TODO: Remove below workaround after EM-820 is fixed
     if tc == 'etp':
         for tc in failed_cases:
             if '2mss' in tc or '3mss' in tc or 'chksum' in tc:
@@ -115,14 +123,14 @@ class EtpTest(FunTestCase):
 
     def setup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
-        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        linux_obj_ptf.command('nohup ping 19.1.1.1 -i 100 &')
+        #linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        #linux_obj_ptf.command('nohup ping 19.1.1.1 -i 100 &')
         pass
 
     def cleanup(self):
         # TODO: Remove below workaround after SWOS-2890 is fixed
-        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        linux_obj_ptf.command('pkill ping')
+        #linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        #linux_obj_ptf.command('pkill ping')
         get_ptf_log()
 
     def run(self):

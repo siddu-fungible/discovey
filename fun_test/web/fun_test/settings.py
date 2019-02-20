@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 from fun_settings import *
-from fun_global import is_regression_server, is_performance_server
+from fun_global import is_lite_mode, is_development_mode
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'web.fun_test',
     'web.tools',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -74,14 +75,11 @@ WSGI_APPLICATION = 'fun_test.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-DEFAULT_DB_FILE = "db.sqlite3"
 REGRESSION_DB_FILE = "regression.db.sqlite3"
-PERFORMANCE_DB_FILE = "performance.db.sqlite3"
 USERS_DB_FILE = "users.db.sqlite3"
 
 DEFAULT_DB_FILE = REGRESSION_DB_FILE
-if is_performance_server() or is_regression_server():
-    DEFAULT_DB_FILE = PERFORMANCE_DB_FILE
+
 
 # print "DEFAULT DB: {}".format(DEFAULT_DB_FILE)
 
@@ -94,29 +92,20 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, USERS_DB_FILE)
     },
-    'performance': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, PERFORMANCE_DB_FILE)
-    },
-    'regression': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, REGRESSION_DB_FILE)
-    },
     'OPTIONS': {
         'timeout': 20,
     }
 }
 
 # Sample for postgresql
-if is_performance_server() or is_regression_server() and True:
-    DATABASES["performance"] = {
+if not is_lite_mode():
+    DATABASES["default"] = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'fun_test',
         'USER': 'fun_test_user',
         'PASSWORD': 'fun123',
         'HOST': 'localhost',
         'PORT': ''}
-    DATABASES["default"] = DATABASES["performance"]
 
 DATABASE_ROUTERS = ('web.fun_test.db_routers.UsersRouter',)
 
@@ -197,12 +186,7 @@ LOGGING = {
 
 CSRF_COOKIE_SECURE = False
 
-# REDIS related settings
-REDIS_HOST = 'localhost'
-REDIS_PORT = '6379'
-BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
-CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
 
 # SESSION_ENGINE = "django.contrib.sessions.backends.file"
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+

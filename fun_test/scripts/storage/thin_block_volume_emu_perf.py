@@ -270,7 +270,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                              passwd=tb_config["tg_info"][0]["ipmi_passwd"],
                                                              interval=30)
             fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(tb_config["tg_info"][0]["ip"]))
-            host_up_status = self.end_host.isHostUp(timeout=self.command_timeout)
+            host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
             fun_test.test_assert(host_up_status, "End Host {} is up".format(tb_config["tg_info"][0]["ip"]))
 
 
@@ -587,7 +587,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                # post_results("BLT_EMU", test_method, *row_data_list)
+                post_results("BLT_EMU", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)

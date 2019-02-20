@@ -40,7 +40,9 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, port_3, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
             dut_port_1, dut_port_3, shape, hnu, dut_port_list, port_1_dscp_stream_1, \
-            port_3_dscp_stream_1, port_2_pfc_stream, port_obj_list
+            port_3_dscp_stream_1, port_2_pfc_stream, port_obj_list, flow_direction
+
+        flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
         dut_port_list = []
         map_list = [x for x in range(16)]
@@ -60,7 +62,7 @@ class SpirentSetup(FunTestScript):
         good_stream_load = 250
         pfc_load = 30
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_3ports", chassis_type=chassis_type,
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_3ports", chassis_type=nu_config_obj.CHASSIS_TYPE,
                                                       spirent_config=spirent_config)
         fun_test.test_assert(template_obj, "Create template object")
 
@@ -80,10 +82,14 @@ class SpirentSetup(FunTestScript):
         port_2 = port_obj_list[1]
         port_3 = port_obj_list[2]
 
-        destination_mac1 = spirent_config['l2_config']['destination_mac']
-        destination_ip1 = spirent_config['l3_config']['ipv4']['destination_ip1']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(routes_config, "Ensure routes config fetched")
+        l3_config = routes_config['l3_config']
+
+        destination_mac1 = routes_config['routermac']
+        destination_ip1 = l3_config['destination_ip1']
         if hnu:
-            destination_ip1 = spirent_config['l3_config']['ipv4']['hnu_destination_ip1']
+            destination_ip1 = l3_config['hnu_destination_ip1']
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
         dut_port_3 = dut_config['ports'][2]
@@ -343,8 +349,6 @@ class TestCase1(FunTestCase):
 
 
 if __name__ == "__main__":
-    local_settings = nu_config_obj.get_local_settings_parameters(flow_direction=True, ip_version=True)
-    flow_direction = local_settings[nu_config_obj.FLOW_DIRECTION]
     ts = SpirentSetup()
     ts.add_test_case(TestCase1())
     ts.run()

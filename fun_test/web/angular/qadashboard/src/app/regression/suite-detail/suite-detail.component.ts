@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService}  from "../../services/api/api.service";
 import { ActivatedRoute } from "@angular/router";
 import {hasOwnProperty} from "tslint/lib/utils";
+import {ReRunService} from "../re-run.service";
+import {LoggerService} from '../../services/logger/logger.service';
+import {RegressionService} from "../regression.service";
 
 @Component({
   selector: 'app-suite-detail',
@@ -18,7 +21,7 @@ export class SuiteDetailComponent implements OnInit {
   scriptExecutionsMap: any = {};
   attributes: any;
 
-  constructor(private apiService: ApiService, private route: ActivatedRoute) {
+  constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService) {
   }
 
   ngOnInit() {
@@ -47,6 +50,9 @@ export class SuiteDetailComponent implements OnInit {
     this.testCaseExecutions = [];
     this.apiService.get("/regression/suite_execution/" + this.executionId).subscribe(function (result) {
       self.suiteExecution = result.data; // TODO: validate
+      ctrl.applyAdditionalAttributes(self.suiteExecution);
+      ctrl.getReRunInfo(self.suiteExecution);
+
       //let suiteExecutionJson = JSON.parse(self.suiteExecution);
       let suiteFields = self.suiteExecution.fields;
       let testCaseExecutionIds = JSON.parse(suiteFields.test_case_execution_ids);
@@ -67,6 +73,24 @@ export class SuiteDetailComponent implements OnInit {
       }
     });
   }
+
+  getReRunInfo(suiteExecution) {
+    if (suiteExecution.fields.suite_type === 'regular') {
+      this.reRunService.getOriginalSuiteReRunInfo(suiteExecution.fields.execution_id).subscribe(response => {
+      suiteExecution["reRunInfo"] = response;
+      }, error => {
+
+      })
+    } else if (suiteExecution.fields.suite_type === 'dynamic') {
+        this.reRunService.getReRunSuiteInfo(suiteExecution.fields.execution_id).subscribe(response => {
+        suiteExecution["reRunInfo"] = response;
+        }, error => {
+
+        })
+    }
+
+  }
+
 
   parseInputs(inputs) {
     let parsedInputs = JSON.parse(inputs);
@@ -133,6 +157,23 @@ export class SuiteDetailComponent implements OnInit {
     window.open(this._getFlatPath(path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
   }
 
+  applyAdditionalAttributes(item) {
+    item["showingDetails"] = false;
+  }
+
+  showDetailsClick(item) {
+    item["showingDetails"] = !item["showingDetails"];
+  }
+
+  getSchedulerLog(suiteId) {
+    return this.regressionService.getSchedulerLog(suiteId);
+  }
+
+  getSchedulerLogDir(suiteId) {
+    return this.regressionService.getSchedulerLogDir(suiteId);
+  }
+
+  /*
   rerunClick(suiteExecutionId, testCaseExecutionId, scriptPath) {
     let payload = {};
     payload["suite_execution_id"] = suiteExecutionId;
@@ -142,6 +183,15 @@ export class SuiteDetailComponent implements OnInit {
       let jobId = parseInt(result.data);
       alert("Rerun Successful");
       window.location.href = "/regression/suite_detail/" + jobId;
+    });
+  }*/
+
+  reRunClick(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null) {
+    this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, scriptFilter).subscribe(response => {
+      alert("Re-run submitted");
+      window.location.href = "/regression";
+    }, error => {
+      this.logger.error("Error submitting re-run");
     });
   }
 

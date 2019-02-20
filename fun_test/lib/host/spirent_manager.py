@@ -300,10 +300,10 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def attach_ports(self, port_list, auto_connect=True):
+    def attach_ports(self, port_list, auto_connect=True, revoke_user=True):
         result = False
         try:
-            self.stc.perform("attachPorts", portList=port_list, autoConnect=auto_connect)
+            self.stc.perform("attachPorts", portList=port_list, autoConnect=auto_connect, RevokeOwner=revoke_user)
             if self.apply_configuration():
                 for port in self.get_port_list():
                     if self.get_port_details(port=port)['Online'] == "false":
@@ -1110,13 +1110,14 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
-    def attach_ports_by_command(self, port_handles, auto_connect_chassis=True):
+    def attach_ports_by_command(self, port_handles, auto_connect_chassis=True, revoke_user=True):
         result = False
         try:
             if type(port_handles) == list:
                 port_handles = ' '.join(port_handles)
             fun_test.debug("Releasing %s from project" % port_handles)
-            output = self.stc.perform("AttachPortsCommand", PortList=port_handles, AutoConnect=auto_connect_chassis)
+            output = self.stc.perform("AttachPortsCommand", PortList=port_handles, AutoConnect=auto_connect_chassis,
+                                      RevokeOwner=revoke_user)
             fun_test.simple_assert(output['State'] == 'COMPLETED', "%s attached" % port_handles)
             if re.search(r'Reserving.*.*', output['Status'], re.IGNORECASE):
                 if self.apply_configuration():

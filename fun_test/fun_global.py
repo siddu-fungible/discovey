@@ -50,13 +50,22 @@ def get_datetime_from_epoch_time(epoch_in_milliseconds):
     date_time = datetime.datetime.utcfromtimestamp(epoch_in_milliseconds / 1000.0)
     return date_time
 
-def is_regression_server():
-    return "REGRESSION_SERVER" in os.environ
+
+def is_production_mode():
+    return "PRODUCTION_MODE" in os.environ
 
 
-def is_performance_server():
-    return "PERFORMANCE_SERVER" in os.environ
+def is_development_mode():
+    return "DEVELOPMENT_MODE" in os.environ
 
+
+def is_lite_mode():
+    """
+    This is for running scripts that do not require a heavy weight DBMS like Postgres
+    For cases that just sqlite
+    For cases where the test-harness is the laptop
+    """
+    return (not is_production_mode()) and (not is_development_mode())
 
 def determine_version(build_url):
     content = fetch_text_file(url=build_url + "/" + BUILD_INFO_FILENAME)

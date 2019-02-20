@@ -29,8 +29,8 @@ from datetime import datetime
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
-from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer
 from web.fun_test.metrics_models import Triage, TriageFlow
+from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -105,9 +105,11 @@ def chart_info(request):
     metric_id = int(request_json["metric_id"])
     if not chart_name:
         chart = MetricChart.objects.get(metric_id=metric_id)
+        milestones = MileStoneMarkers.objects.filter(metric_id=metric_id)
     else:
         chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result = None
+    markers_dict = {}
     if chart:
         result = {"data_sets": json.loads(chart.data_sets),
                   "description": chart.description,
@@ -129,7 +131,11 @@ def chart_info(request):
                   "last_suite_execution_id": chart.last_suite_execution_id,
                   "last_lsf_job_id": chart.last_lsf_job_id,
                   "last_git_commit": chart.last_git_commit,
-                  "owner_info": chart.owner_info}
+                  "owner_info": chart.owner_info,
+                  "source": chart.source}
+        for markers in milestones:
+            markers_dict[markers.milestone_name] = markers.milestone_date
+        result["milestone_markers"] = markers_dict
     return result
 
 
@@ -228,10 +234,11 @@ def update_child_weight(request):
     invalidate_goodness_cache()
 
 
+'''
 @csrf_exempt
 def summary_page(request):
     return render(request, 'qa_dashboard/angular_home.html', locals())
-
+'''
 
 @csrf_exempt
 def initialize(request):
@@ -259,6 +266,7 @@ def metric_info(request):
     serialized_data["children_info"] = result["children_info"]
     return serialized_data
 
+
 @csrf_exempt
 @api_safe_json_response
 def global_settings(request):
@@ -271,14 +279,23 @@ def global_settings(request):
 @api_safe_json_response
 def scores(request):
     result = {}
-    date_range = None
     request_json = json.loads(request.body)
     metric_id = int(request_json["metric_id"])
-    if "date_range" in request_json:
-        date_range = request_json["date_range"]
-        date_range = [parser.parse(x) for x in date_range]
+    chart = None
+    try:
+        chart = MetricChart.objects.get(metric_id=metric_id)
+    except:
+        pass
+    if chart:
+        date_range = [chart.base_line_date, datetime.now()]
         entries = MetricChartStatus.objects.filter(date_time__range=date_range,
                                                    metric_id=metric_id)
+
+    # if "date_range" in request_json:
+    #     date_range = request_json["date_range"]
+    #     date_range = [parser.parse(x) for x in date_range]
+    #     entries = MetricChartStatus.objects.filter(date_time__range=date_range,
+    #                                                metric_id=metric_id)
     # chart_name = request_json["chart_name"]
     else:
         entries = MetricChartStatus.objects.filter(metric_id=metric_id)
@@ -427,6 +444,9 @@ def update_chart(request):
     owner_info = "Unknown"
     if "owner_info" in request_json:
         owner_info = request_json["owner_info"]
+    source = "Unknown"
+    if "source" in request_json:
+        source = request_json["source"]
 
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
@@ -444,6 +464,8 @@ def update_chart(request):
             c.leaf = leaf
         if owner_info:
             c.owner_info = owner_info
+        if source:
+            c.source = source
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,
@@ -456,7 +478,6 @@ def update_chart(request):
         c.save()
         invalidate_goodness_cache()
     return "Ok"
-
 
 
 @csrf_exempt
@@ -644,7 +665,8 @@ def traverse_dag(metric_id, sort_by_name=True):
             child_chart = MetricChart.objects.get(metric_id=child_id)
             children_info[child_chart.metric_id] = traverse_dag(metric_id=child_chart.metric_id)
         if sort_by_name:
-            result["children"] = map(lambda item: item[0], sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
+            result["children"] = map(lambda item: item[0],
+                                     sorted(children_info.iteritems(), key=lambda d: d[1]['chart_name']))
     return result
 
 
@@ -657,7 +679,10 @@ def dag(request):
     chart_name = request_json["chart_name"]
     chart = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=chart_name)
     result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=False)
+    chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="All metrics")
+    result[chart.metric_id] = traverse_dag(metric_id=chart.metric_id, sort_by_name=True)
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -678,6 +703,7 @@ def update_jira_info(request, metric_id, jira_id):
         logger.critical("No data found - updating jira ids for metric id {}".format(metric_id))
         return obj.response.status_code
     return "OK"
+
 
 def validate_jira(jira_id):
     project_name, id = jira_id.split('-')
@@ -707,6 +733,7 @@ def delete_jira_info(request, metric_id, jira_id):
     except ObjectDoesNotExist:
         logger.critical("No data found - Deleting jira ids for metric id {}".format(metric_id))
     return "Ok"
+
 
 @csrf_exempt
 @api_safe_json_response

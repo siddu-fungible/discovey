@@ -21,12 +21,12 @@
       </div>
     </div>
     <!-- fun chart component -->
-    <fun-chart [mileStoneIndex]="mileStoneIndex" [y1Values]="values" [xValues]="series" [title]="chartName"
+    <fun-chart [mileStones]="mileStoneIndices" [y1Values]="values" [xValues]="series" [title]="chartName"
                [xAxisLabel]="chart1XaxisTitle"
                [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"
                [pointClickCallback]="pointClickCallback" (pointInfo)="showPointDetails($event)"></fun-chart>
     <!--showing clicked point details when selected on a chart-->
-    <div class="card" *ngIf="pointClicked && modelName!='MetricContainer'">
+    <div class="card" *ngIf="pointClicked && modelName !== 'MetricContainer'">
       <div class="properties-margin">
         <table>
           <tr *ngFor="let point of pointInfo">
@@ -50,13 +50,27 @@
     </div>
     <!-- showing owner info and description only when leaf charts are clicked -->
     <div *ngIf="!minimal">
-      <div *ngIf="modelName != 'MetricContainer'" style="float: right">
-        <i *ngIf="!editingOwner" class="grey-text">Owner: <span (click)="editingOwner = true">{{ inner.currentOwner }}</span></i>
-        <i *ngIf="editingOwner" style="font-size: 95%;">Owner: <input type="text" class="owner-text" [(ngModel)]="inner.currentOwner">
+      <div *ngIf="modelName !== 'MetricContainer'" style="float: right">
+        <i *ngIf="!editingOwner" class="grey-text">Owner: <span
+          (click)="editingOwner = true">{{ inner.currentOwner }}</span></i>
+        <i *ngIf="editingOwner" style="font-size: 95%;">Owner: <input type="text" class="owner-text"
+                                                                      [(ngModel)]="inner.currentOwner">
           <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
           <span><i class="fa fa-times fa-fw close-color" (click)="editingOwner = false"></i></span></i>
         <br>
-    </div>
+      </div>
+      <br>
+      <div *ngIf="modelName !== 'MetricContainer'" style="float: right">
+        <span *ngIf="!editingSource"><i class="grey-text">Source: </i><i class="grey-text"
+                                                                         *ngIf="inner.currentSource === 'Unknown'">{{ inner.currentSource }}</i>
+          <a *ngIf="inner.currentSource !== 'Unknown'" [routerLink]="" (click)="openSource(inner.currentSource)">{{ getAppName(inner.currentSource) }}</a>&nbsp;
+          <a (click)="editingSource = true"><i class="fa fa-pencil"></i></a></span>
+        <i *ngIf="editingSource" style="font-size: 95%;">Source: <input type="text" class="owner-text"
+                                                                        [(ngModel)]="inner.currentSource">
+          <span><i class="fa fa-check fa-fw tick-color" (click)="submit()"></i></span>
+          <span><i class="fa fa-times fa-fw close-color" (click)="editingSource = false"></i></span></i>
+        <br>
+      </div>
       <br>
       <div>
         <b>Description: </b><a *ngIf="!editingDescription" (click)="toggleEdit()"><i class="fa fa-pencil"></i></a>
@@ -69,12 +83,15 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
-    <br>
-  </div>
-  <div class="closed-section"></div>
-  <!-- Show tables below the leaf chart -->
-  <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
-    <div *ngIf="!minimal">
+      <!--<span style="float: right;">-->
+        <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
+      <!--</span>-->
+      <br>
+    </div>
+    <div class="closed-section"></div>
+    <!-- Show tables below the leaf chart -->
+    <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+      <div *ngIf="!minimal">
     <span class="a-text">
       <a *ngIf="!showingTable" [routerLink]="" (click)="showTables()">Show Table </a>
       <a *ngIf="showingTable" [routerLink]="" (click)="showTables()">Hide Table </a>
@@ -82,54 +99,54 @@
         <span *ngIf="showingTable" class="arrow-down"></span>
       </a>
     </span>
-      <div *ngIf="showingTable" scrollTo>
-        <h3 style="float: left;">{{ chartName }}</h3>
-        <fun-table [data]="data"></fun-table>
+        <div *ngIf="showingTable" scrollTo>
+          <h3 style="float: left;">{{ chartName }}</h3>
+          <fun-table [data]="data"></fun-table>
+        </div>
       </div>
     </div>
-  </div>
-  <!-- configure button below the leaf chart -->
-  <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
-    <div *ngIf="!minimal">
+    <!-- configure button below the leaf chart -->
+    <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
+      <div *ngIf="!minimal">
     <span class="a-text">
       <a [routerLink]="" (click)="showConfigure()">Configure </a>
       <a [routerLink]="" (click)="showConfigure()"><span *ngIf="!showingConfigure" class="arrow-right"></span>
         <span *ngIf="showingConfigure" class="arrow-down"></span>
       </a>
     </span>
-      <div *ngIf="showingConfigure">
-        <table class="table table-nonfluid table-borderless" *ngFor="let dataSet of previewDataSets">
-          <tr>
-            <th>Name</th>
-            <th>Field</th>
-            <th>Min</th>
-            <th>Max</th>
-            <th>Expected</th>
-          </tr>
-          <tr>
-            <td>{{ dataSet.name }}</td>
-            <td>{{ dataSet.output.name }}</td>
-            <td><input type="number" [(ngModel)]="dataSet.output.min" [value]="dataSet.output.min"
-                       style="width: 100px"></td>
-            <td><input type="number" [(ngModel)]="dataSet.output.max" [value]="dataSet.output.max"
-                       style="width: 100px"></td>
-            <td><input type="number" [(ngModel)]="dataSet.output.expected"
-                       [value]="dataSet.output.expected"
-                       style="width: 100px"></td>
-          </tr>
-        </table>
-        <p><input type="checkbox" [checked]="negativeGradient" [(ngModel)]="inner.negativeGradient">&nbsp;Negative
-          gradient
-        </p>
-        <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
-        <div class="row">
-          <div style="padding: 10px;">
-            <button class="btn btn-success" (click)="submit()">Submit</button>
-            <a (click)="showConfigure()"> Cancel</a>
+        <div *ngIf="showingConfigure">
+          <table class="table table-nonfluid table-borderless" *ngFor="let dataSet of previewDataSets">
+            <tr>
+              <th>Name</th>
+              <th>Field</th>
+              <th>Min</th>
+              <th>Max</th>
+              <th>Expected</th>
+            </tr>
+            <tr>
+              <td>{{ dataSet.name }}</td>
+              <td>{{ dataSet.output.name }}</td>
+              <td><input type="number" [(ngModel)]="dataSet.output.min" [value]="dataSet.output.min"
+                         style="width: 100px"></td>
+              <td><input type="number" [(ngModel)]="dataSet.output.max" [value]="dataSet.output.max"
+                         style="width: 100px"></td>
+              <td><input type="number" [(ngModel)]="dataSet.output.expected"
+                         [value]="dataSet.output.expected"
+                         style="width: 100px"></td>
+            </tr>
+          </table>
+          <p><input type="checkbox" [checked]="negativeGradient" [(ngModel)]="inner.negativeGradient">&nbsp;Negative
+            gradient
+          </p>
+          <p><input type="checkbox" [checked]="leaf" [(ngModel)]="inner.leaf">&nbsp;Leaf</p>
+          <div class="row">
+            <div style="padding: 10px;">
+              <button class="btn btn-success" (click)="submit()">Submit</button>
+              <a (click)="showConfigure()"> Cancel</a>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </div>

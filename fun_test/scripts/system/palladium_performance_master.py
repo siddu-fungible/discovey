@@ -1,15 +1,15 @@
 from lib.system.fun_test import *
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
-from web.fun_test.metrics_models import BcopyFloodDmaPerformance
+from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSoakPerformance, PkeP256TlsSoakPerformance
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
-    SoakClassicMallocPerformance
+    SoakClassicMallocPerformance, TeraMarkMultiClusterCryptoPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
-    TeraMarkCryptoPerformance
+    TeraMarkCryptoPerformance, SoakDmaMemcpyCoherentPerformance, SoakDmaMemcpyNonCoherentPerformance, SoakDmaMemsetPerformance
 from web.fun_test.metrics_models import TeraMarkLookupEnginePerformance, FlowTestPerformance, \
     TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance, TeraMarkJpegPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
@@ -30,6 +30,9 @@ TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
 TERAMARK_EC = "ec_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
+SOAK_DMA_MEMCPY_COH = "soak_funos_memcpy_coh"
+SOAK_DMA_MEMCPY_NON_COH = "soak_funos_memcpy_non_coh"
+SOAK_DMA_MEMSET = "soak_funos_memset"
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
                    "Accelerator Compression throughput": "Compression Accelerator throughput",
@@ -37,15 +40,18 @@ jpeg_operations = {"Compression throughput": "Compression throughput with Driver
                    "JPEG Compression": "JPEG Compression"}
 nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 
+
 def get_rounded_time():
     dt = get_current_time()
     dt = datetime(year=dt.year, month=dt.month, day=dt.day, hour=23, minute=59, second=59)
     dt = get_localized_time(dt)
     return dt
 
+
 def get_time_from_timestamp(timestamp):
     time_obj = parse(timestamp)
     return time_obj
+
 
 def is_job_from_today(job_dt):
     today = get_rounded_time()
@@ -53,7 +59,8 @@ def is_job_from_today(job_dt):
     return (job_dt.year == today.year) and (job_dt.month == today.month) and (job_dt.day == today.day)
 
 
-def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, git_commit, model_name):
+def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, git_commit,
+                                 model_name):
     charts = MetricChartHelper.get_charts_by_model_name(metric_model_name=model_name)
     for chart in charts:
         chart.last_build_status = result
@@ -86,6 +93,7 @@ class MyScript(FunTestScript):
 
 class PalladiumPerformanceTc(FunTestCase):
     tag = ALLOC_SPEED_TEST_TAG
+    model = None
     result = fun_test.FAILED
     dt = get_rounded_time()
 
@@ -124,14 +132,21 @@ class PalladiumPerformanceTc(FunTestCase):
         return d
 
     def validate_json_file(self, validation_required=True):
-        log_dir = LOGS_DIR
-        file_path = log_dir + "/nu_rfc2544_performance.json"
         data = {}
+        self.lines = []
+        file_path = LOGS_DIR + "/nu_rfc2544_performance.json"
         fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
         fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
         with open(file_path) as fp:
-           data = json.loads(fp.read())
-        self.lines = data
+            data = json.loads(fp.read())
+            self.lines.append(data)
+
+        file_path = LOGS_DIR + "/hu_funeth_performance_data.json"
+        fun_test.test_assert(os.path.isfile(file_path), "Ensure Hu Funeth Performance Data Json exists")
+        fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
+        with open(file_path) as fp:
+            data = json.loads(fp.read())
+            self.lines.append(data)
         return True
 
 
@@ -264,13 +279,19 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
         average_bandwidth_perf_name = ""
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
+            m = None
+            n = None
 
             for line in self.lines:
-                m = re.search(
-                    r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>.*)\];\s+average bandwidth: (?P<average_bandwidth>\S+) \[(?P<average_bandwidth_perf_name>.*)\]',
-                    line)
-
-                if m:
+                if not m:
+                    m = re.search(
+                        r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>.*)\]',
+                        line)
+                if not n:
+                    n = re.search(
+                        r'bcopy \((?P<coherent>\S+),\s+(?P<plain>\S+)\) (?P<size>\S+) (?P<iterations>\d+) times;\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>.*)\]',
+                        line)
+                if m and n:
                     stats_found = True
                     coherent = "Coherent"
                     if m.group("coherent") != "coherent":
@@ -295,14 +316,15 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                     latency_max = latency_json["max"]
                     latency_avg = latency_json["avg"]
                     latency_perf_name = m.group("latency_perf_name")
-                    average_bandwidth = m.group("average_bandwidth")
+                    bandwidth_json = json.loads(n.group("bandwidth_json"))
+                    average_bandwidth_unit = bandwidth_json["unit"]
                     try:
-                        fun_test.test_assert(average_bandwidth.endswith("Gbps"), "Avg bw should be Gbps")
-                        average_bandwidth = int(average_bandwidth.replace("Gbps", ""))
+                        fun_test.test_assert(average_bandwidth_unit.endswith("Gbps"), "Avg bw should be Gbps")
+                        average_bandwidth = int(bandwidth_json["value"])
                     except Exception as ex:
                         fun_test.critical(str(ex))
 
-                    average_bandwidth_perf_name = m.group("average_bandwidth_perf_name")
+                    average_bandwidth_perf_name = n.group("average_bandwidth_perf_name")
                     MetricHelper(model=BcopyPerformance).add_entry(status=self.result,
                                                                    input_date_time=self.dt,
                                                                    input_plain=plain,
@@ -316,6 +338,8 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                                                                    input_latency_perf_name=latency_perf_name,
                                                                    output_average_bandwith=average_bandwidth,
                                                                    input_average_bandwith_perf_name=average_bandwidth_perf_name)
+                    m = None
+                    n = None
             self.result = fun_test.PASSED
             # if self.result == fun_test.PASSED:
 
@@ -324,8 +348,8 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
             fun_test.critical(str(ex))
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                         test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                         git_commit=self.git_commit, model_name="BcopyPerformance")
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="BcopyPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -343,7 +367,7 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'bcopy flood with dma \((?P<N>\d+)\)\s+(?P<size>\S+);\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>\S+)\];\s+average bandwidth: (?P<average_bandwidth>\S+) \[(?P<average_bandwidth_perf_name>\S+)\]',
+                    r'bcopy flood with dma \((?P<N>\d+)\)\s+(?P<size>\S+);\s+latency\s+\((?P<latency_units>\S+)\):\s+(?P<latency_json>{.*})\s+\[(?P<latency_perf_name>\S+)\];\s+average bandwidth: (?P<bandwidth_json>{.*})\s+\[(?P<average_bandwidth_perf_name>\S+)\]',
                     line)
                 if m:
                     n = m.group("N")
@@ -362,10 +386,11 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
                     latency_max = latency_json["max"]
                     latency_avg = latency_json["avg"]
                     latency_perf_name = m.group("latency_perf_name")
-                    average_bandwidth = m.group("average_bandwidth")
+                    bandwidth_json = json.loads(m.group("bandwidth_json"))
+                    average_bandwidth_unit = bandwidth_json["unit"]
                     try:
-                        fun_test.test_assert(average_bandwidth.endswith("Gbps"), "Avg bw should be Gbps")
-                        average_bandwidth = int(average_bandwidth.replace("Gbps", ""))
+                        fun_test.test_assert(average_bandwidth_unit.endswith("Gbps"), "Avg bw should be Gbps")
+                        average_bandwidth = int(bandwidth_json["value"])
                     except Exception as ex:
                         fun_test.critical(str(ex))
 
@@ -1156,6 +1181,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
 
 class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO
+    model = TeraMarkCryptoPerformance
 
     def describe(self):
         self.set_test_details(id=18,
@@ -1163,43 +1189,66 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-
             for line in self.lines:
                 m = re.search(
-                    r'{"alg":\s+"(?P<algorithm>\S+)",\s+"operation":\s+"(?P<operation>\S+)",\s+"results":\[(?P<results>.*)\]}',
+                    r'(?P<crypto_json>{"test".*})',
                     line)
                 if m:
-                    input_app = "crypto_test_perf"
-                    input_algorithm = m.group("algorithm")
-                    input_operation = m.group("operation")
-                    output_results = json.loads(m.group("results"))
-                    input_pkt_size = int(output_results['pktsize']['value'])
+                    metrics = collections.OrderedDict()
+                    crypto_json = json.loads(m.group("crypto_json"))
+                    input_test = crypto_json["test"]
+                    if self.model == TeraMarkCryptoPerformance:
+                        if "api" in input_test:
+                            input_app = "crypto_api_perf"
+                            input_algorithm = crypto_json["alg"]
+                            input_operation = crypto_json["operation"]
+                            pkt_size_json = crypto_json["pktsize"]
+                            ops_json = crypto_json["ops"] if "ops" in crypto_json else None
+                            bandwidth_json = crypto_json["throughput"]
 
-                    output_ops_unit = "ops/sec"
-                    output_ops_per_sec = int(output_results['ops']['value'])
+                            input_pkt_size = int(pkt_size_json["value"])
+                            output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
+                            output_throughput = float(bandwidth_json["value"])
 
-                    output_throughput_unit = "Mbps"
-                    output_throughput = int(output_results['throughput']['value'])
+                            metrics["input_app"] = input_app
+                            metrics["input_algorithm"] = input_algorithm
+                            metrics["input_operation"] = input_operation
+                            metrics["input_pkt_size"] = input_pkt_size
+                            metrics["output_ops_per_sec"] = output_ops_per_sec
+                            metrics["output_throughput"] = output_throughput
+                            # metrics["output_latency_min"] = output_latency_min
+                            # metrics["output_latency_avg"] = output_latency_avg
+                            # metrics["output_latency_max"] = output_latency_max
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            MetricHelper(model=self.model).add_entry(**d)
+                    elif self.model == TeraMarkMultiClusterCryptoPerformance:
+                        if "raw" in input_test:
+                            input_app = "crypto_raw_speed"
+                            input_algorithm = crypto_json["alg"]
+                            input_operation = crypto_json["operation"]
+                            input_key_size = int(crypto_json["key_size"]) if "key_size" in crypto_json else -1
+                            pkt_size_json = crypto_json["pktsize"]
+                            ops_json = crypto_json["ops"] if "ops" in crypto_json else None
+                            bandwidth_json = crypto_json["throughput"]
 
-                    output_latency_unit = "ns"
-                    output_latency_min = int(output_results['latency']['value']['min'])
-                    output_latency_avg = int(output_results['latency']['value']['avg'])
-                    output_latency_max = int(output_results['latency']['value']['max'])
+                            input_pkt_size = int(pkt_size_json["value"])
+                            output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
+                            output_throughput = float(bandwidth_json["value"])
 
-                    metrics["input_app"] = input_app
-                    metrics["input_algorithm"] = input_algorithm
-                    metrics["input_operation"] = input_operation
-                    metrics["input_pkt_size"] = input_pkt_size
-                    metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_throughput"] = output_throughput
-                    metrics["output_latency_min"] = output_latency_min
-                    metrics["output_latency_avg"] = output_latency_avg
-                    metrics["output_latency_max"] = output_latency_max
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=TeraMarkCryptoPerformance).add_entry(**d)
+                            metrics["input_app"] = input_app
+                            metrics["input_key_size"] = input_key_size
+                            metrics["input_algorithm"] = input_algorithm
+                            metrics["input_operation"] = input_operation
+                            metrics["input_pkt_size"] = input_pkt_size
+                            metrics["output_ops_per_sec"] = output_ops_per_sec
+                            metrics["output_throughput"] = output_throughput
+                            # metrics["output_latency_min"] = output_latency_min
+                            # metrics["output_latency_avg"] = output_latency_avg
+                            # metrics["output_latency_max"] = output_latency_max
+                            d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                            MetricHelper(model=self.model).add_entry(**d)
 
             self.result = fun_test.PASSED
 
@@ -1207,8 +1256,8 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
             fun_test.critical(str(ex))
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkCryptoPerformance")
+                             test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                             git_commit=self.git_commit, model_name=str(self.model))
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1373,6 +1422,7 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name="TeraMarkZipLzmaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
 class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_DFA
 
@@ -1393,8 +1443,8 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
                     teramark_begin = False
                 if teramark_begin:
                     m = re.search(
-                          r'{"Graph\s+Index":\s+(?P<index>\S+),\s+"Processed\s+\(Bytes\)":\s+(?P<processed>\S+),\s+"Matches\s+\(Bytes\)":\s+(?P<matches>\S+),\s+"Duration\s+\(ns\)":\s+(?P<latency>\S+),\s+"Throughput\s+\(Gbps\)":\s+(?P<bandwidth>\S+)}',
-                         line)
+                        r'{"Graph\s+Index":\s+(?P<index>\S+),\s+"Processed\s+\(Bytes\)":\s+(?P<processed>\S+),\s+"Matches\s+\(Bytes\)":\s+(?P<matches>\S+),\s+"Duration\s+\(ns\)":\s+(?P<latency>\S+),\s+"Throughput\s+\(Gbps\)":\s+(?P<bandwidth>\S+)}',
+                        line)
                     if m:
                         input_graph_index = int(m.group("index"))
                         output_processed = int(m.group("processed"))
@@ -1423,6 +1473,7 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name="TeraMarkDfaPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
 class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_JPEG
 
@@ -1443,7 +1494,8 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                 compression_ratio_found = False
                 if "Compression-ratio to 1" in line:
                     compression_ratio_found = True
-                m = re.search(r'JPEG Compression/Decompression performance stats (?P<current_file_name>\S+?)(?=#)', line)
+                m = re.search(r'JPEG Compression/Decompression performance stats (?P<current_file_name>\S+?)(?=#)',
+                              line)
                 if m:
                     current_file_name = m.group("current_file_name")
                     final_file_name = current_file_name
@@ -1480,8 +1532,7 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                                 metrics["output_max_latency"] = d['Stats']['_max_latency']
                                 metrics["output_min_latency"] = d['Stats']['_min_latency']
                                 metrics["output_average_latency"] = d['Stats']['_avg_latency']
-                                metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_kbps']
-                                metrics["output_total_bandwidth"] = d['Stats']['_total_bw_kbps']
+                                metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_gbps']
                             else:
                                 if d["Operation"] in jpeg_operations:
                                     metrics["input_operation"] = jpeg_operations[d["Operation"]]
@@ -1508,10 +1559,11 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name="TeraMarkJpegPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
 class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
     def describe(self):
         self.set_test_details(id=24,
-                              summary="TeraMark NU Transit Performance Test",
+                              summary="TeraMark NU Transit and HU Funeth Performance Test",
                               steps="Steps 1")
 
     def run(self):
@@ -1519,28 +1571,41 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
         try:
 
             fun_test.test_assert(self.validate_json_file(), "validate json file and output")
-            for line in self.lines:
-                if "flow_type" in line:
-                    if line["flow_type"] in nu_transit_flow_types:
-                        line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
-                    metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                    metrics["input_mode"] = line["mode"]
-                    metrics["input_version"] = line["version"]
-                    metrics["input_frame_size"] = line["frame_size"]
-                    date_time = get_time_from_timestamp(line["timestamp"])
-                    metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
-                    metrics["output_pps"] = line["pps"] if "pps" in line else -1
-                    metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
-                    metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
-                    metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
-                    metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
-                    metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
-                    metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
-                    fun_test.log("flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"], metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
-                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    d["input_date_time"] = date_time
-                    if date_time.year >= 2019:
-                        MetricHelper(model=NuTransitPerformance).add_entry(**d)
+            for lines in self.lines:
+                for line in lines:
+                    if "flow_type" in line:
+                        if line["flow_type"] in nu_transit_flow_types:
+                            line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
+                        metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
+                        metrics["input_mode"] = line["mode"] if "mode" in line else ""
+                        metrics["input_version"] = line["version"]
+                        metrics["input_frame_size"] = line["frame_size"]
+                        date_time = get_time_from_timestamp(line["timestamp"])
+                        metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
+                        metrics["output_pps"] = line["pps"] if "pps" in line else -1
+                        metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
+                        metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
+                        if "latency_avg" in line:
+                            metrics["output_latency_avg"] = line["latency_avg"]
+                            metrics["output_latency_median"] = -1
+                        elif "latency_mean" in line:
+                            metrics["output_latency_avg"] = line["latency_mean"]
+                            metrics["output_latency_median"] = line["latency_median"]
+                        else:
+                            metrics["output_latency_avg"] = -1
+                            metrics["output_latency_median"] = -1
+
+                        metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
+                        metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
+                        metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
+                        fun_test.log(
+                            "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
+                                metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"],
+                                metrics["input_frame_size"], metrics["output_jitter_avg"], metrics["output_pps"]))
+                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                        d["input_date_time"] = date_time
+                        if date_time.year >= 2019:
+                            MetricHelper(model=NuTransitPerformance).add_entry(**d)
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -1550,6 +1615,153 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                                      test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
                                      git_commit="", model_name="NuTransitPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="ECDHE_RSA X25519 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+X25519\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_x25519_2k_tls_soak"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=PkeX25519TlsSoakPerformance).add_entry(**d)
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="PkeX25519TlsSoakPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
+class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
+    tag = TERAMARK_PKE
+
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="ECDHE_RSA P256 RSA 2K TLS Soak Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            for line in self.lines:
+                m = re.search(
+                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    line)
+                if m:
+                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    input_app = "pke_p256_2k_tls_soak"
+                    input_metric_name = m.group("metric_name")
+                    fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
+                    metrics["input_app"] = input_app
+                    metrics["input_metric_name"] = input_metric_name
+                    metrics["output_ops_per_sec"] = output_ops_per_sec
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=PkeP256TlsSoakPerformance).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name="PkeP256TlsSoakPerformance")
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
+    tag = SOAK_DMA_MEMCPY_COH
+    model = SoakDmaMemcpyCoherentPerformance
+
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="Soak DMA memcpy coherent Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        metrics = collections.OrderedDict()
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            for line in self.lines:
+                m = re.search(
+                    r'Bandwidth\s+for\s+DMA\s+(?P<operation>\S+)\s+for\s+size\s+(?P<size>\S+):\s+(?P<bandwidth_json>.*)\s+\[(?P<metric_name>\S+)\]',
+                    line)
+                if m:
+                    input_operation = m.group("operation")
+                    input_size = m.group("size")
+                    bandwidth_json = json.loads(m.group("bandwidth_json"))
+                    output_bandwidth = float(bandwidth_json["value"])
+                    input_unit = bandwidth_json["unit"]
+                    input_log_size = bandwidth_json["log_size"]
+                    metric_name = m.group("metric_name")
+                    metrics["input_size"] = input_size
+                    metrics["input_operation"] = input_operation
+                    metrics["output_bandwidth"] = output_bandwidth
+                    metrics["input_unit"] = input_unit
+                    metrics["input_log_size"] = input_log_size
+                    metrics["input_metric_name"] = metric_name
+                    d = self.metrics_to_dict(metrics, fun_test.PASSED)
+                    MetricHelper(model=self.model).add_entry(**d)
+
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name=str(self.model))
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
+    tag = SOAK_DMA_MEMCPY_NON_COH
+    model = SoakDmaMemcpyNonCoherentPerformance
+
+    def describe(self):
+        self.set_test_details(id=28,
+                              summary="Soak DMA memcpy Non coherent Performance Test",
+                              steps="Steps 1")
+
+class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
+    tag = SOAK_DMA_MEMSET
+    model = SoakDmaMemsetPerformance
+
+    def describe(self):
+        self.set_test_details(id=29,
+                              summary="Soak DMA memset Performance Test",
+                              steps="Steps 1")
+
+class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
+    tag = TERAMARK_CRYPTO
+    model = TeraMarkMultiClusterCryptoPerformance
+
+    def describe(self):
+        self.set_test_details(id=30,
+                              summary="TeraMark Multi Cluster Crypto Performance Test",
+                              steps="Steps 1")
+
 
 class PrepareDbTc(FunTestCase):
     def describe(self):
@@ -1570,7 +1782,7 @@ class PrepareDbTc(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MyScript()
-    
+
     myscript.add_test_case(AllocSpeedPerformanceTc())
     myscript.add_test_case(BcopyPerformanceTc())
     myscript.add_test_case(BcopyFloodPerformanceTc())
@@ -1595,6 +1807,12 @@ if __name__ == "__main__":
     # myscript.add_test_case(TeraMarkDfaPerformanceTC())
     myscript.add_test_case(TeraMarkJpegPerformanceTC())
     myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

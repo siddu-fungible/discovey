@@ -25,6 +25,7 @@ from . import demo_views
 from . import triaging
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
+from fun_global import is_development_mode
 
 regression_urls = [
     url(r'^$', views.angular_home),
@@ -72,6 +73,8 @@ regression_urls = [
     url(r'^all_jiras$', regression_views.all_regression_jiras),
     url(r'^jiras/(\d+)/?(.*)?$', regression_views.jiras),
     url(r'^script_execution/(\d+)$', regression_views.script_execution),
+    url(r'^job_spec/(\d+)$', regression_views.job_spec),
+    url(r'^re_run_info$', regression_views.re_run_info),
     url(r'^(?:\S+)$', views.angular_home)
 
 ]
@@ -136,7 +139,7 @@ metric_urls = [
     url(r'^update_chart$', metrics_views.update_chart),
     url(r'^tables/(.*?)/(\d+)$', metrics_views.tables),
     url(r'^table_data$', metrics_views.table_data),
-    url(r'^summary$', metrics_views.summary_page),
+    # url(r'^summary$', metrics_views.summary_page),
     url(r'^metric_info$', metrics_views.metric_info),
     url(r'^atomic/(.*)/(.*)$', metrics_views.atomic),
     url(r'^score_table/(\d+)$', metrics_views.score_table),

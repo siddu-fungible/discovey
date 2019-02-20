@@ -216,20 +216,22 @@ class FSOnECTestcase(FunTestCase):
         # and the total file size
         self.dd_write_args["block_size"] = self.ec_info["volume_block"]["ndata"] * self.ec_info["ndata"]
         self.dd_write_args["count"] = self.input_file_size / self.dd_write_args["block_size"]
-        cmd_timeout = self.dd_write_args["count"] / self.test_timeout_ratio
+        io_timeout = self.dd_write_args["count"] / self.test_timeout_ratio
+        if io_timeout < 60:
+            io_timeout = 60
 
         # Write a file into the EC volume of size self.input_file_size bytes
-        return_size = self.host.dd(timeout=cmd_timeout, **self.dd_write_args)
+        return_size = self.host.dd(timeout=io_timeout, **self.dd_write_args)
         fun_test.test_assert_expected(self.input_file_size, return_size, "Writing {} bytes file into the EC volume".
                                       format(self.input_file_size))
-        self.input_md5sum = self.host.md5sum(file_name=self.dd_write_args["output_file"])
+        self.input_md5sum = self.host.md5sum(file_name=self.dd_write_args["output_file"], timeout=io_timeout)
         fun_test.test_assert(self.input_md5sum, "Finding md5sum of input file {}".
                              format(self.dd_write_args["output_file"]))
         # If the testcase is a buffered I/O then flush the kernel buffers/pages after the write operation, so that
         # the entire file will be flushed to the underlying volume
         if "oflag" not in self.dd_write_args:
-            self.host.sudo_command("sync", timeout=cmd_timeout)
-            self.host.sudo_command("echo 3>/proc/sys/vm/drop_caches", timeout=cmd_timeout)
+            self.host.sudo_command("sync", timeout=io_timeout)
+            self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=io_timeout)
 
     def do_read_test(self, ndata, nparity):
 
@@ -237,16 +239,18 @@ class FSOnECTestcase(FunTestCase):
         # and the total file size
         self.dd_read_args["block_size"] = self.ec_info["volume_block"]["ndata"] * self.ec_info["ndata"]
         self.dd_read_args["count"] = self.input_file_size / self.dd_read_args["block_size"]
-        cmd_timeout = self.dd_read_args["count"] / self.test_timeout_ratio
+        io_timeout = self.dd_read_args["count"] / self.test_timeout_ratio
+        if io_timeout < 60:
+            io_timeout = 60
 
         # If the testcase is a buffered I/O then flush the kernel buffers/pages before the readoperation, so that
         # the entire file will be read from the underlying volume
         if "iflag" not in self.dd_read_args:
-            self.host.sudo_command("sync", timeout=cmd_timeout)
-            self.host.sudo_command("echo 3>/proc/sys/vm/drop_caches", timeout=cmd_timeout)
+            self.host.sudo_command("sync", timeout=io_timeout)
+            self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=io_timeout)
 
         # Read the previously written file from the EC volume and calculate the md5sum of the same
-        return_size = self.host.dd(timeout=cmd_timeout, **self.dd_read_args)
+        return_size = self.host.dd(timeout=io_timeout, **self.dd_read_args)
         fun_test.test_assert_expected(self.input_file_size, return_size, "Reading {} bytes file into the EC volume".
                                       format(self.input_file_size))
         self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
@@ -277,6 +281,7 @@ class FSOnECTestcase(FunTestCase):
             setattr(self, k, v)
         # End of benchmarking json file parsing
 
+        # Getting handles to the DUT and the qemu host and preserving their start commands
         self.topology = fun_test.shared_variables["topology"]
         self.dut = self.topology.get_dut_instance(index=0)
         fun_test.test_assert(self.dut, "Retrieved DUT instance")
@@ -287,14 +292,21 @@ class FSOnECTestcase(FunTestCase):
         self.funos_cmdline = fun_test.shared_variables["funos_cmdline"]
         self.qemu_cmdline = fun_test.shared_variables["qemu_cmdline"]
 
+        self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
+        self.volume_name = self.nvme_block_device.replace("/dev/", "")
+        self.volume_attached = False
+
+        # Increasing the nvme driver timeouts for posix platform
+        timeout_config = ""
+        for key, value in self.nvme_timeouts.items():
+            timeout_config += 'options nvme {}="{}"\n'.format(key, value)
+        self.host.create_file(file_name=r"/etc/modprobe.d/nvme_core.conf", contents=timeout_config)
+        self.host.command("cat /etc/modprobe.d/nvme_core.conf")
+
         # Configuring the controller
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Enabling counters on DUT instance")
-
-        self.nvme_block_device = self.nvme_device + "n" + str(self.ns_id)
-        self.volume_name = self.nvme_block_device.replace("/dev/", "")
-        self.volume_attached = False
 
     def run(self):
 
@@ -352,11 +364,12 @@ class FSOnECTestcase(FunTestCase):
                 fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                               message="Ensuring error_injection got disabled")
 
-                # Reloading the nvme driver before checking the disk
+                # Reloading the nvme driver before checking the disk and decrease the queue length
                 if self.reload_after_config:
                     command_result = self.host.nvme_restart()
                     fun_test.simple_assert(command_result, "Reloading nvme driver")
                     fun_test.sleep("Waiting for the nvme driver reload to complete", 5)
+                    self.host.sudo_command("echo 8 >/sys/block/nvme0n1/queue/nr_requests")
 
                 # Checking that the volume is accessible to the host
                 lsblk_output = self.host.lsblk("-b")
@@ -372,7 +385,11 @@ class FSOnECTestcase(FunTestCase):
                 if self.fs_type == "xfs":
                     install_status = self.host.install_package("xfsprogs")
                     fun_test.test_assert(install_status, "Installing XFS Package")
-                fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device)
+                # Set the timeout for the filesystem create command based on its size
+                fs_create_timeout = (size / 1073741824) * 120
+                if not fs_create_timeout:
+                    fs_create_timeout = 60
+                fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device, timeout=fs_create_timeout)
                 fun_test.test_assert(fs_status, "Creating {} filesystem on EC volume {}".format(self.fs_type,
                                                                                                 self.volume_name))
                 command_result = self.host.create_directory(self.mount_point)
