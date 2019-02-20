@@ -688,6 +688,10 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         count_in_mbps = count_in_bps / 1000000
         return int(count_in_mbps)
 
+    def _convert_bps_to_kbps(self, count_in_bps):
+        count_in_kbps = count_in_bps / 1000
+        return int(count_in_kbps)
+
     def validate_traffic_rate_results(self, rx_summary_subscribe_handle, tx_summary_subscribe_handle, stream_objects,
                                       wait_before_fetching_results=True, validate_throughput=True, tx_port=None,
                                       rx_port=None):
@@ -1499,6 +1503,108 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 fun_test.log("Chassis Type: %s FEC Status: %s Interface: %s Port: %s" % (
                     self.chassis_type, self.stc_manager.get_fec_status(handle=handle), handle, port_handle))
                 count += 1
+            result['result'] = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_traffic_rate_comparison(self, rx_summary_subscribe_handle, tx_summary_subscribe_handle, stream_objects,
+                                      wait_before_fetching_results=True, validate_throughput=True, tx_port=None,
+                                      rx_port=None, time_for_throughput=25, kbps=False):
+        result = {'result': False, 'pps_in': 0, 'pps_out': 0, 'throughput_count_in': 0, 'throughput_count_out': 0}
+        try:
+            if wait_before_fetching_results:
+                fun_test.sleep("Waiting for traffic to reach full throughput", seconds=time_for_throughput)
+
+            for stream_obj in stream_objects:
+                if stream_obj.FixedFrameLength == 64:
+                    if not tx_port and not rx_port:
+                        raise Exception("Please provide Spirent Tx Port and Rx Port handles")
+
+                    checkpoint = "Fetch Tx Port Results for %s" % tx_port
+                    tx_port_result = self.stc_manager.get_generator_port_results(
+                        port_handle=tx_port, subscribe_handle=tx_summary_subscribe_handle)
+                    fun_test.simple_assert(expression=tx_port_result, message=checkpoint)
+                    checkpoint = "Fetch Rx Port Results for %s" % rx_port
+                    rx_port_result = self.stc_manager.get_rx_port_analyzer_results(
+                        port_handle=rx_port, subscribe_handle=rx_summary_subscribe_handle)
+                    fun_test.simple_assert(expression=rx_port_result, message=checkpoint)
+
+                    fun_test.log("FrameRate (PPS) Results for %s : Tx --> %d fps and Rx --> %d fps" % (
+                        stream_obj.spirent_handle, int(tx_port_result['GeneratorFrameRate']),
+                        int(rx_port_result['TotalFrameRate'])))
+                    rx_pps_count = self._manipulate_rate_counters(tx_rate_count=int(tx_port_result['GeneratorFrameRate']),
+                                                                  rx_rate_count=int(rx_port_result['TotalFrameRate']))
+
+                    result['pps_in'] = int(tx_port_result['GeneratorFrameRate'])
+                    result['pps_out'] = rx_pps_count
+                    if validate_throughput:
+                        if kbps:
+                            tx_l1_bit_rate_in_kbps = self._convert_bps_to_kbps(
+                                count_in_bps=int(tx_port_result['L1BitRate']))
+                            rx_l1_bit_rate_in_kbps = self._convert_bps_to_kbps(
+                                count_in_bps=int(rx_port_result['L1BitRate']))
+                            fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d kbps and Rx --> %d kbps " % (
+                                stream_obj.spirent_handle, tx_l1_bit_rate_in_kbps, rx_l1_bit_rate_in_kbps))
+                            rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_kbps,
+                                                                         rx_rate_count=rx_l1_bit_rate_in_kbps)
+                            result['throughput_count_in'] = tx_l1_bit_rate_in_kbps
+                            result['throughput_count_out'] = rx_bit_rate
+                        else:
+                            tx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(tx_port_result['L1BitRate']))
+                            rx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(rx_port_result['L1BitRate']))
+                            fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d Mbps and Rx --> %d Mbps " % (
+                                stream_obj.spirent_handle, tx_l1_bit_rate_in_mbps, rx_l1_bit_rate_in_mbps))
+                            rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_mbps,
+                                                                         rx_rate_count=rx_l1_bit_rate_in_mbps)
+                            result['throughput_count_in'] = tx_l1_bit_rate_in_mbps
+                            result['throughput_count_out'] = rx_bit_rate
+                else:
+
+                    checkpoint = "Fetch Tx Results for %s" % stream_obj.spirent_handle
+                    tx_result = self.stc_manager.get_tx_stream_block_results(stream_block_handle=stream_obj.spirent_handle,
+                                                                             subscribe_handle=tx_summary_subscribe_handle,
+                                                                             summary=True, refresh=False)
+                    fun_test.simple_assert(expression=tx_result, message=checkpoint)
+
+                    checkpoint = "Fetch Rx Results for %s" % stream_obj.spirent_handle
+                    rx_result = self.stc_manager.get_rx_stream_block_results(stream_block_handle=stream_obj.spirent_handle,
+                                                                             subscribe_handle=rx_summary_subscribe_handle,
+                                                                             summary=True, refresh=False)
+                    fun_test.simple_assert(expression=rx_result, message=checkpoint)
+
+                    fun_test.log("FrameRate (PPS) Results for %s : Tx --> %d fps and Rx --> %d fps" % (
+                        stream_obj.spirent_handle, int(tx_result['FrameRate']), int(rx_result['FrameRate'])))
+
+                    rx_pps_count = self._manipulate_rate_counters(tx_rate_count=int(tx_result['FrameRate']),
+                                                                  rx_rate_count=int(rx_result['FrameRate']))
+
+                    result['pps_in'] = int(tx_result['FrameRate'])
+                    result['pps_out'] = rx_pps_count
+                    if validate_throughput:
+                        if kbps:
+                            tx_l1_bit_rate_in_kbps = self._convert_bps_to_kbps(count_in_bps=int(tx_result['L1BitRate']))
+                            rx_l1_bit_rate_in_kbps = self._convert_bps_to_kbps(count_in_bps=int(rx_result['L1BitRate']))
+                            fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d kbps and Rx --> %d kbps " % (
+                                stream_obj.spirent_handle, tx_l1_bit_rate_in_kbps, rx_l1_bit_rate_in_kbps))
+
+                            rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_kbps,
+                                                                         rx_rate_count=rx_l1_bit_rate_in_kbps)
+                            result['throughput_count_in'] = tx_l1_bit_rate_in_kbps
+                            result['throughput_count_out'] = rx_bit_rate
+                        else:
+                            tx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(tx_result['L1BitRate']))
+                            rx_l1_bit_rate_in_mbps = self._convert_bps_to_mbps(count_in_bps=int(rx_result['L1BitRate']))
+                            fun_test.log("Throughput (L1 Rate) Results for %s : Tx --> %d Mbps and Rx --> %d Mbps " % (
+                                stream_obj.spirent_handle, tx_l1_bit_rate_in_mbps, rx_l1_bit_rate_in_mbps))
+
+                            rx_bit_rate = self._manipulate_rate_counters(tx_rate_count=tx_l1_bit_rate_in_mbps,
+                                                                         rx_rate_count=rx_l1_bit_rate_in_mbps)
+                            result['throughput_count_in'] = tx_l1_bit_rate_in_mbps
+                            result['throughput_count_out'] = rx_bit_rate
+                #     result['pps_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): int(rx_result['FrameRate'])}
+                # if validate_throughput:
+                #     result['throughput_count'] = {'frame_%s' % str(stream_obj.FixedFrameLength): float(rx_bit_rate)}
             result['result'] = True
         except Exception as ex:
             fun_test.critical(str(ex))
