@@ -1258,6 +1258,52 @@
                 "label": "SHA_256 Throughput",
                 "children": [],
                 "weight": 1
+              },
+              {
+                "info": "Crypto raw throughput",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "Crypto raw throughput",
+                "label": "Raw Throughput",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "AES_GCM Encryption Raw Throughput",
+                    "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
+                    "leaf": true,
+                    "name": "AES_GCM Encryption Raw Throughput",
+                    "label": "AES_GCM",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "AES_XTS Encryption Raw Throughput",
+                    "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
+                    "leaf": true,
+                    "name": "AES_XTS Encryption Raw Throughput",
+                    "label": "AES_XTS",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "SHA_256 Raw Throughput",
+                    "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
+                    "leaf": true,
+                    "name": "SHA_256 Raw Throughput",
+                    "label": "SHA_256",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "SHA3_256 Raw Throughput",
+                    "metric_model_name": "TeraMarkMultiClusterCryptoPerformance",
+                    "leaf": true,
+                    "name": "SHA3_256 Raw Throughput",
+                    "label": "SHA3_256",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
               }
             ]
           },

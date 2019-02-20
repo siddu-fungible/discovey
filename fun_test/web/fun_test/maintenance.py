@@ -692,7 +692,7 @@ if __name__ == "__main_rebasing__":
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_DMA__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
     chart_names = ["DMA", "MovingBits"]
@@ -714,3 +714,16 @@ if __name__ == "__main__":
                                    milestone_name="Tape-out")
             mmt.save()
     print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    internal_chart_names = ["Crypto raw throughput", "AES_GCM Encryption Raw Throughput", "AES_XTS Encryption Raw Throughput", "SHA_256 Raw Throughput", "SHA3_256 Raw Throughput"]
+    for entry in entries:
+        if entry.internal_chart_name in internal_chart_names:
+            base_line_date = datetime(year=2019, month=2, day=17, minute=0, hour=0, second=0)
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+    print "Milestone and Baseline Setting for Crypto Raw Throughput Complete"
