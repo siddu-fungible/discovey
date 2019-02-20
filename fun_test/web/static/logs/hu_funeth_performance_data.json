@@ -297,5 +297,18 @@
         "throughput": 1.873,
         "timestamp": "2019-02-17 07:06:47.569944-08:00",
         "version": 5300
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 64,
+        "jitter": 3530.0,
+        "latency_P99.0": 1260000.0,
+        "latency_avg": 223000.0,
+        "latency_max": 1330000.0,
+        "latency_min": 14700.0,
+        "pps": 372.35,
+        "throughput": 0.191,
+        "timestamp": "2019-02-18 21:41:57.999687-08:00",
+        "version": 5308
     }
 ]
