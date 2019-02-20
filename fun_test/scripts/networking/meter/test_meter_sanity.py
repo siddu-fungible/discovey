@@ -283,6 +283,27 @@ class MeterPps1Rate(MeterBase):
     mode = METER_MODE_PPS
     rate_mode = SrTCM
 
+    def describe(self):
+        self.set_test_details(id=2, summary="Test SrTC meter transit for pps",
+                              steps="""
+                                  1. Create Stream on Tx port with defined kbps
+                                  2. Start Traffic for %d secs
+                                  3. Make sure Rx and Tx framecount are equal
+                                  4. Make sure Rx and Tx rate are same
+                                  5. Make sure packets are seen in expected meter colors
+                                  6. Ensure no errors are seen on spirent ports
+                                  """ % TRAFFIC_DURATION)
+
+    def setup(self):
+        super(MeterPps1Rate, self).setup()
+
+    def cleanup(self):
+        super(MeterPps1Rate, self).cleanup()
+
+    def run(self):
+        super(MeterPps1Rate, self).run()
+
+
 
 class MeterPps2Rate(MeterBase):
     load_type = "FRAMES_PER_SECOND"
