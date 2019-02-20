@@ -2,7 +2,7 @@
   {
     "bps_meter":{
       "sport" : 1234,
-      "dport" : 1666,
+      "dport" : 1024,
       "meter_id" : 60,
       "meter_interval" : 13,
       "meter_credit" : 4,

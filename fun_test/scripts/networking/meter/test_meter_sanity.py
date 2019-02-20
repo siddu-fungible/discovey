@@ -137,12 +137,15 @@ class SpirentSetup(FunTestScript):
 class MeterBase(FunTestCase):
     stream_obj = None
     load_type = "MEGABITS_PER_SECOND"
-    load = test_config['load_kbps']
+    load = test_config['load_mbps']
     dport = meter_bps['dport']
+    sport = meter_bps['sport']
     meter_id = meter_bps['meter_id']
     meter_interval = meter_bps['meter_interval']
     meter_credit = meter_bps['meter_credit']
     commit_rate = meter_bps['commit_rate']
+    commit_burst = meter_bps['commit_burst']
+    excess_burst = meter_bps['excess_burst']
     mode = METER_MODE_BPS
     rate_mode= TWO_COLOR_METER
 
@@ -166,7 +169,7 @@ class MeterBase(FunTestCase):
         self.stream_obj = create_streams(tx_port=nu_ing_port, load=self.load, load_type=self.load_type,
                                          dmac=self.routes_config['routermac'],
                                          dip=self.l3_config['destination_ip1'],
-                                         d_port=self.dport)
+                                         d_port=self.dport, s_port=self.sport)
         checkpoint = "Clear FPG port stats on DUT"
         c = 0
         for port_num in dut_config['ports']:
@@ -182,7 +185,8 @@ class MeterBase(FunTestCase):
         rx_port = nu_eg_port
         result = network_controller_obj.update_meter(index=self.meter_id, interval=self.meter_interval,
                                                      crd=self.meter_credit, commit_rate=self.commit_rate,
-                                                     pps_mode=self.mode, rate_mode=self.rate_mode)
+                                                     pps_mode=self.mode, rate_mode=self.rate_mode,
+                                                     commit_burst=self.commit_burst, excess_burst=self.excess_burst)
 
         meter_before =  network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
@@ -192,7 +196,7 @@ class MeterBase(FunTestCase):
         fun_test.sleep("Waiting for traffic to reach full throughput", seconds=5)
         stream_objs = []
         stream_objs.append(self.stream_obj)
-        rate_result = template_obj.validate_traffic_rate_results(
+        rate_result = template_obj.get_traffic_rate_comparison(
             rx_summary_subscribe_handle=subscribed_results['rx_summary_subscribe'],
             tx_summary_subscribe_handle=subscribed_results['tx_stream_subscribe'],
             stream_objects=stream_objs)
@@ -218,6 +222,11 @@ class MeterBase(FunTestCase):
                                           message=checkpoint)
             meter_after = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
             fun_test.log(meter_after)
+            meter_green = (int(meter_after['green']['pkts']) - int(meter_before['green']['pkts']))
+            meter_yellow = (int(meter_after['yellow']['pkts']) - int(meter_before['yellow']['pkts']))
+            meter_red = (int(meter_after['red']['pkts']) - int(meter_before['red']['pkts']))
+            fun_test.test_assert_expected(expected=frames_transmitted, actual=meter_green+meter_red+meter_yellow)
+
 
 
     def cleanup(self):
@@ -259,6 +268,6 @@ class MeterPps3Color(MeterBase):
 if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(MeterBase())
-    ts.add_test_case(MeterPps2Color())
-    ts.add_test_case(MeterPps3Color())
+    # ts.add_test_case(MeterPps2Color())
+    # ts.add_test_case(MeterPps3Color())
     ts.run()

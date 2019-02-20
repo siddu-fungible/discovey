@@ -6,7 +6,7 @@
     "max_frame_size": 1500,
     "fixed_frame_size": 128,
     "load_type": "MEGABITS_PER_SECOND",
-    "load_kbps": 1,
+    "load_mbps": 1,
     "load_pps" : 100,
     "traffic_duration":30,
     "insert_signature": true,
