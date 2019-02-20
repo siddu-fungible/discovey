@@ -128,13 +128,7 @@
             <td *ngIf="flatNode.special">
               &nbsp;
             </td>
-            <!--<ng-template #GitCommitInfo>-->
-              <!--<triage [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></triage>-->
-            <!--</ng-template>-->
             <ng-template #TrendInfo>
-              <button (click)="openGitDetails(flatNode.node)" class="btn btn-sm failed-label no-margin git-commit">
-                    Triage
-                  </button>
               <div style="color: black">
                 <b><u>Trend Calculation:</u></b><br>
                 Deviation = ((Current Score - Previous Score)/(min(Current Score, Previous Score))) * 100<br>

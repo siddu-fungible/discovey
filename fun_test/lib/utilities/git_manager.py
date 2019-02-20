@@ -65,7 +65,7 @@ class GitManager:
 
 if __name__ == "__main__":
      m = GitManager()
-     list = m.get_commits_between('5d3c45dd24f5154b689f3876cb048184b6de9db9','09fc91e7aa029925324667553b48834bc54bea17')
+     list = m.get_commits_between('20fc4887a46a8d59d01d55470f1501c6763d01ea','27ee475fac43eeb93c604e59d185b903360fc504')
 
      for l in list["commits"]:
          print l["hexsha"], l["date"]

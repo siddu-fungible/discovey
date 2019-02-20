@@ -20,6 +20,7 @@
         <a (click)="setTimeMode('all')"> All </a>
       </div>
     </div>
+
     <!-- fun chart component -->
     <fun-chart [mileStones]="mileStoneIndices" [y1Values]="values" [xValues]="series" [title]="chartName"
                [xAxisLabel]="chart1XaxisTitle"
@@ -83,6 +84,11 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
+      <div style="float: right">
+      <button (click)="openGitDetails()" class="btn btn-sm failed-label no-margin git-commit">
+                    Triage
+                  </button>
+    </div>
       <!--<span style="float: right;">-->
         <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
       <!--</span>-->

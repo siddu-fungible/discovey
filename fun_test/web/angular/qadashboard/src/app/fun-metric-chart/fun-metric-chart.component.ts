@@ -363,6 +363,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     });
   }
 
+  openGitDetails(): void {
+    let url = "/performance/atomic/" + this.metricId + "/triage";
+    window.open(url, '_blank');
+  }
+
   openSource(url): void {
     window.open(url, '_blank');
   }

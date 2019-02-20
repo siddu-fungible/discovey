@@ -867,10 +867,6 @@ export class PerformanceComponent implements OnInit {
     window.open(url, '_blank');
   };
 
-  openGitDetails(node): void {
-    let url = "/performance/atomic/" + node.metricId + "/triage";
-    window.open(url, '_blank');
-  }
 
   expandNode = (flatNode, all = false) => {
     let topLineage = null;
@@ -918,6 +914,7 @@ export class PerformanceComponent implements OnInit {
     this.navigateByQuery(flatNode);
 
   };
+
 
   showNonAtomicMetric = (flatNode) => {
     if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
