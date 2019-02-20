@@ -45,6 +45,7 @@ class NuConfigManager(object):
     def __init__(self):
         self.get_dut_type()
         self.get_chassis_type()
+        self.get_speed()
 
     def get_chassis_type(self):
         if self.DUT_TYPE == self.DUT_TYPE_F1:
@@ -52,6 +53,15 @@ class NuConfigManager(object):
         else:
             self.CHASSIS_TYPE = self.CHASSIS_TYPE_VIRTUAL
         return self.CHASSIS_TYPE
+
+    def get_speed(self):
+        self.SPEED = None
+        job_inputs = fun_test.get_job_inputs()
+        if job_inputs and 'speed' in job_inputs:
+            set_speed = job_inputs['speed'].split('_')[1]
+            if set_speed[-1] == 'G':
+                self.SPEED = int(set_speed[:-1]) * 1000
+        return self.SPEED
 
     def _parse_file_to_json_in_order(self, file_name):
         result = None
@@ -360,7 +370,7 @@ class NuConfigManager(object):
         try:
             fun_test.simple_assert(flow_direction or ip_version or spray_enable,
                                    "No parameter provided to be fetcehd from local settings")
-            configs = nu_config_obj._get_nu_configs()
+            configs = self._get_nu_configs()
             fun_test.simple_assert(configs, "Get NU Configs")
             for config in configs:
                 if config['name'] == "local_settings":

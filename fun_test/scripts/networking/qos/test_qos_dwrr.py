@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header
 from lib.host.network_controller import NetworkController
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import NuConfigManager
 from scripts.networking.helper import *
 from scripts.networking.qos.qos_helper import *
 
@@ -10,14 +10,6 @@ num_ports = 3
 streamblock_objs = {}
 generator_config_objs = {}
 generator_dict = {}
-config = nu_config_obj.read_dut_config()
-qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
-if config['type'] == 'f1':
-    qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
-qos_json_output = fun_test.parse_file_to_json(qos_json_file)
-test_type = "dwrr"
-qos_sp_json = qos_json_output[test_type]
-sleep_timer = qos_sp_json['dwrr_traffic_time']
 k_list = [x for x in range(0, 16)]
 k_list.reverse()
 
@@ -36,15 +28,29 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list, flow_direction
+            dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list, flow_direction, nu_config_obj, \
+            qos_sp_json, sleep_timer, qos_json_output, max_egress_load
+
+        nu_config_obj = NuConfigManager()
+
+        qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
+        qos_json_output = fun_test.parse_file_to_json(qos_json_file)
+        test_type = "dwrr"
+        qos_sp_json = qos_json_output[test_type]
+        sleep_timer = qos_sp_json['dwrr_traffic_time']
+        
+        max_egress_load = nu_config_obj.SPEED
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_PALLADIUM:
+            max_egress_load = qos_json_output['max_egress_load']
 
         min_frame_length = 64
         max_frame_length = 1500
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
-        dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+        dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE, flow_direction=flow_direction)
 
         shape = 0
         hnu = False
@@ -55,7 +61,7 @@ class SpirentSetup(FunTestScript):
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_ingress_qos",
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_qos_dwrr",
                                                       spirent_config=spirent_config,
                                                       chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
@@ -174,18 +180,16 @@ class SpirentSetup(FunTestScript):
             fun_test.simple_assert(remove_strict_priority, "Remove SP for queue %s" % queue)
 
     def cleanup(self):
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2, qos_json_output=qos_json_output)
         fun_test.test_assert(reset_config, "Ensure default scheduler config is set for all queues")
 
         template_obj.cleanup()
 
 
 class Dwrr_Q0_Q1_Q2_Q3(FunTestCase):
-    max_egress_load = qos_json_output['max_egress_load']
-    json_load_unit = qos_json_output['load_unit']
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json
+    test_streams = None
     all_streamblock_handle_list = []
     fixed_frame_length = True
     port_1_dscp = [0, 1]
@@ -202,6 +206,7 @@ class Dwrr_Q0_Q1_Q2_Q3(FunTestCase):
                               """)
 
     def setup(self):
+        self.test_streams = qos_sp_json
 
         # Create streams
         for port, streams in self.test_streams.iteritems():
@@ -219,7 +224,7 @@ class Dwrr_Q0_Q1_Q2_Q3(FunTestCase):
                 self.testcase_streamblocks[str(port)][dscp_val] = {}
                 current_streamblock_obj = streamblock_objs[spirent_port][counter]
                 load_value = get_load_value_from_load_percent(load_percent=stream_details['load_percent'],
-                                                              max_egress_load=self.max_egress_load)
+                                                              max_egress_load=max_egress_load)
                 fun_test.simple_assert(load_value, "Ensure load value is calculated")
 
                 dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
@@ -312,7 +317,7 @@ class Dwrr_Q0_Q1_Q2_Q3(FunTestCase):
                 current_list = self.port_3_dscp
             for stream_details, dscp_val in zip(streams, current_list):
                 expected_load_value = get_load_value_from_load_percent(load_percent=stream_details['expected_load_percent'],
-                                                                       max_egress_load=self.max_egress_load)
+                                                                       max_egress_load=max_egress_load)
                 fun_test.simple_assert(expected_load_value, "Ensure expected load value is calculated")
 
                 current_streamblock_handle = \
@@ -328,7 +333,7 @@ class Dwrr_Q0_Q1_Q2_Q3(FunTestCase):
     def validate_stats(self, result_dict):
         for dscp, values in result_dict.iteritems():
             load_check = verify_load_output(actual_value=values['actual'],
-                                            expected_value=values['expected'])
+                                            expected_value=values['expected'], nu_config_obj=nu_config_obj, max_egress_load=max_egress_load)
             fun_test.test_assert(load_check, "Ensure shaper rate %s is seen for dscp %s. Actual seen %s" %
                                  (values['expected'], dscp, values['actual']))
 

@@ -1,6 +1,6 @@
 {
   "load_unit": "Mbps",
-  "max_egress_load": 25000,
+  "max_egress_load": 6.44,
   "strict_priority": {
     "sp_traffic_time": 15,
     "channel_0": {
@@ -78,7 +78,7 @@
       }
     },
     "all_queues": {
-      "all_queues_traffic_time": 15,
+      "all_queues_traffic_time": 30,
       "ingress_port1": [
               {"load_percent": 10, "expected_load_percent": 6.25}],
           "ingress_port2": [
@@ -93,28 +93,28 @@
       "ingress_port1": [
         {
           "load_percent": 50,
-          "cir_bw": 2,
-          "rate": 8400,
+          "cir_bw": 31,
+          "rate": 7758,
           "threshold": 282000
         },
         {
           "load_percent": 50,
-          "cir_bw": 1,
-          "rate": 4200,
+          "cir_bw": 15.5,
+          "rate": 3879,
           "threshold": 282000
         }
       ],
       "ingress_port2": [
         {
           "load_percent": 50,
-          "cir_bw": 1,
-          "rate": 4200,
+          "cir_bw": 15.5,
+          "rate": 3879,
           "threshold": 282000
         },
         {
           "load_percent": 50,
-          "cir_bw": 2,
-          "rate": 8400,
+          "cir_bw": 31,
+          "rate": 7758,
           "threshold": 282000
         }
       ]
@@ -123,28 +123,28 @@
       "ingress_port1": [
         {
           "load_percent": 50,
-          "cir_bw": 0.5,
-          "rate": 2100,
+          "cir_bw": 7.75,
+          "rate": 1939,
           "threshold": 282000
         },
         {
           "load_percent": 50,
-          "cir_bw": 1,
-          "rate": 4200,
+          "cir_bw": 15.5,
+          "rate": 3879,
           "threshold": 282000
         }
       ],
       "ingress_port2": [
         {
           "load_percent": 50,
-          "cir_bw": 2,
-          "rate": 8400,
+          "cir_bw": 31,
+          "rate": 7758,
           "threshold": 282000
         },
         {
           "load_percent": 50,
-          "cir_bw": 0.5,
-          "rate": 2100,
+          "cir_bw":7.75,
+          "rate": 1939,
           "threshold": 282000
         }
       ]
@@ -153,28 +153,28 @@
       "ingress_port1": [
         {
           "load_percent": 33,
-          "cir_bw": 1,
-          "rate": 2100,
+          "cir_bw": 15.5,
+          "rate": 1939,
           "threshold": 282000
         },
         {
           "load_percent": 33,
-          "cir_bw": 1.5,
-          "rate": 4200,
+          "cir_bw": 23.25,
+          "rate": 3879,
           "threshold": 282000
         }
       ],
       "ingress_port2": [
         {
           "load_percent": 66,
-          "cir_bw": 2.5,
-          "rate": 8400,
+          "cir_bw": 38.75,
+          "rate": 7759,
           "threshold": 282000
         },
         {
           "load_percent": 33,
-          "cir_bw": 1,
-          "rate": 2100,
+          "cir_bw": 15.5,
+          "rate": 1939,
           "threshold": 282000
         }
       ]
@@ -184,7 +184,7 @@
         {
           "load_percent": 66,
           "expected_load_percent": 33,
-          "rate": 8400,
+          "rate": 8259,
           "threshold": 282000
         }
       ],
@@ -196,7 +196,7 @@
       ]
     },
     "all_queues_pir": {
-      "all_queues_traffic_time": 15,
+      "all_queues_traffic_time": 30,
       "ingress_port1": [
         {
           "load_percent": 10,
@@ -222,7 +222,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
-            "rate": 16800,
+            "rate": 15509,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -230,7 +230,7 @@
           {
             "load_percent": 16,
             "expected_load_percent": 12.5,
-            "rate": 8400,
+            "rate": 7759,
             "threshold": 282000,
             "sp": false,
             "eb": 0
@@ -240,7 +240,7 @@
           {
             "load_percent": 16,
             "expected_load_percent": 12.5,
-            "rate": 8400,
+            "rate": 7759,
             "threshold": 282000,
             "sp": false,
             "eb": 0
@@ -248,7 +248,7 @@
           {
             "load_percent": 16,
             "expected_load_percent": 12.5,
-            "rate": 4200,
+            "rate": 3879,
             "threshold": 282000,
             "sp": false,
             "eb": 0
@@ -260,7 +260,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
-            "rate": 16800,
+            "rate": 15509,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -268,7 +268,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 3,
-            "rate": 8400,
+            "rate": 7759,
             "threshold": 282000,
             "sp": false,
             "eb": 0
@@ -278,7 +278,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 31.5,
-            "rate": 8400,
+            "rate": 7759,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -286,7 +286,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 3,
-            "rate": 4200,
+            "rate": 3879,
             "threshold": 282000,
             "sp": false,
             "eb": 0
@@ -298,7 +298,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
-            "rate": 16800,
+            "rate": 15509,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -306,7 +306,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 32,
-            "rate": 8400,
+            "rate": 7759,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -316,7 +316,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 5.5,
-            "rate": 8400,
+            "rate": 7759,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -324,7 +324,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 0,
-            "rate": 4200,
+            "rate": 3879,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -530,7 +530,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 48.4,
-            "rate": 8400,
+            "rate": 7759,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -575,7 +575,7 @@
               {"load_percent": 50, "expected_load_percent": 40, "weight": 4, "rate": 1, "threshold": 282000}]
     },
   "all_queues_dwrr": {
-    "all_queues_traffic_time": 15,
+    "all_queues_traffic_time": 30,
     "default_weight": 1,
     "ingress_port1": [
               {"dscp": 0, "load_percent": 3.5, "expected_load_percent": 1.5, "weight": 3, "rate": 1, "threshold": 282000},
@@ -604,33 +604,34 @@
     "wred_weight": 2,
     "wred_min_thr": 10,
     "wred_max_thr": 90,
-    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [15, 40, 65, 80]},
+    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [15, 25, 45, 85]},
     "avg_period": 1024,
     "cap_avg_sz": 1,
     "cap_avg_enable": 1,
     "non_wred_load_percent": 15
   },
   "ecn": {
-    "ecn_timer": 15,
+    "ecn_timer": 2,
     "ecn_prob_index": 0,
     "ecn_prof_num": 0,
     "ecn_enable": 1,
     "ecn_min_thr": 10,
     "ecn_max_thr": 9000,
-    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [15, 40, 65, 80]},
+    "stream_pps": {"ingress_port_1": 80, "ingress_port_2": [8]},
     "avg_period": 1024,
     "cap_avg_enable": 1,
     "cap_avg_sz": 1
   },
   "all_queue_wred": {
-    "wred_timer": 15,
+    "wred_timer": 30,
     "wred_prob_index": 0,
     "wred_prof_num": 0,
     "wred_enable": 1,
     "wred_weight": 2,
     "wred_min_thr": 10,
     "wred_max_thr": 90,
-    "stream_pps_percent": [90, 95, 105],
+    "stream_pps_percent": {"110": {"avg_q_integ": {"lower_limit": 55, "upper_limit": 65}, "wred_q_drop": {"lower_limit": 600, "upper_limit": 650}},
+      "140": {"avg_q_integ": {"lower_limit": 65, "upper_limit": 75}, "wred_q_drop": {"lower_limit": 1400, "upper_limit": 1550}}},
     "avg_period": 1024,
     "cap_avg_sz": 1,
     "cap_avg_enable": 1,
