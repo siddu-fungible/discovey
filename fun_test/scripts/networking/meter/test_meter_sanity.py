@@ -1,4 +1,5 @@
 '''Author : Yajat N Singh'''
+from __future__ import division
 from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
@@ -6,6 +7,7 @@ from lib.host.network_controller import *
 from scripts.networking.nu_config_manager import *
 from scripts.networking.helper import *
 from lib.utilities.pcap_parser import *
+
 
 spirent_config = {}
 nu_config_obj = NuConfigManager()
@@ -22,11 +24,16 @@ meter_bps = meter_json_output[0]['bps_meter']
 meter_pps = meter_json_output[0]['pps_meter']
 METER_MODE_BPS = 0
 METER_MODE_PPS = 1
-TWO_COLOR_METER = 0
-THREE_COLOR_METER = 1
+SrTCM = 0
+TrTCM = 1
 
 
-def create_streams(tx_port, dip, dmac, load=test_config['load_pps'], load_type = test_config['fill_type'], sip="192.168.1.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
+def is_close(a, b, rel_tol=1e-01, abs_tol=0.0):
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+
+def create_streams(tx_port, dip, dmac, load=test_config['load_pps'], load_type = test_config['fill_type'],
+                   sip="192.168.1.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
                    ipv6=False, v6_traffic_class=0):
     stream_obj = StreamBlock(fill_type=test_config['fill_type'], insert_signature=test_config['insert_signature'],
                              load = load, load_unit=load_type,
@@ -136,8 +143,8 @@ class SpirentSetup(FunTestScript):
 
 class MeterBase(FunTestCase):
     stream_obj = None
-    load_type = "MEGABITS_PER_SECOND"
-    load = test_config['load_mbps']
+    load_type = test_config['load_type']
+    load = test_config['load_bps']
     dport = meter_bps['dport']
     sport = meter_bps['sport']
     meter_id = meter_bps['meter_id']
@@ -147,7 +154,7 @@ class MeterBase(FunTestCase):
     commit_burst = meter_bps['commit_burst']
     excess_burst = meter_bps['excess_burst']
     mode = METER_MODE_BPS
-    rate_mode= TWO_COLOR_METER
+    rate_mode = SrTCM
 
     def describe(self):
         self.set_test_details(id=1, summary="Test SrTC meter transit for bps",
@@ -199,14 +206,23 @@ class MeterBase(FunTestCase):
         rate_result = template_obj.get_traffic_rate_comparison(
             rx_summary_subscribe_handle=subscribed_results['rx_summary_subscribe'],
             tx_summary_subscribe_handle=subscribed_results['tx_stream_subscribe'],
-            stream_objects=stream_objs)
+            stream_objects=stream_objs, kbps=True)
         fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
-
+        pps_in = rate_result['pps_in']
+        pps_out = rate_result['pps_out']
+        bps_in = rate_result['throughput_count_in']
+        bps_out = rate_result['throughput_count_out']
         fun_test.sleep("Waiting for traffic to complete", seconds=TRAFFIC_DURATION)
+        stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
+                                                                            [self.stream_obj.spirent_handle],
+                                                                            tx_result=True, rx_result=True)
+        tx_stream_result_framecount = int(
+            stream_results[self.stream_obj.spirent_handle]["tx_result"]["FrameCount"])
+        rx_stream_result_framecount = int(
+            stream_results[self.stream_obj.spirent_handle]["rx_result"]["FrameCount"])
 
         if dut_config['enable_dpcsh']:
-            checkpoint = "Validate FPG FrameCount Tx == Rx for port direction %d --> %d on DUT" % (
-                dut_config['ports'][0], dut_config['ports'][1])
+
             port1_result = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
             fun_test.log("DUT Port %d Results: %s" % (dut_config['ports'][0], port1_result))
             fun_test.test_assert(port1_result, "Get %d Port FPG Stats" % dut_config['ports'][0])
@@ -215,19 +231,31 @@ class MeterBase(FunTestCase):
             fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
 
             frames_transmitted = get_dut_output_stats_value(result_stats=port1_result,
-                                                            stat_type=FRAMES_TRANSMITTED_OK)
-            frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_RECEIVED_OK)
+                                                            stat_type=FRAMES_RECEIVED_OK)
+            frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_TRANSMITTED_OK)
 
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=frames_received,
-                                          message=checkpoint)
+            fun_test.test_assert_expected(expected=rx_stream_result_framecount, actual=frames_received,
+                                          message="Compare DUT stats and Spirent Stream stats ")
             meter_after = network_controller_obj.peek_meter_stats_by_id(meter_id=self.meter_id)
             fun_test.log(meter_after)
+            checkpoint = "Compare green & yellow colored pkts with total forwarded pkts"
             meter_green = (int(meter_after['green']['pkts']) - int(meter_before['green']['pkts']))
             meter_yellow = (int(meter_after['yellow']['pkts']) - int(meter_before['yellow']['pkts']))
             meter_red = (int(meter_after['red']['pkts']) - int(meter_before['red']['pkts']))
-            fun_test.test_assert_expected(expected=frames_transmitted, actual=meter_green+meter_red+meter_yellow)
-
-
+            fun_test.test_assert_expected(expected=rx_stream_result_framecount, actual=meter_green + meter_yellow,
+                                          message=checkpoint)
+            meter_color_ratio = (meter_red + meter_yellow + meter_green)/(meter_yellow + meter_green)
+            fun_test.log("Meter Color Ratio : " + str(meter_color_ratio))
+            if self.mode == METER_MODE_BPS:
+                bps_ratio = bps_in/bps_out
+                fun_test.log("BPS ratio : "+str(bps_ratio))
+                fun_test.test_assert_expected(expected=True, actual=is_close(a=bps_ratio, b=meter_color_ratio),
+                                              message="Comparing rx rate against pkts color ratio")
+            elif self.mode == METER_MODE_PPS:
+                pps_ratio = pps_in/pps_out
+                fun_test.log("PPS ratio : "+str(pps_ratio))
+                fun_test.test_assert_expected(expected=True, actual=is_close(a=pps_ratio, b=meter_color_ratio),
+                                              message="Comparing rx rate against pkts color ratio")
 
     def cleanup(self):
         dut_rx_port = dut_config['ports'][0]
@@ -241,7 +269,22 @@ class MeterBase(FunTestCase):
         fun_test.add_checkpoint(checkpoint)
 
 
-class MeterPps2Color(MeterBase):
+class MeterPps1Rate(MeterBase):
+    load_type = "FRAMES_PER_SECOND"
+    load = test_config['load_pps']
+    dport = meter_pps['dport']
+    sport = meter_pps['sport']
+    meter_id = meter_pps['meter_id']
+    meter_interval = meter_pps['meter_interval']
+    meter_credit = meter_pps['meter_credit']
+    commit_rate = meter_pps['commit_rate']
+    commit_burst = meter_bps['commit_burst']
+    excess_burst = meter_bps['excess_burst']
+    mode = METER_MODE_PPS
+    rate_mode = SrTCM
+
+
+class MeterPps2Rate(MeterBase):
     load_type = "FRAMES_PER_SECOND"
     load = test_config['load_pps']
     dport = meter_pps['dport']
@@ -250,24 +293,12 @@ class MeterPps2Color(MeterBase):
     meter_credit = meter_pps['meter_credit']
     commit_rate = meter_pps['commit_rate']
     mode = METER_MODE_PPS
-    rate_mode = TWO_COLOR_METER
-
-
-class MeterPps3Color(MeterBase):
-    load_type = "FRAMES_PER_SECOND"
-    load = test_config['load_pps']
-    dport = meter_pps['dport']
-    meter_id = meter_pps['meter_id']
-    meter_interval = meter_pps['meter_interval']
-    meter_credit = meter_pps['meter_credit']
-    commit_rate = meter_pps['commit_rate']
-    mode = METER_MODE_PPS
-    rate_mode = THREE_COLOR_METER
+    rate_mode = TrTCM
 
 
 if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(MeterBase())
-    # ts.add_test_case(MeterPps2Color())
-    # ts.add_test_case(MeterPps3Color())
+    ts.add_test_case(MeterPps1Rate())
+    # ts.add_test_case(MeterPps2Rate())
     ts.run()

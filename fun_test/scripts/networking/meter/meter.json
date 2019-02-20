@@ -12,11 +12,14 @@
     },
     "pps_meter":
     {
-      "dport" : 1166,
+      "sport" : 1234,
+      "dport" : 1024,
       "meter_id" : 60,
-      "meter_interval" : 14,
-      "meter_credit" : 82,
-      "commit_rate" : 4
+      "meter_interval" : 13,
+      "meter_credit" : 6,
+      "commit_rate" : 102,
+      "commit_burst" : 82,
+      "excess_burst" : 1
     }
   }
 ]
