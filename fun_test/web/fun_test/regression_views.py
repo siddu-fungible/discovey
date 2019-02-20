@@ -222,7 +222,7 @@ def submit_job(request):
                                 environment=environment,
                                 test_bed_type=test_bed_type,
                                 original_suite_execution_id=original_suite_execution_id,
-)
+                                build_url=build_url)
     return job_id
 
 
