@@ -323,5 +323,31 @@
         "throughput": 0.106,
         "timestamp": "2019-02-19 22:21:24.571382-08:00",
         "version": 5316
+    },
+    {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 64,
+        "jitter": 8117.0,
+        "latency_P99.0": 1560000.0,
+        "latency_avg": 692000.0,
+        "latency_max": 1600000.0,
+        "latency_min": 60400.0,
+        "pps": 92.5,
+        "throughput": 0.047,
+        "timestamp": "2019-02-20 08:45:45.175967-08:00",
+        "version": 5316
+    },
+    {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 1500,
+        "jitter": 6456.0,
+        "latency_P99.0": 1480000.0,
+        "latency_avg": 901000.0,
+        "latency_max": 1690000.0,
+        "latency_min": 55000.0,
+        "pps": 109.67,
+        "throughput": 1.316,
+        "timestamp": "2019-02-20 08:59:02.562592-08:00",
+        "version": 5316
     }
 ]
