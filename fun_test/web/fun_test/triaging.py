@@ -1,6 +1,8 @@
 from datetime import datetime
 import json
 import random
+import jenkins, sys
+import requests
 from django.core.exceptions import ObjectDoesNotExist
 import web.fun_test.django_interactive
 from web.web_global import api_safe_json_response
@@ -45,6 +47,7 @@ def update_mid(entries, l, r, last_good_score, id):
             entry.lsf_job_id = 12345
             entry.date_time = entry.date_time
             entry.save()
+
             suspend_flows(entry, entries, last_good_score, mid, l, r)
         else:
             if entry.score >= last_good_score:
@@ -136,7 +139,9 @@ def insert_triage_db(request):
 
     passed_score = triage_info["passed_score"]
     degraded_score = triage_info["degraded_score"]
-    triage = Triage.objects.filter(metric_id=metric_id)
+    metric_type = triage_info["metric_type"]
+    boot_args = triage_info["boot_args"]
+    triage = Triage.objects.filter(metric_id=metric_id, degraded_git_commit=degraded_git_commit, stable_git_commit=passed_git_commit)
     if triage:
         return 0
     else:
@@ -146,7 +151,7 @@ def insert_triage_db(request):
                         degraded_git_commit=degraded_git_commit, degraded_build_properties=degraded_build_properties,
                         stable_suite_execution_id=passed_suite_id, stable_jenkins_job_id=passed_jenkins_job_id,
                         stable_lsf_job_id=passed_lsf_job_id, stable_git_commit=passed_git_commit,
-                        stable_build_properties=passed_build_properties, last_good_score=passed_score, max_tries=5)
+                        stable_build_properties=passed_build_properties, last_good_score=passed_score, max_tries=5, metric_type=metric_type, boot_args=boot_args)
         triage.save()
         for commit in commits[1:-1]:
             triage_flow = TriageFlow(metric_id=metric_id, triage_id=triage_id,
@@ -186,5 +191,23 @@ def check_triage(request):
 
 if __name__ == "__main__":
     metric_id = 157
-    update_triage_flow(metric_id=metric_id)
+    # update_triage_flow(metric_id=metric_id)
+    url = "http://jenkins-sw-master:8080/"
     print "completed"
+    server = jenkins.Jenkins(url=url, username='jenkins.service', password='117071d3cb2cae6c964099664b271e4011')
+    user = server.get_whoami()
+    print server.jobs_count()
+    import pprint
+
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(server.get_jobs())
+    print server.get_jobs()
+    version = server.get_version()
+    user = server.get_whoami()
+    print('Hello %s from Jenkins %s' % (user['fullName'], version))
+    # server.create_job("empty", config_xml=jenkins.EMPTY_CONFIG_XML)
+    my_job = server.get_job_config('emulation')
+    print(my_job)  # prints XML configuration
+    print "hello"
+    # jobs = server.get_jobs(view_name='Emulation')
+    # print jobs

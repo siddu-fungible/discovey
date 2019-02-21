@@ -374,8 +374,49 @@ def get_first_degrade(request):
                       "degraded_lsf_job_id": previous_entry.lsf_job_id,
                       "degraded_date_time": previous_entry.date_time,
                       "degraded_git_commit": previous_entry.git_commit,
-                      "degraded_score": previous_entry.score}
+                      "degraded_score": previous_entry.score,
+              "boot_args": boot_args,
+              "metric_type": metric_type
+              }
     return result
+
+@csrf_exempt
+@api_safe_json_response
+def get_triage_info(request):
+    previous_entry = {}
+    current_entry = {}
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    from_dict = request_json["from_date"]
+    to_dict = request_json["to_date"]
+    from_date = datetime(year=from_dict["year"], month=from_dict["month"], day=from_dict["day"])
+    to_date = datetime(year=to_dict["year"], month=to_dict["month"], day=to_dict["day"])
+    boot_args = request_json["boot_args"]
+    metric_type= request_json["metric_type"]
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
+    for entry in chart_status_entries:
+        if same_day(from_date, entry.date_time):
+            current_entry = entry
+        if same_day(to_date, entry.date_time):
+            previous_entry = entry
+    result = {"passed_jenkins_job_id": current_entry.jenkins_job_id,
+                      "passed_suite_execution_id": current_entry.suite_execution_id,
+                      "passed_lsf_job_id": current_entry.lsf_job_id,
+                      "passed_date_time": current_entry.date_time,
+                      "passed_git_commit": current_entry.git_commit,
+                      "passed_score": current_entry.score,
+                      "degraded_jenkins_job_id": previous_entry.jenkins_job_id,
+                      "degraded_suite_execution_id": previous_entry.suite_execution_id,
+                      "degraded_lsf_job_id": previous_entry.lsf_job_id,
+                      "degraded_date_time": previous_entry.date_time,
+                      "degraded_git_commit": previous_entry.git_commit,
+                      "degraded_score": previous_entry.score,
+              "boot_args": boot_args,
+              "metric_type": metric_type}
+    return result
+
+def same_day(from_to_date, current_date):
+    return (from_to_date.day == current_date.day) and (from_to_date.month == current_date.month) and (from_to_date.year == current_date.year)
 
 @csrf_exempt
 @api_safe_json_response

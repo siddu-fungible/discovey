@@ -2,6 +2,7 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
+import {DataSharingService} from "../services/data-sharing/data-sharing.service";
 
 
 @Component({
@@ -55,16 +56,37 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   mileStoneMarkers: any = {}; // fetch the milestones for each chart from backend and save it
   mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
 
+  showTriaging: boolean = false;
+  selectedOption: string = null;
+  triagingOptions: any = [];
+
+  fromDate: any;
+  toDate: any;
+  bootArgs: string = null;
+
+  triageInfo: any = null;
+  successCommit: string = null;
+  faultyCommit: string = null;
+  faultyMessage: string = null;
+  successMessage: string = null;
+  faultyAuthor: string = null;
+  successAuthor: string = null;
+  commits: any = null;
+  message: any = null;
+
   public formatter: Function;
   public tooltip: Function;
   public pointClickCallback: Function;
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute) {
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute,
+              private sharedData: DataSharingService) {
   }
 
   ngOnInit() {
     this.status = "Updating";
     this.fetchNames();
+    this.triagingOptions.push("SCORES");
+    this.triagingOptions.push("PASS/FAIL");
     this.showingTable = false;
     this.showingConfigure = false;
     this.headers = null;
@@ -289,6 +311,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingSource = false;
     this.editingDescription = false;
     this.chart1YaxisTitle = "";
+    this.fromDate = null;
+    this.toDate = null;
+    this.bootArgs = null;
+    this.selectedOption = null;
   }
 
   closePointInfo(): void {
@@ -363,9 +389,76 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     });
   }
 
-  openGitDetails(): void {
-    let url = "/performance/atomic/" + this.metricId + "/triage";
+  enterTriaging(): void {
+    this.message = {
+    "metric_type": this.selectedOption,
+    "from_date": this.fromDate,
+    "to_date": this.toDate,
+    "boot_args": this.bootArgs
+    };
+      this.sharedData.changeMessage(this.message);
+      alert("submitted");
+
+      let url = "/performance/atomic/" + this.metricId + "/triage";
     window.open(url, '_blank');
+    // let payload = {"metric_id": this.metricId,
+    // "metric_type": this.selectedOption,
+    // "from_date": this.fromDate,
+    // "to_date": this.toDate,
+    // "boot_args": this.bootArgs};
+    // this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
+    //   let result = data.data;
+    //   this.triageInfo = result;
+    //   if (result.passed_git_commit && result.passed_git_commit !== "") {
+    //     this.successCommit = result.passed_git_commit;
+    //   }
+    //   if (result.degraded_git_commit && result.degraded_git_commit !== "") {
+    //     this.faultyCommit = result.degraded_git_commit;
+    //   }
+    //   this.fetchGitCommits();
+    // }, error => {
+    //   this.loggerService.error("Traiging info fetch failed");
+    // });
+
+  }
+  fetchGitCommits(): void {
+    if (this.faultyCommit && this.successCommit) {
+      let payload = {};
+      payload = {
+        "faulty_commit": this.faultyCommit,
+        "success_commit": this.successCommit
+      };
+      this.apiService.post('/metrics/git_commits', payload).subscribe(result => {
+        this.commits = result.data.commits;
+        let total = this.commits.length - 1;
+        this.faultyMessage = this.commits[0].message;
+        this.faultyAuthor = this.commits[0].author;
+        this.successAuthor = this.commits[total].author;
+        this.successMessage = this.commits[total].message;
+        this.startTriaging();
+      }, error => {
+        this.loggerService.error("Fetching git Commits between the faulty and success commits");
+      });
+    }
+    else {
+      console.log("Git commit is missing from the data");
+    }
+  }
+
+  startTriaging(): void {
+    let payload = {
+      "metric_id": this.id,
+      "commits": this.commits,
+      "triage_info": this.triageInfo
+    };
+    this.apiService.post('/triage/insert_db', payload).subscribe(response => {
+      alert("submitted");
+
+      let url = "/performance/atomic/" + this.metricId + "/triage";
+    window.open(url, '_blank');
+    }, error => {
+      this.loggerService.error("Updating DB Failed");
+    });
   }
 
   openSource(url): void {

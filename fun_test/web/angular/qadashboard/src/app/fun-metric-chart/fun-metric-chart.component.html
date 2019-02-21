@@ -84,15 +84,65 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
-      <div style="float: right">
-      <button (click)="openGitDetails()" class="btn btn-sm failed-label no-margin git-commit">
-                    Triage
-                  </button>
-    </div>
+
+      <button style="float: right" (click)="showTriaging = !showTriaging"
+              class="btn btn-sm failed-label no-margin git-commit">
+        Triage
+      </button>
       <!--<span style="float: right;">-->
-        <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
+      <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
       <!--</span>-->
       <br>
+    </div>
+    <br>
+    <div *ngIf="showTriaging">
+      <table class="table table-borderless" style="width: 60%">
+        <tr>
+          <td>
+            From Date:
+            <form class="form-inline">
+              <div class="form-group">
+                <div class="input-group">
+                  <input class="form-control" placeholder="yyyy-mm-dd"
+                         name="dp1" [(ngModel)]="fromDate" ngbDatepicker #d="ngbDatepicker">
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" (click)="d.toggle()" type="button"><i class="fa fa-calendar"></i></button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </td>
+          <td>
+           To Date: <form class="form-inline">
+          <div class="form-group">
+            <div class="input-group">
+              <input class="form-control" placeholder="yyyy-mm-dd"
+                     name="dp2" [(ngModel)]="toDate" ngbDatepicker #e="ngbDatepicker">
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" (click)="e.toggle()" type="button"><i class="fa fa-calendar"></i></button>
+              </div>
+            </div>
+          </div>
+        </form>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Type: <select [(ngModel)]="selectedOption">
+        <option [value]="x" *ngFor="let x of triagingOptions">{{x}}</option>
+      </select>
+          </td>
+          <td>
+            <button class="btn btn-sm no-margin btn-success" (click)="enterTriaging()">Submit</button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            Boot args: <input type="text" [(ngModel)]="bootArgs"/>
+          </td>
+        </tr>
+      </table>
+
     </div>
     <div class="closed-section"></div>
     <!-- Show tables below the leaf chart -->

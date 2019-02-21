@@ -4,6 +4,8 @@ import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
+import {DataSharingService} from "../services/data-sharing/data-sharing.service";
+import {Subscription} from "rxjs";
 
 @Component({
   selector: 'git-history',
@@ -40,11 +42,13 @@ export class TriageComponent implements OnInit {
   continueTriaging: boolean = true;
   maxTries: string = null;
   timePercentage: any = null;
+  message: any = null;
+  subscription: Subscription;
 
   @ViewChild("content") modalContent: TemplateRef<any>;
 
   constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute,
-              private commonService: CommonService, private modalService: NgbModal) {
+              private commonService: CommonService, private modalService: NgbModal, private sharedData: DataSharingService) {
   }
 
   ngOnInit() {
@@ -215,8 +219,14 @@ export class TriageComponent implements OnInit {
   }
 
   setCommits(): void {
-    let payload = {"metric_id": this.id};
-    this.apiService.post('/metrics/first_degrade', payload).subscribe((data) => {
+    this.subscription = this.sharedData.getMessage().subscribe(message => {
+      this.message = message;
+    let payload = {"metric_id": this.id,
+    "metric_type": this.message["metric_type"],
+    "from_date": this.message["from_date"],
+    "to_date": this.message["to_date"],
+    "boot_args": this.message["boot_args"]};
+    this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
       let result = data.data;
       this.triageInfo = result;
       if (result.passed_git_commit && result.passed_git_commit !== "") {
@@ -227,8 +237,23 @@ export class TriageComponent implements OnInit {
       }
       this.fetchGitCommits();
     }, error => {
-      this.logger.error("Past Status Urls");
+      this.logger.error("Traiging info fetch failed");
+    })
     });
+    // let payload = {"metric_id": this.id};
+    // this.apiService.post('/metrics/first_degrade', payload).subscribe((data) => {
+    //   let result = data.data;
+    //   this.triageInfo = result;
+    //   if (result.passed_git_commit && result.passed_git_commit !== "") {
+    //     this.successCommit = result.passed_git_commit;
+    //   }
+    //   if (result.degraded_git_commit && result.degraded_git_commit !== "") {
+    //     this.faultyCommit = result.degraded_git_commit;
+    //   }
+    //   this.fetchGitCommits();
+    // }, error => {
+    //   this.logger.error("Past Status Urls");
+    // });
 
   }
 

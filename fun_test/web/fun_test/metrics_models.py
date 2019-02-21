@@ -82,6 +82,7 @@ class Triage(models.Model):
     status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
     max_tries = models.IntegerField(default=-1)
     faulty_commit = models.TextField(default="")
+    boot_args = models.TextField(default="")
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.last_good_score)
@@ -101,6 +102,7 @@ class TriageFlow(models.Model):
     git_commit = models.TextField(default="")
     committer = models.TextField(default="")
     build_properties = models.TextField(default="")
+    boot_args = models.TextField(default="")
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.score)
