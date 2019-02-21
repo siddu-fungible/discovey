@@ -465,83 +465,13 @@
             "reference": true
           },
           {
-            "name": "Crypto Accelerator",
-            "info": "Crypto Accelerator",
-            "label": "Crypto Accelerator",
+            "info": "Crypto",
             "metric_model_name": "MetricContainer",
             "leaf": false,
+            "name": "Crypto",
+            "label": "Crypto",
             "weight": 1,
-            "children": [
-              {
-                "info": "SHA Latency",
-                "name": "SHA Latency",
-                "label": "SHA Latency",
-                "metric_model_name": "ShaxPerformance",
-                "leaf": true,
-                "weight": 1
-              },
-              {
-                "info": "SHA Throughput",
-                "name": "SHA Throughput",
-                "label": "SHA Throughput",
-                "metric_model_name": "ShaxPerformance",
-                "leaf": true,
-                "weight": 1
-              },
-              {
-                "info": "SHA IOPS",
-                "name": "SHA IOPS",
-                "label": "SHA IOPS",
-                "metric_model_name": "ShaxPerformance",
-                "leaf": true,
-                "weight": 1
-              },
-              {
-                "info": "AES_ECB Encryption Throughput",
-                "metric_model_name": "TeraMarkCryptoPerformance",
-                "leaf": true,
-                "name": "AES_ECB Encryption Throughput",
-                "label": "AES_ECB Encryption Throughput",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "AES_CBC Encryption Throughput",
-                "metric_model_name": "TeraMarkCryptoPerformance",
-                "leaf": true,
-                "name": "AES_CBC Encryption Throughput",
-                "label": "AES_CBC Encryption Throughput",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "AES_GCM Encryption Throughput",
-                "metric_model_name": "TeraMarkCryptoPerformance",
-                "leaf": true,
-                "name": "AES_GCM Encryption Throughput",
-                "label": "AES_GCM Encryption Throughput",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "AES_XTS Encryption Throughput",
-                "metric_model_name": "TeraMarkCryptoPerformance",
-                "leaf": true,
-                "name": "AES_XTS Encryption Throughput",
-                "label": "AES_XTS Encryption Throughput",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "SHA_256 Throughput",
-                "metric_model_name": "TeraMarkCryptoPerformance",
-                "leaf": true,
-                "name": "SHA_256 Throughput",
-                "label": "SHA_256 Throughput",
-                "children": [],
-                "weight": 1
-              }
-            ]
+            "reference": true
           },
           {
             "info": "Zip",
@@ -1219,7 +1149,7 @@
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
                 "name": "Crypto api throughput",
-                "label": "Api Throughput",
+                "label": "API Throughput",
                 "weight": 1,
                 "children": [
                   {
