@@ -139,6 +139,7 @@ export class PerformanceComponent implements OnInit {
   gotoQueryBaseUrl: string = "/performance?goto=";
   queryPath: string = null;  // includes gotoQueryBaseUrl and a query
 
+  slashReplacement: string = "_fsl"; //forward slash
 
   constructor(
     private apiService: ApiService,
@@ -318,7 +319,8 @@ export class PerformanceComponent implements OnInit {
   lineageToPath(lineage) {
     let s = "";
     lineage.forEach(part => {
-      s += "/" + encodeURIComponent(part.chartName);
+      let name = part.chartName.replace("/", this.slashReplacement);
+      s += "/" + encodeURIComponent(name);
     });
     s = s.slice(1, s.length); // Remove leading slash
     return s;
@@ -968,14 +970,16 @@ export class PerformanceComponent implements OnInit {
   _doPathToGuid(flatNode, remainingParts) {
     let result = null;
     if (remainingParts.length > 0) {
-      if (flatNode.node.chartName === decodeURIComponent(remainingParts[0])) {
+      let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");
+      if (flatNode.node.chartName === decodeURIComponent(remainingPart)) {
         // match found
 
         if (remainingParts.length > 1) {
           remainingParts = remainingParts.slice(1, remainingParts.length); // there are more segments to parse
+          let remainingPart = remainingParts[0].replace(this.slashReplacement, "/");
           for (let index = 0; index < flatNode.children.length; index++) {
             let childFlatNode = flatNode.children[index];
-            if (decodeURIComponent(remainingParts[0]) === childFlatNode.node.chartName) {
+            if (decodeURIComponent(remainingPart) === childFlatNode.node.chartName) {
               return this._doPathToGuid(childFlatNode, remainingParts);
             }
           }
