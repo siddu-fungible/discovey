@@ -287,7 +287,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     if filter_param != "vol_decrypt_filter_added" and filter_param != "vol_encrypt_filter_added":
                         evalue = 2 * multiplier
                     else:
-                        evalue = 1 * multiplier
+                        evalue = multiplier
                     diff_filter_values[filter_param] = \
                         final_filter_values[filter_param] - initial_filter_values[filter_param]
                     fun_test.test_assert_expected(evalue, diff_filter_values[filter_param],
