@@ -93,8 +93,9 @@ class DpcshClient(object):
                 else:
                     result["data"] = json_output
                 result["error_message"] = None
-            if (type(result["data"]) is bool and result["data"] is False) or (type(result["data"]) is int and
-                                                                              result["data"] < 0):
+            if (type(result["data"]) is bool and result["data"] is False) \
+                    or (type(result["data"]) is int and result["data"] < 0)\
+                    or result["data"] is None:
                 result["status"] = False
         except socket.error, msg:
             print msg
