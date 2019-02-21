@@ -93,28 +93,28 @@
       "ingress_port1": [
         {
           "load_percent": 50,
-          "cir_bw": 2,
-          "rate": 8400,
+          "cir_bw": 31,
+          "rate": 7758,
           "threshold": 282000
         },
         {
           "load_percent": 50,
-          "cir_bw": 1,
-          "rate": 4200,
+          "cir_bw": 15.5,
+          "rate": 3879,
           "threshold": 282000
         }
       ],
       "ingress_port2": [
         {
           "load_percent": 50,
-          "cir_bw": 1,
-          "rate": 4200,
+          "cir_bw": 15.5,
+          "rate": 3879,
           "threshold": 282000
         },
         {
           "load_percent": 50,
-          "cir_bw": 2,
-          "rate": 8400,
+          "cir_bw": 31,
+          "rate": 7758,
           "threshold": 282000
         }
       ]
@@ -123,13 +123,13 @@
       "ingress_port1": [
         {
           "load_percent": 50,
-          "cir_bw": 0.5,
+          "cir_bw": 7.75,
           "rate": 2100,
           "threshold": 282000
         },
         {
           "load_percent": 50,
-          "cir_bw": 1,
+          "cir_bw": 15.5,
           "rate": 4200,
           "threshold": 282000
         }
@@ -137,13 +137,13 @@
       "ingress_port2": [
         {
           "load_percent": 50,
-          "cir_bw": 2,
+          "cir_bw": 31,
           "rate": 8400,
           "threshold": 282000
         },
         {
           "load_percent": 50,
-          "cir_bw": 0.5,
+          "cir_bw": 7.75,
           "rate": 2100,
           "threshold": 282000
         }
@@ -153,13 +153,13 @@
       "ingress_port1": [
         {
           "load_percent": 33,
-          "cir_bw": 1,
+          "cir_bw": 15.5,
           "rate": 2100,
           "threshold": 282000
         },
         {
           "load_percent": 33,
-          "cir_bw": 1.5,
+          "cir_bw": 23.25,
           "rate": 4200,
           "threshold": 282000
         }
@@ -167,13 +167,13 @@
       "ingress_port2": [
         {
           "load_percent": 66,
-          "cir_bw": 2.5,
+          "cir_bw": 38.75,
           "rate": 8400,
           "threshold": 282000
         },
         {
           "load_percent": 33,
-          "cir_bw": 1,
+          "cir_bw": 15.5,
           "rate": 2100,
           "threshold": 282000
         }

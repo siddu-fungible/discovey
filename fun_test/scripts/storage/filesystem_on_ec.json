@@ -25,10 +25,10 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "ext2",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 8
   },
   "Ext2OnECDirectWriteDeleteFirst": {
     "ec_list": ["(4, 2)", "(8, 3)"],
@@ -56,10 +56,10 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "ext2",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 8
   },
   "Ext3OnECBufferedWriteDetachFirst": {
     "ec_list": ["(4, 2)", "(8, 3)"],
@@ -87,10 +87,10 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "ext3",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 8
   },
   "Ext3OnECDirectWriteDeleteFirst": {
     "ec_list": ["(4, 2)", "(8, 3)"],
@@ -118,10 +118,10 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "ext3",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 8
   },
   "Ext4OnECBufferedWriteDetachFirst": {
     "ec_list": ["(4, 2)", "(8, 3)"],
@@ -149,10 +149,10 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "ext4",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 8
   },
   "Ext4OnECDirectWriteDeleteFirst": {
     "ec_list": ["(4, 2)", "(8, 3)"],
@@ -180,10 +180,10 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "ext4",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
-    "test_timeout_ratio": 12
+    "test_timeout_ratio": 4
   },
   "XFSOnECBufferedWriteDetachFirst": {
     "ec_list": ["(4, 2)", "(8, 3)"],
@@ -211,10 +211,10 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "xfs",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 8
   },
   "XFSOnECDirectWriteDeleteFirst": {
     "ec_list": ["(4, 2)", "(8, 3)"],
@@ -242,10 +242,10 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "xfs",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 8
   },
   "ECVolumeCreateDeleteInBatch": {
     "ec_list": ["(4, 2)", "(8, 3)"],
@@ -274,9 +274,9 @@
     "nvme_device": "/dev/nvme0",
     "mount_point": "/mnt/ssd",
     "fs_type": "ext2",
-    "dataset_size_pct": 0.5,
+    "dataset_size_pct": 0.25,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
-    "test_timeout_ratio": 16
+    "test_timeout_ratio": 8
   }
 }

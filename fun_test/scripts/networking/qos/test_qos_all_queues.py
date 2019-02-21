@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header
 from lib.host.network_controller import NetworkController
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import NuConfigManager
 from scripts.networking.helper import *
 from scripts.networking.qos.qos_helper import *
 import copy
@@ -15,10 +15,6 @@ reversed_list = copy.deepcopy(queue_list)
 reversed_list.reverse()
 generator_config_objs = {}
 generator_dict = {}
-qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
-qos_json_output = fun_test.parse_file_to_json(qos_json_file)
-max_egress_load = qos_json_output['max_egress_load']
-json_load_unit = qos_json_output['load_unit']
 q_depth = 'avg_q_integ'
 wred_q_drop = 'wred_q_drop'
 min_frame_length = 64
@@ -39,12 +35,23 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list, flow_direction
+            dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list, flow_direction, \
+            nu_config_obj, sleep_timer, max_egress_load, qos_sp_json, qos_json_output
+
+        nu_config_obj = NuConfigManager()
+
+        qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
+        qos_json_output = fun_test.parse_file_to_json(qos_json_file)
+
+        max_egress_load = nu_config_obj.SPEED
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_PALLADIUM:
+            max_egress_load = qos_json_output['max_egress_load']
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
-        dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+        dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE, flow_direction=flow_direction)
 
         shape = 0
         hnu = False
@@ -52,7 +59,6 @@ class SpirentSetup(FunTestScript):
             shape = 1
             hnu = True
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
@@ -173,11 +179,13 @@ class SpirentSetup(FunTestScript):
                                                                                                map_list=reversed_list)
                 fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
 
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2,
+                                                    qos_json_output=qos_json_output)
         fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
     def cleanup(self):
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2,
+                                                    qos_json_output=qos_json_output)
         fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
         template_obj.cleanup()
@@ -185,8 +193,8 @@ class SpirentSetup(FunTestScript):
 
 class All_Queues_Share_BW(FunTestCase):
     test_type = "strict_priority"
-    qos_sp_json = qos_json_output[test_type]['all_queues']
-    sleep_timer = qos_sp_json['all_queues_traffic_time']
+    qos_sp_json = None
+    sleep_timer = None
     difference_accept_range = 0.1
     same_expected_load = True
 
@@ -199,8 +207,12 @@ class All_Queues_Share_BW(FunTestCase):
                                 3. At egress bandwidth must be shared between all queues 
                                 """)
 
-    def setup(self):
+    def setup_variables(self):
+        self.qos_sp_json = qos_json_output[self.test_type]['all_queues']
+        self.sleep_timer = self.qos_sp_json['all_queues_traffic_time']
 
+    def setup(self):
+        self.setup_variables()
         for queue in [0, 8]:
             disable = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
                                                                       scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
@@ -267,15 +279,14 @@ class All_Queues_Share_BW(FunTestCase):
     def validate_stats(self, result_dict):
         for dscp, values in result_dict.iteritems():
             load_check = verify_load_output(actual_value=values['actual'],
-                                            expected_value=values['expected'], accept_range=self.difference_accept_range)
+                                            expected_value=values['expected'], accept_range=self.difference_accept_range, nu_config_obj=nu_config_obj,
+                                            max_egress_load=max_egress_load)
             fun_test.test_assert(load_check, "Ensure rate %s is seen for dscp %s. Actual seen %s" %
                                  (values['expected'], dscp, values['actual']))
 
 
 class All_Queues_Pir(All_Queues_Share_BW):
     test_type = "shaper"
-    qos_sp_json = qos_json_output[test_type]['all_queues_pir']
-    sleep_timer = qos_sp_json['all_queues_traffic_time']
     difference_accept_range = 0.1
 
     def describe(self):
@@ -288,8 +299,14 @@ class All_Queues_Pir(All_Queues_Share_BW):
                                 4. Verify that each queue only tx at its pir assigned
                                 """)
 
+    def setup_variables(self):
+        self.qos_sp_json = qos_json_output[self.test_type]['all_queues_pir']
+        self.sleep_timer = self.qos_sp_json['all_queues_traffic_time']
+
     def setup(self):
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+        self.setup_variables()
+        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2,
+                                                    qos_json_output=qos_json_output)
         fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
         for queue in queue_list:
@@ -317,8 +334,6 @@ class All_Queues_Pir(All_Queues_Share_BW):
 
 class All_Queues_DWRR(All_Queues_Share_BW):
     test_type = "all_queues_dwrr"
-    qos_sp_json = qos_json_output[test_type]
-    sleep_timer = qos_sp_json['all_queues_traffic_time']
     difference_accept_range = 0.1
     same_expected_load = False
 
@@ -331,8 +346,12 @@ class All_Queues_DWRR(All_Queues_Share_BW):
                                 3. Start traffic for all queues together
                                 4. Verify that each queue only tx at its weight assigned
                                 """)
+    def setup_variables(self):
+        self.qos_sp_json = qos_json_output[self.test_type]
+        self.sleep_timer = self.qos_sp_json['all_queues_traffic_time']
 
     def setup(self):
+        self.setup_variables()
         super(All_Queues_DWRR, self).setup()
 
         for queue in queue_list:
@@ -394,19 +413,19 @@ class All_Queues_WRED(FunTestCase):
     For WRED we are using the same key from qos.json that is used in other testcases
     """
     test_type = "all_queue_wred"
-    qos_test_json = qos_json_output[test_type]
-    sleep_timer = qos_test_json['wred_timer']
-    normal_stream_pps = qos_test_json['stream_pps_percent']
-    normal_stream_pps_list = normal_stream_pps.keys()
-    min_thr = qos_test_json['wred_min_thr']
-    max_thr = qos_test_json['wred_max_thr']
-    wred_weight = qos_test_json['wred_weight']
-    wred_enable = qos_test_json['wred_enable']
-    prob_index = qos_test_json['wred_prob_index']
-    prof_num = qos_test_json['wred_prof_num']
-    non_wred_load_percent = qos_test_json['non_wred_load_percent']
-    avg_period = qos_test_json['avg_period']
-    cap_avg_sz = qos_test_json['cap_avg_sz']
+    qos_test_json = None
+    sleep_timer = None
+    normal_stream_pps = None
+    normal_stream_pps_list = None
+    min_thr = None
+    max_thr = None
+    wred_weight = None
+    wred_enable = None
+    prob_index = None
+    prof_num = None
+    non_wred_load_percent = None
+    avg_period = None
+    cap_avg_sz = None
     stats_list = [q_depth, wred_q_drop]
     cushion_drops = 30
     cushion_depth = 5
@@ -422,7 +441,23 @@ class All_Queues_WRED(FunTestCase):
                                 3. Verify that each queue has wred drops and compare them with all other queues
                                 """)
 
+    def setup_variables(self):
+        qos_test_json = qos_json_output[self.test_type]
+        self.sleep_timer = qos_test_json['wred_timer']
+        self.normal_stream_pps = qos_test_json['stream_pps_percent']
+        self.normal_stream_pps_list = self.normal_stream_pps.keys()
+        self.min_thr = qos_test_json['wred_min_thr']
+        self.max_thr = qos_test_json['wred_max_thr']
+        self.wred_weight = qos_test_json['wred_weight']
+        self.wred_enable = qos_test_json['wred_enable']
+        self.prob_index = qos_test_json['wred_prob_index']
+        self.prof_num = qos_test_json['wred_prof_num']
+        self.non_wred_load_percent = qos_test_json['non_wred_load_percent']
+        self.avg_period = qos_test_json['avg_period']
+        self.cap_avg_sz = qos_test_json['cap_avg_sz']
+
     def setup(self):
+        self.setup_variables()
         for queue in [0, 8]:
             disable = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
                                                                       scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
@@ -583,16 +618,16 @@ class All_Queues_WRED(FunTestCase):
 
 class All_Queues_ECN(All_Queues_WRED):
     test_type = QOS_PROFILE_ECN
-    qos_test_json = qos_json_output[test_type]
-    sleep_timer = qos_test_json['ecn_timer']
-    normal_stream_pps = qos_test_json['stream_pps']
-    min_thr = qos_test_json['ecn_min_thr']
-    max_thr = qos_test_json['ecn_max_thr']
-    ecn_enable = qos_test_json['ecn_enable']
-    prob_index = qos_test_json['ecn_prob_index']
-    prof_num = qos_test_json['ecn_prof_num']
-    avg_period = qos_test_json['avg_period']
-    cap_avg_sz = qos_test_json['cap_avg_sz']
+    qos_test_json = None
+    sleep_timer = None
+    normal_stream_pps = None
+    min_thr = None
+    max_thr = None
+    ecn_enable = None
+    prob_index = None
+    prof_num = None
+    avg_period = None
+    cap_avg_sz = None
     stats_list = [q_depth, ecn_count]
     current_ecn_bits = ECN_BITS_10
     dut_ecn_count = 'dut_ecn_count'
@@ -609,6 +644,18 @@ class All_Queues_ECN(All_Queues_WRED):
                                     2. Start traffic for all queues together
                                     3. Verify that each queue has some frames sent out with ecn bits 11
                                     """)
+
+    def setup_variables(self):
+        self.qos_test_json = qos_json_output[self.test_type]
+        self.sleep_timer = self.qos_test_json['ecn_timer']
+        self.normal_stream_pps = self.qos_test_json['stream_pps']
+        self.min_thr = self.qos_test_json['ecn_min_thr']
+        self.max_thr = self.qos_test_json['ecn_max_thr']
+        self.ecn_enable = self.qos_test_json['ecn_enable']
+        self.prob_index = self.qos_test_json['ecn_prob_index']
+        self.prof_num = self.qos_test_json['ecn_prof_num']
+        self.avg_period = self.qos_test_json['avg_period']
+        self.cap_avg_sz = self.qos_test_json['cap_avg_sz']
 
     def run(self):
         result_dict = {}

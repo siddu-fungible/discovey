@@ -512,6 +512,7 @@ export class RegressionSummaryComponent implements OnInit {
 
         console.log("Returning:" + currentDate + "," + historyTime);
       }*/
+      console.log("Check this please");
       return;
     }
     while (currentDate <= today) {

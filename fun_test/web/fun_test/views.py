@@ -64,7 +64,7 @@ def get_script_content(request):
 @csrf_exempt
 def angular_home(request):
     angular_home = 'qa_dashboard/angular_home_development.html'
-    if is_production_mode():
+    if is_production_mode() and "TRIAGE" not in os.environ:
         angular_home = 'qa_dashboard/angular_home_production.html'
     return render(request, angular_home, locals())
 

@@ -222,7 +222,7 @@ def submit_job(request):
                                 environment=environment,
                                 test_bed_type=test_bed_type,
                                 original_suite_execution_id=original_suite_execution_id,
-)
+                                build_url=build_url)
     return job_id
 
 
@@ -673,7 +673,7 @@ def get_test_case_executions_by_time(request):
     if "script_path" in request_json:
         q = q & Q(script_path=request_json["script_path"])
 
-    test_case_executions = TestCaseExecution.objects.filter(q)
+    test_case_executions = TestCaseExecution.objects.filter(q).order_by('started_time')
     re_run_info = {}
     for te in test_case_executions:
         if scripts_for_module:

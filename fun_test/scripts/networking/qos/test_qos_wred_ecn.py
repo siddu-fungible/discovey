@@ -2,18 +2,13 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header
 from lib.host.network_controller import NetworkController
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import NuConfigManager
 from scripts.networking.helper import *
 from scripts.networking.qos.qos_helper import *
 from collections import OrderedDict
 import copy
 
 num_ports = 3
-config = nu_config_obj.read_dut_config()
-qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
-if config['type'] == 'f1':
-    qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
-qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 streamblock_objs_list = []
 streamblock_handles_list = []
 queue_list = [x for x in range(16)]
@@ -75,12 +70,23 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, port_3, pfc_stream, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, port_obj_list, dut_port_list, normal_stream, subscribe_results, flow_direction
+            dut_port_1, hnu, shape, port_obj_list, dut_port_list, normal_stream, subscribe_results, flow_direction, \
+            nu_config_obj, qos_json_output, max_egress_load
+
+        nu_config_obj = NuConfigManager()
+
+        qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
+        qos_json_output = fun_test.parse_file_to_json(qos_json_file)
+
+        max_egress_load = nu_config_obj.SPEED
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_PALLADIUM:
+            max_egress_load = qos_json_output['max_egress_load']
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
-        dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+        dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE, flow_direction=flow_direction)
 
         shape = 0
         hnu = False
@@ -88,7 +94,6 @@ class SpirentSetup(FunTestScript):
             shape = 1
             hnu = True
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
@@ -198,24 +203,23 @@ class SpirentSetup(FunTestScript):
 
 
 class Wred_Q0(FunTestCase):
-    test_type = QOS_PROFILE_WRED
-    max_egress_load = qos_json_output['max_egress_load']
-    qos_profile_dict = qos_json_output[test_type]
-    normal_stream_pps_list = qos_profile_dict['stream_pps']
-    timer = qos_profile_dict['wred_timer']
-    min_thr = qos_profile_dict['wred_min_thr']
-    max_thr = qos_profile_dict['wred_max_thr']
-    wred_weight = qos_profile_dict['wred_weight']
-    wred_enable = qos_profile_dict['wred_enable']
-    prob_index = qos_profile_dict['wred_prob_index']
-    prof_num = qos_profile_dict['wred_prof_num']
+    test_type = None
+    qos_profile_dict = None
+    normal_stream_pps_list = None
+    timer = None
+    min_thr = None
+    max_thr = None
+    wred_weight = None
+    wred_enable = None
+    prob_index = None
+    prof_num = None
     test_queue = 0
-    avg_period = qos_profile_dict['avg_period']
-    cap_avg_sz = qos_profile_dict['cap_avg_sz']
-    stats_list = [q_depth, wred_q_drop]
+    avg_period = None
+    cap_avg_sz = None
+    stats_list = None
     max_queue_pps = 0
-    port_1_stream_load = normal_stream_pps_list['ingress_port_1']
-    port_3_stream_load_list = normal_stream_pps_list['ingress_port_2']
+    port_1_stream_load = None
+    port_3_stream_load_list = None
 
     def describe(self):
         self.set_test_details(id=1,
@@ -229,9 +233,31 @@ class Wred_Q0(FunTestCase):
                               7. Verify that as q depth increases, wred drop increases
                               """)
 
+    def setup_variables(self):
+        self.test_type = QOS_PROFILE_WRED
+        self.qos_profile_dict = qos_json_output[self.test_type]
+        self.normal_stream_pps_list = self.qos_profile_dict['stream_pps']
+        self.timer = self.qos_profile_dict['wred_timer']
+        self.min_thr = self.qos_profile_dict['wred_min_thr']
+        self.max_thr = self.qos_profile_dict['wred_max_thr']
+        self.wred_weight = self.qos_profile_dict['wred_weight']
+        self.wred_enable = self.qos_profile_dict['wred_enable']
+        self.prob_index = self.qos_profile_dict['wred_prob_index']
+        self.prof_num = self.qos_profile_dict['wred_prof_num']
+        self.test_queue = 0
+        self.avg_period = self.qos_profile_dict['avg_period']
+        self.cap_avg_sz = self.qos_profile_dict['cap_avg_sz']
+        self.stats_list = [q_depth, wred_q_drop]
+        self.max_queue_pps = 0
+        self.port_1_stream_load = self.normal_stream_pps_list['ingress_port_1']
+        self.port_3_stream_load_list = self.normal_stream_pps_list['ingress_port_2']
+
     def setup(self):
+        self.setup_variables()
+
+
         fun_test.log("Setting stream rate on stream coming from port %s to 80 percent of egress b/w" % port_1)
-        self.max_queue_pps = get_load_pps_for_each_queue(self.max_egress_load, 128, 1)
+        self.max_queue_pps = get_load_pps_for_each_queue(max_egress_load, 140, 1)
 
         load_value = int(get_load_value_from_load_percent(load_percent=self.port_1_stream_load,
                                                           max_egress_load=self.max_queue_pps))
@@ -368,23 +394,23 @@ class Wred_Q0(FunTestCase):
 class ECN_10(Wred_Q0):
     test_type = QOS_PROFILE_ECN
     ecn_bits = ECN_BITS_10
-    qos_profile_dict = qos_json_output[test_type]
-    normal_stream_pps_list = qos_profile_dict['stream_pps']
-    timer = qos_profile_dict['ecn_timer']
-    min_thr = qos_profile_dict['ecn_min_thr']
-    max_thr = qos_profile_dict['ecn_max_thr']
-    wred_enable = qos_profile_dict['ecn_enable']
-    prob_index = qos_profile_dict['ecn_prob_index']
-    prof_num = qos_profile_dict['ecn_prof_num']
+    qos_profile_dict = None
+    normal_stream_pps_list = None
+    timer = None
+    min_thr = None
+    max_thr = None
+    wred_enable = None
+    prob_index = None
+    prof_num = None
     test_queue = 0
-    avg_period = qos_profile_dict['avg_period']
-    cap_avg_sz = qos_profile_dict['cap_avg_sz']
-    stats_list = [q_depth, ecn_count]
-    max_queue_pps = 0
-    port_1_stream_load = normal_stream_pps_list['ingress_port_1']
-    port_3_stream_load_list = normal_stream_pps_list['ingress_port_2']
+    avg_period = None
+    cap_avg_sz = None
+    port_1_stream_load = None
+    port_3_stream_load_list = None
     sleep_interval = 5
     iterations = 3
+    max_queue_pps = 0
+    stats_list = [q_depth, ecn_count]
 
     def describe(self):
         self.set_test_details(id=2,
@@ -399,7 +425,29 @@ class ECN_10(Wred_Q0):
                                   8. For every iteration check if ecn count on dut and spirent match
                                   """)
 
+    def setup_variables(self):
+        self.test_type = QOS_PROFILE_ECN
+        self.ecn_bits = self.ecn_bits
+        self.qos_profile_dict = qos_json_output[self.test_type]
+        self.normal_stream_pps_list = self.qos_profile_dict['stream_pps']
+        self.timer = self.qos_profile_dict['ecn_timer']
+        self.min_thr = self.qos_profile_dict['ecn_min_thr']
+        self.max_thr = self.qos_profile_dict['ecn_max_thr']
+        self.wred_enable = self.qos_profile_dict['ecn_enable']
+        self.prob_index = self.qos_profile_dict['ecn_prob_index']
+        self.prof_num = self.qos_profile_dict['ecn_prof_num']
+        self.test_queue = 0
+        self.avg_period = self.qos_profile_dict['avg_period']
+        self.cap_avg_sz = self.qos_profile_dict['cap_avg_sz']
+        self.stats_list = self.stats_list
+        self.max_queue_pps = self.max_queue_pps
+        self.port_1_stream_load = self.normal_stream_pps_list['ingress_port_1']
+        self.port_3_stream_load_list = self.normal_stream_pps_list['ingress_port_2']
+        self.sleep_interval = 5
+        self.iterations = 3
+
     def setup(self):
+        self.setup_variables()
         super(ECN_10, self).setup()
 
         # Set non fcp curr count
@@ -548,20 +596,20 @@ class ECN_10_00(FunTestCase):
     port_1_stream_dscp = 0
     port_3_stream_dscp = 16
     stream_ecn_bits_list = [ECN_BITS_10, ECN_BITS_00]
-    stream_dscps = [port_1_stream_dscp, port_3_stream_dscp]
+    stream_dscps = None
     test_type = QOS_PROFILE_ECN
-    qos_profile_dict = qos_json_output[test_type]
-    timer = qos_profile_dict['ecn_timer']
-    min_thr = qos_profile_dict['ecn_min_thr']
-    max_thr = qos_profile_dict['ecn_max_thr']
-    prob_index = qos_profile_dict['ecn_prob_index']
-    prof_num = qos_profile_dict['ecn_prof_num']
-    stream_pps_list = qos_profile_dict['stream_pps']['ingress_port_1']
-    enable_ecn = qos_profile_dict['ecn_enable']
-    avg_period = qos_profile_dict['avg_period']
-    cap_avg_sz = qos_profile_dict['cap_avg_sz']
-    cap_avg_enable = qos_profile_dict['cap_avg_enable']
-    max_egress_load = qos_json_output['max_egress_load']
+    qos_profile_dict = None
+    timer = None
+    min_thr = None
+    max_thr = None
+    prob_index = None
+    prof_num = None
+    stream_pps_list = None
+    enable_ecn = None
+    avg_period = None
+    cap_avg_sz = None
+    cap_avg_enable = None
+    max_egress_load = None
 
     def describe(self):
         self.set_test_details(id=4,
@@ -574,11 +622,29 @@ class ECN_10_00(FunTestCase):
                               4. Verify from diff serv stats on spirent that only dscp 0 has packets with ecn bits set 
                                  and dscp 16 have no packets with ecn bits set
                               """)
+    def setup_variables(self):
+        self.port_1_stream_dscp = 0
+        self.port_3_stream_dscp = 16
+        self.stream_dscps = [self.port_1_stream_dscp, self.port_3_stream_dscp]
+        self.test_type = QOS_PROFILE_ECN
+        self.qos_profile_dict = qos_json_output[self.test_type]
+        self.timer = self.qos_profile_dict['ecn_timer']
+        self.min_thr = self.qos_profile_dict['ecn_min_thr']
+        self.max_thr = self.qos_profile_dict['ecn_max_thr']
+        self.prob_index = self.qos_profile_dict['ecn_prob_index']
+        self.prof_num = self.qos_profile_dict['ecn_prof_num']
+        self.stream_pps_list = self.qos_profile_dict['stream_pps']['ingress_port_1']
+        self.enable_ecn = self.qos_profile_dict['ecn_enable']
+        self.avg_period = self.qos_profile_dict['avg_period']
+        self.cap_avg_sz = self.qos_profile_dict['cap_avg_sz']
+        self.cap_avg_enable = self.qos_profile_dict['cap_avg_enable']
+        self.max_egress_load = max_egress_load
 
     def setup(self):
+        self.setup_variables()
         # Update streams to dscp and ecn bits
         stream_pps = get_load_value_from_load_percent(load_percent=self.stream_pps_list,
-                                                      max_egress_load=self.max_egress_load)
+                                                      max_egress_load=max_egress_load)
 
         for stream, queue_num, ecn_bits in zip(streamblock_objs_list, self.stream_dscps, self.stream_ecn_bits_list):
             fun_test.log("Updating stream %s with dscp %s having ecn 10 and load to %s" % (stream.spirent_handle,

@@ -3,7 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header, Capture
 from lib.utilities.pcap_parser import PcapParser
 from lib.host.network_controller import NetworkController
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import NuConfigManager
 from scripts.networking.helper import *
 import re
 
@@ -79,7 +79,9 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, pause_obj, dut_port_list, pause_streamblock, interface_obj_list, flow_direction
+            dut_port_1, hnu, shape, pause_obj, dut_port_list, pause_streamblock, interface_obj_list, flow_direction, nu_config_obj
+
+        nu_config_obj = NuConfigManager()
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 

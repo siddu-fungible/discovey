@@ -210,6 +210,7 @@ class F1(Linux, ToDictMixin):
                     fun_test.sleep("Ensure FunOS is started", seconds=10)
                     fun_test.test_assert(new_process_id, "Started FunOs")
                     self.fun_os_process_id = new_process_id
+                    result = True
                 else:
                     result = self.command(command=command, timeout=timeout, run_to_completion=run_to_completion)
             # if not get_output:

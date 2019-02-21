@@ -2,20 +2,12 @@ from lib.system.fun_test import *
 from lib.templates.traffic_generator.spirent_ethernet_traffic_template import SpirentEthernetTrafficTemplate, \
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header
 from lib.host.network_controller import NetworkController
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import NuConfigManager
 from scripts.networking.helper import *
 from scripts.networking.qos.qos_helper import *
 import itertools
 
 num_ports = 3
-config = nu_config_obj.read_dut_config()
-qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
-if config['type'] == 'f1':
-    qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
-qos_json_output = fun_test.parse_file_to_json(qos_json_file)
-test_type = "strict_priority"
-qos_sp_json = qos_json_output[test_type]
-sleep_timer = qos_sp_json['sp_traffic_time']
 streamblock_objs = {}
 generator_config_objs = {}
 generator_dict = {}
@@ -39,15 +31,29 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list, flow_direction
+            dut_port_1, hnu, shape, port_3, port_obj_list, destination_ip1, destination_mac1, dut_port_list, flow_direction, \
+            nu_config_obj, sleep_timer, test_streams, max_egress_load, qos_json_output, qos_sp_json
+
+        nu_config_obj = NuConfigManager()
+
+        qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            qos_json_file = fun_test.get_script_parent_directory() + '/qos_f1.json'
+        qos_json_output = fun_test.parse_file_to_json(qos_json_file)
+        test_type = "strict_priority"
+        qos_sp_json = qos_json_output[test_type]
+        sleep_timer = qos_sp_json['sp_traffic_time']
+
+        max_egress_load = nu_config_obj.SPEED
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_PALLADIUM:
+            max_egress_load = qos_json_output['max_egress_load']
 
         min_frame_length = 64
         max_frame_length = 1500
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
-        dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+        dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE, flow_direction=flow_direction)
 
         shape = 0
         hnu = False
@@ -55,13 +61,12 @@ class SpirentSetup(FunTestScript):
             shape = 1
             hnu = True
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_ingress_qos",
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_qos_cir",
                                                       spirent_config=spirent_config,
-                                                      chassis_type=nu_config_obj.FLOW_DIRECTION_NU_NU)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
 
         routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
@@ -174,7 +179,8 @@ class SpirentSetup(FunTestScript):
                 fun_test.test_assert(set_egress_priority_map, "Set queue to priority map")
 
     def cleanup(self):
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2)
+        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2,
+                                                    qos_json_output=qos_json_output)
         fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
         template_obj.cleanup()
@@ -185,9 +191,7 @@ class Q0_SP_Channel0(FunTestCase):
     streamblock_handles_list = []
     channel = "channel_0"
     sp_queue_numbers = "Q0"
-    max_egress_load = qos_json_output['max_egress_load']
-    json_load_unit = qos_json_output['load_unit']
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
+    test_streams = None
     multi_split_sp = False
     sp_dscp_list = [0]
     non_sp_dscp_list = [1, 2]
@@ -206,6 +210,7 @@ class Q0_SP_Channel0(FunTestCase):
                               """)
 
     def setup(self):
+        self.test_streams = qos_sp_json[self.channel][self.sp_queue_numbers]
         # Create streams
         for port, streams in self.test_streams.iteritems():
             self.testcase_streamblocks[str(port)] = {}
@@ -226,7 +231,7 @@ class Q0_SP_Channel0(FunTestCase):
                 self.testcase_streamblocks[str(port)][dscp_val] = {}
                 current_streamblock_obj = streamblock_objs[spirent_port][counter]
                 load_value = get_load_value_from_load_percent(load_percent=stream_details['load_percent'],
-                                                              max_egress_load=self.max_egress_load)
+                                                              max_egress_load=max_egress_load,)
                 fun_test.simple_assert(load_value, "Ensure load value is calculated")
 
                 dscp_values = template_obj.get_diff_serv_dscp_value_from_decimal_value(
@@ -314,7 +319,7 @@ class Q0_SP_Channel0(FunTestCase):
 
             for stream_details, dscp_val in zip(streams, current_list):
                 expected_load_value = get_load_value_from_load_percent(load_percent=stream_details['expected_load_percent'],
-                                                                       max_egress_load=self.max_egress_load)
+                                                                       max_egress_load=max_egress_load)
                 fun_test.simple_assert(expected_load_value is not None, "Ensure expected load value is calculated")
 
                 current_streamblock_handle = \
@@ -356,13 +361,15 @@ class Q0_SP_Channel0(FunTestCase):
     def validate_sp_output(self, result_dict):
         for dscp_val, stream_details in result_dict.iteritems():
             stream_details['result'] = verify_load_output(actual_value=stream_details['actual'],
-                                                          expected_value=stream_details['expected'])
+                                                          expected_value=stream_details['expected'], nu_config_obj=nu_config_obj,
+                                                          max_egress_load=max_egress_load)
         return result_dict
 
     def validate_non_sp_output(self, result_dict):
         for dscp_val, stream_details in result_dict.iteritems():
             stream_details['result'] = verify_load_output(actual_value=stream_details['actual'],
-                                                          expected_value=stream_details['expected'])
+                                                          expected_value=stream_details['expected'], nu_config_obj=nu_config_obj,
+                                                          max_egress_load=max_egress_load)
         return result_dict
 
 
@@ -371,9 +378,6 @@ class Q1_SP_Channel0(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_0"
     sp_queue_numbers = "Q0"
-    max_egress_load = qos_json_output['max_egress_load']
-    json_load_unit = qos_json_output['load_unit']
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     multi_split_sp = False
     sp_dscp_list = [1]
     non_sp_dscp_list = [2, 3]
@@ -397,9 +401,6 @@ class Q2_SP_Channel0(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_0"
     sp_queue_numbers = "Q0"
-    max_egress_load = qos_json_output['max_egress_load']
-    json_load_unit = qos_json_output['load_unit']
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     multi_split_sp = False
     sp_dscp_list = [2]
     non_sp_dscp_list = [3, 4]
@@ -422,9 +423,6 @@ class Q3_SP_Channel0(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_0"
     sp_queue_numbers = "Q0"
-    max_egress_load = qos_json_output['max_egress_load']
-    json_load_unit = qos_json_output['load_unit']
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     multi_split_sp = False
     sp_dscp_list = [3]
     non_sp_dscp_list = [4, 5]
@@ -448,9 +446,6 @@ class Q5_SP_Channel0(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_0"
     sp_queue_numbers = "Q0"
-    max_egress_load = qos_json_output['max_egress_load']
-    json_load_unit = qos_json_output['load_unit']
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     multi_split_sp = False
     sp_dscp_list = [5]
     non_sp_dscp_list = [6, 7]
@@ -474,9 +469,6 @@ class Q6_SP_Channel0(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_0"
     sp_queue_numbers = "Q0"
-    max_egress_load = qos_json_output['max_egress_load']
-    json_load_unit = qos_json_output['load_unit']
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     multi_split_sp = False
     sp_dscp_list = [6]
     non_sp_dscp_list = [7, 1]
@@ -500,9 +492,6 @@ class Q7_SP_Channel0(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_0"
     sp_queue_numbers = "Q0"
-    max_egress_load = qos_json_output['max_egress_load']
-    json_load_unit = qos_json_output['load_unit']
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     multi_split_sp = False
     sp_dscp_list = [7]
     non_sp_dscp_list = [2, 3]
@@ -527,7 +516,6 @@ class Q4_SP_Channel0(Q0_SP_Channel0):
     multi_split_sp = False
     channel = "channel_0"
     sp_queue_numbers = "Q4"
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [4]
     non_sp_dscp_list = [5, 0]
     sp_list_only = False
@@ -549,7 +537,6 @@ class Q8_SP_Channel1(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_1"
     sp_queue_numbers = "Q0"
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [8]
     non_sp_dscp_list = [9, 10]
     sp_list_only = False
@@ -571,7 +558,6 @@ class Q9_SP_Channel1(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_1"
     sp_queue_numbers = "Q0"
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [9]
     non_sp_dscp_list = [10, 11]
     sp_list_only = False
@@ -592,7 +578,6 @@ class Q10_SP_Channel1(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_1"
     sp_queue_numbers = "Q0"
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [10]
     non_sp_dscp_list = [11, 12]
     sp_list_only = False
@@ -613,7 +598,6 @@ class Q12_SP_Channel1(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_1"
     sp_queue_numbers = "Q0"
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [12]
     non_sp_dscp_list = [13, 14]
     sp_list_only = False
@@ -634,7 +618,6 @@ class Q13_SP_Channel1(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_1"
     sp_queue_numbers = "Q0"
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [13]
     non_sp_dscp_list = [14, 15]
     sp_list_only = False
@@ -655,7 +638,6 @@ class Q14_SP_Channel1(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_1"
     sp_queue_numbers = "Q0"
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [14]
     non_sp_dscp_list = [15, 9]
     sp_list_only = False
@@ -676,7 +658,6 @@ class Q15_SP_Channel1(Q0_SP_Channel0):
     streamblock_handles_list = []
     channel = "channel_1"
     sp_queue_numbers = "Q0"
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [15]
     non_sp_dscp_list = [9, 10]
     sp_list_only = False
@@ -699,7 +680,6 @@ class Q11_SP_Channel1(Q0_SP_Channel0):
     testcase_streamblocks = {}
     streamblock_handles_list = []
     multi_split_sp = False
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [11]
     non_sp_dscp_list = [12, 8]
     sp_list_only = False
@@ -722,7 +702,6 @@ class Q0_Q8_SP_Channel0_Channel1(Q0_SP_Channel0):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [0, 8]
     sp_list_only = True
 
@@ -745,7 +724,6 @@ class Q1_Q9_SP_Channel0_Channel1(Q0_SP_Channel0):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [1, 9]
     sp_list_only = True
 
@@ -768,7 +746,6 @@ class Q2_Q10_SP_Channel0_Channel1(Q0_SP_Channel0):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [2, 10]
     sp_list_only = True
 
@@ -791,7 +768,6 @@ class Q3_Q11_SP_Channel0_Channel1(Q0_SP_Channel0):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [3, 11]
     sp_list_only = True
 
@@ -814,7 +790,6 @@ class Q4_Q12_SP_Channel0_Channel1(Q0_SP_Channel0):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [4, 12]
     sp_list_only = True
 
@@ -837,7 +812,6 @@ class Q5_Q13_SP_Channel0_Channel1(Q0_SP_Channel0):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [5, 13]
     sp_list_only = True
 
@@ -860,7 +834,6 @@ class Q6_Q14_SP_Channel0_Channel1(Q0_SP_Channel0):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [6, 14]
     sp_list_only = True
 
@@ -882,7 +855,6 @@ class Q7_Q15_SP_Channel0_Channel1(Q0_SP_Channel0):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [7, 15]
     sp_list_only = True
 
@@ -905,7 +877,6 @@ class Q0_Q9_SP_Channel0_Channel1(Q0_Q8_SP_Channel0_Channel1):
     non_sp_dscp_list = []
     testcase_streamblocks = {}
     streamblock_handles_list = []
-    test_streams = qos_sp_json[channel][sp_queue_numbers]
     sp_dscp_list = [0, 9]
     sp_list_only = True
 
