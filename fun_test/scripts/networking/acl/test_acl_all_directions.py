@@ -357,9 +357,9 @@ class AclIngressDropNUtoNU(FunTestCase):
                 stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dip = int(
                 stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
-                                          actual=rx_stream_result_framecount_dip,
-                                          message="Comparing tx and rx frame count on Spirent for stream dip")
+            # fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
+            #                               actual=rx_stream_result_framecount_dip,
+            #                               message="Comparing tx and rx frame count on Spirent for stream dip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_ecn.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
