@@ -593,7 +593,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         self.linux_host.disconnect()
 
         if not self.blt_creation_fail:
-            for x in range(1, self.volume_count + 1, 1):
+            for x in range(1, self.blt_attach_count + 1, 1):
                 if self.correct_key_tweak:
                     command_result = self.storage_controller.volume_detach_remote(ns_id=x,
                                                                                   uuid=self.thin_uuid[x],
@@ -641,10 +641,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                 storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                           "VOL_TYPE_BLK_LOCAL_THIN", self.thin_uuid[x])
                 command_result = self.storage_controller.peek(storage_props_tree)
-                fun_test.simple_assert(command_result["status"], "BLT {} with uuid {} peek failed".
-                                       format(x, self.thin_uuid[x]))
                 fun_test.simple_assert(expression=command_result["data"] is None,
-                                       message="BLT {} with uuid {} not cleaned".format(x, self.thin_uuid[x]))
+                                       message="BLT {} with uuid {} removal".format(x, self.thin_uuid[x]))
 
 
 class BLTKey256(BLTCryptoVolumeTestCase):
