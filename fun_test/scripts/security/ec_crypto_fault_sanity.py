@@ -387,6 +387,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attach {} with uuid {}".format(self.attach_type,
                                                                                            self.attach_uuid))
+            self.attach_count = 1
 
         # Check the expected filter params
         if hasattr(self, "encrypt") and self.encrypt:
@@ -972,7 +973,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                          format(x, self.attach_uuid))
 
             else:
-                if self.attach_count == 1:
+                if self.attach_count:
                     command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
                                                                                   uuid=self.attach_uuid,
                                                                                   remote_ip=self.linux_host.internal_ip)
@@ -1028,19 +1029,14 @@ class ECCryptoVolumeTestCase(FunTestCase):
                     storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                               self.vol_types[vol_type], cur_uuid)
                     command_result = self.storage_controller.peek(storage_props_tree)
-                    fun_test.simple_assert(command_result["status"], "{} with uuid {} peek failed".
-                                           format(vol_type, cur_uuid))
                     fun_test.simple_assert(expression=command_result["data"] is None,
-                                           message="BLT with uuid {} not cleaned up".format(cur_uuid))
+                                           message="BLT with uuid {} removal".format(cur_uuid))
             else:
                 storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                           self.vol_types[vol_type], self.uuid[vol_type])
                 command_result = self.storage_controller.peek(storage_props_tree)
-                fun_test.simple_assert(command_result["status"], "{} with uuid {} peek failed".
-                                       format(vol_type, self.uuid[vol_type]))
                 fun_test.simple_assert(expression=command_result["data"] is None,
-                                       message="{} with uuid {} not cleaned up".format(vol_type,
-                                                                                       self.uuid[vol_type]))
+                                       message="{} with uuid {} removal".format(vol_type, self.uuid[vol_type]))
 
 
 class ECKey256(ECCryptoVolumeTestCase):
@@ -1100,7 +1096,7 @@ class ECKey512(ECCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=5,
                               summary="4:2 EC with 512 bit key and run FIO write,read,randwrite,randread "
-                                      "with different block size & depth with fault injected on one random plex",
+                                      "with different block size & depth with fault injected on two random plexes",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
                               2. Attach it to external linux/container.
