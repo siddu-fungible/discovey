@@ -84,18 +84,17 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
-
-      <button style="float: right" (click)="showTriaging = !showTriaging"
+      <br>
+      <button (click)="showTriaging = !showTriaging"
               class="btn btn-sm failed-label no-margin git-commit">
         Triage
       </button>
       <!--<span style="float: right;">-->
       <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
       <!--</span>-->
-      <br>
     </div>
     <br>
-    <div *ngIf="showTriaging">
+    <div *ngIf="showTriaging" class="card">
       <table class="table table-borderless" style="width: 60%">
         <tr>
           <td>
@@ -128,17 +127,20 @@
         </tr>
         <tr>
           <td>
+            Boot args: <input type="text" [(ngModel)]="bootArgs"/>
+          </td>
+          <td>
             Type: <select [(ngModel)]="selectedOption">
         <option [value]="x" *ngFor="let x of triagingOptions">{{x}}</option>
       </select>
           </td>
+        </tr>
+        <tr>
           <td>
             <button class="btn btn-sm no-margin btn-success" (click)="enterTriaging()">Submit</button>
           </td>
-        </tr>
-        <tr>
-          <td colspan="2">
-            Boot args: <input type="text" [(ngModel)]="bootArgs"/>
+          <td>
+
           </td>
         </tr>
       </table>

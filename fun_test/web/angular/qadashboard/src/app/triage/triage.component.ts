@@ -219,29 +219,14 @@ export class TriageComponent implements OnInit {
   }
 
   setCommits(): void {
-    this.subscription = this.sharedData.getMessage().subscribe(message => {
-      this.message = message;
-    let payload = {"metric_id": this.id,
-    "metric_type": this.message["metric_type"],
-    "from_date": this.message["from_date"],
-    "to_date": this.message["to_date"],
-    "boot_args": this.message["boot_args"]};
-    this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
-      let result = data.data;
-      this.triageInfo = result;
-      if (result.passed_git_commit && result.passed_git_commit !== "") {
-        this.successCommit = result.passed_git_commit;
-      }
-      if (result.degraded_git_commit && result.degraded_git_commit !== "") {
-        this.faultyCommit = result.degraded_git_commit;
-      }
-      this.fetchGitCommits();
-    }, error => {
-      this.logger.error("Traiging info fetch failed");
-    })
-    });
-    // let payload = {"metric_id": this.id};
-    // this.apiService.post('/metrics/first_degrade', payload).subscribe((data) => {
+    // this.subscription = this.sharedData.getMessage().subscribe(message => {
+    //   this.message = message;
+    // let payload = {"metric_id": this.id,
+    // "metric_type": this.message["metric_type"],
+    // "from_date": this.message["from_date"],
+    // "to_date": this.message["to_date"],
+    // "boot_args": this.message["boot_args"]};
+    // this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
     //   let result = data.data;
     //   this.triageInfo = result;
     //   if (result.passed_git_commit && result.passed_git_commit !== "") {
@@ -252,8 +237,23 @@ export class TriageComponent implements OnInit {
     //   }
     //   this.fetchGitCommits();
     // }, error => {
-    //   this.logger.error("Past Status Urls");
+    //   this.logger.error("Traiging info fetch failed");
+    // })
     // });
+    let payload = {"metric_id": this.id};
+    this.apiService.post('/metrics/first_degrade', payload).subscribe((data) => {
+      let result = data.data;
+      this.triageInfo = result;
+      if (result.passed_git_commit && result.passed_git_commit !== "") {
+        this.successCommit = result.passed_git_commit;
+      }
+      if (result.degraded_git_commit && result.degraded_git_commit !== "") {
+        this.faultyCommit = result.degraded_git_commit;
+      }
+      this.fetchGitCommits();
+    }, error => {
+      this.logger.error("Past Status Urls");
+    });
 
   }
 
@@ -262,8 +262,9 @@ export class TriageComponent implements OnInit {
     this.apiService.post('/triage/check_db', payload).subscribe(response => {
       if (response.data) {
         this.startButton = false;
+        this.showTriaging();
       }
-      this.setCommits();
+      // this.setCommits();
     }, error => {
       this.logger.error("checking DB Failed");
     });

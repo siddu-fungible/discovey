@@ -25,7 +25,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 from analytics_models_helper import invalidate_goodness_cache
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
@@ -396,9 +396,16 @@ def get_triage_info(request):
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
     for entry in chart_status_entries:
         if same_day(from_date, entry.date_time):
-            current_entry = entry
+            if entry.git_commit != "":
+                current_entry = entry
+                break
+            else:
+                from_date = from_date - timedelta(days=1)
         if same_day(to_date, entry.date_time):
-            previous_entry = entry
+            if entry.git_commit != "":
+                previous_entry = entry
+            else:
+                to_date = to_date - timedelta(days=1)
     result = {"passed_jenkins_job_id": current_entry.jenkins_job_id,
                       "passed_suite_execution_id": current_entry.suite_execution_id,
                       "passed_lsf_job_id": current_entry.lsf_job_id,

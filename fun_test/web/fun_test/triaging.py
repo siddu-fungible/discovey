@@ -197,6 +197,19 @@ if __name__ == "__main__":
     server = jenkins.Jenkins(url=url, username='jenkins.service', password='117071d3cb2cae6c964099664b271e4011')
     user = server.get_whoami()
     print server.jobs_count()
+    params={
+        "RUN_TARGET": "F1",
+        "HW_MODEL": "F1DevBoard",
+        "HW_VERSION": "Ignored",
+        "RUN_MODE": "Batch",
+        "PRIORITY": "normal_priority",
+        "BOOTARGS": "app=soak_malloc_classic",
+        "MAX_DURATION": 20,
+        "SECURE_BOOT": "fungible",
+        "NOTE": "Testing out Python Jenkins",
+        "FAST_EXIT": "true"
+    }
+
     import pprint
 
     pp = pprint.PrettyPrinter(indent=4)
@@ -206,8 +219,23 @@ if __name__ == "__main__":
     user = server.get_whoami()
     print('Hello %s from Jenkins %s' % (user['fullName'], version))
     # server.create_job("empty", config_xml=jenkins.EMPTY_CONFIG_XML)
+    server.build_job('emulation/fun_on_demand', params)
+    job = server.get_job_info('emulation/fun_on_demand')
+    info = server.get_build_info('emulation/fun_on_demand', 3402)
+    # build = job.get_last_build()
+    # print build.get_actions()
     my_job = server.get_job_config('emulation')
     print(my_job)  # prints XML configuration
     print "hello"
-    # jobs = server.get_jobs(view_name='Emulation')
+    # jobs = server.get_jobs(view_name='emulation')
     # print jobs
+    curl_params = [
+    {"name": "RUN_TARGET", "value": "F1"},
+    {"name": "HW_MODEL", "value": "F1DevBoard"},
+    {"name": "HW_VERSION", "value": "ignored"},
+    {"name": "RUN_MODE", "value": "Batch"},
+    {"name": "PRIORITY", "value": "normal_priority"},
+    {"name": "BOOTARGS", "value": "app=soak_malloc_classic"},
+    {"name": "MAX_DURATION", "value": 20},
+    {"name": "FAST_EXIT", "value": True}
+    ]

@@ -397,28 +397,28 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     "boot_args": this.bootArgs
     };
       this.sharedData.changeMessage(this.message);
-      alert("submitted");
+    //   alert("submitted");
 
-      let url = "/performance/atomic/" + this.metricId + "/triage";
-    window.open(url, '_blank');
-    // let payload = {"metric_id": this.metricId,
-    // "metric_type": this.selectedOption,
-    // "from_date": this.fromDate,
-    // "to_date": this.toDate,
-    // "boot_args": this.bootArgs};
-    // this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
-    //   let result = data.data;
-    //   this.triageInfo = result;
-    //   if (result.passed_git_commit && result.passed_git_commit !== "") {
-    //     this.successCommit = result.passed_git_commit;
-    //   }
-    //   if (result.degraded_git_commit && result.degraded_git_commit !== "") {
-    //     this.faultyCommit = result.degraded_git_commit;
-    //   }
-    //   this.fetchGitCommits();
-    // }, error => {
-    //   this.loggerService.error("Traiging info fetch failed");
-    // });
+    //   let url = "/performance/atomic/" + this.metricId + "/triage";
+    // window.open(url, '_blank');
+    let payload = {"metric_id": this.metricId,
+    "metric_type": this.selectedOption,
+    "from_date": this.fromDate,
+    "to_date": this.toDate,
+    "boot_args": this.bootArgs};
+    this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
+      let result = data.data;
+      this.triageInfo = result;
+      if (result.passed_git_commit && result.passed_git_commit !== "") {
+        this.successCommit = result.passed_git_commit;
+      }
+      if (result.degraded_git_commit && result.degraded_git_commit !== "") {
+        this.faultyCommit = result.degraded_git_commit;
+      }
+      this.fetchGitCommits();
+    }, error => {
+      this.loggerService.error("Traiging info fetch failed");
+    });
 
   }
   fetchGitCommits(): void {
