@@ -2654,37 +2654,37 @@ class AclRangeDropNUtoNU(FunTestCase):
                                                  dip=self.l3_config['destination_ip1'],
                                                  sip=acl_fields_dict_range_nu_nu['source_ip'],
                                                  s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                 d_port=acl_fields_dict_sanity_nu_nu['in_range_port'],
-                                                 sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                                 ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                                 d_port=acl_fields_dict_range_nu_nu['in_range_port'],
+                                                 sync_bit=acl_fields_dict_range_nu_nu['tcp_sync_bit'],
+                                                 ack_bit=acl_fields_dict_range_nu_nu['tcp_ack_bit'])
         self.stream_obj_boundary_low = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                       dip=self.l3_config['destination_ip1'],
                                                       sip=acl_fields_dict_range_nu_nu['source_ip'],
                                                       s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                      d_port=acl_fields_dict_sanity_nu_nu['range_boundary_low_port'],
-                                                      sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                                      ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                                      d_port=acl_fields_dict_range_nu_nu['range_boundary_low_port'],
+                                                      sync_bit=acl_fields_dict_range_nu_nu['tcp_sync_bit'],
+                                                      ack_bit=acl_fields_dict_range_nu_nu['tcp_ack_bit'])
         self.stream_obj_boundary_high = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                        dip=self.l3_config['destination_ip1'],
                                                        sip=acl_fields_dict_range_nu_nu['source_ip'],
                                                        s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                       d_port=acl_fields_dict_sanity_nu_nu['range_boundary_high_port'],
-                                                       sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                                       ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                                       d_port=acl_fields_dict_range_nu_nu['range_boundary_high_port'],
+                                                       sync_bit=acl_fields_dict_range_nu_nu['tcp_sync_bit'],
+                                                       ack_bit=acl_fields_dict_range_nu_nu['tcp_ack_bit'])
         self.stream_obj_lower_range = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                      dip=self.l3_config['destination_ip1'],
                                                      sip=acl_fields_dict_range_nu_nu['source_ip'],
                                                      s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                     d_port=acl_fields_dict_sanity_nu_nu['lower_range_port'],
-                                                     sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                                     ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                                     d_port=acl_fields_dict_range_nu_nu['lower_range_port'],
+                                                     sync_bit=acl_fields_dict_range_nu_nu['tcp_sync_bit'],
+                                                     ack_bit=acl_fields_dict_range_nu_nu['tcp_ack_bit'])
         self.stream_obj_higher_range = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                       dip=self.l3_config['destination_ip1'],
                                                       sip=acl_fields_dict_range_nu_nu['source_ip'],
                                                       s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                      d_port=acl_fields_dict_sanity_nu_nu['higher_range_port'],
-                                                      sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                                      ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                                      d_port=acl_fields_dict_range_nu_nu['higher_range_port'],
+                                                      sync_bit=acl_fields_dict_range_nu_nu['tcp_sync_bit'],
+                                                      ack_bit=acl_fields_dict_range_nu_nu['tcp_ack_bit'])
 
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
