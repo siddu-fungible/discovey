@@ -68,22 +68,23 @@
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
-      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randwrite": {"fault_injection": 0, "num_reads": 1040, "num_writes": 1040},
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
     },
     "ec_pass_threshold": 100,
     "expected_ec_stats": {
       "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
       "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
-      "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
+      "randwrite": {"fault_injection": 0,"num_reads": 1158, "num_writes": 315},
+      "randread": {"fault_injection": 0,"num_reads": 1019, "num_writes": 0}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 30,
+    "blt_read_pass_threshold": 80,
     "expected_blt_stats": {
-      "write": {"fault_injection": 0,"num_reads": 530, "num_writes": 283},
-      "read": {"fault_injection": 0,"num_reads": 530, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 611, "num_writes": 306},
-      "randread": {"fault_injection": 0,"num_reads": 530, "num_writes": 0}
+      "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 283},
+      "read": {"fault_injection": 0,"num_reads": 498, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 622, "num_writes": 306},
+      "randread": {"fault_injection": 0,"num_reads": 515, "num_writes": 0}
     },
     "expected_decryption_stats": {
       "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
@@ -155,26 +156,27 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
+    "lsv_pass_threshold": 5,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
-      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1027, "num_writes": 672}}
     },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 5,
     "expected_ec_stats": {
-      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
-      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
-      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
-      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 1024, "num_writes": 198}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 1036, "num_writes": 207}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 1036, "num_writes": 198}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 0,
+    "blt_read_pass_threshold": 30,
     "expected_blt_stats": {
-      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 365, "num_writes": 198}},
-      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 370, "num_writes": 198}},
-      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 370, "num_writes": 189}},
-      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 370, "num_writes": 189}}
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 381, "num_writes": 202}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 387, "num_writes": 207}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 386, "num_writes": 198}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 380, "num_writes": 189}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -246,26 +248,27 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
+    "lsv_pass_threshold": 5,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
-      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
-      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
-      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1028, "num_writes": 730}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1039, "num_writes": 708}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1050, "num_writes": 698}}
     },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 5,
     "expected_ec_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 748, "num_writes": 198}},
       "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 207}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 993, "num_writes": 198}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1023, "num_writes": 189}}
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1057, "num_writes": 216}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1055, "num_writes": 198}}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 0,
+    "blt_read_pass_threshold": 40,
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 275, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 320, "num_writes": 207}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 350, "num_writes": 198}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 350, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 286, "num_writes": 202}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 346, "num_writes": 207}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 380, "num_writes": 216}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 360, "num_writes": 198}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -337,26 +340,27 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
+    "lsv_pass_threshold": 5,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
-      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 543}},
-      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 504}},
-      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 547}}
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1027, "num_writes": 543}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1028, "num_writes": 500}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1042, "num_writes": 546}}
     },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 15,
     "expected_ec_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 144}},
       "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 754, "num_writes": 153}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 862, "num_writes": 144}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 935, "num_writes": 153}}
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 863, "num_writes": 144}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 940, "num_writes": 153}}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 10,
+    "blt_read_pass_threshold": 40,
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 193, "num_writes": 148}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 257, "num_writes": 153}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 303, "num_writes": 144}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 323, "num_writes": 153}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 208, "num_writes": 148}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 282, "num_writes": 153}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 311, "num_writes": 144}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 330, "num_writes": 153}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -396,7 +400,7 @@
     "trigger_plex_failure": true,
     "plex_details": {
       "indices": "random",
-      "count": 1
+      "count": 2
     },
     "ns_id": 1,
     "encrypt": true,
@@ -434,22 +438,23 @@
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
-      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randwrite": {"fault_injection": 0, "num_reads": 1040, "num_writes": 1040},
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
     },
     "ec_pass_threshold": 100,
     "expected_ec_stats": {
-      "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
+      "write": {"fault_injection": 0,"num_reads": 1154, "num_writes": 279},
       "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
-      "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
+      "randwrite": {"fault_injection": 0,"num_reads": 1058, "num_writes": 315},
+      "randread": {"fault_injection": 0,"num_reads": 1019, "num_writes": 0}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 30,
+    "blt_read_pass_threshold": 80,
     "expected_blt_stats": {
-      "write": {"fault_injection": 0,"num_reads": 390, "num_writes": 279},
-      "read": {"fault_injection": 0,"num_reads": 330, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 390, "num_writes": 279},
-      "randread": {"fault_injection": 0,"num_reads": 330, "num_writes": 0}
+      "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 283},
+      "read": {"fault_injection": 0,"num_reads": 498, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 622, "num_writes": 306},
+      "randread": {"fault_injection": 0,"num_reads": 515, "num_writes": 0}
     },
     "expected_decryption_stats": {
       "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
@@ -521,26 +526,27 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
+    "lsv_pass_threshold": 5,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
     },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 10,
     "expected_ec_stats": {
-      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 1025, "num_writes": 198}},
-      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 1032, "num_writes": 198}},
-      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}},
-      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 1022, "num_writes": 189}}
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 1024, "num_writes": 198}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 1036, "num_writes": 207}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 1036, "num_writes": 198}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 1026, "num_writes": 189}}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 0,
+    "blt_read_pass_threshold": 40,
     "expected_blt_stats": {
-      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 365, "num_writes": 198}},
-      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 370, "num_writes": 198}},
-      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 370, "num_writes": 189}},
-      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 370, "num_writes": 189}}
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 381, "num_writes": 202}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 387, "num_writes": 207}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 386, "num_writes": 198}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 380, "num_writes": 189}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -612,26 +618,27 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
+    "lsv_pass_threshold": 5,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
-      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
-      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
-      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1028, "num_writes": 730}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1036, "num_writes": 704}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1051, "num_writes": 698}}
     },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 10,
     "expected_ec_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 748, "num_writes": 198}},
       "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 915, "num_writes": 207}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 993, "num_writes": 198}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1023, "num_writes": 189}}
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1057, "num_writes": 216}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 1055, "num_writes": 198}}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 0,
+    "blt_read_pass_threshold": 40,
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 275, "num_writes": 198}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 320, "num_writes": 207}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 350, "num_writes": 198}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 350, "num_writes": 189}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 286, "num_writes": 202}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 346, "num_writes": 207}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 380, "num_writes": 216}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 360, "num_writes": 198}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -703,26 +710,27 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
+    "lsv_pass_threshold": 5,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 528}},
-      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 543}},
-      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 504}},
-      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 547}}
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1027, "num_writes": 543}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1028, "num_writes": 500}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1042, "num_writes": 546}}
     },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 40,
     "expected_ec_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 144}},
       "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 754, "num_writes": 153}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 862, "num_writes": 144}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 935, "num_writes": 153}}
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 863, "num_writes": 144}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 969, "num_writes": 153}}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 10,
+    "blt_read_pass_threshold": 40,
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 193, "num_writes": 148}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 257, "num_writes": 153}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 303, "num_writes": 144}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 323, "num_writes": 153}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 208, "num_writes": 148}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 282, "num_writes": 153}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 311, "num_writes": 144}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 330, "num_writes": 161}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -792,7 +800,10 @@
       "randread"
     ],
     "fio_bs_iodepth": [
-      "(4, 1)"
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
     ],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
@@ -811,12 +822,13 @@
       "randwrite": {"fault_injection": 0,"num_reads": 912, "num_writes": 63},
       "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 10,
+    "blt_read_pass_threshold": 50,
     "expected_blt_stats": {
-      "write": {"fault_injection": 0,"num_reads": 390, "num_writes": 67},
-      "read": {"fault_injection": 0,"num_reads": 335, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 390, "num_writes": 72},
-      "randread": {"fault_injection": 0,"num_reads": 335, "num_writes": 0}
+      "write": {"fault_injection": 0,"num_reads": 303, "num_writes": 67},
+      "read": {"fault_injection": 0,"num_reads": 292, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 303, "num_writes": 72},
+      "randread": {"fault_injection": 0,"num_reads": 303, "num_writes": 0}
     },
     "expected_decryption_stats": {
       "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
@@ -904,26 +916,27 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
     },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 0,
     "expected_ec_stats": {
-      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 881, "num_writes": 54}},
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 881, "num_writes": 45}},
       "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 918, "num_writes": 54}},
       "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 890, "num_writes": 45}},
       "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 964, "num_writes": 54}}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 0,
+    "blt_read_pass_threshold": 40,
     "expected_blt_stats": {
-      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 300, "num_writes": 49}},
-      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 300, "num_writes": 54}},
-      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 300, "num_writes": 45}},
-      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 300, "num_writes": 54}}
+      "(4, 1)": {"rw": {"fault_injection": 0,"num_reads": 310, "num_writes": 49}},
+      "(8, 1)": {"rw": {"fault_injection": 0,"num_reads": 310, "num_writes": 54}},
+      "(16, 1)": {"rw": {"fault_injection": 0,"num_reads": 310, "num_writes": 45}},
+      "(32, 1)": {"rw": {"fault_injection": 0,"num_reads": 310, "num_writes": 54}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -1011,26 +1024,27 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
+    "lsv_pass_threshold": 0,
     "expected_lsv_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
       "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
       "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
       "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
     },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 0,
     "expected_ec_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 650, "num_writes": 45}},
       "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 849, "num_writes": 54}},
       "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 863, "num_writes": 45}},
       "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 989, "num_writes": 54}}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 0,
+    "blt_read_pass_threshold": 60,
     "expected_blt_stats": {
-      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 280, "num_writes": 49}},
-      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 330, "num_writes": 54}},
-      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 330, "num_writes": 45}},
-      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 330, "num_writes": 54}}
+      "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 234, "num_writes": 49}},
+      "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 310, "num_writes": 54}},
+      "(16, 1)": {"randrw": {"fault_injection": 0,"num_reads": 312, "num_writes": 45}},
+      "(32, 1)": {"randrw": {"fault_injection": 0,"num_reads": 346, "num_writes": 54}}
     },
     "expected_decryption_stats": {
       "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
@@ -1070,15 +1084,6 @@
       "capacity": 268435456,
       "block_size": 4096
     },
-    "lsv_create": false,
-    "lsv_head": 30,
-    "lsv_details": {
-      "chunk_size": 32
-    },
-    "jvol_details": {
-      "multiplier": 8,
-      "block_size": 512
-    },
     "trigger_plex_failure": true,
     "plex_details": {
       "indices": "random",
@@ -1117,21 +1122,15 @@
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
       "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "lsv_pass_threshold": 50,
-    "expected_lsv_stats": {
-      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
-      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
-      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
-      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
-    },
-    "ec_pass_threshold": 100,
+    "ec_pass_threshold": 0,
     "expected_ec_stats": {
       "write": {"fault_injection": 0,"num_reads": 1024, "num_writes": 1024},
       "read": {"fault_injection": 0,"num_reads": 1024, "num_writes": 0},
       "randwrite": {"fault_injection": 0,"num_reads": 1024, "num_writes": 1024},
       "randread": {"fault_injection": 0,"num_reads": 1024, "num_writes": 0}
     },
-    "blt_pass_threshold": 200,
+    "blt_write_pass_threshold": 30,
+    "blt_read_pass_threshold": 200,
     "expected_blt_stats": {
       "write": {"fault_injection": 0,"num_reads": 1200, "num_writes": 515},
       "read": {"fault_injection": 0,"num_reads": 340, "num_writes": 0},
@@ -1163,15 +1162,6 @@
     "blt_details": {
       "capacity": 268435456,
       "block_size": 4096
-    },
-    "lsv_create": false,
-    "lsv_head": 30,
-    "lsv_details": {
-      "chunk_size": 32
-    },
-    "jvol_details": {
-      "multiplier": 8,
-      "block_size": 512
     },
     "trigger_plex_failure": true,
     "plex_details": {
@@ -1225,7 +1215,8 @@
       "randwrite": {"fault_injection": 0,"num_reads": 1024, "num_writes": 1024},
       "randread": {"fault_injection": 0,"num_reads": 1024, "num_writes": 0}
     },
-    "blt_pass_threshold": 200,
+    "blt_write_pass_threshold": 30,
+    "blt_read_pass_threshold": 200,
     "expected_blt_stats": {
       "write": {"fault_injection": 0,"num_reads": 1200, "num_writes": 515},
       "read": {"fault_injection": 0,"num_reads": 340, "num_writes": 0},
@@ -1307,17 +1298,18 @@
     "lsv_pass_threshold": 50,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
-      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024}
+      "randwrite": {"fault_injection": 0, "num_reads": 1040, "num_writes": 1040}
     },
     "ec_pass_threshold": 100,
     "expected_ec_stats": {
       "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
-      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279}
+      "randwrite": {"fault_injection": 0,"num_reads": 1158, "num_writes": 315}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 30,
+    "blt_read_pass_threshold": 80,
     "expected_blt_stats": {
-      "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 279},
-      "randwrite": {"fault_injection": 0,"num_reads": 560, "num_writes": 279}
+      "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 283},
+      "randwrite": {"fault_injection": 0,"num_reads": 622, "num_writes": 306}
     },
     "expected_decryption_stats": {
       "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
@@ -1390,17 +1382,18 @@
     "lsv_pass_threshold": 50,
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
-      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024}
+      "randwrite": {"fault_injection": 0, "num_reads": 1040, "num_writes": 1040}
     },
     "ec_pass_threshold": 100,
     "expected_ec_stats": {
       "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
-      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279}
+      "randwrite": {"fault_injection": 0,"num_reads": 1158, "num_writes": 315}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 30,
+    "blt_read_pass_threshold": 80,
     "expected_blt_stats": {
-      "write": {"fault_injection": 0,"num_reads": 555, "num_writes": 279},
-      "randwrite": {"fault_injection": 0,"num_reads": 555, "num_writes": 279}
+      "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 283},
+      "randwrite": {"fault_injection": 0,"num_reads": 622, "num_writes": 306}
     },
     "expected_decryption_stats": {
       "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
@@ -1476,22 +1469,23 @@
     "expected_lsv_stats": {
       "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
-      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randwrite": {"fault_injection": 0, "num_reads": 1040, "num_writes": 1040},
       "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
     },
     "ec_pass_threshold": 100,
     "expected_ec_stats": {
       "write": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
       "read": {"fault_injection": 0,"num_reads": 992, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 1054, "num_writes": 279},
-      "randread": {"fault_injection": 0,"num_reads": 992, "num_writes": 0}
+      "randwrite": {"fault_injection": 0,"num_reads": 1158, "num_writes": 315},
+      "randread": {"fault_injection": 0,"num_reads": 1019, "num_writes": 0}
     },
-    "blt_pass_threshold": 100,
+    "blt_write_pass_threshold": 30,
+    "blt_read_pass_threshold": 80,
     "expected_blt_stats": {
-      "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 279},
-      "read": {"fault_injection": 0,"num_reads": 497, "num_writes": 0},
-      "randwrite": {"fault_injection": 0,"num_reads": 560, "num_writes": 279},
-      "randread": {"fault_injection": 0,"num_reads": 497, "num_writes": 0}
+      "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 283},
+      "read": {"fault_injection": 0,"num_reads": 498, "num_writes": 0},
+      "randwrite": {"fault_injection": 0,"num_reads": 622, "num_writes": 306},
+      "randread": {"fault_injection": 0,"num_reads": 515, "num_writes": 0}
     },
     "expected_decryption_stats": {
       "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},

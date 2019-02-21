@@ -94,14 +94,15 @@ class ECCryptoVolumeTestCase(FunTestCase):
                      format(testcase, self.fio_bs_iodepth))
 
         # Setting the expected volume level internal stats at the end of every FIO run
-        if ('expected_lsv_stats' not in testcase_dict[testcase] or
-                not testcase_dict[testcase]['expected_lsv_stats']):
-            benchmark_parsing = False
-            fun_test.critical("Expected internal LSV stats needed for this {} testcase is not available in "
-                              "the {} file".format(testcase, testcase_dict))
+        if hasattr(self, "lsv_create") and self.lsv_create:
+            if ('expected_lsv_stats' not in testcase_dict[testcase] or
+                    not testcase_dict[testcase]['expected_lsv_stats']):
+                    benchmark_parsing = False
+                    fun_test.critical("Expected internal LSV stats needed for this {} testcase is not available in "
+                                      "the {} file".format(testcase, testcase_dict))
 
-        fun_test.log("Expected lsv volume stats for this {} testcase: \n{}".
-                     format(testcase, self.expected_lsv_stats))
+            fun_test.log("Expected lsv volume stats for this {} testcase: \n{}".
+                         format(testcase, self.expected_lsv_stats))
 
         if ('expected_ec_stats' not in testcase_dict[testcase] or
                 not testcase_dict[testcase]['expected_ec_stats']):
@@ -157,6 +158,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
         key256_count = 0
         key384_count = 0
         key512_count = 0
+        self.attach_count = 0
         self.blt_create_count = 0
         self.blt_delete_count = 0
         self.blt_capacity = 0
@@ -243,49 +245,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
         # Generate uuid for EC
         self.uuid["ec"] = utils.generate_uuid()
 
-        if not self.lsv_create:
-            # Creating EC vol and setting it to attach_vol
-            self.attach_type = "VOL_TYPE_BLK_EC"
-            self.volume_list.append("ec")
-            self.all_volume.append("ec")
-            self.attach_uuid = self.uuid["ec"]
-            self.ec_capacity = self.blt_details["capacity"] * self.ndata
-            if hasattr(self, "compress") and self.compress:
-                command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
-                                                                       capacity=self.ec_capacity,
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="ec_vol1",
-                                                                       uuid=self.attach_uuid,
-                                                                       ndata=self.ndata,
-                                                                       nparity=self.nparity,
-                                                                       pvol_id=self.uuid["blt"],
-                                                                       encrypt=self.encrypt,
-                                                                       key=self.xts_key,
-                                                                       xtweak=self.xts_tweak,
-                                                                       compress=self.compress,
-                                                                       zip_filter=self.zip_filter,
-                                                                       zip_effort=self.zip_effort,
-                                                                       command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {},"
-                                                               "without LSV, with compression & {} byte key".
-                                     format(self.attach_uuid, self.ec_capacity, key_size))
-            else:
-                command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
-                                                                       capacity=self.ec_capacity,
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="ec_vol1",
-                                                                       uuid=self.attach_uuid,
-                                                                       ndata=self.ndata,
-                                                                       nparity=self.nparity,
-                                                                       pvol_id=self.uuid["blt"],
-                                                                       encrypt=self.encrypt,
-                                                                       key=self.xts_key,
-                                                                       xtweak=self.xts_tweak,
-                                                                       command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {},without LSV"
-                                                               " & {} byte key".
-                                     format(self.attach_uuid, self.ec_capacity, key_size))
-        else:
+        if hasattr(self, "lsv_create") and self.lsv_create:
+            # Create EC vol with LSV
             self.attach_type = "VOL_TYPE_BLK_LSV"
             self.ec_capacity = self.blt_capacity * self.ndata
             command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
@@ -360,6 +321,48 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
             self.volume_list.append("lsv")
             self.all_volume.append("lsv")
+        else:
+            # Creating EC vol without LSV and setting it to attach_vol
+            self.attach_type = "VOL_TYPE_BLK_EC"
+            self.volume_list.append("ec")
+            self.all_volume.append("ec")
+            self.attach_uuid = self.uuid["ec"]
+            self.ec_capacity = self.blt_details["capacity"] * self.ndata
+            if hasattr(self, "compress") and self.compress:
+                command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
+                                                                       capacity=self.ec_capacity,
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="ec_vol1",
+                                                                       uuid=self.attach_uuid,
+                                                                       ndata=self.ndata,
+                                                                       nparity=self.nparity,
+                                                                       pvol_id=self.uuid["blt"],
+                                                                       encrypt=self.encrypt,
+                                                                       key=self.xts_key,
+                                                                       xtweak=self.xts_tweak,
+                                                                       compress=self.compress,
+                                                                       zip_filter=self.zip_filter,
+                                                                       zip_effort=self.zip_effort,
+                                                                       command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {},"
+                                                               "without LSV, with compression & {} byte key".
+                                     format(self.attach_uuid, self.ec_capacity, key_size))
+            else:
+                command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
+                                                                       capacity=self.ec_capacity,
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="ec_vol1",
+                                                                       uuid=self.attach_uuid,
+                                                                       ndata=self.ndata,
+                                                                       nparity=self.nparity,
+                                                                       pvol_id=self.uuid["blt"],
+                                                                       encrypt=self.encrypt,
+                                                                       key=self.xts_key,
+                                                                       xtweak=self.xts_tweak,
+                                                                       command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {},without LSV"
+                                                               " & {} byte key".
+                                     format(self.attach_uuid, self.ec_capacity, key_size))
 
         if hasattr(self, "traffic_parallel") and self.traffic_parallel:
             for x in range(1, self.parallel_count + 1, 1):
@@ -774,16 +777,20 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                       format(ekey, x, mode, combo))
                                 else:
                                     for ekey, evalue in expected_blt_stats[mode].items():
+                                        if ekey == "num_writes":
+                                            blt_threshold = self.blt_write_pass_threshold
+                                        elif ekey == "num_reads":
+                                            blt_threshold = self.blt_read_pass_threshold
                                         actual = diff_vol_stats[combo][mode][vol_type][x][ekey]
                                         if actual != evalue:
-                                            if (actual < evalue) and ((evalue - actual) <= self.blt_pass_threshold):
+                                            if (actual < evalue) and ((evalue - actual) <= blt_threshold):
                                                 fun_test.add_checkpoint(
                                                     "{} check for BLT {} for {} test for the combo {}".
                                                     format(ekey, x, mode, combo), "PASSED", evalue, actual)
                                                 fun_test.critical(
                                                     "Final {} value {} for BLT {} is within the expected "
                                                     "range {}".format(ekey, actual, x, evalue))
-                                            elif (actual > evalue) and ((actual - evalue) <= self.blt_pass_threshold):
+                                            elif (actual > evalue) and ((actual - evalue) <= blt_threshold):
                                                 fun_test.add_checkpoint(
                                                     "{} check for BLT {} for {} test for the combo {}".
                                                     format(ekey, x, mode, combo), "PASSED", evalue, actual)
@@ -817,14 +824,16 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                             format(ekey, vol_type, mode, combo), "PASSED", evalue, actual)
                                         fun_test.critical(
                                             "Final {} value {} for {} volume is within the expected "
-                                            "range {}".format(ekey, actual, vol_type, evalue))
+                                            "range {} for mode & combo {} : {}".format(ekey, actual, vol_type,
+                                                                                       evalue, mode, combo))
                                     elif (actual > evalue) and ((actual - evalue) <= threshold_check):
                                         fun_test.add_checkpoint(
                                             "{} check for {} volume for {} test for the combo {}".
                                             format(ekey, vol_type, mode, combo), "PASSED", evalue, actual)
                                         fun_test.critical(
                                             "Final {} value {} for {} volume is within the expected "
-                                            "range {}".format(ekey, actual, vol_type, evalue))
+                                            "range {} for mode & combo {} : {}".format(ekey, actual, vol_type,
+                                                                                       evalue, mode, combo))
                                     else:
                                         fun_test.test_assert_expected(evalue, actual,
                                                                       message="Final {} value for {} for mode {} & "
@@ -954,7 +963,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
         if not self.blt_creation_fail:
             if self.traffic_parallel:
-                for x in range(1, self.parallel_count + 1, 1):
+                for x in range(1, self.attach_count + 1, 1):
                     command_result = self.storage_controller.volume_detach_remote(ns_id=x,
                                                                                   uuid=self.attach_uuid,
                                                                                   remote_ip=self.linux_host.internal_ip)
@@ -963,13 +972,14 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                          format(x, self.attach_uuid))
 
             else:
-                command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
-                                                                              uuid=self.attach_uuid,
-                                                                              remote_ip=self.linux_host.internal_ip)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detach vol with uuid {}".format(self.attach_uuid))
+                if self.attach_count == 1:
+                    command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
+                                                                                  uuid=self.attach_uuid,
+                                                                                  remote_ip=self.linux_host.internal_ip)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detach vol with uuid {}".format(self.attach_uuid))
 
-            if self.lsv_create:
+            if hasattr(self, "lsv_create") and self.lsv_create:
                 command_result = self.storage_controller.delete_volume(capacity=self.lsv_capacity,
                                                                        block_size=self.lsv_blocksize,
                                                                        name="lsv1",
@@ -1212,7 +1222,7 @@ class ECEncDeadBeef(ECCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=14,
                               summary="4:2 EC with random key and run diff FIO RW pattern(write,"
-                                      "randwrite, with different block size & depth & deadbeef "
+                                      "randwrite), with different block size & depth & deadbeef "
                                       "pattern with fault injected on two random plexes",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
