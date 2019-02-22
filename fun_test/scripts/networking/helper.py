@@ -44,6 +44,7 @@ VP_FAE_REQUESTS_SENT = "vp_fae_requests_sent"
 VP_FAE_RESPONSES_RECEIVED = "vp_fae_responses_received"
 VP_PACKETS_CONTROL_T2C_COUNT = "vp_packets_control_t2c"
 VP_PACKETS_CC_OUT = "vp_packets_out_cc"
+VP_PACKETS_SAMPLE = "vp_packets_sample"
 ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED = "count_for_all_non_fcp_packets_received"
 ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE = "count_for_efp_to_wqm_decrement_pulse"
 ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT = "count_for_efp_to_wro_descriptors_sent"
@@ -63,6 +64,7 @@ SFG_IN_FFE_DESC = "IN_FFE_DESC"
 SFG_OUT_FFE_DESC = "OUT_FFE_DESC"
 SFG_OUT_PSW_DESC = "OUT_PSW_DESC"
 SFG_SAMPLER_COPY = "SAMPLER_COPY"
+SFG_SAMPLE_COPY = "SAMPLE_COPY"
 
 # Meter IDs got from copp_static.h file under funcp/networking/asicd/libnu/copp
 ETH_COPP_ARP_REQ_METER_ID = 1
