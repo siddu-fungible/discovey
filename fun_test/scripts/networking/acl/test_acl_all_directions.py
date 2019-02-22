@@ -627,7 +627,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 1)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -2849,9 +2849,9 @@ if __name__ == '__main__':
     ts.add_test_case(AclIngressDropNUtoNU())
     ts.add_test_case(AclIPv6DropNUtoNU())
     ts.add_test_case(AclQosTCNuNu())
-    ts.add_test_case(AclEgressDropNUtoHNU())
+    # ts.add_test_case(AclEgressDropNUtoHNU())
     # ts.add_test_case(AclIngressDropHNUtoHNU())
-    ts.add_test_case(AclEgressDropHNUtoNU())
+    # ts.add_test_case(AclEgressDropHNUtoNU())
     # ts.add_test_case(AclIPv6DropNUtoHNU())
     # ts.add_test_case(AclIPv6DropHNUtoHNU())
     # ts.add_test_case(AclIPv6DropHNUtoNU())
