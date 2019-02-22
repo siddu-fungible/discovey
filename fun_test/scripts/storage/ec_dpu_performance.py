@@ -949,7 +949,7 @@ if __name__ == "__main__":
     ec_dpu_script.add_test_case(EC21FioSeqWriteSeqReadOnly())
     ec_dpu_script.add_test_case(EC21FioRandWriteRandReadOnly())
     # Commenting this case because of the bug #771
-    # ec_dpu_script.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
+    ec_dpu_script.add_test_case(EC21FioSeqAndRandReadOnlyWithFailure())
     ec_dpu_script.add_test_case(EC21FioSeqReadWriteMix())
     ec_dpu_script.add_test_case(EC21FioRandReadWriteMix())
     ec_dpu_script.run()
