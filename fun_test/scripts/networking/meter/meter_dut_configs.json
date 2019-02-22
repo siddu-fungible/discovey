@@ -23,7 +23,7 @@
     "fixed_frame_size": 128,
     "load_type": "MEGABITS_PER_SECOND",
     "load_bps": 40,
-    "load_pps" : 100,
+    "load_pps" : 5000,
     "traffic_duration":30,
     "insert_signature": true,
     "fill_type": "PRBS",
