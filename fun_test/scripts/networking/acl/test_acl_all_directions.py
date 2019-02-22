@@ -334,7 +334,7 @@ class AclIngressDropNUtoNU(FunTestCase):
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 1)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -566,7 +566,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 1)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
 
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
         rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
