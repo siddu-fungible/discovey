@@ -896,6 +896,7 @@ class Q0_Q9_SP_Channel0_Channel1(Q0_Q8_SP_Channel0_Channel1):
 if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(Q0_SP_Channel0())
+    '''
     ts.add_test_case(Q1_SP_Channel0())
     ts.add_test_case(Q2_SP_Channel0())
     ts.add_test_case(Q3_SP_Channel0())
@@ -920,4 +921,5 @@ if __name__ == "__main__":
     ts.add_test_case(Q6_Q14_SP_Channel0_Channel1())
     ts.add_test_case(Q7_Q15_SP_Channel0_Channel1())
     ts.add_test_case(Q0_Q9_SP_Channel0_Channel1())
+    '''
     ts.run()

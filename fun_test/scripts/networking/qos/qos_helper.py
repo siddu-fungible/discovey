@@ -29,7 +29,7 @@ def get_accept_range(accept_value, max_egress_val):
     result = 0
     try:
         default_load_calculated = 6.44
-        result = (max_egress_val * accept_value) / (default_load_calculated * 1000.0)
+        result = (max_egress_val * accept_value) / (default_load_calculated * 4.0)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
