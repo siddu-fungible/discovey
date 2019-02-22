@@ -81,8 +81,11 @@ class SpirentSetup(FunTestScript):
 
         good_load = 100
         pfc_load = 20
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            good_load = 2500
+            pfc_load = 1000
         fun_test.log("Creating Template object")
-        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_ingress_qos",
+        template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_egress_qos",
                                                       spirent_config=spirent_config,
                                                       chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
