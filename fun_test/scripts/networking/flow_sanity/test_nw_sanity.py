@@ -1138,7 +1138,7 @@ class TestVpFlows(FunTestCase):
         fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
                              % (tcp._spirent_handle, modify_attribute))
         if flow_direction == NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
-            range_obj = RangeModifier(recycle_count=MAX_FRAME_SIZE, step_value=1, data=1024)
+            range_obj = RangeModifier(recycle_count=100, step_value=1, data=1)
             modify_attribute = 'destPort'
             create_range = template_obj.stc_manager.configure_range_modifier(range_modifier_obj=range_obj,
                                                                              streamblock_obj=self.streamblock_obj_1,
@@ -1393,7 +1393,7 @@ class TestVpFlows(FunTestCase):
                                                   "DUT port %s"
                                                   % (dut_port_2, dut_port_1))
             # Check ERP stats
-            if flow_direction != NuConfigManager.FLOW_DIRECTION_HNU_FPG:
+            if flow_direction != NuConfigManager.FLOW_DIRECTION_HNU_FPG and flow_direction != NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
                 diff_stats_erp = get_diff_stats(old_stats=erp_stats_1, new_stats=erp_stats_2,
                                                 stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
                 actual_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
