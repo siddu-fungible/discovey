@@ -158,7 +158,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
         key512_count = 0
         self.blt_create_count = 0
         self.blt_delete_count = 0
-        self.blt_attach_count = 0
+        self.attach_count = 0
         self.blt_capacity = 0
         self.blt_creation_fail = None
 
@@ -369,8 +369,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                     fun_test.test_assert(command_result["status"], "Attach {} on {} with uuid {}".
                                          format(x, self.attach_type, self.attach_uuid))
                 else:
-                    self.blt_attach_count += 1
-            fun_test.test_assert_expected(self.parallel_count, self.blt_attach_count,
+                    self.attach_count += 1
+            fun_test.test_assert_expected(self.parallel_count, self.attach_count,
                                           message="Parallel count and attach count")
         else:
             command_result = self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
@@ -380,6 +380,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attach {} with uuid {}".
                                  format(self.attach_type, self.attach_uuid))
+            self.attach_count == 1
 
         # Check the expected filter params
         if hasattr(self, "encrypt") and self.encrypt:
@@ -600,10 +601,9 @@ class ECCryptoVolumeTestCase(FunTestCase):
                         fun_test.log("Running fio test is threaded mode...")
                         thread_id = {}
                         wait_time = 0
-                        self.attach_count = self.parallel_count + 1
-                        for x in range(1, self.attach_count, 1):
+                        for x in range(1, self.parallel_count + 1, 1):
                             if mode == "rw" or mode == "randrw":
-                                wait_time = self.attach_count - x
+                                wait_time = self.parallel_count + 1 - x
                                 fio_output[combo][mode] = {}
                                 self.linux_host_inst[x] = self.linux_host.clone()
                                 thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -618,7 +618,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                              **self.fio_cmd_args)
                                 fun_test.sleep("Fio threadzz", seconds=1)
                             else:
-                                wait_time = self.attach_count - x
+                                wait_time = self.parallel_count + 1 - x
                                 fio_output[combo][mode] = {}
                                 self.linux_host_inst[x] = self.linux_host.clone()
                                 thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -633,7 +633,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                 fun_test.sleep("Fio Threadzz", seconds=1)
 
                         fun_test.sleep("Sleeping between thread join...", seconds=10)
-                        for x in range(1, self.attach_count, 1):
+                        for x in range(1, self.parallel_count + 1, 1):
                             fun_test.log("Joining thread {}".format(x))
                             fun_test.join_thread(fun_test_thread_id=thread_id[x])
 
@@ -907,7 +907,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
         if not self.blt_creation_fail:
             if self.traffic_parallel:
-                for x in range(1, self.parallel_count + 1, 1):
+                for x in range(1, self.attach_count + 1, 1):
                     command_result = self.storage_controller.volume_detach_remote(ns_id=x,
                                                                                   uuid=self.attach_uuid,
                                                                                   remote_ip=self.linux_host.internal_ip)
@@ -916,11 +916,12 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                            format(x, self.attach_uuid))
 
             else:
-                command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
-                                                                              uuid=self.attach_uuid,
-                                                                              remote_ip=self.linux_host.internal_ip)
-                fun_test.log(command_result)
-                fun_test.simple_assert(command_result["status"], "Detach vol with uuid {}".format(self.attach_uuid))
+                if self.attach_count:
+                    command_result = self.storage_controller.volume_detach_remote(ns_id=self.ns_id,
+                                                                                  uuid=self.attach_uuid,
+                                                                                  remote_ip=self.linux_host.internal_ip)
+                    fun_test.log(command_result)
+                    fun_test.simple_assert(command_result["status"], "Detach vol with uuid {}".format(self.attach_uuid))
 
             if self.lsv_create:
                 command_result = self.storage_controller.delete_volume(capacity=self.lsv_capacity,
@@ -972,19 +973,14 @@ class ECCryptoVolumeTestCase(FunTestCase):
                     storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                               self.vol_types[vol_type], cur_uuid)
                     command_result = self.storage_controller.peek(storage_props_tree)
-                    fun_test.simple_assert(command_result["status"], "{} with uuid {} peek failed".
-                                           format(vol_type, cur_uuid))
                     fun_test.simple_assert(expression=command_result["data"] is None,
-                                           message="BLT with uuid {} not cleaned up".format(cur_uuid))
+                                           message="BLT with uuid {} removal".format(cur_uuid))
             else:
                 storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                           self.vol_types[vol_type], self.uuid[vol_type])
                 command_result = self.storage_controller.peek(storage_props_tree)
-                fun_test.simple_assert(command_result["status"], "{} with uuid {} peek failed".
-                                       format(vol_type, self.uuid[vol_type]))
                 fun_test.simple_assert(expression=command_result["data"] is None,
-                                       message="{} with uuid {} not cleaned up".format(vol_type,
-                                                                                       self.uuid[vol_type]))
+                                       message="{} with uuid {} removal".format(vol_type, self.uuid[vol_type]))
 
 
 class ECKey256(ECCryptoVolumeTestCase):
