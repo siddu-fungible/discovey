@@ -94,14 +94,15 @@ class ECCryptoVolumeTestCase(FunTestCase):
                      format(testcase, self.fio_bs_iodepth))
 
         # Setting the expected volume level internal stats at the end of every FIO run
-        if ('expected_lsv_stats' not in testcase_dict[testcase] or
-                not testcase_dict[testcase]['expected_lsv_stats']):
-            benchmark_parsing = False
-            fun_test.critical("Expected internal LSV stats needed for this {} testcase is not available in "
-                              "the {} file".format(testcase, testcase_dict))
+        if hasattr(self, "lsv_create") and self.lsv_create:
+            if ('expected_lsv_stats' not in testcase_dict[testcase] or
+                    not testcase_dict[testcase]['expected_lsv_stats']):
+                    benchmark_parsing = False
+                    fun_test.critical("Expected internal LSV stats needed for this {} testcase is not available in "
+                                      "the {} file".format(testcase, testcase_dict))
 
-        fun_test.log("Expected lsv volume stats for this {} testcase: \n{}".
-                     format(testcase, self.expected_lsv_stats))
+            fun_test.log("Expected lsv volume stats for this {} testcase: \n{}".
+                         format(testcase, self.expected_lsv_stats))
 
         if ('expected_ec_stats' not in testcase_dict[testcase] or
                 not testcase_dict[testcase]['expected_ec_stats']):
@@ -155,10 +156,11 @@ class ECCryptoVolumeTestCase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         key256_count = 0
+        key384_count = 0
         key512_count = 0
+        self.attach_count = 0
         self.blt_create_count = 0
         self.blt_delete_count = 0
-        self.attach_count = 0
         self.blt_capacity = 0
         self.blt_creation_fail = None
 
@@ -219,70 +221,33 @@ class ECCryptoVolumeTestCase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "BLT {} creation with uuid {} & capacity {}".
                                      format(x, cur_uuid, self.blt_capacity))
         fun_test.test_assert_expected(self.blt_count, self.blt_create_count,
-                                      message="BLT count and create count")
+                                      message="BLT count & creation count")
         self.volume_list.append("blt")
         self.all_volume.append("blt")
 
         # Key generation for encryption based on size or input is random or alternate
         if self.key_size == "random":
-            key_range = [32, 64]
-            rand_key = random.choice(key_range)
+            rand_key = random.choice(self.key_range)
+            key_size = rand_key
             self.xts_key = utils.generate_key(rand_key)
             if rand_key == 32:
                 key256_count += 1
-            else:
+            elif rand_key == 48:
+                key384_count += 1
+            elif rand_key == 64:
                 key512_count += 1
         else:
+            key_size = self.key_size
             self.xts_key = utils.generate_key(self.key_size)
 
         self.xts_tweak = utils.generate_key(self.xtweak_size)
 
-        if not self.lsv_create:
-            # Creating EC vol and setting it to attach_vol
-            self.attach_type = "VOL_TYPE_BLK_EC"
-            self.volume_list.append("ec")
-            self.all_volume.append("ec")
-            self.uuid["ec"] = utils.generate_uuid()
-            self.attach_uuid = self.uuid["ec"]
-            self.ec_capacity = self.blt_details["capacity"] * self.ndata
-            if hasattr(self, "compress") and self.compress:
-                command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
-                                                                       capacity=self.ec_capacity,
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="ec_vol1",
-                                                                       uuid=self.attach_uuid,
-                                                                       ndata=self.ndata,
-                                                                       nparity=self.nparity,
-                                                                       pvol_id=self.uuid["blt"],
-                                                                       encrypt=self.encrypt,
-                                                                       key=self.xts_key,
-                                                                       xtweak=self.xts_tweak,
-                                                                       compress=self.compress,
-                                                                       zip_filter=self.zip_filter,
-                                                                       zip_effort=self.zip_effort,
-                                                                       command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {}, "
-                                                               "without LSV, with compression".
-                                     format(self.attach_uuid, self.ec_capacity))
-            else:
-                command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
-                                                                       capacity=self.ec_capacity,
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="ec_vol1",
-                                                                       uuid=self.attach_uuid,
-                                                                       ndata=self.ndata,
-                                                                       nparity=self.nparity,
-                                                                       pvol_id=self.uuid["blt"],
-                                                                       encrypt=self.encrypt,
-                                                                       key=self.xts_key,
-                                                                       xtweak=self.xts_tweak,
-                                                                       command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {} without LSV".
-                                     format(self.attach_uuid, self.ec_capacity))
-        else:
+        # Generate uuid for EC
+        self.uuid["ec"] = utils.generate_uuid()
+
+        if hasattr(self, "lsv_create") and self.lsv_create:
+            # Create EC vol with LSV
             self.attach_type = "VOL_TYPE_BLK_LSV"
-            # Creating EC Vol
-            self.uuid["ec"] = utils.generate_uuid()
             self.ec_capacity = self.blt_capacity * self.ndata
             command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
                                                                    capacity=self.ec_capacity,
@@ -293,7 +258,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                    nparity=self.nparity,
                                                                    pvol_id=self.uuid["blt"],
                                                                    command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {}, with LSV".
+            fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {} with LSV".
                                  format(self.uuid["ec"], self.ec_capacity))
             self.volume_list.append("ec")
             self.all_volume.append("ec")
@@ -334,9 +299,9 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                        zip_effort=self.zip_effort,
                                                                        command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {}, "
-                                                               "with compression".
-                                     format(self.attach_uuid, self.lsv_capacity))
+                fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {} with "
+                                                               "compression & {} byte key".
+                                     format(self.attach_uuid, self.lsv_capacity, key_size))
             else:
                 command_result = self.storage_controller.create_volume(type=self.vol_types["lsv"],
                                                                        capacity=self.lsv_capacity,
@@ -351,10 +316,53 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                        xtweak=self.xts_tweak,
                                                                        command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "LSV creation with uuid {} & capacity {}".
-                                     format(self.attach_uuid, self.lsv_capacity))
+                fun_test.test_assert(command_result["status"], "LSV with uuid {} & capacity {} & {} byte key".
+                                     format(self.attach_uuid, self.lsv_capacity, key_size))
+
             self.volume_list.append("lsv")
             self.all_volume.append("lsv")
+        else:
+            # Creating EC vol without LSV and setting it to attach_vol
+            self.attach_type = "VOL_TYPE_BLK_EC"
+            self.volume_list.append("ec")
+            self.all_volume.append("ec")
+            self.attach_uuid = self.uuid["ec"]
+            self.ec_capacity = self.blt_details["capacity"] * self.ndata
+            if hasattr(self, "compress") and self.compress:
+                command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
+                                                                       capacity=self.ec_capacity,
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="ec_vol1",
+                                                                       uuid=self.attach_uuid,
+                                                                       ndata=self.ndata,
+                                                                       nparity=self.nparity,
+                                                                       pvol_id=self.uuid["blt"],
+                                                                       encrypt=self.encrypt,
+                                                                       key=self.xts_key,
+                                                                       xtweak=self.xts_tweak,
+                                                                       compress=self.compress,
+                                                                       zip_filter=self.zip_filter,
+                                                                       zip_effort=self.zip_effort,
+                                                                       command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {},"
+                                                               "without LSV, with compression & {} byte key".
+                                     format(self.attach_uuid, self.ec_capacity, key_size))
+            else:
+                command_result = self.storage_controller.create_volume(type=self.vol_types["ec"],
+                                                                       capacity=self.ec_capacity,
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="ec_vol1",
+                                                                       uuid=self.attach_uuid,
+                                                                       ndata=self.ndata,
+                                                                       nparity=self.nparity,
+                                                                       pvol_id=self.uuid["blt"],
+                                                                       encrypt=self.encrypt,
+                                                                       key=self.xts_key,
+                                                                       xtweak=self.xts_tweak,
+                                                                       command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "EC creation with uuid {} & capacity {},without LSV"
+                                                               " & {} byte key".
+                                     format(self.attach_uuid, self.ec_capacity, key_size))
 
         if hasattr(self, "traffic_parallel") and self.traffic_parallel:
             for x in range(1, self.parallel_count + 1, 1):
@@ -364,23 +372,22 @@ class ECCryptoVolumeTestCase(FunTestCase):
                     remote_ip=self.linux_host.internal_ip,
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                # Assert only for failing case
                 if not command_result["status"]:
                     fun_test.test_assert(command_result["status"], "Attach {} on {} with uuid {}".
                                          format(x, self.attach_type, self.attach_uuid))
                 else:
                     self.attach_count += 1
             fun_test.test_assert_expected(self.parallel_count, self.attach_count,
-                                          message="Parallel count and attach count")
+                                          message="Parallel count & attach count")
         else:
             command_result = self.storage_controller.volume_attach_remote(ns_id=self.ns_id,
                                                                           uuid=self.attach_uuid,
                                                                           remote_ip=self.linux_host.internal_ip,
                                                                           command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attach {} with uuid {}".
-                                 format(self.attach_type, self.attach_uuid))
-            self.attach_count == 1
+            fun_test.test_assert(command_result["status"], "Attach {} with uuid {}".format(self.attach_type,
+                                                                                           self.attach_uuid))
+            self.attach_count = 1
 
         # Check the expected filter params
         if hasattr(self, "encrypt") and self.encrypt:
@@ -413,7 +420,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
         fun_test.test_assert(command_result["status"],
                              "Disabling error_injection for EC volume on DUT")
         # Ensuring that the error_injection got disabled properly
-        fun_test.sleep("Sleeping for a second to disable the error_injection", 1)
+        fun_test.sleep("Sleeping after disabling the error_injection", 1)
         command_result = self.storage_controller.peek("params/ecvol")
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"],
@@ -430,6 +437,35 @@ class ECCryptoVolumeTestCase(FunTestCase):
 
         self.ec_config = str(self.ndata) + ":" + str(self.nparity)
 
+        # Enable fault injection on the volume
+        if hasattr(self, "trigger_plex_failure") and self.trigger_plex_failure:
+            if self.plex_details["indices"] == "random":
+                fun_test.log("Using random plexes to trigger failure")
+                self.plex_indices = []
+                for x in range(1, self.plex_details["count"] + 1, 1):
+                    while True:
+                        rand_num = random.randint(1, self.blt_count)
+                        if rand_num not in self.plex_indices:
+                            self.plex_indices.append(rand_num)
+                            break
+                self.plex_details["indices"] = self.plex_indices
+                fun_test.log("Triggering failure on {}".format(self.plex_details["indices"]))
+
+            for index in self.plex_details["indices"]:
+                command_result = self.storage_controller.fail_volume(uuid=self.uuid["blt"][index - 1],
+                                                                     command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Inject failure to BLT {} having the UUID {}"
+                                     .format(index, self.uuid["blt"][index - 1]))
+                fun_test.sleep("Sleeping after enabling fault_injection", 1)
+                props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.vol_types["blt"],
+                                                     self.uuid["blt"][index - 1], "stats")
+                command_result = self.storage_controller.peek(props_tree)
+                fun_test.log(command_result)
+                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]),
+                                              expected=1,
+                                              message="Ensuring fault_injection got enabled")
+
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
         fio_output = {}
@@ -442,8 +478,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
         initial_zip_stats = {}
         final_zip_stats = {}
         diff_zip_stats = {}
-        expected_crypto_stats = {}
         expected_vol_stats = {}
+        expected_crypto_stats = {}
 
         for combo in self.fio_bs_iodepth:
             fio_output[combo] = {}
@@ -601,9 +637,10 @@ class ECCryptoVolumeTestCase(FunTestCase):
                         fun_test.log("Running fio test is threaded mode...")
                         thread_id = {}
                         wait_time = 0
+                        wait_count = self.parallel_count + 1
                         for x in range(1, self.parallel_count + 1, 1):
                             if mode == "rw" or mode == "randrw":
-                                wait_time = self.parallel_count + 1 - x
+                                wait_time = wait_count - x
                                 fio_output[combo][mode] = {}
                                 self.linux_host_inst[x] = self.linux_host.clone()
                                 thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -616,9 +653,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                              iodepth=fio_iodepth,
                                                                              nsid=x,
                                                                              **self.fio_cmd_args)
-                                fun_test.sleep("Fio threadzz", seconds=1)
                             else:
-                                wait_time = self.parallel_count + 1 - x
+                                wait_time = wait_count - x
                                 fio_output[combo][mode] = {}
                                 self.linux_host_inst[x] = self.linux_host.clone()
                                 thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -630,7 +666,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                              iodepth=fio_iodepth,
                                                                              nsid=x,
                                                                              **self.fio_cmd_args)
-                                fun_test.sleep("Fio Threadzz", seconds=1)
+                            fun_test.sleep("Fio Threadzz", seconds=1)
 
                         fun_test.sleep("Sleeping between thread join...", seconds=10)
                         for x in range(1, self.parallel_count + 1, 1):
@@ -697,13 +733,17 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                     if fkey in initial_vol_stats[combo][mode][vol_type][x]:
                                         ivalue = initial_vol_stats[combo][mode][vol_type][x][fkey]
                                         diff_vol_stats[combo][mode][vol_type][x][fkey] = fvalue - ivalue
+                                    else:
+                                        fun_test.simple_assert(False,
+                                                               message="{} is not found in BLT {} inital stats".
+                                                               format(fkey, x))
                                 fun_test.log("Difference of BLT {} stats before and after the test:".format(x))
                                 fun_test.log(diff_vol_stats[combo][mode][vol_type][x])
                         else:
                             if vol_type == "ec":
                                 expected_vol_stats = expected_ec_stats[mode]
                             elif vol_type == "lsv":
-                                expected_vol_stats = expected_lsv_stats[mode]                                
+                                expected_vol_stats = expected_lsv_stats[mode]
                             diff_vol_stats[combo][mode][vol_type] = {}
                             for fkey, fvalue in final_vol_stats[combo][mode][vol_type].items():
                                 if fkey not in expected_vol_stats or fkey == "fault_injection":
@@ -714,10 +754,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                     diff_vol_stats[combo][mode][vol_type][fkey] = fvalue - ivalue
                                 else:
                                     fun_test.simple_assert(False,
-                                                           message="{} is not found in {} stats : {}".
-                                                           format(fkey,
-                                                                  vol_type,
-                                                                  initial_vol_stats[combo][mode][vol_type]))
+                                                           message="{} is not found in {} initial stats".
+                                                           format(fkey, vol_type))
                             fun_test.log("Difference of {} stats before and after the test:".format(vol_type))
                             fun_test.log(diff_vol_stats[combo][mode][vol_type])
 
@@ -727,39 +765,50 @@ class ECCryptoVolumeTestCase(FunTestCase):
                         if vol_type == "blt":
                             # Loop through all BLT's
                             for x in range(1, self.blt_count + 1, 1):
-                                for ekey, evalue in expected_blt_stats[mode].items():
-                                    actual = diff_vol_stats[combo][mode][vol_type][x][ekey]
-                                    if actual != evalue:
-                                        if (actual < evalue) and ((evalue - actual) <= self.blt_pass_threshold):
-                                            fun_test.add_checkpoint(
-                                                "{} check for BLT volume {} for {} test for the block size & IO "
-                                                "depth combo {}".
-                                                format(ekey, x, mode, combo), "PASSED", evalue, actual)
-                                            fun_test.critical(
-                                                "Final {} value {} for BLT volume {} is within the expected "
-                                                "range {}".format(ekey, actual, x, evalue))
-                                        elif (actual > evalue) and ((actual - evalue) <= self.blt_pass_threshold):
-                                            fun_test.add_checkpoint(
-                                                "{} check for BLT volume {} for {} test for the block size & IO "
-                                                "depth combo {}".
-                                                format(ekey, x, mode, combo), "PASSED", evalue, actual)
-                                            fun_test.critical(
-                                                "Final {} value {} for BLT volume {} is within the expected "
-                                                "range {}".format(ekey, actual, x, evalue))
+                                if self.trigger_plex_failure and x in self.plex_details["indices"]:
+                                    for ekey in expected_blt_stats[mode].keys():
+                                        if ekey == "fault_injection":
+                                            evalue = 1
                                         else:
-                                            fun_test.simple_assert(False,
-                                                                   message="Final {} value : {} for BLT  {} is not "
-                                                                           "within the expected range : {} for mode {}"
-                                                                           "  & combo {}".
-                                                                   format(ekey, actual, x, evalue, mode, combo))
-                                    else:
-                                        fun_test.add_checkpoint(
-                                            "{} check for BLT volume {} for {} test for the block size & IO "
-                                            "depth combo {}".
-                                            format(ekey, x, mode, combo), "PASSED", evalue, actual)
-                                        fun_test.log(
-                                            "Final {} value {} for BLT volume {} matches the expected "
-                                            "value {}".format(ekey, actual, x, evalue))
+                                            evalue = 0
+                                        actual = diff_vol_stats[combo][mode][vol_type][x][ekey]
+                                        fun_test.test_assert_expected(evalue, actual,
+                                                                      message="Final {} value for BLT {} for mode {}"
+                                                                              " & combo {}".
+                                                                      format(ekey, x, mode, combo))
+                                else:
+                                    for ekey, evalue in expected_blt_stats[mode].items():
+                                        if ekey == "num_writes":
+                                            blt_threshold = self.blt_write_pass_threshold
+                                        elif ekey == "num_reads":
+                                            blt_threshold = self.blt_read_pass_threshold
+                                        actual = diff_vol_stats[combo][mode][vol_type][x][ekey]
+                                        if actual != evalue:
+                                            if (actual < evalue) and ((evalue - actual) <= blt_threshold):
+                                                fun_test.add_checkpoint(
+                                                    "{} check for BLT {} for {} test for the combo {}".
+                                                    format(ekey, x, mode, combo), "PASSED", evalue, actual)
+                                                fun_test.critical(
+                                                    "Final {} value {} for BLT {} is within the expected "
+                                                    "range {}".format(ekey, actual, x, evalue))
+                                            elif (actual > evalue) and ((actual - evalue) <= blt_threshold):
+                                                fun_test.add_checkpoint(
+                                                    "{} check for BLT {} for {} test for the combo {}".
+                                                    format(ekey, x, mode, combo), "PASSED", evalue, actual)
+                                                fun_test.critical(
+                                                    "Final {} value {} for BLT {} is within the expected "
+                                                    "range {}".format(ekey, actual, x, evalue))
+                                            else:
+                                                fun_test.test_assert_expected(evalue, actual,
+                                                                              message="Final {} value for BLT {}".
+                                                                              format(ekey, x))
+                                        else:
+                                            fun_test.add_checkpoint(
+                                                "{} check for BLT {} for {} test for the combo {}".
+                                                format(ekey, x, mode, combo), "PASSED", evalue, actual)
+                                            fun_test.log(
+                                                "Final {} value {} for BLT {} matches the expected "
+                                                "value {}".format(ekey, actual, x, evalue))
                         else:
                             if vol_type == "ec":
                                 expected_vol_stats = expected_ec_stats[mode]
@@ -772,29 +821,28 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                 if actual != evalue:
                                     if (actual < evalue) and ((evalue - actual) <= threshold_check):
                                         fun_test.add_checkpoint(
-                                            "{} check for {} volume for {} test for the block size & IO "
-                                            "depth combo {}".
+                                            "{} check for {} volume for {} test for the combo {}".
                                             format(ekey, vol_type, mode, combo), "PASSED", evalue, actual)
                                         fun_test.critical(
                                             "Final {} value {} for {} volume is within the expected "
-                                            "range {}".format(ekey, actual, vol_type, evalue))
+                                            "range {} for mode & combo {} : {}".format(ekey, actual, vol_type,
+                                                                                       evalue, mode, combo))
                                     elif (actual > evalue) and ((actual - evalue) <= threshold_check):
                                         fun_test.add_checkpoint(
-                                            "{} check for {} volume for {} test for the block size & IO "
-                                            "depth combo {}".
+                                            "{} check for {} volume for {} test for the combo {}".
                                             format(ekey, vol_type, mode, combo), "PASSED", evalue, actual)
                                         fun_test.critical(
                                             "Final {} value {} for {} volume is within the expected "
-                                            "range {}".format(ekey, actual, vol_type, evalue))
+                                            "range {} for mode & combo {} : {}".format(ekey, actual, vol_type,
+                                                                                       evalue, mode, combo))
                                     else:
-                                        fun_test.simple_assert(False,
-                                                               message="Final {} value : {} for {} is not within "
-                                                                       "the expected range : {} for mode {} & combo {}".
-                                                               format(ekey, actual, vol_type, evalue, mode, combo))
+                                        fun_test.test_assert_expected(evalue, actual,
+                                                                      message="Final {} value for {} for mode {} & "
+                                                                              "combo {}".
+                                                                      format(ekey, vol_type, mode, combo))
                                 else:
                                     fun_test.add_checkpoint(
-                                        "{} check for {} volume for {} test for the block size & IO "
-                                        "depth combo {}".
+                                        "{} check for {} volume for {} test for the combo {}".
                                         format(ekey, vol_type, mode, combo), "PASSED", evalue, actual)
                                     fun_test.log(
                                         "Final {} value {} for {} volume matches the expected "
@@ -835,6 +883,10 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                 if fkey in initial_crypto_stats[combo][mode][x]:
                                     ivalue = initial_crypto_stats[combo][mode][x][fkey]
                                     diff_crypto_stats[combo][mode][x][fkey] = fvalue - ivalue
+                                else:
+                                    fun_test.simple_assert(False,
+                                                           message="{} is not found in {} initial stats".
+                                                           format(fkey, x))
                             fun_test.log("Difference of {} stats before and after the test: {}".
                                          format(x, diff_crypto_stats[combo][mode][x]))
 
@@ -842,21 +894,21 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                 if ekey in diff_crypto_stats[combo][mode][x]:
                                     actual = diff_crypto_stats[combo][mode][x][ekey]
                                     fun_test.test_assert_expected(evalue, actual,
-                                                                  message="{} : {} stats for {} mode & {} combo on {}".
-                                                                  format(x, ekey, mode, combo, self.attach_type))
+                                                                  message="{} : {} stats for {} mode & combo {}".
+                                                                  format(x, ekey, mode, combo))
                                 else:
                                     fun_test.simple_assert(False,
-                                                           message="{} is not found in {} stats".format(ekey, x))
-
+                                                           message="{} is not found in {} diff stats".
+                                                           format(ekey, x))
                         if hasattr(self, "crypto_ops_params"):
                             filter_values = []
                             for i in self.crypto_ops_params:
                                 crypto_props_tree = "{}/{}/{}/{}".format("stats", "wus", "counts", i)
                                 command_result = self.storage_controller.peek(crypto_props_tree)
                                 filter_values.append(command_result["data"])
-                                
-                            fun_test.test_assert(expression=len(set(filter_values)) == 1,
-                                                 message="All filter counter stats {} match".format(filter_values))
+
+                            fun_test.simple_assert(expression=len(set(filter_values)) == 1,
+                                                   message="All filter counter stats {} match".format(filter_values))
 
                     if hasattr(self, "compress") and self.compress:
                         final_zip_stats[combo][mode] = {}
@@ -888,6 +940,10 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                 if fkey in initial_zip_stats[combo][mode][x]:
                                     ivalue = initial_zip_stats[combo][mode][x][fkey]
                                     diff_zip_stats[combo][mode][x][fkey] = fvalue - ivalue
+                                else:
+                                    fun_test.simple_assert(False,
+                                                           message="{} is not found in {} initial stats".
+                                                           format(fkey, x))
                             fun_test.log("Difference of {} stats before and after the test: {}".
                                          format(x, diff_zip_stats[combo][mode][x]))
 
@@ -895,11 +951,12 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                 if ekey in diff_zip_stats[combo][mode][x]:
                                     actual = diff_zip_stats[combo][mode][x][ekey]
                                     fun_test.test_assert_expected(evalue, actual,
-                                                                  message="{} : {} stats for {} mode & {} combo on {}".
-                                                                  format(x, ekey, mode, combo, self.attach_type))
+                                                                  message="{} : {} stats for {} mode & combo {}".
+                                                                  format(x, ekey, mode, combo))
                                 else:
                                     fun_test.simple_assert(False,
-                                                           message="{} is not found in {} stats".format(ekey, x))
+                                                           message="{} is not found in {} diff stats".
+                                                           format(ekey, x))
 
     def cleanup(self):
         if hasattr(self, "host_disconnect") and self.host_disconnect:
@@ -912,8 +969,8 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                                   uuid=self.attach_uuid,
                                                                                   remote_ip=self.linux_host.internal_ip)
                     fun_test.log(command_result)
-                    fun_test.simple_assert(command_result["status"], "Detach {} with uuid {}".
-                                           format(x, self.attach_uuid))
+                    fun_test.test_assert(command_result["status"], "Detach vol {} with uuid {}".
+                                         format(x, self.attach_uuid))
 
             else:
                 if self.attach_count:
@@ -921,16 +978,16 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                                   uuid=self.attach_uuid,
                                                                                   remote_ip=self.linux_host.internal_ip)
                     fun_test.log(command_result)
-                    fun_test.simple_assert(command_result["status"], "Detach vol with uuid {}".format(self.attach_uuid))
+                    fun_test.test_assert(command_result["status"], "Detach vol with uuid {}".format(self.attach_uuid))
 
-            if self.lsv_create:
+            if hasattr(self, "lsv_create") and self.lsv_create:
                 command_result = self.storage_controller.delete_volume(capacity=self.lsv_capacity,
                                                                        block_size=self.lsv_blocksize,
                                                                        name="lsv1",
                                                                        uuid=self.uuid["lsv"],
                                                                        type=self.vol_types["lsv"])
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleted LSV with uuid {}".format(self.attach_uuid))
+                fun_test.test_assert(command_result["status"], "Deleted LSV with uuid {}".format(self.uuid["lsv"]))
 
                 command_result = self.storage_controller.delete_volume(capacity=self.jvol_capacity,
                                                                        block_size=self.jvol_details["block_size"],
@@ -939,8 +996,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                                        type=self.vol_types["jvol"])
 
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleted Journal with uuid {}".
-                                     format(self.uuid["jvol"]))
+                fun_test.test_assert(command_result["status"], "Deleted Journal with uuid {}".format(self.uuid["jvol"]))
 
             command_result = self.storage_controller.delete_volume(capacity=self.ec_capacity,
                                                                    block_size=self.blt_details["block_size"],
@@ -961,15 +1017,15 @@ class ECCryptoVolumeTestCase(FunTestCase):
             if command_result["status"]:
                 self.blt_delete_count += 1
             else:
-                fun_test.test_assert(not command_result["status"], "Delete BLT {} with uuid {}".
+                fun_test.test_assert(not command_result["status"], "Deleting BLT {} with uuid {}".
                                      format(x, cur_uuid))
         fun_test.test_assert_expected(self.blt_count, self.blt_delete_count,
-                                      message="BLT count and delete count")
+                                      message="BLT count & delete count")
         # Verify cleanup is successful
         for vol_type in self.all_volume:
             if vol_type == "blt":
                 for x in range(1, self.blt_count + 1, 1):
-                    cur_uuid = self.uuid[vol_type][x - 1]
+                    cur_uuid = self.uuid[vol_type][x-1]
                     storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                               self.vol_types[vol_type], cur_uuid)
                     command_result = self.storage_controller.peek(storage_props_tree)
@@ -987,8 +1043,8 @@ class ECKey256(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="4:2 EC with 256 bit key and run FIO with different RW pattern(write,read"
-                                      "randwrite,randread), with different block size & depth",
+                              summary="4:2 EC with 256 bit key and run FIO write,read,randwrite,randread "
+                                      "with different block size & depth with fault injected on 2 random plexes",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1001,7 +1057,7 @@ class ECKey256RW(ECCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="4:2 EC with 256 bit key and run FIO RW pattern with different block size"
-                                      " & depth",
+                                      " & depth with fault injected on 1st plex",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1014,7 +1070,7 @@ class ECKey256RandRW(ECCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=3,
                               summary="4:2 EC with 256 bit key and run FIO RandRW pattern with different block "
-                                      "size & depth",
+                                      "size & depth with fault injected on 2nd plex",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1026,8 +1082,8 @@ class ECKey256RandRW50(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="4:2 EC with 256 bit key and run FIO RandRW pattern(50%RW) with different block "
-                                      "size & depth",
+                              summary="4:2 EC with 256 bit key and run FIO RandRW(50%RW) pattern with different block "
+                                      "size & depth with fault injected on one random plex",
                               steps='''
                               1. Create a lsv with encryption using 256 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1039,8 +1095,8 @@ class ECKey512(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="4:2 EC with 512 bit key and run FIO with different RW pattern(write,read"
-                                      "randwrite,randread), with different block size & depth",
+                              summary="4:2 EC with 512 bit key and run FIO write,read,randwrite,randread "
+                                      "with different block size & depth with fault injected on two random plexes",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1053,7 +1109,7 @@ class ECKey512RW(ECCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=6,
                               summary="4:2 EC with 512 bit key and run FIO RW pattern with different block size"
-                                      " & depth",
+                                      " & depth with fault injected on one random plex",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1066,7 +1122,7 @@ class ECKey512RandRW(ECCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=7,
                               summary="4:2 EC with 512 bit key and run FIO RandRW pattern with different block "
-                                      "size & depth",
+                                      "size & depth with fault injected on one random plex",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1078,8 +1134,8 @@ class ECKey512RandRW50(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=8,
-                              summary="4:2 EC with 512 bit key and run FIO RandRW pattern(50%RW) with different block "
-                                      "size & depth",
+                              summary="4:2 EC with 512 bit key and run FIO RandRW(50%RW) pattern with different block "
+                                      "size & depth with fault injected on one random plex",
                               steps='''
                               1. Create a lsv with encryption using 512 bit key on dut.
                               2. Attach it to external linux/container.
@@ -1091,9 +1147,9 @@ class ECEncCompress(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=9,
-                              summary="4:2 EC with random key & compression and run diff FIO RW pattern(write,"
-                                      " read,randwrite,randread) with different block size & depth & deadbeef data "
-                                      "pattern",
+                              summary="4:2 EC with random key & compression and run diff FIO write,read,randwrite,"
+                                      "randread with different block size & depth & deadbeef data "
+                                      "pattern with fault injected on one random plex",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
@@ -1106,7 +1162,8 @@ class ECEncCompressRW(ECCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=10,
                               summary="4:2 EC with random key & compression and run FIO RW pattern set to"
-                                      " rwmix:30 using different block size & depth & deadbeef data pattern",
+                                      " rwmix:30 using different block size & depth & deadbeef data pattern "
+                                      "with fault injected on one random plex",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
@@ -1119,7 +1176,8 @@ class ECEncCompressRandRW(ECCryptoVolumeTestCase):
     def describe(self):
         self.set_test_details(id=11,
                               summary="4:2 EC with random key & compression and run FIO RandRW pattern"
-                                      " with different block size & depth & deadbeef data pattern",
+                                      " with different block size & depth & deadbeef data pattern "
+                                      "with fault injected on one random plex",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
@@ -1131,8 +1189,9 @@ class ECKey256NoLSV(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=12,
-                              summary="4:2 EC with 256 bit key and run FIO with different RW pattern(write,read"
-                                      "randwrite,randread), with different block size & depth without LSV",
+                              summary="4:2 EC with 256 bit key and run FIO with different RW pattern(write,read,"
+                                      "randwrite,randread), with different block size & depth without LSV "
+                                      "with fault injected on one random plex",
                               steps='''
                               1. Create a EC with encryption using 256 bit key on dut without LSV.
                               2. Attach it to external linux/container.
@@ -1144,8 +1203,9 @@ class ECKey512NoLSV(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=13,
-                              summary="4:2 EC with 512 bit key and run FIO with different RW pattern(write,read"
-                                      "randwrite,randread), with different block size & depth without LSV",
+                              summary="4:2 EC with 512 bit key and run FIO with different RW pattern(write,read,"
+                                      "randwrite,randread), with different block size & depth without LSV "
+                                      "with fault injected on one random plex",
                               steps='''
                               1. Create a EC with encryption using 256 bit key on dut without LSV.
                               2. Attach it to external linux/container.
@@ -1157,9 +1217,9 @@ class ECEncDeadBeef(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=14,
-                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read"
-                                      "randwrite,randread), with different block size & depth & deadbeef "
-                                      "pattern in parallel",
+                              summary="4:2 EC with random key and run diff FIO RW pattern(write,"
+                                      "randwrite), with different block size & depth & deadbeef "
+                                      "pattern with fault injected on two random plexes",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
@@ -1171,9 +1231,9 @@ class ECEncZeroPattern(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=15,
-                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read"
-                                      "randwrite,randread), with different block size & depth & 0x000000000 string "
-                                      "pattern in parallel",
+                              summary="4:2 EC with random key and run diff FIO RW pattern(write,"
+                                      "randwrite), with different block size & depth & 0x000000000 string "
+                                      "pattern with fault injected on two random plexes",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
@@ -1185,9 +1245,9 @@ class ECEncZeroHPattern(ECCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=16,
-                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read"
+                              summary="4:2 EC with random key and run diff FIO RW pattern(write,read,"
                                       "randwrite,randread), with different block size & depth & 0x000000000 hex "
-                                      "pattern in parallel",
+                                      "pattern with fault injected on two random plexes",
                               steps='''
                               1. Create a lsv with encryption using random key on dut.
                               2. Attach it to external linux/container.
