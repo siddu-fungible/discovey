@@ -63,6 +63,9 @@ class SpirentSetup(FunTestScript):
 
         good_stream_load = 250
         pfc_load = 30
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            good_stream_load = 2500
+            pfc_load = 3000
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_3ports", chassis_type=nu_config_obj.CHASSIS_TYPE,
                                                       spirent_config=spirent_config)

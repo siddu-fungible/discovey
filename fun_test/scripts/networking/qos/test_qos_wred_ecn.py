@@ -220,6 +220,7 @@ class Wred_Q0(FunTestCase):
     max_queue_pps = 0
     port_1_stream_load = None
     port_3_stream_load_list = None
+    packet_size = 0
 
     def describe(self):
         self.set_test_details(id=1,
@@ -251,13 +252,13 @@ class Wred_Q0(FunTestCase):
         self.max_queue_pps = 0
         self.port_1_stream_load = self.normal_stream_pps_list['ingress_port_1']
         self.port_3_stream_load_list = self.normal_stream_pps_list['ingress_port_2']
+        self.packet_size = self.qos_profile_dict['packet_size']
 
     def setup(self):
         self.setup_variables()
 
-
         fun_test.log("Setting stream rate on stream coming from port %s to 80 percent of egress b/w" % port_1)
-        self.max_queue_pps = get_load_pps_for_each_queue(max_egress_load, 140, 1)
+        self.max_queue_pps = get_load_pps_for_each_queue(max_egress_load, self.packet_size, 1)
 
         load_value = int(get_load_value_from_load_percent(load_percent=self.port_1_stream_load,
                                                           max_egress_load=self.max_queue_pps))
@@ -267,12 +268,14 @@ class Wred_Q0(FunTestCase):
         if self.test_type == QOS_PROFILE_WRED:
             wred_streamblock = streamblock_objs_list[0]
             wred_streamblock.Load = load_value
+            wred_streamblock.FixedFrameLength = self.packet_size
             update_stream = template_obj.configure_stream_block(stream_block_obj=wred_streamblock, update=True)
             fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
                                  (load_value, wred_streamblock.spirent_handle))
         else:
             for ecn_streamblock in streamblock_objs_list:
                 ecn_streamblock.Load = load_value
+                ecn_streamblock.FixedFrameLength = self.packet_size
                 update_stream = template_obj.configure_stream_block(stream_block_obj=ecn_streamblock, update=True)
                 fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
                                      (load_value, ecn_streamblock.spirent_handle))
@@ -411,6 +414,7 @@ class ECN_10(Wred_Q0):
     iterations = 3
     max_queue_pps = 0
     stats_list = [q_depth, ecn_count]
+    packet_size = 0
 
     def describe(self):
         self.set_test_details(id=2,
@@ -445,9 +449,9 @@ class ECN_10(Wred_Q0):
         self.port_3_stream_load_list = self.normal_stream_pps_list['ingress_port_2']
         self.sleep_interval = 5
         self.iterations = 3
+        self.packet_size = self.qos_profile_dict['packet_size']
 
     def setup(self):
-        self.setup_variables()
         super(ECN_10, self).setup()
 
         # Set non fcp curr count
@@ -769,8 +773,10 @@ class ECN_10_10(ECN_10_00):
 if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(Wred_Q0())
+    '''
     ts.add_test_case(ECN_10())
     ts.add_test_case(ECN_01())
     ts.add_test_case(ECN_10_00())
     ts.add_test_case(ECN_10_10())
+    '''
     ts.run()

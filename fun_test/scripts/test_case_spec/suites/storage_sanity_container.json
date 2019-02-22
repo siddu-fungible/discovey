@@ -6,5 +6,7 @@
   "storage_compression_sanity.json",
   "ikv_sanity.json",
   "crypto_sanity.json",
-  "crypto_packet.json"
+  "crypto_packet.json",
+  "ec_crypto_fault_sanity.json"
+
 ]

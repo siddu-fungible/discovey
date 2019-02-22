@@ -241,7 +241,7 @@
      "sanity_test_nu_nu": {
     "source_ip": "192.85.1.10",
     "wrong_dip": "20.1.1.2",
-    "source_port": 1234,
+    "source_port": 1235,
     "dest_port": 666,
     "tcp_sync_bit": "1",
     "tcp_reset_bit": "0",
@@ -265,6 +265,28 @@
     "higher_range_port": 458,
     "source_ip": "192.85.1.10",
     "counter_id": 110
+  },
+    "nu_hnu_egress_drop_test": {
+    "source_ip": "192.85.1.12",
+    "wrong_dip": "29.1.1.1",
+    "source_port": 1224,
+    "dest_port": 686,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 111
+  },
+    "hnu_nu_drop_test": {
+    "source_ip": "192.85.1.20",
+    "wrong_dip": "20.1.1.2",
+    "source_port": 1422,
+    "dest_port": 681,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 113
   },
     "nu_nu_v6_test": {
     "source_ip": "3000::1",

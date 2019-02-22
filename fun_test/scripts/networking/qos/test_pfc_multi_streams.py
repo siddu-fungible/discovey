@@ -94,12 +94,15 @@ class SpirentSetup(FunTestScript):
             shape = 1
             hnu = True
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         good_load = 100
         pfc_load = 10
         pause_load = 60
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            good_load = 2500
+            pfc_load = 1000
+            pause_load = 1000
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_multi_stream", spirent_config=spirent_config,
                                                       chassis_type=nu_config_obj.CHASSIS_TYPE)

@@ -26,6 +26,8 @@ if dut_type_json == 'f1':
     acl_fields_dict_qos_nu_nu = acl_json_output['qos_nu_nu']
     acl_fields_dict_ipv6_nu_nu = acl_json_output["nu_nu_v6_test"]
     acl_fields_dict_range_nu_nu = acl_json_output['range_test_nu_nu']
+    acl_fields_dict_sanity_eg_nu_hnu = acl_json_output['nu_hnu_egress_drop_test']
+    acl_fields_dict_sanity_eg_hnu_nu = acl_json_output['hnu_nu_drop_test']
 else:
     acl_fields_dict_sanity_eg_nu_hnu = acl_json_output['nu_hnu_egress_drop_test']
     acl_fields_dict_sanity_nu_nu = acl_json_output["sanity_test_nu_nu"]
@@ -116,6 +118,9 @@ class SpirentSetup(FunTestScript):
         nu_eg_port = result['port_list'][1]
         hnu_ing_port = result['port_list'][2]
         hnu_eg_port = result['port_list'][3]
+        #For Fake HU image, to be removed later
+        if dut_type_json == "f1":
+            hnu_ing_port = result['port_list'][3]
         generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                            duration=TRAFFIC_DURATION,
                                            duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
@@ -329,7 +334,7 @@ class AclIngressDropNUtoNU(FunTestCase):
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 1)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -561,7 +566,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 1)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
 
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
         rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
@@ -622,7 +627,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 1)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -960,6 +965,8 @@ class AclEgressDropNUtoHNU(FunTestCase):
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             elif c == 3:
                 shape = 1
+                if dut_type_json == "f1":
+                    shape = 0
                 result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             c += 1
@@ -998,8 +1005,12 @@ class AclEgressDropNUtoHNU(FunTestCase):
         dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
         fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
-        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port,hnu=True)
-        fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+        if dut_type_json == "f1":
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+        else:
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
 
         fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
         fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
@@ -1078,8 +1089,8 @@ class AclEgressDropNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dip = int(
                 stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip, actual=rx_stream_result_framecount_dip,
-                                      message="Comparing tx and rx frame count on Spirent for stream dip")
+            # fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip, actual=rx_stream_result_framecount_dip,
+            #                           message="Comparing tx and rx frame count on Spirent for stream dip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_ecn.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1114,10 +1125,11 @@ class AclEgressDropNUtoHNU(FunTestCase):
             del obj_list[:]
             obj_list.append(self.stream_obj_drop)
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
-            counterstats_before = network_controller_obj.peek_erp_flex_stats(acl_fields_dict_sanity_eg_nu_hnu['counter_id'])
-            fun_test.log("counterstats Before: ")
-            #fun_test.log(counterstats_before)
-            counter_bef = int(counterstats_before['bank1']['pkts'])
+            erp = True
+            if dut_type_json == "f1":
+                erp = False
+            counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                                  counter_id=acl_fields_dict_sanity_eg_nu_hnu['counter_id'], erp=erp)
             fun_test.log(counter_bef)
             checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
@@ -1131,15 +1143,15 @@ class AclEgressDropNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_drop.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_drop = int(
                 stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
-            counterstats_after = network_controller_obj.peek_erp_flex_stats(acl_fields_dict_sanity_eg_nu_hnu['counter_id'])
-            fun_test.log("counterstats after: ")
-            counter_after = int(counterstats_after['bank1']['pkts'])
-            fun_test.log(counter_after)
+            counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                                    counter_id=acl_fields_dict_sanity_eg_nu_hnu['counter_id'], erp=erp)
             fun_test.log("tx_streamcount"+str(tx_stream_result_framecount_drop))
             fun_test.test_assert_expected(expected=0, actual=rx_stream_result_framecount_drop,
-                                          message="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted")
+                                          message="Comparing tx and rx frame count on Spirent for stream drop."
+                                                  "No pkt shuold be transmitted")
             # add counter values with the stream value using : peek_erp_flex_stats
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_drop, actual=(counter_after - counter_bef),
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_drop,
+                                          actual=(counter_after - counter_bef),
                                           message="Packets dropped should be equal to counter value")
             rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
                 port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
@@ -1558,6 +1570,8 @@ class AclEgressDropHNUtoNU(FunTestCase):
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             elif c == 2:
                 shape = 1
+                if dut_type_json == "f1":
+                    shape = 0
                 result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             c += 1
@@ -1594,8 +1608,10 @@ class AclEgressDropHNUtoNU(FunTestCase):
 
         fun_test.log("Tx Port: %s" % tx_port_result)
         fun_test.log("Rx Port: %s" % rx_port_result)
-
-        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
+        hnu = True
+        if dut_type_json == "f1":
+            hnu = False
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=hnu)
         fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
         dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
@@ -1714,7 +1730,8 @@ class AclEgressDropHNUtoNU(FunTestCase):
 
             fun_test.log("tx_streamcount"+str(tx_stream_result_framecount_drop))
             fun_test.test_assert_expected(expected=0, actual=rx_stream_result_framecount_drop,
-                                          message="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted")
+                                          message="Comparing tx and rx frame count on Spirent for stream drop."
+                                                  "No pkt shuold be transmitted")
             rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
                 port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
             checkpoint = "Ensure no errors are seen on Rx spirent port"

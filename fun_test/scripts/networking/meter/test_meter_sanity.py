@@ -18,10 +18,12 @@ subscribed_results = None
 NUM_PORTS = 2
 generator_port_obj_dict = {}
 analyzer_port_obj_dict = {}
+dut_type_json = test_config['dut_type']
 meter_json_file = fun_test.get_script_parent_directory() + '/meter.json'
-meter_json_output = fun_test.parse_file_to_json(meter_json_file)
-meter_bps = meter_json_output[0]['bps_meter']
-meter_pps = meter_json_output[0]['pps_meter']
+meter_json = fun_test.parse_file_to_json(meter_json_file)
+meter_json_output = meter_json[dut_type_json]
+meter_bps = meter_json_output['bps_meter']
+meter_pps = meter_json_output['pps_meter']
 METER_MODE_BPS = 0
 METER_MODE_PPS = 1
 SrTCM = 0
@@ -302,7 +304,6 @@ class MeterPps1Rate(MeterBase):
 
     def run(self):
         super(MeterPps1Rate, self).run()
-
 
 
 class MeterPps2Rate(MeterBase):

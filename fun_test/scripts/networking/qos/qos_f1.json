@@ -222,7 +222,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
-            "rate": 15509,
+            "rate": 15629,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -260,7 +260,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
-            "rate": 15509,
+            "rate": 15629,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -597,6 +597,7 @@
               {"dscp": 15, "load_percent": 14, "expected_load_percent": 11.5, "weight": 23, "rate": 1, "threshold": 282000}]
   },
   "wred": {
+    "packet_size": 140,
     "wred_timer": 15,
     "wred_prob_index": 0,
     "wred_prof_num": 0,
@@ -611,6 +612,7 @@
     "non_wred_load_percent": 15
   },
   "ecn": {
+    "packet_size": 140,
     "ecn_timer": 2,
     "ecn_prob_index": 0,
     "ecn_prof_num": 0,

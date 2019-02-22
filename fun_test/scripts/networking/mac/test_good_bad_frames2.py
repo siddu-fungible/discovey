@@ -23,8 +23,7 @@ cushion_sleep = 5
 
 
 def get_stream_list():
-    stream_list = [OVERSIZED, CRC_OVERSIZED, TOTAL_LENGTH_ERROR, TOTAL_LENGTH_ERROR_1K, TOTAL_LENGTH_ERROR_100B,
-                   MTU_EGRESS,PADDED, GOOD_FRAME]
+    stream_list = [TOTAL_LENGTH_ERROR_1K]
     return stream_list
 
 
@@ -154,24 +153,27 @@ class SpirentSetup(FunTestScript):
                     elif stream_type == TOTAL_LENGTH_ERROR:
                         current_ipv4_obj.totalLength = current_ipv4_obj.TOTAL_HEADER_LENGTH_ERROR
                     elif stream_type == TOTAL_LENGTH_ERROR_1K:
-                        current_streamblock_obj.Load = 100
-                        current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
+                        current_streamblock_obj.Load = test_config['load']
+                        current_streamblock_obj.LoadUnit = test_config['load_type']
                         current_streamblock_obj.FixedFrameLength = 192
                         custom_header_obj = CustomBytePatternHeader(byte_pattern=current_1k)
+                        current_ethernet_obj.etherType = Ethernet2Header.INTERNET_IP_ETHERTYPE
                     elif stream_type == TOTAL_LENGTH_ERROR_100B:
-                        current_streamblock_obj.Load = 10
-                        current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
+                        current_streamblock_obj.Load = test_config['load']
+                        current_streamblock_obj.LoadUnit = test_config['load_type']
                         current_streamblock_obj.FrameLengthMode = current_streamblock_obj.FRAME_LENGTH_MODE_RANDOM
                         current_streamblock_obj.MinFrameLength = test_config['min_frame_size']
                         current_streamblock_obj.MaxFrameLength = test_config['max_frame_size']
                         custom_header_obj = CustomBytePatternHeader(byte_pattern=current_100_b)
+                        current_ethernet_obj.etherType = Ethernet2Header.INTERNET_IP_ETHERTYPE
                     elif stream_type == PADDED:
                         current_streamblock_obj.FrameLengthMode = current_streamblock_obj.FRAME_LENGTH_MODE_INCR
                         current_streamblock_obj.MinFrameLength = test_config['min_frame_size']
                         current_streamblock_obj.MaxFrameLength = test_config['max_frame_size']
-                        current_streamblock_obj.Load = 100
-                        current_streamblock_obj.LoadUnit = current_streamblock_obj.LOAD_UNIT_FRAMES_PER_SECOND
+                        current_streamblock_obj.Load = test_config['load']
+                        current_streamblock_obj.LoadUnit = test_config['load_type']
                         custom_header_obj = CustomBytePatternHeader(byte_pattern=current_positive)
+                        current_ethernet_obj.etherType = Ethernet2Header.INTERNET_IP_ETHERTYPE
                     elif stream_type == GOOD_FRAME:
                         current_streamblock_obj.FrameLengthMode = current_streamblock_obj.FRAME_LENGTH_MODE_RANDOM
                         current_streamblock_obj.MinFrameLength = test_config['min_frame_size']
@@ -756,6 +758,8 @@ class TestCase4(FunTestCase):
     def run(self):
         nu_config_obj = fun_test.shared_variables['nu_config_obj']
         if dut_type is not nu_config_obj.DUT_TYPE_PALLADIUM:
+            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+            sfg_stats_before = network_controller_obj.peek_sfg_stats()
             activate = template_obj.activate_stream_blocks([streamblock_objects[TOTAL_LENGTH_ERROR][str(port_1)],
                                                             streamblock_objects[TOTAL_LENGTH_ERROR][str(port_2)]])
             fun_test.test_assert(activate, "Activate streamblocks for %s " % TOTAL_LENGTH_ERROR)
@@ -796,10 +800,23 @@ class TestCase4(FunTestCase):
             fun_test.log("Tx 1 Results %s " % tx_results_1)
             fun_test.log("Tx 2 Results %s " % tx_results_2)
 
+            vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+            vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats)
+            fun_test.log("VP Packets sample: %s" % vp_stats_diff[VP_PACKETS_SAMPLE])
+            fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_SAMPLE]) > 0,
+                                 "Ensure packets are getting sampled in vppkts")
+            erp_stats = get_erp_stats_values(network_controller_obj=network_controller_obj)
+            fun_test.log("ERP IP inner len error count: %s" % erp_stats[ERP_COUNT_PACKETS_INNER_IP_LEN_ERROR])
+            fun_test.test_assert(int(erp_stats[ERP_COUNT_PACKETS_INNER_IP_LEN_ERROR]) > 0,
+                                 "Ensure ERP ip inner len errors seen")
+            sfg_stats = network_controller_obj.peek_sfg_stats()
+            sfg_stats_diff = get_diff_stats(old_stats=sfg_stats_before, new_stats=sfg_stats)
+            fun_test.log("SFG sample count: %s" % sfg_stats_diff[SFG_SAMPLE_COPY])
+            fun_test.test_assert(int(sfg_stats_diff[SFG_SAMPLE_COPY]) > 0,
+                                 "Ensure sample copies are seen in SFG stats")
+
             fun_test.test_assert(tx_results_1["FrameCount"] > 0,
                                  message="Ensure some frames were sent from %s" % str(port_1))
-            # Currently F1 does not look in total length and passes frame as is
-            # TODO: when fixed frames must be dropped
             expected_rx = 0
             fun_test.test_assert_expected(actual=rx_port_analyzer_results_1["TotalFrameCount"],
                                           expected=expected_rx,
