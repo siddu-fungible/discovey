@@ -431,6 +431,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
+                if not fio_output[combo][mode]:
+                    fio_result[combo][mode] = False
+                    fun_test.critical("No output from FIO test, hence moving to the next variation")
+                    fun_test.add_checkpoint("FIO {} only test with the block size and IO depth set to {} & {}".
+                                            format(mode, fio_block_size, fio_iodepth), "FAILED")
+                    continue
+                else:
+                    fun_test.add_checkpoint("FIO {} only test with the block size and IO depth set to {} & {}".
+                                            format(mode, fio_block_size, fio_iodepth), "PASSED")
+
                 # Pulling volume stats of all the volumes from the DUT in dictionary format after the test
                 fun_test.log("Pulling volume stats of all volumes after the FIO test")
                 final_volume_status[combo][mode] = {}
@@ -498,11 +508,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                         diff_stats[combo][mode][key][fkey] = fvalue - ivalue
                     fun_test.log("Difference of {} stats before and after the test:".format(key))
                     fun_test.log(diff_stats[combo][mode][key])
-
-                if not fio_output[combo][mode]:
-                    fio_result[combo][mode] = False
-                    fun_test.critical("No output from FIO test, hence moving to the next variation")
-                    continue
 
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 for op, stats in self.expected_fio_result[combo][mode].items():
@@ -686,9 +691,32 @@ class EC21FioSeqWriteSeqReadOnly(ECVolumeLevelTestcase):
         super(EC21FioSeqWriteSeqReadOnly, self).cleanup()
 
 
-class EC21FioSeqAndRandReadOnlyWithFailure(ECVolumeLevelTestcase):
+class EC21FioRandWriteRandReadOnly(ECVolumeLevelTestcase):
     def describe(self):
         self.set_test_details(id=2,
+                              summary="Random Write & Read only performance of EC volume",
+                              steps="""
+        1. Create 3 BLT volumes in dut instance 0.
+        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
+        3. Create a LS volume on top of the EC volume based on use_lsv config.
+        4. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
+        5. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
+        external Linux server and check the performance are inline with the expected threshold.
+        """)
+
+    def setup(self):
+        super(EC21FioRandWriteRandReadOnly, self).setup()
+
+    def run(self):
+        super(EC21FioRandWriteRandReadOnly, self).run()
+
+    def cleanup(self):
+        super(EC21FioRandWriteRandReadOnly, self).cleanup()
+
+
+class EC21FioSeqAndRandReadOnlyWithFailure(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=3,
                               summary="Sequential and Random Read only performance of EC volume with a plex failure",
                               steps="""
         1. Create 3 BLT volumes on dut instance 0.
@@ -708,29 +736,6 @@ class EC21FioSeqAndRandReadOnlyWithFailure(ECVolumeLevelTestcase):
 
     def cleanup(self):
         super(EC21FioSeqAndRandReadOnlyWithFailure, self).cleanup()
-
-
-class EC21FioRandWriteRandReadOnly(ECVolumeLevelTestcase):
-    def describe(self):
-        self.set_test_details(id=3,
-                              summary="Random Write & Read only performance of EC volume",
-                              steps="""
-        1. Create 3 BLT volumes in dut instance 0.
-        2. Create a 2:1 EC volume on top of the 3 BLT volumes.
-        3. Create a LS volume on top of the EC volume based on use_lsv config.
-        4. Export (Attach) the above EC or LS volume based on use_lsv config to external Linux instance/container.
-        5. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
-        external Linux server and check the performance are inline with the expected threshold.
-        """)
-
-    def setup(self):
-        super(EC21FioRandWriteRandReadOnly, self).setup()
-
-    def run(self):
-        super(EC21FioRandWriteRandReadOnly, self).run()
-
-    def cleanup(self):
-        super(EC21FioRandWriteRandReadOnly, self).cleanup()
 
 
 class EC21FioSeqReadWriteMix(ECVolumeLevelTestcase):
