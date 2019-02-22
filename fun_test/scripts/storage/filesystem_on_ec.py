@@ -369,7 +369,7 @@ class FSOnECTestcase(FunTestCase):
                     command_result = self.host.nvme_restart()
                     fun_test.simple_assert(command_result, "Reloading nvme driver")
                     fun_test.sleep("Waiting for the nvme driver reload to complete", 5)
-                    self.host.sudo_command("echo 8 >/sys/block/nvme0n1/queue/nr_requests")
+                    self.host.sudo_command("echo 4 >/sys/block/nvme0n1/queue/nr_requests")
 
                 # Checking that the volume is accessible to the host
                 lsblk_output = self.host.lsblk("-b")
@@ -386,9 +386,9 @@ class FSOnECTestcase(FunTestCase):
                     install_status = self.host.install_package("xfsprogs")
                     fun_test.test_assert(install_status, "Installing XFS Package")
                 # Set the timeout for the filesystem create command based on its size
-                fs_create_timeout = (size / 1073741824) * 150
+                fs_create_timeout = (size / 1073741824) * 180
                 if not fs_create_timeout:
-                    fs_create_timeout = 90
+                    fs_create_timeout = 120
                 fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device, timeout=fs_create_timeout)
                 fun_test.test_assert(fs_status, "Creating {} filesystem on EC volume {}".format(self.fs_type,
                                                                                                 self.volume_name))
