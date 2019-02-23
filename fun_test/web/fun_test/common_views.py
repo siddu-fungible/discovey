@@ -5,7 +5,6 @@ from web.web_global import api_safe_json_response, initialize_result
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.transaction import atomic
 from web.fun_test.models import TimeKeeper
 from web.fun_test.metrics_views import validate_jira
 
@@ -20,7 +19,7 @@ def home(request):
 
 @csrf_exempt
 def add_session_log(request):
-    if not "logs" in request.session:
+    if "logs" not in request.session:
         request.session["logs"] = []
     request_json = json.loads(request.body)
     log = request_json
