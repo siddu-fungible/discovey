@@ -97,7 +97,7 @@ class DockerHost(Linux, ToDictMixin):
         images = self.get_images()
         expected_images = [x["name"] for x in self.spec["images"]]
         for expected_image in expected_images:
-            if not expected_image in images:
+            if expected_image not in images:
                 error_message = "Health: Unable to find image: {} in docker host: {}".format(expected_image,
                                self.host_ip)
                 fun_test.critical(error_message)
@@ -113,12 +113,22 @@ class DockerHost(Linux, ToDictMixin):
         result = False
         timer = FunTimer(max_time=max_time)
         while not timer.is_expired():
-            output = self.command(command="docker logs {}".format(container_name), include_last_line=True)
-            if re.search(handoff_string, output):
-                result = True
-                break
+            output = self.logs(container_name=container_name)
+            # output = self.command(command="docker logs {}".format(container_name), include_last_line=True)
+            if output:
+                if re.search(handoff_string, output):
+                    result = True
+                    break
             fun_test.sleep("Waiting for container handoff string", seconds=2)
         return result
+
+    def logs(self, container_name):
+        logs = None
+        container = self.get_container_by_name(name=container_name)
+        if container:
+            logs = container.logs()
+        return logs
+
 
     def get_images(self):
         images = []
@@ -447,7 +457,7 @@ class DockerHost(Linux, ToDictMixin):
                 elif self.type == self.TYPE_DESKTOP:
                     fun_test.sleep("Additional sleep for {}".format(self.type), seconds=15)
                 if not self.localhost:
-                    self.sudo_command("docker logs {}".format(container_name))
+                    fun_test.log("docker logs {}".format(self.logs(container_name=container_name)))
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
@@ -455,10 +465,9 @@ class DockerHost(Linux, ToDictMixin):
                 allocated_container = self.client.containers.get(container_name)
                 internal_ip = allocated_container.attrs["NetworkSettings"]["IPAddress"]
 
-
                 fun_test.log("Launched container: {}".format(container_name))
                 if not self.localhost:
-                    self.sudo_command("docker logs {}".format(container_name))
+                    fun_test.log("docker logs {}".format(self.logs(container_name=container_name)))
 
                 port_retries += 1
                 container_asset = {"host_ip": self.host_ip}
@@ -505,13 +514,13 @@ class DockerHost(Linux, ToDictMixin):
                 self.destroy_container(container_name=container_name)
                 if allocated_container:
                     if not self.localhost:
-                        self.sudo_command("docker logs {}".format(container_name))
+                        fun_test.log("docker logs {}".format(self.logs(container_name=container_name)))
                     logs = allocated_container.logs(stdout=True, stderr=True)
                     fun_test.log("Docker logs:\n {}".format(logs))
                     break
                 else:
                     if not self.localhost:
-                        self.sudo_command("docker logs {}".format(container_name))
+                        fun_test.log("docker logs {}".format(self.logs(container_name=container_name)))
 
         self.disconnect()
         return container_asset
