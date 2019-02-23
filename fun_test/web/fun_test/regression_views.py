@@ -27,6 +27,7 @@ from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
 from web.fun_test.models import SuiteReRunInfo
 import logging
+import subprocess
 import dateutil.parser
 import re
 from django.apps import apps
@@ -960,4 +961,23 @@ def re_run_info(request):
         suite_execution = SuiteExecution.objects.get(execution_id=entry.re_run_suite_execution_id)
         re_run_suite_execution["attributes"] = _get_attributes(suite_execution=suite_execution)
         result.append({"original": original_suite_execution, "re_run": re_run_suite_execution})
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def git(request):
+    result = {}
+    if request.method == "POST":
+        try:
+            request_json = json.loads(request.body)
+            command = request_json["command"]
+            result = {"pull": None}
+            if command == "pull":
+                result["pull"] = subprocess.check_output("git pull", shell=True)
+            if command == "logs":
+                output = subprocess.check_output("git log -n 10", shell=True)
+                result["logs"] = output
+        except Exception as ex:
+            logger.exception(str(ex))
     return result
