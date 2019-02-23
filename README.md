@@ -13,4 +13,3 @@ Installation:
 # cd scripts
 # python examples/sanity.py 
 ```
-
