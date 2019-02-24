@@ -369,7 +369,7 @@ class FSOnECTestcase(FunTestCase):
                     command_result = self.host.nvme_restart()
                     fun_test.simple_assert(command_result, "Reloading nvme driver")
                     fun_test.sleep("Waiting for the nvme driver reload to complete", 5)
-                    self.host.sudo_command("echo 4 >/sys/block/nvme0n1/queue/nr_requests")
+                    self.host.sudo_command("echo 8 >/sys/block/nvme0n1/queue/nr_requests")
 
                 # Checking that the volume is accessible to the host
                 lsblk_output = self.host.lsblk("-b")
