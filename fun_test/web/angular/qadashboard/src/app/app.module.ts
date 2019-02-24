@@ -46,6 +46,8 @@ import { SummaryJiraInfoComponent } from "./jira-info/summary-jira-info.componen
 import { ScriptSelectorComponent } from './regression/script-selector/script-selector.component';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { ReRunPanelComponent } from './regression/re-run-panel/re-run-panel.component';
+import { AlertsComponent } from './alerts/alerts.component';
+import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.component';
 
 
 @NgModule({
@@ -78,7 +80,9 @@ import { ReRunPanelComponent } from './regression/re-run-panel/re-run-panel.comp
     SummaryJiraInfoComponent,
     ScriptSelectorComponent,
     NotFoundComponent,
-    ReRunPanelComponent
+    ReRunPanelComponent,
+    AlertsComponent,
+    SchedulerAdminComponent
   ],
   imports: [
     BsDropdownModule,
