@@ -386,7 +386,7 @@
         },
         "ec": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 857216)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 1077440)"},
             "mbuf": {"bm_in_use": "(0, 40)", "bm_num_bytes": "(0, 163840)", "in_use": "(0, 40)", "num_bytes": "(0, 163840)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
