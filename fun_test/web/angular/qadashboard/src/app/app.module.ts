@@ -46,7 +46,6 @@ import { SummaryJiraInfoComponent } from "./jira-info/summary-jira-info.componen
 import { ScriptSelectorComponent } from './regression/script-selector/script-selector.component';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { ReRunPanelComponent } from './regression/re-run-panel/re-run-panel.component';
-import {DataSharingService} from "./services/data-sharing/data-sharing.service";
 
 
 @NgModule({
@@ -99,7 +98,7 @@ import {DataSharingService} from "./services/data-sharing/data-sharing.service";
     ClipboardModule
   ],
 
-  providers: [ApiService, LoggerService, DataSharingService],
+  providers: [ApiService, LoggerService],
   bootstrap: [AppComponent]
 })
 export class AppModule {

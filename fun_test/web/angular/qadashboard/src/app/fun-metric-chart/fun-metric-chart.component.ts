@@ -2,7 +2,6 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
-import {DataSharingService} from "../services/data-sharing/data-sharing.service";
 
 
 @Component({
@@ -56,13 +55,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   mileStoneMarkers: any = {}; // fetch the milestones for each chart from backend and save it
   mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
 
-  showTriaging: boolean = false;
-  selectedOption: string = null;
-  triagingOptions: any = [];
-
-  fromDate: any;
-  toDate: any;
-  bootArgs: string = null;
 
   triageInfo: any = null;
   successCommit: string = null;
@@ -78,15 +70,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   public tooltip: Function;
   public pointClickCallback: Function;
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute,
-              private sharedData: DataSharingService) {
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute) {
   }
 
   ngOnInit() {
     this.status = "Updating";
     this.fetchNames();
-    this.triagingOptions.push("SCORES");
-    this.triagingOptions.push("PASS/FAIL");
     this.showingTable = false;
     this.showingConfigure = false;
     this.headers = null;
@@ -311,10 +300,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingSource = false;
     this.editingDescription = false;
     this.chart1YaxisTitle = "";
-    this.fromDate = null;
-    this.toDate = null;
-    this.bootArgs = null;
-    this.selectedOption = null;
   }
 
   closePointInfo(): void {
@@ -453,12 +438,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     };
     this.apiService.post('/triage/insert_db', payload).subscribe(response => {
       alert("submitted");
-
-      let url = "/performance/atomic/" + this.metricId + "/triage";
-    window.open(url, '_blank');
     }, error => {
       this.loggerService.error("Updating DB Failed");
     });
+  }
+
+  openTriaging(): void {
+    let url = "/performance/atomic/" + this.metricId + "/triage";
+    window.open(url, '_blank');
   }
 
   openSource(url): void {

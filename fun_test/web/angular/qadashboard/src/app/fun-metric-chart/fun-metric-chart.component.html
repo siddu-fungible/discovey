@@ -85,7 +85,7 @@
         </div>
       </div>
       <br>
-      <button (click)="showTriaging = !showTriaging"
+      <button (click)="openTriaging()"
               class="btn btn-sm failed-label no-margin git-commit">
         Triage
       </button>
@@ -94,58 +94,6 @@
       <!--</span>-->
     </div>
     <br>
-    <div *ngIf="showTriaging" class="card">
-      <table class="table table-borderless" style="width: 60%">
-        <tr>
-          <td>
-            From Date:
-            <form class="form-inline">
-              <div class="form-group">
-                <div class="input-group">
-                  <input class="form-control" placeholder="yyyy-mm-dd"
-                         name="dp1" [(ngModel)]="fromDate" ngbDatepicker #d="ngbDatepicker">
-                  <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" (click)="d.toggle()" type="button"><i class="fa fa-calendar"></i></button>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </td>
-          <td>
-           To Date: <form class="form-inline">
-          <div class="form-group">
-            <div class="input-group">
-              <input class="form-control" placeholder="yyyy-mm-dd"
-                     name="dp2" [(ngModel)]="toDate" ngbDatepicker #e="ngbDatepicker">
-              <div class="input-group-append">
-                <button class="btn btn-outline-secondary" (click)="e.toggle()" type="button"><i class="fa fa-calendar"></i></button>
-              </div>
-            </div>
-          </div>
-        </form>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            Boot args: <input type="text" [(ngModel)]="bootArgs"/>
-          </td>
-          <td>
-            Type: <select [(ngModel)]="selectedOption">
-        <option [value]="x" *ngFor="let x of triagingOptions">{{x}}</option>
-      </select>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <button class="btn btn-sm no-margin btn-success" (click)="enterTriaging()">Submit</button>
-          </td>
-          <td>
-
-          </td>
-        </tr>
-      </table>
-
-    </div>
     <div class="closed-section"></div>
     <!-- Show tables below the leaf chart -->
     <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">

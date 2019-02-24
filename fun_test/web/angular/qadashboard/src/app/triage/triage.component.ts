@@ -4,8 +4,6 @@ import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
-import {DataSharingService} from "../services/data-sharing/data-sharing.service";
-import {Subscription} from "rxjs";
 
 @Component({
   selector: 'git-history',
@@ -30,7 +28,7 @@ export class TriageComponent implements OnInit {
   gitUser: string = null;
   triageInfo: any = null;
   showTriagingStatus: boolean = false;
-  showCommits: boolean = true;
+  showCommits: boolean = false;
   startButton: boolean = true;
   faultyAuthor: string = null;
   successAuthor: string = null;
@@ -42,17 +40,32 @@ export class TriageComponent implements OnInit {
   continueTriaging: boolean = true;
   maxTries: string = null;
   timePercentage: any = null;
-  message: any = null;
-  subscription: Subscription;
+
+  showForm: boolean = false;
+  selectedOption: string = null;
+  triagingOptions: any = [];
+
+  fromDate: any;
+  toDate: any;
+  bootArgs: string = null;
+  fromCommit: string = null;
+  toCommit: string = null;
+  advancedInfo: boolean = false;
 
   @ViewChild("content") modalContent: TemplateRef<any>;
 
   constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute,
-              private commonService: CommonService, private modalService: NgbModal, private sharedData: DataSharingService) {
+              private commonService: CommonService, private modalService: NgbModal) {
   }
 
   ngOnInit() {
     this.status = "Fetching Commits";
+    this.triagingOptions.push("SCORES");
+    this.triagingOptions.push("PASS/FAIL");
+    this.fromDate = null;
+    this.toDate = null;
+    this.bootArgs = null;
+    this.selectedOption = null;
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.id = params['id'];
@@ -114,7 +127,7 @@ export class TriageComponent implements OnInit {
       "triage_info": this.triageInfo
     };
     this.apiService.post('/triage/insert_db', payload).subscribe(response => {
-      this.startButton = false;
+      this.showForm = false;
       this.showTriaging();
       alert("submitted");
     }, error => {
@@ -125,6 +138,7 @@ export class TriageComponent implements OnInit {
   showTriaging(): void {
     this.showCommits = false;
     this.showChanged = false;
+    this.showForm = false;
     this.status = "Fetching Status";
     this.refreshStatus();
   }
@@ -148,7 +162,7 @@ export class TriageComponent implements OnInit {
     if (!this.continueTriaging) {
       let git_commit = "";
       let statusFlag = false;
-      let detail = this.triageDetails[0];
+      let detail = this.triageDetails;
       for (let flow of this.triageFlows) {
         if (flow.score !== -1 && flow.score < detail.last_good_score) {
           git_commit = flow.git_commit;
@@ -176,8 +190,8 @@ export class TriageComponent implements OnInit {
     this.apiService.post('/triage/fetch_flows', payload).subscribe((data) => {
       let result = data.data;
       this.triageFlows = result.flows;
-      this.triageDetails = result.triage;
-      let detail = this.triageDetails[0];
+      this.triageDetails = result.triage[0];
+      let detail = this.triageDetails;
       this.triageStatus = detail.status;
       this.fault = detail.faulty_commit;
       if (detail.status !== "ACTIVE") {
@@ -209,6 +223,8 @@ export class TriageComponent implements OnInit {
   }
 
   goBack(): void {
+    this.status = "Fetching commits";
+    this.fetchGitCommits();
     this.showChanged = false;
     this.showTriagingStatus = false;
     this.showCommits = true;
@@ -219,29 +235,12 @@ export class TriageComponent implements OnInit {
   }
 
   setCommits(): void {
-    // this.subscription = this.sharedData.getMessage().subscribe(message => {
-    //   this.message = message;
-    // let payload = {"metric_id": this.id,
-    // "metric_type": this.message["metric_type"],
-    // "from_date": this.message["from_date"],
-    // "to_date": this.message["to_date"],
-    // "boot_args": this.message["boot_args"]};
-    // this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
-    //   let result = data.data;
-    //   this.triageInfo = result;
-    //   if (result.passed_git_commit && result.passed_git_commit !== "") {
-    //     this.successCommit = result.passed_git_commit;
-    //   }
-    //   if (result.degraded_git_commit && result.degraded_git_commit !== "") {
-    //     this.faultyCommit = result.degraded_git_commit;
-    //   }
-    //   this.fetchGitCommits();
-    // }, error => {
-    //   this.logger.error("Traiging info fetch failed");
-    // })
-    // });
-    let payload = {"metric_id": this.id};
-    this.apiService.post('/metrics/first_degrade', payload).subscribe((data) => {
+    let payload = {"metric_id": this.id,
+    "metric_type": this.selectedOption,
+    "from_date": this.fromDate,
+    "to_date": this.toDate,
+    "boot_args": this.bootArgs};
+    this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
       let result = data.data;
       this.triageInfo = result;
       if (result.passed_git_commit && result.passed_git_commit !== "") {
@@ -252,19 +251,61 @@ export class TriageComponent implements OnInit {
       }
       this.fetchGitCommits();
     }, error => {
-      this.logger.error("Past Status Urls");
+      this.logger.error("Traiging info fetch failed");
     });
+    // let payload = {"metric_id": this.id};
+    // this.apiService.post('/metrics/first_degrade', payload).subscribe((data) goBack=> {
+    //   let result = data.data;
+    //   this.triageInfo = result;
+    //   if (result.passed_git_commit && result.passed_git_commit !== "") {
+    //     this.successCommit = result.passed_git_commit;
+    //   }
+    //   if (result.degraded_git_commit && result.degraded_git_commit !== "") {
+    //     this.faultyCommit = result.degraded_git_commit;
+    //   }
+    //   this.fetchGitCommits();
+    // }, error => {
+    //   this.logger.error("Past Status Urls");
+    // });
 
+  }
+
+  getInfoFromCommits(): void {
+    this.status = "Triaging commits";
+    let payload = {"metric_id": this.id,
+    "metric_type": this.selectedOption,
+    "from_commit": this.fromCommit,
+    "to_commit": this.toCommit,
+    "boot_args": this.bootArgs};
+    this.apiService.post('/metrics/get_triage_info_from_commits', payload).subscribe((data) => {
+      let result = data.data;
+      this.triageInfo = result;
+      this.successCommit = this.toCommit;
+      this.faultyCommit = this.fromCommit;
+      this.fetchGitCommits();
+    }, error => {
+      this.logger.error("Traiging info fetch failed");
+    });
   }
 
   checkTriageDb(): void {
     let payload = {"metric_id": this.id};
     this.apiService.post('/triage/check_db', payload).subscribe(response => {
-      if (response.data) {
+      let result = response.data;
+      if (result["metric_type"]) {
+        this.selectedOption = result["metric_type"];
+        this.bootArgs = result["boot_args"];
+        this.faultyCommit = result["from_commit"];
+        this.successCommit = result["to_commit"];
+        this.showForm = false;
         this.startButton = false;
         this.showTriaging();
+      } else {
+        this.showForm = true;
+        this.status = null;
       }
       // this.setCommits();
+      // this.getInfoFromCommits();
     }, error => {
       this.logger.error("checking DB Failed");
     });
@@ -284,12 +325,12 @@ export class TriageComponent implements OnInit {
         this.faultyAuthor = this.commits[0].author;
         this.successAuthor = this.commits[total].author;
         this.successMessage = this.commits[total].message;
+        this.showCommits = true;
         this.status = null;
       }, error => {
         this.logger.error("Fetching git Commits between the faulty and success commits");
       });
-    }
-    else {
+    } else {
       this.status = null;
       console.log("Git commit is missing from the data");
     }

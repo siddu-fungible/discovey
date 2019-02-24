@@ -1,3 +1,68 @@
+<div *ngIf="showForm" class="card card-primary component">
+  <div class="card-header min-padding"><b>Submit info</b></div>
+      <table class="table table-borderless" style="width: 50%">
+        <!--<tr>-->
+          <!--<td>-->
+            <!--From Date:-->
+            <!--<form class="form-inline">-->
+              <!--<div class="form-group">-->
+                <!--<div class="input-group">-->
+                  <!--<input class="form-control" placeholder="yyyy-mm-dd"-->
+                         <!--name="dp1" [(ngModel)]="fromDate" ngbDatepicker #d="ngbDatepicker">-->
+                  <!--<div class="input-group-append">-->
+                    <!--<button class="btn btn-outline-secondary" (click)="d.toggle()" type="button"><i class="fa fa-calendar"></i></button>-->
+                  <!--</div>-->
+                <!--</div>-->
+              <!--</div>-->
+            <!--</form>-->
+          <!--</td>-->
+          <!--<td>-->
+           <!--To Date: <form class="form-inline">-->
+          <!--<div class="form-group">-->
+            <!--<div class="input-group">-->
+              <!--<input class="form-control" placeholder="yyyy-mm-dd"-->
+                     <!--name="dp2" [(ngModel)]="toDate" ngbDatepicker #e="ngbDatepicker">-->
+              <!--<div class="input-group-append">-->
+                <!--<button class="btn btn-outline-secondary" (click)="e.toggle()" type="button"><i class="fa fa-calendar"></i></button>-->
+              <!--</div>-->
+            <!--</div>-->
+          <!--</div>-->
+        <!--</form>-->
+          <!--</td>-->
+        <!--</tr>-->
+        <tr>
+          <td>
+            From commit:
+          </td>
+          <td><input type="text" [(ngModel)]="fromCommit"/>
+          </td>
+          <td>
+            To commit: </td>
+          <td><input type="text" [(ngModel)]="toCommit"/>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Boot args: </td>
+          <td> <input type="text" [(ngModel)]="bootArgs"/>
+          </td>
+          <td>
+            Type:
+          </td>
+          <td>
+            <select [(ngModel)]="selectedOption">
+        <option [value]="x" *ngFor="let x of triagingOptions">{{x}}</option>
+      </select>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4">
+            <button class="btn btn-sm no-margin btn-success" (click)="getInfoFromCommits()">Submit</button>
+          </td>
+        </tr>
+      </table>
+
+</div>
 <div id="changed-files" class="component">
   <fun-spinner [status]="status"></fun-spinner>
   <div *ngIf="status===null">
@@ -13,6 +78,7 @@
                 <a *ngIf="!startButton" [routerLink]="" (click)="showTriaging()">Show triaging status</a>
               </span>
               <br><br>
+              <br>
               <p class="no-margin"><b>Git info for first degrade:</b>
                 <span>Sha:</span><span style="color: red"> {{ faultyCommit }}</span><br>
                 <span>
@@ -74,73 +140,148 @@
           class="fa fa-refresh"></i></button>
         <br>
         <div class="card card-primary" style="margin: 4px;">
-          <div class="card-header min-padding"><b>Triaging status:</b></div>
+          <div class="card-header min-padding"><b>Triaging status:</b>&nbsp;<button class="btn btn-sm btn-danger">Kill triaging</button></div>
           <div class="card-body min-padding">
             <div class="min-padding">
-              <table class="table table-bordered" style="width: 65%">
+              <table class="table table-borderless triage-status" style="width: 20%">
                 <tr>
-                  <th class="align header-padding" style="width: 7%;">
+                  <th>
+                    From git commit
+                  </th>
+                  <td>
+                    {{ faultyCommit }}
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    To git commit
+                  </th>
+                  <td>
+                    {{ successCommit }}
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    Boot args
+                  </th>
+                  <td>
+                    {{ bootArgs }}
+                  </td>
+                </tr>
+                <tr>
+                  <th>
                     Triage id
                   </th>
-                  <th class="align header-padding" style="width: 7%;">
+                  <td>
+                    {{ triageDetails.triage_id }}
+                  </td>
+                </tr>
+                <tr>
+                  <th>
                     Metric id
                   </th>
-                  <th class="align header-padding" style="width: 10%;">
-                    Metric type
+                  <td>
+                    {{ triageDetails.metric_id }}
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    Triaging type
                   </th>
-                  <th class="align header-padding" style="width: 7%;">
-                    Last good score
-                  </th>
-                  <th class="align header-padding" style="width: 10%;">
+                  <td>
+                    {{ triageDetails.metric_type }}
+                  </td>
+                </tr>
+                <tr>
+                  <th>
                     Status
                   </th>
-                  <th class="align header-padding" style="width: 5%;">
-                    Trials
-                  </th>
-                  <th class="align header-padding" style="width: 20%;">
-                    Time elapsed
-                  </th>
-                </tr>
-                <tr *ngFor="let id of triageDetails">
-                  <td class="align">
-                    {{ id.triage_id }}
-                  </td>
-                  <td class="align">
-                    {{ id.metric_id }}
-                  </td>
-                  <td class="align">
-                    {{ id.metric_type }}
-                  </td>
-                  <td class="align">
-                    {{ id.last_good_score }}
-                  </td>
-                  <td class="align">
+                  <td>
                     <span [ngClass]="{'table-danger': triageStatus === 'FAILED'}">
                       <span [ngClass]="'text-'+
                           resultToClass(triageStatus)">{{ triageStatus }}</span>
                     </span>
                   </td>
-                  <td class="align">
+                </tr>
+                <tr>
+                  <th>
+                    Trials
+                  </th>
+                  <td>
                     {{ maxTries }}
                   </td>
-                  <td class="align">
+                </tr>
+                <tr>
+                  <th>
+                    Time elapsed
+                  </th>
+                  <td>
+                    {{ timePercentage }}
+                  </td>
+                </tr>
+                <!--<tr>-->
+                  <!--<th class="align header-padding" style="width: 7%;">-->
+                    <!--Triage id-->
+                  <!--</th>-->
+                  <!--<th class="align header-padding" style="width: 7%;">-->
+                    <!--Metric id-->
+                  <!--</th>-->
+                  <!--<th class="align header-padding" style="width: 10%;">-->
+                    <!--Metric type-->
+                  <!--</th>-->
+                  <!--&lt;!&ndash;<th class="align header-padding" style="width: 7%;">&ndash;&gt;-->
+                    <!--&lt;!&ndash;Last good score&ndash;&gt;-->
+                  <!--&lt;!&ndash;</th>&ndash;&gt;-->
+                  <!--<th class="align header-padding" style="width: 10%;">-->
+                    <!--Status-->
+                  <!--</th>-->
+                  <!--<th class="align header-padding" style="width: 5%;">-->
+                    <!--Trials-->
+                  <!--</th>-->
+                  <!--<th class="align header-padding" style="width: 20%;">-->
+                    <!--Time elapsed-->
+                  <!--</th>-->
+                <!--</tr>-->
+                <!--<tr *ngFor="let id of triageDetails">-->
+                  <!--<td class="align">-->
+                    <!--{{ id.triage_id }}-->
+                  <!--</td>-->
+                  <!--<td class="align">-->
+                    <!--{{ id.metric_id }}-->
+                  <!--</td>-->
+                  <!--<td class="align">-->
+                    <!--{{ id.metric_type }}-->
+                  <!--</td>-->
+                  <!--&lt;!&ndash;<td class="align">&ndash;&gt;-->
+                    <!--&lt;!&ndash;{{ id.last_good_score }}&ndash;&gt;-->
+                  <!--&lt;!&ndash;</td>&ndash;&gt;-->
+                  <!--<td class="align">-->
                     <!--<span [ngClass]="{'table-danger': triageStatus === 'FAILED'}">-->
                       <!--<span [ngClass]="'text-'+-->
                           <!--resultToClass(triageStatus)">{{ triageStatus }}</span>-->
                     <!--</span>-->
-                    <span>
-                      {{ timePercentage }}
-                    </span>
-                    <div class="progress">
-                      <div id="dynamic-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
-                          aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%;"></div>
-                    </div>
-                  </td>
-                </tr>
+                  <!--</td>-->
+                  <!--<td class="align">-->
+                    <!--{{ maxTries }}-->
+                  <!--</td>-->
+                  <!--<td class="align">-->
+                    <!--&lt;!&ndash;<span [ngClass]="{'table-danger': triageStatus === 'FAILED'}">&ndash;&gt;-->
+                      <!--&lt;!&ndash;<span [ngClass]="'text-'+&ndash;&gt;-->
+                          <!--&lt;!&ndash;resultToClass(triageStatus)">{{ triageStatus }}</span>&ndash;&gt;-->
+                    <!--&lt;!&ndash;</span>&ndash;&gt;-->
+                    <!--<span>-->
+                      <!--{{ timePercentage }}-->
+                    <!--</span>-->
+                    <!--<div class="progress">-->
+                      <!--<div id="dynamic-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"-->
+                          <!--aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%;"></div>-->
+                    <!--</div>-->
+                  <!--</td>-->
+                <!--</tr>-->
               </table>
-              <div *ngIf="continueTriaging">Do you want to continue triaging?
-              <button type="button" class="btn btn-sm btn-outline-success" (click)="moreTriaging()">Yes</button>&nbsp;
-              <button type="button" class="btn btn-sm btn-outline-danger" (click)="stopTriaging()">No</button></div>
+              <!--<div *ngIf="continueTriaging">Do you want to continue triaging?-->
+              <!--<button type="button" class="btn btn-sm btn-outline-success" (click)="moreTriaging()">Yes</button>&nbsp;-->
+              <!--<button type="button" class="btn btn-sm btn-outline-danger" (click)="stopTriaging()">No</button></div>-->
               <div *ngIf="!continueTriaging" style="font-weight: 900">
                 <span class="text-color-green">Triaging complete</span><br>
                 Potential faulty Commit: <a [routerLink]="" (click)="openFaultyCommitDetails(fault)" class="text-color-red">{{ fault }}</a><br>
@@ -162,33 +303,34 @@
                   <button type="button" ngbAutofocus class="btn btn-outline-secondary" (click)="c">No</button>
                 </div>
               </ng-template>
-              <p><b>All flows:</b></p>
-              <table class="table table-bordered" style="width: 80%">
+              <p><b>All flows:</b>&nbsp;
+              <a [routerLink]="" (click)="advancedInfo = !advancedInfo">Show more info</a></p>
+              <table class="table table-bordered" style="width: 60%">
                 <tr>
-                  <th class="align" style="width: 7%;">
+                  <th *ngIf="advancedInfo" class="align">
                     Flow id
                   </th>
-                  <th class="align" style="width: 15%;">
+                  <th class="align">
                     Git commit
                   </th>
-                  <th class="align" style="width: 10%;">
+                  <th class="align">
                     Committer
                   </th>
-                  <th class="align" style="width: 7%;">
+                  <th *ngIf="advancedInfo" class="align">
                     Jenkins #
                   </th>
-                  <th class="align" style="width: 7%;">
+                  <th *ngIf="advancedInfo" class="align">
                     Lsf #
                   </th>
-                  <th class="align" style="width: 10%;">
+                  <th *ngIf="advancedInfo" class="align">
                     Score
                   </th>
-                  <th class="align" style="width: 20%;">
+                  <th class="align">
                     Status
                   </th>
                 </tr>
                 <tr class="no-margin">
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
                   <td class="table-padding text-color-red">
@@ -197,13 +339,13 @@
                   <td class="table-padding align">
                     {{ faultyAuthor }}
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
                   <td class="table-padding align">
@@ -212,7 +354,7 @@
                 </tr>
                 <ng-container *ngFor="let commit of triageFlows">
                   <tr [ngClass]="{'grey-highlight': commit.status === 'SUSPENDED'}" class="no-margin">
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     {{ commit.flow_id }}
                   </td>
                   <td class="table-padding" style="vertical-align: middle">
@@ -221,13 +363,13 @@
                   <td class="table-padding align">
                     {{ commit.committer }}
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     <span *ngIf="commit.jenkins !== -1">{{ commit.jenkins }}</span>
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     <span *ngIf="commit.lsf !== -1">{{ commit.lsf }}</span>
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     <span *ngIf="commit.score != -1">{{ commit.score }}</span>
                   </td>
                   <td class="table-padding align">
@@ -244,7 +386,7 @@
                 </tr>
                 </ng-container>
                 <tr class="no-margin">
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
                   <td class="table-padding text-color-green">
@@ -253,13 +395,13 @@
                   <td class="table-padding align">
                     {{ successAuthor }}
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
-                  <td class="table-padding align">
+                  <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
                   <td class="table-padding align">
@@ -267,7 +409,7 @@
                   </td>
                 </tr>
               </table>
-              <button *ngIf="continueTriaging" type="button" (click)="testEntry()">Test</button>
+              <!--<button *ngIf="continueTriaging" type="button" (click)="testEntry()">Test</button>-->
             </div>
           </div>
         </div>

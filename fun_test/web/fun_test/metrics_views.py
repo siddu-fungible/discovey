@@ -375,8 +375,8 @@ def get_first_degrade(request):
                       "degraded_date_time": previous_entry.date_time,
                       "degraded_git_commit": previous_entry.git_commit,
                       "degraded_score": previous_entry.score,
-              "boot_args": boot_args,
-              "metric_type": metric_type
+              "boot_args": "",
+              "metric_type": "SCORES"
               }
     return result
 
@@ -418,6 +418,31 @@ def get_triage_info(request):
                       "degraded_date_time": previous_entry.date_time,
                       "degraded_git_commit": previous_entry.git_commit,
                       "degraded_score": previous_entry.score,
+              "boot_args": boot_args,
+              "metric_type": metric_type}
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def get_triage_info_from_commits(request):
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    from_commit = request_json["from_commit"]
+    to_commit = request_json["to_commit"]
+    boot_args = request_json["boot_args"]
+    metric_type= request_json["metric_type"]
+    result = {"passed_jenkins_job_id": -1,
+                      "passed_suite_execution_id": -1,
+                      "passed_lsf_job_id": -1,
+                      "passed_date_time": -1,
+                      "passed_git_commit": to_commit,
+                      "passed_score": -1,
+                      "degraded_jenkins_job_id": -1,
+                      "degraded_suite_execution_id": -1,
+                      "degraded_lsf_job_id": -1,
+                      "degraded_date_time": -1,
+                      "degraded_git_commit": from_commit,
+                      "degraded_score": -1,
               "boot_args": boot_args,
               "metric_type": metric_type}
     return result

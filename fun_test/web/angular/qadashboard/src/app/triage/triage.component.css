@@ -24,3 +24,6 @@
 .grey-highlight {
   background-color: lightgrey;
 }
+.triage-status td, .triage-status th {
+  padding: 0!important;
+}

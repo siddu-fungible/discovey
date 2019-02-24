@@ -36,6 +36,7 @@ class SchedulingStates:
     FAILED = "FAILED"
     SUCCESS = "SUCCESS"
     SUSPENDED = "SUSPENDED"
+    RUNNING = "RUNNING"
 
 class MetricChartStatus(models.Model):
     metric_id = models.IntegerField(default=-1)
