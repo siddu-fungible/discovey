@@ -930,8 +930,10 @@ def job_spec(request, job_id):
 
 
 def _get_attributes(suite_execution):
-    attributes = {"result": suite_execution.result, "scheduled_time": str(suite_execution.scheduled_time),
-                  "completed_time": str(suite_execution.completed_time)}
+    attributes = {"result": suite_execution.result,
+                  "scheduled_time": str(suite_execution.scheduled_time),
+                  "completed_time": str(suite_execution.completed_time),
+                  "suite_path": str(suite_execution.suite_path)}
     return attributes
 
 @csrf_exempt
