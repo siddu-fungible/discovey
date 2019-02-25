@@ -292,6 +292,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingSource = false;
     this.editingDescription = false;
     this.chart1YaxisTitle = "";
+    this.y1AxisPlotLines = [];
+    this.showAllExpectedValues = false;
   }
 
   closePointInfo(): void {
