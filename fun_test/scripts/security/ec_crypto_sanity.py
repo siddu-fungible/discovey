@@ -380,7 +380,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attach {} with uuid {}".
                                  format(self.attach_type, self.attach_uuid))
-            self.attach_count == 1
+            self.attach_count = 1
 
         # Check the expected filter params
         if hasattr(self, "encrypt") and self.encrypt:
