@@ -826,6 +826,7 @@ class FunTest:
         result = {}
         result["classes"] = []
         sys.argv.append("--disable_fun_test")
+        fun_test.absolute_script_file_name = module_name
         test_cases = []
 
         import imp
