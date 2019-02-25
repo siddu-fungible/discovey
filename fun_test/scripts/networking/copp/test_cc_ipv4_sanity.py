@@ -43,13 +43,13 @@ class SetupSpirent(FunTestScript):
             interface_obj1, interface_obj2, generator_handle, subscribed_results
         global LOAD, LOAD_UNIT, FRAME_SIZE, FRAME_LENGTH_MODE, MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT, TRAFFIC_DURATION
 
-        dut_type = fun_test.get_local_setting('dut_type')
         nu_config_obj = NuConfigManager()
         fun_test.shared_variables['nu_config_obj'] = nu_config_obj
+        dut_type = nu_config_obj.DUT_TYPE
         dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_type=NuConfigManager.CC_FLOW_TYPE,
                                                    flow_direction=FLOW_DIRECTION)
 
-        chassis_type = fun_test.get_local_setting('chassis_type')
+        chassis_type = nu_config_obj.CHASSIS_TYPE
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         template_obj = SpirentEthernetTrafficTemplate(session_name="cc_path", spirent_config=spirent_config,
@@ -69,16 +69,15 @@ class SetupSpirent(FunTestScript):
         dpc_server_port = dut_config['dpcsh_tcp_proxy_port']
         network_controller_obj = NetworkController(dpc_server_ip=dpc_server_ip, dpc_server_port=dpc_server_port)
 
-        configs = fun_test.parse_file_to_json(INTERFACE_LOADS_SPEC)
-        fun_test.simple_assert(configs, "Read Interface loads file")
-        cc_path_config = configs['cc_path']
-        LOAD = cc_path_config['load']
-        LOAD_UNIT = cc_path_config['load_unit']
-        FRAME_SIZE = cc_path_config['frame_size']
-        FRAME_LENGTH_MODE = cc_path_config['frame_length_mode']
-        MIN_RX_PORT_COUNT = cc_path_config['rx_range_min']
-        MAX_RX_PORT_COUNT = cc_path_config['rx_range_max']
-        TRAFFIC_DURATION = cc_path_config['duration']
+        config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
+        fun_test.simple_assert(config, "Read Interface loads file")
+        LOAD = config['load']
+        MIN_RX_PORT_COUNT = config['min_meter_range']
+        MAX_RX_PORT_COUNT = config['max_meter_range']
+        LOAD_UNIT = config['load_type']
+        FRAME_SIZE = config['fixed_frame_size']
+        FRAME_LENGTH_MODE = config['frame_length_mode']
+        TRAFFIC_DURATION = config['duration']
 
         checkpoint = "Configure Generator Config for port %s" % port1
         self.generator_config_obj = GeneratorConfig(duration=TRAFFIC_DURATION,
@@ -103,7 +102,6 @@ class TestCcIPv4ICMP(FunTestCase):
     stream_obj = None
     validate_meter_stats = True
     meter_id = None
-    routes_config = None
 
     def describe(self):
         self.set_test_details(id=1, summary="NU --> CC IPv4 ICMP (Internet Control Message Protocol) destined to "
@@ -136,11 +134,11 @@ class TestCcIPv4ICMP(FunTestCase):
 
     def setup(self):
         nu_config_obj = fun_test.shared_variables['nu_config_obj']
-        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
-        fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(routes_config, "Ensure routes config fetched")
 
-        routermac = self.routes_config['routermac']
-        l3_config = self.routes_config['l3_config']
+        routermac = routes_config['routermac']
+        l3_config = routes_config['l3_config']
 
         checkpoint = "Configure stream with EthernetII, IPv4 and ICMP Echo Request under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -160,7 +158,7 @@ class TestCcIPv4ICMP(FunTestCase):
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
         ipv4_header_obj = Ipv4Header(protocol=Ipv4Header.PROTOCOL_TYPE_ICMP,
-                                     destination_address=l3_config['cc_destination_ip'])
+                                     destination_address=l3_config['cc_destination_ip1'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Update IPv4 header under %s" % self.stream_obj.spirent_handle)
@@ -172,12 +170,28 @@ class TestCcIPv4ICMP(FunTestCase):
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_ICMP_METER_ID
 
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
+
     def run(self):
-        checkpoint = "Clear FPG stats on all DUT ports"
-        for port in dut_config['ports']:
-            clear_stats = network_controller_obj.clear_port_stats(port_num=port)
-            fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
-        fun_test.add_checkpoint(checkpoint)
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        dut_port1 = dut_config['ports'][0]
+
+        # TODO: Need to figure out better approach to determine if dut port is FPG or HNU
+        checkpoint = "Clear FPG port stats on DUT"
+        for port_num in dut_config['ports']:
+            shape = 0
+            if port_num == 1 or port_num == 2:
+                shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
+            result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+            fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
 
         checkpoint = "Get PSW and Parser NU stats before traffic"
         psw_stats = network_controller_obj.peek_psw_global_stats()
@@ -203,44 +217,8 @@ class TestCcIPv4ICMP(FunTestCase):
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
 
-        '''
-        checkpoint = "Ensure Spirent stats fetched"
-        tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
-                                                                          spirent_handle,
-                                                                          subscribe_handle=subscribed_results
-                                                                          ['tx_subscribe'])
-        rx_results = template_obj.stc_manager.get_rx_stream_block_results(stream_block_handle=self.stream_obj.
-                                                                          spirent_handle,
-                                                                          subscribe_handle=subscribed_results
-                                                                          ['rx_subscribe'])
-        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
-                                                                                subscribe_handle=subscribed_results
-                                                                                ['analyzer_subscribe'])
-        rx_port2_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port2,
-                                                                                 subscribe_handle=subscribed_results
-                                                                                 ['analyzer_subscribe'])
-        tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=port1,
-                                                                              subscribe_handle=subscribed_results
-                                                                              ['generator_subscribe'])
-        fun_test.simple_assert(rx_port_results and tx_port_results and rx_port2_results, checkpoint)
-
-        fun_test.log("Tx Spirent Stats: %s" % tx_results)
-        fun_test.log("Rx Spirent Stats: %s" % rx_results)
-        fun_test.log("Tx Port Stats: %s" % tx_port_results)
-        fun_test.log("Rx Port Stats: %s" % rx_port_results)
-        fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
-        '''
-
-        dut_tx_port_stats = None
-        dut_rx_port_stats = None
-        vp_stats = None
-        erp_stats = None
-        wro_stats = None
-        meter_stats = None
-        dut_port1 = dut_config['ports'][0]
-        dut_port2 = dut_config['ports'][2]
         checkpoint = "Fetch PSW and Parser DUT stats after traffic"
         psw_stats = network_controller_obj.peek_psw_global_stats()
         parser_stats = network_controller_obj.peek_parser_stats()
@@ -250,10 +228,8 @@ class TestCcIPv4ICMP(FunTestCase):
 
         checkpoint = "Get FPG port stats for all ports"
         dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_port1)
-        dut_tx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_port2)
-        fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
+        fun_test.simple_assert(dut_rx_port_stats, checkpoint)
 
-        fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
         fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
 
         checkpoint = "Fetch VP stats"
@@ -279,67 +255,94 @@ class TestCcIPv4ICMP(FunTestCase):
             fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats))
 
         # validation asserts
-        # Spirent stats validation
         # TODO: Skip spirent validation for now as on real CC we need to figure out how to validate
-        '''
-        checkpoint = "Validate Tx and Rx on spirent"
-        fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
-                                                              int(rx_port_results['TotalFrameCount'])))
-        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
-                             checkpoint)
-
-        checkpoint = "Ensure %s does not received any frames" % port2
-        fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
-        fun_test.test_assert_expected(expected=0, actual=int(rx_port2_results['TotalFrameCount']),
-                                      message=checkpoint)
-
-        checkpoint = "Ensure no errors are seen on spirent"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
-        fun_test.test_assert(expression=result['result'], message=checkpoint)
-        '''
-
         # DUT stats validation
-        checkpoint = "Validate Tx and Rx on DUT"
-        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                     stat_type=FRAMES_RECEIVED_OK, tx=False)
-        frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
-                                                        stat_type=FRAMES_TRANSMITTED_OK)
-        fun_test.log("Frames received on FPG%d: %s and Frames transmitted on FPG%d: %s" % (
-            dut_port1, str(frames_received), dut_port2, str(frames_transmitted)))
-
-        checkpoint = "Validate meter stats ensure frames_received in DUT == (green pkts + yellow pkts + " \
-                     "red_pkts)"
+        checkpoint = "Validate meter stats ensure frames_received on FPG%d == (green pkts + yellow pkts + " \
+                     "red_pkts)" % dut_port1
         meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
         green_pkts = int(meter_stats_diff['green']['pkts'])
         yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
         red_pkts = int(meter_stats_diff['red']['pkts'])
         fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
-
-        fun_test.test_assert_expected(expected=frames_received,
-                                      actual=(green_pkts + yellow_pkts + red_pkts),
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats, stat_type=FRAMES_RECEIVED_OK,
+                                                     tx=False)
+        fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts + red_pkts),
                                       message=checkpoint)
-        total_packets_punted_to_cc = green_pkts + yellow_pkts
+        total_packets_punted_cc = green_pkts + yellow_pkts
+        fun_test.log("Total Packets punted to CC (green + yellow): %d" % total_packets_punted_cc)
+        fun_test.test_assert(expression=MIN_RX_PORT_COUNT <= total_packets_punted_cc <= MAX_RX_PORT_COUNT,
+                             message="Ensure total packets metered to CC is within a "
+                                     "expected min-max range i.e MIN: %d MAX: %d and packets metered "
+                                     "(green + yellow): %d" % (MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT,
+                                                               total_packets_punted_cc))
 
-        # Since on F1 CC FPG won't be there we don't need to validate it
         # VP stats validation
+        # To avoid false failure due to stray traffic in system change assert like below
         checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
         vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
-                                       stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT])
-        # fun_test.test_assert_expected(expected=frames_received,
-        #                               actual=vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT],
-        #                               message=checkpoint)
-        # To avoid false failure due to stray traffic in system change assert like below
-        fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]) >= total_packets_punted_to_cc,
+                                       stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
+                                                   VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+        fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]) >= total_packets_punted_cc,
                              message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                 total_packets_punted_to_cc, vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]))
+                                 total_packets_punted_cc, vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]))
         checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
-        # fun_test.test_assert_expected(expected=frames_received,
-        #                              actual=vp_stats_diff[VP_PACKETS_CC_OUT],
-        #                              message=checkpoint)
-        # To avoid false failure due to stray traffic in system change assert like below
-        fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CC_OUT]) >= total_packets_punted_to_cc,
+        fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CC_OUT]) >= total_packets_punted_cc,
                              message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
-                                 total_packets_punted_to_cc, vp_stats_diff[VP_PACKETS_CC_OUT]))
+                                 total_packets_punted_cc, vp_stats_diff[VP_PACKETS_CC_OUT]))
+        checkpoint = "Ensure VP total packets IN == VP total packets OUT"
+        fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
+                                      actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
+                                      message=checkpoint)
+
+        # ERP stats validation
+        # To avoid false failure due to stray traffic in system change assert like below
+        checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
+        erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats,
+                                        stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED,
+                                                    ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT,
+                                                    ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
+                                                    ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
+                                                    ERP_COUNT_FOR_EFP_FCP_VLD])
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]))
+        checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]))
+        checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
+        fun_test.test_assert(
+            int(erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]) >= total_packets_punted_cc,
+            message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]))
+        checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]))
+        checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]))
+
+        # WRO stats validation
+        # To avoid false failure due to stray traffic in system change assert like below
+        checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
+        wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_IN_PKTS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_IN_PKTS]))
+        checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_IN_NFCP_PKTS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_IN_NFCP_PKTS]))
+        checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_OUT_WUS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_OUT_WUS]))
+        checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_WU_COUNT_VPP]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_WU_COUNT_VPP]))
 
     def cleanup(self):
         fun_test.log("In test case cleanup")
@@ -381,6 +384,7 @@ class TestCcIPv4Ospfv2Hello(TestCcIPv4ICMP):
                               """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         checkpoint = "Create a stream with EthernetII and IPv4 and OSPFv2 Hello headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
@@ -410,6 +414,13 @@ class TestCcIPv4Ospfv2Hello(TestCcIPv4ICMP):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_OSPF_1_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIPv4Ospfv2LinkStateUpdate(TestCcIPv4ICMP):
@@ -444,6 +455,7 @@ class TestCcIPv4Ospfv2LinkStateUpdate(TestCcIPv4ICMP):
                                   port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         checkpoint = "Create a stream with EthernetII and IPv4 and OSPFv2 Link State Update headers under port %s" % \
                      port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -472,6 +484,13 @@ class TestCcIPv4Ospfv2LinkStateUpdate(TestCcIPv4ICMP):
                                                                 header_obj=ospf_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
         self.meter_id = IPV4_COPP_OSPF_2_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIpv4Pim(TestCcIPv4ICMP):
@@ -506,6 +525,7 @@ class TestCcIpv4Pim(TestCcIPv4ICMP):
                                   port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         checkpoint = "Create a stream with EthernetII and IPv4 and PIMv4Hello headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
@@ -535,6 +555,13 @@ class TestCcIpv4Pim(TestCcIPv4ICMP):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_PIM_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIpv4BGP(TestCcIPv4ICMP):
@@ -567,8 +594,10 @@ class TestCcIpv4BGP(TestCcIPv4ICMP):
                               """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
-        l2_config = spirent_config['l2_config']
-        l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        routermac = routes_config['routermac']
+        l3_config = routes_config['l3_config']
 
         checkpoint = "Create a stream with EthernetII and IPv4 and TCP headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -579,15 +608,14 @@ class TestCcIpv4BGP(TestCcIPv4ICMP):
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
-        ether_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'],
-                                    ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+        ether_obj = Ethernet2Header(destination_mac=routermac, ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
         ipv4_header_obj = Ipv4Header(protocol=Ipv4Header.PROTOCOL_TYPE_TCP,
-                                     destination_address=l3_config['cc_destination_ip'])
+                                     destination_address=l3_config['cc_destination_ip1'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Update IPv4 header under %s" % self.stream_obj.spirent_handle)
@@ -598,6 +626,13 @@ class TestCcIpv4BGP(TestCcIPv4ICMP):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_BGP_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIpv4Igmp(TestCcIPv4ICMP):
@@ -630,8 +665,10 @@ class TestCcIpv4Igmp(TestCcIPv4ICMP):
                               """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
-        l2_config = spirent_config['l2_config']
-        l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        routermac = routes_config['routermac']
+        l3_config = routes_config['l3_config']
 
         checkpoint = "Create a stream with EthernetII and IPv4 and IGMP headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -642,7 +679,7 @@ class TestCcIpv4Igmp(TestCcIPv4ICMP):
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
-        ether_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'],
+        ether_obj = Ethernet2Header(destination_mac=routermac,
                                     ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
@@ -650,7 +687,7 @@ class TestCcIpv4Igmp(TestCcIPv4ICMP):
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
         ipv4_header_obj = Ipv4Header(protocol=Ipv4Header.PROTOCOL_TYPE_IGMP,
-                                     destination_address=l3_config['cc_destination_ip'])
+                                     destination_address=l3_config['cc_destination_ip1'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.simple_assert(result, "Update IPv4 header under %s" % self.stream_obj.spirent_handle)
@@ -661,6 +698,13 @@ class TestCcIpv4Igmp(TestCcIPv4ICMP):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_IGMP_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIPv4ForUs(TestCcIPv4ICMP):
@@ -694,8 +738,10 @@ class TestCcIPv4ForUs(TestCcIPv4ICMP):
                                   port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
-        l2_config = spirent_config['l2_config']
-        l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        routermac = routes_config['routermac']
+        l3_config = routes_config['l3_config']
 
         checkpoint = "Create a stream with EthernetII and IPv4 headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -706,19 +752,25 @@ class TestCcIPv4ForUs(TestCcIPv4ICMP):
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
-        ether_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'],
-                                    ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+        ether_obj = Ethernet2Header(destination_mac=routermac, ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip'])
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'])
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_FOR_US_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIPv4PTP1(TestCcIPv4ICMP):
@@ -752,8 +804,10 @@ class TestCcIPv4PTP1(TestCcIPv4ICMP):
                               """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
-        l2_config = spirent_config['l2_config']
-        l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        routermac = routes_config['routermac']
+        l3_config = routes_config['l3_config']
 
         checkpoint = "Create a stream with EthernetII and IPv4 headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -764,14 +818,13 @@ class TestCcIPv4PTP1(TestCcIPv4ICMP):
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
-        ether_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'],
-                                    ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
+        ether_obj = Ethernet2Header(destination_mac=routermac, ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip'],
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'],
                                      protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
@@ -788,6 +841,13 @@ class TestCcIPv4PTP1(TestCcIPv4ICMP):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_PTP_1_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIPv4PTP2(TestCcIPv4ICMP):
@@ -821,8 +881,10 @@ class TestCcIPv4PTP2(TestCcIPv4ICMP):
                               """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
-        l2_config = spirent_config['l2_config']
-        l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        routermac = routes_config['routermac']
+        l3_config = routes_config['l3_config']
 
         checkpoint = "Create a stream with EthernetII and IPv4 headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -833,14 +895,14 @@ class TestCcIPv4PTP2(TestCcIPv4ICMP):
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
-        ether_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'],
+        ether_obj = Ethernet2Header(destination_mac=routermac,
                                     ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ether_obj, update=True)
         fun_test.simple_assert(result, "Configure EthernetII header under %s" % self.stream_obj.spirent_handle)
 
-        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip'],
+        ipv4_header_obj = Ipv4Header(destination_address=l3_config['cc_destination_ip1'],
                                      protocol=Ipv4Header.PROTOCOL_TYPE_UDP)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=ipv4_header_obj, update=True)
@@ -857,6 +919,13 @@ class TestCcIPv4PTP2(TestCcIPv4ICMP):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_PTP_2_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIPv4PTP3(TestCcIPv4ICMP):
@@ -889,6 +958,7 @@ class TestCcIPv4PTP3(TestCcIPv4ICMP):
                               """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         checkpoint = "Create a stream with EthernetII and IPv4 and UDP (PTP Sync) headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
@@ -924,6 +994,13 @@ class TestCcIPv4PTP3(TestCcIPv4ICMP):
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_PTP_3_METER_ID
 
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
+
 
 class TestCcIPv4PTP4(TestCcIPv4ICMP):
     stream_obj = None
@@ -956,6 +1033,7 @@ class TestCcIPv4PTP4(TestCcIPv4ICMP):
                               """ % (port1, FRAME_LENGTH_MODE, FRAME_SIZE, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         checkpoint = "Create a stream with EthernetII and IPv4 and UDP (PTP Delay Request) headers under port %s" % \
                      port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -992,6 +1070,13 @@ class TestCcIPv4PTP4(TestCcIPv4ICMP):
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_PTP_4_METER_ID
 
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
+
 
 class TestCcIpv4Dhcp(TestCcIPv4ICMP):
     stream_obj = None
@@ -1025,6 +1110,7 @@ class TestCcIpv4Dhcp(TestCcIPv4ICMP):
                                   port1, FRAME_LENGTH_MODE, self.frame_size, LOAD, LOAD_UNIT, port1, TRAFFIC_DURATION))
 
     def setup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         checkpoint = "Create a stream with EthernetII and IPv4 and DHCP header option under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=self.frame_size,
@@ -1059,6 +1145,13 @@ class TestCcIpv4Dhcp(TestCcIPv4ICMP):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_DHCP_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIPv4MTUCase(TestCcIPv4ICMP):
@@ -1096,8 +1189,11 @@ class TestCcIPv4MTUCase(TestCcIPv4ICMP):
                                          port1, TRAFFIC_DURATION))
 
     def setup(self):
-        l2_config = spirent_config['l2_config']
-        l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        routermac = routes_config['routermac']
+        l3_config = routes_config['l3_config']
+
         checkpoint = "Create a stream with EthernetII and IPv4 with Control Flags Reserved = 1 Error " \
                      "under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -1108,7 +1204,7 @@ class TestCcIPv4MTUCase(TestCcIPv4ICMP):
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
-        ether_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'],
+        ether_obj = Ethernet2Header(destination_mac=routermac,
                                     ether_type=Ethernet2Header.INTERNET_IP_ETHERTYPE)
 
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
@@ -1132,6 +1228,13 @@ class TestCcIPv4MTUCase(TestCcIPv4ICMP):
                 fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port, self.mtu))
             fun_test.add_checkpoint(checkpoint)
         self.validate_meter_stats = False
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcMtuCaseForUs(TestCcIPv4ICMP):
@@ -1169,8 +1272,11 @@ class TestCcMtuCaseForUs(TestCcIPv4ICMP):
                                      port1, TRAFFIC_DURATION))
 
     def setup(self):
-        l2_config = spirent_config['l2_config']
-        l3_config = spirent_config['l3_config']['ipv4']
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        routermac = routes_config['routermac']
+        l3_config = routes_config['l3_config']
+
         checkpoint = "Create a stream with EthernetII and IPv4 with Control Flags Reserved = 1 Error " \
                      "under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -1205,6 +1311,13 @@ class TestCcMtuCaseForUs(TestCcIPv4ICMP):
                 fun_test.simple_assert(mtu_changed, "Change MTU on DUT port %d to %d" % (port, self.mtu))
             fun_test.add_checkpoint(checkpoint)
         self.validate_meter_stats = False
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcIpv4AllTogether(FunTestCase):
@@ -1247,197 +1360,180 @@ class TestCcIpv4AllTogether(FunTestCase):
 
     def run(self):
         global MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT
-        vp_stats_before = None
-        wro_stats_before = None
-        erp_stats_before = None
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
+        dut_port1 = dut_config['ports'][0]
 
-        if dut_config['enable_dpcsh']:
-            checkpoint = "Clear FPG stats on all DUT ports"
-            for port in dut_config['ports']:
-                clear_stats = network_controller_obj.clear_port_stats(port_num=port)
-                fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
-            fun_test.add_checkpoint(checkpoint)
+        # TODO: Need to figure out better approach to determine if dut port is FPG or HNU
+        checkpoint = "Clear FPG port stats on DUT"
+        for port_num in dut_config['ports']:
+            shape = 0
+            if port_num == 1 or port_num == 2:
+                shape = 1
+            if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+                shape = 0
+            result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
+            fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
+        fun_test.add_checkpoint(checkpoint=checkpoint)
 
-            checkpoint = "Get PSW and Parser NU stats before traffic"
-            psw_stats = network_controller_obj.peek_psw_global_stats()
-            parser_stats = network_controller_obj.peek_parser_stats()
-            fun_test.add_checkpoint(checkpoint)
+        checkpoint = "Get PSW and Parser NU stats before traffic"
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+        parser_stats = network_controller_obj.peek_parser_stats()
+        fun_test.add_checkpoint(checkpoint)
 
-            checkpoint = "Fetch VP stats"
-            vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
-            fun_test.simple_assert(vp_stats_before, checkpoint)
+        checkpoint = "Fetch VP stats"
+        vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+        fun_test.simple_assert(vp_stats_before, checkpoint)
 
-            checkpoint = "Fetch ERP NU stats"
-            erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
-            fun_test.simple_assert(erp_stats_before, checkpoint)
+        checkpoint = "Fetch ERP NU stats"
+        erp_stats_before = get_erp_stats_values(network_controller_obj=network_controller_obj)
+        fun_test.simple_assert(erp_stats_before, checkpoint)
 
-            checkpoint = "Fetch WRO NU stats"
-            wro_stats_before = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
-            fun_test.simple_assert(wro_stats_before, checkpoint)
+        checkpoint = "Fetch WRO NU stats"
+        wro_stats_before = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
+        fun_test.simple_assert(wro_stats_before, checkpoint)
 
-            fun_test.log("PSW Stats: %s \n" % psw_stats)
-            fun_test.log("Parser stats: %s \n" % parser_stats)
-            fun_test.log("PSW Stats: %s \n" % psw_stats)
-            fun_test.log("Parser stats: %s \n" % parser_stats)
-            fun_test.log("VP stats: %s \n" % vp_stats_before)
-            fun_test.log("ERP stats: %s \n" % erp_stats_before)
-            fun_test.log("WRO stats: %s \n" % wro_stats_before)
+        fun_test.log("PSW Stats: %s \n" % psw_stats)
+        fun_test.log("Parser stats: %s \n" % parser_stats)
+        fun_test.log("VP stats: %s \n" % vp_stats_before)
+        fun_test.log("ERP stats: %s \n" % erp_stats_before)
+        fun_test.log("WRO stats: %s \n" % wro_stats_before)
 
         checkpoint = "Start traffic Traffic Duration: %d" % TRAFFIC_DURATION
         result = template_obj.enable_generator_configs([generator_handle])
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=DURATION_SECONDS)
-        '''
-        checkpoint = "Ensure Spirent stats fetched"
-        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port3,
-                                                                                subscribe_handle=subscribed_results
-                                                                                ['analyzer_subscribe'])
-        rx_port2_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=port2,
-                                                                                 subscribe_handle=subscribed_results
-                                                                                 ['analyzer_subscribe'])
-        tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=port1,
-                                                                              subscribe_handle=subscribed_results
-                                                                              ['generator_subscribe'])
-        fun_test.simple_assert(rx_port_results and tx_port_results and rx_port2_results, checkpoint)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 10)
 
-        fun_test.log("Tx Port Stats: %s" % tx_port_results)
-        fun_test.log("Rx Port Stats: %s" % rx_port_results)
-        fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
-        '''
-        dut_tx_port_stats = None
-        dut_rx_port_stats = None
-        vp_stats = None
-        erp_stats = None
-        wro_stats = None
-        if dut_config['enable_dpcsh']:
-            checkpoint = "Fetch PSW and Parser DUT stats after traffic"
-            psw_stats = network_controller_obj.peek_psw_global_stats()
-            parser_stats = network_controller_obj.peek_parser_stats()
-            fun_test.log("PSW Stats: %s \n" % psw_stats)
-            fun_test.log("Parser stats: %s \n" % parser_stats)
-            fun_test.add_checkpoint(checkpoint)
+        checkpoint = "Fetch PSW and Parser DUT stats after traffic"
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+        parser_stats = network_controller_obj.peek_parser_stats()
+        fun_test.log("PSW Stats: %s \n" % psw_stats)
+        fun_test.log("Parser stats: %s \n" % parser_stats)
+        fun_test.add_checkpoint(checkpoint)
 
-            checkpoint = "Get FPG port stats for all ports"
-            dut_tx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
-            dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][2])
-            fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
+        checkpoint = "Get FPG port stats for all ports"
+        dut_tx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
+        dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][2])
+        fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
 
-            fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
-            fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
+        fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
+        fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
 
-            checkpoint = "Fetch VP stats"
-            vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
-            fun_test.simple_assert(vp_stats, checkpoint)
+        checkpoint = "Fetch VP stats"
+        vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
+        fun_test.simple_assert(vp_stats, checkpoint)
 
-            checkpoint = "Fetch ERP NU stats"
-            erp_stats = get_erp_stats_values(network_controller_obj=network_controller_obj)
-            fun_test.simple_assert(erp_stats, checkpoint)
+        checkpoint = "Fetch ERP NU stats"
+        erp_stats = get_erp_stats_values(network_controller_obj=network_controller_obj)
+        fun_test.simple_assert(erp_stats, checkpoint)
 
-            checkpoint = "Fetch WRO NU stats"
-            wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
-            fun_test.simple_assert(wro_stats, checkpoint)
+        checkpoint = "Fetch WRO NU stats"
+        wro_stats = get_wro_global_stats_values(network_controller_obj=network_controller_obj)
+        fun_test.simple_assert(wro_stats, checkpoint)
 
-            fun_test.log("VP stats: %s" % vp_stats)
-            fun_test.log("ERP stats: %s" % erp_stats)
-            fun_test.log("WRO stats: %s" % wro_stats)
+        fun_test.log("VP stats: %s" % vp_stats)
+        fun_test.log("ERP stats: %s" % erp_stats)
+        fun_test.log("WRO stats: %s" % wro_stats)
 
-        # validation asserts
-        # Spirent stats validation
         MIN_RX_PORT_COUNT = 200 * len(streams_group)
         MAX_RX_PORT_COUNT = 500 * len(streams_group)
-        '''
-        checkpoint = "Validate Tx and Rx on spirent. Ensure Rx Port counter should be in a range of %d - %d" % (
-            MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT)
-        fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
-                                                              int(rx_port_results['TotalFrameCount'])))
-        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
-                             checkpoint)
-        checkpoint = "Ensure %s does not received any frames" % port2
-        fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
-        fun_test.test_assert_expected(expected=0, actual=int(rx_port2_results['TotalFrameCount']),
+        # TODO: We need to figure out how to validate actual CC so for now we skipped spirent validation
+        # DUT stats validation
+        checkpoint = "Get mac stats for FPG%d received port" % dut_port1
+        hnu = False
+        if dut_port1 == 1:
+            hnu = True
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            hnu = False
+        dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_port1, hnu=hnu)
+        fun_test.simple_assert(dut_rx_port_stats, checkpoint)
+
+        fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
+
+        checkpoint = "Validate meter stats ensure frames_received on FPG%d == (green pkts + yellow pkts + " \
+                     "red_pkts)" % dut_port1
+        meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
+        green_pkts = int(meter_stats_diff['green']['pkts'])
+        yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
+        red_pkts = int(meter_stats_diff['red']['pkts'])
+        fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
+        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats, stat_type=FRAMES_RECEIVED_OK)
+        fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts + red_pkts),
+                                      message=checkpoint)
+        total_packets_punted_cc = green_pkts + yellow_pkts
+        fun_test.log("Total Packets punted to CC: %d" % total_packets_punted_cc)
+        fun_test.test_assert(expression=MIN_RX_PORT_COUNT >= total_packets_punted_cc <= MAX_RX_PORT_COUNT,
+                             message="Ensure total packets metered to CC is within a "
+                                     "expected min-max range i.e MIN: %d MAX: %d and packets metered "
+                                     "(green + yellow): %d" % (MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT,
+                                                               total_packets_punted_cc))
+        # VP stats validation
+        # To avoid false failure due to stray traffic in system change assert like below
+        checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
+        vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
+                                       stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
+                                                   VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+        fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]))
+        checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
+        fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CC_OUT]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, vp_stats_diff[VP_PACKETS_CC_OUT]))
+        checkpoint = "Ensure VP total packets IN == VP total packets OUT"
+        fun_test.test_assert_expected(expected=vp_stats_diff[VP_PACKETS_TOTAL_IN],
+                                      actual=vp_stats_diff[VP_PACKETS_TOTAL_OUT],
                                       message=checkpoint)
 
-        checkpoint = "Ensure no errors are seen on spirent"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
-        fun_test.test_assert(expression=result['result'], message=checkpoint)
-        '''
-        # DUT stats validation
-        if dut_config['enable_dpcsh']:
-            checkpoint = "Validate Tx and Rx on DUT"
-            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_stats,
-                                                            stat_type=FRAMES_RECEIVED_OK)
-            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
-                                                         stat_type=FRAMES_TRANSMITTED_OK)
-            fun_test.log(
-                "DUT Tx FrameCount: %s DUT Rx FrameCount: %s" % (str(frames_transmitted), str(frames_received)))
-            fun_test.test_assert((MIN_RX_PORT_COUNT <= frames_received <= MAX_RX_PORT_COUNT),
-                                 checkpoint)
-            # VP stats validation
-            checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
-            vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats)
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
+        # ERP stats validation
+        # To avoid false failure due to stray traffic in system change assert like below
+        checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
+        erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats,
+                                        stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED,
+                                                    ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT,
+                                                    ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
+                                                    ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
+                                                    ERP_COUNT_FOR_EFP_FCP_VLD])
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]))
+        checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]))
+        checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
+        fun_test.test_assert(
+            int(erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]) >= total_packets_punted_cc,
+            message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]))
+        checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]))
+        checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
+        fun_test.test_assert(int(erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]))
 
-            checkpoint = "From VP stats, Ensure CC OUT counters are equal to spirent Tx Counter"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(vp_stats_diff[VP_PACKETS_CC_OUT]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            checkpoint = "Ensure VP total packets IN == VP total packets OUT"
-            fun_test.test_assert_expected(expected=int(vp_stats_diff[VP_PACKETS_TOTAL_IN]),
-                                          actual=int(vp_stats_diff[VP_PACKETS_TOTAL_OUT]),
-                                          message=checkpoint)
-            # ERP stats validation
-            checkpoint = "From ERP stats, Ensure count for EFP to WQM decrement pulse equal to spirent Tx"
-            erp_stats_diff = get_diff_stats(old_stats=erp_stats_before, new_stats=erp_stats)
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            checkpoint = "From ERP stats, Ensure count for EFP to WRO descriptors send equal to spirent Tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(erp_stats_diff[ERP_COUNT_FOR_EFP_WRO_DESCRIPTORS_SENT]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            checkpoint = "From ERP stats, Ensure count for ERP0 to EFP error interface flits equal to spirent Tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(
-                    erp_stats_diff[ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            checkpoint = "From ERP stats, Ensure count for all non FCP packets received equal to spirent Tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(erp_stats_diff[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            checkpoint = "From ERP stats, Ensure count for EFP to FCB vld equal to spirent Tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(erp_stats_diff[ERP_COUNT_FOR_EFP_FCP_VLD]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            # WRO stats validation
-            wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
-            checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(wro_stats_diff[WRO_IN_PKTS]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(wro_stats_diff[WRO_IN_NFCP_PKTS]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(wro_stats_diff[WRO_OUT_WUS]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
-
-            checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
-            fun_test.test_assert(
-                (MIN_RX_PORT_COUNT <= int(wro_stats_diff[WRO_WU_COUNT_VPP]) <= MAX_RX_PORT_COUNT),
-                checkpoint)
+        # WRO stats validation
+        # To avoid false failure due to stray traffic in system change assert like below
+        checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
+        wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_IN_PKTS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_IN_PKTS]))
+        checkpoint = "From WRO stats, Ensure WRO In NFCP packets equal to spirent Tx"
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_IN_NFCP_PKTS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_IN_NFCP_PKTS]))
+        checkpoint = "From WRO stats, Ensure WRO out WUs equal to spirent tx"
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_OUT_WUS]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_OUT_WUS]))
+        checkpoint = "From WRO stats, Ensure WRO WU CNT VPP packets equal to spirent tx"
+        fun_test.test_assert(int(wro_stats_diff['global'][WRO_WU_COUNT_VPP]) >= total_packets_punted_cc,
+                             message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
+                                 total_packets_punted_cc, wro_stats_diff['global'][WRO_WU_COUNT_VPP]))
 
     def cleanup(self):
         pass
@@ -1461,11 +1557,11 @@ if __name__ == '__main__':
     ts.add_test_case(TestCcIPv4PTP4())
 
     ts.add_test_case(TestCcIpv4Dhcp())
-
+    # TODO: Need to test this manually
     # TODO: Failing these cases on Virtual chassis hence disabled them
     # ts.add_test_case(TestCcIPv4MTUCase())
     # ts.add_test_case(TestCcMtuCaseForUs())
-    
+    # TODO: Need to test this manually
     ts.add_test_case(TestCcIpv4AllTogether())
 
     ts.run()
