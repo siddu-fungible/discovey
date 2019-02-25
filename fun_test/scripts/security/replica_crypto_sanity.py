@@ -136,7 +136,6 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
         key256_count = 0
         key384_count = 0
         key512_count = 0
-        self.got_active_plex = None
         self.blt_capacity = 0
         self.blt_delete_count = 0
         self.blt_creation_fail = None
@@ -540,16 +539,10 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
                                             active_plex = int(evalue[0])
                                             idle_plex = int(evalue[1])
                                             if actual == active_plex:
-                                                if self.got_active_plex:
-                                                    fun_test.simple_assert(False,
-                                                                           "Looks like BLT {} is also active".
-                                                                           format(x))
-                                                else:
-                                                    self.got_active_plex = True
-                                                    fun_test.test_assert_expected(active_plex, actual,
-                                                                                  "BLT {} is active, final {} for "
-                                                                                  "mode {} & combo {}".
-                                                                                  format(x, ekey, mode, combo))
+                                                fun_test.test_assert_expected(active_plex, actual,
+                                                                              "BLT {} is active, final {} for "
+                                                                              "mode {} & combo {}".
+                                                                              format(x, ekey, mode, combo))
                                             elif actual == idle_plex:
                                                 fun_test.test_assert_expected(idle_plex, actual,
                                                                               "BLT {} is idle, final {} for mode {} "
