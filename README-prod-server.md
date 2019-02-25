@@ -44,3 +44,31 @@ qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$ sudo sy
 Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Starting PostgreSQL RDBMS...
 Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
 ~~~~
+
+### iptables
+~~~~
+qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test$  sudo iptables -i enp3s0f0 -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
+~~~~
+
+
+## Starting the web-server
+~~~~
+cd /project/users/QA/regression/Integration/fun_test
+export PYTHONPATH=`pwd`
+export PRODUCTION_MODE=1
+python web/manage.py migrate --database=default
+cd web/angular/qadashboard/
+ng build --prod  --output-hashing none
+python web/start_production_server.py &> server.out  &
+~~~~
+
+## Starting/Re-starting the scheduler
+- Ensure the web-server was started successfully
+~~~~
+cd /project/users/QA/regression/Integration/fun_test
+export PYTHONPATH=`pwd`
+export PRODUCTION_MODE=1
+~~~~
+- Ensure that ps -ef | grep scheduler_main does not show any entry
+
+
