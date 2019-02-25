@@ -1135,7 +1135,6 @@ class Linux(object, ToDictMixin):
         expects[0] = '[pP]assword:'
         expects[1] = self.prompt_terminator + r'$'
         expects[2] = '\(yes/no\)?'
-        expects[3] = 'lost connection\n' + self.prompt_terminator + r'$'
 
         max_retry_count = 10
         max_loop_count = 10
@@ -1155,10 +1154,6 @@ class Linux(object, ToDictMixin):
                             fun_test.debug("Sending: %s" % "yes")
                             handle.sendline("yes")
                             current_loop_count += 1
-                        if i == 3:
-                            fun_test.debug("Connection timed out")
-                            transfer_complete = False
-                            break
                         if i == 1:
                             transfer_complete = True
                             break
@@ -1169,6 +1164,9 @@ class Linux(object, ToDictMixin):
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
+
+        if self.exit_status():
+            transfer_complete = False
 
         return transfer_complete
 
