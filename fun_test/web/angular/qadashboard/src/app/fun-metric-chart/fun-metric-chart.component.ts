@@ -56,6 +56,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
   expectedValues: any = [];
   showAllExpectedValues: boolean = false;
+  y1AxisPlotLines: any = [];
 
   public formatter: Function;
   public tooltip: Function;
@@ -491,7 +492,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   changeExpectedValueShow(output): void {
     output.show = !output.show;
     this.expectedValues = [...this.expectedValues];
-
+    this.y1AxisPlotLines = [];
+    for (let dataset of this.expectedValues) {
+      if (dataset.show) {
+        let line = {};
+        line["text"] = dataset.name;
+        line["value"] = dataset.value;
+        this.y1AxisPlotLines.push(line);
+      }
+    }
   }
 
   //select or unselect all checkbox
@@ -501,6 +510,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       output.show = this.showAllExpectedValues;
     }
     this.expectedValues = [...this.expectedValues];
+    this.y1AxisPlotLines = [];
+    for (let dataset of this.expectedValues) {
+      if (dataset.show) {
+        let line = {};
+        line["text"] = dataset.name;
+        line["value"] = dataset.value;
+        this.y1AxisPlotLines.push(line);
+      }
+    }
   }
 
   //fetch the data from backend
