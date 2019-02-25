@@ -728,7 +728,7 @@ if __name__ == "__main_crypto_baseline__":
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_crypto_charts__":
     internal_name_map = {"AES_GCM": "AES_GCM Encryption Raw Throughput",
                          "AES_XTS": "AES_XTS Encryption Raw Throughput",
                          "SHA_256": "SHA_256 Raw Throughput",
@@ -791,3 +791,19 @@ if __name__ == "__main__":
                                    milestone_name="Tape-out")
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
+
+if __name__ == "__main_nw_delete__":
+    model = NuTransitPerformance
+    entries = model.objects.all()
+    entries.delete()
+    print "deleted nu transit model"
+
+if __name__ == "__main__":
+    model = MetricChart
+    chart_names = ["Networking", ]
+    entries = model.objects.all()
+    for entry in entries:
+        
+    print "removed milestones for networking"
+
+
