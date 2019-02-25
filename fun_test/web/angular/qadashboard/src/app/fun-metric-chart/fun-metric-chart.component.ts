@@ -503,6 +503,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.y1AxisPlotLines.push(line);
       }
     }
+    if (this.expectedValues.length === this.y1AxisPlotLines.length) {
+      this.showAllExpectedValues = true;
+    } else {
+      this.showAllExpectedValues = false;
+    }
   }
 
   //select or unselect all checkbox

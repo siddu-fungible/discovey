@@ -90,10 +90,9 @@
       <!--</span>-->
       <br>
       <div>
-        <input
-          type="checkbox"
-          [checked]="showAllExpectedValues"
-          (change)="changeAllExpectedValues()"/>&nbsp;<b>Expected values:</b>
+        <b>Expected values:</b>&nbsp;
+        <a *ngIf="!showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
+        <a *ngIf="showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>
         <table>
           <tr *ngFor="let output of expectedValues">
             <td>
