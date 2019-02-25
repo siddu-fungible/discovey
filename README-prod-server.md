@@ -1,4 +1,6 @@
 
+# Setup needed for the main regression server
+
 ### Account settings
 sudo adduser qa-admin sudo
 
