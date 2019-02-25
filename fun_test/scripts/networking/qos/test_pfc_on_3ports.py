@@ -3,7 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, Ethernet2Header, Ipv4Header, Capture, GeneratorConfig
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import NuConfigManager
 from lib.utilities.pcap_parser import PcapParser
 
 num_ports = 3
@@ -40,7 +40,9 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, port_3, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
             dut_port_1, dut_port_3, shape, hnu, dut_port_list, port_1_dscp_stream_1, \
-            port_3_dscp_stream_1, port_2_pfc_stream, port_obj_list, flow_direction
+            port_3_dscp_stream_1, port_2_pfc_stream, port_obj_list, flow_direction, nu_config_obj
+
+        nu_config_obj = NuConfigManager()
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
@@ -61,6 +63,9 @@ class SpirentSetup(FunTestScript):
 
         good_stream_load = 250
         pfc_load = 30
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            good_stream_load = 2500
+            pfc_load = 3000
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_3ports", chassis_type=nu_config_obj.CHASSIS_TYPE,
                                                       spirent_config=spirent_config)

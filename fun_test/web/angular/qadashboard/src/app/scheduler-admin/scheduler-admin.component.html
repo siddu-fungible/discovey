@@ -1,0 +1,22 @@
+<div class="component">
+  <div class="card">
+    <div class="card-header">
+      Git
+    </div>
+    <div class="card-body">
+      <button class="button btn-primary" (click)="gitPull()">Git pull</button>
+      <br>
+
+      <ng-container *ngIf="gitPullLog">
+        <b>Git pull log:</b>
+        <pre>
+          {{ gitPullLog }}
+        </pre>
+      </ng-container>
+      <b>Logs (last 10):</b>
+      <pre>{{ gitLogs }}</pre>
+    </div>
+
+
+  </div>
+</div>

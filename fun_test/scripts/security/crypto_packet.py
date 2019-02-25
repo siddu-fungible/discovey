@@ -213,6 +213,10 @@ class CryptoCore(FunTestCase):
         else:
             nvme_reload = self.host.nvme_restart()
             fun_test.test_assert(nvme_reload, "nvme driver module reloaded")
+            fun_test.sleep("Waiting for NVMe reload to complete", seconds=5)
+            nvme_controller = self.host.command("ls /dev/nvme*")
+            if "cannot" in nvme_controller:
+                fun_test.test_assert(False, "NVMe controller not found")
             lsblk_output = self.host.command("lsblk -o NAME | grep -i nvme0")
             if "nvme0" not in lsblk_output:
                 fun_test.test_assert(False, "NVME device not found.")

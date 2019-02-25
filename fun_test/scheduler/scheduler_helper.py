@@ -284,13 +284,15 @@ def queue_dynamic_suite(dynamic_suite_spec,
                         original_suite_execution_id,
                         email_list=None,
                         environment=None,
-                        test_bed_type=None):
+                        test_bed_type=None,
+                        build_url=None):
     return queue_job2(dynamic_suite_spec=dynamic_suite_spec,
                       suite_type=SuiteType.DYNAMIC,
                       original_suite_execution_id=original_suite_execution_id,
                       email_list=email_list,
                       test_bed_type=test_bed_type,
-                      environment=environment)
+                      environment=environment,
+                      build_url=build_url)
 
 def queue_job2(suite_path=None,
                original_suite_execution_id=None,
@@ -313,7 +315,7 @@ def queue_job2(suite_path=None,
                suite_type=SuiteType.STATIC,
                test_bed_type=None):
     time.sleep(0.1)
-    print "Environment: {}".format(environment)
+    # print "Environment: {}".format(environment)
     if not suite_path:
         if job_spec:
             suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")

@@ -2,8 +2,6 @@ from lib.system.fun_test import *
 from lib.utilities.pcap_parser import PcapParser
 import copy
 
-qos_json_file = fun_test.get_script_parent_directory() + '/qos.json'
-qos_json_output = fun_test.parse_file_to_json(qos_json_file)
 QOS_PROFILE_WRED = "wred"
 QOS_PROFILE_ECN = "ecn"
 q_depth = 'avg_q_integ'
@@ -27,8 +25,17 @@ def get_load_value_from_load_percent(load_percent, max_egress_load):
         fun_test.critical(str(ex))
     return result
 
+def get_accept_range(accept_value, max_egress_val):
+    result = 0
+    try:
+        default_load_calculated = 6.44
+        result = (max_egress_val * accept_value) / (default_load_calculated * 4.0)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
 
-def verify_load_output(actual_value, expected_value, accept_range=0.2, compare=False):
+
+def verify_load_output(actual_value, expected_value, nu_config_obj, max_egress_load, accept_range=0.2, compare=False):
     result = False
     try:
         fun_test.log("Actual load output seen is %s" % actual_value)
@@ -36,6 +43,9 @@ def verify_load_output(actual_value, expected_value, accept_range=0.2, compare=F
             fun_test.log("Expected load output is %s" % expected_value)
         else:
             fun_test.log("Actual load output seen for comparing stream is %s" % expected_value)
+
+        if nu_config_obj.DUT_TYPE != nu_config_obj.DUT_TYPE_PALLADIUM:
+            accept_range = get_accept_range(accept_range, max_egress_load)
         if actual_value < expected_value:
             diff = expected_value - actual_value
         else:
@@ -48,7 +58,7 @@ def verify_load_output(actual_value, expected_value, accept_range=0.2, compare=F
     return result
 
 
-def reset_queue_scheduler_config(network_controller_obj, dut_port, queue_list=[]):
+def reset_queue_scheduler_config(network_controller_obj, qos_json_output, dut_port, queue_list=[]):
     result = False
     try:
         if not queue_list:

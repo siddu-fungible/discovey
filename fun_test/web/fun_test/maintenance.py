@@ -672,7 +672,7 @@ if __name__ == "__main_JPEG_gbps__":
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_rebasing__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
     internal_chart_names_zip = ["Deflate", "Lzma", "Zip"]
@@ -691,3 +691,103 @@ if __name__ == "__main__":
             base_line_date = datetime(year=2019, month=1, day=30, minute=0, hour=0, second=0)
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main_DMA__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    chart_names = ["DMA", "MovingBits"]
+    for entry in entries:
+        if "memcpy" in entry.internal_chart_name or "memset" in entry.internal_chart_name:
+            base_line_date = datetime(year=2019, month=2, day=17, minute=0, hour=0, second=0)
+            if entry.leaf:
+                y1_axis_title = "GBps"
+            else:
+                y1_axis_title = None
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=y1_axis_title)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+        if entry.chart_name in chart_names:
+            base_line_date = datetime(year=2019, month=2, day=17, minute=0, hour=0, second=0)
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+    print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main_crypto_baseline__":
+    entries = MetricChart.objects.all()
+    sbl = SetBaseLine()
+    internal_chart_names = ["Crypto raw throughput", "Crypto api throughput"]
+    for entry in entries:
+        if entry.internal_chart_name in internal_chart_names:
+            base_line_date = datetime(year=2019, month=2, day=18, minute=0, hour=0, second=0)
+            mmt = MileStoneMarkers(metric_id=entry.metric_id, milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+            sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
+    print "Milestone and Baseline Setting Complete"
+
+if __name__ == "__main__":
+    internal_name_map = {"AES_GCM": "AES_GCM Encryption Raw Throughput",
+                         "AES_XTS": "AES_XTS Encryption Raw Throughput",
+                         "SHA_256": "SHA_256 Raw Throughput",
+                         "SHA3_256": "SHA3_256 Raw Throughput"}
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    sbl = SetBaseLine()
+    base_line_date = datetime(year=2019, month=2, day=19, minute=0, hour=0, second=0)
+    model_name = "TeraMarkMultiClusterCryptoPerformance"
+    input_choices = get_possible_values(model_name=model_name)
+    for key, value in input_choices.iteritems():
+        print key, value
+
+    for input_algorithm in input_choices["input_algorithm"]:
+        if input_algorithm:
+            data_sets = []
+            for packet_size in input_choices["input_pkt_size"]:
+                if "SHA" in input_algorithm:
+                    input_operation = "Hash"
+                    input_key_size = 0
+                    name = packet_size
+                    one_data_set = {}
+                    one_data_set["inputs"] = {}
+                    one_data_set["inputs"]["input_algorithm"] = input_algorithm
+                    one_data_set["inputs"]["input_operation"] = input_operation
+                    one_data_set["inputs"]["input_key_size"] = input_key_size
+                    one_data_set["inputs"]["input_pkt_size"] = packet_size
+                    one_data_set["output"] = {"name": "output_throughput", 'min': 0, "max": 9999999}
+                    one_data_set["name"] = name
+                    data_sets.append(one_data_set)
+                else:
+                    input_operation = "Encrypt"
+                    for key_size in input_choices["input_key_size"]:
+                        if key_size != 0:
+                            name = str(packet_size) + "-" + str(key_size)
+                            one_data_set = {}
+                            one_data_set["inputs"] = {}
+                            one_data_set["inputs"]["input_algorithm"] = input_algorithm
+                            one_data_set["inputs"]["input_operation"] = input_operation
+                            one_data_set["inputs"]["input_key_size"] = key_size
+                            one_data_set["inputs"]["input_pkt_size"] = packet_size
+                            one_data_set["output"] = {"name": "output_throughput", 'min': 0, "max": 9999999}
+                            one_data_set["name"] = name
+                            data_sets.append(one_data_set)
+
+            metric_id = LastMetricId.get_next_id()
+            positive = True
+            MetricChart(chart_name=input_algorithm,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name_map[input_algorithm],
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Suren Madineni (suren.madineni@fungible.com)",
+                        positive=positive,
+                        y1_axis_title="Gbps",
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date).save()
+            mmt = MileStoneMarkers(metric_id=metric_id,
+                                   milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+    print "Creating charts and setting baseline is done programatically"

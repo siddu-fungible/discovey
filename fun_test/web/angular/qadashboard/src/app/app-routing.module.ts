@@ -13,6 +13,8 @@ import {RegressionAdminComponent} from "./regression/regression-admin/regression
 import {RegressionSummaryComponent} from "./regression/regression-summary/regression-summary.component";
 import {ScriptHistoryComponent} from "./regression/script-history/script-history.component";
 import {NotFoundComponent} from "./not-found/not-found.component";
+import {AlertsComponent} from "./alerts/alerts.component";
+import {SchedulerAdminComponent} from "./scheduler-admin/scheduler-admin.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -38,8 +40,10 @@ const routes: Routes = [
   {path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent},
   {path: 'regression/script_history_page/:scriptId', component: ScriptHistoryComponent},
   {path: 'regression/:filterString', component: RegressionComponent},
+  {path: 'regression/scheduler/admin', component: SchedulerAdminComponent},
+  {path: 'common/alerts', component: AlertsComponent},
   {path: 'upgrade/test', component: TestComponent},
-  {path: 'upgrade/demo1', component: Demo1Component},
+  /*{path: 'upgrade/demo1', component: Demo1Component},*/
   {path: '*', component: NotFoundComponent}
 ];
 

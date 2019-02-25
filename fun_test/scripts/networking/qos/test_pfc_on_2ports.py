@@ -5,7 +5,7 @@ from lib.host.network_controller import  NetworkController
 from scripts.networking.helper import *
 from scripts.networking.qos.qos_helper import *
 from lib.utilities.pcap_parser import PcapParser
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import NuConfigManager
 
 num_ports = 2
 streamblock_objs = {}
@@ -34,11 +34,12 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, shape, hnu, flow_direction
+            dut_port_1, shape, hnu, flow_direction, nu_config_obj
+
+        nu_config_obj = NuConfigManager()
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
-        dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type, flow_direction=flow_direction)
+        dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE, flow_direction=flow_direction)
 
         shape = 0
         hnu = False
@@ -46,11 +47,13 @@ class SpirentSetup(FunTestScript):
             shape = 1
             hnu = True
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         good_stream_load = 250
         pfc_load = 10
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            good_stream_load = 2500
+            pfc_load = 1000
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc", chassis_type=nu_config_obj.CHASSIS_TYPE,
                                                       spirent_config=spirent_config)
@@ -670,7 +673,7 @@ class TestCase4(FunTestCase):
         fun_test.test_assert(pfc_enable, "Ensure qos pfc is enabled")
 
         enable_1 = network_controller_obj.enable_priority_flow_control(dut_port_1, shape=shape)
-        fun_test.test_assert(enable_1, "Disable pfc on port %s" % dut_port_1)
+        fun_test.test_assert(enable_1, "Enable pfc on port %s" % dut_port_1)
 
         port_quanta = network_controller_obj.set_priority_flow_control_quanta(port_num=dut_port_1, quanta=self.quanta,
                                                                               class_num=self.class_val, shape=shape)

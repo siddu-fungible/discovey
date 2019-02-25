@@ -1,0 +1,30 @@
+[
+  {
+    "name": "palladium_test_config",
+    "dut_type": "palladium",
+    "fixed_frame_size": 128,
+    "load_type": "FRAMES_PER_SECOND",
+    "load": 110,
+    "insert_signature": true,
+    "duration": 10,
+    "min_meter_range": 350,
+    "max_meter_range": 500,
+    "fill_type": "PRBS",
+    "soc_clk_in_khz": 256,
+    "frame_length_mode": "FIXED"
+  },
+  {
+    "name": "f1_test_config",
+    "dut_type": "f1",
+    "fixed_frame_size": 128,
+    "load_type": "FRAMES_PER_SECOND",
+    "load": 110,
+    "insert_signature": true,
+    "duration": 10,
+    "min_meter_range": 800,
+    "max_meter_range": 900,
+    "fill_type": "PRBS",
+    "soc_clk_in_khz": 1000000,
+    "frame_length_mode": "FIXED"
+  }
+]

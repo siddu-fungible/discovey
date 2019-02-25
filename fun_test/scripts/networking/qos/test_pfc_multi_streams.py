@@ -3,7 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, Ipv4Header, Capture
 from lib.utilities.pcap_parser import PcapParser
 from lib.host.network_controller import NetworkController
-from scripts.networking.nu_config_manager import nu_config_obj
+from scripts.networking.nu_config_manager import NuConfigManager
 from scripts.networking.helper import *
 import re
 
@@ -79,7 +79,9 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global template_obj, port_1, port_2, pfc_frame, subscribe_results, network_controller_obj, dut_port_2, \
-            dut_port_1, hnu, shape, pause_obj, dut_port_list, pause_streamblock, interface_obj_list, flow_direction
+            dut_port_1, hnu, shape, pause_obj, dut_port_list, pause_streamblock, interface_obj_list, flow_direction, nu_config_obj
+
+        nu_config_obj = NuConfigManager()
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_NU_NU
 
@@ -92,12 +94,15 @@ class SpirentSetup(FunTestScript):
             shape = 1
             hnu = True
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         good_load = 100
         pfc_load = 10
         pause_load = 60
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            good_load = 2500
+            pfc_load = 1000
+            pause_load = 1000
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="test_pfc_multi_stream", spirent_config=spirent_config,
                                                       chassis_type=nu_config_obj.CHASSIS_TYPE)

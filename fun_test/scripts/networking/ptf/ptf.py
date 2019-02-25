@@ -36,6 +36,15 @@ class PTFTestSuite(FunTestScript):
         funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
         funsdk_obj = funcp.FunSDK(linux_obj, ws=workspace)
 
+        # Stop noise traffic, e.g. IPv6 ND, LLDP
+        linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
+        cmds = (
+            'sysctl net.ipv6.conf.all.disable_ipv6=1',
+            'pkill lldp',
+        )
+        for cmd in cmds:
+            linux_obj_ptf.sudo_command(cmd)
+        
         # Get FunControlPlane
         fun_test.test_assert(funcp_obj.clone(), 'git clone FunControlPlane repo')
         fun_test.test_assert(funcp_obj.pull(), 'git pull FunControlPlane repo')

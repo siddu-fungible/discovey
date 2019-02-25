@@ -1166,15 +1166,95 @@ class PkeP256TlsSoakPerformance(models.Model):
             s += "{}:{} ".format(key, value)
         return s
 
+class SoakDmaMemcpyCoherentPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_size = models.TextField(verbose_name="Size")
+    input_operation = models.TextField(verbose_name="Operation")
+    input_log_size = models.TextField(verbose_name="Log Size")
+    input_unit = models.TextField(verbose_name="Unit")
+    input_metric_name = models.TextField(verbose_name="Metric Name", default="")
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class SoakDmaMemcpyNonCoherentPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_size = models.TextField(verbose_name="Size")
+    input_operation = models.TextField(verbose_name="Operation")
+    input_log_size = models.TextField(verbose_name="Log Size")
+    input_unit = models.TextField(verbose_name="Unit")
+    input_metric_name = models.TextField(verbose_name="Metric Name", default="")
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class SoakDmaMemsetPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_size = models.TextField(verbose_name="Size")
+    input_operation = models.TextField(verbose_name="Operation")
+    input_log_size = models.TextField(verbose_name="Log Size")
+    input_unit = models.TextField(verbose_name="Unit")
+    input_metric_name = models.TextField(verbose_name="Metric Name", default="")
+    output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
 class TeraMarkCryptoPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_app = models.CharField(max_length=30, default="crypto_test_perf", choices=[(0, "crypto_test_perf")])
-    input_algorithm = models.CharField(max_length=30, default="", choices=[(0, "AES_ECB"), (1, "AES_GCM"), (2, "AES_CBC"), (3, "AES_XTS"), (4, "SHA_256")])
-    input_operation = models.CharField(max_length=30, default="", choices=[(0, "Encryption"), (1, "Decryption")])
-    input_pkt_size = models.IntegerField(verbose_name="bytes", default=-1, choices=[(0, "16"), (1, "256"), (2, "512"), (3, "1024"), (4, "4096"), (5, "8192"), (6, "16000")])
+    input_app = models.CharField(max_length=30, default="crypto_api_perf")
+    input_algorithm = models.CharField(max_length=30, default="")
+    input_operation = models.CharField(max_length=30, default="")
+    input_pkt_size = models.IntegerField(verbose_name="bytes", default=-1)
+    output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
+    output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkMultiClusterCryptoPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="crypto_raw_speed")
+    input_algorithm = models.CharField(max_length=30, default="")
+    input_operation = models.CharField(max_length=30, default="")
+    input_pkt_size = models.IntegerField(verbose_name="bytes", default=-1)
+    input_key_size = models.IntegerField(verbose_name="Key Size", default=-1)
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_throughput = models.FloatField(verbose_name="Gbps", default=-1)
     output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
