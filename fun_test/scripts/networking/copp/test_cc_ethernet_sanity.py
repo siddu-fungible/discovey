@@ -233,7 +233,7 @@ class TestCcEthernetArpRequest(FunTestCase):
         fun_test.log("ERP stats: %s" % erp_stats)
         fun_test.log("WRO stats: %s" % wro_stats)
         fun_test.log("METER stats for id %s : %s" % (str(self.meter_id), meter_stats))
-
+        '''
         checkpoint = "Get mac stats for FPG%d received port" % dut_port1
         hnu = False
         if dut_port1 == 1:
@@ -244,6 +244,7 @@ class TestCcEthernetArpRequest(FunTestCase):
         fun_test.simple_assert(dut_rx_port_stats, checkpoint)
 
         fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
+        '''
 
         checkpoint = "Validate meter stats ensure frames_received on FPG%d == (green pkts + yellow pkts + " \
                      "red_pkts)" % dut_port1
@@ -252,10 +253,9 @@ class TestCcEthernetArpRequest(FunTestCase):
         yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
         red_pkts = int(meter_stats_diff['red']['pkts'])
         fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
-        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats, stat_type=FRAMES_RECEIVED_OK,
-                                                     tx=False)
-        fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts + red_pkts),
-                                      message=checkpoint)
+        # frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats, stat_type=FRAMES_RECEIVED_OK,
+        #                                              tx=False)
+        # fun_test.log("Frames Received on FPG%d : %s" % (dut_port1, frames_received))
         total_packets_punted_cc = green_pkts + yellow_pkts
         fun_test.log("Total Packets punted to CC (green + yellow): %d" % total_packets_punted_cc)
         fun_test.test_assert(expression=MIN_RX_PORT_COUNT <= total_packets_punted_cc <= MAX_RX_PORT_COUNT,
@@ -263,6 +263,7 @@ class TestCcEthernetArpRequest(FunTestCase):
                                      "expected min-max range i.e MIN: %d MAX: %d and packets metered "
                                      "(green + yellow): %d" % (MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT,
                                                                total_packets_punted_cc))
+        fun_test.add_checkpoint(checkpoint)
         # VP stats validation
         # To avoid false failure due to stray traffic in system change assert like below
         checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
@@ -373,7 +374,10 @@ class TestCcEthernetArpResponse(TestCcEthernetArpRequest):
 
     def setup(self):
         nu_config_obj = fun_test.shared_variables['nu_config_obj']
-        l2_config = spirent_config['l2_config']
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        fun_test.simple_assert(routes_config, "Ensure routes config fetched")
+        routermac = routes_config['routermac']
+
         checkpoint = "Configure a stream with EthernetII and ARP headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
                                       fixed_frame_length=FRAME_SIZE,
@@ -383,7 +387,7 @@ class TestCcEthernetArpResponse(TestCcEthernetArpRequest):
         result = template_obj.configure_stream_block(stream_block_obj=self.stream_obj, port_handle=port1)
         fun_test.simple_assert(result, "Create Default Stream Block under: %s" % port1)
 
-        ether_obj = Ethernet2Header(destination_mac=l2_config['destination_mac'],
+        ether_obj = Ethernet2Header(destination_mac=routermac,
                                     ether_type=Ethernet2Header.ARP_ETHERTYPE)
         arp_obj = ARP()
 
@@ -555,7 +559,7 @@ class TestCcEthernetPTP(TestCcEthernetArpRequest):
         nu_config_obj = fun_test.shared_variables['nu_config_obj']
         routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(routes_config, "Ensure routes config fetched")
-        routermac = spirent_config['routermac']
+        routermac = routes_config['routermac']
 
         checkpoint = "Create a stream with EthernetII and PTP headers under port %s" % port1
         self.stream_obj = StreamBlock(fill_type=StreamBlock.FILL_TYPE_CONSTANT,
@@ -624,7 +628,7 @@ class TestCcEthArpRequestUnicast(TestCcEthernetArpRequest):
         nu_config_obj = fun_test.shared_variables['nu_config_obj']
         routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(routes_config, "Ensure routes config fetched")
-        routermac = spirent_config['routermac']
+        routermac = routes_config['routermac']
         l3_config = routes_config['l3_config']
 
         checkpoint = "Create a stream with EthernetII and ARP header option under port %s" % port1
@@ -648,8 +652,14 @@ class TestCcEthArpRequestUnicast(TestCcEthernetArpRequest):
                                                                 header_obj=arp_header_obj, update=False)
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
-        self.validate_meter_stats = False
-        # TODO: Check meter ID for this stream
+        self.meter_id = ETH_COPP_ARP_RESP_METER_ID
+
+        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
+        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
+                                                         pps_mode=1, bank=0)
+            fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
+                                         "commit_rate: 14, pps_mode: 1 bank: 0" % self.meter_id)
 
 
 class TestCcEthernetIsis1(TestCcEthernetArpRequest):
@@ -810,7 +820,7 @@ class TestCcGlean(TestCcEthernetArpRequest):
         nu_config_obj = fun_test.shared_variables['nu_config_obj']
         routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(routes_config, "Ensure routes config fetched")
-        routermac = spirent_config['routermac']
+        routermac = routes_config['routermac']
         l3_config = routes_config['l3_config']
 
         checkpoint = "Create a stream with EthernetII and IPv4 with glean" \
@@ -839,6 +849,7 @@ class TestCcGlean(TestCcEthernetArpRequest):
         # TODO: Get meter id for this stream
         # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
         if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
+            self.meter_id = 61
             result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
                                                          pps_mode=1, bank=0)
             fun_test.test_assert(result, "Configured meter on F1 for meter id: %d Interval: 15, crd: 1, "
@@ -934,11 +945,9 @@ class TestCcEthernetAllTogether(FunTestCase):
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Get FPG port stats for all ports"
-        dut_tx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
         dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][2])
-        fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
+        fun_test.simple_assert(dut_rx_port_stats, checkpoint)
 
-        fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
         fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
 
         checkpoint = "Fetch VP stats"
@@ -957,44 +966,15 @@ class TestCcEthernetAllTogether(FunTestCase):
         fun_test.log("ERP stats: %s" % erp_stats)
         fun_test.log("WRO stats: %s" % wro_stats)
 
-        MIN_RX_PORT_COUNT = 200 * len(streams_group)
-        MAX_RX_PORT_COUNT = 500 * len(streams_group)
         # TODO: We need to figure out how to validate actual CC so for now we skipped spirent validation
-        # DUT stats validation
-        checkpoint = "Get mac stats for FPG%d received port" % dut_port1
-        hnu = False
-        if dut_port1 == 1:
-            hnu = True
-        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
-            hnu = False
-        dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_port1, hnu=hnu)
-        fun_test.simple_assert(dut_rx_port_stats, checkpoint)
-
-        fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
-
-        checkpoint = "Validate meter stats ensure frames_received on FPG%d == (green pkts + yellow pkts + " \
-                     "red_pkts)" % dut_port1
-        meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
-        green_pkts = int(meter_stats_diff['green']['pkts'])
-        yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
-        red_pkts = int(meter_stats_diff['red']['pkts'])
-        fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
-        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats, stat_type=FRAMES_RECEIVED_OK)
-        fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts + red_pkts),
-                                      message=checkpoint)
-        total_packets_punted_cc = green_pkts + yellow_pkts
-        fun_test.log("Total Packets punted to CC: %d" % total_packets_punted_cc)
-        fun_test.test_assert(expression=MIN_RX_PORT_COUNT >= total_packets_punted_cc <= MAX_RX_PORT_COUNT,
-                             message="Ensure total packets metered to CC is within a "
-                                     "expected min-max range i.e MIN: %d MAX: %d and packets metered "
-                                     "(green + yellow): %d" % (MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT,
-                                                               total_packets_punted_cc))
         # VP stats validation
         # To avoid false failure due to stray traffic in system change assert like below
         checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
         vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
                                        stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
                                                    VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+        total_packets_punted_cc = vp_stats_diff[VP_PACKETS_CC_OUT]
+        fun_test.log("Total Packets punted to CC: %d" % total_packets_punted_cc)
         fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]) >= total_packets_punted_cc,
                              message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
                                  total_packets_punted_cc, vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]))
@@ -1075,13 +1055,13 @@ if __name__ == '__main__':
     ts.add_test_case(TestCcEthernetPTP())
 
     # Unicast CC
-    # TODO: Test manually first 
     ts.add_test_case(TestCcEthArpRequestUnicast())
 
     ts.add_test_case(TestCcEthernetIsis1())
     ts.add_test_case(TestCcEthernetIsis2())
 
     # Glean
+    # TODO: Get meter id for this stream
     # TODO: Test manually first
     ts.add_test_case(TestCcGlean())
 

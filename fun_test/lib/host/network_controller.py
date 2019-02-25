@@ -1509,7 +1509,7 @@ class NetworkController(DpcshClient):
                             "color_aware": color_aware, "unit": unit, "rsvd": rsvd}
 
             result_index = self._update_meter(cmd_arg_dict)
-            if result_index == 0:
+            if result_index['data'] == 0:
                 result = True
         except Exception as ex:
             fun_test.critical(str(ex))
