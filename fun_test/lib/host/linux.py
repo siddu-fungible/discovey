@@ -1135,7 +1135,7 @@ class Linux(object, ToDictMixin):
         expects[0] = '[pP]assword:'
         expects[1] = self.prompt_terminator + r'$'
         expects[2] = '\(yes/no\)?'
-        expects[3] = 'Connection timed out' + r'$'
+        expects[3] = 'lost connection\n' + self.prompt_terminator + r'$'
 
         max_retry_count = 10
         max_loop_count = 10
