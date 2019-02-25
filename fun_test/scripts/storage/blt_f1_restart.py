@@ -570,15 +570,9 @@ class BLTF1RestartTestCase(FunTestCase):
                 capacity=self.volume_params["capacity"][type], uuid=uuid,
                 block_size=self.volume_params["block_size"][type], name=self.volume_params["name"][type])
             fun_test.shared_variables["setup_created"] = False
-            # changes after fixing issue SWOS-3813 - LSV mount fails if underlying BLT is faulty. As LSV cannot be
-            # deleted, BLT volume deletion fails
-            if self.use_lsv and hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
-                fun_test.test_assert(not result_delete_volume["status"],
-                                     "Expected failure, open {} volume can't be deleted".format(type))
-            else:
-                fun_test.test_assert(result_delete_volume["status"], "{} volume is deleted".format(type))
 
-            # self.storage_controller.disconnect()
+            # Below assert will fails due to SWOS-4234, (until it's fixed)
+            fun_test.test_assert(result_delete_volume["status"], "{} volume is deleted".format(type))
 
 
 class BLTF1RestartFio(BLTF1RestartTestCase):
