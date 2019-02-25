@@ -55,6 +55,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   mileStoneMarkers: any = {}; // fetch the milestones for each chart from backend and save it
   mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
   expectedValues: any = [];
+  showAllExpectedValues: boolean = false;
 
   public formatter: Function;
   public tooltip: Function;
@@ -486,6 +487,21 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       d1.getDate() === d2.getDate();
   }
 
+  //cahnge the output show of the expected value checkbox
+  changeExpectedValueShow(output): void {
+    output.show = !output.show;
+    this.expectedValues = [...this.expectedValues];
+
+  }
+
+  changeAllExpectedValues(): void {
+    this.showAllExpectedValues = !this.showAllExpectedValues;
+    for (let output of this.expectedValues) {
+      output.show = this.showAllExpectedValues;
+    }
+    this.expectedValues = [...this.expectedValues];
+  }
+
   //fetch the data from backend
   fetchData(metricId, chartInfo, previewDataSets, tableInfo) {
     let payload = {};
@@ -607,6 +623,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         output["name"] = this.filterDataSets[j].name;
         output["value"] = filterDataSets[j].output.expected;
         output["unit"] = this.chart1YaxisTitle;
+        output["show"] = false;
         this.expectedValues.push(output);
       }
       this.series = seriesDates;

@@ -104,15 +104,17 @@ export class FunChartComponent implements OnInit, OnChanges {
       chartOptions.yAxis["plotLines"] = [];
       if (this.expected) {
         for (let dataSet of this.expected) {
-          chartOptions.yAxis["plotLines"].push({
-            color: 'grey', // Color value
-            dashStyle: 'shortdash', // Style of the plot line. Default to solid
-            value: dataSet.value, // Value of where the line will appear
-            width: 2, // Width of the line
-            label: {
-              text: dataSet.name
-            }
-          });
+          if (dataSet.show) {
+            chartOptions.yAxis["plotLines"].push({
+              color: 'grey', // Color value
+              dashStyle: 'shortdash', // Style of the plot line. Default to solid
+              value: dataSet.value, // Value of where the line will appear
+              width: 2, // Width of the line
+              label: {
+                text: dataSet.name
+              }
+            });
+          }
         }
       }
     }
