@@ -1165,6 +1165,9 @@ class Linux(object, ToDictMixin):
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
 
+        if self.exit_status():
+            transfer_complete = False
+
         return transfer_complete
 
     @fun_test.safe
