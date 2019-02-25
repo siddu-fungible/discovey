@@ -21,7 +21,7 @@
       </div>
     </div>
     <!-- fun chart component -->
-    <fun-chart [mileStones]="mileStoneIndices" [y1Values]="values" [xValues]="series" [title]="chartName"
+    <fun-chart [mileStones]="mileStoneIndices" [expected]="expectedValues" [y1Values]="values" [xValues]="series" [title]="chartName"
                [xAxisLabel]="chart1XaxisTitle"
                [y1AxisLabel]="chart1YaxisTitle" [xAxisFormatter]="formatter" [tooltipFormatter]="tooltip"
                [pointClickCallback]="pointClickCallback" (pointInfo)="showPointDetails($event)"></fun-chart>
@@ -87,6 +87,19 @@
         <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
       <!--</span>-->
       <br>
+      <div>
+        <b>Expected values:</b><br>
+        <table>
+          <tr *ngFor="let output of expectedValues">
+            <td>
+              <i>{{ output.name }}:</i>&nbsp;
+            </td>
+            <td>
+              {{ output.value }} {{ output.unit }}
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
     <div class="closed-section"></div>
     <!-- Show tables below the leaf chart -->

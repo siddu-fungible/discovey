@@ -15,6 +15,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() xAxisLabel: string;
   @Input() y1AxisLabel: string;
   @Input() mileStones: any = null;
+  @Input() expected: any = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
@@ -100,7 +101,20 @@ export class FunChartComponent implements OnInit, OnChanges {
           });
         });
       }
-
+      chartOptions.yAxis["plotLines"] = [];
+      if (this.expected) {
+        for (let dataSet of this.expected) {
+          chartOptions.yAxis["plotLines"].push({
+            color: 'grey', // Color value
+            dashStyle: 'shortdash', // Style of the plot line. Default to solid
+            value: dataSet.value, // Value of where the line will appear
+            width: 2, // Width of the line
+            label: {
+              text: dataSet.name
+            }
+          });
+        }
+      }
     }
     else if (this.chartType === 'vertical_colored_bar_chart') {
       chartOptions = {

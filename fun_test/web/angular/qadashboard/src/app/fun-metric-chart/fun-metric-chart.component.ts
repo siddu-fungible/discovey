@@ -54,6 +54,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   paddingNeeded: boolean = false;
   mileStoneMarkers: any = {}; // fetch the milestones for each chart from backend and save it
   mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
+  expectedValues: any = [];
 
   public formatter: Function;
   public tooltip: Function;
@@ -546,6 +547,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       keyList = this.getDatesByTimeMode(keyList);
       let chartDataSets = [];
       let seriesDates = [];
+      this.expectedValues = [];
       for (let j = 0; j < this.filterDataSets.length; j++) {
         let oneChartDataArray = [];
         for (let i = 0; i < keyList.length; i++) {
@@ -601,6 +603,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
         let oneChartDataSet = {name: this.filterDataSets[j].name, data: oneChartDataArray};
         chartDataSets.push(oneChartDataSet);
+        let output = {};
+        output["name"] = this.filterDataSets[j].name;
+        output["value"] = filterDataSets[j].output.expected;
+        output["unit"] = this.chart1YaxisTitle;
+        this.expectedValues.push(output);
       }
       this.series = seriesDates;
       this.values = chartDataSets;
