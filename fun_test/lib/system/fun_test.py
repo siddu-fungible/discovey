@@ -104,7 +104,6 @@ class FunTest:
 
     def __init__(self):
         if "DISABLE_FUN_TEST" in os.environ:
-
             def black_hole(*args, **kwargs):
                 pass
             self.log = black_hole
@@ -821,7 +820,7 @@ class FunTest:
         result["classes"] = []
         sys.argv.append("--disable_fun_test")
         test_cases = []
-
+        fun_test.absolute_script_file_name = module_name
         import imp
         import inspect
         f, filename, description = imp.find_module(os.path.basename(module_name).replace(".py", ""),
