@@ -487,13 +487,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       d1.getDate() === d2.getDate();
   }
 
-  //cahnge the output show of the expected value checkbox
+  //change the output show of the expected value checkbox
   changeExpectedValueShow(output): void {
     output.show = !output.show;
     this.expectedValues = [...this.expectedValues];
 
   }
 
+  //select or unselect all checkbox
   changeAllExpectedValues(): void {
     this.showAllExpectedValues = !this.showAllExpectedValues;
     for (let output of this.expectedValues) {

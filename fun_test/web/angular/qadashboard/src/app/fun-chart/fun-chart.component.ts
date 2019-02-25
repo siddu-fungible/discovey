@@ -15,7 +15,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() xAxisLabel: string;
   @Input() y1AxisLabel: string;
   @Input() mileStones: any = null;
-  @Input() expected: any = null;
+  @Input() y1AxisPlotLines: any = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
@@ -102,8 +102,8 @@ export class FunChartComponent implements OnInit, OnChanges {
         });
       }
       chartOptions.yAxis["plotLines"] = [];
-      if (this.expected) {
-        for (let dataSet of this.expected) {
+      if (this.y1AxisPlotLines) {
+        for (let dataSet of this.y1AxisPlotLines) {
           if (dataSet.show) {
             chartOptions.yAxis["plotLines"].push({
               color: 'grey', // Color value
