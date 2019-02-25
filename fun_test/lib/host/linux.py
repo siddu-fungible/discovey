@@ -1135,7 +1135,7 @@ class Linux(object, ToDictMixin):
         expects[0] = '[pP]assword:'
         expects[1] = self.prompt_terminator + r'$'
         expects[2] = '\(yes/no\)?'
-        expects[3] = 'Connection timed out'
+        expects[3] = 'Connection timed out' + r'$'
 
         max_retry_count = 10
         max_loop_count = 10
@@ -1156,7 +1156,7 @@ class Linux(object, ToDictMixin):
                             handle.sendline("yes")
                             current_loop_count += 1
                         if i == 3:
-                            fun_test.debug("Connection timeout time")
+                            fun_test.debug("Connection timed out")
                             transfer_complete = False
                             break
                         if i == 1:
