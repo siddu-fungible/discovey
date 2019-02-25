@@ -6,7 +6,7 @@
 sudo adduser qa-admin sudo
 
 ### Install python modules
-cd fun_test  
+cd /project/users/QA/regression/Integration/fun_test 
 pip install -r requirements.txt —user  
 mkdir /project/users/QA/regression/database  
 nohup python web/start_production_server.py & 
