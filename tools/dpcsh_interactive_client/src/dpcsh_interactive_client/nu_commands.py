@@ -2304,11 +2304,11 @@ class SampleCommands(object):
                 cmd_arg_dict['psw_drop'] = psw_drop
             if pps_en is not None:
                 cmd_arg_dict['pps_en'] = pps_en
-            if pps_interval:
+            if pps_interval is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
-            if pps_burst:
+            if pps_burst is not None:
                 cmd_arg_dict['pps_burst'] = pps_burst
-            if pps_tick:
+            if pps_tick is not None:
                 cmd_arg_dict['pps_tick'] = pps_tick
             if sampler_en is not None:
                 cmd_arg_dict['sampler_en'] = sampler_en
@@ -2408,3 +2408,27 @@ class ShowCommands(PeekCommands):
             if filepath:
                 self.delete_filepath(filepath)
             self.dpc_client.disconnect()
+
+class MeterCommands(object):
+
+    def __init__(self, dpc_client):
+        self.dpc_client = dpc_client
+
+    def set_meter(self, index, interval, crd, commit_rate, pps_mode, excess_rate, commit_burst,
+                  excess_burst, direction, len_mode, rate_mode, color_aware, unit, rsvd, len8, common, bank,
+                  op="FUN_NU_OP_SFG_METER_CFG_W", erp=False):
+        inst = 0
+        if erp:
+            inst = 1
+        try:
+            cmd_arg_dict = {"op": op, "len8": len8, "common": common, "inst": inst, "bank": bank, "index": index,
+                            "interval": interval, "crd": crd, "commit_rate": commit_rate,
+                            "excess_rate": excess_rate,
+                            "commit_burst": commit_burst, "excess_burst": excess_burst, "dir": direction,
+                            "len_mode": len_mode, "rate_mode": rate_mode, "pps_mode": pps_mode,
+                            "color_aware": color_aware, "unit": unit, "rsvd": rsvd}
+
+            result = self.dpc_client.execute(verb='req', arg_list=cmd_arg_dict)
+            print result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)

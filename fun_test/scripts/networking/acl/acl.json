@@ -209,6 +209,7 @@
     "dest_port": 1118
   },
   "qos_nu_nu": {
+    "source_ip": "192.85.1.10",
     "dest_port": 670,
     "ecn_bits": 10,
     "ecn_tc": 2,
