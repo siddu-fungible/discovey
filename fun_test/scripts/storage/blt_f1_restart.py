@@ -236,7 +236,15 @@ class BLTF1RestartTestCase(FunTestCase):
             ns_id=self.ns_id, uuid=self.attach_uuid, remote_ip=self.linux_host.internal_ip,
             command_duration=self.volume_params["command_timeout"])
         fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Attaching volume in the DUT instance")
+        if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+            if command_result["status"]:
+                fun_test.critical(
+                    "Attach is expected to FAIL however it's PASSED. Please check. Continuing with further steps")
+            else:
+                fun_test.test_assert(not command_result["status"],
+                                     "Attaching of LSV should fail because LSV Mount has failed")
+        else:
+            fun_test.test_assert(command_result["status"], "Attaching volume in the DUT instance")
 
         fun_test.shared_variables["setup_created"] = True
         fun_test.shared_variables["uuids"] = self.uuids
@@ -434,8 +442,16 @@ class BLTF1RestartTestCase(FunTestCase):
                                                                  "stats")
                     command_result = {}
                     command_result = self.storage_controller.peek(storage_props_tree)
-                    fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
-                                           format(type, index))
+                    if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure and type == "lsv":
+                        if command_result["status"]:
+                            fun_test.critical(
+                                "Vol stats is expected to FAIL however it's PASSED. Please check.")
+                        else:
+                            fun_test.test_assert(not command_result["status"],
+                                                 "Initial stats for LSV should fail because LSV is not Mounted")
+                    else:
+                        fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
+                                               format(type, index))
                     initial_volume_status[mode][type][index] = command_result["data"]
                     fun_test.log("{} {} volume Status at the beginning of the test:".format(type, index))
                     fun_test.log(initial_volume_status[mode][type][index])
@@ -539,7 +555,16 @@ class BLTF1RestartTestCase(FunTestCase):
 
             result_detach_volume = self.storage_controller.volume_detach_remote(
                 ns_id=self.ns_id, uuid=uuid, remote_ip=self.linux_host.internal_ip)
-            fun_test.test_assert(result_detach_volume["status"], "{} volume is detached".format(type))
+
+            if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+                if result_detach_volume["status"]:
+                    fun_test.critical(
+                        "DETACH is expected to be FAIL however it's PASSED. Please check. Continuing with further step")
+                else:
+                    fun_test.test_assert(not result_detach_volume["status"],
+                                         "Detaching of LSV should fail because LSV Mount & Attach has failed")
+            else:
+                fun_test.test_assert(result_detach_volume["status"], "{} volume is detached".format(type))
 
             # Deleting LS volume and Journal volume
             if self.use_lsv:
@@ -552,7 +577,7 @@ class BLTF1RestartTestCase(FunTestCase):
                 # will fail as it's not mounted
                 if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
                     fun_test.test_assert(not result_delete_lsv["status"],
-                                         "Expected failure in delete LSV as LSV was not mounted")
+                                         "Expected failure in LSV delete as it was not mounted")
                 else:
                     fun_test.test_assert(result_delete_lsv["status"], "LS volume is deleted")
 
