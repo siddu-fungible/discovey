@@ -849,7 +849,7 @@ class FunTest:
                         o.describe()
                         result["classes"].append({"name": o.__class__.__name__, "summary": o.summary, "id": o.id})
                         test_cases.append(klass)
-                    except:
+                    except Exception as ex:
                         pass
                     # print o.id
                     # print o.summary
