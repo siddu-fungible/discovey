@@ -443,7 +443,6 @@ def queue_job2(suite_path=None,
                                                         suite_path=final_suite_path,
                                                         tags=tags,
                                                         suite_container_execution_id=suite_container_execution_id,
-                                                        suite_type=suite_type,
                                                         test_bed_type=test_bed_type)
     dynamic_suite_file = None
     if suite_type == SuiteType.DYNAMIC:
