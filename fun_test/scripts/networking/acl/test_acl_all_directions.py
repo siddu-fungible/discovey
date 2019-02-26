@@ -154,7 +154,7 @@ class AclIngressDropNUtoNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
-    acl_fields_dict_sanity_nu_nu = acl_json_output['sanity_test_nu_nu']
+    acl_fields_dict_sanity_nu_nu = {}
 
     def describe(self):
         self.set_test_details(id=1, summary="Test ACL Drop FPG to FPG",
@@ -172,6 +172,7 @@ class AclIngressDropNUtoNU(FunTestCase):
         global dut_rx_port, dut_tx_port
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_sanity_nu_nu = acl_json_output['sanity_test_nu_nu']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
         self.stream_obj_sport = create_streams(tx_port=nu_ing_port,
@@ -452,7 +453,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
-    acl_fields_dict_ipv6_nu_nu = acl_json_output['nu_nu_v6_test']
+    acl_fields_dict_ipv6_nu_nu = {}
 
     def describe(self):
         self.set_test_details(id=2, summary="Test IPv6 ACL FPG to FPG",
@@ -469,6 +470,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
                                                                               ip_version="ipv6")
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_ipv6_nu_nu = acl_json_output['nu_nu_v6_test']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port,
 
@@ -741,8 +743,8 @@ class AclQosTCNuNu(FunTestCase):
     routes_config = None
     stream_obj = None
     capture_results = None
-    acl_fields_dict_qos_nu_nu = acl_json_output['qos_nu_nu']
 
+    acl_fields_dict_qos_nu_nu = {}
     def describe(self):
         self.set_test_details(id=3, summary=" Test QoS ACL for set_tc action",
                               steps="""
@@ -756,7 +758,7 @@ class AclQosTCNuNu(FunTestCase):
     def setup(self):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
-
+        self.acl_fields_dict_qos_nu_nu = acl_json_output['qos_nu_nu']
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
         self.stream_obj = create_streams(tx_port=nu_ing_port,
                                          dmac=self.routes_config['routermac'],
@@ -864,7 +866,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
-    acl_fields_dict_sanity_eg_nu_hnu = acl_json_output['nu_hnu_egress_drop_test']
+    acl_fields_dict_sanity_eg_nu_hnu = {}
 
     def describe(self):
         self.set_test_details(id=4, summary="Test Traffic FPG to HNU",
@@ -882,7 +884,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
         self.l3_config = self.routes_config['l3_config']
         #Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
-
+        self.acl_fields_dict_sanity_eg_nu_hnu = acl_json_output['nu_hnu_egress_drop_test']
         self.stream_obj_sport = create_streams(tx_port=nu_ing_port,
                                                     dmac=self.routes_config['routermac'],
                                                     dip=self.l3_config['hnu_destination_ip2'],
@@ -1182,7 +1184,7 @@ class AclIngressDropHNUtoHNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
-    acl_fields_dict_sanity_ing_hnu_hnu = acl_json_output['hnu_hnu_drop_test']
+    acl_fields_dict_sanity_ing_hnu_hnu = {}
 
     def describe(self):
         self.set_test_details(id=5, summary="Test ACL HNU to HNU",
@@ -1199,7 +1201,7 @@ class AclIngressDropHNUtoHNU(FunTestCase):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
-
+        self.acl_fields_dict_sanity_ing_hnu_hnu = acl_json_output['hnu_hnu_drop_test']
         self.stream_obj_sport = create_streams(tx_port=hnu_ing_port,
                                                dmac=self.routes_config['routermac'],
                                                dip=self.l3_config['hnu_destination_ip2'],
@@ -1473,7 +1475,7 @@ class AclEgressDropHNUtoNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
-    acl_fields_dict_sanity_eg_hnu_nu = acl_json_output['hnu_nu_drop_test']
+    acl_fields_dict_sanity_eg_hnu_nu = {}
 
     def describe(self):
         self.set_test_details(id=6, summary="Test ACL HNU to NU",
@@ -1490,6 +1492,7 @@ class AclEgressDropHNUtoNU(FunTestCase):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
         #Multiple streams for seding packets with different fields
+        self.acl_fields_dict_sanity_eg_hnu_nu = acl_json_output['hnu_nu_drop_test']
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
         self.stream_obj_sport = create_streams(tx_port=hnu_ing_port,
                                                dmac=self.routes_config['routermac'],
@@ -1765,7 +1768,7 @@ class AclIPv6DropNUtoHNU(FunTestCase):
     stream_obj_ecn = None
     stream_obj_tcpflag = None
     capture_results = None
-    acl_fields_dict_sanity_v6_nu_hnu = acl_json_output['v6_nu_hnu_test']
+    acl_fields_dict_sanity_v6_nu_hnu = {}
 
     def describe(self):
         self.set_test_details(id=7, summary="Test IPv6 ACL FPG to HNU",
@@ -1782,6 +1785,7 @@ class AclIPv6DropNUtoHNU(FunTestCase):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
                                                                               ip_version="ipv6")
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_sanity_v6_nu_hnu = acl_json_output['v6_nu_hnu_test']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
 
@@ -2070,7 +2074,7 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
-    acl_fields_dict_ipv6_hnu_hnu = acl_json_output['hnu_hnu_v6_drop']
+    acl_fields_dict_ipv6_hnu_hnu = {}
 
     def describe(self):
         self.set_test_details(id=8, summary="Test IPv6 ACL HNU to HNU",
@@ -2087,6 +2091,7 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
                                                                               ip_version="ipv6")
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_ipv6_hnu_hnu = acl_json_output['hnu_hnu_v6_drop']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
 
@@ -2364,7 +2369,7 @@ class AclIPv6DropHNUtoNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
-    acl_fields_dict_ipv6_hnu_nu = acl_json_output['hnu_nu_v6_drop']
+    acl_fields_dict_ipv6_hnu_nu = {}
 
     def describe(self):
         self.set_test_details(id=9, summary="Test IPv6 ACL HNU to HNU",
@@ -2383,6 +2388,7 @@ class AclIPv6DropHNUtoNU(FunTestCase):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
         # Multiple streams for seding packets with different fields
+        self.acl_fields_dict_ipv6_hnu_nu = acl_json_output['hnu_nu_v6_drop']
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
 
         self.stream_obj_sport = create_streams(tx_port=hnu_ing_port, ipv6=True, dip=self.l3_config['destination_ip1'],
@@ -2647,7 +2653,7 @@ class AclRangeDropNUtoNU(FunTestCase):
     stream_obj_boundary_high = None
     stream_obj_lower_range = None
     stream_obj_higher_range = None
-    acl_fields_dict_range_nu_nu = acl_json_output['range_test_nu_nu']
+    acl_fields_dict_range_nu_nu = {}
 
     def describe(self):
         self.set_test_details(id=10, summary="Test ACL Range Drop NU to NU",
@@ -2665,6 +2671,7 @@ class AclRangeDropNUtoNU(FunTestCase):
                                                                               ip_version="ipv6")
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_range_nu_nu = acl_json_output['range_test_nu_nu']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
 
