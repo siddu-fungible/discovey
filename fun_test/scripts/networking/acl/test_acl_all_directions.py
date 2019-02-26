@@ -20,11 +20,10 @@ def get_acl_dict(nu_config_object, test_case=""):
     test_config_file = fun_test.get_script_parent_directory() + "/dut_configs.json"
     test_config = nu_config_object.read_test_configs_by_dut_type(config_file=test_config_file)
     dut_type_json = test_config['dut_type']
-    if test_case != "":
-        acl_json_file = fun_test.get_script_parent_directory() + '/acl.json'
-        acl_json_output_all = fun_test.parse_file_to_json(acl_json_file)
-        acl_json_output = acl_json_output_all[dut_type_json]
-        result['acl_dict'] = acl_json_output[test_case]
+    acl_json_file = fun_test.get_script_parent_directory() + '/acl.json'
+    acl_json_output_all = fun_test.parse_file_to_json(acl_json_file)
+    acl_json_output = acl_json_output_all[dut_type_json]
+    result['acl_dict'] = acl_json_output
     result['test_config'] = test_config
     result['traffic_dur'] = test_config['traffic_duration']
     return result
@@ -88,7 +87,7 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global spirent_config, subscribed_results, dut_config, template_obj, network_controller_obj, nu_ing_port, \
             nu_eg_port, hnu_ing_port, hnu_eg_port, generator_port_obj_dict, analyzer_port_obj_dict, nu_config_obj,\
-            TRAFFIC_DURATION
+            TRAFFIC_DURATION, acl_json_output
 
         nu_config_obj = NuConfigManager()
         spirent_config = nu_config_obj.read_traffic_generator_config()
@@ -111,6 +110,7 @@ class SpirentSetup(FunTestScript):
         hnu_eg_port = result['port_list'][3]
         acl_dict = get_acl_dict(nu_config_object=nu_config_obj)
         TRAFFIC_DURATION = acl_dict['traffic_dur']
+        acl_json_output = acl_dict['acl_dict']
         generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                            duration=TRAFFIC_DURATION,
                                            duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
@@ -154,8 +154,7 @@ class AclIngressDropNUtoNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="sanity_test_nu_nu")
-    acl_fields_dict_sanity_nu_nu = json_values['acl_dict']
+    acl_fields_dict_sanity_nu_nu = acl_json_output['sanity_test_nu_nu']
 
     def describe(self):
         self.set_test_details(id=1, summary="Test ACL Drop FPG to FPG",
@@ -453,8 +452,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="nu_nu_v6_test")
-    acl_fields_dict_ipv6_nu_nu = json_values['acl_dict']
+    acl_fields_dict_ipv6_nu_nu = acl_json_output['nu_nu_v6_test']
 
     def describe(self):
         self.set_test_details(id=2, summary="Test IPv6 ACL FPG to FPG",
@@ -743,8 +741,7 @@ class AclQosTCNuNu(FunTestCase):
     routes_config = None
     stream_obj = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="qos_nu_nu")
-    acl_fields_dict_qos_nu_nu = json_values['acl_dict']
+    acl_fields_dict_qos_nu_nu = acl_json_output['qos_nu_nu']
 
     def describe(self):
         self.set_test_details(id=3, summary=" Test QoS ACL for set_tc action",
@@ -867,8 +864,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="nu_hnu_egress_drop_test")
-    acl_fields_dict_sanity_eg_nu_hnu = json_values['acl_dict']
+    acl_fields_dict_sanity_eg_nu_hnu = acl_json_output['nu_hnu_egress_drop_test']
 
     def describe(self):
         self.set_test_details(id=4, summary="Test Traffic FPG to HNU",
@@ -1186,8 +1182,7 @@ class AclIngressDropHNUtoHNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="hnu_hnu_drop_test")
-    acl_fields_dict_sanity_ing_hnu_hnu = json_values['acl_dict']
+    acl_fields_dict_sanity_ing_hnu_hnu = acl_json_output['hnu_hnu_drop_test']
 
     def describe(self):
         self.set_test_details(id=5, summary="Test ACL HNU to HNU",
@@ -1478,8 +1473,7 @@ class AclEgressDropHNUtoNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="hnu_nu_drop_test")
-    acl_fields_dict_sanity_eg_hnu_nu = json_values['acl_dict']
+    acl_fields_dict_sanity_eg_hnu_nu = acl_json_output['hnu_nu_drop_test']
 
     def describe(self):
         self.set_test_details(id=6, summary="Test ACL HNU to NU",
@@ -1771,8 +1765,7 @@ class AclIPv6DropNUtoHNU(FunTestCase):
     stream_obj_ecn = None
     stream_obj_tcpflag = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="v6_nu_hnu_test")
-    acl_fields_dict_sanity_v6_nu_hnu = json_values['acl_dict']
+    acl_fields_dict_sanity_v6_nu_hnu = acl_json_output['v6_nu_hnu_test']
 
     def describe(self):
         self.set_test_details(id=7, summary="Test IPv6 ACL FPG to HNU",
@@ -2077,8 +2070,7 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="hnu_hnu_v6_drop")
-    acl_fields_dict_ipv6_hnu_hnu = json_values['acl_dict']
+    acl_fields_dict_ipv6_hnu_hnu = acl_json_output['hnu_hnu_v6_drop']
 
     def describe(self):
         self.set_test_details(id=8, summary="Test IPv6 ACL HNU to HNU",
@@ -2372,8 +2364,7 @@ class AclIPv6DropHNUtoNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="hnu_nu_v6_drop")
-    acl_fields_dict_ipv6_hnu_nu = json_values['acl_dict']
+    acl_fields_dict_ipv6_hnu_nu = acl_json_output['hnu_nu_v6_drop']
 
     def describe(self):
         self.set_test_details(id=9, summary="Test IPv6 ACL HNU to HNU",
@@ -2656,8 +2647,7 @@ class AclRangeDropNUtoNU(FunTestCase):
     stream_obj_boundary_high = None
     stream_obj_lower_range = None
     stream_obj_higher_range = None
-    json_values = get_acl_dict(nu_config_object=nu_config_obj, test_case="range_test_nu_nu")
-    acl_fields_dict_range_nu_nu = json_values['acl_dict']
+    acl_fields_dict_range_nu_nu = acl_json_output['range_test_nu_nu']
 
     def describe(self):
         self.set_test_details(id=10, summary="Test ACL Range Drop NU to NU",
