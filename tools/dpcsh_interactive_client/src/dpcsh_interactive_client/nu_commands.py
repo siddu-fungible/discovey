@@ -2304,11 +2304,11 @@ class SampleCommands(object):
                 cmd_arg_dict['psw_drop'] = psw_drop
             if pps_en is not None:
                 cmd_arg_dict['pps_en'] = pps_en
-            if pps_interval:
+            if pps_interval is not None:
                 cmd_arg_dict['pps_interval'] = pps_interval
-            if pps_burst:
+            if pps_burst is not None:
                 cmd_arg_dict['pps_burst'] = pps_burst
-            if pps_tick:
+            if pps_tick is not None:
                 cmd_arg_dict['pps_tick'] = pps_tick
             if sampler_en is not None:
                 cmd_arg_dict['sampler_en'] = sampler_en

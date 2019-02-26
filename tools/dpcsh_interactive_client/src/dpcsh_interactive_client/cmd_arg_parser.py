@@ -346,7 +346,7 @@ set_nu_sample_ingress_parser.add_argument("-pps_burst", type=int, help="pps burs
 set_nu_sample_ingress_parser.add_argument("-pps_tick", type=int, help="pps tick set clock frequency for e.g "
                                                                       "1000 KHz[1000]", default=None)
 set_nu_sample_ingress_parser.add_argument("-sampler_en", type=int, help="sampler_en [0-1]", default=None)
-set_nu_sample_ingress_parser.add_argument("-sampler_rate", type=str, help="sampler_rate [1-0x3fff]", default=None)
+set_nu_sample_ingress_parser.add_argument("-sampler_rate", type=int, help="sampler_rate [1-0x3fff]", default=None)
 set_nu_sample_ingress_parser.add_argument("-sampler_run_sz", type=int, help="sampler run sz [1-15]", default=None)
 set_nu_sample_ingress_parser.add_argument("-first_cell_only", type=int, help="first cell only [0-1]", default=None)
 
