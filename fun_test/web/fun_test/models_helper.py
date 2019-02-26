@@ -109,9 +109,9 @@ def get_all_test_cases(script_path):
     return test_cases
 
 def get_test_case_details(script_path, test_case_id):
-    from lib.system.fun_test import fun_test
-    import os
-    os.environ["DISABLE_FUN_TEST"] = "1"
+    # from lib.system.fun_test import fun_test
+    # import os
+    # os.environ["DISABLE_FUN_TEST"] = "1"
 
     # print "Script Path", script_path
     # result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
