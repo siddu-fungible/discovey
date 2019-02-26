@@ -22,8 +22,8 @@ def get_acl_dict(nu_config_object, test_case=""):
     dut_type_json = test_config['dut_type']
     acl_json_file = fun_test.get_script_parent_directory() + '/acl.json'
     acl_json_output_all = fun_test.parse_file_to_json(acl_json_file)
-    acl_json_output = acl_json_output_all[dut_type_json]
-    result['acl_dict'] = acl_json_output
+    acl_json_out = acl_json_output_all[dut_type_json]
+    result['acl_dict'] = acl_json_out
     result['test_config'] = test_config
     result['traffic_dur'] = test_config['traffic_duration']
     return result
