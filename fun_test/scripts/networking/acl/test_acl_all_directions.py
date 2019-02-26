@@ -2668,8 +2668,7 @@ class AclRangeDropNUtoNU(FunTestCase):
 
     def setup(self):
         global dut_rx_port, dut_tx_port
-        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
-                                                                              ip_version="ipv6")
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
         self.acl_fields_dict_range_nu_nu = acl_json_output['range_test_nu_nu']
