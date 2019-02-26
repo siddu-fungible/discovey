@@ -160,13 +160,13 @@ class AclIngressDropNUtoNU(FunTestCase):
         self.set_test_details(id=1, summary="Test ACL Drop FPG to FPG",
                               steps="""
                                   1. Create Multiple streams on Tx port, make sure 1 matches the ACL for drop
-                                  2. Start Traffic for %d secs
+                                  2. Start Traffic
                                   3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count for 
                                   all streams but the drop stream
                                   4. Make sure no packets are transmitted for drop stream
                                   5. Make sure counter value equals sent packets on drop stream
                                   6. Ensure no errors are seen on spirent ports
-                                  """ % TRAFFIC_DURATION)
+                                  """ )
 
     def setup(self):
         global dut_rx_port, dut_tx_port
@@ -459,11 +459,11 @@ class AclIPv6DropNUtoNU(FunTestCase):
         self.set_test_details(id=2, summary="Test IPv6 ACL FPG to FPG",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
-                                 2. Start Traffic for %d secs
+                                 2. Start Traffic 
                                  3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                  4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                  5. Ensure no errors are seen on spirent ports
-                                 """ % TRAFFIC_DURATION)
+                                 """)
 
     def setup(self):
         global dut_rx_port, dut_tx_port
@@ -872,11 +872,11 @@ class AclEgressDropNUtoHNU(FunTestCase):
         self.set_test_details(id=4, summary="Test Traffic FPG to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
-                              2. Start Traffic for %d secs
+                              2. Start Traffic 
                               3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                               4. Ensure on spirent Tx port frames must be equal to Rx port frames
                               5. Ensure no errors are seen on spirent ports
-                              """ % TRAFFIC_DURATION)
+                              """ )
 
     def setup(self):
         global dut_rx_port,dut_tx_port
@@ -1190,11 +1190,11 @@ class AclIngressDropHNUtoHNU(FunTestCase):
         self.set_test_details(id=5, summary="Test ACL HNU to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
-                              2. Start Traffic for %d secs
+                              2. Start Traffic
                               3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                               4. Ensure on spirent Tx port frames must be equal to Rx port frames
                               5. Ensure no errors are seen on spirent ports
-                              """ % TRAFFIC_DURATION)
+                              """)
 
     def setup(self):
         global dut_rx_port,dut_tx_port
@@ -1481,11 +1481,11 @@ class AclEgressDropHNUtoNU(FunTestCase):
         self.set_test_details(id=6, summary="Test ACL HNU to NU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
-                              2. Start Traffic for %d secs
+                              2. Start Traffic
                               3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                               4. Ensure on spirent Tx port frames must be equal to Rx port frames
                               5. Ensure no errors are seen on spirent ports
-                              """ % TRAFFIC_DURATION)
+                              """)
 
     def setup(self):
         global dut_rx_port,dut_tx_port
@@ -1774,11 +1774,11 @@ class AclIPv6DropNUtoHNU(FunTestCase):
         self.set_test_details(id=7, summary="Test IPv6 ACL FPG to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
-                                 2. Start Traffic for %d secs
+                                 2. Start Traffic
                                  3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                  4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                  5. Ensure no errors are seen on spirent ports
-                                 """ % TRAFFIC_DURATION)
+                                 """)
 
     def setup(self):
         global dut_rx_port, dut_tx_port
@@ -2080,11 +2080,11 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
         self.set_test_details(id=8, summary="Test IPv6 ACL HNU to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
-                                 2. Start Traffic for %d secs
+                                 2. Start Traffic
                                  3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                  4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                  5. Ensure no errors are seen on spirent ports
-                                 """ % TRAFFIC_DURATION)
+                                 """ )
 
     def setup(self):
         global dut_rx_port, dut_tx_port
@@ -2375,11 +2375,11 @@ class AclIPv6DropHNUtoNU(FunTestCase):
         self.set_test_details(id=9, summary="Test IPv6 ACL HNU to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
-                                 2. Start Traffic for %d secs
+                                 2. Start Traffic
                                  3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                  4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                  5. Ensure no errors are seen on spirent ports
-                                 """ % TRAFFIC_DURATION)
+                                 """)
 
     def setup(self):
         global dut_rx_port, dut_tx_port
@@ -2659,11 +2659,11 @@ class AclRangeDropNUtoNU(FunTestCase):
         self.set_test_details(id=10, summary="Test ACL Range Drop NU to NU",
                               steps="""
                                      1. Create TCP frame stream on Tx Port
-                                     2. Start Traffic for %d secs
+                                     2. Start Traffic
                                      3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                      4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                      5. Ensure no errors are seen on spirent ports
-                                     """ % TRAFFIC_DURATION)
+                                     """)
 
     def setup(self):
         global dut_rx_port, dut_tx_port
