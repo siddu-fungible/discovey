@@ -1580,7 +1580,9 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         metrics["input_mode"] = line["mode"] if "mode" in line else ""
                         metrics["input_version"] = line["version"]
                         metrics["input_frame_size"] = line["frame_size"]
-                        date_time = get_time_from_timestamp(line["timestamp"])
+                        dt = get_time_from_timestamp(line["timestamp"])
+                        dt = datetime(year=dt.year, month=dt.month, day=dt.day, hour=0, minute=0, second=0)
+                        date_time = get_localized_time(dt)
                         metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
                         metrics["output_pps"] = line["pps"] if "pps" in line else -1
                         metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1

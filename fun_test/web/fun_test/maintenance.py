@@ -798,12 +798,12 @@ if __name__ == "__main_nw_delete__":
     entries.delete()
     print "deleted nu transit model"
 
-if __name__ == "__main__":
-    model = MetricChart
-    chart_names = ["Networking", ]
-    entries = model.objects.all()
-    for entry in entries:
-        
-    print "removed milestones for networking"
+# if __name__ == "__main__":
+#     model = MetricChart
+#     chart_names = ["Networking", ]
+#     entries = model.objects.all()
+#     for entry in entries:
+#
+#     print "removed milestones for networking"
 
 
