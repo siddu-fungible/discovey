@@ -127,6 +127,18 @@ export class RegressionComponent implements OnInit {
 
   }
 
+  getReRunOriginalSuitePath(suiteExecution) {
+    let suitePath = "*";
+    if (suiteExecution) {
+      if (suiteExecution.reRunInfo) {
+        if (suiteExecution.reRunInfo.reRunInfo.length > 0) {
+          suitePath = suiteExecution.reRunInfo.reRunInfo[0].original.attributes.suite_path;
+        }
+      }
+    }
+    return suitePath;
+  }
+
   testCaseLength = function (testCases) {
     return JSON.parse(testCases).length;
   };

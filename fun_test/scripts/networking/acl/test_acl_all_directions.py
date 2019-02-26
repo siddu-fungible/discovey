@@ -8,37 +8,25 @@ from scripts.networking.helper import *
 from lib.utilities.pcap_parser import *
 
 spirent_config = {}
-nu_config_obj = NuConfigManager()
-TEST_CONFIG_FILE = fun_test.get_script_parent_directory() + "/dut_configs.json"
-test_config = nu_config_obj.read_test_configs_by_dut_type(config_file=TEST_CONFIG_FILE)
 subscribed_results = None
-TRAFFIC_DURATION = test_config['traffic_duration']
-dut_type_json = test_config['dut_type']
 NUM_PORTS = 4
 generator_port_obj_dict = {}
 analyzer_port_obj_dict = {}
 prev_traffic_success = 0
-acl_json_file = fun_test.get_script_parent_directory() + '/acl.json'
-acl_json_output_all = fun_test.parse_file_to_json(acl_json_file)
-acl_json_output = acl_json_output_all[dut_type_json]
-if dut_type_json == 'f1':
-    acl_fields_dict_sanity_nu_nu = acl_json_output["sanity_test_nu_nu"]
-    acl_fields_dict_qos_nu_nu = acl_json_output['qos_nu_nu']
-    acl_fields_dict_ipv6_nu_nu = acl_json_output["nu_nu_v6_test"]
-    acl_fields_dict_range_nu_nu = acl_json_output['range_test_nu_nu']
-    acl_fields_dict_sanity_eg_nu_hnu = acl_json_output['nu_hnu_egress_drop_test']
-    acl_fields_dict_sanity_eg_hnu_nu = acl_json_output['hnu_nu_drop_test']
-else:
-    acl_fields_dict_sanity_eg_nu_hnu = acl_json_output['nu_hnu_egress_drop_test']
-    acl_fields_dict_sanity_nu_nu = acl_json_output["sanity_test_nu_nu"]
-    acl_fields_dict_ipv6_nu_nu = acl_json_output["nu_nu_v6_test"]
-    acl_fields_dict_qos_nu_nu = acl_json_output['qos_nu_nu']
-    acl_fields_dict_sanity_ing_hnu_hnu = acl_json_output['hnu_hnu_drop_test']
-    acl_fields_dict_sanity_eg_hnu_nu = acl_json_output['hnu_nu_drop_test']
-    acl_fields_dict_sanity_v6_nu_hnu = acl_json_output['v6_nu_hnu_test']
-    acl_fields_dict_ipv6_hnu_hnu = acl_json_output['hnu_hnu_v6_drop']
-    acl_fields_dict_ipv6_hnu_nu = acl_json_output['hnu_nu_v6_drop']
-    acl_fields_dict_range_nu_nu = acl_json_output['range_test_nu_nu']
+
+
+def get_acl_dict(nu_config_object):
+    result = {"acl_dict": {}, "traffic_dur": 0, "test_config": {}}
+    test_config_file = fun_test.get_script_parent_directory() + "/dut_configs.json"
+    test_config = nu_config_object.read_test_configs_by_dut_type(config_file=test_config_file)
+    dut_type_json = test_config['dut_type']
+    acl_json_file = fun_test.get_script_parent_directory() + '/acl.json'
+    acl_json_output_all = fun_test.parse_file_to_json(acl_json_file)
+    acl_json_out = acl_json_output_all[dut_type_json]
+    result['acl_dict'] = acl_json_out
+    result['test_config'] = test_config
+    result['traffic_dur'] = test_config['traffic_duration']
+    return result
 
 
 def create_streams(tx_port, dip, sip, dmac, s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
@@ -98,8 +86,10 @@ class SpirentSetup(FunTestScript):
 
     def setup(self):
         global spirent_config, subscribed_results, dut_config, template_obj, network_controller_obj, nu_ing_port, \
-            nu_eg_port, hnu_ing_port, hnu_eg_port, generator_port_obj_dict, analyzer_port_obj_dict
+            nu_eg_port, hnu_ing_port, hnu_eg_port, generator_port_obj_dict, analyzer_port_obj_dict, nu_config_obj,\
+            TRAFFIC_DURATION, acl_json_output, test_config
 
+        nu_config_obj = NuConfigManager()
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         dut_config = nu_config_obj.read_dut_config(flow_type=NuConfigManager.ACL_FLOW_TYPE,
@@ -118,9 +108,10 @@ class SpirentSetup(FunTestScript):
         nu_eg_port = result['port_list'][1]
         hnu_ing_port = result['port_list'][2]
         hnu_eg_port = result['port_list'][3]
-        #For Fake HU image, to be removed later
-        if dut_type_json == "f1":
-            hnu_ing_port = result['port_list'][3]
+        acl_dict = get_acl_dict(nu_config_object=nu_config_obj)
+        TRAFFIC_DURATION = acl_dict['traffic_dur']
+        acl_json_output = acl_dict['acl_dict']
+        test_config = acl_dict['test_config']
         generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                            duration=TRAFFIC_DURATION,
                                            duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
@@ -164,84 +155,86 @@ class AclIngressDropNUtoNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
+    acl_fields_dict_sanity_nu_nu = {}
 
     def describe(self):
         self.set_test_details(id=1, summary="Test ACL Drop FPG to FPG",
                               steps="""
                                   1. Create Multiple streams on Tx port, make sure 1 matches the ACL for drop
-                                  2. Start Traffic for %d secs
+                                  2. Start Traffic
                                   3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count for 
                                   all streams but the drop stream
                                   4. Make sure no packets are transmitted for drop stream
                                   5. Make sure counter value equals sent packets on drop stream
                                   6. Ensure no errors are seen on spirent ports
-                                  """ % TRAFFIC_DURATION)
+                                  """ )
 
     def setup(self):
         global dut_rx_port, dut_tx_port
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_sanity_nu_nu = acl_json_output['sanity_test_nu_nu']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
         self.stream_obj_sport = create_streams(tx_port=nu_ing_port,
                                                dmac=self.routes_config['routermac'],
                                                dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_sanity_nu_nu['source_ip'],
-                                               d_port=acl_fields_dict_sanity_nu_nu['dest_port'],
-                                               sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                               ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                               sip=self.acl_fields_dict_sanity_nu_nu['source_ip'],
+                                               d_port=self.acl_fields_dict_sanity_nu_nu['dest_port'],
+                                               sync_bit=self.acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
+                                               ack_bit=self.acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
 
         self.stream_obj_dport = create_streams(tx_port=nu_ing_port,
                                                dmac=self.routes_config['routermac'],
                                                dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_sanity_nu_nu['source_ip'],
-                                               s_port=acl_fields_dict_sanity_nu_nu['source_port'],
-                                               sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                               ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                               sip=self.acl_fields_dict_sanity_nu_nu['source_ip'],
+                                               s_port=self.acl_fields_dict_sanity_nu_nu['source_port'],
+                                               sync_bit=self.acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
+                                               ack_bit=self.acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
 
         self.stream_obj_sip = create_streams(tx_port=nu_ing_port,
                                               dmac=self.routes_config['routermac'],
                                               dip=self.l3_config['destination_ip1'], sip="192.168.2.10",
-                                              s_port=acl_fields_dict_sanity_nu_nu['source_port'],
-                                              d_port=acl_fields_dict_sanity_nu_nu['dest_port'],
-                                              sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                              s_port=self.acl_fields_dict_sanity_nu_nu['source_port'],
+                                              d_port=self.acl_fields_dict_sanity_nu_nu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
 
         self.stream_obj_dip = create_streams(tx_port=nu_ing_port,
                                              dmac=self.routes_config['routermac'],
-                                             dip=acl_fields_dict_sanity_nu_nu['wrong_dip'],
-                                             sip=acl_fields_dict_sanity_nu_nu['source_ip'],
-                                             s_port=acl_fields_dict_sanity_nu_nu['source_port'],
-                                             d_port=acl_fields_dict_sanity_nu_nu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                             dip=self.acl_fields_dict_sanity_nu_nu['wrong_dip'],
+                                             sip=self.acl_fields_dict_sanity_nu_nu['source_ip'],
+                                             s_port=self.acl_fields_dict_sanity_nu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_nu_nu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
 
         self.stream_obj_ecn = create_streams(tx_port=nu_ing_port,
                                              dmac=self.routes_config['routermac'],
                                              dip=self.l3_config['destination_ip1'],
-                                             sip=acl_fields_dict_sanity_nu_nu['source_ip'],
-                                             s_port=acl_fields_dict_sanity_nu_nu['source_port'],
-                                             d_port=acl_fields_dict_sanity_nu_nu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
+                                             sip=self.acl_fields_dict_sanity_nu_nu['source_ip'],
+                                             s_port=self.acl_fields_dict_sanity_nu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_nu_nu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_nu_nu['tcp_ack_bit'])
 
         self.stream_obj_tcpflag = create_streams(tx_port=nu_ing_port,
                                                  dmac=self.routes_config['routermac'],
                                                  dip=self.l3_config['destination_ip1'],
-                                                 sip=acl_fields_dict_sanity_nu_nu['source_ip'],
-                                                 s_port=acl_fields_dict_sanity_nu_nu['source_port'],
-                                                 d_port=acl_fields_dict_sanity_nu_nu['dest_port'],
-                                                 ecn_v4=acl_fields_dict_sanity_nu_nu['ecn_bits'])
+                                                 sip=self.acl_fields_dict_sanity_nu_nu['source_ip'],
+                                                 s_port=self.acl_fields_dict_sanity_nu_nu['source_port'],
+                                                 d_port=self.acl_fields_dict_sanity_nu_nu['dest_port'],
+                                                 ecn_v4=self.acl_fields_dict_sanity_nu_nu['ecn_bits'])
 
         self.stream_obj_drop = create_streams(tx_port=nu_ing_port,
                                               dmac=self.routes_config['routermac'],
                                               dip=self.l3_config['destination_ip1'],
-                                              sip=acl_fields_dict_sanity_nu_nu['source_ip'],
-                                              s_port=acl_fields_dict_sanity_nu_nu['source_port'],
-                                              d_port=acl_fields_dict_sanity_nu_nu['dest_port'],
-                                              sync_bit=acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_sanity_nu_nu['tcp_ack_bit'],
-                                              ecn_v4=acl_fields_dict_sanity_nu_nu['ecn_bits'])
+                                              sip=self.acl_fields_dict_sanity_nu_nu['source_ip'],
+                                              s_port=self.acl_fields_dict_sanity_nu_nu['source_port'],
+                                              d_port=self.acl_fields_dict_sanity_nu_nu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_sanity_nu_nu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_sanity_nu_nu['tcp_ack_bit'],
+                                              ecn_v4=self.acl_fields_dict_sanity_nu_nu['ecn_bits'])
 
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
@@ -274,7 +267,7 @@ class AclIngressDropNUtoNU(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION+1)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
         # Getting Spirent results - only when analyzer/generator is subscribed
 
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
@@ -335,6 +328,23 @@ class AclIngressDropNUtoNU(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+
+            dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+            fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+            fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+            checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                         tx=False)
+            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+                dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -362,9 +372,9 @@ class AclIngressDropNUtoNU(FunTestCase):
                 stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dip = int(
                 stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
-            # fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
-            #                               actual=rx_stream_result_framecount_dip,
-            #                               message="Comparing tx and rx frame count on Spirent for stream dip")
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
+                                          actual=rx_stream_result_framecount_dip,
+                                          message="Comparing tx and rx frame count on Spirent for stream dip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_ecn.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -401,7 +411,7 @@ class AclIngressDropNUtoNU(FunTestCase):
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
             counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                             counter_id=acl_fields_dict_sanity_nu_nu['counter_id'])
+                                                  counter_id=self.acl_fields_dict_sanity_nu_nu['counter_id'])
 
             checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
@@ -417,11 +427,12 @@ class AclIngressDropNUtoNU(FunTestCase):
                 stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
 
             counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                               counter_id=acl_fields_dict_sanity_nu_nu['counter_id'])
+                                                    counter_id=self.acl_fields_dict_sanity_nu_nu['counter_id'])
 
             fun_test.log("tx_streamcount"+str(tx_stream_result_framecount_drop))
             fun_test.test_assert_expected(expected=0, actual=rx_stream_result_framecount_drop,
-                                          message="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted")
+                                          message="Comparing tx and rx frame count on Spirent for stream drop."
+                                                  "No pkt shuold be transmitted")
             # add counter values with the stream value using : peek_fwd_flex_stats
             fun_test.test_assert_expected(expected=tx_stream_result_framecount_drop,
                                           actual=(counter_after - counter_bef),
@@ -433,8 +444,6 @@ class AclIngressDropNUtoNU(FunTestCase):
             fun_test.test_assert(result['result'], checkpoint)
 
     def cleanup(self):
-        dut_rx_port = dut_config['ports'][0]
-
         checkpoint = "Delete the streams"
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sport.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dport.spirent_handle])
@@ -462,75 +471,77 @@ class AclIPv6DropNUtoNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
+    acl_fields_dict_ipv6_nu_nu = {}
 
     def describe(self):
         self.set_test_details(id=2, summary="Test IPv6 ACL FPG to FPG",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
-                                 2. Start Traffic for %d secs
+                                 2. Start Traffic 
                                  3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                  4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                  5. Ensure no errors are seen on spirent ports
-                                 """ % TRAFFIC_DURATION)
+                                 """)
 
     def setup(self):
         global dut_rx_port, dut_tx_port
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
                                                                               ip_version="ipv6")
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_ipv6_nu_nu = acl_json_output['nu_nu_v6_test']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port,
 
         self.stream_obj_sport = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                                dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_ipv6_nu_nu['source_ip'],
+                                               sip=self.acl_fields_dict_ipv6_nu_nu['source_ip'],
                                                dmac=self.routes_config['routermac'],
-                                               s_port=1024, d_port=acl_fields_dict_ipv6_nu_nu['dest_port'])
+                                               s_port=1024, d_port=self.acl_fields_dict_ipv6_nu_nu['dest_port'])
 
         self.stream_obj_dport = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                                dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_ipv6_nu_nu['source_ip'],
+                                               sip=self.acl_fields_dict_ipv6_nu_nu['source_ip'],
                                                dmac=self.routes_config['routermac'],
-                                               s_port=acl_fields_dict_ipv6_nu_nu['source_port'], d_port=1024)
+                                               s_port=self.acl_fields_dict_ipv6_nu_nu['source_port'], d_port=1024)
 
         self.stream_obj_sip = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                              dip=self.l3_config['destination_ip1'],
                                              sip="3001::1", dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_ipv6_nu_nu['source_port'],
-                                             d_port=acl_fields_dict_ipv6_nu_nu['dest_port'])
+                                             s_port=self.acl_fields_dict_ipv6_nu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_ipv6_nu_nu['dest_port'])
 
         self.stream_obj_dip = create_streams(tx_port=nu_ing_port,  ipv6=True,
-                                             dip=acl_fields_dict_ipv6_nu_nu['wrong_dip'],
-                                             sip=acl_fields_dict_ipv6_nu_nu['source_ip'],
+                                             dip=self.acl_fields_dict_ipv6_nu_nu['wrong_dip'],
+                                             sip=self.acl_fields_dict_ipv6_nu_nu['source_ip'],
                                              dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_ipv6_nu_nu['source_port'],
-                                             d_port=acl_fields_dict_ipv6_nu_nu['dest_port'])
+                                             s_port=self.acl_fields_dict_ipv6_nu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_ipv6_nu_nu['dest_port'])
 
         self.stream_obj_tcpflag = create_streams(tx_port=nu_ing_port,
                                                  ipv6=True, dip=self.l3_config['destination_ip1'],
-                                                 sip=acl_fields_dict_ipv6_nu_nu['source_ip'],
+                                                 sip=self.acl_fields_dict_ipv6_nu_nu['source_ip'],
                                                  dmac=self.routes_config['routermac'],
-                                                 s_port=acl_fields_dict_ipv6_nu_nu['source_port'],
-                                                 d_port=acl_fields_dict_ipv6_nu_nu['dest_port'],
-                                                 sync_bit=acl_fields_dict_ipv6_nu_nu['tcp_sync_bit'])
+                                                 s_port=self.acl_fields_dict_ipv6_nu_nu['source_port'],
+                                                 d_port=self.acl_fields_dict_ipv6_nu_nu['dest_port'],
+                                                 sync_bit=self.acl_fields_dict_ipv6_nu_nu['tcp_sync_bit'])
 
         self.stream_obj_ecn = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                                  dip=self.l3_config['destination_ip1'],
-                                                 sip=acl_fields_dict_ipv6_nu_nu['source_ip'],
+                                                 sip=self.acl_fields_dict_ipv6_nu_nu['source_ip'],
                                                  dmac=self.routes_config['routermac'],
-                                                 s_port=acl_fields_dict_ipv6_nu_nu['source_port'],
-                                                 d_port=acl_fields_dict_ipv6_nu_nu['dest_port'],
-                                                 sync_bit=acl_fields_dict_ipv6_nu_nu['tcp_sync_bit'],
-                                                 ack_bit=acl_fields_dict_ipv6_nu_nu['tcp_ack_bit'])
+                                                 s_port=self.acl_fields_dict_ipv6_nu_nu['source_port'],
+                                                 d_port=self.acl_fields_dict_ipv6_nu_nu['dest_port'],
+                                                 sync_bit=self.acl_fields_dict_ipv6_nu_nu['tcp_sync_bit'],
+                                                 ack_bit=self.acl_fields_dict_ipv6_nu_nu['tcp_ack_bit'])
 
         self.stream_obj_drop = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                               dip=self.l3_config['destination_ip1'],
-                                              sip=acl_fields_dict_ipv6_nu_nu['source_ip'],
+                                              sip=self.acl_fields_dict_ipv6_nu_nu['source_ip'],
                                               dmac=self.routes_config['routermac'],
-                                              s_port=acl_fields_dict_ipv6_nu_nu['source_port'],
-                                              d_port=acl_fields_dict_ipv6_nu_nu['dest_port'],
-                                              sync_bit=acl_fields_dict_ipv6_nu_nu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_ipv6_nu_nu['tcp_ack_bit'],
+                                              s_port=self.acl_fields_dict_ipv6_nu_nu['source_port'],
+                                              d_port=self.acl_fields_dict_ipv6_nu_nu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_ipv6_nu_nu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_ipv6_nu_nu['tcp_ack_bit'],
                                               v6_traffic_class=2)
 
         dut_rx_port = dut_config['ports'][0]
@@ -695,7 +706,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
             counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                                  counter_id=acl_fields_dict_ipv6_nu_nu['counter_id'])
+                                                  counter_id=self.acl_fields_dict_ipv6_nu_nu['counter_id'])
 
             checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
@@ -711,7 +722,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
                 stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
 
             counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                                    counter_id=acl_fields_dict_ipv6_nu_nu['counter_id'])
+                                                    counter_id=self.acl_fields_dict_ipv6_nu_nu['counter_id'])
 
             fun_test.log("tx_streamcount" + str(tx_stream_result_framecount_drop))
             checkpoint="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted"
@@ -751,6 +762,7 @@ class AclQosTCNuNu(FunTestCase):
     stream_obj = None
     capture_results = None
 
+    acl_fields_dict_qos_nu_nu = {}
     def describe(self):
         self.set_test_details(id=3, summary=" Test QoS ACL for set_tc action",
                               steps="""
@@ -764,15 +776,14 @@ class AclQosTCNuNu(FunTestCase):
     def setup(self):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
-
+        self.acl_fields_dict_qos_nu_nu = acl_json_output['qos_nu_nu']
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
         self.stream_obj = create_streams(tx_port=nu_ing_port,
-                                               dmac=self.routes_config['routermac'],
-                                               dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_sanity_nu_nu['source_ip'],
-                                               d_port=acl_fields_dict_qos_nu_nu['dest_port'],
-                                               ecn_v4=acl_fields_dict_qos_nu_nu['ecn_bits'])
-
+                                         dmac=self.routes_config['routermac'],
+                                         dip=self.l3_config['destination_ip1'],
+                                         sip=self.acl_fields_dict_qos_nu_nu['source_ip'],
+                                         d_port=self.acl_fields_dict_qos_nu_nu['dest_port'],
+                                         ecn_v4=self.acl_fields_dict_qos_nu_nu['ecn_bits'])
 
     def run(self):
         checkpoint = "Clear FPG port stats on DUT"
@@ -803,14 +814,14 @@ class AclQosTCNuNu(FunTestCase):
         pg_queue_counters_dict = get_psw_port_enqueue_dequeue_counters(network_controller_obj=network_controller_obj,
                                                   dut_port=dut_rx_port, pg=True, hnu=False)
         qos_count_bef = get_qos_stats(network_controller_obj=network_controller_obj,
-                                      queue_no=acl_fields_dict_qos_nu_nu['queue_id'],
+                                      queue_no=self.acl_fields_dict_qos_nu_nu['queue_id'],
                                       dut_port=dut_rx_port, queue_type='pg_deq')
 
         ecn_qos_count_bef = get_qos_stats(network_controller_obj=network_controller_obj,
-                                            queue_no=acl_fields_dict_qos_nu_nu['ecn_tc'],
-                                            dut_port=dut_rx_port, queue_type='pg_deq')
+                                          queue_no=self.acl_fields_dict_qos_nu_nu['ecn_tc'],
+                                          dut_port=dut_rx_port, queue_type='pg_deq')
         counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                         counter_id=acl_fields_dict_qos_nu_nu['counter_id'])
+                                              counter_id=self.acl_fields_dict_qos_nu_nu['counter_id'])
 
         checkpoint = "Start traffic from %s port for %d secs stream" % (tx_port, TRAFFIC_DURATION)
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
@@ -832,20 +843,22 @@ class AclQosTCNuNu(FunTestCase):
         checkpoint = "Make sure packets transmitted equals ACL counter value"
 
         counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                           counter_id=acl_fields_dict_qos_nu_nu['counter_id'])
+                                                counter_id=self.acl_fields_dict_qos_nu_nu['counter_id'])
         fun_test.test_assert_expected(expected=rx_stream_result_framecount, actual=counter_after - counter_bef,
                                       message=checkpoint)
 
         qos_count_after = get_qos_stats(network_controller_obj=network_controller_obj,
-                                        queue_no=acl_fields_dict_qos_nu_nu['queue_id'],
+                                        queue_no=self.acl_fields_dict_qos_nu_nu['queue_id'],
                                         dut_port=dut_rx_port, queue_type='pg_deq')
         fun_test.test_assert_expected(expected=tx_stream_result_framecount,actual=(qos_count_after-qos_count_bef),
-                                      message="Ensure Queue %s has the frames after matching the ACL" % acl_fields_dict_qos_nu_nu['queue_id'])
+                                      message="Ensure Queue %s has the frames after matching the ACL"
+                                              % self.acl_fields_dict_qos_nu_nu['queue_id'])
         ecn_qos_count_after = get_qos_stats(network_controller_obj=network_controller_obj,
-                                      queue_no=acl_fields_dict_qos_nu_nu['ecn_tc'],
+                                      queue_no=self.acl_fields_dict_qos_nu_nu['ecn_tc'],
                                       dut_port=dut_rx_port, queue_type='pg_deq')
         fun_test.test_assert_expected(expected=0,actual=ecn_qos_count_after-ecn_qos_count_bef,
-                                      message="Ensure Queue %s has no packets" % acl_fields_dict_qos_nu_nu['ecn_tc'])
+                                      message="Ensure Queue %s has no packets"
+                                              % self.acl_fields_dict_qos_nu_nu['ecn_tc'])
 
     def cleanup(self):
 
@@ -871,16 +884,17 @@ class AclEgressDropNUtoHNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
+    acl_fields_dict_sanity_eg_nu_hnu = {}
 
     def describe(self):
         self.set_test_details(id=4, summary="Test Traffic FPG to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
-                              2. Start Traffic for %d secs
+                              2. Start Traffic 
                               3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                               4. Ensure on spirent Tx port frames must be equal to Rx port frames
                               5. Ensure no errors are seen on spirent ports
-                              """ % TRAFFIC_DURATION)
+                              """ )
 
     def setup(self):
         global dut_rx_port,dut_tx_port
@@ -888,66 +902,66 @@ class AclEgressDropNUtoHNU(FunTestCase):
         self.l3_config = self.routes_config['l3_config']
         #Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
-
+        self.acl_fields_dict_sanity_eg_nu_hnu = acl_json_output['nu_hnu_egress_drop_test']
         self.stream_obj_sport = create_streams(tx_port=nu_ing_port,
                                                     dmac=self.routes_config['routermac'],
                                                     dip=self.l3_config['hnu_destination_ip2'],
-                                                    sip=acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
-                                                    d_port=acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
-                                                    sync_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
-                                                    ack_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
+                                                    sip=self.acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
+                                                    d_port=self.acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
+                                                    sync_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
+                                                    ack_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
 
         self.stream_obj_dport = create_streams(tx_port=nu_ing_port,
                                                dmac=self.routes_config['routermac'],
                                                dip=self.l3_config['hnu_destination_ip2'],
-                                               sip=acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
-                                               s_port=acl_fields_dict_sanity_eg_nu_hnu['source_port'],
-                                               sync_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
-                                               ack_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
+                                               sip=self.acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
+                                               s_port=self.acl_fields_dict_sanity_eg_nu_hnu['source_port'],
+                                               sync_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
+                                               ack_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
 
         self.stream_obj_sip = create_streams(tx_port=nu_ing_port,
                                              dmac=self.routes_config['routermac'],
                                              dip=self.l3_config['hnu_destination_ip2'], sip="192.168.2.10",
-                                             s_port=acl_fields_dict_sanity_eg_nu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
+                                             s_port=self.acl_fields_dict_sanity_eg_nu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
 
         self.stream_obj_dip = create_streams(tx_port=nu_ing_port,
                                              dmac=self.routes_config['routermac'],
-                                             dip=acl_fields_dict_sanity_eg_nu_hnu['wrong_dip'],
-                                             sip=acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
-                                             s_port=acl_fields_dict_sanity_eg_nu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
+                                             dip=self.acl_fields_dict_sanity_eg_nu_hnu['wrong_dip'],
+                                             sip=self.acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
+                                             s_port=self.acl_fields_dict_sanity_eg_nu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
 
         self.stream_obj_ecn = create_streams(tx_port=nu_ing_port,
                                              dmac=self.routes_config['routermac'],
                                              dip=self.l3_config['hnu_destination_ip2'],
-                                             sip=acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
-                                             s_port=acl_fields_dict_sanity_eg_nu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
+                                             sip=self.acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
+                                             s_port=self.acl_fields_dict_sanity_eg_nu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'])
 
         self.stream_obj_tcpflag = create_streams(tx_port=nu_ing_port,
                                                  dmac=self.routes_config['routermac'],
                                                  dip=self.l3_config['hnu_destination_ip2'],
-                                                 sip=acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
-                                                 s_port=acl_fields_dict_sanity_eg_nu_hnu['source_port'],
-                                                 d_port=acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
-                                                 ecn_v4=acl_fields_dict_sanity_eg_nu_hnu['ecn_bits'])
+                                                 sip=self.acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
+                                                 s_port=self.acl_fields_dict_sanity_eg_nu_hnu['source_port'],
+                                                 d_port=self.acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
+                                                 ecn_v4=self.acl_fields_dict_sanity_eg_nu_hnu['ecn_bits'])
 
         self.stream_obj_drop = create_streams(tx_port=nu_ing_port,
                                               dmac=self.routes_config['routermac'],
                                               dip=self.l3_config['hnu_destination_ip2'],
-                                              sip=acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
-                                              s_port=acl_fields_dict_sanity_eg_nu_hnu['source_port'],
-                                              d_port=acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
-                                              sync_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'],
-                                              ecn_v4=acl_fields_dict_sanity_eg_nu_hnu['ecn_bits'])
+                                              sip=self.acl_fields_dict_sanity_eg_nu_hnu['source_ip'],
+                                              s_port=self.acl_fields_dict_sanity_eg_nu_hnu['source_port'],
+                                              d_port=self.acl_fields_dict_sanity_eg_nu_hnu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_sanity_eg_nu_hnu['tcp_ack_bit'],
+                                              ecn_v4=self.acl_fields_dict_sanity_eg_nu_hnu['ecn_bits'])
 
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][3]
@@ -965,8 +979,6 @@ class AclEgressDropNUtoHNU(FunTestCase):
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             elif c == 3:
                 shape = 1
-                if dut_type_json == "f1":
-                    shape = 0
                 result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             c += 1
@@ -1005,12 +1017,8 @@ class AclEgressDropNUtoHNU(FunTestCase):
         dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
         fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
-        if dut_type_json == "f1":
-            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
-        else:
-            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
-            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+        dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+        fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
 
         fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
         fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
@@ -1059,7 +1067,8 @@ class AclEgressDropNUtoHNU(FunTestCase):
             obj_list.append(self.stream_obj_tcpflag)
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
-            checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (tx_port, TRAFFIC_DURATION)
+            checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (tx_port,
+                                                                                                       TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
@@ -1071,7 +1080,8 @@ class AclEgressDropNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_dport.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dport = int(
                 stream_results[self.stream_obj_dport.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport, actual=rx_stream_result_framecount_dport,
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport,
+                                          actual=rx_stream_result_framecount_dport,
                                           message="Comparing tx and rx frame count on Spirent for stream dport")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_sip.spirent_handle],
@@ -1080,8 +1090,9 @@ class AclEgressDropNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_sip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_sip = int(
                 stream_results[self.stream_obj_sip.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip, actual=rx_stream_result_framecount_sip,
-                                      message="Comparing tx and rx frame count on Spirent for stream sip")
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip,
+                                          actual=rx_stream_result_framecount_sip,
+                                          message="Comparing tx and rx frame count on Spirent for stream sip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dip.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1089,8 +1100,9 @@ class AclEgressDropNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dip = int(
                 stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
-            # fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip, actual=rx_stream_result_framecount_dip,
-            #                           message="Comparing tx and rx frame count on Spirent for stream dip")
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
+                                          actual=rx_stream_result_framecount_dip,
+                                          message="Comparing tx and rx frame count on Spirent for stream dip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_ecn.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1126,10 +1138,10 @@ class AclEgressDropNUtoHNU(FunTestCase):
             obj_list.append(self.stream_obj_drop)
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
             erp = True
-            if dut_type_json == "f1":
-                erp = False
+
             counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                                  counter_id=acl_fields_dict_sanity_eg_nu_hnu['counter_id'], erp=erp)
+                                                  counter_id=self.acl_fields_dict_sanity_eg_nu_hnu['counter_id'],
+                                                  erp=erp)
             fun_test.log(counter_bef)
             checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
@@ -1144,7 +1156,8 @@ class AclEgressDropNUtoHNU(FunTestCase):
             rx_stream_result_framecount_drop = int(
                 stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
             counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                                    counter_id=acl_fields_dict_sanity_eg_nu_hnu['counter_id'], erp=erp)
+                                                    counter_id=self.acl_fields_dict_sanity_eg_nu_hnu['counter_id'],
+                                                    erp=erp)
             fun_test.log("tx_streamcount"+str(tx_stream_result_framecount_drop))
             fun_test.test_assert_expected(expected=0, actual=rx_stream_result_framecount_drop,
                                           message="Comparing tx and rx frame count on Spirent for stream drop."
@@ -1189,82 +1202,83 @@ class AclIngressDropHNUtoHNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
+    acl_fields_dict_sanity_ing_hnu_hnu = {}
 
     def describe(self):
         self.set_test_details(id=5, summary="Test ACL HNU to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
-                              2. Start Traffic for %d secs
+                              2. Start Traffic
                               3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                               4. Ensure on spirent Tx port frames must be equal to Rx port frames
                               5. Ensure no errors are seen on spirent ports
-                              """ % TRAFFIC_DURATION)
+                              """)
 
     def setup(self):
         global dut_rx_port,dut_tx_port
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
-
+        self.acl_fields_dict_sanity_ing_hnu_hnu = acl_json_output['hnu_hnu_drop_test']
         self.stream_obj_sport = create_streams(tx_port=hnu_ing_port,
                                                dmac=self.routes_config['routermac'],
                                                dip=self.l3_config['hnu_destination_ip2'],
-                                               sip=acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
-                                               d_port=acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
-                                               sync_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
-                                               ack_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
+                                               sip=self.acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
+                                               d_port=self.acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
+                                               sync_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
+                                               ack_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
 
         self.stream_obj_dport = create_streams(tx_port=hnu_ing_port,
                                                dmac=self.routes_config['routermac'],
                                                dip=self.l3_config['hnu_destination_ip2'],
-                                               sip=acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
-                                               s_port=acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
-                                               sync_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
-                                               ack_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
+                                               sip=self.acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
+                                               s_port=self.acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
+                                               sync_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
+                                               ack_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
 
         self.stream_obj_sip = create_streams(tx_port=hnu_ing_port,
                                              dmac=self.routes_config['routermac'],
                                              dip=self.l3_config['hnu_destination_ip2'], sip="192.168.2.10",
-                                             s_port=acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
+                                             s_port=self.acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
 
         self.stream_obj_dip = create_streams(tx_port=hnu_ing_port,
                                              dmac=self.routes_config['routermac'],
-                                             dip=acl_fields_dict_sanity_ing_hnu_hnu['wrong_dip'],
-                                             sip=acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
-                                             s_port=acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
+                                             dip=self.acl_fields_dict_sanity_ing_hnu_hnu['wrong_dip'],
+                                             sip=self.acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
+                                             s_port=self.acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
 
         self.stream_obj_ecn = create_streams(tx_port=hnu_ing_port,
                                              dmac=self.routes_config['routermac'],
                                              dip=self.l3_config['hnu_destination_ip2'],
-                                             sip=acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
-                                             s_port=acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
+                                             sip=self.acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
+                                             s_port=self.acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'])
 
         self.stream_obj_tcpflag = create_streams(tx_port=hnu_ing_port,
                                                  dmac=self.routes_config['routermac'],
                                                  dip=self.l3_config['hnu_destination_ip2'],
-                                                 sip=acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
-                                                 s_port=acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
-                                                 d_port=acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
-                                                 ecn_v4=acl_fields_dict_sanity_ing_hnu_hnu['ecn_bits'])
+                                                 sip=self.acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
+                                                 s_port=self.acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
+                                                 d_port=self.acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
+                                                 ecn_v4=self.acl_fields_dict_sanity_ing_hnu_hnu['ecn_bits'])
 
         self.stream_obj_drop = create_streams(tx_port=hnu_ing_port,
                                               dmac=self.routes_config['routermac'],
                                               dip=self.l3_config['hnu_destination_ip2'],
-                                              sip=acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
-                                              s_port=acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
-                                              d_port=acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
-                                              sync_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'],
-                                              ecn_v4=acl_fields_dict_sanity_ing_hnu_hnu['ecn_bits'])
+                                              sip=self.acl_fields_dict_sanity_ing_hnu_hnu['source_ip'],
+                                              s_port=self.acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
+                                              d_port=self.acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_ack_bit'],
+                                              ecn_v4=self.acl_fields_dict_sanity_ing_hnu_hnu['ecn_bits'])
 
         dut_rx_port = dut_config['ports'][2]
         dut_tx_port = dut_config['ports'][3]
@@ -1330,11 +1344,6 @@ class AclIngressDropHNUtoHNU(FunTestCase):
 
         fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
 
-        # Validate Spirent stats
-        # checkpoint = "Ensure Tx spirent Port FrameCount must be equal to Rx spirent port FrameCount"
-        # fun_test.test_assert_expected(expected=tx_port_result['GeneratorFrameCount'],
-        #                               actual=rx_port_result['TotalFrameCount'], message=checkpoint)
-
         checkpoint = "Ensure no errors are seen on Rx spirent port"
         result = template_obj.check_non_zero_error_count(rx_results=rx_port_result)
         fun_test.test_assert(result['result'], checkpoint)
@@ -1353,7 +1362,8 @@ class AclIngressDropHNUtoHNU(FunTestCase):
             obj_list.append(self.stream_obj_tcpflag)
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
-            checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (tx_port, TRAFFIC_DURATION)
+            checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (tx_port,
+                                                                                                       TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
@@ -1365,7 +1375,8 @@ class AclIngressDropHNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_dport.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dport = int(
                 stream_results[self.stream_obj_dport.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport, actual=rx_stream_result_framecount_dport,
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport,
+                                          actual=rx_stream_result_framecount_dport,
                                           message="Comparing tx and rx frame count on Spirent for stream dport")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_sip.spirent_handle],
@@ -1374,8 +1385,9 @@ class AclIngressDropHNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_sip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_sip = int(
                 stream_results[self.stream_obj_sip.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip, actual=rx_stream_result_framecount_sip,
-                                      message="Comparing tx and rx frame count on Spirent for stream sip")
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip,
+                                          actual=rx_stream_result_framecount_sip,
+                                          message="Comparing tx and rx frame count on Spirent for stream sip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dip.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1383,8 +1395,9 @@ class AclIngressDropHNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dip = int(
                 stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip, actual=rx_stream_result_framecount_dip,
-                                      message="Comparing tx and rx frame count on Spirent for stream dip")
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
+                                          actual=rx_stream_result_framecount_dip,
+                                          message="Comparing tx and rx frame count on Spirent for stream dip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_ecn.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1421,7 +1434,7 @@ class AclIngressDropHNUtoHNU(FunTestCase):
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
             counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                               counter_id=acl_fields_dict_sanity_ing_hnu_hnu['counter_id'])
+                                                  counter_id=self.acl_fields_dict_sanity_ing_hnu_hnu['counter_id'])
             checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
@@ -1435,12 +1448,14 @@ class AclIngressDropHNUtoHNU(FunTestCase):
             rx_stream_result_framecount_drop = int(
                 stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
             counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                               counter_id=acl_fields_dict_sanity_ing_hnu_hnu['counter_id'])
+                                                    counter_id=self.acl_fields_dict_sanity_ing_hnu_hnu['counter_id'])
             fun_test.log("tx_streamcount"+str(tx_stream_result_framecount_drop))
             fun_test.test_assert_expected(expected=0, actual=rx_stream_result_framecount_drop,
-                                          message="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted")
+                                          message="Comparing tx and rx frame count on Spirent for stream drop."
+                                                  "No pkt shuold be transmitted")
             # add counter values with the stream value using : peek_erp_flex_stats
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_drop, actual=(counter_after - counter_bef),
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_drop,
+                                          actual=(counter_after - counter_bef),
                                           message="Packets dropped should be equal to counter value")
             rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
                 port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
@@ -1478,82 +1493,84 @@ class AclEgressDropHNUtoNU(FunTestCase):
     stream_obj_drop = None
     stream_obj_tcpflag = None
     capture_results = None
+    acl_fields_dict_sanity_eg_hnu_nu = {}
 
     def describe(self):
         self.set_test_details(id=6, summary="Test ACL HNU to NU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
-                              2. Start Traffic for %d secs
+                              2. Start Traffic
                               3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                               4. Ensure on spirent Tx port frames must be equal to Rx port frames
                               5. Ensure no errors are seen on spirent ports
-                              """ % TRAFFIC_DURATION)
+                              """)
 
     def setup(self):
         global dut_rx_port,dut_tx_port
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
         #Multiple streams for seding packets with different fields
+        self.acl_fields_dict_sanity_eg_hnu_nu = acl_json_output['hnu_nu_drop_test']
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
         self.stream_obj_sport = create_streams(tx_port=hnu_ing_port,
                                                dmac=self.routes_config['routermac'],
                                                dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
-                                               d_port=acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
-                                               sync_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
-                                               ack_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
+                                               sip=self.acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
+                                               d_port=self.acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
+                                               sync_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
+                                               ack_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
 
         self.stream_obj_dport = create_streams(tx_port=hnu_ing_port,
                                                dmac=self.routes_config['routermac'],
                                                dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
-                                               s_port=acl_fields_dict_sanity_eg_hnu_nu['source_port'],
-                                               sync_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
-                                               ack_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
+                                               sip=self.acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
+                                               s_port=self.acl_fields_dict_sanity_eg_hnu_nu['source_port'],
+                                               sync_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
+                                               ack_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
 
         self.stream_obj_sip = create_streams(tx_port=hnu_ing_port,
                                              dmac=self.routes_config['routermac'],
                                              dip=self.l3_config['destination_ip1'], sip="192.168.2.10",
-                                             s_port=acl_fields_dict_sanity_eg_hnu_nu['source_port'],
-                                             d_port=acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
+                                             s_port=self.acl_fields_dict_sanity_eg_hnu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
 
         self.stream_obj_dip = create_streams(tx_port=hnu_ing_port,
                                              dmac=self.routes_config['routermac'],
-                                             dip=acl_fields_dict_sanity_eg_hnu_nu['wrong_dip'],
-                                             sip=acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
-                                             s_port=acl_fields_dict_sanity_eg_hnu_nu['source_port'],
-                                             d_port=acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
+                                             dip=self.acl_fields_dict_sanity_eg_hnu_nu['wrong_dip'],
+                                             sip=self.acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
+                                             s_port=self.acl_fields_dict_sanity_eg_hnu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
 
         self.stream_obj_ecn = create_streams(tx_port=hnu_ing_port,
                                              dmac=self.routes_config['routermac'],
                                              dip=self.l3_config['destination_ip1'],
-                                             sip=acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
-                                             s_port=acl_fields_dict_sanity_eg_hnu_nu['source_port'],
-                                             d_port=acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
+                                             sip=self.acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
+                                             s_port=self.acl_fields_dict_sanity_eg_hnu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'])
 
         self.stream_obj_tcpflag = create_streams(tx_port=hnu_ing_port,
                                                  dmac=self.routes_config['routermac'],
                                                  dip=self.l3_config['destination_ip1'],
-                                                 sip=acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
-                                                 s_port=acl_fields_dict_sanity_eg_hnu_nu['source_port'],
-                                                 d_port=acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
-                                                 ecn_v4=acl_fields_dict_sanity_eg_hnu_nu['ecn_bits'])
+                                                 sip=self.acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
+                                                 s_port=self.acl_fields_dict_sanity_eg_hnu_nu['source_port'],
+                                                 d_port=self.acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
+                                                 ecn_v4=self.acl_fields_dict_sanity_eg_hnu_nu['ecn_bits'])
 
         self.stream_obj_drop = create_streams(tx_port=hnu_ing_port,
                                               dmac=self.routes_config['routermac'],
                                               dip=self.l3_config['destination_ip1'],
-                                              sip=acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
-                                              s_port=acl_fields_dict_sanity_eg_hnu_nu['source_port'],
-                                              d_port=acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
-                                              sync_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'],
-                                              ecn_v4=acl_fields_dict_sanity_eg_hnu_nu['ecn_bits'])
+                                              sip=self.acl_fields_dict_sanity_eg_hnu_nu['source_ip'],
+                                              s_port=self.acl_fields_dict_sanity_eg_hnu_nu['source_port'],
+                                              d_port=self.acl_fields_dict_sanity_eg_hnu_nu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_sanity_eg_hnu_nu['tcp_ack_bit'],
+                                              ecn_v4=self.acl_fields_dict_sanity_eg_hnu_nu['ecn_bits'])
 
         dut_rx_port = dut_config['ports'][2]
         dut_tx_port = dut_config['ports'][1]
@@ -1570,8 +1587,6 @@ class AclEgressDropHNUtoNU(FunTestCase):
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             elif c == 2:
                 shape = 1
-                if dut_type_json == "f1":
-                    shape = 0
                 result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
                 fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
             c += 1
@@ -1609,8 +1624,7 @@ class AclEgressDropHNUtoNU(FunTestCase):
         fun_test.log("Tx Port: %s" % tx_port_result)
         fun_test.log("Rx Port: %s" % rx_port_result)
         hnu = True
-        if dut_type_json == "f1":
-            hnu = False
+
         dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=hnu)
         fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
@@ -1648,11 +1662,30 @@ class AclEgressDropHNUtoNU(FunTestCase):
             obj_list.append(self.stream_obj_tcpflag)
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
-            checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (tx_port, TRAFFIC_DURATION)
+            checkpoint = "Start traffic from %s port for %d secs streams dport,sip,dip,ecn,tcpflag" % (tx_port,
+                                                                                                       TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+
+            dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=hnu)
+            fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+            fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+            fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+            checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                         tx=False)
+            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+                dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1660,7 +1693,8 @@ class AclEgressDropHNUtoNU(FunTestCase):
                 stream_results[self.stream_obj_dport.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dport = int(
                 stream_results[self.stream_obj_dport.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport, actual=rx_stream_result_framecount_dport,
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dport,
+                                          actual=rx_stream_result_framecount_dport,
                                           message="Comparing tx and rx frame count on Spirent for stream dport")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_sip.spirent_handle],
@@ -1669,8 +1703,9 @@ class AclEgressDropHNUtoNU(FunTestCase):
                 stream_results[self.stream_obj_sip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_sip = int(
                 stream_results[self.stream_obj_sip.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip, actual=rx_stream_result_framecount_sip,
-                                      message="Comparing tx and rx frame count on Spirent for stream sip")
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_sip,
+                                          actual=rx_stream_result_framecount_sip,
+                                          message="Comparing tx and rx frame count on Spirent for stream sip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dip.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1678,8 +1713,9 @@ class AclEgressDropHNUtoNU(FunTestCase):
                 stream_results[self.stream_obj_dip.spirent_handle]["tx_result"]["FrameCount"])
             rx_stream_result_framecount_dip = int(
                 stream_results[self.stream_obj_dip.spirent_handle]["rx_result"]["FrameCount"])
-            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip, actual=rx_stream_result_framecount_dip,
-                                      message="Comparing tx and rx frame count on Spirent for stream dip")
+            fun_test.test_assert_expected(expected=tx_stream_result_framecount_dip,
+                                          actual=rx_stream_result_framecount_dip,
+                                          message="Comparing tx and rx frame count on Spirent for stream dip")
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_ecn.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1768,75 +1804,77 @@ class AclIPv6DropNUtoHNU(FunTestCase):
     stream_obj_ecn = None
     stream_obj_tcpflag = None
     capture_results = None
+    acl_fields_dict_sanity_v6_nu_hnu = {}
 
     def describe(self):
         self.set_test_details(id=7, summary="Test IPv6 ACL FPG to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
-                                 2. Start Traffic for %d secs
+                                 2. Start Traffic
                                  3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                  4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                  5. Ensure no errors are seen on spirent ports
-                                 """ % TRAFFIC_DURATION)
+                                 """)
 
     def setup(self):
         global dut_rx_port, dut_tx_port
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
                                                                               ip_version="ipv6")
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_sanity_v6_nu_hnu = acl_json_output['v6_nu_hnu_test']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
 
         self.stream_obj_sport = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                                dip=self.l3_config['hnu_destination_ip2'],
-                                               sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                               sip=self.acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
                                                dmac=self.routes_config['routermac'],
-                                               s_port=1024, d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
+                                               s_port=1024, d_port=self.acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
 
         self.stream_obj_dport = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                                dip=self.l3_config['hnu_destination_ip2'],
-                                               sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                               sip=self.acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
                                                dmac=self.routes_config['routermac'],
-                                               s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'], d_port=1024)
+                                               s_port=self.acl_fields_dict_sanity_v6_nu_hnu['source_port'], d_port=1024)
 
         self.stream_obj_sip = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                              dip=self.l3_config['hnu_destination_ip2'],
                                              sip="3001::1", dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
+                                             s_port=self.acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
 
         self.stream_obj_dip = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                              dip=self.l3_config['hnu_destination_ip2'],
-                                             sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                             sip=self.acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
                                              dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
+                                             s_port=self.acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_v6_nu_hnu['dest_port'])
 
         self.stream_obj_tcpflag = create_streams(tx_port=nu_ing_port,
                                                  ipv6=True, dip=self.l3_config['hnu_destination_ip2'],
-                                                 sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                                 sip=self.acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
                                                  dmac=self.routes_config['routermac'],
-                                                 s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
-                                                 d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
-                                                 sync_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'])
+                                                 s_port=self.acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                                 d_port=self.acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
+                                                 sync_bit=self.acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'])
 
         self.stream_obj_ecn = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                              dip=self.l3_config['hnu_destination_ip2'],
-                                             sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                             sip=self.acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
                                              dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
-                                             d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
-                                             sync_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_ack_bit'])
+                                             s_port=self.acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_sanity_v6_nu_hnu['tcp_ack_bit'])
 
         self.stream_obj_drop = create_streams(tx_port=nu_ing_port,  ipv6=True,
                                               dip=self.l3_config['hnu_destination_ip2'],
-                                              sip=acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
+                                              sip=self.acl_fields_dict_sanity_v6_nu_hnu['source_ip'],
                                               dmac=self.routes_config['routermac'],
-                                              s_port=acl_fields_dict_sanity_v6_nu_hnu['source_port'],
-                                              d_port=acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
-                                              sync_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_sanity_v6_nu_hnu['tcp_ack_bit'],
+                                              s_port=self.acl_fields_dict_sanity_v6_nu_hnu['source_port'],
+                                              d_port=self.acl_fields_dict_sanity_v6_nu_hnu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_sanity_v6_nu_hnu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_sanity_v6_nu_hnu['tcp_ack_bit'],
                                               v6_traffic_class=2)
 
         dut_rx_port = dut_config['ports'][0]
@@ -2011,7 +2049,7 @@ class AclIPv6DropNUtoHNU(FunTestCase):
         template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
         counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                         counter_id=acl_fields_dict_sanity_v6_nu_hnu['counter_id'],erp=True)
+                                         counter_id=self.acl_fields_dict_sanity_v6_nu_hnu['counter_id'],erp=True)
 
         checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
@@ -2027,7 +2065,7 @@ class AclIPv6DropNUtoHNU(FunTestCase):
             stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
 
         counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                           counter_id=acl_fields_dict_sanity_v6_nu_hnu['counter_id'],erp=True)
+                                                counter_id=self.acl_fields_dict_sanity_v6_nu_hnu['counter_id'],erp=True)
 
         fun_test.log("tx_streamcount" + str(tx_stream_result_framecount_drop))
         checkpoint="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted"
@@ -2072,75 +2110,77 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
+    acl_fields_dict_ipv6_hnu_hnu = {}
 
     def describe(self):
         self.set_test_details(id=8, summary="Test IPv6 ACL HNU to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
-                                 2. Start Traffic for %d secs
+                                 2. Start Traffic
                                  3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                  4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                  5. Ensure no errors are seen on spirent ports
-                                 """ % TRAFFIC_DURATION)
+                                 """ )
 
     def setup(self):
         global dut_rx_port, dut_tx_port
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
                                                                               ip_version="ipv6")
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_ipv6_hnu_hnu = acl_json_output['hnu_hnu_v6_drop']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
 
         self.stream_obj_sport = create_streams(tx_port=hnu_ing_port,
                                                ipv6=True, dip=self.l3_config['hnu_destination_ip2'],
-                                               sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                               sip=self.acl_fields_dict_ipv6_hnu_hnu['source_ip'],
                                                dmac=self.routes_config['routermac'],
-                                               s_port=1024, d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'])
+                                               s_port=1024, d_port=self.acl_fields_dict_ipv6_hnu_hnu['dest_port'])
 
         self.stream_obj_dport = create_streams(tx_port=hnu_ing_port,
                                                ipv6=True, dip=self.l3_config['hnu_destination_ip2'],
-                                               sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                               sip=self.acl_fields_dict_ipv6_hnu_hnu['source_ip'],
                                                dmac=self.routes_config['routermac'],
-                                               s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'], d_port=1024)
+                                               s_port=self.acl_fields_dict_ipv6_hnu_hnu['source_port'], d_port=1024)
 
         self.stream_obj_sip = create_streams(tx_port=hnu_ing_port,  ipv6=True,
                                              dip=self.l3_config['hnu_destination_ip2'],
                                              sip="3001::1", dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
-                                             d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'])
+                                             s_port=self.acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_ipv6_hnu_hnu['dest_port'])
 
         self.stream_obj_dip = create_streams(tx_port=hnu_ing_port,  ipv6=True,
-                                             dip=acl_fields_dict_ipv6_hnu_hnu['wrong_dip'],
-                                             sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                             dip=self.acl_fields_dict_ipv6_hnu_hnu['wrong_dip'],
+                                             sip=self.acl_fields_dict_ipv6_hnu_hnu['source_ip'],
                                              dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
-                                             d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'])
+                                             s_port=self.acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_ipv6_hnu_hnu['dest_port'])
 
         self.stream_obj_tcpflag = create_streams(tx_port=hnu_ing_port,
                                                  ipv6=True, dip=self.l3_config['hnu_destination_ip2'],
-                                                 sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                                 sip=self.acl_fields_dict_ipv6_hnu_hnu['source_ip'],
                                                  dmac=self.routes_config['routermac'],
-                                                 s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
-                                                 d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'],
-                                                 sync_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'])
+                                                 s_port=self.acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                                 d_port=self.acl_fields_dict_ipv6_hnu_hnu['dest_port'],
+                                                 sync_bit=self.acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'])
 
         self.stream_obj_ecn = create_streams(tx_port=hnu_ing_port,  ipv6=True,
                                              dip=self.l3_config['hnu_destination_ip2'],
-                                             sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                             sip=self.acl_fields_dict_ipv6_hnu_hnu['source_ip'],
                                              dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
-                                             d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'],
-                                             sync_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_ack_bit'])
+                                             s_port=self.acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                             d_port=self.acl_fields_dict_ipv6_hnu_hnu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_ipv6_hnu_hnu['tcp_ack_bit'])
 
         self.stream_obj_drop = create_streams(tx_port=hnu_ing_port,  ipv6=True,
                                               dip=self.l3_config['hnu_destination_ip2'],
-                                              sip=acl_fields_dict_ipv6_hnu_hnu['source_ip'],
+                                              sip=self.acl_fields_dict_ipv6_hnu_hnu['source_ip'],
                                               dmac=self.routes_config['routermac'],
-                                              s_port=acl_fields_dict_ipv6_hnu_hnu['source_port'],
-                                              d_port=acl_fields_dict_ipv6_hnu_hnu['dest_port'],
-                                              sync_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_ipv6_hnu_hnu['tcp_ack_bit'],
+                                              s_port=self.acl_fields_dict_ipv6_hnu_hnu['source_port'],
+                                              d_port=self.acl_fields_dict_ipv6_hnu_hnu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_ipv6_hnu_hnu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_ipv6_hnu_hnu['tcp_ack_bit'],
                                               v6_traffic_class=2)
 
         dut_rx_port = dut_config['ports'][2]
@@ -2305,7 +2345,7 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
             template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
             counter_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                             counter_id=acl_fields_dict_ipv6_hnu_hnu['counter_id'])
+                                             counter_id=self.acl_fields_dict_ipv6_hnu_hnu['counter_id'])
 
             checkpoint = "Start traffic from %s port for %d secs stream sip" % (tx_port, TRAFFIC_DURATION)
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
@@ -2321,7 +2361,7 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
                 stream_results[self.stream_obj_drop.spirent_handle]["rx_result"]["FrameCount"])
 
             counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                               counter_id=acl_fields_dict_ipv6_hnu_hnu['counter_id'])
+                                               counter_id=self.acl_fields_dict_ipv6_hnu_hnu['counter_id'])
 
             fun_test.log("tx_streamcount" + str(tx_stream_result_framecount_drop))
             checkpoint="Comparing tx and rx frame count on Spirent for stream drop. No pkt shuold be transmitted"
@@ -2365,16 +2405,17 @@ class AclIPv6DropHNUtoNU(FunTestCase):
     stream_obj_tcpflag = None
     stream_obj_ecn = None
     capture_results = None
+    acl_fields_dict_ipv6_hnu_nu = {}
 
     def describe(self):
         self.set_test_details(id=9, summary="Test IPv6 ACL HNU to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
-                                 2. Start Traffic for %d secs
+                                 2. Start Traffic
                                  3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                  4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                  5. Ensure no errors are seen on spirent ports
-                                 """ % TRAFFIC_DURATION)
+                                 """)
 
     def setup(self):
         global dut_rx_port, dut_tx_port
@@ -2383,54 +2424,55 @@ class AclIPv6DropHNUtoNU(FunTestCase):
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
         # Multiple streams for seding packets with different fields
+        self.acl_fields_dict_ipv6_hnu_nu = acl_json_output['hnu_nu_v6_drop']
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
 
         self.stream_obj_sport = create_streams(tx_port=hnu_ing_port, ipv6=True, dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                               sip=self.acl_fields_dict_ipv6_hnu_nu['source_ip'],
                                                dmac=self.routes_config['routermac'],
-                                               s_port=1024, d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'])
+                                               s_port=1024, d_port=self.acl_fields_dict_ipv6_hnu_nu['dest_port'])
 
         self.stream_obj_dport = create_streams(tx_port=hnu_ing_port, ipv6=True, dip=self.l3_config['destination_ip1'],
-                                               sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                               sip=self.acl_fields_dict_ipv6_hnu_nu['source_ip'],
                                                dmac=self.routes_config['routermac'],
-                                               s_port=acl_fields_dict_ipv6_hnu_nu['source_port'], d_port=1024)
+                                               s_port=self.acl_fields_dict_ipv6_hnu_nu['source_port'], d_port=1024)
 
         self.stream_obj_sip = create_streams(tx_port=hnu_ing_port, ipv6=True, dip=self.l3_config['destination_ip1'],
                                              sip="3001::1", dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
-                                             d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'])
+                                             s_port=self.acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_ipv6_hnu_nu['dest_port'])
 
         self.stream_obj_dip = create_streams(tx_port=hnu_ing_port, ipv6=True,
-                                             dip=acl_fields_dict_ipv6_hnu_nu['wrong_dip'],
-                                             sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                             dip=self.acl_fields_dict_ipv6_hnu_nu['wrong_dip'],
+                                             sip=self.acl_fields_dict_ipv6_hnu_nu['source_ip'],
                                              dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
-                                             d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'])
+                                             s_port=self.acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_ipv6_hnu_nu['dest_port'])
 
         self.stream_obj_tcpflag = create_streams(tx_port=hnu_ing_port, ipv6=True, dip=self.l3_config['destination_ip1'],
-                                                 sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                                 sip=self.acl_fields_dict_ipv6_hnu_nu['source_ip'],
                                                  dmac=self.routes_config['routermac'],
-                                                 s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
-                                                 d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'],
-                                                 sync_bit=acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'])
+                                                 s_port=self.acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                                 d_port=self.acl_fields_dict_ipv6_hnu_nu['dest_port'],
+                                                 sync_bit=self.acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'])
 
         self.stream_obj_ecn = create_streams(tx_port=hnu_ing_port, ipv6=True,
                                              dip=self.l3_config['destination_ip1'],
-                                             sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                             sip=self.acl_fields_dict_ipv6_hnu_nu['source_ip'],
                                              dmac=self.routes_config['routermac'],
-                                             s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
-                                             d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'],
-                                             sync_bit=acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'],
-                                             ack_bit=acl_fields_dict_ipv6_hnu_nu['tcp_ack_bit'], v6_traffic_class=4)
+                                             s_port=self.acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                             d_port=self.acl_fields_dict_ipv6_hnu_nu['dest_port'],
+                                             sync_bit=self.acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'],
+                                             ack_bit=self.acl_fields_dict_ipv6_hnu_nu['tcp_ack_bit'], v6_traffic_class=4)
 
         self.stream_obj_drop = create_streams(tx_port=hnu_ing_port, ipv6=True,
                                               dip=self.l3_config['destination_ip1'],
-                                              sip=acl_fields_dict_ipv6_hnu_nu['source_ip'],
+                                              sip=self.acl_fields_dict_ipv6_hnu_nu['source_ip'],
                                               dmac=self.routes_config['routermac'],
-                                              s_port=acl_fields_dict_ipv6_hnu_nu['source_port'],
-                                              d_port=acl_fields_dict_ipv6_hnu_nu['dest_port'],
-                                              sync_bit=acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'],
-                                              ack_bit=acl_fields_dict_ipv6_hnu_nu['tcp_ack_bit'],
+                                              s_port=self.acl_fields_dict_ipv6_hnu_nu['source_port'],
+                                              d_port=self.acl_fields_dict_ipv6_hnu_nu['dest_port'],
+                                              sync_bit=self.acl_fields_dict_ipv6_hnu_nu['tcp_sync_bit'],
+                                              ack_bit=self.acl_fields_dict_ipv6_hnu_nu['tcp_ack_bit'],
                                               v6_traffic_class=2)
 
         dut_rx_port = dut_config['ports'][2]
@@ -2647,51 +2689,52 @@ class AclRangeDropNUtoNU(FunTestCase):
     stream_obj_boundary_high = None
     stream_obj_lower_range = None
     stream_obj_higher_range = None
+    acl_fields_dict_range_nu_nu = {}
 
     def describe(self):
         self.set_test_details(id=10, summary="Test ACL Range Drop NU to NU",
                               steps="""
                                      1. Create TCP frame stream on Tx Port
-                                     2. Start Traffic for %d secs
+                                     2. Start Traffic
                                      3. Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count 
                                      4. Ensure on spirent Tx port frames must be equal to Rx port frames
                                      5. Ensure no errors are seen on spirent ports
-                                     """ % TRAFFIC_DURATION)
+                                     """)
 
     def setup(self):
         global dut_rx_port, dut_tx_port
-        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config,
-                                                                              ip_version="ipv6")
+        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         fun_test.simple_assert(self.routes_config, "Ensure routes config fetched")
         self.l3_config = self.routes_config['l3_config']
+        self.acl_fields_dict_range_nu_nu = acl_json_output['range_test_nu_nu']
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % hnu_ing_port
 
         self.stream_obj_inrange = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                  dip=self.l3_config['destination_ip1'],
-                                                 sip=acl_fields_dict_range_nu_nu['source_ip'],
-                                                 s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                 d_port=acl_fields_dict_range_nu_nu['in_range_port'])
+                                                 sip=self.acl_fields_dict_range_nu_nu['source_ip'],
+                                                 s_port=self.acl_fields_dict_range_nu_nu['source_port'],
+                                                 d_port=self.acl_fields_dict_range_nu_nu['in_range_port'])
         self.stream_obj_boundary_low = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                       dip=self.l3_config['destination_ip1'],
-                                                      sip=acl_fields_dict_range_nu_nu['source_ip'],
-                                                      s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                      d_port=acl_fields_dict_range_nu_nu['range_boundary_low_port'])
+                                                      sip=self.acl_fields_dict_range_nu_nu['source_ip'],
+                                                      s_port=self.acl_fields_dict_range_nu_nu['source_port'],
+                                                      d_port=self.acl_fields_dict_range_nu_nu['range_boundary_low_port'])
         self.stream_obj_boundary_high = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                        dip=self.l3_config['destination_ip1'],
-                                                       sip=acl_fields_dict_range_nu_nu['source_ip'],
-                                                       s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                       d_port=acl_fields_dict_range_nu_nu['range_boundary_high_port'])
+                                                       sip=self.acl_fields_dict_range_nu_nu['source_ip'],
+                                                       s_port=self.acl_fields_dict_range_nu_nu['source_port'],
+                                                       d_port=self.acl_fields_dict_range_nu_nu['range_boundary_high_port'])
         self.stream_obj_lower_range = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                      dip=self.l3_config['destination_ip1'],
-                                                     sip=acl_fields_dict_range_nu_nu['source_ip'],
-                                                     s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                     d_port=acl_fields_dict_range_nu_nu['lower_range_port'])
+                                                     sip=self.acl_fields_dict_range_nu_nu['source_ip'],
+                                                     s_port=self.acl_fields_dict_range_nu_nu['source_port'],
+                                                     d_port=self.acl_fields_dict_range_nu_nu['lower_range_port'])
         self.stream_obj_higher_range = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
                                                       dip=self.l3_config['destination_ip1'],
-                                                      sip=acl_fields_dict_range_nu_nu['source_ip'],
-                                                      s_port=acl_fields_dict_range_nu_nu['source_port'],
-                                                      d_port=acl_fields_dict_range_nu_nu['higher_range_port'])
+                                                      sip=self.acl_fields_dict_range_nu_nu['source_ip'],
+                                                      s_port=self.acl_fields_dict_range_nu_nu['source_port'],
+                                                      d_port=self.acl_fields_dict_range_nu_nu['higher_range_port'])
 
         dut_rx_port = dut_config['ports'][0]
         dut_tx_port = dut_config['ports'][1]
@@ -2761,7 +2804,7 @@ class AclRangeDropNUtoNU(FunTestCase):
         template_obj.activate_stream_blocks(stream_obj_list=obj_list)
 
         counter_before = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                                 counter_id=acl_fields_dict_range_nu_nu['counter_id'])
+                                                 counter_id=self.acl_fields_dict_range_nu_nu['counter_id'])
 
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
@@ -2785,8 +2828,7 @@ class AclRangeDropNUtoNU(FunTestCase):
             dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
 
         stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
-                                                                            [
-                                                                                self.stream_obj_inrange.spirent_handle],
+                                                                            [self.stream_obj_inrange.spirent_handle],
                                                                             tx_result=True, rx_result=True)
 
         tx_stream_result_framecount_inrange = int(
@@ -2797,8 +2839,7 @@ class AclRangeDropNUtoNU(FunTestCase):
                                       message="Comparing tx and rx frame count on Spirent for inrange stream")
 
         stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
-                                                                            [
-                                                                                self.stream_obj_boundary_low.spirent_handle],
+                                                                            [self.stream_obj_boundary_low.spirent_handle],
                                                                             tx_result=True, rx_result=True)
 
         tx_stream_result_framecount_b_low = int(
@@ -2809,8 +2850,7 @@ class AclRangeDropNUtoNU(FunTestCase):
                                       message="Comparing tx and rx frame count on Spirent for boundary low stream")
 
         stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
-                                                                            [
-                                                                                self.stream_obj_boundary_high.spirent_handle],
+                                                                            [self.stream_obj_boundary_high.spirent_handle],
                                                                             tx_result=True, rx_result=True)
 
         tx_stream_result_framecount_b_high = int(
@@ -2821,15 +2861,15 @@ class AclRangeDropNUtoNU(FunTestCase):
                                       message="Comparing tx and rx frame count on Spirent for boundary high stream")
 
         counter_after = get_flex_counter_values(network_controller_obj=network_controller_obj,
-                                                counter_id=acl_fields_dict_range_nu_nu['counter_id'])
+                                                counter_id=self.acl_fields_dict_range_nu_nu['counter_id'])
 
         fun_test.test_assert_expected(expected=(
-                    tx_stream_result_framecount_inrange + tx_stream_result_framecount_b_high + tx_stream_result_framecount_b_low),
+                    tx_stream_result_framecount_inrange + tx_stream_result_framecount_b_high +
+                    tx_stream_result_framecount_b_low),
                                       actual=(counter_after - counter_before),
                                       message="Packets dropped should be equal to counter value")
 
     def cleanup(self):
-        dut_rx_port = dut_config['ports'][0]
 
         checkpoint = "Delete the stream"
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_inrange.spirent_handle])
@@ -2849,11 +2889,11 @@ if __name__ == '__main__':
     ts.add_test_case(AclIngressDropNUtoNU())
     ts.add_test_case(AclIPv6DropNUtoNU())
     ts.add_test_case(AclQosTCNuNu())
-    # ts.add_test_case(AclEgressDropNUtoHNU())
-    # ts.add_test_case(AclIngressDropHNUtoHNU())
-    # ts.add_test_case(AclEgressDropHNUtoNU())
-    # ts.add_test_case(AclIPv6DropNUtoHNU())
-    # ts.add_test_case(AclIPv6DropHNUtoHNU())
-    # ts.add_test_case(AclIPv6DropHNUtoNU())
+    ts.add_test_case(AclEgressDropNUtoHNU())
+    ts.add_test_case(AclIngressDropHNUtoHNU())
+    ts.add_test_case(AclEgressDropHNUtoNU())
+    ts.add_test_case(AclIPv6DropNUtoHNU())
+    ts.add_test_case(AclIPv6DropHNUtoHNU())
+    ts.add_test_case(AclIPv6DropHNUtoNU())
     ts.add_test_case(AclRangeDropNUtoNU())
     ts.run()

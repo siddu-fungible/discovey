@@ -18,6 +18,7 @@ class CmdController(Cmd):
         self._clear_cmd_obj = NuClearCommands(dpc_client=self.dpc_client)
         self._sample_cmd_obj = SampleCommands(dpc_client=self.dpc_client)
         self._show_cmd_obj = ShowCommands(dpc_client=self.dpc_client)
+        self._meter_cmd_obj = MeterCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -36,6 +37,30 @@ class CmdController(Cmd):
         port_num = args.port_num
         shape = args.shape
         self._port_cmd_obj.port_mtu(port_num=port_num, shape=shape)
+
+    def set_nu_meter(self, args):
+        index = args.index
+        interval = args.interval
+        crd = args.crd
+        commit_rate = args.commit_rate
+        pps_mode = args.pps_mode
+        excess_rate = args.excess_rate
+        commit_burst = args.commit_burst
+        excess_burst = args.excess_burst
+        direction = args.direction
+        len_mode = args.len_mode
+        rate_mode = args.rate_mode
+        color_aware = args.color_aware
+        unit = args.unit
+        rsvd = args.rsvd
+        len8 = args.len8
+        common = args.common
+        bank = args.bank
+        self._meter_cmd_obj.set_meter(index=index, interval=interval, crd=crd, commit_rate=commit_rate,
+                                      pps_mode=pps_mode, excess_rate=excess_rate, commit_burst=commit_burst,
+                                      excess_burst=excess_burst, direction=direction, len_mode=len_mode,
+                                      rate_mode=rate_mode, color_aware=color_aware, unit=unit, rsvd=rsvd, len8=len8,
+                                      common=common, bank=bank)
 
     def enable_port(self, args):
         self._port_cmd_obj.enable_disable_port(port_num=args.port_num, shape=args.shape)
@@ -912,6 +937,9 @@ class CmdController(Cmd):
     set_nu_sample_disable_parser.set_defaults(func=disable_sample)
     get_nu_sample_parser.set_defaults(func=get_sample)
 
+    # --------------------Meter Commands Handlers -------------
+    set_nu_meter_parser.set_defaults(func=set_nu_meter)
+    
     # -------------- QoS Command Handlers ----------------
     set_qos_egress_buffer_pool_parser.set_defaults(func=set_qos_egress_buffer_pool)
     get_qos_egress_buffer_pool_parser.set_defaults(func=get_qos_egress_buffer_pool)

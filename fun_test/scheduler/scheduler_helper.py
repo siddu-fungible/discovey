@@ -1,6 +1,12 @@
 import os
-import time, datetime, json, glob, shutil
-import psutil, logging.handlers, sys
+import time
+import datetime
+import json
+import glob
+import shutil
+import psutil
+import logging.handlers
+import sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR, SUITES_DIR
@@ -9,8 +15,10 @@ from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
-from scheduler.scheduler_types import SchedulerStates, SuiteType
+from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType
 from lib.utilities.http import fetch_text_file
+# from web.fun_test.models import JobSpec
+
 from pytz import timezone
 from datetime import timedelta
 import random
@@ -47,11 +55,6 @@ handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(messag
 scheduler_logger.addHandler(hdlr=handler)
 scheduler_logger.setLevel(logging.DEBUG)
 
-class SchedulingType:
-    ASAP = "asap"
-    PERIODIC = "periodic"
-    TODAY = "today"
-    REPEAT = "repeat"
 
 
 
@@ -294,6 +297,115 @@ def queue_dynamic_suite(dynamic_suite_spec,
                       environment=environment,
                       build_url=build_url)
 
+def queue_job3(suite_path=None,
+               original_suite_execution_id=None,
+               dynamic_suite_spec=None,
+               script_path=None,
+               build_url=None,
+               scheduling_type=SchedulingType.ASAP,
+               requested_days=None,
+               requested_hour=None,
+               requested_minute=None,
+               timezone_string="PST",
+               tags=None,
+               emails=None,
+               email_on_fail_only=None,
+               environment=None,
+               inputs=None,
+               repeat_in_minutes=None,
+               suite_container_execution_id=-1,
+               job_spec=None,
+               suite_type=SuiteType.STATIC,
+               test_bed_type=None,
+               version=None):
+    time.sleep(0.1)
+    job_id = -1
+    if not suite_path:
+        if job_spec:
+            suite_path = job_spec["suite_name"].replace(JSON_EXTENSION, "")
+            tags = job_spec["tags"]
+
+    if suite_type == SuiteType.DYNAMIC:
+        suite_path = "dynamic"
+    final_suite_path = suite_path if suite_path else script_path
+
+    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
+                                                        scheduled_time=get_current_time(),
+                                                        completed_time=get_current_time(),
+                                                        suite_path=final_suite_path,
+                                                        tags=tags,
+                                                        suite_container_execution_id=suite_container_execution_id,
+                                                        test_bed_type=test_bed_type)
+    dynamic_suite_file = None
+    if suite_type == SuiteType.DYNAMIC:
+        dynamic_suite_file = prepare_dynamic_suite(spec=dynamic_suite_spec, suite_execution_id=suite_execution.execution_id)
+        if original_suite_execution_id:  # Must be a re-run
+            models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
+                                                re_run_suite_execution_id=suite_execution.execution_id)
+        else:
+            scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
+    if not job_spec:
+        job_spec = {}
+        if suite_path:
+            suite_path = suite_path.replace(JSON_EXTENSION, "")
+        job_spec["suite_name"] = suite_path  #.replace(JSON_EXTENSION, "")
+        job_spec["dynamic_suite_file"] = dynamic_suite_file
+        job_spec["script_path"] = script_path
+        job_spec["build_url"] = build_url
+        job_spec["scheduling_type"] = scheduling_type
+        job_spec["requested_days"] = requested_days
+        job_spec["requested_hour"] = requested_hour
+        job_spec["requested_minute"] = requested_minute
+        job_spec["repeat_in_minutes"] = repeat_in_minutes
+        job_spec["tags"] = tags
+        job_spec["emails"] = emails
+        job_spec["email_on_fail_only"] = email_on_fail_only
+        job_spec["environment"] = environment
+        job_spec["timezone_string"] = timezone_string
+        job_spec["suite_type"] = suite_type
+        job_spec["inputs"] = inputs
+    job_spec_valid, error_message = validate_spec(spec=job_spec)
+
+    if not job_spec_valid:
+        scheduler_logger.error("Invalid job spec: {}, Error message: {}".format(job_spec, error_message))
+        job_id = -1
+    else:
+        job_id = suite_execution.execution_id
+        job_spec["job_id"] = job_id
+        try:
+            job_spec_entry = JobSpec()
+            job_spec_entry.suite_name = job_spec["suite_path"]
+            job_spec_entry.dynamic_suite_file = job_spec["dynamic_suite_file"]
+            job_spec_entry.script_path = job_spec["script_path"]
+            job_spec_entry.suite_type = job_spec["suite_type"]
+            job_spec_entry.scheduling_type = job_spec["scheduling_type"]
+
+            job_spec_entry.requested_days = job_spec["requested_days"]
+            job_spec_entry.requested_hour = job_spec["requested_hour"]
+            job_spec_entry.requested_minute = job_spec["requested_minute"]
+            job_spec_entry.timezone_string = job_spec["timezone_string"]
+            job_spec_entry.repeat_in_minutes = job_spec["repeat_in_minutes"]
+
+            job_spec_entry.tags = job_spec["tags"]
+            job_spec_entry.emails = job_spec["emails"]
+            job_spec_entry.email_on_failure_only = job_spec["email_on_fail_only"]
+
+            job_spec_entry.environment = job_spec["environment"]
+            job_spec_entry.inputs = job_spec["inputs"]
+            job_spec_entry.build_url = job_spec["build_url"]
+            job_spec_entry.version = job_spec["version"]
+
+            job_spec_entry.save()
+
+            queued_file_name = "{}/{}.{}".format(JOBS_DIR, job_id, QUEUED_JOB_EXTENSION)
+            with open(queued_file_name, "w+") as qf:
+                qf.write(json.dumps(job_spec))
+                qf.close()
+        except Exception as ex:
+            scheduler_logger.error("Job spec is invalid: {}".format(job_spec))
+        print("Job Id: {} suite: {} Queued. Spec: {}".format(job_id, suite_path, job_spec))
+    return job_id
+
 def queue_job2(suite_path=None,
                original_suite_execution_id=None,
                dynamic_suite_spec=None,
@@ -331,8 +443,8 @@ def queue_job2(suite_path=None,
                                                         suite_path=final_suite_path,
                                                         tags=tags,
                                                         suite_container_execution_id=suite_container_execution_id,
-                                                        suite_type=suite_type,
-                                                        test_bed_type=test_bed_type)
+                                                        test_bed_type=test_bed_type,
+                                                        suite_type=suite_type)
     dynamic_suite_file = None
     if suite_type == SuiteType.DYNAMIC:
         dynamic_suite_file = prepare_dynamic_suite(spec=dynamic_suite_spec, suite_execution_id=suite_execution.execution_id)

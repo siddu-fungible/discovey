@@ -11,7 +11,7 @@ import dateutil.parser
 from django.db.models import Q
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-# from scheduler.scheduler_global import SuiteType
+from scheduler.scheduler_global import SuiteType
 from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
@@ -109,9 +109,9 @@ def get_all_test_cases(script_path):
     return test_cases
 
 def get_test_case_details(script_path, test_case_id):
-    from lib.system.fun_test import fun_test
-    import os
-    os.environ["DISABLE_FUN_TEST"] = "1"
+    # from lib.system.fun_test import fun_test
+    # import os
+    # os.environ["DISABLE_FUN_TEST"] = "1"
 
     # print "Script Path", script_path
     # result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
@@ -193,7 +193,8 @@ def add_suite_execution(submitted_time,
                         tags=None,
                         catalog_reference="",
                         suite_container_execution_id=-1,
-                        test_bed_type=None):
+                        test_bed_type=None,
+                        suite_type=SuiteType.STATIC):
 
     if tags:
         tags = json.dumps(tags)
@@ -213,7 +214,8 @@ def add_suite_execution(submitted_time,
                                tags=tags,
                                catalog_reference=catalog_reference,
                                suite_container_execution_id=suite_container_execution_id,
-                               test_bed_type=test_bed_type)
+                               test_bed_type=test_bed_type,
+                               suite_type=suite_type)
             s.save()
 
             break
