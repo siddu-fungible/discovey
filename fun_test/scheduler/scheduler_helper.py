@@ -17,7 +17,7 @@ from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType
 from lib.utilities.http import fetch_text_file
-from web.fun_test.models import JobSpec
+# from web.fun_test.models import JobSpec
 
 from pytz import timezone
 from datetime import timedelta
