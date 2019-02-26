@@ -71,7 +71,7 @@
           <td>{{ testCaseLength(suiteExecution.fields.test_case_execution_ids) }}</td>
           <td>{{ suiteExecution.fields.version }}</td>
           <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
-          <td>{{ suiteExecution.fields.suite_path === 'dynamic'? 'N/A': suiteExecution.fields.suite_path }}</td>
+          <td>{{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}</td>
           <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Log</a></td>
           <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">s_{{suiteExecution.fields.execution_id}}</a>
           </td>
@@ -92,10 +92,10 @@
           </td>
           <td>
             <span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.numActive" class="text-color-red">Active: <span class="pseudo-anchor">{{ suiteExecution?.reRunInfo?.numActive }}</span></span>
-            <span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.numCompleted " class="text-color-green">Completed: <span class="pseudo-anchor">{{ suiteExecution?.reRunInfo?.numCompleted }}</span></span>
+            &nbsp;<span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.numCompleted " class="text-color-green">Completed: <span class="pseudo-anchor">{{ suiteExecution?.reRunInfo?.numCompleted }}</span></span>
             <ng-container *ngIf="suiteExecution.fields.suite_type === 'dynamic'">
               <span (click)="showDetailsClick(suiteExecution)" *ngIf="suiteExecution?.reRunInfo?.reRunInfo.length > 0">
-                <a href="/regression/suite_detail/{{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original: {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}</a>
+                <a href="/regression/suite_detail/{{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }}">Original: {{ suiteExecution?.reRunInfo.reRunInfo[0].original.suite_execution_id }} </a>
               </span>
             </ng-container>
           </td>

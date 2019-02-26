@@ -11,7 +11,7 @@ import dateutil.parser
 from django.db.models import Q
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-from scheduler.scheduler_types import SuiteType
+from scheduler.scheduler_global import SuiteType
 from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
@@ -64,6 +64,7 @@ def inspect(module_name):
     flat_base_name = os.path.basename(module_name).replace(".", "_")
     loaded_module_name = "dynamic_load" + flat_base_name
     imp.load_module(loaded_module_name, f, filename, description)
+
     members = inspect.getmembers(sys.modules[loaded_module_name], inspect.isclass)
     for m in members:
         if len(m) > 1:
@@ -108,7 +109,10 @@ def get_all_test_cases(script_path):
     return test_cases
 
 def get_test_case_details(script_path, test_case_id):
-    from lib.system.fun_test import fun_test
+    # from lib.system.fun_test import fun_test
+    # import os
+    # os.environ["DISABLE_FUN_TEST"] = "1"
+
     # print "Script Path", script_path
     # result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
 
@@ -116,7 +120,9 @@ def get_test_case_details(script_path, test_case_id):
 
     try:
         if test_case_id:
-            result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+            from lib.system.fun_test import fun_test
+            result = fun_test.inspect(module_name=SCRIPTS_DIR + "/" + script_path)
+            # result = inspect(module_name=SCRIPTS_DIR + "/" + script_path)
             if result:
                 if "classes" in result:
                     for c in result["classes"]:
@@ -187,8 +193,8 @@ def add_suite_execution(submitted_time,
                         tags=None,
                         catalog_reference="",
                         suite_container_execution_id=-1,
-                        suite_type=SuiteType.STATIC,
-                        test_bed_type=None):
+                        test_bed_type=None,
+                        suite_type=SuiteType.STATIC):
 
     if tags:
         tags = json.dumps(tags)
@@ -208,8 +214,8 @@ def add_suite_execution(submitted_time,
                                tags=tags,
                                catalog_reference=catalog_reference,
                                suite_container_execution_id=suite_container_execution_id,
-                               suite_type=suite_type,
-                               test_bed_type=test_bed_type)
+                               test_bed_type=test_bed_type,
+                               suite_type=suite_type)
             s.save()
 
             break

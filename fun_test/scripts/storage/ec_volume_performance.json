@@ -105,7 +105,7 @@
     "expected_stats": {
       "randwrite": {
         "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
-        "mbuf": {"bm_in_use": "(0, 3)", "bm_num_bytes": "(0, 12288)", "in_use": "(0, 16)", "num_bytes": "(0, 65536)"},
+        "mbuf": {"bm_in_use": "(0, 3)", "bm_num_bytes": "(0, 12288)", "in_use": "(0, 24)", "num_bytes": "(0, 98304)"},
         "wustacks": {"in_use": "(0, 1)"}
       },
       "randread": {
@@ -135,7 +135,7 @@
     "fio_modes": ["read", "randread"],
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 10,
+    "volume_pass_threshold": 16,
     "expected_fio_result": {
       "(4, 1)": {"read": {"read": {"bw": 82, "iops": 21, "latency": 48587}},
                  "randread": {"read": {"bw": 82, "iops": 21, "latency": 48568}}},
