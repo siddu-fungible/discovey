@@ -1252,7 +1252,7 @@ if __name__ == "__main__":
     replica_script.add_test_case(FioSeqWriteSeqReadOnly())
     replica_script.add_test_case(FioRandWriteRandReadOnly())
     # Commenting this case because of the bug #771
-    # replica_script.add_test_case(FioSeqAndRandReadOnlyWithFailure())
+    replica_script.add_test_case(FioSeqAndRandReadOnlyWithFailure())
     replica_script.add_test_case(FioSeqReadWriteMix())
     replica_script.add_test_case(FioRandReadWriteMix())
     # replica_script.add_test_case(FioLargeWriteReadOnly())
