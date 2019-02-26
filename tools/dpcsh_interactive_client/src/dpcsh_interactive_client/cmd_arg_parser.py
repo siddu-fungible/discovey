@@ -12,6 +12,7 @@ set_nu_subparsers = set_nu_parser.add_subparsers(title='subcommands', help="")
 set_nu_port_parser = set_nu_subparsers.add_parser('port', help="NU Port commands")
 set_nu_qos_parser = set_nu_subparsers.add_parser('qos', help="NU QoS commands")
 set_nu_sample_parser = set_nu_subparsers.add_parser('sample', help="Sample commands")
+set_nu_meter_parser = set_nu_subparsers.add_parser('meter', help="Meter commands")
 
 set_hnu_subparsers = set_hnu_parser.add_subparsers(title='subcommands', help="")
 set_hnu_qos_parser = set_hnu_subparsers.add_parser('qos', help="HNU QoS commands")
@@ -385,6 +386,26 @@ set_nu_sample_disable_parser.add_argument("-sampler_en", type=int, help="sampler
 set_nu_sample_disable_parser.add_argument("-sampler_rate", type=str, help="sampler_rate [1-0x3fff]", default=None)
 set_nu_sample_disable_parser.add_argument("-sampler_run_sz", type=int, help="sampler run sz [1-15]", default=None)
 set_nu_sample_disable_parser.add_argument("-first_cell_only", type=int, help="first cell only [0-1]", default=None)
+
+# -----------------------------------------------------------------------------------------------
+# Meter commands
+set_nu_meter_parser.add_argument('index', type=int, help="Meter ID")
+set_nu_meter_parser.add_argument('interval', type=int, help="Meter Interval")
+set_nu_meter_parser.add_argument('crd', type=int, help="Meter CRD")
+set_nu_meter_parser.add_argument('commit_rate', type=int, help="Meter Commit Rate")
+set_nu_meter_parser.add_argument('pps_mode', type=int, help="Meter PPS Mode")
+set_nu_meter_parser.add_argument('-excess_rate', type=int, help="Meter Excess Rate", default=0)
+set_nu_meter_parser.add_argument('-commit_burst', type=int, help="Meter Commit Burst", default=82)
+set_nu_meter_parser.add_argument('-excess_burst', type=int, help="Meter Excess Burst", default=1)
+set_nu_meter_parser.add_argument('-direction', type=int, help="Meter direction", default=0)
+set_nu_meter_parser.add_argument('-len_mode', type=int, help="Meter Len Mode", default=1)
+set_nu_meter_parser.add_argument('-rate_mode', type=int, help="Meter Rate Mode", default=0)
+set_nu_meter_parser.add_argument('-color_aware', type=int, help="Meter Color Aware", default=0)
+set_nu_meter_parser.add_argument('-unit', type=int, help="Meter Unit", default=0)
+set_nu_meter_parser.add_argument('-rsvd', type=int, help="Meter RSVD", default=0)
+set_nu_meter_parser.add_argument('-len8', type=int, help="Meter Len8", default=3)
+set_nu_meter_parser.add_argument('-common', type=dict, help="Meter Common", default={})
+set_nu_meter_parser.add_argument('-bank', type=int, help="Meter Bank", default=0)
 
 # -----------------------------------------------------------------------------------------------
 # Set NU system sub commands
