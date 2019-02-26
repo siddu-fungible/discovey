@@ -15,7 +15,7 @@ analyzer_port_obj_dict = {}
 prev_traffic_success = 0
 
 
-def get_acl_dict(nu_config_object, test_case=""):
+def get_acl_dict(nu_config_object):
     result = {"acl_dict": {}, "traffic_dur": 0, "test_config": {}}
     test_config_file = fun_test.get_script_parent_directory() + "/dut_configs.json"
     test_config = nu_config_object.read_test_configs_by_dut_type(config_file=test_config_file)
@@ -29,7 +29,7 @@ def get_acl_dict(nu_config_object, test_case=""):
     return result
 
 
-def create_streams(test_config, tx_port, dip, sip, dmac, s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
+def create_streams(tx_port, dip, sip, dmac, s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
                    ipv6=False, v6_traffic_class=0):
     stream_obj = StreamBlock(fill_type=test_config['fill_type'], insert_signature=test_config['insert_signature'],
                              load = test_config['load'], load_unit=test_config['load_type'],
@@ -87,7 +87,7 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global spirent_config, subscribed_results, dut_config, template_obj, network_controller_obj, nu_ing_port, \
             nu_eg_port, hnu_ing_port, hnu_eg_port, generator_port_obj_dict, analyzer_port_obj_dict, nu_config_obj,\
-            TRAFFIC_DURATION, acl_json_output
+            TRAFFIC_DURATION, acl_json_output, test_config
 
         nu_config_obj = NuConfigManager()
         spirent_config = nu_config_obj.read_traffic_generator_config()
@@ -111,6 +111,7 @@ class SpirentSetup(FunTestScript):
         acl_dict = get_acl_dict(nu_config_object=nu_config_obj)
         TRAFFIC_DURATION = acl_dict['traffic_dur']
         acl_json_output = acl_dict['acl_dict']
+        test_config = acl_dict['test_config']
         generator_config = GeneratorConfig(scheduling_mode=GeneratorConfig.SCHEDULING_MODE_RATE_BASED,
                                            duration=TRAFFIC_DURATION,
                                            duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
