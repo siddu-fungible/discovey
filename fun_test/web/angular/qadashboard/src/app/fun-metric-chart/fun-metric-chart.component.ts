@@ -54,6 +54,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   paddingNeeded: boolean = false;
   mileStoneMarkers: any = {}; // fetch the milestones for each chart from backend and save it
   mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
+  expectedValues: any = [];
+  showAllExpectedValues: boolean = false;
+  y1AxisPlotLines: any = [];
 
   public formatter: Function;
   public tooltip: Function;
@@ -289,6 +292,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingSource = false;
     this.editingDescription = false;
     this.chart1YaxisTitle = "";
+    this.y1AxisPlotLines = [];
+    this.showAllExpectedValues = false;
   }
 
   closePointInfo(): void {
@@ -485,6 +490,44 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       d1.getDate() === d2.getDate();
   }
 
+  //change the output show of the expected value checkbox
+  changeExpectedValueShow(output): void {
+    output.show = !output.show;
+    this.expectedValues = [...this.expectedValues];
+    this.y1AxisPlotLines = [];
+    for (let dataset of this.expectedValues) {
+      if (dataset.show) {
+        let line = {};
+        line["text"] = dataset.name;
+        line["value"] = dataset.value;
+        this.y1AxisPlotLines.push(line);
+      }
+    }
+    if (this.expectedValues.length === this.y1AxisPlotLines.length) {
+      this.showAllExpectedValues = true;
+    } else {
+      this.showAllExpectedValues = false;
+    }
+  }
+
+  //select or unselect all checkbox
+  changeAllExpectedValues(): void {
+    this.showAllExpectedValues = !this.showAllExpectedValues;
+    for (let output of this.expectedValues) {
+      output.show = this.showAllExpectedValues;
+    }
+    this.expectedValues = [...this.expectedValues];
+    this.y1AxisPlotLines = [];
+    for (let dataset of this.expectedValues) {
+      if (dataset.show) {
+        let line = {};
+        line["text"] = dataset.name;
+        line["value"] = dataset.value;
+        this.y1AxisPlotLines.push(line);
+      }
+    }
+  }
+
   //fetch the data from backend
   fetchData(metricId, chartInfo, previewDataSets, tableInfo) {
     let payload = {};
@@ -546,6 +589,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       keyList = this.getDatesByTimeMode(keyList);
       let chartDataSets = [];
       let seriesDates = [];
+      this.expectedValues = [];
       for (let j = 0; j < this.filterDataSets.length; j++) {
         let oneChartDataArray = [];
         for (let i = 0; i < keyList.length; i++) {
@@ -601,6 +645,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
         let oneChartDataSet = {name: this.filterDataSets[j].name, data: oneChartDataArray};
         chartDataSets.push(oneChartDataSet);
+        let output = {};
+        output["name"] = this.filterDataSets[j].name;
+        output["value"] = filterDataSets[j].output.expected;
+        output["unit"] = this.chart1YaxisTitle;
+        output["show"] = false;
+        this.expectedValues.push(output);
       }
       this.series = seriesDates;
       this.values = chartDataSets;

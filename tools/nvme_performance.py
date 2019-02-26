@@ -1,4 +1,4 @@
-﻿import os,re,sys,datetime,time
+import os,re,sys,datetime,time
 
 #example: python nvme_performance.py 4 read 1 8 30
 argv_list = sys.argv
@@ -45,14 +45,25 @@ output = os.popen("lscpu | grep node%s" % numa_node).read()
 output = output.strip()
 print "numa node and CPUs associated are:",output
 
-#example 8-15,16-32 takes the first two numbers and the finds the difference and adds 1 to that
-#ie. 15-8=7 and +1 gives 8 which is number_of_cpus
-match_number_start = int(re.search(r'[\d](?=-)', output).group())
-match_number_end = int(re.search(r'(?<=-)[\d]', output).group())
+list_of_cpu_number = []
+while True:
+    num = re.search(r'[\d]+', output)
+    if num:
+        number = num.group()
+        output = re.sub(r'[\d]+', '$', output, 1)
+        list_of_cpu_number.append(int(number))
+    else:
+        break
+list_of_cpu_number.pop(0)
+print "\nlist of cpus:",list_of_cpu_number
 
-number_of_cpus = match_number_end - match_number_start
-number_of_cpus = number_of_cpus + 1
-print "Number of cpus on NUMA node%s=%s\n"%(numa_node, number_of_cpus)
+sum_value = 0
+leng_num_list = len(list_of_cpu_number)
+for i in range(0, leng_num_list, 2):
+    sum_value = sum_value + list_of_cpu_number[i + 1] - list_of_cpu_number[i] + 1
+
+number_of_cpus = sum_value
+print "Number of cpus on NUMA node%s: %s\n"%(numa_node, number_of_cpus)
 
 #checking whether the namespaces have been created or not
 #if not created than creates the namespaces if created skips the creation part
@@ -62,6 +73,7 @@ if output == 0:
     print "Creating and attaching namespaces:\n"
     for i in range(number_of_cpus):
         os.system("sudo nvme create-ns -s 1024 -c 1024 -b 4096 /dev/nvme0")
+        #os.system("sudo nvme create-ns -s 1024 -c 1024 /dev/nvme0")
         os.system("sudo nvme attach-ns -n %d /dev/nvme0"%(i+1))
     print "\nPerforming ns-rescan"
     os.system("sudo nvme ns-rescan /dev/nvme0")
@@ -71,16 +83,23 @@ else:
     print "Namespaces already exists, proceeding with fio test."
 
 file_name = "/dev/nvme"
-time_stamp = "n1-" + datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+time_stamp = "n1-" + datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
 print "\nTIME stamp:",time_stamp
-print "\nStarting FIO"
-for i in range(int(argv_list[1])):
-    cpu_mask = 2**i
-    j = i+1
-    print "cpu mask used for FIO test:",cpu_mask
-    os.system("fio --filename=/dev/nvme0n%s --rw=%s --bs=64k --size=4m --direct=1 --ioengine=libaio --numjobs=%s --iodepth=%s --group_reporting --name=%s%s --output=result%s%s --status-interval=30 --time_based --runtime=%s --group_reporting --prio=0 --cpumask=%s&"
-              % (j, operation, number_of_jobs, iodepth, j, time_stamp, j ,time_stamp, sleep_time, cpu_mask))
+print "\nStarting FIO\n"
+leng = len(list_of_cpu_number)
+count_temp = 0
+for j in range(0,leng,2):
+    for i in range(list_of_cpu_number[j], list_of_cpu_number[j + 1] + 1):
+        cpu_mask = 2**i
+        count_temp = count_temp + 1
+        if count_temp > number_of_namespace:
+            break
+        print "cpu_mask=",cpu_mask
+        j = i+1
+        print "cpu mask used for FIO test:",cpu_mask
+        os.system("fio --filename=/dev/nvme0n%s --rw=%s --bs=64k --size=4m --direct=1 --ioengine=libaio --numjobs=%s --iodepth=%s --group_reporting --name=%s%s --output=result%s%s --status-interval=30 --time_based --runtime=%s --group_reporting --prio=0 --cpumask=%s&"
+                  % (count_temp, operation, number_of_jobs, iodepth, count_temp, time_stamp, count_temp ,time_stamp, sleep_time, cpu_mask))
 
 print "\nSleeping for %ss for fio completion\n"%sleep_time
 time.sleep(sleep_time)
@@ -93,7 +112,7 @@ while True:
         break
     else:
         time.sleep(5)
-print "\nFIO completed successfully\n"
+print "\nFIO completed successfully\n\n"
 
 read_flag = False
 write_flag = False
@@ -136,7 +155,7 @@ for line in lines:
         sum_of_num = sum_of_num + speed
 
 avg = float(sum_of_num) / number_count
-print "Average bandwidth in MB/s is:",avg
+print "Average bandwidth in MB/s is:",avg,"Mbps"
 
 bw = 0.0
 if read_flag or write_flag:
@@ -145,4 +164,4 @@ elif readwrite_flag:
     bw = avg*number_of_namespace*8
 
 gbps = float(bw)/1024.0
-print "Bandwidth in Gbps:",gbps
+print "Bandwidth in Gbps           :",gbps,"Gbps"

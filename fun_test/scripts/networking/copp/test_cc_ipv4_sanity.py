@@ -19,7 +19,7 @@ LOAD = 110
 LOAD_UNIT = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
 FRAME_SIZE = 128
 FRAME_LENGTH_MODE = StreamBlock.FRAME_LENGTH_MODE_FIXED
-INTERFACE_LOADS_SPEC = SCRIPTS_DIR + "/networking" + "/interface_loads.json"
+TEST_CONFIG_FILE = SCRIPTS_DIR + "/networking/copp" + "/test_configs.json"
 NUM_PORTS = 3
 streams_group = []
 MIN_RX_PORT_COUNT = 80
@@ -226,11 +226,11 @@ class TestCcIPv4ICMP(FunTestCase):
         fun_test.log("Parser stats: %s \n" % parser_stats)
         fun_test.add_checkpoint(checkpoint)
 
-        checkpoint = "Get FPG port stats for all ports"
-        dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_port1)
-        fun_test.simple_assert(dut_rx_port_stats, checkpoint)
+        # checkpoint = "Get FPG port stats for all ports"
+        # dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_port1)
+        # fun_test.simple_assert(dut_rx_port_stats, checkpoint)
 
-        fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
+        # fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
 
         checkpoint = "Fetch VP stats"
         vp_stats = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
@@ -264,10 +264,8 @@ class TestCcIPv4ICMP(FunTestCase):
         yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
         red_pkts = int(meter_stats_diff['red']['pkts'])
         fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
-        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats, stat_type=FRAMES_RECEIVED_OK,
-                                                     tx=False)
-        fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts + red_pkts),
-                                      message=checkpoint)
+        # frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats, stat_type=FRAMES_RECEIVED_OK,
+        #                                              tx=False)
         total_packets_punted_cc = green_pkts + yellow_pkts
         fun_test.log("Total Packets punted to CC (green + yellow): %d" % total_packets_punted_cc)
         fun_test.test_assert(expression=MIN_RX_PORT_COUNT <= total_packets_punted_cc <= MAX_RX_PORT_COUNT,
@@ -1412,11 +1410,9 @@ class TestCcIpv4AllTogether(FunTestCase):
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Get FPG port stats for all ports"
-        dut_tx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][0])
         dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_config['ports'][2])
-        fun_test.simple_assert(dut_tx_port_stats and dut_rx_port_stats, checkpoint)
+        fun_test.simple_assert(dut_rx_port_stats, checkpoint)
 
-        fun_test.log("DUT Tx stats: %s" % dut_tx_port_stats)
         fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
 
         checkpoint = "Fetch VP stats"
@@ -1435,44 +1431,15 @@ class TestCcIpv4AllTogether(FunTestCase):
         fun_test.log("ERP stats: %s" % erp_stats)
         fun_test.log("WRO stats: %s" % wro_stats)
 
-        MIN_RX_PORT_COUNT = 200 * len(streams_group)
-        MAX_RX_PORT_COUNT = 500 * len(streams_group)
         # TODO: We need to figure out how to validate actual CC so for now we skipped spirent validation
-        # DUT stats validation
-        checkpoint = "Get mac stats for FPG%d received port" % dut_port1
-        hnu = False
-        if dut_port1 == 1:
-            hnu = True
-        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
-            hnu = False
-        dut_rx_port_stats = network_controller_obj.peek_fpg_port_stats(port_num=dut_port1, hnu=hnu)
-        fun_test.simple_assert(dut_rx_port_stats, checkpoint)
-
-        fun_test.log("DUT Rx stats: %s" % dut_rx_port_stats)
-
-        checkpoint = "Validate meter stats ensure frames_received on FPG%d == (green pkts + yellow pkts + " \
-                     "red_pkts)" % dut_port1
-        meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
-        green_pkts = int(meter_stats_diff['green']['pkts'])
-        yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
-        red_pkts = int(meter_stats_diff['red']['pkts'])
-        fun_test.log("Green: %d Yellow: %d Red: %d" % (green_pkts, yellow_pkts, red_pkts))
-        frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats, stat_type=FRAMES_RECEIVED_OK)
-        fun_test.test_assert_expected(expected=frames_received, actual=(green_pkts + yellow_pkts + red_pkts),
-                                      message=checkpoint)
-        total_packets_punted_cc = green_pkts + yellow_pkts
-        fun_test.log("Total Packets punted to CC: %d" % total_packets_punted_cc)
-        fun_test.test_assert(expression=MIN_RX_PORT_COUNT >= total_packets_punted_cc <= MAX_RX_PORT_COUNT,
-                             message="Ensure total packets metered to CC is within a "
-                                     "expected min-max range i.e MIN: %d MAX: %d and packets metered "
-                                     "(green + yellow): %d" % (MIN_RX_PORT_COUNT, MAX_RX_PORT_COUNT,
-                                                               total_packets_punted_cc))
         # VP stats validation
         # To avoid false failure due to stray traffic in system change assert like below
         checkpoint = "From VP stats, Ensure T2C header counter equal to spirent Tx counter"
         vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
                                        stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
                                                    VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+        total_packets_punted_cc = vp_stats_diff[VP_PACKETS_CC_OUT]
+        fun_test.log("Total Packets punted to CC: %d" % total_packets_punted_cc)
         fun_test.test_assert(int(vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]) >= total_packets_punted_cc,
                              message=checkpoint + "Pass Criteria Actual >= Expected  Expected: %s Found: %s" % (
                                  total_packets_punted_cc, vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT]))
