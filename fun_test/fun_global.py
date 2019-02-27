@@ -20,7 +20,6 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "IN_PROGRESS": "IN_PROGRESS",
            "UNKNOWN": "UNKNOWN",
            "KILLED": "KILLED",
-           "SUBMITTED": "SUBMITTED",
            "QUEUED": "QUEUED",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
