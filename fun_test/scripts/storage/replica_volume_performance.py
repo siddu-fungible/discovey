@@ -785,7 +785,7 @@ class FioRandWriteRandReadOnly(ReplicaDPULevelTestcase):
 class FioSeqAndRandReadOnlyWithFailure(ReplicaDPULevelTestcase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Random Write & Read only performance of replica volume",
+                              summary="Sequential and Random Read only performance of replica volume with a plex failure",
                               steps="""
         1. Create a BLT volume on dut instances 0 and 1
         2. Export (Attach) this local thin volume to dut instance 2
@@ -857,7 +857,7 @@ class FioRandReadWriteMix(ReplicaDPULevelTestcase):
 
 class FioLargeWriteReadOnly(ReplicaDPULevelTestcase):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=6,
                               summary="Write & Read only performance(for both Sequential and random) for large sizes "
                                       "of replica volume",
                               steps="""
