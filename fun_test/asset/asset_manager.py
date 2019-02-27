@@ -22,13 +22,13 @@ class AssetManager:
 
     @fun_test.safe
     def cleanup(self):
-        for orchestrator in self.orchestrators:
+        for orchestrator_index, orchestrator in enumerate(self.orchestrators):
             if orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
                 # TODO: We need to map container to the container type
                 # if it is an F1 container we should retrieve F1 logs,
                 # if it is a Tg container we should retrieve tg logs
 
-                artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="f1.log.txt")
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="{}_f1.log.txt".format(orchestrator_index))
                 container_asset = self.docker_host.get_container_asset(name=orchestrator.container_name)
                 if container_asset:
                     fun_test.scp(source_ip=container_asset["host_ip"],
@@ -37,16 +37,16 @@ class AssetManager:
                                  source_password=container_asset["mgmt_ssh_password"],
                                  source_port=container_asset["mgmt_ssh_port"],
                                  target_file_path=artifact_file_name)
-                    fun_test.add_auxillary_file(description="F1 Log", filename=artifact_file_name)
+                    fun_test.add_auxillary_file(description="F1 Log {}".format(orchestrator_index), filename=artifact_file_name)
                     if hasattr(orchestrator, "QEMU_LOG"):
-                        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="qemu.log.txt")
+                        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="{}_qemu.log.txt".format(orchestrator_index))
                         fun_test.scp(source_ip=container_asset["host_ip"],
                                      source_file_path=orchestrator.QEMU_LOG,
                                      source_username=container_asset["mgmt_ssh_username"],
                                      source_password=container_asset["mgmt_ssh_password"],
                                      source_port=container_asset["mgmt_ssh_port"],
                                      target_file_path=artifact_file_name)
-                        fun_test.add_auxillary_file(description="QEMU Log", filename=artifact_file_name)
+                        fun_test.add_auxillary_file(description="QEMU Log {}".format(orchestrator_index), filename=artifact_file_name)
 
                 self.docker_host.stop_container(orchestrator.container_name)
                 fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
