@@ -7,6 +7,7 @@
   "ikv_sanity.json",
   "crypto_sanity.json",
   "crypto_packet.json",
-  "ec_crypto_fault_sanity.json"
+  "ec_crypto_fault_sanity.json",
+  "lsv_crypto_sanity.json"
 
 ]

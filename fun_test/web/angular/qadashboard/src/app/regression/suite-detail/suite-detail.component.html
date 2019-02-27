@@ -22,11 +22,11 @@
             {{ attribute.value }}
           </td>
         </tr>
-        <tr>
+        <tr *ngIf="suiteExecution">
           <td><a target="_blank" href="{{ getSchedulerLog(suiteExecution.fields.execution_id) | async }}">Scheduler
             log</a></td>
         </tr>
-        <tr>
+        <tr *ngIf="suiteExecution">
           <td><a target="_blank" href="{{ getSchedulerLogDir(suiteExecution.fields.execution_id) | async }}">Log
             directory</a>
         </tr>
