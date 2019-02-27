@@ -18,7 +18,7 @@
       "do_verify": 1,
       "verify": "md5",
       "verify_fatal": 1,
-      "timeout": 100
+      "timeout": 180
     }
   },
   "BLTFioRandomWrite": {
@@ -40,7 +40,7 @@
       "do_verify": 1,
       "verify": "md5",
       "verify_fatal": 1,
-      "timeout": 100
+      "timeout": 180
     }
   },
   "BLTLSFioSequentialWrite": {
@@ -62,7 +62,7 @@
       "do_verify": 1,
       "verify": "md5",
       "verify_fatal": 1,
-      "timeout": 100
+      "timeout": 180
     }
   },
   "BLTLSFioRandomWrite": {
@@ -84,7 +84,7 @@
       "do_verify": 1,
       "verify": "md5",
       "verify_fatal": 1,
-      "timeout": 100
+      "timeout": 180
     }
   }
 }
