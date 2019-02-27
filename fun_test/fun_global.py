@@ -20,6 +20,7 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "IN_PROGRESS": "IN_PROGRESS",
            "UNKNOWN": "UNKNOWN",
            "KILLED": "KILLED",
+           "SUBMITTED": "SUBMITTED",
            "QUEUED": "QUEUED",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
@@ -57,6 +58,8 @@ def is_production_mode():
 def is_development_mode():
     return "DEVELOPMENT_MODE" in os.environ
 
+def is_triaging_mode():
+    return "TRIAGE" in os.environ
 
 def is_lite_mode():
     """
