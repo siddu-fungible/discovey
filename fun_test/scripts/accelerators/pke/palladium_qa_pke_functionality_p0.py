@@ -2,7 +2,8 @@ from lib.system.fun_test import *
 from scripts.helpers.palladium_app_parser_script import RetrieveLogLinesCase, PalladiumAppParserScript
 
 QA_PKE_FUNCTIONALITY_P0_TAG = "qa_pke_functionality_p0"
-TOTAL_NUMBER_OF_TEST_CASES = 10
+# TOTAL_NUMBER_OF_TEST_CASES = 10
+TOTAL_NUMBER_OF_TEST_CASES = 2
 
 
 class GeneratedTc(FunTestCase):
