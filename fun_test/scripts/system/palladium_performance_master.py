@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from django.apps import apps
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSoakPerformance, PkeP256TlsSoakPerformance
@@ -39,7 +40,7 @@ jpeg_operations = {"Compression throughput": "Compression throughput with Driver
                    "Accelerator Decompression throughput": "Decompression Accelerator throughput",
                    "JPEG Compression": "JPEG Compression"}
 nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
-
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 def get_rounded_time():
     dt = get_current_time()
@@ -1181,7 +1182,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
 
 class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO
-    model = TeraMarkCryptoPerformance
+    model = "TeraMarkCryptoPerformance"
 
     def describe(self):
         self.set_test_details(id=18,
@@ -1199,7 +1200,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                     metrics = collections.OrderedDict()
                     crypto_json = json.loads(m.group("crypto_json"))
                     input_test = crypto_json["test"]
-                    if self.model == TeraMarkCryptoPerformance:
+                    if self.model == "TeraMarkCryptoPerformance":
                         if "api" in input_test:
                             input_app = "crypto_api_perf"
                             input_algorithm = crypto_json["alg"]
@@ -1222,8 +1223,9 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             # metrics["output_latency_avg"] = output_latency_avg
                             # metrics["output_latency_max"] = output_latency_max
                             d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            MetricHelper(model=self.model).add_entry(**d)
-                    elif self.model == TeraMarkMultiClusterCryptoPerformance:
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                    elif self.model == "TeraMarkMultiClusterCryptoPerformance":
                         if "raw" in input_test:
                             input_app = "crypto_raw_speed"
                             input_algorithm = crypto_json["alg"]
@@ -1248,7 +1250,8 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             # metrics["output_latency_avg"] = output_latency_avg
                             # metrics["output_latency_max"] = output_latency_max
                             d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            MetricHelper(model=self.model).add_entry(**d)
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
 
             self.result = fun_test.PASSED
 
@@ -1257,7 +1260,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                              test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                             git_commit=self.git_commit, model_name=str(self.model))
+                             git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1690,7 +1693,7 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
 
 class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_COH
-    model = SoakDmaMemcpyCoherentPerformance
+    model = "SoakDmaMemcpyCoherentPerformance"
 
     def describe(self):
         self.set_test_details(id=27,
@@ -1720,7 +1723,8 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     metrics["input_log_size"] = input_log_size
                     metrics["input_metric_name"] = metric_name
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=self.model).add_entry(**d)
+                    metric_model = app_config.get_metric_models()[self.model]
+                    MetricHelper(model=metric_model).add_entry(**d)
 
             self.result = fun_test.PASSED
 
@@ -1729,12 +1733,12 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=str(self.model))
+                                     git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
     tag = SOAK_DMA_MEMCPY_NON_COH
-    model = SoakDmaMemcpyNonCoherentPerformance
+    model = "SoakDmaMemcpyNonCoherentPerformance"
 
     def describe(self):
         self.set_test_details(id=28,
@@ -1743,7 +1747,7 @@ class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
 
 class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
     tag = SOAK_DMA_MEMSET
-    model = SoakDmaMemsetPerformance
+    model = "SoakDmaMemsetPerformance"
 
     def describe(self):
         self.set_test_details(id=29,
@@ -1752,7 +1756,7 @@ class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
 
 class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
     tag = TERAMARK_CRYPTO
-    model = TeraMarkMultiClusterCryptoPerformance
+    model = "TeraMarkMultiClusterCryptoPerformance"
 
     def describe(self):
         self.set_test_details(id=30,
@@ -1780,36 +1784,36 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # myscript.add_test_case(FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkZipPerformanceTC())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJpegPerformanceTC())
     myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemsetPerformanceTC())
-    # myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
