@@ -474,7 +474,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
     acl_fields_dict_ipv6_nu_nu = {}
 
     def describe(self):
-        self.set_test_details(id=2, summary="Test IPv6 ACL FPG to FPG",
+        self.set_test_details(id=2, summary="Test IPv6 ACL DROP FPG to FPG",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic 
@@ -887,7 +887,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
     acl_fields_dict_sanity_eg_nu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=4, summary="Test Traffic FPG to HNU",
+        self.set_test_details(id=4, summary="Test ACL DROP NU to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
                               2. Start Traffic 
@@ -1205,7 +1205,7 @@ class AclIngressDropHNUtoHNU(FunTestCase):
     acl_fields_dict_sanity_ing_hnu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=5, summary="Test ACL HNU to HNU",
+        self.set_test_details(id=5, summary="Test v4 ACL drop HNU to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
                               2. Start Traffic
@@ -1496,7 +1496,7 @@ class AclEgressDropHNUtoNU(FunTestCase):
     acl_fields_dict_sanity_eg_hnu_nu = {}
 
     def describe(self):
-        self.set_test_details(id=6, summary="Test ACL HNU to NU",
+        self.set_test_details(id=6, summary="Test v4 ACL drop HNU to NU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
                               2. Start Traffic
@@ -1807,7 +1807,7 @@ class AclIPv6DropNUtoHNU(FunTestCase):
     acl_fields_dict_sanity_v6_nu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=7, summary="Test IPv6 ACL FPG to HNU",
+        self.set_test_details(id=7, summary="Test IPv6 ACL drop FPG to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic
@@ -2113,7 +2113,7 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
     acl_fields_dict_ipv6_hnu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=8, summary="Test IPv6 ACL HNU to HNU",
+        self.set_test_details(id=8, summary="Test IPv6 ACL drop HNU to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic
@@ -2408,7 +2408,7 @@ class AclIPv6DropHNUtoNU(FunTestCase):
     acl_fields_dict_ipv6_hnu_nu = {}
 
     def describe(self):
-        self.set_test_details(id=9, summary="Test IPv6 ACL HNU to HNU",
+        self.set_test_details(id=9, summary="Test IPv6 ACL drop HNU to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic
@@ -2892,7 +2892,7 @@ if __name__ == '__main__':
     ts.add_test_case(AclEgressDropNUtoHNU())
     ts.add_test_case(AclIngressDropHNUtoHNU())
     ts.add_test_case(AclEgressDropHNUtoNU())
-    ts.add_test_case(AclIPv6DropNUtoHNU())
+    # ts.add_test_case(AclIPv6DropNUtoHNU())
     ts.add_test_case(AclIPv6DropHNUtoHNU())
     ts.add_test_case(AclIPv6DropHNUtoNU())
     ts.add_test_case(AclRangeDropNUtoNU())
