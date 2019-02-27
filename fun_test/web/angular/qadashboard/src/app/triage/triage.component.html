@@ -152,7 +152,8 @@
                     From git commit
                   </th>
                   <td>
-                    {{ faultyCommit }}
+                    <a [routerLink]="" (click)="openGitUrl(faultyCommit)">{{ faultyCommit.substr(faultyCommit.length -
+                      7) }}</a>
                   </td>
                 </tr>
                 <tr>
@@ -160,7 +161,8 @@
                     To git commit
                   </th>
                   <td>
-                    {{ successCommit }}
+                    <a [routerLink]="" (click)="openGitUrl(successCommit)">{{ successCommit.substr(successCommit.length
+                      - 7) }}</a>
                   </td>
                 </tr>
                 <tr>
@@ -231,7 +233,7 @@
               <div *ngIf="!continueTriaging">
                 <span class="text-color-green">Triaging complete</span><br>
                 Potential faulty Commit: <a [routerLink]="" (click)="openFaultyCommitDetails(fault)"
-                                            class="text-color-red">{{ fault }}</a><br>
+                                            class="text-color-red">{{ fault.substr(fault.length - 7) }}</a><br>
                 <br>
               </div>
               <ng-template #content let-c="close('Close click')" let-d="dismiss('Cross click')"
@@ -281,13 +283,17 @@
                   <th class="align">
                     Result
                   </th>
+                  <th class="align">
+                    ReRun
+                  </th>
                 </tr>
                 <tr class="no-margin">
                   <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
                   <td class="table-padding align text-color-red">
-                    <a [routerLink]="" (click)="openGitUrl(faultyCommit)">{{ faultyCommit.substr(faultyCommit.length - 7) }}</a>
+                    <a [routerLink]="" (click)="openGitUrl(faultyCommit)">{{ faultyCommit.substr(faultyCommit.length -
+                      7) }}</a>
                   </td>
                   <td class="table-padding align">
                     {{ faultyAuthor }}
@@ -307,6 +313,9 @@
                   <td class="table-padding align">
                     NA
                   </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
                 </tr>
                 <ng-container *ngFor="let commit of triageFlows">
                   <tr [ngClass]="{'grey-highlight': commit.status === 'Suspended'}" class="no-margin">
@@ -314,7 +323,8 @@
                       {{ commit.flow_id }}
                     </td>
                     <td class="table-padding align">
-                      <a [routerLink]="" (click)="openGitUrl(commit.git_commit)">{{ commit.git_commit.substr(commit.git_commit.length - 7) }}</a>
+                      <a [routerLink]="" (click)="openGitUrl(commit.git_commit)">{{
+                        commit.git_commit.substr(commit.git_commit.length - 7) }}</a>
                     </td>
                     <td class="table-padding align">
                       {{ commit.committer }}
@@ -343,15 +353,17 @@
                       <span *ngIf="commit.status === 'Failed'">
                         <span [ngClass]="'text-'+
                           resultToClass(commit.status)">{{ commit.status }}
-                          <button class="btn btn-sm btn-outline-warning re-run" (click)="reRun()"><i
-                            class="fa fa-refresh"></i></button></span>
+                        </span>
                       </span>
                       <span *ngIf="commit.status === 'Success' || commit.status === 'Completed'">
                       <span [ngClass]="'text-'+
                           resultToClass(commit.status)">Passed
-                        <button class="btn btn-sm btn-outline-warning re-run" (click)="reRun()"><i
-                          class="fa fa-refresh"></i></button></span>
+                      </span>
                     </span>
+                    </td>
+                    <td class="table-padding align">
+                      <button *ngIf="commit.status === 'Failed' || commit.status === 'Completed'" class="btn btn-sm btn-outline-warning re-run" (click)="reRun(commit)"><i
+                        class="fa fa-refresh"></i></button>
                     </td>
                   </tr>
                 </ng-container>
@@ -360,7 +372,8 @@
                     NA
                   </td>
                   <td class="table-padding text-color-green align">
-                    <a [routerLink]="" (click)="openGitUrl(successCommit)">{{ successCommit.substr(successCommit.length - 7) }}</a>
+                    <a [routerLink]="" (click)="openGitUrl(successCommit)">{{ successCommit.substr(successCommit.length
+                      - 7) }}</a>
                   </td>
                   <td class="table-padding align">
                     {{ successAuthor }}
@@ -372,6 +385,9 @@
                     NA
                   </td>
                   <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
                     NA
                   </td>
                   <td class="table-padding align">

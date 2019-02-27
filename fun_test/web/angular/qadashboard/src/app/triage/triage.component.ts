@@ -228,7 +228,7 @@ export class TriageComponent implements OnInit {
       let totalTries = 0;
       let tries = 0;
       for (let flow of this.triageFlows) {
-        if (flow.status === "Success" || flow.status === "Failed") {
+        if (flow.status === "Completed" || flow.status === "Failed") {
           tries += 1;
         }
         if (flow.status !== "Suspended") {
@@ -445,7 +445,7 @@ export class TriageComponent implements OnInit {
     });
   }
 
-  reRun(): void {
+  reRun(commit): void {
 
   }
 
