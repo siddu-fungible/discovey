@@ -4,11 +4,13 @@ import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 import {CommonService} from "../services/common/common.service";
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
+import {Location, LocationStrategy, PathLocationStrategy} from '@angular/common';
 
 @Component({
   selector: 'git-history',
   templateUrl: './triage.component.html',
-  styleUrls: ['./triage.component.css']
+  styleUrls: ['./triage.component.css'],
+  providers: [Location, {provide: LocationStrategy, useClass: PathLocationStrategy}]
 })
 export class TriageComponent implements OnInit {
   @Input() id: number = null;
@@ -35,7 +37,7 @@ export class TriageComponent implements OnInit {
   triageFlows: any = null;
   triageDetails: any = null;
   fault: string = null;
-  triageStatus: string = "ACTIVE";
+  triageStatus: string = "Active";
   closeResult: string;
   continueTriaging: boolean = true;
   maxTries: string = null;
@@ -44,6 +46,7 @@ export class TriageComponent implements OnInit {
   showForm: boolean = false;
   selectedOption: string = null;
   triagingOptions: any = [];
+  triageId: number;
 
   fromDate: any;
   toDate: any;
@@ -51,11 +54,13 @@ export class TriageComponent implements OnInit {
   fromCommit: string = null;
   toCommit: string = null;
   advancedInfo: boolean = false;
+  location: Location;
 
   @ViewChild("content") modalContent: TemplateRef<any>;
 
   constructor(private apiService: ApiService, private logger: LoggerService, private route: ActivatedRoute,
-              private commonService: CommonService, private modalService: NgbModal) {
+              private commonService: CommonService, private modalService: NgbModal, private loc: Location) {
+    this.location = loc;
   }
 
   ngOnInit() {
@@ -69,14 +74,30 @@ export class TriageComponent implements OnInit {
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.id = params['id'];
+        this.triageId = this.id;
         this.checkTriageDb();
-      }
-      else if (this.id) {
-        this.checkTriageDb()
+      } else if (this.id) {
+        this.triageId = this.id;
+        this.checkTriageDb();
+      } else {
+        this.showForm = true;
+        this.status = null;
       }
     });
 
 
+  }
+
+  kill(triageId): void {
+    let payload = {};
+    payload["triage_id"] = triageId;
+    this.apiService.post('/triage/kill_db', payload).subscribe(response => {
+      if (response.data) {
+        alert("Killed triaging");
+      } else {
+        alert("Unable to kill triage");
+      }
+    });
   }
 
   showModal(git_commit) {
@@ -122,13 +143,15 @@ export class TriageComponent implements OnInit {
 
   startTriaging(): void {
     let payload = {
-      "metric_id": this.id,
       "commits": this.commits,
       "triage_info": this.triageInfo
     };
     this.apiService.post('/triage/insert_db', payload).subscribe(response => {
       this.showForm = false;
+      this.triageId = response.data;
       this.showTriaging();
+      this.location.prepareExternalUrl("triaging/" + String(this.triageId));
+      this.location.go("triaging/" + String(this.triageId));
       alert("submitted");
     }, error => {
       this.logger.error("Updating DB Failed");
@@ -146,13 +169,13 @@ export class TriageComponent implements OnInit {
   checkStatus(): void {
     let statusFlag = false;
     for (let flow of this.triageFlows) {
-      if (flow.status === "ACTIVE") {
+      if (flow.status === "Active") {
         statusFlag = true;
       }
     }
     if (!statusFlag) {
       this.fault = this.faultyCommit;
-      this.triageStatus = "NOT FOUND";
+      this.triageStatus = "Not found";
       this.continueTriaging = false;
     }
   }
@@ -178,15 +201,20 @@ export class TriageComponent implements OnInit {
   }
 
   openFaultyCommitDetails(fault): void {
-    for (let commit of this.commits) {
-      if (commit.hexsha === fault) {
-        this.showFilesChanged(commit);
+    if (this.commits) {
+      for (let commit of this.commits) {
+        if (commit.hexsha === fault) {
+          this.showFilesChanged(commit);
+        }
       }
+    } else {
+      this.status = "Fetching changed files";
+      this.fetchGitCommits();
     }
   }
 
   refreshStatus(): void {
-    let payload = {"metric_id": this.id};
+    let payload = {"triage_id": this.triageId};
     this.apiService.post('/triage/fetch_flows', payload).subscribe((data) => {
       let result = data.data;
       this.triageFlows = result.flows;
@@ -194,20 +222,26 @@ export class TriageComponent implements OnInit {
       let detail = this.triageDetails;
       this.triageStatus = detail.status;
       this.fault = detail.faulty_commit;
-      if (detail.status !== "ACTIVE") {
+      if (detail.status !== "Active") {
         this.continueTriaging = false;
       }
-      let git_commit = "";
+      let totalTries = 0;
       let tries = 0;
       for (let flow of this.triageFlows) {
-        if (flow.status === "COMPLETED" || flow.status === "FAILED") {
+        if (flow.status === "Success" || flow.status === "Failed") {
           tries += 1;
+        }
+        if (flow.status !== "Suspended") {
+          totalTries += 1;
+        }
+        if (!this.continueTriaging && flow.status === "Failed") {
+          this.fault = flow.git_commit;
         }
         // if (flow.score !== -1 && flow.score < detail.last_good_score) {
         //   git_commit = flow.git_commit;
         // }
       }
-      this.maxTries = String(tries) + "/" + String(detail.max_tries);
+      this.maxTries = String(tries) + "/" + String(totalTries);
       let currentDate = new Date();
       let diff = currentDate.getTime() - new Date(detail.date_time).getTime();
       let time_elapsed = diff / 60000;
@@ -223,11 +257,22 @@ export class TriageComponent implements OnInit {
   }
 
   goBack(): void {
-    this.status = "Fetching commits";
-    this.fetchGitCommits();
-    this.showChanged = false;
-    this.showTriagingStatus = false;
-    this.showCommits = true;
+    if (this.commits) {
+      this.showChanged = false;
+      this.showTriagingStatus = false;
+      this.showCommits = true;
+    } else {
+      this.status = "Fetching commits";
+      this.showChanged = false;
+      this.showTriagingStatus = false;
+      this.showCommits = true;
+      this.fetchGitCommits();
+    }
+  }
+  
+  openGitUrl(sha): void {
+    let url = "https://github.com/fungible-inc/FunOS/commit/" + sha;
+    window.open(url, '_blank');
   }
 
   getPercentage(): string {
@@ -235,11 +280,13 @@ export class TriageComponent implements OnInit {
   }
 
   setCommits(): void {
-    let payload = {"metric_id": this.id,
-    "metric_type": this.selectedOption,
-    "from_date": this.fromDate,
-    "to_date": this.toDate,
-    "boot_args": this.bootArgs};
+    let payload = {
+      "metric_id": this.id,
+      "metric_type": this.selectedOption,
+      "from_date": this.fromDate,
+      "to_date": this.toDate,
+      "boot_args": this.bootArgs
+    };
     this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
       let result = data.data;
       this.triageInfo = result;
@@ -272,11 +319,12 @@ export class TriageComponent implements OnInit {
 
   getInfoFromCommits(): void {
     this.status = "Triaging commits";
-    let payload = {"metric_id": this.id,
-    "metric_type": this.selectedOption,
-    "from_commit": this.fromCommit,
-    "to_commit": this.toCommit,
-    "boot_args": this.bootArgs};
+    let payload = {
+      "metric_type": this.selectedOption,
+      "from_commit": this.fromCommit,
+      "to_commit": this.toCommit,
+      "boot_args": this.bootArgs
+    };
     this.apiService.post('/metrics/get_triage_info_from_commits', payload).subscribe((data) => {
       let result = data.data;
       this.triageInfo = result;
@@ -289,7 +337,7 @@ export class TriageComponent implements OnInit {
   }
 
   checkTriageDb(): void {
-    let payload = {"metric_id": this.id};
+    let payload = {"triage_id": this.id};
     this.apiService.post('/triage/check_db', payload).subscribe(response => {
       let result = response.data;
       if (result["metric_type"]) {
@@ -325,7 +373,12 @@ export class TriageComponent implements OnInit {
         this.faultyAuthor = this.commits[0].author;
         this.successAuthor = this.commits[total].author;
         this.successMessage = this.commits[total].message;
-        this.showCommits = true;
+        if (this.showTriagingStatus) {
+          this.showCommits = false;
+          this.openFaultyCommitDetails(this.fault);
+        } else {
+          this.showCommits = true;
+        }
         this.status = null;
       }, error => {
         this.logger.error("Fetching git Commits between the faulty and success commits");
@@ -360,16 +413,25 @@ export class TriageComponent implements OnInit {
   }
 
   resultToClass(result): string {
-    result = result.toUpperCase();
-    let klass = "default";
-    if (result === "FAILED") {
+    let klass = "danger";
+    if (result === "Failed") {
       klass = "danger";
-    } else if (result === "COMPLETED") {
+    } else if (result === "Completed") {
       klass = "success";
-    } else if (result === "ACTIVE") {
+    } else if (result === "Active") {
       klass = "warning";
-    } else if (result === "SUCCESS") {
+    } else if (result === "Success") {
       klass = "success";
+    } else if (result === "Building on Jenkins") {
+      klass = "info";
+    } else if (result === "Jenkins build complete") {
+      klass = "info";
+    } else if (result === "Running on Lsf") {
+      klass = "info";
+    } else if (result === "Waiting") {
+      klass = "muted";
+    } else if (result === "Suspended") {
+      klass = "default";
     }
     return klass;
   }
@@ -381,6 +443,10 @@ export class TriageComponent implements OnInit {
     }, error => {
       this.logger.error("Testing entry Failed");
     });
+  }
+
+  reRun(): void {
+
   }
 
   moreTriaging(): void {

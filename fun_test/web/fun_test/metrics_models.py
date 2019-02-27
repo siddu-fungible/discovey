@@ -31,12 +31,27 @@ class MetricsGlobalSettingsSerializer(ModelSerializer):
         fields = "__all__"
 
 class SchedulingStates:
-    ACTIVE = "ACTIVE"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-    SUCCESS = "SUCCESS"
-    SUSPENDED = "SUSPENDED"
-    RUNNING = "RUNNING"
+    ACTIVE = "Active"
+    COMPLETED = "Completed"
+    FAILED = "Failed"
+    SUCCESS = "Success"
+    SUSPENDED = "Suspended"
+    RUNNING = "Running"
+    KILLED = "Killed"
+    SUBMITTED = "Submitted"
+    IN_JENKINS = "In Jenkins"
+    WAITING = "Waiting"
+    BUILD_COMPLETE = "Build complete"
+    IN_LSF = "In Lsf"
+    PASSED = "Passed"
+    ABORTED = "Aborted"
+    SUBMITTED_TO_JENKINS = "Submitted to Jenkins"
+    BUILDING_ON_JENKINS = "Building on Jenkins"
+    JENKINS_BUILD_COMPLETE = "Jenkins build complete"
+    QUEUED_ON_LSF = "Queued on Lsf"
+    RUNNING_ON_LSF = "Running on Lsf"
+    IN_PROGRESS = "In progress"
+
 
 class MetricChartStatus(models.Model):
     metric_id = models.IntegerField(default=-1)
@@ -65,7 +80,7 @@ class MetricChartStatus(models.Model):
         return s
 
 class Triage(models.Model):
-    metric_id = models.IntegerField(default=-1, unique=True)
+    metric_id = models.IntegerField(default=-1)
     metric_type = models.CharField(max_length=15, default=METRIC_TYPE["SCORES"])
     triage_id = models.IntegerField(default=-1)
     date_time = models.DateTimeField(default=datetime.now)
@@ -80,7 +95,7 @@ class Triage(models.Model):
     stable_git_commit = models.TextField(default="")
     stable_build_properties = models.TextField(default="")
     last_good_score = models.FloatField(default=-1)
-    status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
+    status = models.CharField(max_length=30, default=SchedulingStates.ACTIVE)
     max_tries = models.IntegerField(default=-1)
     faulty_commit = models.TextField(default="")
     boot_args = models.TextField(default="")
@@ -99,7 +114,7 @@ class TriageFlow(models.Model):
     suite_execution_id = models.IntegerField(default=-1)
     jenkins_job_id = models.IntegerField(default=-1)
     lsf_job_id = models.IntegerField(default=-1)
-    status = models.CharField(max_length=15, default=SchedulingStates.ACTIVE)
+    status = models.CharField(max_length=30, default=SchedulingStates.WAITING)
     git_commit = models.TextField(default="")
     committer = models.TextField(default="")
     build_properties = models.TextField(default="")

@@ -46,7 +46,9 @@ const routes: Routes = [
   {path: 'upgrade/test', component: TestComponent},
   /*{path: 'upgrade/demo1', component: Demo1Component},*/
   {path: '*', component: NotFoundComponent},
-  { path: 'performance/atomic/:id/triage', component: TriageComponent}
+  { path: 'performance/atomic/:id/triage', component: TriageComponent},
+  { path: 'triaging/:id', component: TriageComponent},
+  { path: 'triaging', component: TriageComponent}
 ];
 
 @NgModule({

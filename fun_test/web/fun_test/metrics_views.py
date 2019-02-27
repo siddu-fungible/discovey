@@ -426,7 +426,7 @@ def get_triage_info(request):
 @api_safe_json_response
 def get_triage_info_from_commits(request):
     request_json = json.loads(request.body)
-    metric_id = int(request_json["metric_id"])
+    # metric_id = int(request_json["metric_id"])
     from_commit = request_json["from_commit"]
     to_commit = request_json["to_commit"]
     boot_args = request_json["boot_args"]

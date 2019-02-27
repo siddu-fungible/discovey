@@ -170,6 +170,7 @@ triage_urls = [
     url(r'^fetch_flows$', triaging.fetch_triage_flow),
     url(r'^test$', triaging.update_triage_flow),
     url(r'^update_db$', triaging.update_triage),
+    url(r'^kill_db$', triaging.kill_triage),
     url(r'^check_db$', triaging.check_triage)
 ]
 
@@ -193,6 +194,7 @@ urlpatterns = [
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
     url(r'^triage/', include(triage_urls)),
+    url(r'^triaging/', views.angular_home),
     url(r'^common/', include(common_urls)),
     url(r'^$', views.angular_home),
     url(r'^initialize$', metrics_views.initialize),

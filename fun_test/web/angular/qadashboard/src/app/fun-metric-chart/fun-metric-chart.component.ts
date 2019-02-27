@@ -379,74 +379,74 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     });
   }
 
-  enterTriaging(): void {
-    this.message = {
-    "metric_type": this.selectedOption,
-    "from_date": this.fromDate,
-    "to_date": this.toDate,
-    "boot_args": this.bootArgs
-    };
-      this.sharedData.changeMessage(this.message);
-    //   alert("submitted");
-
-    //   let url = "/performance/atomic/" + this.metricId + "/triage";
-    // window.open(url, '_blank');
-    let payload = {"metric_id": this.metricId,
-    "metric_type": this.selectedOption,
-    "from_date": this.fromDate,
-    "to_date": this.toDate,
-    "boot_args": this.bootArgs};
-    this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
-      let result = data.data;
-      this.triageInfo = result;
-      if (result.passed_git_commit && result.passed_git_commit !== "") {
-        this.successCommit = result.passed_git_commit;
-      }
-      if (result.degraded_git_commit && result.degraded_git_commit !== "") {
-        this.faultyCommit = result.degraded_git_commit;
-      }
-      this.fetchGitCommits();
-    }, error => {
-      this.loggerService.error("Traiging info fetch failed");
-    });
-
-  }
-  fetchGitCommits(): void {
-    if (this.faultyCommit && this.successCommit) {
-      let payload = {};
-      payload = {
-        "faulty_commit": this.faultyCommit,
-        "success_commit": this.successCommit
-      };
-      this.apiService.post('/metrics/git_commits', payload).subscribe(result => {
-        this.commits = result.data.commits;
-        let total = this.commits.length - 1;
-        this.faultyMessage = this.commits[0].message;
-        this.faultyAuthor = this.commits[0].author;
-        this.successAuthor = this.commits[total].author;
-        this.successMessage = this.commits[total].message;
-        this.startTriaging();
-      }, error => {
-        this.loggerService.error("Fetching git Commits between the faulty and success commits");
-      });
-    }
-    else {
-      console.log("Git commit is missing from the data");
-    }
-  }
-
-  startTriaging(): void {
-    let payload = {
-      "metric_id": this.id,
-      "commits": this.commits,
-      "triage_info": this.triageInfo
-    };
-    this.apiService.post('/triage/insert_db', payload).subscribe(response => {
-      alert("submitted");
-    }, error => {
-      this.loggerService.error("Updating DB Failed");
-    });
-  }
+  // enterTriaging(): void {
+  //   this.message = {
+  //   "metric_type": this.selectedOption,
+  //   "from_date": this.fromDate,
+  //   "to_date": this.toDate,
+  //   "boot_args": this.bootArgs
+  //   };
+  //     this.sharedData.changeMessage(this.message);
+  //   //   alert("submitted");
+  //
+  //   //   let url = "/performance/atomic/" + this.metricId + "/triage";
+  //   // window.open(url, '_blank');
+  //   let payload = {"metric_id": this.metricId,
+  //   "metric_type": this.selectedOption,
+  //   "from_date": this.fromDate,
+  //   "to_date": this.toDate,
+  //   "boot_args": this.bootArgs};
+  //   this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
+  //     let result = data.data;
+  //     this.triageInfo = result;
+  //     if (result.passed_git_commit && result.passed_git_commit !== "") {
+  //       this.successCommit = result.passed_git_commit;
+  //     }
+  //     if (result.degraded_git_commit && result.degraded_git_commit !== "") {
+  //       this.faultyCommit = result.degraded_git_commit;
+  //     }
+  //     this.fetchGitCommits();
+  //   }, error => {
+  //     this.loggerService.error("Traiging info fetch failed");
+  //   });
+  //
+  // }
+  // fetchGitCommits(): void {
+  //   if (this.faultyCommit && this.successCommit) {
+  //     let payload = {};
+  //     payload = {
+  //       "faulty_commit": this.faultyCommit,
+  //       "success_commit": this.successCommit
+  //     };
+  //     this.apiService.post('/metrics/git_commits', payload).subscribe(result => {
+  //       this.commits = result.data.commits;
+  //       let total = this.commits.length - 1;
+  //       this.faultyMessage = this.commits[0].message;
+  //       this.faultyAuthor = this.commits[0].author;
+  //       this.successAuthor = this.commits[total].author;
+  //       this.successMessage = this.commits[total].message;
+  //       this.startTriaging();
+  //     }, error => {
+  //       this.loggerService.error("Fetching git Commits between the faulty and success commits");
+  //     });
+  //   }
+  //   else {
+  //     console.log("Git commit is missing from the data");
+  //   }
+  // }
+  //
+  // startTriaging(): void {
+  //   let payload = {
+  //     "metric_id": this.id,
+  //     "commits": this.commits,
+  //     "triage_info": this.triageInfo
+  //   };
+  //   this.apiService.post('/triage/insert_db', payload).subscribe(response => {
+  //     alert("submitted");
+  //   }, error => {
+  //     this.loggerService.error("Updating DB Failed");
+  //   });
+  // }
 
   openTriaging(): void {
     let url = "/performance/atomic/" + this.metricId + "/triage";

@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import random
+import re
 import jenkins, sys
 from jenkinsapi.jenkins import Jenkins
 import requests
@@ -15,12 +16,6 @@ from web.fun_test.metrics_models import SchedulingStates
 from lib.host.lsf_status_server import LsfStatusServer
 from lib.system.fun_test import *
 
-pick_values = {0: 78.5,
-               1: 75.4,
-               2: 74.3,
-               3: 72.1,
-               4: 70}
-
 JENKINS_URL = "http://jenkins-sw-master:8080/"
 BUILD_PARAMS = {
     "RUN_TARGET": "F1",
@@ -29,7 +24,7 @@ BUILD_PARAMS = {
     "RUN_MODE": "Batch",
     "PRIORITY": "high_priority",
     "BOOTARGS": "",
-    "MAX_DURATION": 10,
+    "MAX_DURATION": 5,
     "SECURE_BOOT": "fungible",
     "NOTE": "",
     "FAST_EXIT": "true",
@@ -61,7 +56,7 @@ BUILD_PARAMS = {
     "RUN_PIPELINE": ""
 }
 
-jenkins_server = Jenkins(JENKINS_URL, username='jenkins.service', password='117071d3cb2cae6c964099664b271e4011')
+jenkins_server = jenkins.Jenkins(JENKINS_URL, username='jenkins.service', password='117071d3cb2cae6c964099664b271e4011')
 
 QA_TRIAGE = "qa_triage_"
 
@@ -70,12 +65,12 @@ QA_TRIAGE = "qa_triage_"
 @api_safe_json_response
 def fetch_triage_flow(request):
     request_json = json.loads(request.body)
-    metric_id = request_json["metric_id"]
+    triage_id = request_json["triage_id"]
     result = {}
     result["flows"] = []
     result["triage"] = []
     try:
-        triage = Triage.objects.filter(metric_id=metric_id)
+        triage = Triage.objects.filter(triage_id=triage_id)
         if len(triage):
             triage_details = triage[0]
             commit_detail = {}
@@ -91,7 +86,7 @@ def fetch_triage_flow(request):
             commit_detail["faulty_commit"] = triage_details.faulty_commit if triage_details.faulty_commit else None
             commit_detail["date_time"] = triage_details.date_time if triage_details.date_time else None
             result["triage"].append(commit_detail)
-        entries = TriageFlow.objects.filter(metric_id=metric_id).order_by("-date_time")
+        entries = TriageFlow.objects.filter(triage_id=triage_id).order_by("-date_time")
         if len(entries):
             for commit in entries:
                 commit_detail = {}
@@ -113,7 +108,6 @@ def fetch_triage_flow(request):
 @api_safe_json_response
 def insert_triage_db(request):
     request_json = json.loads(request.body)
-    metric_id = request_json["metric_id"]
     commits = request_json["commits"]
     triage_info = request_json["triage_info"]
 
@@ -137,13 +131,13 @@ def insert_triage_db(request):
     degraded_score = triage_info["degraded_score"]
     metric_type = triage_info["metric_type"]
     boot_args = triage_info["boot_args"]
-    triage = Triage.objects.filter(metric_id=metric_id, degraded_git_commit=degraded_git_commit,
+    triage = Triage.objects.filter(degraded_git_commit=degraded_git_commit,
                                    stable_git_commit=passed_git_commit)
     if triage:
-        return 0
+        return triage.triage_id
     else:
         triage_id = LastTriageId.get_next_id()
-        triage = Triage(metric_id=metric_id, triage_id=triage_id, degraded_suite_execution_id=degraded_suite_id,
+        triage = Triage(triage_id=triage_id, degraded_suite_execution_id=degraded_suite_id,
                         degraded_jenkins_job_id=degraded_jenkins_job_id, degraded_lsf_job_id=degraded_lsf_job_id,
                         degraded_git_commit=degraded_git_commit, degraded_build_properties=degraded_build_properties,
                         stable_suite_execution_id=passed_suite_id, stable_jenkins_job_id=passed_jenkins_job_id,
@@ -152,12 +146,13 @@ def insert_triage_db(request):
                         metric_type=metric_type, boot_args=boot_args)
         triage.save()
         for commit in commits[1:-1]:
-            triage_flow = TriageFlow(metric_id=metric_id, triage_id=triage_id,
+            triage_flow = TriageFlow(triage_id=triage_id,
                                      triage_flow_id=LastTriageFlowId.get_next_id(),
                                      git_commit=commit["hexsha"], committer=commit["author"],
-                                     build_properties=passed_build_properties, metric_type=metric_type, date_time=commit["date"], boot_args=boot_args)
+                                     build_properties=passed_build_properties, metric_type=metric_type,
+                                     date_time=commit["date"], boot_args=boot_args)
             triage_flow.save()
-    return 1
+        return triage_id
 
 
 @csrf_exempt
@@ -170,7 +165,7 @@ def update_triage(request):
     triage = Triage.objects.filter(metric_id=metric_id)
     if len(triage):
         triage_details = triage[0]
-        triage_details.status = SchedulingStates.SUCCESS
+        triage_details.status = SchedulingStates.COMPLETED
         triage_details.faulty_commit = faulty_commit
         triage_details.save()
         result["faulty_commit"] = triage_details.faulty_commit
@@ -180,11 +175,26 @@ def update_triage(request):
 
 @csrf_exempt
 @api_safe_json_response
+def kill_triage(request):
+    request_json = json.loads(request.body)
+    triage_id = request_json["triage_id"]
+    result = False
+    triage = Triage.objects.filter(triage_id=triage_id)
+    if len(triage):
+        triage_details = triage[0]
+        triage_details.status = SchedulingStates.ABORTED
+        triage_details.save()
+        result = True
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
 def check_triage(request):
     request_json = json.loads(request.body)
-    metric_id = request_json["metric_id"]
+    triage_id = request_json["triage_id"]
     result = {}
-    triage = Triage.objects.filter(metric_id=metric_id)
+    triage = Triage.objects.filter(triage_id=triage_id)
     if len(triage):
         result["metric_type"] = triage[0].metric_type
         result["from_commit"] = triage[0].degraded_git_commit
@@ -195,149 +205,194 @@ def check_triage(request):
 
 def update_triaging():
     while True:
+        result = None
         charts = Triage.objects.all()
         for chart in charts:
-            if chart.metric_id:
+            if chart.triage_id:
                 if chart.status == SchedulingStates.ACTIVE:
-                    update_triage_flow(chart.metric_id, chart)
-        time.sleep(60)
+                    result = update_triage_flow(chart.triage_id, chart)
+            if result:
+                chart.status = SchedulingStates.COMPLETED
+                chart.save()
+        time.sleep(120)
 
 
 @csrf_exempt
 @api_safe_json_response
-def update_triage_flow(metric_id, triage_details):
-    entries = TriageFlow.objects.filter(metric_id=metric_id).order_by("-date_time")
+def update_triage_flow(triage_id, triage_details):
+    result = None
+    entries = TriageFlow.objects.filter(triage_id=triage_id).order_by("-date_time")
     metric_type = triage_details.metric_type
     boot_args = triage_details.boot_args
     if metric_type == "PASS/FAIL":
         if len(entries):
-            start_flow(entries, 0, len(entries) - 1, boot_args)
+            result = start_flow(entries, 0, len(entries) - 1, boot_args)
+        if result:
+            return result
     print "one try finished"
-    # if len(entries):
-    #     update_mid(entries, 0, len(entries) - 1, last_good_score)
-    #     print "updated"
 
 
 def start_flow(entries, l, r, boot_args):
     if r >= l:
         mid = l + (r - l) / 2
         entry = entries[mid]
-        if entry.status == SchedulingStates.ACTIVE:
-            tags = "qa_triage_" + str(entry.metric_id)
+        if entry.status == SchedulingStates.WAITING:
+            tags = "qa_triage"
             BUILD_PARAMS["TAGS"] = tags
             BUILD_PARAMS["BOOTARGS"] = boot_args
             BUILD_PARAMS["BRANCH_FunOS"] = entry.git_commit
-            jenkins_server.build_job('emulation/fun_on_demand', BUILD_PARAMS)
-            entry.status = SchedulingStates.RUNNING
-            entry.save()
-            print "Added a flow"
-        elif entry.status == SchedulingStates.SUCCESS:
+            try:
+                next_build_number = jenkins_server.get_job_info('emulation/fun_on_demand')['nextBuildNumber']
+                output = jenkins_server.build_job('emulation/fun_on_demand', BUILD_PARAMS)
+                time.sleep(10)
+                build_info = jenkins_server.get_build_info('emulation/fun_on_demand', next_build_number)
+                entry.status = SchedulingStates.BUILDING_ON_JENKINS
+                entry.jenkins_job_id = build_info["number"]
+                entry.boot_args = boot_args
+                entry.save()
+                print "Added a flow"
+            except:
+                entry.status = SchedulingStates.SUBMITTED_TO_JENKINS
+                entry.save()
+        elif entry.status == SchedulingStates.COMPLETED:
             suspend_flows(entry, entries, mid, l, r)
-            start_flow(entries, l, mid - 1, boot_args)
+            print "suspended flows"
+            return start_flow(entries, l, mid - 1, boot_args)
         elif entry.status == SchedulingStates.FAILED:
             suspend_flows(entry, entries, mid, l, r)
-            start_flow(entries, mid + 1, r, boot_args)
-        elif entry.status == SchedulingStates.RUNNING:
-            tags = "qa_triage_" + str(entry.metric_id)
-            result = validate_job(tag=tags, validation_required=True)
-            if result["passed"]:
-                entry.status = SchedulingStates.SUCCESS
-            else:
-                entry.status = SchedulingStates.FAILED
-            entry.jenkins_job_id = result["jenkins_job_id"]
-            entry.lsf_job_id = result["lsf_job_id"]
-            entry.save()
+            print "suspended flows"
+            return start_flow(entries, mid + 1, r, boot_args)
+        elif entry.status == SchedulingStates.BUILDING_ON_JENKINS:
+            try:
+                build_number = entry.jenkins_job_id
+                info = jenkins_server.get_build_info('emulation/fun_on_demand', build_number)
+                if not info["building"]:
+                    if info["result"] == "SUCCESS":
+                        entry.status = SchedulingStates.JENKINS_BUILD_COMPLETE
+                        entry.save()
+            except:
+                pass
+        elif entry.status == SchedulingStates.JENKINS_BUILD_COMPLETE:
+            try:
+                info = jenkins_server.get_build_info('emulation/fun_on_demand', entry.jenkins_job_id)
+                description = info["description"]
+                m = re.search(
+                    r'"http://palladium-jobs.fungible.local:8080/job/(?P<lsf_job_id>\S+)"',
+                    description)
+                if m:
+                    lsf_job_id = int(m.group('lsf_job_id'))
+                    entry.lsf_job_id = lsf_job_id
+                    entry.status = SchedulingStates.RUNNING_ON_LSF
+                    entry.save()
+            except:
+                pass
+        elif entry.status == SchedulingStates.RUNNING_ON_LSF:
+            try:
+                result = validate_job(lsf_job_id=entry.lsf_job_id, validation_required=True)
+                if result["passed"]:
+                    entry.status = SchedulingStates.COMPLETED
+                else:
+                    entry.status = SchedulingStates.FAILED
+                entry.save()
+            except:
+                pass
+    else:
+        return "Completed"
+
 
 def suspend_flows(entry, entries, mid, l, r):
-    if entry.status == SchedulingStates.SUCCESS:
+    if entry.status == SchedulingStates.COMPLETED:
         index = mid + 1
         while index <= r:
             updating_entry = entries[index]
-            if updating_entry.status == SchedulingStates.ACTIVE:
+            if updating_entry.status == SchedulingStates.WAITING:
                 updating_entry.status = SchedulingStates.SUSPENDED
                 updating_entry.save()
             index = index + 1
     if entry.status == SchedulingStates.FAILED:
         while l < mid:
             updating_entry = entries[l]
-            if updating_entry.status == SchedulingStates.ACTIVE:
+            if updating_entry.status == SchedulingStates.WAITING:
                 updating_entry.status = SchedulingStates.SUSPENDED
                 updating_entry.save()
             l = l + 1
 
 
-def validate_job(tag=QA_TRIAGE, validation_required=True):
+def validate_job(lsf_job_id, validation_required=True):
     lsf_status_server = LsfStatusServer()
     result = {}
-    job_info = lsf_status_server.get_last_job(tag=tag)
-    fun_test.test_assert(job_info, "Ensure Job Info exists")
-    jenkins_job_id = job_info["jenkins_build_number"]
-    job_id = job_info["job_id"]
-    result["lsf_job_id"] = job_id
-    result["jenkins_job_id"] = jenkins_job_id
-    result["passed"] = False
-    git_commit = job_info["git_commit"]
-    git_commit = git_commit.replace("https://github.com/fungible-inc/FunOS/commit/", "")
-    if validation_required:
-        if job_info["return_code"]:
-            return result
-        else:
-            result["passed"] = True
-        fun_test.test_assert(not job_info["return_code"], "Valid return code")
-        fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(job_id))
-    lines = job_info["output_text"].split("\n")
-    dt = job_info["date_time"]
-
-    job_info = job_info
-    lines = lines
-    dt = dt
+    if lsf_job_id:
+        try:
+            job_info = lsf_status_server.get_job_by_id(lsf_job_id)
+            fun_test.test_assert(job_info, "Ensure Job Info exists")
+            response_dict = json.loads(job_info)
+            status = response_dict["job_dict"]["return_code"]
+            if not status:
+                print "Passed"
+                result["passed"] = True
+            else:
+                print "Failed"
+                result["passed"] = False
+        except:
+            pass
     return result
-
-
-if __name__ == "__main_test__":
-    # validate_job(tag="qa_triage", validation_required=True)
-    update_triaging()
+    # job_info = lsf_status_server.get_last_job(tag=tag)
+    # fun_test.test_assert(job_info, "Ensure Job Info exists")
+    # jenkins_job_id = job_info["jenkins_build_number"]
+    # job_id = job_info["job_id"]
+    # result["lsf_job_id"] = job_id
+    # result["jenkins_job_id"] = jenkins_job_id
+    # result["passed"] = False
+    # git_commit = job_info["git_commit"]
+    # git_commit = git_commit.replace("https://github.com/fungible-inc/FunOS/commit/", "")
+    # if validation_required:
+    #     if job_info["return_code"]:
+    #         return result
+    #     else:
+    #         result["passed"] = True
+    #     fun_test.test_assert(not job_info["return_code"], "Valid return code")
+    #     fun_test.test_assert("output_text" in job_info, "output_text found in job info: {}".format(job_id))
+    # lines = job_info["output_text"].split("\n")
+    # dt = job_info["date_time"]
+    # return result
 
 
 if __name__ == "__main__":
+    # validate_job(tag="qa_triage", validation_required=True)
+    update_triaging()
+
+if __name__ == "__main_test__":
     metric_id = 157
     # update_triage_flow(metric_id=metric_id)
-    # j = Jenkins(JENKINS_URL, username='ashwin.srinivasan', password='Ash@Fungible')
-    # job = j.get_job('emulation/fun_on_demand')
+    # job = Jenkins.get_job('emulation/fun_on_demand')
     # build = job.get_last_build()
     # parameters = build.get_actions()['parameters']
-    BUILD_PARAMS["BOOTARGS"] = "app=perftest_deflate,perftest_lzma --serial"
-    BUILD_PARAMS["BRANCH_FunOS"] = "0380baac5846806ea6510dd853c7fc4cf8612afa"
-    BUILD_PARAMS["DISABLE_ASSERTIONS"] = "true"
-    BUILD_PARAMS["TAGS"] = "qa_branch_prediction"
-    BUILD_PARAMS["NOTE"] = "Zip apps - branch prediction"
-    jenkins_server.build_job('emulation/fun_on_demand', BUILD_PARAMS)
-    print "completed"
+    # BUILD_PARAMS["BOOTARGS"] = "app=perftest_deflate,perftest_lzma --serial"
+    # BUILD_PARAMS["BRANCH_FunOS"] = "0380baac5846806ea6510dd853c7fc4cf8612afa"
+    # BUILD_PARAMS["DISABLE_ASSERTIONS"] = "true"
+    # BUILD_PARAMS["TAGS"] = "qa_branch_prediction"
+    # BUILD_PARAMS["NOTE"] = "Zip apps - branch prediction"
+    # jenkins_server.build_job('emulation/fun_on_demand', BUILD_PARAMS)
+    print "started"
     # server = jenkins.Jenkins(url=JENKINS_URL, username='jenkins.service', password='117071d3cb2cae6c964099664b271e4011')
-    # user = server.get_whoami()
-    # print server.jobs_count()
-    #
-    # import pprint
-    #
-    # pp = pprint.PrettyPrinter(indent=4)
-    # pp.pprint(server.get_jobs())
-    # print server.get_jobs()
-    # version = server.get_version()
     # user = server.get_whoami()
     # print('Hello %s from Jenkins %s' % (user['fullName'], version))
     # server.create_job("empty", config_xml=jenkins.EMPTY_CONFIG_XML)
     # server.build_job('emulation/fun_on_demand', params)
-    # job = server.get_job_info('emulation/fun_on_demand')
-    # job = server.get_job()
-    # info = server.get_build_info('emulation/fun_on_demand', 3402)
-    # build = job.get_last_build()
-    # parameters = build.get_actions()['parameters']
-    # build = job.get_last_build()
-    # print build.get_actions()
+    # job = jenkins_server.get_job("emulation/fun_on_demand")
+    # job = jenkins_server.get_job
+    # info = jenkins_server.get_build_info('emulation/fun_on_demand', 3640)
+    # queue_number = jenkins_server.build_job('emulation/fun_on_demand', BUILD_PARAMS)
+    # time.sleep(5)
+    # next_build_number = jenkins_server.get_job_info('emulation/fun_on_demand')['nextBuildNumber']
+    # output = jenkins_server.build_job('emulation/fun_on_demand', BUILD_PARAMS)
+    # time.sleep(10)
+    build_info = jenkins_server.get_build_info('emulation/fun_on_demand', 3657)
+    lsf_job_id = 632460
+    validate_job(lsf_job_id=lsf_job_id)
+    print "completed"
     # my_job = server.get_job_config('emulation')
     # print(my_job)  # prints XML configuration
-    # print "hello"
-    # # jobs = server.get_jobs(view_name='emulation')
     # # print jobs
     # curl_params = [
     # {"name": "RUN_TARGET", "value": "F1"},

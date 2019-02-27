@@ -27,3 +27,20 @@
 .triage-status td, .triage-status th {
   padding: 0!important;
 }
+p#horizontal-line {
+   width: 100%;
+   text-align: left;
+   border-bottom: 1px solid lightgrey;
+   line-height: 0.1em;
+   margin: 10px 0 20px;
+}
+
+p#horizontal-line span {
+    background:#fff;
+    padding: 0;
+}
+
+.re-run {
+  color: black;
+  float: right;
+}
