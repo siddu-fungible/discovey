@@ -171,6 +171,7 @@ triage_urls = [
     url(r'^test$', triaging.update_triage_flow),
     url(r'^update_db$', triaging.update_triage),
     url(r'^kill_db$', triaging.kill_triage),
+    url(r'^rerun_flow$', triaging.rerun_triage_flow),
     url(r'^check_db$', triaging.check_triage)
 ]
 

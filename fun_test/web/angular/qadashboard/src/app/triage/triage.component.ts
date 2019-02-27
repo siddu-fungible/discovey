@@ -275,6 +275,16 @@ export class TriageComponent implements OnInit {
     window.open(url, '_blank');
   }
 
+  openJenkinsUrl(jenkinsId): void {
+    let url = "http://jenkins-sw-master:8080/job/emulation/job/fun_on_demand/" + jenkinsId;
+    window.open(url, '_blank');
+  }
+
+  openLsfUrl(lsfId): void {
+    let url = "http://palladium-jobs.fungible.local:8080/job/" + lsfId;
+    window.open(url, '_blank');
+  }
+
   getPercentage(): string {
     return this.timePercentage;
   }

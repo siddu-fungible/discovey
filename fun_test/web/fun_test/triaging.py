@@ -184,9 +184,32 @@ def kill_triage(request):
         triage_details = triage[0]
         triage_details.status = SchedulingStates.ABORTED
         triage_details.save()
+        triage_flow_entries = TriageFlow.objects.filter(triage_id=triage_details.triage_id)
+        for entry in triage_flow_entries:
+            if entry.status != "Completed" or entry.status != "Failed":
+                entry.status = SchedulingStates.SUSPENDED
+                entry.save()
         result = True
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def rerun_triage_flow(request):
+    request_json = json.loads(request.body)
+    triage_flow_id = request_json["triage_flow_id"]
+    result = False
+    triage_flow = TriageFlow.objects.filter(triage_flow_id=triage_flow_id)
+    if len(triage_flow):
+        triage_flow.status = SchedulingStates.WAITING
+        triage_flow.save()
+        triage_id = triage_flow.triage_id
+        triage = Triage.objects.filter(triage_id=triage_id)
+        if len(triage):
+            triage.status = SchedulingStates.ACTIVE
+            triage.save()
+
+        result = True
+    return result
 
 @csrf_exempt
 @api_safe_json_response
@@ -211,10 +234,12 @@ def update_triaging():
             if chart.triage_id:
                 if chart.status == SchedulingStates.ACTIVE:
                     result = update_triage_flow(chart.triage_id, chart)
-            if result:
-                chart.status = SchedulingStates.COMPLETED
-                chart.save()
-        time.sleep(120)
+                    if result.content:
+                        response = json.loads(result.content)
+                        if response["data"]:
+                            chart.status = SchedulingStates.COMPLETED
+                            chart.save()
+        time.sleep(60)
 
 
 @csrf_exempt
@@ -228,6 +253,7 @@ def update_triage_flow(triage_id, triage_details):
         if len(entries):
             result = start_flow(entries, 0, len(entries) - 1, boot_args)
         if result:
+            print "all flows completed"
             return result
     print "one try finished"
 

@@ -284,15 +284,15 @@
                     Result
                   </th>
                   <th class="align">
-                    ReRun
+                    Action
                   </th>
                 </tr>
                 <tr class="no-margin">
                   <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
-                  <td class="table-padding align text-color-red">
-                    <a [routerLink]="" (click)="openGitUrl(faultyCommit)">{{ faultyCommit.substr(faultyCommit.length -
+                  <td class="table-padding align">
+                    <a [routerLink]="" class="text-color-red" (click)="openGitUrl(faultyCommit)">{{ faultyCommit.substr(faultyCommit.length -
                       7) }}</a>
                   </td>
                   <td class="table-padding align">
@@ -330,18 +330,18 @@
                       {{ commit.committer }}
                     </td>
                     <td *ngIf="advancedInfo" class="table-padding align">
-                      <span *ngIf="commit.jenkins !== -1">{{ commit.jenkins }}</span>
+                      <a [routerLink]="" *ngIf="commit.jenkins !== -1" (click)="openJenkinsUrl(commit.jenkins)">{{ commit.jenkins }}</a>
                     </td>
                     <td *ngIf="advancedInfo" class="table-padding align">
-                      <span *ngIf="commit.lsf !== -1">{{ commit.lsf }}</span>
+                      <a [routerLink]="" *ngIf="commit.lsf !== -1" (click)="openLsfUrl(commit.lsf)">{{ commit.lsf }}</a>
                     </td>
                     <td *ngIf="advancedInfo" class="table-padding align">
                       <span *ngIf="commit.score != -1">{{ commit.score }}</span>
                     </td>
                     <td class="table-padding align">
-                    <span [ngClass]="{'table-danger': commit.status === 'Failed'}">
-                      <span [ngClass]="'text-'+
-                          resultToClass(commit.status)">{{ commit.status }}</span>
+                    <span [ngClass]="{'badge badge-danger': commit.status === 'Failed'}">
+                      <span *ngIf="commit.status !== 'Failed'" [ngClass]="'text-'+ resultToClass(commit.status)">{{ commit.status }}</span>
+                      <span *ngIf="commit.status === 'Failed'">{{ commit.status }}</span>
                     </span>
                       <!--<div *ngIf="(commit.status !== 'SUSPENDED' || commit.status === 'FAILED') && commit.score === -1"-->
                       <!--class="progress">-->
@@ -371,8 +371,8 @@
                   <td *ngIf="advancedInfo" class="table-padding align">
                     NA
                   </td>
-                  <td class="table-padding text-color-green align">
-                    <a [routerLink]="" (click)="openGitUrl(successCommit)">{{ successCommit.substr(successCommit.length
+                  <td class="table-padding align">
+                    <a [routerLink]="" class="text-color-green" (click)="openGitUrl(successCommit)">{{ successCommit.substr(successCommit.length
                       - 7) }}</a>
                   </td>
                   <td class="table-padding align">
