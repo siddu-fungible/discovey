@@ -1,0 +1,5 @@
+[
+  {"info": {"tags": ["networking-erp-sanity"]}},
+  {"path": "networking/funeth/sanity.py", "test_case_ids": [1]},
+  {"path": "networking/ptf/ptf.py", "test_case_ids": [2]}
+]
