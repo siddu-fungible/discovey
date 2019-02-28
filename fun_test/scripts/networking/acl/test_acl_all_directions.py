@@ -1125,7 +1125,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
                                           actual=rx_stream_result_framecount_tcpflag,
                                           message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
-            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
             acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
@@ -1420,8 +1420,8 @@ class AclIngressDropHNUtoHNU(FunTestCase):
                                           actual=rx_stream_result_framecount_tcpflag,
                                           message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
-            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
             fun_test.log(acl_stats_rx_before)
@@ -1739,7 +1739,7 @@ class AclEgressDropHNUtoNU(FunTestCase):
                                           message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
             acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
             fun_test.log(acl_stats_rx_before)
@@ -2035,8 +2035,8 @@ class AclIPv6DropNUtoHNU(FunTestCase):
         #                               actual=rx_stream_result_framecount_ecn,
         #                               message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
-        acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-        acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port,hnu=True)
+        acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+        acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
         fun_test.log("Port DPC results : ")
         fun_test.log(acl_stats_tx_before)
         fun_test.log(acl_stats_rx_before)
@@ -2331,8 +2331,8 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
             #                               actual=rx_stream_result_framecount_ecn,
             #                               message="Comparing tx and rx frame count on Spirent for stream ecn")
 
-            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
             fun_test.log(acl_stats_rx_before)
@@ -2628,7 +2628,7 @@ class AclIPv6DropHNUtoNU(FunTestCase):
             #                               message="Comparing tx and rx frame count on Spirent for stream ecn")
 
             acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
             fun_test.log(acl_stats_rx_before)
