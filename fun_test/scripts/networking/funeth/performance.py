@@ -14,6 +14,7 @@ if TB == 'SN2':
 else:
     BW_LIMIT = '25G'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
+TIMESTAMP = get_current_time()
 
 
 class FunethPerformance(FunTestScript):
@@ -84,13 +85,13 @@ class FunethPerformanceBase(FunTestCase):
         passed = True
         for k, v in result.items():
             if math.isnan(v):
+                result[k] = -1  # Update 'NaN' as -1 for infra to process, per John/Ashwin
                 passed = False
-                break
 
         result.update(
             {'flow_type': flow_type,
              'frame_size': frame_size,
-             'timestamp': '%s' % get_current_time(),
+             'timestamp': '%s' % TIMESTAMP,
              'version': fun_test.get_version(),
              }
         )
