@@ -2408,7 +2408,7 @@ class AclIPv6DropHNUtoNU(FunTestCase):
     acl_fields_dict_ipv6_hnu_nu = {}
 
     def describe(self):
-        self.set_test_details(id=9, summary="Test IPv6 ACL drop HNU to HNU",
+        self.set_test_details(id=9, summary="Test IPv6 ACL drop HNU to NU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic
