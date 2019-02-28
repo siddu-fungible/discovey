@@ -874,4 +874,4 @@ if __name__ == "__main_create_nw__":
                                    milestone_date=datetime(year=2018, month=9, day=16),
                                    milestone_name="Tape-out")
                 mmt.save()
-print "Creating charts and setting baseline for networking flow types is completed programatically"
+    print "Creating charts and setting baseline for networking flow types is completed programatically"
