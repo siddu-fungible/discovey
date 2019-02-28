@@ -333,7 +333,7 @@
     "fio_modes": ["rw"],
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 16,
+    "volume_pass_threshold": 24,
     "expected_fio_result": {
       "(4, 1)": {"rw": {"write": {"bw": 41, "iops": 10, "latency": 73621},
                          "read": {"bw": 13, "iops": 3, "latency": 72449}}},
