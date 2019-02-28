@@ -267,7 +267,7 @@ class AclIngressDropNUtoNU(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 4)
         # Getting Spirent results - only when analyzer/generator is subscribed
 
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
@@ -450,10 +450,9 @@ class AclIngressDropNUtoNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
-
-        checkpoint = "Clear subscribed results"
         template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.add_checkpoint(checkpoint)
 
@@ -747,8 +746,9 @@ class AclIPv6DropNUtoNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
-
         checkpoint = "Clear subscribed results"
         template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.add_checkpoint(checkpoint)
@@ -887,7 +887,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
     acl_fields_dict_sanity_eg_nu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=4, summary="Test ACL DROP NU to HNU",
+        self.set_test_details(id=4, summary="Test ACL Egress DROP NU to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
                               2. Start Traffic 
@@ -993,7 +993,9 @@ class AclEgressDropNUtoHNU(FunTestCase):
         obj_list.append(self.stream_obj_tcpflag)
         obj_list.append(self.stream_obj_drop)
         template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
-
+        del obj_list[:]
+        obj_list.append(self.stream_obj_sport)
+        template_obj.activate_stream_blocks(stream_obj_list=obj_list)
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
@@ -1182,6 +1184,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Clear subscribed results"
@@ -1473,8 +1476,8 @@ class AclIngressDropHNUtoHNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
-
         checkpoint = "Clear subscribed results"
         template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.add_checkpoint(checkpoint)
@@ -1784,8 +1787,8 @@ class AclEgressDropHNUtoNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
-
         checkpoint = "Clear subscribed results"
         template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.add_checkpoint(checkpoint)
@@ -2090,6 +2093,8 @@ class AclIPv6DropNUtoHNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Clear subscribed results"
@@ -2385,6 +2390,8 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dport.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
@@ -2672,6 +2679,8 @@ class AclIPv6DropHNUtoNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Clear subscribed results"
