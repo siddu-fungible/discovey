@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+from django.apps import apps
 from lib.host.lsf_status_server import LsfStatusServer
 from web.fun_test.metrics_models import AllocSpeedPerformance, BcopyPerformance, LAST_ANALYTICS_DB_STATUS_UPDATE
 from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSoakPerformance, PkeP256TlsSoakPerformance
@@ -39,7 +40,7 @@ jpeg_operations = {"Compression throughput": "Compression throughput with Driver
                    "Accelerator Decompression throughput": "Decompression Accelerator throughput",
                    "JPEG Compression": "JPEG Compression"}
 nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
-
+app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 def get_rounded_time():
     dt = get_current_time()
@@ -1181,7 +1182,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
 
 class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_CRYPTO
-    model = TeraMarkCryptoPerformance
+    model = "TeraMarkCryptoPerformance"
 
     def describe(self):
         self.set_test_details(id=18,
@@ -1199,7 +1200,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                     metrics = collections.OrderedDict()
                     crypto_json = json.loads(m.group("crypto_json"))
                     input_test = crypto_json["test"]
-                    if self.model == TeraMarkCryptoPerformance:
+                    if self.model == "TeraMarkCryptoPerformance":
                         if "api" in input_test:
                             input_app = "crypto_api_perf"
                             input_algorithm = crypto_json["alg"]
@@ -1222,8 +1223,9 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             # metrics["output_latency_avg"] = output_latency_avg
                             # metrics["output_latency_max"] = output_latency_max
                             d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            MetricHelper(model=self.model).add_entry(**d)
-                    elif self.model == TeraMarkMultiClusterCryptoPerformance:
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                    elif self.model == "TeraMarkMultiClusterCryptoPerformance":
                         if "raw" in input_test:
                             input_app = "crypto_raw_speed"
                             input_algorithm = crypto_json["alg"]
@@ -1248,7 +1250,8 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             # metrics["output_latency_avg"] = output_latency_avg
                             # metrics["output_latency_max"] = output_latency_max
                             d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                            MetricHelper(model=self.model).add_entry(**d)
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
 
             self.result = fun_test.PASSED
 
@@ -1257,7 +1260,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                              test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                             git_commit=self.git_commit, model_name=str(self.model))
+                             git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1580,21 +1583,18 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         metrics["input_mode"] = line["mode"] if "mode" in line else ""
                         metrics["input_version"] = line["version"]
                         metrics["input_frame_size"] = line["frame_size"]
-                        date_time = get_time_from_timestamp(line["timestamp"])
+                        dt = get_time_from_timestamp(line["timestamp"])
+                        dt = datetime(year=dt.year, month=dt.month, day=dt.day, hour=0, minute=0, second=0)
+                        date_time = get_localized_time(dt)
                         metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
                         metrics["output_pps"] = line["pps"] if "pps" in line else -1
                         metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
                         metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
-                        if "latency_avg" in line:
-                            metrics["output_latency_avg"] = line["latency_avg"]
-                            metrics["output_latency_median"] = -1
-                        elif "latency_mean" in line:
-                            metrics["output_latency_avg"] = line["latency_mean"]
-                            metrics["output_latency_median"] = line["latency_median"]
+                        metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
+                        if "latency_P99.0" in line:
+                            metrics["output_latency_P99"] = line["latency_P99.0"]
                         else:
-                            metrics["output_latency_avg"] = -1
-                            metrics["output_latency_median"] = -1
-
+                            metrics["output_latency_P99"] = -1
                         metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
                         metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
                         metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
@@ -1693,7 +1693,7 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
 
 class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_COH
-    model = SoakDmaMemcpyCoherentPerformance
+    model = "SoakDmaMemcpyCoherentPerformance"
 
     def describe(self):
         self.set_test_details(id=27,
@@ -1723,7 +1723,8 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     metrics["input_log_size"] = input_log_size
                     metrics["input_metric_name"] = metric_name
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    MetricHelper(model=self.model).add_entry(**d)
+                    metric_model = app_config.get_metric_models()[self.model]
+                    MetricHelper(model=metric_model).add_entry(**d)
 
             self.result = fun_test.PASSED
 
@@ -1732,12 +1733,12 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name=str(self.model))
+                                     git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
     tag = SOAK_DMA_MEMCPY_NON_COH
-    model = SoakDmaMemcpyNonCoherentPerformance
+    model = "SoakDmaMemcpyNonCoherentPerformance"
 
     def describe(self):
         self.set_test_details(id=28,
@@ -1746,7 +1747,7 @@ class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
 
 class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
     tag = SOAK_DMA_MEMSET
-    model = SoakDmaMemsetPerformance
+    model = "SoakDmaMemsetPerformance"
 
     def describe(self):
         self.set_test_details(id=29,
@@ -1755,7 +1756,7 @@ class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
 
 class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
     tag = TERAMARK_CRYPTO
-    model = TeraMarkMultiClusterCryptoPerformance
+    model = "TeraMarkMultiClusterCryptoPerformance"
 
     def describe(self):
         self.set_test_details(id=30,
