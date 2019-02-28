@@ -91,7 +91,7 @@ class FunethPerformanceBase(FunTestCase):
         result.update(
             {'flow_type': flow_type,
              'frame_size': frame_size,
-             'timestamp': '%s' % TIMESTAMP,
+             'timestamp': '%s' % TIMESTAMP,  # Use same timestamp for all the results of same run, per John/Ashwin
              'version': fun_test.get_version(),
              }
         )
