@@ -361,11 +361,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingDescription = false;
     this.editingOwner = false;
     this.editingSource = false;
-    if (this.chartInfo) {
-      this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets); // TODO: Race condition on chartInfo
-    } else {
-      this.fetchMetricsData(this.modelName, this.chartName, null, this.previewDataSets); // TODO: Race condition on chartInfo
-    }
+    this.setTimeMode('all');
   }
 
   //populates buildInfo
