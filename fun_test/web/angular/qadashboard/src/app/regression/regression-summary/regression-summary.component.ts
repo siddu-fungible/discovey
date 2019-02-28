@@ -536,7 +536,7 @@ export class RegressionSummaryComponent implements OnInit {
     }
     let currentDate = this.filters[index].currentDate;
     let today = new Date();
-    let historyTime = new Date(history.started_time);
+    let historyTime = new Date(history.started_time.replace(/\s+/g, 'T')); // For Safari
     if (this.isGreaterThan(currentDate, historyTime)) {
       /*if (index === 4) {
 
