@@ -95,7 +95,7 @@
       <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
       <!--</span>-->
       <br>
-      <div>
+      <div *ngIf="modelName !== 'MetricContainer'">
         <b>Expected values:</b>&nbsp;
         <a *ngIf="!showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
         <a *ngIf="showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>

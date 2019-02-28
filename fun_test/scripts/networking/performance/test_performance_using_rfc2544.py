@@ -3,6 +3,7 @@ from lib.templates.traffic_generator.spirent_rfc2544_template import *
 from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
 from scripts.networking.helper import *
+from lib.host.linux import *
 
 
 network_controller_obj = None
@@ -63,8 +64,9 @@ class ScriptSetup(FunTestScript):
     def setup(self):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
-        dut_type = NuConfigManager.DUT_TYPE_PALLADIUM
         nu_config_obj = NuConfigManager()
+        dut_type = nu_config_obj.DUT_TYPE
+        fun_test.shared_variables['dut_type'] = dut_type
         spirent_config = nu_config_obj.read_traffic_generator_config()
         dut_config = nu_config_obj.read_dut_config()
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
@@ -112,7 +114,7 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        for port in [1, 2, 17]:
+        for port in [0, 1, 2, 3, 17]:
             mtu = network_controller_obj.set_port_mtu(port_num=port, shape=0, mtu_value=9000)
             fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
 
@@ -144,15 +146,20 @@ class TestTransitPerformance(FunTestCase):
         elif flow_direction == FLOW_TYPE_HNU_HNU_FCP:
             dir_name = "hnu_hnu_fcp_flow"
 
-        tcc_config_path = fun_test.get_helper_dir_path() + '/palladium_configs/%s/%s' % (
-            dir_name, self.tcc_file_name)
+        config_type = "palladium_configs"
+        dut_type = fun_test.shared_variables['dut_type']
+        if dut_type == NuConfigManager.DUT_TYPE_F1:
+            config_type = "f1_configs"
+
+        tcc_config_path = fun_test.get_helper_dir_path() + '/%s/%s/%s' % (
+            config_type, dir_name, self.tcc_file_name)
         fun_test.debug("Dir Name: %s" % dir_name)
         return tcc_config_path
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1000B, 9000B]" % (self.flow_direction,
-                                                                                             self.spray),
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1000B, 9000B, IMIX(AvgFrameSize: 361 B)]" % (
+                                  self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
                               2. Initialize RFC-2544 and load existing tcc configuration 
@@ -163,6 +170,7 @@ class TestTransitPerformance(FunTestCase):
                               """)
 
     def setup(self):
+        dut_type = fun_test.shared_variables['dut_type']
         checkpoint = "Initialize RFC-2544 template"
         self.template_obj = Rfc2544Template(spirent_config=spirent_config)
         fun_test.test_assert(self.template_obj, checkpoint)
@@ -172,6 +180,15 @@ class TestTransitPerformance(FunTestCase):
         checkpoint = "Load existing tcc configuration"
         result = self.template_obj.setup(tcc_config_path=tcc_config_path)
         fun_test.test_assert(result['result'], checkpoint)
+
+        if dut_type == NuConfigManager.DUT_TYPE_F1:
+            checkpoint = "Enable per-port latency compensation adjustments"
+            result = self.template_obj.enable_per_port_latency_adjustments()
+            fun_test.test_assert(result, checkpoint)
+
+            checkpoint = "Set compensation mode to REMOVED for each port"
+            result = self.template_obj.set_ports_compensation_mode()
+            fun_test.test_assert(result, checkpoint)
 
     def run(self):
         fun_test.log("----------------> Start RFC-2544 test using %s <----------------" % self.tcc_file_name)

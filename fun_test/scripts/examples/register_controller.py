@@ -58,15 +58,47 @@ class RegisterController(DpcshClient):
             fun_test.log("Output seen for register '%s' with field '%s' is '%s'" % (register_name, field, output['data']))
         else:
             fun_test.log("Output seen for register '%s' is '%s'" % (register_name, output['data']))
-        if register_name == self.hsu_pwp_core0_csr_test_outl and rinst == 3 and field == "csr_test_outl":
+        if register_name == self.hsu_pwp_core0_csr_test_outl and rinst == 0 and field == "csr_test_outl":
             self.print_simplified_data(register_name, output['data'][2], hsu_pwp_core0_csr_test_outl_dict)
         if register_name == self.hsu_pwp_core0_csr_apb and (inst is not None) and (index is not None) and (int(output['data'][0]) != 0):
             self.print_hsu_pwp_core0_csr_apb_byte0(output['data'][0], rinst, inst, index)
 
+    def findTwoscomplement(self,stri):
+        n = len(stri)
+        i = n - 1
+        while (i >= 0):
+            if (stri[i] == '1'):
+                break
+            i -= 1
+        if (i == -1):
+            return '1' + stri
+        k = i - 1
+        while (k >= 0):
+            if (stri[k] == '1'):
+                stri = list(stri)
+                stri[k] = '0'
+                stri = ''.join(stri)
+            else:
+                stri = list(stri)
+                stri[k] = '1'
+                stri = ''.join(stri)
+            k -= 1
+        return stri
+
+
+
     def _convert_decimal_to_binary(self, decimal, zfill_val):
         result = None
         try:
-            binary = bin(decimal)
+            if decimal<0:
+                decimal = -decimal
+                bin_d = bin(decimal)
+                stri = str(bin_d)
+                binary = self.findTwoscomplement(stri)
+                binary = '0b'+binary
+            else:
+                binary = bin(decimal)
+
             to_add = zfill_val - len(binary)
             to_prepend = to_add + 2
             zeros = '0' * to_prepend
