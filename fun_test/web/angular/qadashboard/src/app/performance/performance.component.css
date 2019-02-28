@@ -172,6 +172,7 @@ arrow-icon {
 
 ::ng-deep #score-info > .tooltip {
   top: 1px !important;
+  transform: translateY(0);
 }
 ::ng-deep #score-info > .tooltip.show {
   opacity: 1.0 !important;
