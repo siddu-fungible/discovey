@@ -2,7 +2,8 @@ from lib.system.fun_test import *
 from scripts.helpers.palladium_app_parser_script import RetrieveLogLinesCase, PalladiumAppParserScript
 
 TERAMARK_CRYPTO_TAG = "crypto_teramark"
-TOTAL_NUMBER_OF_TEST_CASES = 338
+# TOTAL_NUMBER_OF_TEST_CASES = 338
+TOTAL_NUMBER_OF_TEST_CASES = 2
 
 
 class GeneratedTc(FunTestCase):
