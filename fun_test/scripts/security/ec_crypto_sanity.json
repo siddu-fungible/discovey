@@ -37,7 +37,7 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -127,7 +127,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "rw"
@@ -213,7 +213,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -299,7 +299,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -384,7 +384,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -473,7 +473,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "rw"
@@ -559,7 +559,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -645,7 +645,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -733,7 +733,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -837,7 +837,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "rw"
@@ -938,7 +938,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -1035,7 +1035,7 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1124,7 +1124,7 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1214,7 +1214,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1294,7 +1294,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "\\\"0x000000000\\\"",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1371,7 +1371,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0x0000000000000",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",

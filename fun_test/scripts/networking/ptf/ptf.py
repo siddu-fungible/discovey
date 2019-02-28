@@ -200,12 +200,12 @@ class FCPTest(FunTestCase):
         run_ptf_test('fcp_palladium', server='nu', timeout=1800, tc_desc='FCP loopback test')
 
 
-class OtherPalladiumTest(FunTestCase):
+class AclTest(FunTestCase):
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Other palladium enabled test - L2/L3, ACL, QoS, Sample, Punt, etc.",
+                              summary="ACL test",
                               steps="""
-        1. Other palladium enabled test - L2/L3, ACL, QoS, Sample, Punt, etc..
+        1. Acl Test.
         """)
 
     def setup(self):
@@ -215,8 +215,85 @@ class OtherPalladiumTest(FunTestCase):
         get_ptf_log()
 
     def run(self):
-        run_ptf_test('palladium', server='nu', timeout=1800,
-                     tc_desc='Other palladium enabled test - L2/L3, ACL, QoS, Sample, Punt, etc.')
+        run_ptf_test('acl_palladium', server='nu', timeout=300,
+                     tc_desc='Acl Test.')
+
+
+class QosTest(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="QoS test",
+                              steps="""
+        1. Qos Test.
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        get_ptf_log()
+
+    def run(self):
+        run_ptf_test('qos_palladium', server='nu', timeout=300,
+                     tc_desc='Qos Test.')
+
+
+class L2Test(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="L2 test",
+                              steps="""
+        1. GPH Test.
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        get_ptf_log()
+
+    def run(self):
+        run_ptf_test('l2_palladium', server='nu', timeout=300,
+                     tc_desc='L2 Test.')
+
+
+class L3Test(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=8,
+                              summary="L3 test",
+                              steps="""
+        1. L3 Test.
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        get_ptf_log()
+
+    def run(self):
+        run_ptf_test('l3_palladium', server='nu', timeout=600,
+                     tc_desc='L3 Test.')
+
+
+class GphTest(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=9,
+                              summary="GPH test",
+                              steps="""
+        1. GPH Test.
+        """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        get_ptf_log()
+
+    def run(self):
+        run_ptf_test('gph_palladium', server='nu', timeout=600,
+                     tc_desc='GPH Test.')
+
 
 
 if __name__ == "__main__":
@@ -226,7 +303,11 @@ if __name__ == "__main__":
             ErpTest,
             ParserTest,
             #FCPTest,  # TODO: Enable these tests
-            #OtherPalladiumTest,
+            #AclTest,
+            #QosTest,
+            #L2Test,
+            #L3Test,
+            #GphTest,
     ):
         ts.add_test_case(tc())
     ts.run()

@@ -728,7 +728,7 @@ if __name__ == "__main_crypto_baseline__":
             sbl.set_base_line(metric_id=entry.metric_id, base_line_date=base_line_date, y1_axis_title=None)
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_crypto_charts__":
     internal_name_map = {"AES_GCM": "AES_GCM Encryption Raw Throughput",
                          "AES_XTS": "AES_XTS Encryption Raw Throughput",
                          "SHA_256": "SHA_256 Raw Throughput",
@@ -791,3 +791,87 @@ if __name__ == "__main__":
                                    milestone_name="Tape-out")
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
+
+if __name__ == "__main_nw_delete__":
+    model = NuTransitPerformance
+    entries = model.objects.all()
+    entries.delete()
+    print "deleted nu transit model"
+
+if __name__ == "__main__":
+    model = MetricChart
+    model_name = "NuTransitPerformance"
+    internal_chart_names = ["Networking", "Networking_Teramarks", "NU_HNU", "HNU_HNU_FCP", "HNU_HNU", "NU_NU", "HNU_NU",
+                            "HU_NU_NFCP"]
+    entries = model.objects.all()
+    for entry in entries:
+        if entry.metric_model_name == model_name or entry.internal_chart_name in internal_chart_names:
+            mm = MileStoneMarkers.objects.filter(metric_id=entry.metric_id)
+            for milestone in mm:
+                if milestone.milestone_name == "F1":
+                    milestone.delete()
+    print "removed milestones for networking"
+
+if __name__ == "__main_create_nw__":
+    internal_name_map = {"HU_HU_Throughput": "HU_HU_NFCP_output_throughput",
+                         "HU_HU_Latency": "HU_HU_NFCP_output_latency_avg",
+                         "NU_HU_Throughput": "NU_HU_NFCP_output_throughput",
+                         "NU_HU_Latency": "NU_HU_NFCP_output_latency_avg"}
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    sbl = SetBaseLine()
+    base_line_date = datetime(year=2019, month=1, day=22, minute=0, hour=0, second=0)
+    model_name = "NuTransitPerformance"
+    input_choices = get_possible_values(model_name=model_name)
+    for key, value in input_choices.iteritems():
+        print key, value
+
+    flow_types = ["HU_HU_NFCP", "NU_HU_NFCP"]
+    flow_type_map = {"HU_HU_Throughput": "HU_HU_NFCP",
+                         "HU_HU_Latency": "HU_HU_NFCP",
+                         "NU_HU_Throughput": "NU_HU_NFCP",
+                         "NU_HU_Latency": "NU_HU_NFCP"}
+    frame_sizes = [64, 1500]
+
+    for internal_name in internal_name_map:
+        internal_flow_type = flow_type_map[internal_name]
+        for input_flow_type in input_choices["input_flow_type"]:
+            if input_flow_type in flow_types and input_flow_type == internal_flow_type:
+                data_sets = []
+                for input_frame_size in input_choices["input_frame_size"]:
+                    if input_frame_size in frame_sizes:
+                        chart_name = internal_name.split('_')[-1]
+                        one_data_set = {}
+                        one_data_set["inputs"] = {}
+                        one_data_set["inputs"]["input_flow_type"] = input_flow_type
+                        one_data_set["inputs"]["input_frame_size"] = input_frame_size
+                        one_data_set["name"] = str(input_frame_size) + 'B'
+                        if chart_name == "Throughput":
+                            one_data_set["output"] = {"name": "output_throughput", 'min': 0, "max": 9999999}
+                        else:
+                            one_data_set["output"] = {"name": "output_latency_avg", 'min': 0, "max": 9999999}
+                        data_sets.append(one_data_set)
+                internal_chart_name = internal_name_map[internal_name]
+                chart_name = internal_name.split('_')[-1]
+                metric_id = LastMetricId.get_next_id()
+                if chart_name == "Throughput":
+                    positive = True
+                    y1_axis_title = "Mbps"
+                else:
+                    positive = False
+                    y1_axis_title = "ns"
+                MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_chart_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                        positive=positive,
+                        y1_axis_title=y1_axis_title,
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date).save()
+                mmt = MileStoneMarkers(metric_id=metric_id,
+                                   milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+                mmt.save()
+    print "Creating charts and setting baseline for networking flow types is completed programatically"

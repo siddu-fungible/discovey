@@ -2,8 +2,10 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
-import { of } from 'rxjs';
+import {forkJoin, from, Observable, of} from 'rxjs';
 import {ReRunService} from "../re-run.service";
+import {concatMap, switchMap} from "rxjs/operators";
+
 
 @Component({
   selector: 'app-regression-summary',
@@ -327,9 +329,30 @@ export class RegressionSummaryComponent implements OnInit {
       this.availableModules.forEach((module) => {
 
       });
+
+      /*
       for (let index = 0; index < this.filters.length; index++) {
-        this.fetchScriptInfo2(index);
-      }
+        this.fetchScriptInfo2(index).subscribe();
+      }*/
+
+      /*forkJoin(Array.from(Array(this.filters.length).keys()).map(filterIndex => {
+        return this.fetchScriptInfo2(filterIndex);
+      })).subscribe(() => {
+
+      });*/
+      let numbers = [];
+      this.filters.map(filter => {numbers.push(numbers.length)});
+        return from(numbers).pipe(
+     concatMap(filterIndex => this.fetchScriptInfo2(filterIndex))).subscribe(response => {
+
+        }, error => {
+        this.loggerService.error("Unable to fetch script info");
+        });
+
+
+
+
+
 
     }, error => {
       this.loggerService.error("Error fetching modules");
@@ -529,7 +552,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   fetchScriptInfo2(index) {
-    this.apiService.post("/regression/get_test_case_executions_by_time", this.filters[index].payload).subscribe((response) => {
+    return this.apiService.post("/regression/get_test_case_executions_by_time", this.filters[index].payload).pipe(switchMap((response) => {
       this.filters[index].testCaseExecutions = response.data;
       this.filters[index].testCaseExecutions.forEach((historyElement) => {
         //console.log(historyElement);
@@ -545,8 +568,8 @@ export class RegressionSummaryComponent implements OnInit {
       this.prepareBucketList(index);
       //console.log(this.filters[0]);
       this.filters[index] = {...this.filters[index]};
-    }, error => {
-    })
+      return of(null);
+    }))
   }
 
 
