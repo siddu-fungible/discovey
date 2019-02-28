@@ -349,5 +349,57 @@
         "throughput": 1.316,
         "timestamp": "2019-02-20 08:59:02.562592-08:00",
         "version": 5316
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 64,
+        "jitter": 7158.0,
+        "latency_P99.0": NaN,
+        "latency_avg": NaN,
+        "latency_max": NaN,
+        "latency_min": NaN,
+        "pps": 185.59,
+        "throughput": 0.095,
+        "timestamp": "2019-02-27 06:32:02.824803-08:00",
+        "version": 5375
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "jitter": 6404.0,
+        "latency_P99.0": NaN,
+        "latency_avg": NaN,
+        "latency_max": NaN,
+        "latency_min": NaN,
+        "pps": 177.72,
+        "throughput": 2.133,
+        "timestamp": "2019-02-27 06:57:17.687525-08:00",
+        "version": 5375
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 64,
+        "jitter": 6328.0,
+        "latency_P99.0": NaN,
+        "latency_avg": NaN,
+        "latency_max": NaN,
+        "latency_min": NaN,
+        "pps": 158.78,
+        "throughput": 0.081,
+        "timestamp": "2019-02-27 07:36:28.618384-08:00",
+        "version": 5375
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 1500,
+        "jitter": 6550.0,
+        "latency_P99.0": NaN,
+        "latency_avg": NaN,
+        "latency_max": NaN,
+        "latency_min": NaN,
+        "pps": 158.23,
+        "throughput": 1.899,
+        "timestamp": "2019-02-27 07:59:48.377368-08:00",
+        "version": 5375
     }
 ]
