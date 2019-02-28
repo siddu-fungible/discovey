@@ -862,11 +862,6 @@ export class PerformanceComponent implements OnInit {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   };
 
-  openAtomicTab = () => {
-    let url = "/performance/atomic/" + this.currentNode.metricId;
-    window.open(url, '_blank');
-  };
-
   expandNode = (flatNode, all = false) => {
     let topLineage = null;
     if (flatNode.hasOwnProperty("lineage")) {
@@ -1013,23 +1008,6 @@ export class PerformanceComponent implements OnInit {
       this.showBugPanel = false;
     }
 
-  }
-
-  //copy atomic URL to clipboard
-  copyAtomicUrl(): string {
-    let baseUrl = window.location.protocol +
-      '//' + window.location.hostname;
-    if (window.location.port !== "") {
-      baseUrl += ':' + window.location.port;
-    }
-
-    let url = baseUrl + "/performance/atomic/" + this.currentNode.metricId;
-    this.clipboardService.copyFromContent(url);
-    let message = 'URL: ' + url + " copied to clipboard";
-    this.toolTipMessage = message;
-    //alert(message);
-    this.copyUrlTooltip.open();
-    return message;
   }
 
 }

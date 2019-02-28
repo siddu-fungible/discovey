@@ -58,6 +58,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   showAllExpectedValues: boolean = false;
   y1AxisPlotLines: any = [];
 
+  baseLineDate: any = null;
+
   public formatter: Function;
   public tooltip: Function;
   public pointClickCallback: Function;
@@ -271,6 +273,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.leaf = this.chartInfo.leaf;
         this.inner.leaf = this.leaf;
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
+        this.baseLineDate = String(this.chartInfo.base_line_date);
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -345,6 +348,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["source"] = this.inner.currentSource;
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
+    payload["base_line_date"] = this.baseLineDate;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
         alert("Submitted");
@@ -357,6 +361,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingDescription = false;
     this.editingOwner = false;
     this.editingSource = false;
+    if (this.chartInfo) {
+      this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets); // TODO: Race condition on chartInfo
+    } else {
+      this.fetchMetricsData(this.modelName, this.chartName, null, this.previewDataSets); // TODO: Race condition on chartInfo
+    }
   }
 
   //populates buildInfo

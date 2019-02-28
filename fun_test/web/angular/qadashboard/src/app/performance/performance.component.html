@@ -166,12 +166,7 @@
               <hr>
               <div *ngIf="currentJenkinsUrl || currentLsfUrl || currentRegressionUrl" style="color: black;">
                 <b>Current Failure:</b>
-                <!--<label data-placement="right" (click)="gitIdentify()" triggers="click"-->
-                <!--[ngbTooltip]="GitCommitInfo" [autoClose]="'outside'"-->
-                <!--class="badge failed-label no-margin git-commit">Git Commit History-->
-                <!--</label>-->
                 <br>
-                <!--Git Commit: {{ currentGitCommit }}<br>-->
                 <a *ngIf="currentLsfUrl" [routerLink]="" (click)='openUrl(currentLsfUrl)'>Lsf log<br></a>
                 <a *ngIf="currentJenkinsUrl" [routerLink]="" (click)='openUrl(currentJenkinsUrl)'>Jenkins log<br></a>
                 <a *ngIf="currentRegressionUrl" [routerLink]="" (click)='openUrl(currentRegressionUrl)'>Regression
@@ -180,7 +175,6 @@
               <hr>
               <div *ngIf="failedDateTime" style="color: black;">
                 <b>First Failure:</b><br> {{ failedDateTime }}<br>
-                <!--Git Commit: {{ failedGitCommit }}<br>-->
                 <a *ngIf="failedLsfUrl" [routerLink]="" (click)='openUrl(failedLsfUrl)'>Lsf log<br></a>
                 <a *ngIf="failedJenkinsUrl" [routerLink]="" (click)='openUrl(failedJenkinsUrl)'>Jenkins log<br></a>
                 <a *ngIf="failedRegressionUrl" [routerLink]="" (click)='openUrl(failedRegressionUrl)'>Regression
@@ -216,26 +210,15 @@
                   </span>
               </span>
             </td>
-            <td valign="top" align="left">
+            <td valign="top" align="left" style="float: left;">
               <span id="score-table-info-icon">
                   <i class="fa fa-info-circle" style="padding: 2px"
                      (click)="showScoreInfoClick(currentNode)">
                   </i>
               </span>
             </td>
-            <td style="width: 100%" id="actions">
-              <span style="float: right;">
-                          <button class="btn" style="background-color: white"
-                                  (click)="openAtomicTab()">
-                              <i class="fa fa-external-link"></i></button>
-              </span>
-              <span style="float: right;" ngbTooltip="Copy chart URL to clipboard">
-                          <button id="copy-url-button" class="btn" style="background-color: white"
-                                  (click)="copyAtomicUrl()">
-                              <i id="copy-url-tooltip" placement="left" class="fa fa-chain"
-                                 ngbTooltip="{{ toolTipMessage }}" (mouseleave)="copyUrlTooltip.close()"
-                                 triggers="click" #copyUrlTooltip="ngbTooltip"></i></button>
-              </span>
+            <td style="width: 100%">
+
             </td>
           </tr>
         </table>

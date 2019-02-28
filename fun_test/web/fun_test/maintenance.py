@@ -798,7 +798,7 @@ if __name__ == "__main_nw_delete__":
     entries.delete()
     print "deleted nu transit model"
 
-if __name__ == "__main__":
+if __name__ == "__main_remove_mm__":
     model = MetricChart
     model_name = "NuTransitPerformance"
     internal_chart_names = ["Networking", "Networking_Teramarks", "NU_HNU", "HNU_HNU_FCP", "HNU_HNU", "NU_NU", "HNU_NU",
