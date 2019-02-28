@@ -593,7 +593,8 @@ class BLTCryptoVolumeTestCase(FunTestCase):
         self.linux_host.disconnect()
 
         if not self.blt_creation_fail:
-            for x in range(1, self.blt_attach_count + 1, 1):
+            # Not using attach count as for TC 17 attach is not done but still BLT is created.
+            for x in range(1, self.blt_create_count + 1, 1):
                 if self.correct_key_tweak:
                     command_result = self.storage_controller.volume_detach_remote(ns_id=x,
                                                                                   uuid=self.thin_uuid[x],
