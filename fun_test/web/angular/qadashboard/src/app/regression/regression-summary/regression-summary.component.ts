@@ -5,6 +5,7 @@ import {CommonService} from "../../services/common/common.service";
 import {forkJoin, from, Observable, of} from 'rxjs';
 import {ReRunService} from "../re-run.service";
 import {concatMap, mergeMap, switchMap} from "rxjs/operators";
+import {RegressionService} from "../regression.service";
 
 
 @Component({
@@ -20,7 +21,8 @@ export class RegressionSummaryComponent implements OnInit {
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
               private commonService: CommonService,
-              private reRunService: ReRunService) {
+              private reRunService: ReRunService,
+              private regressionService: RegressionService) {
   }
 
   xValues: any [] = [];
@@ -536,7 +538,7 @@ export class RegressionSummaryComponent implements OnInit {
     }
     let currentDate = this.filters[index].currentDate;
     let today = new Date();
-    let historyTime = new Date(history.started_time.replace(/\s+/g, 'T')); // For Safari
+    let historyTime = new Date(this.regressionService.convertToLocalTimezone(history.started_time)); //.replace(/\s+/g, 'T')); // For Safari
     if (this.isGreaterThan(currentDate, historyTime)) {
       /*if (index === 4) {
 
