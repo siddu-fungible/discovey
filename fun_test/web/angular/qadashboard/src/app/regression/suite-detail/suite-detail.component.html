@@ -19,7 +19,7 @@
             <b>{{ attribute.name }}</b>
           </td>
           <td class="cell">
-            {{ attribute.value }}
+            {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
           </td>
         </tr>
         <tr *ngIf="suiteExecution">
@@ -94,7 +94,7 @@
             <td [ngClass]="{'table-danger': script.value.result === 'FAILED'}">
               <a [ngClass]="'text-'+ resultToClass(script.value.result)">{{ script.value.result }}</a>
             </td>
-            <td>{{ trimTime(script.value.started_time) }}</td>
+            <td>{{ localizeTime(script.value.started_time) }}</td>
             <td><a [routerLink]="" (click)="getHtmlLogPath(script.value.script_path, script.value.log_prefix)">html</a>
             </td>
             <td><a [routerLink]=""

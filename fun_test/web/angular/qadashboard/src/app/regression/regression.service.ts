@@ -45,4 +45,11 @@ export class RegressionService implements OnInit{
     }));
   }
 
+  convertToLocalTimezone(t) {
+    let d = new Date(t.replace(/\s+/g, 'T'));
+    let epochValue = d.getTime();
+    return new Date(epochValue);
+
+  }
+
 }
