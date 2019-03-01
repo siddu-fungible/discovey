@@ -875,7 +875,7 @@ class FunTest:
             source_ip=None,
             source_username=None,
             source_password=None,
-            source_port=None,
+            source_port=22,
             target_ip=None,
             target_username=None,
             target_password=None,
