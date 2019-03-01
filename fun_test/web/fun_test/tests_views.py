@@ -5,6 +5,7 @@ import time
 import os
 from django.apps import apps
 from fun_settings import MAIN_WEB_APP
+from web.web_global import api_safe_json_response
 from fun_global import get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from web.fun_test.settings import COMMON_WEB_LOGGER_NAME
 from django.shortcuts import render
@@ -52,3 +53,11 @@ def bg(request):
     scheduler.add_job(tick, 'interval', seconds=3, args=[123, {"pool": 89}], id=str(123))
     # scheduler.add_job(tick, 'cron', day_of_week='mon', hour=18, minute=33, args=['89'])
     return HttpResponse("OK")
+
+
+@csrf_exempt
+@api_safe_json_response
+def crash(request):
+    result = None
+    raise Exception("Duh")
+    return result
