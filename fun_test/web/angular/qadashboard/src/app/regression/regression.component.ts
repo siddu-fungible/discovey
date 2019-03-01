@@ -144,13 +144,7 @@ export class RegressionComponent implements OnInit {
   };
 
   trimTime(t) {
-    //console.log(new Date().toLocaleString());
-    //return t.toLocaleString().replace(/\..*$/, "").replace(/T/, " ");;
-    //return t.replace(/\..*$/, "").replace(/T/, " ");
-    let d = new Date(t.replace(/\s+/g, 'T'));
-    let epochValue = d.getTime();
-    return new Date(epochValue).toLocaleString().replace(/\..*$/, "");
-
+    return this.regressionService.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
   }
 
   getSuiteDetail(suiteId) {
