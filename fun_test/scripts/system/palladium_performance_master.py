@@ -1712,6 +1712,8 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     bandwidth_json = json.loads(m.group("bandwidth_json"))
                     output_bandwidth = float(bandwidth_json["value"])
                     input_unit = bandwidth_json["unit"]
+                    if input_unit == "MBps":
+                        output_bandwidth = float(output_bandwidth / 1000)
                     input_log_size = bandwidth_json["log_size"]
                     metric_name = m.group("metric_name")
                     metrics["input_size"] = input_size
