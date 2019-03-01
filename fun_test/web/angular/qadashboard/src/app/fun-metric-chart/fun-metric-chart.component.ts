@@ -3,12 +3,18 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 
+enum TimeMode {
+  ALL = "all",
+  WEEK = "week",
+  MONTH = "month"
+}
 
 @Component({
   selector: 'fun-metric-chart',
   templateUrl: './fun-metric-chart.component.html',
   styleUrls: ['./fun-metric-chart.component.css']
 })
+
 export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() minimal: boolean = false;
   @Input() id: number = null;
@@ -58,7 +64,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   showAllExpectedValues: boolean = false;
   y1AxisPlotLines: any = [];
 
-  baseLineDate: any = null;
+  baseLineDate: string = null;
 
   public formatter: Function;
   public tooltip: Function;
@@ -361,7 +367,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingDescription = false;
     this.editingOwner = false;
     this.editingSource = false;
-    this.setTimeMode('all');
+    this.setTimeMode(TimeMode.ALL);
   }
 
   //populates buildInfo
