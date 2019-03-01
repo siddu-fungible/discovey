@@ -4,7 +4,8 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     Ipv6Header
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import *
+from scripts.networking.nu_config_manager import NuConfigManager
+from collections import OrderedDict
 
 
 num_ports = 3
@@ -44,9 +45,9 @@ OL_MPLS_GOOD_TCP_XSUM = "OL_MPLS_GOOD_TCP_XSUM"
 UL_GOOD_TCP_FFFF_XSUM = "UL_GOOD_TCP_FFFF_XSUM"
 UL_GOOD_TCP_ZERO_XSUM = "UL_GOOD_TCP_ZERO_XSUM"
 custom_headers = {UL_GOOD_UDP_ZERO_XSUM: ['00010001006E0000'],
-                  UL_GOOD_UDP_FFFF_XSUM: ['000125B9', '006EFFFF'], OL_VXLAN_GOOD_UDP_FFFF_XSUM: ['0001F9D60008FFFF'],
-                  UL_GOOD_TCP_FFFF_XSUM: ['0400f5fa0001e2400003944750021000ffff0000'],
-                  UL_GOOD_TCP_ZERO_XSUM: ['0400f5fa0001e240000394475002100000000000']
+                  UL_GOOD_UDP_FFFF_XSUM: ['00011FB8', '006EFFFF'], OL_VXLAN_GOOD_UDP_FFFF_XSUM: ['0001F9D60008FFFF'],
+                  UL_GOOD_TCP_FFFF_XSUM: ['0400f5fa0001e24000258E3850021000ffff0000'],
+                  UL_GOOD_TCP_ZERO_XSUM: ['0400f5fa0001e24000258E385002100000000000']
                   }
 
 
@@ -186,7 +187,16 @@ class SpirentSetup(FunTestScript):
         global template_obj, port_1, port_2, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
             dut_config, spirent_config, l3_config, dut_port_3, port_3, gen_obj_3, dut_type, l3_config, destination_mac, ul_ipv4_l3_config, \
-            ul_ipv6_l3_config, ol_ipv4_l3_config, ol_ipv6_l3_config, flow_direction
+            ul_ipv6_l3_config, ol_ipv4_l3_config, ol_ipv6_l3_config, flow_direction, nu_config_obj, hnu, shape
+
+        nu_config_obj = NuConfigManager()
+
+        # REMOVE below lines
+        #hnu = False
+        #shape = 0
+
+        hnu = True
+        shape = 1
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
 
@@ -234,7 +244,6 @@ class SpirentSetup(FunTestScript):
 
         destination_mac = ul_ipv4_routes_config['routermac']
         l3_config = ul_ipv6_l3_config
-        print destination_mac, l3_config
 
         # Configure Generator
         gen_config_obj = GeneratorConfig()
@@ -311,7 +320,7 @@ class Ulv6BadUdpXsum(FunTestCase):
             clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=1)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
             # Get stats before starting traffic
@@ -359,7 +368,7 @@ class Ulv6BadUdpXsum(FunTestCase):
 
             dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
             fun_test.test_assert(dut_port_1_results, message="Ensure stats are obtained for %s" % dut_port_1)
-            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=True)
+            dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
             fun_test.test_assert(dut_port_2_results, message="Ensure stats are obtained for %s" % dut_port_2)
 
             dut_port_2_transmit = get_dut_output_stats_value(dut_port_2_results, FRAMES_TRANSMITTED_OK)
@@ -524,7 +533,7 @@ class Ulv4Olv6BadUdpXsum(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv4_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                                         overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV6_UDP,
                                                                         l3_config=l3_config, ol_l4_checksum='error')
@@ -555,7 +564,7 @@ class Ulv4ZeroUdpXsumOlv6ZeroUdpXsum(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv4_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV6_UDP,
                                                              ul_l4_checksum='0',
@@ -588,7 +597,7 @@ class Ulv4ZeroUdpXsumOlv6BadTcpXsum(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv4_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV6_TCP,
                                                              ul_l4_checksum='0',
@@ -622,7 +631,7 @@ class Ulv6Olv6BadUdpXsum(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv6_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP,
                                                              l3_config=l3_config,
@@ -655,7 +664,7 @@ class Ulv6Olv6BadTcpXsum(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv6_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP,
                                                              l3_config=l3_config,
@@ -689,7 +698,7 @@ class Ulv6ZeroUdpXsumOlv6GoodUdpXsum(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv6_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP,
                                                              l3_config=l3_config,
@@ -723,7 +732,7 @@ class Ulv6ZeroUdpXsumOlv6GoodTcpXsum(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv6_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_TCP,
                                                              l3_config=l3_config,
@@ -789,7 +798,7 @@ class Ulv4Olv6IpLenError(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv4_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV6_TCP,
                                                              l3_config=l3_config,
@@ -824,7 +833,7 @@ class Ulv6Olv6IpLenError(Ulv6BadUdpXsum):
     def setup(self):
         deactivate = template_obj.deactivate_stream_blocks()
         fun_test.test_assert(deactivate, "Deactivated all streamblocks")
-
+        l3_config = ul_ipv6_l3_config
         self.current_streamblock_obj = create_overlay_stream(template_obj=template_obj, port=port_1,
                                                              overlay_type=template_obj.ETH_IPV6_UDP_VXLAN_ETH_IPV6_UDP,
                                                              l3_config=l3_config,
@@ -1015,7 +1024,6 @@ class GoodBad(FunTestCase):
                                                                 overlay_type=template_obj.ETH_IPV4_UDP_VXLAN_ETH_IPV4_UDP)
             l3_config = ul_ipv4_l3_config
             ip_header = Ipv4Header()
-            destination = l3_config['hu_destination_ip1']
             if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
                 destination = l3_config['hnu_destination_ip2']
             elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
@@ -1176,7 +1184,6 @@ class GoodBad(FunTestCase):
                                                                 mpls=True)
             l3_config = ul_ipv4_l3_config
             ip_header = Ipv4Header()
-            destination = l3_config['hu_destination_ip1']
             if flow_direction == NuConfigManager.FLOW_DIRECTION_FPG_HNU:
                 destination = l3_config['hnu_destination_ip2']
             elif flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
@@ -1222,7 +1229,7 @@ class GoodBad(FunTestCase):
             fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
                                  % (tcp._spirent_handle, modify_attribute))
             stream_objs['good'][OL_MPLS_GOOD_UDP_ZERO_XSUM] = self.current_streamblock_obj
-
+            '''
             fun_test.log("========= NEW GOOD STREAM =========")
             self.current_streamblock_obj = None
             fun_test.log("Create stream %s" % OL_MPLS_GOOD_TCP_XSUM)
@@ -1275,11 +1282,11 @@ class GoodBad(FunTestCase):
             fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
                                  % modify_attribute)
             stream_objs['good'][OL_MPLS_GOOD_TCP_XSUM] = self.current_streamblock_obj
-
+            '''
             fun_test.log("========= NEW GOOD STREAM =========")
             self.current_streamblock_obj = None
             fun_test.log("Create stream %s" % UL_GOOD_TCP_FFFF_XSUM)
-            self.current_streamblock_obj = self.create_common_streamblock(protocol_tcp=True, src_ip='18.0.5.1')
+            self.current_streamblock_obj = self.create_common_streamblock(protocol_tcp=True, src_ip='18.0.5.1', frame_length=128)
             custom_header_1 = CustomBytePatternHeader(byte_pattern=custom_headers[UL_GOOD_TCP_FFFF_XSUM])
             configure_cust_header = template_obj.stc_manager.configure_frame_stack(
                 stream_block_handle=self.current_streamblock_obj._spirent_handle, header_obj=custom_header_1)
@@ -1289,7 +1296,7 @@ class GoodBad(FunTestCase):
             fun_test.log("========= NEW GOOD STREAM =========")
             self.current_streamblock_obj = None
             fun_test.log("Create stream %s" % UL_GOOD_TCP_ZERO_XSUM)
-            self.current_streamblock_obj = self.create_common_streamblock(protocol_tcp=True, src_ip='18.0.5.1')
+            self.current_streamblock_obj = self.create_common_streamblock(protocol_tcp=True, src_ip='18.0.5.1', frame_length=128)
             custom_header_1 = CustomBytePatternHeader(byte_pattern=custom_headers[UL_GOOD_TCP_ZERO_XSUM])
             configure_cust_header = template_obj.stc_manager.configure_frame_stack(
                 stream_block_handle=self.current_streamblock_obj._spirent_handle, header_obj=custom_header_1)
@@ -1307,7 +1314,7 @@ class GoodBad(FunTestCase):
                 clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
                 fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-                clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2)
+                clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
                 fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
                 clear_3 = network_controller_obj.clear_port_stats(port_num=dut_port_3)
@@ -1395,8 +1402,6 @@ if __name__ == "__main__":
     ts.add_test_case(Ulv4ZeroUdpXsumOlv6BadTcpXsum())
     ts.add_test_case(Ulv6Olv6BadUdpXsum())
     ts.add_test_case(Ulv6Olv6BadTcpXsum())
-    ts.add_test_case(Ulv6ZeroUdpXsumOlv6GoodUdpXsum())
-    ts.add_test_case(Ulv6ZeroUdpXsumOlv6GoodTcpXsum())
     ts.add_test_case(UlIpv6LenError())
     ts.add_test_case(Ulv4Olv6IpLenError())
     ts.add_test_case(Ulv6Olv6IpLenError())
