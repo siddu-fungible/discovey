@@ -636,10 +636,11 @@ class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'Average\s+dispatch\s+WU\s+cycles:\s+(?P<average>\d+)\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]',
+                    r'Average\s+dispatch\s+WU\s+(?P<average_json>\S+)\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]',
                     line)
                 if m:
-                    output_average = int(m.group("average"))
+                    average_json = json.loads(m.group("average_json"))
+                    output_average = int(average_json["value"])
                     input_app = "dispatch_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
@@ -677,10 +678,11 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'Average\s+WU\s+send\s+ungated\s+cycles:\s+(?P<average>\d+)\s+\[(?P<metric_name>wu_send_ungated_latency_cycles)\]',
+                    r'Average\s+WU\s+send\s+ungated\s+(?P<average_json>\S+)\s+\[(?P<metric_name>wu_send_ungated_latency_cycles)\]',
                     line)
                 if m:
-                    output_average = int(m.group("average"))
+                    average_json = json.loads(m.group("average_json"))
+                    output_average = int(average_json["value"])
                     input_app = "wu_send_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
@@ -838,9 +840,11 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]:\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                    r'soak_bench\s+result\s+(?P<value_json>\S+)\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]',
                     line)
                 if m:
+                    value_json = json.loads(m.group("value_json"))
+                    fsfsf
                     output_ops_per_sec = float(m.group("ops_per_sec"))
                     input_app = "soak_malloc_classic"
                     input_metric_name = m.group("metric_name")
