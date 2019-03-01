@@ -3,12 +3,18 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
 
+enum TimeMode {
+  ALL = "all",
+  WEEK = "week",
+  MONTH = "month"
+}
 
 @Component({
   selector: 'fun-metric-chart',
   templateUrl: './fun-metric-chart.component.html',
   styleUrls: ['./fun-metric-chart.component.css']
 })
+
 export class FunMetricChartComponent implements OnInit, OnChanges {
   @Input() minimal: boolean = false;
   @Input() id: number = null;
@@ -57,6 +63,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   expectedValues: any = [];
   showAllExpectedValues: boolean = false;
   y1AxisPlotLines: any = [];
+
+  baseLineDate: string = null;
 
   public formatter: Function;
   public tooltip: Function;
@@ -271,6 +279,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.leaf = this.chartInfo.leaf;
         this.inner.leaf = this.leaf;
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
+        this.baseLineDate = String(this.chartInfo.base_line_date);
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -345,6 +354,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["source"] = this.inner.currentSource;
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
+    payload["base_line_date"] = this.baseLineDate;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
         alert("Submitted");
@@ -357,6 +367,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingDescription = false;
     this.editingOwner = false;
     this.editingSource = false;
+    this.setTimeMode(TimeMode.ALL);
   }
 
   //populates buildInfo

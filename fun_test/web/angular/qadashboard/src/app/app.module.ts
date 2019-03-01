@@ -39,7 +39,6 @@ import { RegressionAdminComponent } from './regression/regression-admin/regressi
 import { JiraInfoComponent } from './jira-info/jira-info.component';
 import { RegressionSummaryComponent } from './regression/regression-summary/regression-summary.component';
 import { GitHistoryComponent } from './git-history/git-history.component';
-import { ClipboardModule } from 'ngx-clipboard';
 import { RegressionSummaryChartComponent } from './regression/regression-summary/regression-summary-chart/regression-summary-chart.component';
 import { ScriptHistoryComponent } from './regression/script-history/script-history.component';
 import { SummaryJiraInfoComponent } from "./jira-info/summary-jira-info.component";
@@ -101,7 +100,6 @@ import { LogViewerComponent } from './log-viewer/log-viewer.component';
     NgMultiSelectDropDownModule,
     NgbModule,
     NgbTooltipModule,
-    ClipboardModule,
     ToasterModule.forRoot()
   ],
 

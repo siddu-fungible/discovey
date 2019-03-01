@@ -101,7 +101,7 @@ class SiteState():
                 description = metric["info"]
             # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
             m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
-
+            m.chart_name = metric["label"]
             m.save()
             if description and not m.description:
                 m.description = description

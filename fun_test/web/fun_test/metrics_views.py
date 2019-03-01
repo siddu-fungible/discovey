@@ -1,5 +1,6 @@
 import logging
 import json
+from dateutil.parser import parse
 from django.http import HttpResponseRedirect
 from django.core.management import call_command
 from django.apps import apps
@@ -131,7 +132,8 @@ def chart_info(request):
                   "last_lsf_job_id": chart.last_lsf_job_id,
                   "last_git_commit": chart.last_git_commit,
                   "owner_info": chart.owner_info,
-                  "source": chart.source}
+                  "source": chart.source,
+                  "base_line_date": chart.base_line_date}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict
@@ -387,6 +389,9 @@ def table_data(request, page=None, records_per_page=10):
     data["data"] = s.data
     return data
 
+def get_time_from_timestamp(timestamp):
+    time_obj = parse(timestamp)
+    return time_obj
 
 @csrf_exempt
 @api_safe_json_response
@@ -411,7 +416,10 @@ def update_chart(request):
     source = "Unknown"
     if "source" in request_json:
         source = request_json["source"]
-
+    base_line_date = datetime(year=2018, month=4, day=1)
+    if "base_line_date" in request_json:
+        base_line_date = request_json["base_line_date"]
+        base_line_date = get_time_from_timestamp(base_line_date)
     try:
         c = MetricChart.objects.get(metric_model_name=model_name, internal_chart_name=internal_chart_name)
         if data_sets:
@@ -430,6 +438,8 @@ def update_chart(request):
             c.owner_info = owner_info
         if source:
             c.source = source
+        if base_line_date:
+            c.base_line_date = base_line_date
         c.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,
