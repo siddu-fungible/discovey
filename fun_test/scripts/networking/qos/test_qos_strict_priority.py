@@ -6,9 +6,10 @@ from scripts.networking.nu_config_manager import NuConfigManager
 from scripts.networking.helper import *
 from scripts.networking.qos.qos_helper import *
 import itertools
+from collections import OrderedDict
 
 num_ports = 3
-streamblock_objs = {}
+streamblock_objs = OrderedDict()
 generator_config_objs = {}
 generator_dict = {}
 sp = 'sp'
@@ -196,6 +197,7 @@ class Q0_SP_Channel0(FunTestCase):
     sp_dscp_list = [0]
     non_sp_dscp_list = [1, 2]
     sp_list_only = False
+    accept_range = 0.3
 
     def describe(self):
         self.set_test_details(id=1,
@@ -369,7 +371,7 @@ class Q0_SP_Channel0(FunTestCase):
         for dscp_val, stream_details in result_dict.iteritems():
             stream_details['result'] = verify_load_output(actual_value=stream_details['actual'],
                                                           expected_value=stream_details['expected'], nu_config_obj=nu_config_obj,
-                                                          max_egress_load=max_egress_load)
+                                                          max_egress_load=max_egress_load, accept_range=self.accept_range)
         return result_dict
 
 
@@ -716,6 +718,12 @@ class Q0_Q8_SP_Channel0_Channel1(Q0_SP_Channel0):
                               4. After 10 seconds, get RxL1BitRate from spirent for each stream
                               5. Ensure bandwidth is shared equally among two streams
                               """)
+
+    def setup(self):
+        disable_streams = template_obj.deactivate_stream_blocks(stream_obj_list=[streamblock_objs[port_3][-1]])
+        fun_test.test_assert(disable_streams, "Ensure stream is disabled")
+
+        super(Q0_Q8_SP_Channel0_Channel1, self).setup()
 
 
 class Q1_Q9_SP_Channel0_Channel1(Q0_SP_Channel0):

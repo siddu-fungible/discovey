@@ -720,7 +720,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                     uuid=self.uuids["blt"][index], command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Disable fault_injection from the BLT volume having the "
-                                                               "UUID {}".format(self.uuids["ndata"][index]))
+                                                               "UUID {}".format(self.uuids["blt"][index]))
                 fun_test.sleep("Sleeping for a second to disable the fault_injection", 1)
                 props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_types["blt"],
                                                      self.uuids["blt"][index], "stats")

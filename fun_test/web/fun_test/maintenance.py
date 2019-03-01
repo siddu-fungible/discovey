@@ -792,13 +792,13 @@ if __name__ == "__main_crypto_charts__":
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
 
-if __name__ == "__main_nw_delete__":
+if __name__ == "__main__":
     model = NuTransitPerformance
     entries = model.objects.all()
     entries.delete()
     print "deleted nu transit model"
 
-if __name__ == "__main__":
+if __name__ == "__main_remove_mm__":
     model = MetricChart
     model_name = "NuTransitPerformance"
     internal_chart_names = ["Networking", "Networking_Teramarks", "NU_HNU", "HNU_HNU_FCP", "HNU_HNU", "NU_NU", "HNU_NU",

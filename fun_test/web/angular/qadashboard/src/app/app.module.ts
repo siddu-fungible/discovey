@@ -39,7 +39,6 @@ import { RegressionAdminComponent } from './regression/regression-admin/regressi
 import { JiraInfoComponent } from './jira-info/jira-info.component';
 import { RegressionSummaryComponent } from './regression/regression-summary/regression-summary.component';
 import { GitHistoryComponent } from './git-history/git-history.component';
-import { ClipboardModule } from 'ngx-clipboard';
 import { RegressionSummaryChartComponent } from './regression/regression-summary/regression-summary-chart/regression-summary-chart.component';
 import { ScriptHistoryComponent } from './regression/script-history/script-history.component';
 import { SummaryJiraInfoComponent } from "./jira-info/summary-jira-info.component";
@@ -48,7 +47,8 @@ import { NotFoundComponent } from './not-found/not-found.component';
 import { ReRunPanelComponent } from './regression/re-run-panel/re-run-panel.component';
 import { AlertsComponent } from './alerts/alerts.component';
 import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.component';
-
+import { ToasterModule, ToasterService } from "angular2-toaster";
+import { LogViewerComponent } from './log-viewer/log-viewer.component';
 
 @NgModule({
   declarations: [
@@ -82,7 +82,8 @@ import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.compo
     NotFoundComponent,
     ReRunPanelComponent,
     AlertsComponent,
-    SchedulerAdminComponent
+    SchedulerAdminComponent,
+    LogViewerComponent
   ],
   imports: [
     BsDropdownModule,
@@ -99,7 +100,7 @@ import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.compo
     NgMultiSelectDropDownModule,
     NgbModule,
     NgbTooltipModule,
-    ClipboardModule
+    ToasterModule.forRoot()
   ],
 
   providers: [ApiService, LoggerService],

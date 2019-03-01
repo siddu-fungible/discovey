@@ -15,6 +15,7 @@ import {ScriptHistoryComponent} from "./regression/script-history/script-history
 import {NotFoundComponent} from "./not-found/not-found.component";
 import {AlertsComponent} from "./alerts/alerts.component";
 import {SchedulerAdminComponent} from "./scheduler-admin/scheduler-admin.component";
+import {LogViewerComponent} from "./log-viewer/log-viewer.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -42,6 +43,7 @@ const routes: Routes = [
   {path: 'regression/:filterString', component: RegressionComponent},
   {path: 'regression/scheduler/admin', component: SchedulerAdminComponent},
   {path: 'common/alerts', component: AlertsComponent},
+  {path: 'common/logs', component: LogViewerComponent},
   {path: 'upgrade/test', component: TestComponent},
   /*{path: 'upgrade/demo1', component: Demo1Component},*/
   {path: '*', component: NotFoundComponent}

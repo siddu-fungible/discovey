@@ -1587,9 +1587,7 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         metrics["input_mode"] = line["mode"] if "mode" in line else ""
                         metrics["input_version"] = line["version"]
                         metrics["input_frame_size"] = line["frame_size"]
-                        dt = get_time_from_timestamp(line["timestamp"])
-                        dt = datetime(year=dt.year, month=dt.month, day=dt.day, hour=0, minute=0, second=0)
-                        date_time = get_localized_time(dt)
+                        date_time = get_time_from_timestamp(line["timestamp"])
                         metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
                         metrics["output_pps"] = line["pps"] if "pps" in line else -1
                         metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
@@ -1718,6 +1716,8 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     bandwidth_json = json.loads(m.group("bandwidth_json"))
                     output_bandwidth = float(bandwidth_json["value"])
                     input_unit = bandwidth_json["unit"]
+                    if input_unit == "MBps":
+                        output_bandwidth = float(output_bandwidth / 1000)
                     input_log_size = bandwidth_json["log_size"]
                     metric_name = m.group("metric_name")
                     metrics["input_size"] = input_size
