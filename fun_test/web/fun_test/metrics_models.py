@@ -20,6 +20,7 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 LAST_ANALYTICS_DB_STATUS_UPDATE = "last_status_update"
+BASE_LINE_DATE = datetime(year=2019, month=4, day=1)
 
 class MetricsGlobalSettings(models.Model):
     tolerance_percentage = models.FloatField(default=3.0)
@@ -106,7 +107,7 @@ class MetricChart(models.Model):
     owner_info = models.TextField(default="UNKNOWN")
     source = models.TextField(default="Unknown")
     jira_ids = models.TextField(default="[]")
-    base_line_date = models.DateTimeField(verbose_name="base_line_date", default=datetime.now)
+    base_line_date = models.DateTimeField(verbose_name="base_line_date", default=BASE_LINE_DATE)
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
