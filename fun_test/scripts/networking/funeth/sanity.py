@@ -405,7 +405,7 @@ if __name__ == "__main__":
     ts = FunethSanity()
     for tc in (
             FunethTestNUPingHU,
-            #FunethTestPacketSweep,  # TODO: uncomment after EM-906 is fixed
+            FunethTestPacketSweep,
             FunethTestScpNU2HUPF,
             FunethTestScpNU2HUVF,
             FunethTestScpHU2NU,

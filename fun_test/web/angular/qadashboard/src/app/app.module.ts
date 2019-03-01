@@ -48,7 +48,8 @@ import { NotFoundComponent } from './not-found/not-found.component';
 import { ReRunPanelComponent } from './regression/re-run-panel/re-run-panel.component';
 import { AlertsComponent } from './alerts/alerts.component';
 import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.component';
-
+import { ToasterModule, ToasterService } from "angular2-toaster";
+import { LogViewerComponent } from './log-viewer/log-viewer.component';
 
 @NgModule({
   declarations: [
@@ -82,7 +83,8 @@ import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.compo
     NotFoundComponent,
     ReRunPanelComponent,
     AlertsComponent,
-    SchedulerAdminComponent
+    SchedulerAdminComponent,
+    LogViewerComponent
   ],
   imports: [
     BsDropdownModule,
@@ -99,7 +101,8 @@ import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.compo
     NgMultiSelectDropDownModule,
     NgbModule,
     NgbTooltipModule,
-    ClipboardModule
+    ClipboardModule,
+    ToasterModule.forRoot()
   ],
 
   providers: [ApiService, LoggerService],

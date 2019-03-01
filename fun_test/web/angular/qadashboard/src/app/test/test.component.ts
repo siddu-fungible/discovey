@@ -63,9 +63,18 @@ export class TestComponent implements OnInit, OnChanges {
     return this.uId++;
   }
 
+  fetchCrash() {
+    this.apiService.get("/test/crash").subscribe(response => {
+      console.log("Abc");
+    }, error => {
+      this.logger.error("Abc");
+    });
+  }
+
   ngOnInit() {
     //this.data = ["examples/vanilla.py", "networking/script1.py", "networking/qos/script2.py"];
-    this.fetchScripts();
+    //this.fetchScripts();
+    this.fetchCrash();
 
   }
 

@@ -7,7 +7,7 @@ User needs to create .tcc spirent config with the test parameters and RFC-2544 w
 from lib.system.fun_test import *
 from lib.host.spirent_manager import *
 from lib.templates.traffic_generator.spirent_traffic_generator_template import *
-from lib.host.linux import Linux
+from scripts.networking.nu_config_manager import *
 import sqlite3
 
 FLOW_TYPE_NU_NU_NFCP = "NU_NU_NFCP"
@@ -21,7 +21,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     USER_WORKING_DIR = "USER_WORKING_DIR"
     FRAME_SIZE_64 = "64.0"
     FRAME_SIZE_1500 = "1500.0"
-    FRAME_SIZE_IMIX = "IMIX"
+    FRAME_SIZE_IMIX = "361.8"
     FRAME_SIZE_1000 = "1000.0"
     FRAME_SIZE_9000 = "9000.0"
     FRAME_SIZE_8900 = "8900.0"
@@ -223,6 +223,10 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         result[self.FRAME_SIZE_9000].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_8900 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_9000].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_IMIX == str(round(float(
+                            data_dict['AvgFrameSize']), 1)) \
+                            and data_dict['iMIXDistribution'] == 'Default':
+                        result[self.FRAME_SIZE_IMIX].append(data_dict)
             output['status'] = True
             output['summary_result'] = result
         except Exception as ex:
@@ -437,6 +441,76 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
+    def _get_interface_type_by_speed(self, speed):
+        interface_type = None
+        if speed == SpirentManager.SPEED_25G:
+            interface_type = str(Ethernet25GigFiberInterface())
+        elif speed == SpirentManager.SPEED_100G:
+            interface_type = str(Ethernet100GigFiberInterface())
+        return interface_type
+
+    # We need to enable per-port latency compensation adjustments
+    # Settings --> PHY --> enable per-port latency compensation adjustments
+    def enable_per_port_latency_adjustments(self):
+        result = False
+        try:
+            phy_options = self.stc_manager.get_physical_options_under_project()
+            for phy_option in phy_options:
+                result = self.stc_manager.enable_per_port_latency_compensation_adjustments(
+                    phy_option=phy_option, enable_compensation_mode=True)
+                fun_test.simple_assert(result, "Ensure per-port latency adjustments are enabled")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    # All ports --> Port config --> compensation_mode = 'Removed'
+    def set_ports_compensation_mode(self, port_list=None, compensation_mode="REMOVED"):
+        result = False
+        try:
+            if not port_list:
+                port_list = self.stc_manager.get_port_list()
+            for port in port_list:
+                interface_obj = self.create_physical_interface(port_handle=port)
+                phy_compensation_option = self.stc_manager.create_phy_compensation_option(
+                    interface_handle=interface_obj.spirent_handle, compensation_mode=compensation_mode)
+                fun_test.simple_assert(phy_compensation_option,
+                                       "Ensure physical compensation option updated for %s under interface %s" % (
+                                           port, interface_obj.spirent_handle))
+                kwargs = {"ActivePhy-targets": interface_obj.spirent_handle}
+                result = self.stc_manager.update_handle_config(config_handle=port, attributes=kwargs)
+                fun_test.simple_assert(result, "Ensure %s updated successfully" % port)
+                self.stc_manager.apply_configuration()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def create_physical_interface(self, port_handle):
+        result = None
+        try:
+            interface_obj = None
+            job_inputs = fun_test.get_job_inputs()
+            fun_test.simple_assert(job_inputs, "Job inputs are not found")
+            if job_inputs['speed'] == SpirentManager.SPEED_100G:
+                # To avoid latency spikes at 100% rate we need to adjust internal clock source to -10
+                interface_obj = Ethernet100GigFiberInterface(line_speed=Ethernet100GigFiberInterface.SPEED_100G,
+                                                             auto_negotiation=False,
+                                                             forward_error_correction=False,
+                                                             internal_ppm_adjust=-10)
+            elif job_inputs['speed'] == SpirentManager.SPEED_25G:
+                # To avoid latency spikes at 100% rate we need to adjust internal clock source to -10
+                interface_obj = Ethernet25GigFiberInterface(auto_negotiation=False,
+                                                            line_speed=Ethernet25GigFiberInterface.SPEED_25G,
+                                                            internal_ppm_adjust=-10)
+            attributes = interface_obj.get_attributes_dict()
+            spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
+                                                                        interface_type=str(interface_obj),
+                                                                        attributes=attributes)
+            fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
+            interface_obj.spirent_handle = spirent_handle
+            result = interface_obj
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
 # TODO: We might need this sqlite wrapper later on to fetch more detail test data
 

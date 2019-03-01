@@ -1296,6 +1296,35 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return status
 
+    def create_phy_compensation_option(self, interface_handle, compensation_mode):
+        result = None
+        try:
+            result = self.stc.create('PhyCompensationOptions', under=interface_handle,
+                                     CompensationMode=compensation_mode)
+            fun_test.simple_assert(result, "Create Phy compensation mode under %s" % interface_handle)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_physical_options_under_project(self):
+        options = []
+        try:
+            options = self.stc.get(self.project_handle, 'children-PhyOptions').split()
+            fun_test.simple_assert(options, "Ensure Physical options are fetched")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return options
+
+    def enable_per_port_latency_compensation_adjustments(self, phy_option, enable_compensation_mode=True):
+        result = False
+        try:
+            self.stc.config(phy_option, EnableCompensationMode=enable_compensation_mode)
+            if self.apply_configuration():
+                result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
 
 if __name__ == "__main__":
     stc_manager = SpirentManager()

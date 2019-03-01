@@ -164,14 +164,15 @@ arrow-icon {
   /*width: 200px !important;*/
   /*height: 200px !important;*/
   border: solid 1px black !important;
-  text-align: left;
+  text-align: left !important;
   max-width: 1000px !important;
   min-width: 200px !important;
   /*display: table !important;*/
 }
 
 ::ng-deep #score-info > .tooltip {
-  top: 0 !important;
+  top: 1px !important;
+  transform: translate(244px, 0) !important;
 }
 ::ng-deep #score-info > .tooltip.show {
   opacity: 1.0 !important;
