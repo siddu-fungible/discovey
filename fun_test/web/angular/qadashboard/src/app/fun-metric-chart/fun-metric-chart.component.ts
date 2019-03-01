@@ -358,16 +358,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
         alert("Submitted");
+        this.editingDescription = false;
+        this.editingOwner = false;
+        this.editingSource = false;
+        this.setTimeMode(TimeMode.ALL);
       } else {
         alert("Submission failed. Please check alerts");
       }
     }, error => {
       this.loggerService.error("EditChart: Submit");
     });
-    this.editingDescription = false;
-    this.editingOwner = false;
-    this.editingSource = false;
-    this.setTimeMode(TimeMode.ALL);
+
   }
 
   //populates buildInfo
