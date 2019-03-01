@@ -765,18 +765,14 @@ class LsvCryptoVolumeTestCase(FunTestCase):
                 storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                           self.vol_types[vol_type], self.uuid[vol_type])
                 command_result = self.storage_controller.peek(storage_props_tree)
-                fun_test.simple_assert(command_result["status"], "{} with uuid {} peek failed".
-                                       format(vol_type, self.uuid[vol_type]))
                 fun_test.simple_assert(expression=command_result["data"] is None,
-                                       message="BLT with uuid {} not cleaned up".format(self.uuid[vol_type]))
+                                       message="BLT with uuid {} removal".format(self.uuid[vol_type]))
             else:
                 storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
                                                           self.vol_types[vol_type], self.uuid[vol_type])
                 command_result = self.storage_controller.peek(storage_props_tree)
-                fun_test.simple_assert(command_result["status"], "{} with uuid {} peek failed".
-                                       format(vol_type, self.uuid[vol_type]))
                 fun_test.simple_assert(expression=command_result["data"] is None,
-                                       message="{} with uuid {} not cleaned up".format(vol_type, self.uuid[vol_type]))
+                                       message="{} with uuid {} removal".format(vol_type, self.uuid[vol_type]))
 
 
 class LsvKey256(LsvCryptoVolumeTestCase):

@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
-from fun_global import is_production_mode
+from fun_global import is_production_mode, is_triaging_mode
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job2, queue_suite_container
 from scheduler.scheduler_helper import queue_dynamic_suite, get_archived_job_spec
@@ -359,7 +359,7 @@ def suite_detail(request, execution_id):
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
     angular_home = 'qa_dashboard/angular_home_development.html'
-    if is_production_mode():
+    if is_production_mode() and not is_triaging_mode():
         angular_home = 'qa_dashboard/angular_home_production.html'
     return render(request, angular_home, locals())
 

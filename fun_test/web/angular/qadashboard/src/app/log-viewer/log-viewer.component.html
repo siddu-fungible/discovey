@@ -1,0 +1,25 @@
+<div class="component">
+  <table class="table">
+    <tr *ngFor="let log of logs">
+      <td>
+        {{ timestampToDate(log.timestamp) }}
+      </td>
+      <td>
+        <span class="badge" [ngClass]="{'badge-danger': log.alertLevel === AlertLevel.ERROR, 'badge-success': log.alertLevel === AlertLevel.SUCCESS }">{{ log.alertLevel }}</span>
+      </td>
+      <ng-container *ngIf="log.dataType === LogDataType.API">
+        <td>
+          <p>{{ log.data.method }} {{ log.data.url }}</p>
+          <p *ngIf="log.data.payload">{{ objectToJson(log.data.payload) }}</p>
+          <p>Status: {{ log.data.response.status }}</p>
+          <p>Message: {{ log.data.response.message }}</p>
+          <p>Error Message:<pre>{{ log.data.response.error_message }} </pre>
+
+        </td>
+      </ng-container>
+      <ng-container *ngIf="log.dataType === LogDataType.SIMPLE">
+        <td> {{ log.data }}</td>
+      </ng-container>
+    </tr>
+  </table>
+</div>

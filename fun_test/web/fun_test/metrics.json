@@ -121,6 +121,24 @@
             "weight": 1,
             "label": "HU->NU NFCP Flow",
             "reference": true
+          },
+          {
+            "info": "HU_HU_NFCP",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "HU_HU_NFCP",
+            "weight": 1,
+            "label": "HU->HU NFCP Flow",
+            "reference": true
+          },
+          {
+            "info": "NU_HU_NFCP",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "NU_HU_NFCP",
+            "weight": 1,
+            "label": "NU->HU NFCP Flow",
+            "reference": true
           }
         ],
         "weight": 1
@@ -1691,6 +1709,58 @@
                     "metric_model_name": "NuTransitPerformance",
                     "leaf": true,
                     "name": "HU_NU_NFCP_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
+                  }
+                ]
+              },
+              {
+                "info": "HU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_NFCP",
+                "weight": 1,
+                "label": "HU->HU NFCP Flow",
+                "children": [
+                  {
+                    "info": "HU_HU_NFCP_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_HU_NFCP_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "HU_HU_NFCP_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_HU_NFCP_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
+                  }
+                ]
+              },
+              {
+                "info": "NU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_HU_NFCP",
+                "weight": 1,
+                "label": "NU->HU NFCP Flow",
+                "children": [
+                  {
+                    "info": "NU_HU_NFCP_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_HU_NFCP_output_throughput",
+                    "weight": 1,
+                    "label": "Throughput"
+                  },
+                  {
+                    "info": "NU_HU_NFCP_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_HU_NFCP_output_latency_avg",
                     "weight": 1,
                     "label": "Latency"
                   }

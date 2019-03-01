@@ -436,3 +436,14 @@ input:checked + .slider:before {
 .pseudo-table {
   border: 0;
 }
+
+
+/* toaster */
+#toast-container > div {
+  opacity: unset;
+}
+
+/* label */
+.passed-label {
+
+}

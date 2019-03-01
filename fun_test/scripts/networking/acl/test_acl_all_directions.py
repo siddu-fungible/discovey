@@ -267,7 +267,7 @@ class AclIngressDropNUtoNU(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 4)
         # Getting Spirent results - only when analyzer/generator is subscribed
 
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
@@ -450,10 +450,9 @@ class AclIngressDropNUtoNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
-
-        checkpoint = "Clear subscribed results"
         template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.add_checkpoint(checkpoint)
 
@@ -474,7 +473,7 @@ class AclIPv6DropNUtoNU(FunTestCase):
     acl_fields_dict_ipv6_nu_nu = {}
 
     def describe(self):
-        self.set_test_details(id=2, summary="Test IPv6 ACL FPG to FPG",
+        self.set_test_details(id=2, summary="Test IPv6 ACL DROP FPG to FPG",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic 
@@ -747,8 +746,9 @@ class AclIPv6DropNUtoNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
-
         checkpoint = "Clear subscribed results"
         template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.add_checkpoint(checkpoint)
@@ -887,7 +887,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
     acl_fields_dict_sanity_eg_nu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=4, summary="Test Traffic FPG to HNU",
+        self.set_test_details(id=4, summary="Test ACL Egress DROP NU to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
                               2. Start Traffic 
@@ -993,7 +993,9 @@ class AclEgressDropNUtoHNU(FunTestCase):
         obj_list.append(self.stream_obj_tcpflag)
         obj_list.append(self.stream_obj_drop)
         template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
-
+        del obj_list[:]
+        obj_list.append(self.stream_obj_sport)
+        template_obj.activate_stream_blocks(stream_obj_list=obj_list)
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
@@ -1125,7 +1127,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
                                           actual=rx_stream_result_framecount_tcpflag,
                                           message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
-            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
             acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
@@ -1182,6 +1184,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Clear subscribed results"
@@ -1205,7 +1208,7 @@ class AclIngressDropHNUtoHNU(FunTestCase):
     acl_fields_dict_sanity_ing_hnu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=5, summary="Test ACL HNU to HNU",
+        self.set_test_details(id=5, summary="Test v4 ACL drop HNU to HNU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
                               2. Start Traffic
@@ -1420,8 +1423,8 @@ class AclIngressDropHNUtoHNU(FunTestCase):
                                           actual=rx_stream_result_framecount_tcpflag,
                                           message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
-            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
             fun_test.log(acl_stats_rx_before)
@@ -1473,8 +1476,8 @@ class AclIngressDropHNUtoHNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
-
         checkpoint = "Clear subscribed results"
         template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.add_checkpoint(checkpoint)
@@ -1496,7 +1499,7 @@ class AclEgressDropHNUtoNU(FunTestCase):
     acl_fields_dict_sanity_eg_hnu_nu = {}
 
     def describe(self):
-        self.set_test_details(id=6, summary="Test ACL HNU to NU",
+        self.set_test_details(id=6, summary="Test v4 ACL drop HNU to NU",
                               steps="""
                               1. Create TCP frame stream on Tx Port
                               2. Start Traffic
@@ -1739,7 +1742,7 @@ class AclEgressDropHNUtoNU(FunTestCase):
                                           message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
             acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
             fun_test.log(acl_stats_rx_before)
@@ -1784,8 +1787,8 @@ class AclEgressDropHNUtoNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
-
         checkpoint = "Clear subscribed results"
         template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.add_checkpoint(checkpoint)
@@ -1807,7 +1810,7 @@ class AclIPv6DropNUtoHNU(FunTestCase):
     acl_fields_dict_sanity_v6_nu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=7, summary="Test IPv6 ACL FPG to HNU",
+        self.set_test_details(id=7, summary="Test IPv6 ACL drop FPG to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic
@@ -2035,8 +2038,8 @@ class AclIPv6DropNUtoHNU(FunTestCase):
         #                               actual=rx_stream_result_framecount_ecn,
         #                               message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
-        acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-        acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port,hnu=True)
+        acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+        acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
         fun_test.log("Port DPC results : ")
         fun_test.log(acl_stats_tx_before)
         fun_test.log(acl_stats_rx_before)
@@ -2090,6 +2093,8 @@ class AclIPv6DropNUtoHNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Clear subscribed results"
@@ -2113,7 +2118,7 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
     acl_fields_dict_ipv6_hnu_hnu = {}
 
     def describe(self):
-        self.set_test_details(id=8, summary="Test IPv6 ACL HNU to HNU",
+        self.set_test_details(id=8, summary="Test IPv6 ACL drop HNU to HNU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic
@@ -2331,8 +2336,8 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
             #                               actual=rx_stream_result_framecount_ecn,
             #                               message="Comparing tx and rx frame count on Spirent for stream ecn")
 
-            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
             fun_test.log(acl_stats_rx_before)
@@ -2385,6 +2390,8 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dport.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
@@ -2408,7 +2415,7 @@ class AclIPv6DropHNUtoNU(FunTestCase):
     acl_fields_dict_ipv6_hnu_nu = {}
 
     def describe(self):
-        self.set_test_details(id=9, summary="Test IPv6 ACL HNU to HNU",
+        self.set_test_details(id=9, summary="Test IPv6 ACL drop HNU to NU",
                               steps="""
                                  1. Create TCP frame stream on Tx Port
                                  2. Start Traffic
@@ -2628,7 +2635,7 @@ class AclIPv6DropHNUtoNU(FunTestCase):
             #                               message="Comparing tx and rx frame count on Spirent for stream ecn")
 
             acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.log("Port DPC results : ")
             fun_test.log(acl_stats_tx_before)
             fun_test.log(acl_stats_rx_before)
@@ -2672,6 +2679,8 @@ class AclIPv6DropHNUtoNU(FunTestCase):
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_sip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_dip.spirent_handle])
         template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_drop.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_ecn.spirent_handle])
+        template_obj.delete_streamblocks(streamblock_handle_list=[self.stream_obj_tcpflag.spirent_handle])
         fun_test.add_checkpoint(checkpoint)
 
         checkpoint = "Clear subscribed results"
@@ -2892,7 +2901,7 @@ if __name__ == '__main__':
     ts.add_test_case(AclEgressDropNUtoHNU())
     ts.add_test_case(AclIngressDropHNUtoHNU())
     ts.add_test_case(AclEgressDropHNUtoNU())
-    ts.add_test_case(AclIPv6DropNUtoHNU())
+    # ts.add_test_case(AclIPv6DropNUtoHNU())
     ts.add_test_case(AclIPv6DropHNUtoHNU())
     ts.add_test_case(AclIPv6DropHNUtoNU())
     ts.add_test_case(AclRangeDropNUtoNU())
