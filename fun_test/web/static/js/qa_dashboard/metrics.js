@@ -155,6 +155,7 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
                 $scope.negativeGradient = !$scope.chartInfo.positive;
                 $scope.owner = $scope.chartInfo.owner_info;
                 $scope.source = $scope.chartInfo.source;
+                $scope.baseLineDate = $scope.chartInfo.base_line_date;
 
             });
         } else {
@@ -257,8 +258,9 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
             payload["y1_axis_title"] = $scope.y1AxisTitle;
             payload["y2_axis_title"] = $scope.y2AxisTitle;
             payload["source"] = $scope.source;
-            payload["owner"] = $scope.owner;
+            payload["owner_info"] = $scope.owner;
             payload["leaf"] = true;
+            payload["base_line_date"] = $scope.baseLineDate;
 
             commonService.apiPost('/metrics/update_chart', payload, "EditChart: Submit").then((data) => {
                 if(data) {

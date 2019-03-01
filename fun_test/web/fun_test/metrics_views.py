@@ -416,7 +416,7 @@ def update_chart(request):
     source = "Unknown"
     if "source" in request_json:
         source = request_json["source"]
-    base_line_date = get_current_time()
+    base_line_date = datetime(year=2018, month=4, day=1)
     if "base_line_date" in request_json:
         base_line_date = request_json["base_line_date"]
         base_line_date = get_time_from_timestamp(base_line_date)
