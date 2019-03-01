@@ -144,7 +144,9 @@ export class RegressionComponent implements OnInit {
   };
 
   trimTime(t) {
-    return t.replace(/\..*$/, "").replace(/T/, " ");
+    //console.log(new Date().toLocaleString());
+    return t.toLocaleString().replace(/\..*$/, "").replace(/T/, " ");;
+    //return t.replace(/\..*$/, "").replace(/T/, " ");
   }
 
   getSuiteDetail(suiteId) {
