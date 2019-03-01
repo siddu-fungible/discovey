@@ -792,7 +792,7 @@ if __name__ == "__main_crypto_charts__":
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
 
-if __name__ == "__main_nw_delete__":
+if __name__ == "__main__":
     model = NuTransitPerformance
     entries = model.objects.all()
     entries.delete()

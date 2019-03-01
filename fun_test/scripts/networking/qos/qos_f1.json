@@ -222,7 +222,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
-            "rate": 15629,
+            "rate": 15634,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -260,7 +260,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
-            "rate": 15629,
+            "rate": 15634,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -268,7 +268,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 3,
-            "rate": 7759,
+            "rate": 7884,
             "threshold": 282000,
             "sp": false,
             "eb": 0
@@ -278,7 +278,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 31.5,
-            "rate": 7759,
+            "rate": 7884,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -286,7 +286,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 3,
-            "rate": 3879,
+            "rate": 3884,
             "threshold": 282000,
             "sp": false,
             "eb": 0
@@ -298,7 +298,7 @@
           {
             "load_percent": 62.5,
             "expected_load_percent": 62.5,
-            "rate": 15509,
+            "rate": 15634,
             "threshold": 282000,
             "sp": true,
             "eb": 0
@@ -306,7 +306,7 @@
           {
             "load_percent": 32,
             "expected_load_percent": 32,
-            "rate": 7759,
+            "rate": 8009,
             "threshold": 282000,
             "sp": true,
             "eb": 0

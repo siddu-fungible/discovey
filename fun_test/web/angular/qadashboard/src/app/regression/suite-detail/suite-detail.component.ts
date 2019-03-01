@@ -195,4 +195,7 @@ export class SuiteDetailComponent implements OnInit {
     });
   }
 
+  localizeTime(t) {
+    return this.regressionService.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+  }
 }

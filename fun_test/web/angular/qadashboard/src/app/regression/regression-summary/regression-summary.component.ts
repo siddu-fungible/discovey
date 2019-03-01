@@ -5,6 +5,7 @@ import {CommonService} from "../../services/common/common.service";
 import {forkJoin, from, Observable, of} from 'rxjs';
 import {ReRunService} from "../re-run.service";
 import {concatMap, mergeMap, switchMap} from "rxjs/operators";
+import {RegressionService} from "../regression.service";
 
 
 @Component({
@@ -20,7 +21,8 @@ export class RegressionSummaryComponent implements OnInit {
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
               private commonService: CommonService,
-              private reRunService: ReRunService) {
+              private reRunService: ReRunService,
+              private regressionService: RegressionService) {
   }
 
   xValues: any [] = [];
@@ -484,19 +486,15 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   isSameDay(d1, d2) {
-    return d1.getUTCFullYear() === d2.getUTCFullYear() &&
-      d1.getUTCMonth() === d2.getUTCMonth() &&
-      d1.getUTCDate() === d2.getUTCDate();
+    return d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
   }
 
-  isSameDay2(d1, d2) {
-    console.log(d1.getUTCFullYear(), d2.getUTCFullYear());
-    console.log(d1.getUTCMonth(), d2.getUTCMonth());
-    console.log(d1.getUTCDate(), d2.getUTCDate());
-  }
+
 
   isGreaterThan(d1, d2) {
-    if ((d1.getUTCFullYear() > d2.getUTCFullYear()) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() > d2.getUTCMonth())) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() === d2.getUTCMonth()) && (d1.getUTCDate() > d2.getUTCDate()))) {
+    if ((d1.getFullYear() > d2.getFullYear()) || ((d1.getYear() === d2.getFullYear()) && (d1.getMonth() > d2.getMonth())) || ((d1.getFullYear() === d2.getFullYear()) && (d1.getMonth() === d2.getMonth()) && (d1.getDate() > d2.getDate()))) {
       return true;
     }
     return false;
@@ -507,7 +505,8 @@ export class RegressionSummaryComponent implements OnInit {
     //console.log(d.getYear());
     //console.log(d.getMonth());
     //console.log(d.getDate());
-    return d.getUTCMonth() + 1 + "/" + d.getUTCDate();
+    //return d.getUTCMonth() + 1 + "/" + d.getUTCDate();
+    return d.getMonth() + 1 + "/" + + d.getDate();
   }
 
   addToTimeBucket(index, d, history) {
@@ -536,7 +535,7 @@ export class RegressionSummaryComponent implements OnInit {
     }
     let currentDate = this.filters[index].currentDate;
     let today = new Date();
-    let historyTime = new Date(history.started_time.replace(/\s+/g, 'T')); // For Safari
+    let historyTime = new Date(this.regressionService.convertToLocalTimezone(history.started_time)); //.replace(/\s+/g, 'T')); // For Safari
     if (this.isGreaterThan(currentDate, historyTime)) {
       /*if (index === 4) {
 

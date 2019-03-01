@@ -286,8 +286,8 @@ class SP_Shaper_Q0_SP(FunTestCase):
             stream_blocks_list=self.streamblock_handles_list)
         fun_test.add_checkpoint("Ensure dscp streams are stopped")
 
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2, qos_json_output=qos_json_output)
-        fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
+        #reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2, qos_json_output=qos_json_output)
+        #fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
         # Clear all subscribed results
         for key in subscribe_results.iterkeys():
