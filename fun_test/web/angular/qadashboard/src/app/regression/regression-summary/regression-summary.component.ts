@@ -506,7 +506,7 @@ export class RegressionSummaryComponent implements OnInit {
     //console.log(d.getMonth());
     //console.log(d.getDate());
     //return d.getUTCMonth() + 1 + "/" + d.getUTCDate();
-    return d.getMonth() + d.getDate();
+    return d.getMonth() + 1 + "/" + + d.getDate();
   }
 
   addToTimeBucket(index, d, history) {
