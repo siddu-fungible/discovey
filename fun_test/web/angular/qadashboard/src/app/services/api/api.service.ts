@@ -9,8 +9,12 @@ export class ApiResponse {
   data: any;
   error_message: string;
   message: string;
+  
+  public constructor() {
+    this.status = false;
+  }
 
-  public constructor(
+  /*public constructor(
     fields?: {
       status?: boolean,
       data?: object,
@@ -18,6 +22,7 @@ export class ApiResponse {
     }) {
     if (fields) Object.assign(this, fields);
   }
+    */
 }
 
 class ApiLog {
@@ -47,7 +52,8 @@ export class ApiService {
   }
 
   //private handleError(error: any, url: string): Observable<ApiResponse> {
-  private handleError(error: any, method: string, url: string, payload?: any): ApiResponse {
+  private handleError(error: any, method: string, url: string, payload?: any): Observable<ApiResponse> {
+  //private handleError(error: any, method: string, url: string, payload?: any): ApiResponse {
 
     let result: ApiResponse = new ApiResponse();
     result.status = false;
@@ -63,8 +69,8 @@ export class ApiService {
     let apiLog = new ApiLog(result, method, url, payload);
     let newLog = new Log(null, apiLog, LogDataType.API, AlertLevel.ERROR);
     this.logger.addLog(newLog);
-    //throw of(result);
-    return result;
+    throw of(result);
+    //return result;
   }
 
   private static handleApiError(apiResponse: ApiResponse): Observable<ApiResponse> {
@@ -82,7 +88,7 @@ export class ApiService {
           }
         }),
         catchError((error) => {
-          throw of(this.handleError(error, "POST", url, payload))
+          return this.handleError(error, "POST", url, payload);
         })
       );
   }
@@ -98,7 +104,7 @@ export class ApiService {
           }
         }),
         catchError((error) => {
-          throw of(this.handleError(error, "GET",  url))
+          return this.handleError(error, "GET",  url);
         })
       );
   }
@@ -114,7 +120,7 @@ export class ApiService {
           }
         }),
         catchError((error) => {
-          throw of(this.handleError(error, "DELETE", url))
+          return this.handleError(error, "DELETE", url);
         })
       );
   }
