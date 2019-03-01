@@ -486,19 +486,15 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   isSameDay(d1, d2) {
-    return d1.getUTCFullYear() === d2.getUTCFullYear() &&
-      d1.getUTCMonth() === d2.getUTCMonth() &&
-      d1.getUTCDate() === d2.getUTCDate();
+    return d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
   }
 
-  isSameDay2(d1, d2) {
-    console.log(d1.getUTCFullYear(), d2.getUTCFullYear());
-    console.log(d1.getUTCMonth(), d2.getUTCMonth());
-    console.log(d1.getUTCDate(), d2.getUTCDate());
-  }
+
 
   isGreaterThan(d1, d2) {
-    if ((d1.getUTCFullYear() > d2.getUTCFullYear()) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() > d2.getUTCMonth())) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() === d2.getUTCMonth()) && (d1.getUTCDate() > d2.getUTCDate()))) {
+    if ((d1.getFullYear() > d2.getFullYear()) || ((d1.getYear() === d2.getFullYear()) && (d1.getMonth() > d2.getMonth())) || ((d1.getFullYear() === d2.getFullYear()) && (d1.getMonth() === d2.getMonth()) && (d1.getDate() > d2.getDate()))) {
       return true;
     }
     return false;
@@ -509,7 +505,8 @@ export class RegressionSummaryComponent implements OnInit {
     //console.log(d.getYear());
     //console.log(d.getMonth());
     //console.log(d.getDate());
-    return d.getUTCMonth() + 1 + "/" + d.getUTCDate();
+    //return d.getUTCMonth() + 1 + "/" + d.getUTCDate();
+    return d.getMonth() + d.getDate();
   }
 
   addToTimeBucket(index, d, history) {
