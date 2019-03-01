@@ -171,7 +171,8 @@ arrow-icon {
 }
 
 ::ng-deep #score-info > .tooltip {
-  top: 0 !important;
+  top: 1px !important;
+  transform: translateY(0) !important;
 }
 ::ng-deep #score-info > .tooltip.show {
   opacity: 1.0 !important;

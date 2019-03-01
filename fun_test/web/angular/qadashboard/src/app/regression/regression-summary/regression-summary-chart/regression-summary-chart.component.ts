@@ -24,11 +24,14 @@ export class RegressionSummaryChartComponent implements OnInit, OnChanges {
     //this.initializeY1Values();
     this.parseTestCaseInfo();
     this.baseId = this.getUid();
+    console.log("Init: " + this.filterEntry.timeBucketList.length);
   }
 
   ngOnChanges() {
     //this.initializeY1Values();
     this.parseTestCaseInfo();
+        console.log("Change: " + this.filterEntry.timeBucketList.length);
+
   }
 
   initializeY1Values() {
