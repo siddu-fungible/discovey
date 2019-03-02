@@ -34,7 +34,7 @@
                   </ng-container>
                 </td>
                 <td *ngSwitchDefault>
-                    {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
+                  {{ attribute.name.includes(' Time')? localizeTime(attribute.value): attribute.value }}
                 </td>
               </ng-container>
 
@@ -138,8 +138,7 @@
         </div>
       </div>
     </div>
-    <div class="col">
-      <div *ngIf="showReRunPanel" class="col">
+    <div *ngIf="showReRunPanel" class="col">
       <div id="re-run-panel" class="card">
         <div class="card-header">
           Re-run history Test-case ID: {{ currenReRunScriptInfo.test_case_id }}
@@ -156,7 +155,7 @@
                 Re-run result
               </th>
               <th>
-               Suite ID
+                Suite ID
               </th>
               <th>
                 TC execution ID
@@ -179,7 +178,8 @@
                 {{ reRun.re_run_result }}
               </td>
               <td>
-                <a target="_blank" href="/regression/suite_detail/{{ reRun.re_run_suite_execution_id }}">{{ reRun.re_run_suite_execution_id }}</a>
+                <a target="_blank"
+                   href="/regression/suite_detail/{{ reRun.re_run_suite_execution_id }}">{{ reRun.re_run_suite_execution_id }}</a>
               </td>
               <td>
                 {{ reRun.re_run_test_case_execution_id }}
@@ -189,17 +189,16 @@
               </td>
               <td>
                 <a [routerLink]=""
-                       (click)="getHtmlLogPath(reRun.re_run_suite_execution_id, currenReRunScriptInfo.script_path, currenReRunScriptInfo.log_prefix)">HTML</a>
+                   (click)="getHtmlLogPath(reRun.re_run_suite_execution_id, currenReRunScriptInfo.script_path, currenReRunScriptInfo.log_prefix)">HTML</a>
               </td>
               <td>
                 <a [routerLink]=""
-                       (click)="getConsoleLogPath(reRun.re_run_suite_execution_id, currenReRunScriptInfo.script_path, currenReRunScriptInfo.log_prefix)">Console</a>
+                   (click)="getConsoleLogPath(reRun.re_run_suite_execution_id, currenReRunScriptInfo.script_path, currenReRunScriptInfo.log_prefix)">Console</a>
               </td>
             </tr>
           </table>
         </div>
       </div>
-    </div>
     </div>
   </div>
 </div>
