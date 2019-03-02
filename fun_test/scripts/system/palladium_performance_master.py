@@ -1055,7 +1055,7 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_app = value_json["unit"]
+                    input_unit = value_json["unit"]
                     input_app = "pke_rsa_crt_dec_no_pad_soak"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1096,7 +1096,7 @@ class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_app = value_json["unit"]
+                    input_unit = value_json["unit"]
                     input_app = "pke_rsa_crt_dec_no_pad_4096_soak"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1137,7 +1137,7 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_app = value_json["unit"]
+                    input_unit = value_json["unit"]
                     input_app = "pke_ecdh_soak_256"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1178,7 +1178,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_app = value_json["unit"]
+                    input_unit = value_json["unit"]
                     input_app = "pke_ecdh_soak_25519"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1653,7 +1653,7 @@ class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_app = value_json["unit"]
+                    input_unit = value_json["unit"]
                     input_app = "pke_x25519_2k_tls_soak"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1692,7 +1692,7 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_app = value_json["unit"]
+                    input_unit = value_json["unit"]
                     input_app = "pke_p256_2k_tls_soak"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
