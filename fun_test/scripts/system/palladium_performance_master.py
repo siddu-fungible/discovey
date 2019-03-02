@@ -684,6 +684,7 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     average_json = json.loads(m.group("average_json"))
                     output_average = int(average_json["value"])
+                    input_unit = average_json["unit"]
                     input_app = "wu_send_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
