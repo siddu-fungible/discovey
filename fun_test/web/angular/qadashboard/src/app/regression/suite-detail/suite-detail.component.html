@@ -1,4 +1,6 @@
 <div class="this-component component">
+
+
   <div class="row">
     <div class="col">
 
@@ -136,7 +138,8 @@
         </div>
       </div>
     </div>
-    <div *ngIf="showReRunPanel" class="col">
+    <div class="col">
+      <div *ngIf="showReRunPanel" class="col">
       <div id="re-run-panel" class="card">
         <div class="card-header">
           Re-run history Test-case ID: {{ currenReRunScriptInfo.test_case_id }}
@@ -196,6 +199,7 @@
           </table>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </div>
