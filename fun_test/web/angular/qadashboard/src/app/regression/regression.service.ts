@@ -49,7 +49,10 @@ export class RegressionService implements OnInit{
     let d = new Date(t.replace(/\s+/g, 'T'));
     let epochValue = d.getTime();
     return new Date(epochValue);
+  }
 
+  getPrettyLocalizeTime(t) {
+    return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
   }
 
 }

@@ -1,4 +1,5 @@
 import {Component, Input, OnChanges, OnInit} from '@angular/core';
+import {RegressionService} from "../regression.service";
 
 @Component({
   selector: 'app-re-run-panel',
@@ -8,7 +9,7 @@ import {Component, Input, OnChanges, OnInit} from '@angular/core';
 export class ReRunPanelComponent implements OnInit, OnChanges {
   @Input() reRunInfo = null;
 
-  constructor() { }
+  constructor(private regressionService: RegressionService) { }
 
   ngOnInit() {
     let i = 0;
@@ -17,4 +18,7 @@ export class ReRunPanelComponent implements OnInit, OnChanges {
   ngOnChanges() {
   }
 
+  localizeTime(t) {
+    return this.regressionService.getPrettyLocalizeTime(t);
+  }
 }
