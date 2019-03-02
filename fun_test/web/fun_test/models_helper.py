@@ -319,11 +319,13 @@ def report_test_case_execution_result(execution_id, result, re_run_info=None):
             original_test_case_execution = get_test_case_execution(execution_id=original_test_case_execution_id)
             re_run_entry = {"started_time": str(original_test_case_execution.started_time),
                             "result": original_test_case_execution.result,
-                            "re_run_suite_execution_id": test_execution.suite_execution_id}
+                            "re_run_suite_execution_id": test_execution.suite_execution_id,
+                            "re_run_test_case_execution_id": test_execution.execution_id,
+                            "re_run_result": test_execution.result}
             original_test_case_execution.result = test_execution.result
             # original_test_case_execution.suite_execution_id = test_execution.suite_execution_id
-            original_test_case_execution.started_time = test_execution.started_time
-            original_test_case_execution.end_time = test_execution.end_time
+            # original_test_case_execution.started_time = test_execution.started_time
+            # original_test_case_execution.end_time = test_execution.end_time
             # original_test_case_execution.log_prefix = test_execution.log_prefix
             original_test_case_execution.add_re_run_entry(re_run_entry)
             original_test_case_execution.re_run_state = TestCaseReRunState.RE_RUN_COMPLETE
