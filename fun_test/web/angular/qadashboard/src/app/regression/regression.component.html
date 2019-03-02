@@ -57,7 +57,7 @@
 
           <td>{{ suiteExecution.fields.execution_id }}</td>
           <td>
-            <a [routerLink]="'/regression/suite_detail/' + suiteExecution?.reRunInfo?.reRunInfo[0].original.suite_execution_id" target="_blank" (click)="getSuiteDetail(suiteExecution.fields.execution_id)">
+            <a [routerLink]="'/regression/suite_detail/' + suiteExecution.fields.execution_id" target="_blank" (click)="getSuiteDetail(suiteExecution.fields.execution_id)">
               <app-smart-label [simulateLink]="true" class="pseudo-anchor" [value]="suiteExecution.suite_result" [type]="suiteExecution.suite_result"></app-smart-label>
             </a>
           </td>
