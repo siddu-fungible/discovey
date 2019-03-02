@@ -636,11 +636,12 @@ class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'Average\s+dispatch\s+WU\s+(?P<average_json>\S+)\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]',
+                    r'Average\s+dispatch\s+WU\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wu_dispatch_latency_cycles)\]',
                     line)
                 if m:
                     average_json = json.loads(m.group("average_json"))
                     output_average = int(average_json["value"])
+                    input_unit = average_json["unit"]
                     input_app = "dispatch_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
@@ -678,7 +679,7 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'Average\s+WU\s+send\s+ungated\s+(?P<average_json>\S+)\s+\[(?P<metric_name>wu_send_ungated_latency_cycles)\]',
+                    r'Average\s+WU\s+send\s+ungated\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wu_send_ungated_latency_cycles)\]',
                     line)
                 if m:
                     average_json = json.loads(m.group("average_json"))
@@ -720,12 +721,13 @@ class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'fun_magent.*=>\s+(?P<latency>\d+)(?P<unit>Kops/sec)\s+\[(?P<metric_name>fun_magent_rate_malloc_free_per_sec)\]',
+                    r'fun_magent.*=>\s+(?P<latency_json>{.*})\s+\[(?P<metric_name>fun_magent_rate_malloc_free_per_sec)\]',
                     line)
                 if m:
-                    unit = m.group("unit")
-                    fun_test.test_assert(unit, "Kops/sec", "Valid Unit")
-                    output_latency = int(m.group("latency"))
+                    latency_json = json.loads(m.group("latency_json"))
+                    unit = latency_json["unit"]
+                    fun_test.test_assert(unit, "Kops", "Valid Unit")
+                    output_latency = int(latency_json["value"])
                     input_app = "fun_magent_perf_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("latency: {}, metric_name: {}".format(output_latency, input_metric_name))
@@ -762,10 +764,12 @@ class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'Average\s+wustack\s+alloc/+free\s+cycles:\s+(?P<average>\d+)\s+\[(?P<metric_name>wustack_alloc_free_cycles)\]',
+                    r'Average\s+wustack\s+alloc/+free\s+cycles:\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wustack_alloc_free_cycles)\]',
                     line)
                 if m:
-                    output_average = int(m.group("average"))
+                    average_json = json.loads(m.group("average_json"))
+                    output_average = int(average_json["value"])
+                    input_unit = average_json["unit"]
                     input_app = "wustack_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
@@ -801,10 +805,12 @@ class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+\[(?P<metric_name>soak_two_fun_malloc_fun_free)\]:\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>soak_two_fun_malloc_fun_free)\]',
                     line)
                 if m:
-                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    value_json = json.loads(m.group("value_json"))
+                    output_ops_per_sec = float(value_json["value"])
+                    input_unit = value_json["unit"]
                     input_app = "soak_malloc_fun_malloc"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -840,12 +846,12 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+(?P<value_json>\S+)\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]',
+                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>soak_two_classic_malloc_free)\]',
                     line)
                 if m:
                     value_json = json.loads(m.group("value_json"))
-                    fsfsf
-                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    output_ops_per_sec = float(value_json["value"])
+                    input_unit = value_json["unit"]
                     input_app = "soak_malloc_classic"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1043,10 +1049,12 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+(?P<metric_name>RSA\s+CRT\s+2048\s+decryptions):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>RSA\s+CRT\s+2048\s+decryptions)\]',
                     line)
                 if m:
-                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    value_json = json.loads(m.group("value_json"))
+                    output_ops_per_sec = float(value_json["value"])
+                    input_app = value_json["unit"]
                     input_app = "pke_rsa_crt_dec_no_pad_soak"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1082,10 +1090,12 @@ class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+(?P<metric_name>RSA\s+CRT\s+4096\s+decryptions):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>RSA\s+CRT\s+4096\s+decryptions)\]',
                     line)
                 if m:
-                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    value_json = json.loads(m.group("value_json"))
+                    output_ops_per_sec = float(value_json["value"])
+                    input_app = value_json["unit"]
                     input_app = "pke_rsa_crt_dec_no_pad_4096_soak"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1121,10 +1131,12 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+(?P<metric_name>ECDH\s+P256):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>ECDH\s+P256)\]',
                     line)
                 if m:
-                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    value_json = json.loads(m.group("value_json"))
+                    output_ops_per_sec = float(value_json["value"])
+                    input_app = value_json["unit"]
                     input_app = "pke_ecdh_soak_256"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1160,10 +1172,12 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+(?P<metric_name>ECDH\s+25519):\s+(?P<ops_per_sec>\d+\.\d+)\s+ops/sec',
+                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[(?P<metric_name>ECDH\s+25519)\]',
                     line)
                 if m:
-                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    value_json = json.loads(m.group("value_json"))
+                    output_ops_per_sec = float(value_json["value"])
+                    input_app = value_json["unit"]
                     input_app = "pke_ecdh_soak_25519"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1633,10 +1647,12 @@ class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+X25519\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+X25519\s+RSA\s+2K)\)\]',
                     line)
                 if m:
-                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    value_json = json.loads(m.group("value_json"))
+                    output_ops_per_sec = float(value_json["value"])
+                    input_app = value_json["unit"]
                     input_app = "pke_x25519_2k_tls_soak"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
@@ -1670,10 +1686,12 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'soak_bench\s+result\s+TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\):\s+(?P<ops_per_sec>\S+)\s+ops/sec',
+                    r'soak_bench\s+result\s+(?P<value_json>{.*})\s+\[TLS\s+1.2\s+SERVER\s+PKE\s+OPS\s+\((?P<metric_name>ECDHE_RSA\s+P256\s+RSA\s+2K)\)\]',
                     line)
                 if m:
-                    output_ops_per_sec = float(m.group("ops_per_sec"))
+                    value_json = json.loads(m.group("value_json"))
+                    output_ops_per_sec = float(value_json["value"])
+                    input_app = value_json["unit"]
                     input_app = "pke_p256_2k_tls_soak"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
