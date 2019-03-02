@@ -5,6 +5,7 @@ import {hasOwnProperty} from "tslint/lib/utils";
 import {ReRunService} from "../re-run.service";
 import {LoggerService} from '../../services/logger/logger.service';
 import {RegressionService} from "../regression.service";
+import {CommonService} from "../../services/common/common.service";
 
 @Component({
   selector: 'app-suite-detail',
@@ -20,8 +21,11 @@ export class SuiteDetailComponent implements OnInit {
   testCaseExecutions: any;
   scriptExecutionsMap: any = {};
   attributes: any;
+  showReRunPanel: boolean = false;
+  currenReRunHistory: any = null;
+  currenReRunScriptInfo: any = null;
 
-  constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService) {
+  constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService, private commonService: CommonService) {
   }
 
   ngOnInit() {
@@ -134,8 +138,8 @@ export class SuiteDetailComponent implements OnInit {
     return klass;
   }
 
-  _getFlatPath(path, logPrefix) {
-    let httpPath = this.logDir + this.executionId;
+  _getFlatPath(suiteExecutionId, path, logPrefix) {
+    let httpPath = this.logDir + suiteExecutionId;
     let parts = path.split("/");
     let flat = path;
     let numParts = parts.length;
@@ -149,12 +153,12 @@ export class SuiteDetailComponent implements OnInit {
     return httpPath + "/" + s + flat.replace(/^\//g, '');
   }
 
-  getHtmlLogPath(path, logPrefix) {
-    window.open(this._getFlatPath(path, logPrefix) + this.HTML_LOG_EXTENSION);
+  getHtmlLogPath(suiteExecutionId, path, logPrefix) {
+    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.HTML_LOG_EXTENSION);
   }
 
-  getConsoleLogPath(path, logPrefix) {
-    window.open(this._getFlatPath(path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
+  getConsoleLogPath(suiteExecutionId, path, logPrefix) {
+    window.open(this._getFlatPath(suiteExecutionId, path, logPrefix) + this.CONSOLE_LOG_EXTENSION);
   }
 
   applyAdditionalAttributes(item) {
@@ -196,6 +200,37 @@ export class SuiteDetailComponent implements OnInit {
   }
 
   localizeTime(t) {
-    return this.regressionService.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+    return this.regressionService.getPrettyLocalizeTime(t);
   }
+
+  hasReRuns(testCaseInfo) {
+    let i = 0;
+    let reRunHistory = JSON.parse(testCaseInfo.re_run_history);
+    return reRunHistory.length > 0;
+  }
+
+  setReRunInfo(testCaseInfo) {
+    this.showReRunPanel = true;
+    this.currenReRunScriptInfo = testCaseInfo;
+    this.currenReRunHistory = JSON.parse(testCaseInfo.re_run_history);
+    setTimeout(() => {
+      this.commonService.scrollTo("re-run-panel");
+    }, 2);
+
+  }
+
+  getReRunOriginalSuitePath(suiteExecution) {
+    let suitePath = "*";
+    if (suiteExecution) {
+      if (suiteExecution.reRunInfo) {
+        if (suiteExecution.reRunInfo.reRunInfo.length > 0) {
+          suitePath = suiteExecution.reRunInfo.reRunInfo[0].original.attributes.suite_path;
+        }
+      }
+    }
+    return suitePath;
+  }
+
+
+
 }
