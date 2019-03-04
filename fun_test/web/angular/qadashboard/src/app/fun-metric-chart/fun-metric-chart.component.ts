@@ -657,12 +657,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
         let oneChartDataSet = {name: this.filterDataSets[j].name, data: oneChartDataArray};
         chartDataSets.push(oneChartDataSet);
-        let output = {};
-        output["name"] = this.filterDataSets[j].name;
-        output["value"] = filterDataSets[j].output.expected;
-        output["unit"] = this.chart1YaxisTitle;
-        output["show"] = false;
-        this.expectedValues.push(output);
       }
       this.series = seriesDates;
       this.values = chartDataSets;

@@ -89,27 +89,27 @@
       <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
       <!--</span>-->
       <br>
-      <div *ngIf="modelName !== 'MetricContainer'">
-        <b>Expected values:</b>&nbsp;
-        <a *ngIf="!showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
-        <a *ngIf="showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>
-        <table>
-          <tr *ngFor="let output of expectedValues">
-            <td>
-              <input
-                type="checkbox"
-                [checked]="output.show"
-                (change)="changeExpectedValueShow(output)"/>&nbsp;
-            </td>
-            <td>
-              <i>{{ output.name }}:</i>&nbsp;
-            </td>
-            <td>
-              {{ output.value }} {{ output.unit }}
-            </td>
-          </tr>
-        </table>
-      </div>
+      <!--<div *ngIf="modelName !== 'MetricContainer'">-->
+        <!--<b>Expected values:</b>&nbsp;-->
+        <!--<a *ngIf="!showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>-->
+        <!--<a *ngIf="showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>-->
+        <!--<table>-->
+          <!--<tr *ngFor="let output of expectedValues">-->
+            <!--<td>-->
+              <!--<input-->
+                <!--type="checkbox"-->
+                <!--[checked]="output.show"-->
+                <!--(change)="changeExpectedValueShow(output)"/>&nbsp;-->
+            <!--</td>-->
+            <!--<td>-->
+              <!--<i>{{ output.name }}:</i>&nbsp;-->
+            <!--</td>-->
+            <!--<td>-->
+              <!--{{ output.value }} {{ output.unit }}-->
+            <!--</td>-->
+          <!--</tr>-->
+        <!--</table>-->
+      <!--</div>-->
     </div>
     <div class="closed-section"></div>
     <!-- Show tables below the leaf chart -->
