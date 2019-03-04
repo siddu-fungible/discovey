@@ -61,7 +61,11 @@ export class ApiService {
     if (error.hasOwnProperty('statusText')) {
       result.error_message = `Http Error: Status: ${error.status} Text: ${error.statusText} URL: ${error.url}\n`; // TODO: Improve this
       result.error_message += `Message: ${error.message}\n`;
-      result.error_message += `Error.error.message: ${error.error.error.message}`;
+      if (error.hasOwnProperty('error')) {
+        if (error.error.hasOwnProperty('error')) {
+          result.error_message += `Error.error.message: ${error.error.error.message}`;
+        }
+      }
 
     } else {
       result.error_message = error.error_message;
