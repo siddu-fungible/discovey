@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 from fun_settings import *
 from fun_global import get_current_time, RESULTS, determine_version
-import os
 import re
 import subprocess
-from threading import Thread
+from threading import Thread, Timer
 import threading
 from scheduler_helper import *
-import dateutil.parser
 import signal
 import psutil
 import shutil
@@ -17,13 +15,26 @@ job_id_timers = {}
 
 ONE_HOUR = 60 * 60
 
-def timed_dispatcher(suite_worker_obj):
-    job_id_threads[suite_worker_obj.job_id] = (suite_worker_obj)
+
+
+def queue_job(job_spec):
+    print "Queued"
+
+def timer_dispatch(job_spec):
+
+    # Add to queue
+    queue_job(job_spec=job_spec)
+
+    if job_spec.job_id in job_id_timers:
+        del job_id_timers[job_spec.job_id]
+
+
+    '''
     suite_worker_obj.start()
-    if suite_worker_obj.job_id in job_id_timers:
-        del job_id_timers[suite_worker_obj.job_id]
-    suite_worker_obj.join()
     scheduler_logger.debug("Job Id: {} join complete".format(suite_worker_obj.job_id))
+    '''
+
+
 
 class SuiteWorker(Thread):
     def __init__(self, job_spec):
@@ -407,67 +418,65 @@ def process_killed_jobs():
         os.remove(job_file)
 
 
-def process_queue():
+def process_submissions():
+    """
+    Process job submissions that came in through queue_job
+    :return:
+    """
     time.sleep(1)
     # sort by date
-    job_files = glob.glob("{}/*{}".format(JOBS_DIR, QUEUED_JOB_EXTENSION))
-    job_files.sort(key=os.path.getmtime)
+    """
 
-    for job_file in job_files:
+    """
+    # Process only from yesterday
+    now = get_current_time()
+    yesterday = now - timedelta(days=1)
+    job_specs = JobSpec.objects.filter(submission_time__gte=yesterday,
+                                       state=RESULTS["SUBMITTED"]).order_by("-submission_time")
+
+    for job_spec in job_specs:
         try:
             # Execute
-            job_spec = parse_file_to_json(file_name=job_file)
-            job_id = job_spec["job_id"]
+            job_id = job_spec.job_id
             scheduler_logger.info("Process queue: {}".format(job_id))
 
             schedule_it = True
-
             scheduling_time = get_scheduling_time(spec=job_spec)
             scheduler_logger.info("Job Id: {} Schedule it: {} Time: {}".format(job_id, schedule_it, scheduling_time))
             if job_spec and schedule_it and (scheduling_time >= 0):
-                suite_worker_obj = SuiteWorker(job_spec=job_spec)
-                t = threading.Timer(scheduling_time, timed_dispatcher, (suite_worker_obj,))
-                job_id_timers[suite_worker_obj.job_id] = t
-                models_helper.update_suite_execution(suite_execution_id=suite_worker_obj.job_id,
+                t = threading.Timer(scheduling_time, timer_dispatch, (job_spec,))
+                job_id_timers[job_spec.job_id] = t
+                models_helper.update_suite_execution(suite_execution_id=job_spec.job_id,
                                                      scheduled_time=get_current_time() + datetime.timedelta(
                                                          seconds=scheduling_time),
                                                      result=RESULTS["SCHEDULED"])
 
-                if job_spec["scheduling_type"] in [SchedulingType.PERIODIC, SchedulingType.REPEAT, SchedulingType.TODAY]:
-                    copy_to_scheduled_job(job_file)
+                if job_spec.scheduling_type in SchedulingType.get_deferred_types():
+                    copy_to_scheduled_job(job_spec)
                 t.start()
             if scheduling_time < 0:
-                scheduler_logger.critical("Unable to schedule. Job-id: {}, Job-file: {}".format(job_id, job_file))
+                scheduler_logger.critical("Unable to process job submission. Job-id: {}".format(job_spec.job_id))
         except Exception as ex:
             scheduler_logger.exception(str(ex))
 
-        de_queue_job(job_file)
+        set_processed_job(job_spec)
 
-def copy_to_scheduled_job(job_file):
-    destination_filename = SCHEDULED_JOBS_DIR + "/" + os.path.basename(job_file)
-    destination_filename = destination_filename.replace(QUEUED_JOB_EXTENSION, SCHEDULED_JOB_EXTENSION)
-    shutil.copy(job_file, destination_filename)
+
+def copy_to_scheduled_job(job_spec):
+    job_spec.is_scheduled_job = True
+    job_spec.save()
 
 
 def remove_scheduled_job(job_id):
-    job_file = SCHEDULED_JOBS_DIR + "/" + str(job_id) + "." + SCHEDULED_JOB_EXTENSION
-    try:
-        os.remove(job_file)
-    except Exception as ex:
-        scheduler_logger.exception(str(ex))
+    job_spec = JobSpec.objects.get(job_id=job_id)
+    job_spec.is_scheduled_job = False
+    job_spec.save()
+    # TODO handle exception
 
 
-def de_queue_job(job_file):
-    # remove job from the jobs directory and move it to the archived directory
-    try:
-        archived_file = ARCHIVED_JOBS_DIR + "/" + os.path.basename(job_file)
-        archived_file = re.sub('(\d+).{}'.format(QUEUED_JOB_EXTENSION),
-                               "\\1.{}".format(ARCHIVED_JOB_EXTENSION),
-                               archived_file)
-        os.rename(job_file, archived_file)
-    except Exception as ex:
-        scheduler_logger.exception(str(ex))
-        # TODO: Ensure job_file is removed
+def set_processed_job(job_spec):
+    job_spec.state = RESULTS["PROCESSED"]
+    job_spec.save()
 
 
 def process_external_requests():
@@ -533,7 +542,7 @@ def revive_scheduled_jobs(job_ids=None):
 
 
 if __name__ == "__main__":
-    ensure_singleton()
+    # ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
 
@@ -555,7 +564,7 @@ if __name__ == "__main__":
             request = process_external_requests()
             if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \
                     (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPED):
-                process_queue()
+                process_submissions()
             if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPING:
                 max_wait_time = ONE_HOUR
                 if request and "max_wait_time" in request:
