@@ -783,6 +783,33 @@
             "weight": 1,
             "children": [
               {
+                "info": "memcpy_coherent_output_bandwidth_below_4k",
+                "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_coherent_output_bandwidth_below_4k",
+                "label": "DMA soak memcpy coherent (Below 4K)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memcpy_coherent_output_bandwidth_4k_1mb",
+                "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_coherent_output_bandwidth_4k_1mb",
+                "label": "DMA soak memcpy coherent (4K-1MB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memcpy_coherent_output_bandwidth_above_1mb",
+                "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_coherent_output_bandwidth_above_1mb",
+                "label": "DMA soak memcpy coherent (Above 1MB)",
+                "children": [],
+                "weight": 1
+              },
+              {
                 "info": "memcpy_non_coherent_output_bandwidth_64B_2048B",
                 "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
                 "leaf": true,
