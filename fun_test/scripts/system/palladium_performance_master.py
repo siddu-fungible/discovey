@@ -84,7 +84,7 @@ class MyScript(FunTestScript):
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
-                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG]
+                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG, SOAK_DMA_MEMCPY_COH, SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -437,48 +437,48 @@ class EcPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
 
-                m = re.search(r'({.*})\s+(\S+)\s+\[perf_ec_encode_latency\]', line)
+                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_latency)\]', line)
                 if m:
-                    d = json.loads(m.group(1))
+                    d = json.loads(m.group("value_json"))
                     ec_encode_latency_min = int(d["min"])
                     ec_encode_latency_max = int(d["max"])
                     ec_encode_latency_avg = int(d["avg"])
-
-                    unit = m.group(2)
+                    input_metric_name = m.group("metric_name")
+                    unit = d["unit"]
                     fun_test.test_assert_expected(actual=unit, expected="nsecs", message="perf_ec_encode_latency unit")
 
-                m = re.search(r'({.*})\s+(\S+)\s+\[perf_ec_encode_throughput\]', line)
+                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]', line)
                 if m:
-                    d = json.loads(m.group(1))
+                    d = json.loads(m.group("value_json"))
                     ec_encode_throughput_min = int(d["min"])
                     ec_encode_throughput_max = int(d["max"])
                     ec_encode_throughput_avg = int(d["avg"])
-
-                    unit = m.group(2)
+                    input_metric_name = m.group("metric_name")
+                    unit = d["unit"]
                     fun_test.test_assert_expected(actual=unit, expected="Mbps",
                                                   message="perf_ec_encode_throughput unit")
 
-                m = re.search(r'({.*})\s+(\S+)\s+\[perf_ec_recovery_latency\]', line)
+                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]', line)
                 if m:
-                    d = json.loads(m.group(1))
+                    d = json.loads(m.group("value_json"))
                     ec_recovery_latency_min = int(d["min"])
                     ec_recovery_latency_max = int(d["max"])
                     ec_recovery_latency_avg = int(d["avg"])
-
-                    unit = m.group(2)
+                    input_metric_name = m.group("metric_name")
+                    unit = d["unit"]
                     fun_test.test_assert_expected(actual=unit, expected="nsecs",
                                                   message="perf_ec_recovery_latency unit")
 
-                m = re.search(r'({.*})\s+(\S+)\s+\[perf_ec_recovery_throughput\]', line)
+                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]', line)
                 if m:
-                    d = json.loads(m.group(1))
+                    d = json.loads(m.group("value_json"))
                     ec_recovery_throughput_min = int(d["min"])
                     ec_recovery_throughput_max = int(d["max"])
                     ec_recovery_throughput_avg = int(d["avg"])
-
-                    unit = m.group(2)
+                    input_metric_name = m.group("metric_name")
+                    unit = d["unit"]
                     fun_test.test_assert_expected(actual=unit, expected="Mbps",
-                                                  message="perf_ec_encode_throughput unit")
+                                                  message="perf_ec_recovery_throughput unit")
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -519,25 +519,28 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'(?:\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>.*)\s+(?P<units>\S+)\s+\[\S+:(?P<metric_name>\S+)\]',
+                    r'(?:\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[\S+:(?P<metric_name>\S+)\]',
                     line)
                 if m:
                     metric_type = m.group("metric_type")
                     value = m.group("value")
-                    units = m.group("units")
+                    j = json.loads(value)
                     metric_name = m.group("metric_name").lower()
                     if not (
                             "ECVOL_EC_STATS_latency_ns".lower() in metric_name or "ECVOL_EC_STATS_iops".lower() in metric_name):
                         continue
 
                     try:  # Either a raw value or json value
-                        j = json.loads(value)
                         for key, value in j.iteritems():
-                            metrics["output_" + metric_name + "_" + key] = value
+                            if key != "unit" and key != "value":
+                                metrics["output_" + metric_name + "_" + key] = value
+                            if key == "value":
+                                metrics["output_" + metric_name] = value
                     except:
                         metrics["output_" + metric_name] = value
                     try:
                         # if units not in ["mbps", "nsecs", "iops"]:
+                        units = j["unit"]
                         fun_test.simple_assert(units in ["mbps", "nsecs", "iops"],
                                                "Unexpected unit {} in line: {}".format(units, line))
                     except Exception as ex:
@@ -568,14 +571,14 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
                 m = re.search(
-                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>.*)\s+(?P<units>\S+)\s+\[(?P<metric_id>\S+)\]',
+                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
                     line)
                 if m:
                     stats_found = True
                     metric_name = m.group("metric_name")
                     metric_type = m.group("metric_type")
                     value = m.group("value")
-                    units = m.group("units")
+                    j = json.loads(value)
                     metric_id = m.group("metric_id").lower()
                     allowed_metric_names = ["VOL_TYPE_BLK_LSV_write",
                                             "VOL_TYPE_BLK_LSV_read",
@@ -595,13 +598,16 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
                             metric_type += "_total"
 
                     try:  # Either a raw value or json value
-                        j = json.loads(value)
                         for key, value in j.iteritems():
-                            metrics["output_" + metric_name + "_" + metric_type + "_" + key] = value
+                            if key != "unit" and key != "value":
+                                metrics["output_" + metric_name + "_" + metric_type + "_" + key] = value
+                            if key == "value":
+                                metrics["output_" + metric_name + "_" + metric_type] = value
                     except Exception as ex:
                         metrics["output_" + metric_name + "_" + metric_type] = value
 
                     try:
+                        units = j["unit"]
                         fun_test.simple_assert(units in ["mbps", "nsecs", "iops"],
                                                "Unexpected unit {} in line: {}".format(units, line))
                     except Exception as ex:
@@ -1837,6 +1843,6 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
     myscript.add_test_case(SoakDmaMemsetPerformanceTC())
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
