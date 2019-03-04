@@ -572,6 +572,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             for line in self.lines:
                 m = re.search(
                     r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
+                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
                     line)
                 if m:
                     stats_found = True
@@ -1843,6 +1844,6 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
     myscript.add_test_case(SoakDmaMemsetPerformanceTC())
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
