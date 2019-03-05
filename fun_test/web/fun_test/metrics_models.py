@@ -24,6 +24,7 @@ BASE_LINE_DATE = datetime(year=2019, month=4, day=1)
 
 class MetricsGlobalSettings(models.Model):
     tolerance_percentage = models.FloatField(default=3.0)
+    cache_dirty = models.BooleanField(default=False)
 
 class MetricsGlobalSettingsSerializer(ModelSerializer):
 

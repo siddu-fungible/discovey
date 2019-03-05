@@ -22,6 +22,8 @@ from web.fun_test.metrics_models import MetricsGlobalSettings
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
+CACHE_DIRTY = MetricsGlobalSettings.objects.first().cache_dirty
+
 start_year = 2018
 start_month = 4
 start_day = 1
@@ -68,7 +70,7 @@ def get_first_record(model, data_set):
     i = 0
 
 
-def fixup_expected_values(chart, model, data_set):
+def fixup_reference_values(chart, model, data_set):
     modified = 0
     first_record = get_first_record(model=model, data_set=data_set)
     if not first_record:
@@ -77,10 +79,10 @@ def fixup_expected_values(chart, model, data_set):
         first_record = first_record[-1]
         output_name = data_set["output"]["name"]
         if output_name in first_record:
-            data_set["output"]["expected"] = first_record[output_name]
+            data_set["output"]["reference"] = first_record[output_name]
             modified = 1
         j = 0
-        # data_set["expected"] = first_rec
+        # data_set["reference"] = first_rec
     # self.data_sets = json.dumps(data_set)
     # self.save()
     return modified
@@ -243,6 +245,10 @@ def prepare_status(chart, purge_old_status=False):
             current_score = 0
             is_leaf_degrade = False
             replacement = False
+            if not CACHE_DIRTY:
+                last_entry = MetricChartStatus.objects.filter(metric_id=metric_id).order_by("-date_time")[0]
+                last_date = last_entry.date_time
+                current_date = last_date + timedelta(days=1)
             while current_date <= to_date:
                 result["num_degrades"] = 0
                 valid_dates.append(current_date)
@@ -270,31 +276,31 @@ def prepare_status(chart, purge_old_status=False):
                         if len(entries):
                             this_days_record = entries.last()
                             output_name = data_set["output"]["name"]  # TODO
-                            if "expected" in data_set["output"]:
-                                expected_value = data_set["output"]["expected"]
-                                if expected_value <= 0:
-                                    data_set_mofified = data_set_mofified or chart.fixup_expected_values(
+                            if "reference" in data_set["output"]:
+                                reference_value = data_set["output"]["reference"]
+                                if reference_value <= 0:
+                                    data_set_mofified = data_set_mofified or chart.fixup_reference_values(
                                         data_set=data_set)
-                                    expected_value = data_set["output"]["expected"]
+                                    reference_value = data_set["output"]["reference"]
                             else:
                                 # let's fix it up
-                                print ("Fixing expected values")
-                                data_set_mofified = data_set_mofified or chart.fixup_expected_values(
+                                print ("Fixing reference values")
+                                data_set_mofified = data_set_mofified or chart.fixup_reference_values(
                                     data_set=data_set)
-                                expected_value = data_set["output"]["expected"] if "expected" in data_set[
-                                    "output"] else None  # expected is set in fixup_expected_values
+                                reference_value = data_set["output"]["reference"] if "reference" in data_set[
+                                    "output"] else None  # reference is set in fixup_reference_values
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
 
                             # data_set_statuses.append(leaf_status)
-                            if expected_value is not None:
+                            if reference_value is not None:
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
-                                        output_value) / expected_value) * 100 if output_value >= 0 and expected_value > 0 else 0
+                                        output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
                                 else:
                                     if output_value:
                                         data_set_combined_goodness += (float(
-                                            expected_value) / output_value) * 100 if output_value >= 0 else 0
+                                            reference_value) / output_value) * 100 if output_value >= 0 else 0
                                     else:
                                         print "ERROR: {}, {}".format(chart.chart_name,
                                                                      chart.metric_model_name)
