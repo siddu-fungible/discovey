@@ -22,7 +22,7 @@ from web.fun_test.metrics_models import MetricsGlobalSettings
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
-CACHE_DIRTY = MetricsGlobalSettings.objects.first().cache_dirty
+CACHE_VALID = MetricsGlobalSettings.objects.first().cache_valid
 
 start_year = 2018
 start_month = 4
@@ -245,10 +245,17 @@ def prepare_status(chart, purge_old_status=False):
             current_score = 0
             is_leaf_degrade = False
             replacement = False
-            if not CACHE_DIRTY:
-                last_entry = MetricChartStatus.objects.filter(metric_id=metric_id).order_by("-date_time")[0]
-                last_date = last_entry.date_time
-                current_date = last_date + timedelta(days=1)
+            if CACHE_VALID:
+                entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by("date_time")
+                if len(entries):
+                    last_entry = entries.last()
+                    last_date = last_entry.date_time
+                    last_good_score = chart.last_good_score
+                    penultimate_good_score = chart.penultimate_good_score
+                    for entry in entries:
+                        valid_dates.append(entry.date_time)
+                        scores[entry.date_time] = entry.score
+                    current_date = last_date + timedelta(days=1)
             while current_date <= to_date:
                 result["num_degrades"] = 0
                 valid_dates.append(current_date)
@@ -433,7 +440,7 @@ def prepare_status(chart, purge_old_status=False):
 
 if __name__ == "__main__":
     "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="Security")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="MovingBits")
     # prepare_status(chart=total_chart, purge_old_status=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False)
