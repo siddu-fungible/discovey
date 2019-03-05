@@ -9,6 +9,7 @@ from scheduler_helper import *
 import signal
 import psutil
 import shutil
+from django.db import transaction
 
 job_id_threads = {}
 job_id_timers = {}
@@ -16,9 +17,99 @@ job_id_timers = {}
 ONE_HOUR = 60 * 60
 
 
+def delete_queued_job(job_id):
+    jobs_in_queue = JobQueue.objects.all().order_by('priority')
+    job_found = False
+    with transaction.atomic():
+        for job_in_queue in jobs_in_queue:
+            if job_id == jobs_in_queue.job_id:
+                jobs_in_queue.delete()
+            if job_found:
+                job_in_queue.priority -= 1
+                job_in_queue.save()
+
+def get_next_priority_value(category):
+    low, high = SchedulerJobPriority.RANGES[category]
+    queued_jobs = JobQueue.objects.filter(priority__gte=low, priority__lte=high).order_by('priority')
+    if queued_jobs.count():
+        next_priority_value = queued_jobs.last().priority + 1
+    else:
+        next_priority_value = low
+    if next_priority_value > high:
+        raise SchedulerException("Exceeded high range for priority category: {}, high: {}".format(category, high))
+    return next_priority_value
+
+
+def get_priority_category_by_priority(priority):
+    result = None
+    for category, priority_range in SchedulerJobPriority.RANGES.iteritems():
+        if (priority >= priority_range[0] and priority <= priority_range[1]):
+            result = category
+            break
+    return result
+
+
+def move_to_queue_head(job_id):
+    this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
+    priority_category = get_priority_category_by_priority(priority=this_job_queue_entry.priority)
+    low, high = SchedulerJobPriority.RANGES[priority_category]
+
+    with transaction.atomic():
+        queue_entries = JobQueue.objects.all().order_by('priority')
+        for queue_entry in queue_entries:
+            queue_entry.priority += 1
+            if queue_entry.priority > high:
+                raise SchedulerException("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
+        this_job_queue_entry.priority = low
+
+
+def move_to_higher_queue(job_id):
+    this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
+    priority_category = get_priority_category_by_priority(priority=this_job_queue_entry.priority)
+
+    next_priority_category = priority_category
+    if priority_category == SchedulerJobPriority.LOW:
+        next_priority_category = SchedulerJobPriority.NORMAL
+    if priority_category == SchedulerJobPriority.NORMAL:
+        next_priority_category = SchedulerJobPriority.HIGH
+
+    if priority_category == SchedulerJobPriority.HIGH:
+        raise SchedulerException("Job-Id: {} already in high priority category")
+
+    next_priority_value = get_next_priority_value(next_priority_category)
+    this_job_queue_entry.priority = next_priority_value
+    this_job_queue_entry.save()
+
+
+def swap_priorities(job1, job2):
+    temp = job1.priority
+    job1.priority = job2.priority
+    job2.priority = temp
+    job1.save()
+    job2.save()
+
+
+def increase_decrease_priority(job_id, increase=True):
+    this_job_queue_entry = JobQueue.objects.get(job_id=job_id)
+    this_job_priority = this_job_queue_entry.priority
+    priority_category = get_priority_category_by_priority(this_job_priority)
+    low, high = SchedulerJobPriority.RANGES[priority_category]
+
+    if increase:
+        other_priority_jobs = JobQueue.objects.filter(priority__lt=this_job_priority, priority__gte=low).order_by('-priority')
+    else:
+        other_priority_jobs = JobQueue.objects.filter(priority__gt=this_job_priority, priority__lte=high).order_by('priority')
+
+    if other_priority_jobs.count():
+        other_priority_job = other_priority_jobs.last()
+        swap_priorities(this_job_queue_entry, other_priority_job)
+    else:
+        pass # You are already the highest
 
 def queue_job(job_spec):
-    print "Queued"
+    next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
+    new_job = JobQueue(priority=next_priority_value, job_id=job_spec.job_id, test_bed_type=job_spec.test_bed_type)
+    new_job.save()
 
 def timer_dispatch(job_spec):
 
