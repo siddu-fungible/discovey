@@ -36,6 +36,16 @@ class FunControlPlane:
         output = self.linux_obj.command(';'.join(cmds), timeout=300)
         return re.search(r'funnel_gen.py', output, re.DOTALL) is not None
 
+    def make_gen_files(self):
+        cmds = (
+            'cd %s/%s/networking/tools/dpcsh' % (self.ws, self.name),
+            'python setup.py install',
+            'cd ../nmtf',
+            'sudo python setup.py install',
+        )
+        output = self.linux_obj.sudo_command(';'.join(cmds), timeout=120)
+        return output
+
     def setup_traffic_server(self, server='nu'):
         """Set up PTF traffic server."""
         if server.lower() in ('nu', 'hu', 'sb'):
