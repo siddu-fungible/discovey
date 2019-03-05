@@ -891,7 +891,7 @@ if __name__ == "__main__":
                     data["output"]["reference"] = expected
                     reference = data["output"]["reference"]
                     print (count, ". new ", reference)
-                    data["output"]["expected"] = 0
+                    data["output"]["expected"] = -1
                     print (count, ". old ", data["output"]["expected"])
             entry.data_sets = json.dumps(jsonData)
             entry.save()

@@ -248,7 +248,7 @@ class MetricChart(models.Model):
                 day_entries = None
             current_date = current_date - timedelta(days=1)  # TODO: if we know the holes jump to the next hole
 
-    def fixup_expected_values(self, data_set):
+    def fixup_reference_values(self, data_set):
         modified = 0
         # if self.chart_name == "BLK_LSV: Latency":
         #    j = 0
@@ -260,11 +260,11 @@ class MetricChart(models.Model):
             for first in first_record[::-1]:
                 if output_name in first:
                     if first[output_name] > 0:
-                        data_set["output"]["expected"] = first[output_name]
+                        data_set["output"]["reference"] = first[output_name]
                         modified = 1
                         break
             if modified == 0:
-                data_set["output"]["expected"] = 0
+                data_set["output"]["reference"] = 0
             # data_set["expected"] = first_rec
         # self.data_sets = json.dumps(data_set)
         # self.save()

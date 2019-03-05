@@ -961,7 +961,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "SBP Boot Timing (Pre-host-boot)",
-            "label": "PSBP Boot Timing (Pre-host-boot)",
+            "label": "SBP Boot Timing (Pre-host-boot)",
             "children": [],
             "weight": 1
           },
