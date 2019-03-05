@@ -176,6 +176,9 @@ class SiteState():
             self._do_register_metric(metric=all_metrics_metric)
             for metric in metrics:
                 self._do_register_metric(metric=metric)
+                global_setting = MetricsGlobalSettings.objects.first()
+                global_setting.cache_valid = False
+                global_setting.save()
 
     def set_metrics_settings(self):
         if MetricsGlobalSettings.objects.count() == 0:

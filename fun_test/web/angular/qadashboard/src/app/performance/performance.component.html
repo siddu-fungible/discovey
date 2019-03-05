@@ -13,17 +13,24 @@
             <ng-template #LeafScoreInfo>
               <div style="color: black">
                 <b>Score for leaf metrics:</b><br>
-                The score approaches 100 as the actual value approaches the expected value (established baseline
-                number). Expected value for the product may vary.
+                The score approaches 100 as the actual value approaches the
+                <ul>
+                  <li>
+                    the reference value, if the expected value is not available
+                  </li>
+                  <li>
+                    the expected value, if available
+                  </li>
+                </ul>
                 <ul>
                   <li>
                     For metrics added before the Tapeout:
                   </li>
-                  Expected value is derived from the Tapeout numbers as the baseline.
+                  Reference value is derived from the Tapeout numbers as the baseline.
                   <li>
                     For metrics added after the Tapeout:
                   </li>
-                  Expected value is derived from the first value entered into the database.
+                  Reference value is derived from the first value entered into the database.
                 </ul>
               </div>
             </ng-template>
