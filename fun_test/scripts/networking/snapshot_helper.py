@@ -57,16 +57,20 @@ def get_snapshot_main_sfg(snapshot_output, prv=False, md=False, frv=False, psw_c
 
 
 def get_snapshot_meter_id(snapshot_output, egress=False, erp=False):
-    if erp:
-        if egress:
-            result = snapshot_output['ERP SFG']['MD']['meter1']
+    result = 0
+    try:
+        if erp:
+            if egress:
+                result = snapshot_output['ERP SFG']['MD']['meter1']
+            else:
+                result = snapshot_output['ERP SFG']['MD']['meter0']
         else:
-            result = snapshot_output['ERP SFG']['MD']['meter0']
-    else:
-        if egress:
-            result = snapshot_output['Main SFG']['MD']['meter1']
-        else:
-            result = snapshot_output['Main SFG']['MD']['meter0']
+            if egress:
+                result = snapshot_output['Main SFG']['MD']['meter1']
+            else:
+                result = snapshot_output['Main SFG']['MD']['meter0']
+    except Exception as ex:
+        fun_test.critical("Exception : %s" % ex)
     return result
 
 
