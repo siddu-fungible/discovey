@@ -18,4 +18,4 @@ def setup_nmtf(username='auto_admin', password='fun123', host_ip="localhost"):
 
 
 if __name__ == "__main__":
-    setup_nmtf(username='yajat', password='messi3006', host_ip="localhost")
+    setup_nmtf(username='auto_admin', password='fun123', host_ip="localhost")
