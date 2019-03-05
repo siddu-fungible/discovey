@@ -19,16 +19,3 @@ def setup_nmtf(username='auto_admin', password='fun123', host_ip="localhost"):
 
 if __name__ == "__main__":
     setup_nmtf(username='yajat', password='messi3006', host_ip="localhost")
-
-
-
-
-    def make_gen_files(self):
-        cmds = (
-            'cd %s/%s/networking/tools/dpcsh' % (self.ws, self.name),
-            'python setup.py install',
-            'cd ../nmtf',
-            'sudo python setup.py install',
-        )
-        output = self.linux_obj.sudo_command(';'.join(cmds), timeout=120)
-        return output
