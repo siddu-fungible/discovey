@@ -22,8 +22,6 @@ from web.fun_test.metrics_models import MetricsGlobalSettings
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
-CACHE_VALID = MetricsGlobalSettings.objects.first().cache_valid
-
 start_year = 2018
 start_month = 4
 start_day = 1
@@ -118,7 +116,7 @@ def get_tolerance():
     return global_settings.tolerance_percentage / 100
 
 
-def prepare_status(chart, purge_old_status=False):
+def prepare_status(chart, cache_valid, purge_old_status=False):
     metric_id = chart.metric_id
     chart_name = chart.chart_name
     result = {}
@@ -178,7 +176,7 @@ def prepare_status(chart, purge_old_status=False):
 
                 child_metric = MetricChart.objects.get(metric_id=child)
                 if child_metric.metric_id not in fixup_results_cache:
-                    temp_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
+                    temp_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status, cache_valid=cache_valid)
                     fixup_results_cache[child_metric.metric_id] = temp_result
                 child_result = fixup_results_cache[child_metric.metric_id]
 
@@ -245,7 +243,7 @@ def prepare_status(chart, purge_old_status=False):
             current_score = 0
             is_leaf_degrade = False
             replacement = False
-            if CACHE_VALID:
+            if cache_valid:
                 entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by("date_time")
                 if len(entries):
                     last_entry = entries.last()
@@ -443,9 +441,9 @@ if __name__ == "__main__":
     # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="MovingBits")
     # prepare_status(chart=total_chart, purge_old_status=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=False)
+    prepare_status(chart=total_chart, purge_old_status=False, cache_valid=True)
     all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
-    prepare_status(chart=all_metrics_chart, purge_old_status=False)
+    prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=True)
 
 if __name__ == "__main2__":
     pass
