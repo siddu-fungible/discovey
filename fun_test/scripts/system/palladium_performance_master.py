@@ -572,7 +572,6 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             for line in self.lines:
                 m = re.search(
                     r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
-                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
                     line)
                 if m:
                     stats_found = True
@@ -609,7 +608,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
 
                     try:
                         units = j["unit"]
-                        fun_test.simple_assert(units in ["mbps", "nsecs", "iops"],
+                        fun_test.simple_assert(units in ["Mbps", "nsecs", "ops"],
                                                "Unexpected unit {} in line: {}".format(units, line))
                     except Exception as ex:
                         fun_test.critical(str(ex))

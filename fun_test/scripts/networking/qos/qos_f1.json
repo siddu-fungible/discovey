@@ -201,7 +201,7 @@
         {
           "load_percent": 10,
           "expected_load_percent": 3.8,
-          "rate": 1050,
+          "rate": 950,
           "threshold": 282000
         }
       ],
@@ -209,7 +209,7 @@
         {
           "load_percent": 10,
           "expected_load_percent": 3.8,
-          "rate": 1050,
+          "rate": 950,
           "threshold": 282000
         }
       ]
