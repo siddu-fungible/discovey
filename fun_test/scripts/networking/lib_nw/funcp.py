@@ -40,7 +40,7 @@ class FunControlPlane:
         cmds = (
             'cd %s/%s/networking/tools/dpcsh' % (self.ws, self.name),
             'python setup.py install',
-            'cd ../nmtf',
+            'cd %s/%s/networking/tools/nmtf' % (self.ws, self.name),
             'sudo python setup.py install',
         )
         output = self.linux_obj.sudo_command(';'.join(cmds), timeout=120)
