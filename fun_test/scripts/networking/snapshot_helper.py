@@ -57,7 +57,7 @@ def get_snapshot_main_sfg(snapshot_output, prv=False, md=False, frv=False, psw_c
 
 
 def get_snapshot_meter_id(snapshot_output, egress=False, erp=False):
-    result = 0
+    result = None
     try:
         if erp:
             if egress:
@@ -75,7 +75,7 @@ def get_snapshot_meter_id(snapshot_output, egress=False, erp=False):
 
 
 def get_snapshot_acl_label(snapshot_output, erp=False):
-    result = 0
+    result = None
     try:
         if erp:
             result = snapshot_output['ERP SFG']['MD']['port_acl_label']
