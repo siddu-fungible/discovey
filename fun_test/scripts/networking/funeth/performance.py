@@ -214,7 +214,7 @@ class FunethPerformance_HU_NU_1500B_TCP(FunethPerformanceBase):
 
 class FunethPerformance_HU_HU_64B_UDP(FunethPerformanceBase):
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=5,
                               summary="Do throughput and latency test of HU -> HU Non-FCP with 64B frames of UDP",
                               steps="""
         1. From HU host PF, run iperf3 to HU host VF interface as destination via NU loopback
