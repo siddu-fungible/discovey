@@ -43,7 +43,7 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Connecting to Remote DPC %s on port %d" % (self.dpc_proxy_ip, self.dpc_proxy_port))
         dpcsh_obj = NetworkController(dpc_server_ip=self.dpc_proxy_ip, dpc_server_port=self.dpc_proxy_port)
 
-        port_list = [1, 2, 3, 4, 5, 15, 18, 13, 17, 20]
+        port_list = [1, 2, 3, 4, 5, 15, 18, 13, 17, 20, 21, 22, 23, 19]
         k_list = [x for x in range(0, 16)]
 
         for i in xrange(0, 50):
@@ -52,6 +52,7 @@ class FunTestCase1(FunTestCase):
                 result = dpcsh_obj.clear_port_stats(port_num=port, shape=0)
                 fun_test.simple_assert(result, "Cleat stats port: %d" % port)
 
+            '''
             vp_stats = dpcsh_obj.peek_vp_packets()
             fun_test.simple_assert(vp_stats, "Fetch VP stats")
             enable_qos = dpcsh_obj.enable_qos_pfc()
@@ -90,7 +91,7 @@ class FunTestCase1(FunTestCase):
                                                                             map_list=k_list)
             fun_test.simple_assert(set_ingress_priority_map, message="Set priority to pg map")
 
-        '''
+        
         fun_test.log("Running Dummy test")
         fun_test.log("Connecting to Remote DPC %s on port %d" % (self.dpc_proxy_ip, self.dpc_proxy_port))
         network_controller_obj = NetworkController(dpc_server_ip=self.dpc_proxy_ip, dpc_server_port=self.dpc_proxy_port,
