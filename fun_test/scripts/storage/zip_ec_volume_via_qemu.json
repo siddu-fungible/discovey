@@ -40,7 +40,7 @@
       "jvol": 512
     },
     // timeout used for the storage controller
-    "command_timeout": 5,
+    "command_timeout": 50,
     "iter_interval": 2,
     "use_lsv": 1,
     "ns_id": 1,
@@ -54,26 +54,13 @@
     "check_lsv_stats": 0,
     "expected_compressed_bytes": 1080,
     "zip_params_to_monitor": {
-      "zipinflate_filter": 1360,
-      // tells how many times we got the request to decompress
-      "zipdeflate_filter": 72,
-      // tells how many times we got the request to compress
-      "zipfilter_compress_done": 72,
-      // tells how many times zipdeflte_filter (above) called this wu to compress
-      "zipfilter_decompress_done": 456,
-      // tells how many times zipinflate_filter (above) called this wu to decompress
       "accumulated_out_bytes": 1080,
       "compress_reqs": 72,
-      // tells how many times we got the request to compress
       "compress_done": 54,
-      // tells how many times we succeeded in compressing
       "compress_fails": 0,
       "uncompress_reqs": 0,
-      // this tells how many times we sent decompression request to the hw
       "uncompress_done": 0,
-      "uncompress_fails": 0,
-      "uncompressible": 18
-      //"zipfilter_uncompress_done":32
+      "uncompress_fails": 0
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,
@@ -121,7 +108,7 @@
     "volume_capacity": {"ndata": 16777216, "nparity": 16777216, "ec": 16777216, "jvol": 524288},
     "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
     // timeout used for the storage controller
-    "command_timeout": 5,
+    "command_timeout": 50,
     "iter_interval": 2,
     "use_lsv": 1,
     "ns_id": 1,
@@ -135,26 +122,13 @@
     "check_lsv_stats": 0,
     "expected_compressed_bytes": 1440,
     "zip_params_to_monitor": {
-      "zipinflate_filter": 1360,
-      // tells how many times we got the request to decompress
-      "zipdeflate_filter": 72,
-      // tells how many times we got the request to compress
-      "zipfilter_compress_done": 72,
-      // tells how many times zipdeflte_filter (above) called this wu to compress
-      "zipfilter_decompress_done": 608,
-      // tells how many times zipinflate_filter (above) called this wu to decompress
       "accumulated_out_bytes": 1080,
       "compress_reqs": 72,
-      // tells how many times we got the request to compress
       "compress_done": 72,
-      // tells how many times we succeeded in compressing
       "compress_fails": 0,
       "uncompress_reqs": 0,
-      // this tells how many times we sent decompression request to the hw
       "uncompress_done": 0,
-      "uncompress_fails": 0,
-      "uncompressible": 0
-      //"zipfilter_uncompress_done":32
+      "uncompress_fails": 0
     },
     "params_to_monitor_per_attach": {
       "vol_filter_create_done":2,

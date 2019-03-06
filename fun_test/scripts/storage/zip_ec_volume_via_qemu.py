@@ -494,7 +494,7 @@ class RndDataWriteAndRead25PctWithDataVolumeFailure(ECinQemuTestcase):
 
         per_volume_zip_stats = {"accumulated_out_bytes", "compress_done", "compress_fails",
                                 "compress_reqs", "uncompress_done", "uncompress_fails",
-                                "uncompress_reqs", "uncompressible"}
+                                "uncompress_reqs"}
 
 
 
@@ -789,7 +789,7 @@ class ZeroDataWriteAndReadWithDataVolumeFailure(ECinQemuTestcase):
         test_result = True
         per_volume_zip_stats = {"accumulated_out_bytes", "compress_done", "compress_fails",
                                 "compress_reqs", "uncompress_done", "uncompress_fails",
-                                "uncompress_reqs", "uncompressible"}
+                                "uncompress_reqs"}
 
         for ndata in range(self.ndata_partition_start_range, self.ndata_partition_end_range + 1):
 
