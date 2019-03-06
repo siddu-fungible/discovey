@@ -792,11 +792,24 @@ if __name__ == "__main_crypto_charts__":
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
 
-if __name__ == "__main_delete_nw__":
+if __name__ == "__main__":
     model = NuTransitPerformance
     entries = model.objects.all()
     entries.delete()
     print "deleted nu transit model"
+    global_setting = MetricsGlobalSettings.objects.first()
+    global_setting.cache_valid = False
+    global_setting.save()
+    print "cache valid is false"
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        if chart.metric_model_name == "NuTransitPerformance":
+            if chart.y1_axis_title == "packets/sec":
+                chart.y1_axis_title = "Mpps"
+            if chart.y1_axis_title == "Mbps":
+                chart.y1_axis_title = "Gbps"
+            chart.save()
+    print "changed y1 axis title"
 
 if __name__ == "__main_remove_mm__":
     model = MetricChart
@@ -876,7 +889,7 @@ if __name__ == "__main_create_nw__":
                 mmt.save()
     print "Creating charts and setting baseline for networking flow types is completed programatically"
 
-if __name__ == "__main__":
+if __name__ == "__main_reference__":
     entries = MetricChart.objects.all()
     count = 0
     for entry in entries:
@@ -896,3 +909,4 @@ if __name__ == "__main__":
             entry.data_sets = json.dumps(jsonData)
             entry.save()
     print "created reference values"
+
