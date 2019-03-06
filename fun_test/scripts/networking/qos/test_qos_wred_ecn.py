@@ -773,10 +773,8 @@ class ECN_10_10(ECN_10_00):
 if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(Wred_Q0())
-    '''
     ts.add_test_case(ECN_10())
     ts.add_test_case(ECN_01())
     ts.add_test_case(ECN_10_00())
     ts.add_test_case(ECN_10_10())
-    '''
     ts.run()
