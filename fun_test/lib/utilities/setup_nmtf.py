@@ -7,7 +7,7 @@ from lib.system.fun_test import *
 
 
 def setup_nmtf(username='auto_admin', password='fun123', host_ip="localhost", localhost=False):
-    linux_obj = Linux(host_ip=host_ip, ssh_username=username, ssh_password=password)
+    linux_obj = Linux(host_ip=host_ip, ssh_username=username, ssh_password=password, localhost=localhost)
     workspace = '/tmp'
     linux_obj.command('WSTMP=$WORKSPACE; export WORKSPACE=%s' % workspace)
     funcp_obj = funcp.FunControlPlane(linux_obj, ws=workspace)
@@ -21,4 +21,4 @@ def setup_nmtf(username='auto_admin', password='fun123', host_ip="localhost", lo
 
 
 if __name__ == "__main__":
-    setup_nmtf(username='yajat', password='messi3006', host_ip="localhost", localhost=False)
+    setup_nmtf(username='yajat', password='messi3006', host_ip="localhost", localhost=True)
