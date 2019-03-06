@@ -31,7 +31,10 @@ class SnapshotTest(FunTestCase):
     def describe(self):
         self.set_test_details(id=1, summary="Test Snapshot",
                               steps="""
-                                  1. Descei
+                                  1. Example Script - SETUP SNAPSHOT
+                                  2. Run traffic
+                                  3. Run snapshot
+                                  4. use snapshot functions to get desired outputs
                                   """)
 
     def setup(self):
