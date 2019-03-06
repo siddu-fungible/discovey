@@ -726,7 +726,7 @@ class ReplicaDPULevelTestcase(FunTestCase):
                                                      self.uuids["blt"][index], "stats")
                 command_result = self.storage_controller["blt"][index].peek(props_tree)
                 fun_test.log(command_result)
-                fun_test.test_assert_expected(actual=int(command_result["blt"]["fault_injection"]), expected=0,
+                fun_test.test_assert_expected(actual=int(command_result["data"]["fault_injection"]), expected=0,
                                               message="Ensuring fault_injection got enabled")
 
         for i in range(self.global_setup["num_replica"]):

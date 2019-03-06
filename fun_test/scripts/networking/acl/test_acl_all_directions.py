@@ -1371,6 +1371,23 @@ class AclIngressDropHNUtoHNU(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+            dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
+            fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+            fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+            fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+            checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                         tx=False)
+            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+                dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+
+            fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -2283,6 +2300,23 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+            dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
+            fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+            fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+            fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+            checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                         tx=False)
+            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+                          dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+            
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -2581,6 +2615,22 @@ class AclIPv6DropHNUtoNU(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+            dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
+            fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+            fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+            fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+            checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                         tx=False)
+            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+                dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)

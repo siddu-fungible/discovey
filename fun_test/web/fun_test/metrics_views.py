@@ -233,6 +233,9 @@ def update_child_weight(request):
     if str(child_id) in children_weights.keys():
         c.add_child_weight(child_id=child_id, weight=weight)
     invalidate_goodness_cache()
+    global_settings = MetricsGlobalSettings.objects.first()
+    global_settings.cache_valid = False
+    global_settings.save()
 
 
 '''
@@ -441,6 +444,9 @@ def update_chart(request):
         if base_line_date:
             c.base_line_date = base_line_date
         c.save()
+        global_settings = MetricsGlobalSettings.objects.first()
+        global_settings.cache_valid = False
+        global_settings.save()
     except ObjectDoesNotExist:
         c = MetricChart(metric_model_name=model_name,
                         chart_name=chart_name,

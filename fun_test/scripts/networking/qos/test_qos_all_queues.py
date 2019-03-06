@@ -211,13 +211,34 @@ class All_Queues_Share_BW(FunTestCase):
         self.qos_sp_json = qos_json_output[self.test_type]['all_queues']
         self.sleep_timer = self.qos_sp_json['all_queues_traffic_time']
 
+    def queue_setup(self):
+        for queue in queue_list:
+            if queue in [0, 8]:
+                disable = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
+                                                                          scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
+                                                                          strict_priority_enable=False, extra_bandwidth=0)
+                fun_test.test_assert(disable, "Disbale sp and eb on queue %s" % queue, ignore_on_success=True)
+
     def setup(self):
         self.setup_variables()
-        for queue in [0, 8]:
-            disable = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
-                                                                      scheduler_type=network_controller_obj.SCHEDULER_TYPE_STRICT_PRIORITY,
-                                                                      strict_priority_enable=False, extra_bandwidth=0)
-            fun_test.test_assert(disable, "Disbale sp and eb on queue %s" % queue, ignore_on_success=True)
+        self.queue_setup()
+
+        for queue in queue_list:
+            spirent_port = port_1
+            if queue >= 8:
+                spirent_port = port_3
+
+            # Set load on streamblock
+            load_value = get_load_value_from_load_percent(load_percent=self.qos_sp_json['ingress_port1'][0]['load_percent'],
+                                                          max_egress_load=max_egress_load)
+            fun_test.simple_assert(load_value, "Ensure load value is calculated")
+
+            current_streamblock = streamblock_objs[spirent_port][str(queue)]
+            current_streamblock.Load = load_value
+            update_stream = template_obj.configure_stream_block(stream_block_obj=current_streamblock,
+                                                                update=True)
+            fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s for dscp %s" %
+                                 (load_value, current_streamblock.spirent_handle, str(queue)))
 
     def cleanup(self):
         stop_streams = template_obj.stc_manager.stop_traffic_stream(
@@ -305,9 +326,9 @@ class All_Queues_Pir(All_Queues_Share_BW):
 
     def setup(self):
         self.setup_variables()
-        reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2,
-                                                    qos_json_output=qos_json_output)
-        fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
+        #reset_config = reset_queue_scheduler_config(network_controller_obj=network_controller_obj, dut_port=dut_port_2,
+        #                                            qos_json_output=qos_json_output)
+        #fun_test.add_checkpoint("Ensure default scheduler config is set for all queues")
 
         for queue in queue_list:
             disable = network_controller_obj.set_qos_scheduler_config(port_num=dut_port_2, queue_num=queue,
@@ -316,6 +337,22 @@ class All_Queues_Pir(All_Queues_Share_BW):
                                                                       max_rate=self.qos_sp_json['ingress_port1'][0]['rate'],
                                                                       shaper_threshold=self.qos_sp_json['ingress_port1'][0]['threshold'])
             fun_test.test_assert(disable, "Set pir on queue %s" % queue, ignore_on_success=True)
+
+            spirent_port = port_1
+            if queue >= 8:
+                spirent_port = port_3
+
+            # Set load on streamblock
+            load_value = get_load_value_from_load_percent(load_percent=self.qos_sp_json['ingress_port1'][0]['load_percent'],
+                                                          max_egress_load=max_egress_load)
+            fun_test.simple_assert(load_value, "Ensure load value is calculated")
+
+            current_streamblock = streamblock_objs[spirent_port][str(queue)]
+            current_streamblock.Load = load_value
+            update_stream = template_obj.configure_stream_block(stream_block_obj=current_streamblock,
+                                                                update=True)
+            fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s for dscp %s" %
+                                 (load_value, current_streamblock.spirent_handle, str(queue)))
 
     def cleanup(self):
         super(All_Queues_Pir, self).cleanup()
@@ -352,7 +389,7 @@ class All_Queues_DWRR(All_Queues_Share_BW):
 
     def setup(self):
         self.setup_variables()
-        super(All_Queues_DWRR, self).setup()
+        super(All_Queues_DWRR, self).queue_setup()
 
         for queue in queue_list:
             ingress_port = "ingress_port1"
@@ -372,8 +409,8 @@ class All_Queues_DWRR(All_Queues_Share_BW):
                     current_streamblock.Load = load_value
                     update_stream = template_obj.configure_stream_block(stream_block_obj=current_streamblock,
                                                                         update=True)
-                    fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s" %
-                                         (load_value, current_streamblock.spirent_handle))
+                    fun_test.test_assert(update_stream, "Ensure load value is updated to %s in stream %s for dscp %s" %
+                                         (load_value, current_streamblock.spirent_handle, str(queue)))
 
                     current_weight = stream_info['weight']
                     break

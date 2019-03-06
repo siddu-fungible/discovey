@@ -35,7 +35,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
     fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     fun_test.test_assert(funeth_obj.configure_interfaces('hu'), 'Configure funeth interfaces.')
     fun_test.test_assert(funeth_obj.configure_ipv4_routes('hu'), 'Configure HU host IPv4 routes.')
-    fun_test.test_assert(funeth_obj.loopback_test(packet_count=100),
+    fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
                         'HU PF and VF interface loopback ping test via NU')
 
 
@@ -153,7 +153,10 @@ class FunethTestPacketSweep(FunTestCase):
         linux_obj = funeth_obj.linux_obj_dict['nu']
         tb_config_obj = funeth_obj.tb_config_obj
 
-        interfaces = tb_config_obj.get_all_interfaces('hu')
+        if emulation_target == 'palladium':  # Use only one PF and one VF interface to save run time
+            interfaces = [tb_config_obj.get_hu_pf_interface(), tb_config_obj.get_hu_vf_interface()]
+        elif emulation_target == 'f1':
+            interfaces = tb_config_obj.get_all_interfaces('hu')
         ip_addrs = [tb_config_obj.get_interface_ipv4_addr('hu', intf) for intf in interfaces]
 
         min_pkt_size = 46
