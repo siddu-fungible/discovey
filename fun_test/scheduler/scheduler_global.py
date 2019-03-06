@@ -27,4 +27,4 @@ class SchedulerJobPriority:
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
-    RANGES = {LOW: (2048, 3071),  NORMAL: (1024, 2047), HIGH: (0, 1023)}
+    RANGES = {LOW: (2049, 3072),  NORMAL: (1025, 2048), HIGH: (1, 1024)}

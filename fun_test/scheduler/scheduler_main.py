@@ -3,7 +3,7 @@ from fun_settings import *
 from fun_global import get_current_time, RESULTS, determine_version
 import re
 import subprocess
-from threading import Thread, Timer
+from threading import Thread, Timer, RLock
 import threading
 from scheduler_helper import *
 import signal
@@ -15,6 +15,8 @@ job_id_threads = {}
 job_id_timers = {}
 
 ONE_HOUR = 60 * 60
+
+queue_lock = None
 
 
 def delete_queued_job(job_id):
@@ -107,24 +109,18 @@ def increase_decrease_priority(job_id, increase=True):
         pass # You are already the highest
 
 def queue_job(job_spec):
+    queue_lock.acquire()
     next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
     new_job = JobQueue(priority=next_priority_value, job_id=job_spec.job_id, test_bed_type=job_spec.test_bed_type)
     new_job.save()
+    queue_lock.release()
+
 
 def timer_dispatch(job_spec):
-
     # Add to queue
     queue_job(job_spec=job_spec)
-
     if job_spec.job_id in job_id_timers:
         del job_id_timers[job_spec.job_id]
-
-
-    '''
-    suite_worker_obj.start()
-    scheduler_logger.debug("Job Id: {} join complete".format(suite_worker_obj.job_id))
-    '''
-
 
 
 class SuiteWorker(Thread):
@@ -633,6 +629,7 @@ def revive_scheduled_jobs(job_ids=None):
 
 
 if __name__ == "__main__":
+    queue_lock = RLock()
     # ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
