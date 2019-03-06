@@ -329,7 +329,7 @@ class JobSpec(models.Model):
     build_url = models.TextField(default="")
     version = models.TextField(default="", null=True)  # Can be based on build_url
     test_bed_type = models.TextField(default="", null=True)
-    requested_priority = models.TextField(default=SchedulerJobPriority.NORMAL)
+    requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
 
     """
     Job id
