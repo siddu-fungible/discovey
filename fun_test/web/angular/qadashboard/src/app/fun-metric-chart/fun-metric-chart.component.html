@@ -89,27 +89,30 @@
       <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
       <!--</span>-->
       <br>
-      <!--<div *ngIf="modelName !== 'MetricContainer'">-->
-        <!--<b>Expected values:</b>&nbsp;-->
-        <!--<a *ngIf="!showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>-->
-        <!--<a *ngIf="showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>-->
-        <!--<table>-->
-          <!--<tr *ngFor="let output of expectedValues">-->
-            <!--<td>-->
-              <!--<input-->
-                <!--type="checkbox"-->
-                <!--[checked]="output.show"-->
-                <!--(change)="changeExpectedValueShow(output)"/>&nbsp;-->
-            <!--</td>-->
-            <!--<td>-->
-              <!--<i>{{ output.name }}:</i>&nbsp;-->
-            <!--</td>-->
-            <!--<td>-->
-              <!--{{ output.value }} {{ output.unit }}-->
-            <!--</td>-->
-          <!--</tr>-->
-        <!--</table>-->
-      <!--</div>-->
+      <div *ngIf="modelName !== 'MetricContainer'">
+        <b>Expected values:</b>&nbsp;
+        <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
+        <a *ngIf="showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>
+        <table>
+          <tr *ngFor="let output of expectedValues">
+            <td *ngIf="output.value !== -1">
+              <input
+                type="checkbox"
+                [checked]="output.show"
+                (change)="changeExpectedValueShow(output)"/>&nbsp;
+            </td>
+            <td>
+              <i>{{ output.name }}:</i>&nbsp;
+            </td>
+            <td *ngIf="output.value !== -1">
+              {{ output.value }} {{ output.unit }}
+            </td>
+            <td *ngIf="output.value === -1">
+              Not set
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
     <div class="closed-section"></div>
     <!-- Show tables below the leaf chart -->
@@ -162,7 +165,7 @@
             <tr>
               <td>
                 BaseLine Date:&nbsp;<input type="text" [(ngModel)]="baseLineDate" [value]=""
-                         style="width: 300px">
+                                           style="width: 300px">
               </td>
             </tr>
           </table>
