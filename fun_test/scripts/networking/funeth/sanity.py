@@ -80,7 +80,7 @@ def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces
                 ip_addr,
                 count=packet_count,
                 max_percentage_loss=0,
-                interval=0.01,
+                interval=0.1,
                 size=packet_size-20-8,  # IP header 20B, ICMP header 8B
                 sudo=True),
             'NU ping HU interfaces {} with {} packets and packet size {}B'.format(intf, packet_count, packet_size))
