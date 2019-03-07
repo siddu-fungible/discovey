@@ -7,7 +7,7 @@ from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from fun_global import is_production_mode, is_triaging_mode
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job2, queue_suite_container
+from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job3, queue_suite_container
 from scheduler.scheduler_helper import queue_dynamic_suite, get_archived_job_spec
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, \
@@ -25,7 +25,8 @@ from datetime import datetime, timedelta
 from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
-from web.fun_test.models import SuiteReRunInfo
+
+# from web.fun_test.models import SuiteReRunInfo, JobQueue, JobSpec
 import logging
 import subprocess
 import dateutil.parser
@@ -34,6 +35,7 @@ from django.apps import apps
 import time
 from django.db import transaction
 from django.db.models import Q
+# from scheduler.scheduler_global import SchedulerJobPriority
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -189,30 +191,30 @@ def submit_job(request):
                                                requested_days=requested_days,
                                                repeat_in_minutes=repeat_in_minutes)
             else:
-                job_id = queue_job2(suite_path=suite_path,
+                job_id = queue_job3(suite_path=suite_path,
                                     build_url=build_url,
                                     tags=tags,
-                                    email_list=email_list,
+                                    emails=email_list,
                                     test_bed_type=test_bed_type,
                                     email_on_fail_only=email_on_fail_only,
                                     environment=environment,
                                     scheduling_type=scheduling_type,
-                                    tz_string=tz,
+                                    timezone_string=tz,
                                     requested_hour=requested_hour,
                                     requested_minute=requested_minute,
                                     requested_days=requested_days,
                                     repeat_in_minutes=repeat_in_minutes)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
-            job_id = queue_job2(script_path=script_path,
+            job_id = queue_job3(script_path=script_path,
                                 build_url=build_url,
                                 tags=tags,
-                                email_list=email_list,
+                                emails=email_list,
                                 test_bed_type=test_bed_type,
                                 email_on_fail_only=email_on_fail_only,
                                 environment=environment,
                                 scheduling_type=scheduling_type,
-                                tz_string=tz,
+                                timezone_string=tz,
                                 requested_hour=requested_hour,
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
@@ -903,6 +905,23 @@ def jiras(request, script_pk, jira_id=None):
 
 @csrf_exempt
 @api_safe_json_response
+def test_case_execution_info(request, test_case_execution_id):
+    """
+    This one does not involve suite execution id
+    :param request:
+    :param test_case_execution_id:
+    :return:
+    """
+    result = {}
+    test_case_execution = TestCaseExecution.objects.get(execution_id=test_case_execution_id)
+    result["execution_id"] = test_case_execution.execution_id
+    result["suite_execution_id"] = test_case_execution.suite_execution_id
+    result["log_prefix"] = test_case_execution.log_prefix
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
 def script_execution(request, pk):
     result = None
     try:
@@ -983,3 +1002,32 @@ def git(request):
         except Exception as ex:
             logger.exception(str(ex))
     return result
+
+def _get_job_spec(job_id):
+    result = {}
+    job_spec = JobSpec.objects.get(job_id=job_id)
+    result["job_id"] = job_spec.job_id
+    result["suite_type"] = job_spec.suite_type
+    result["script_path"] = job_spec.script_path
+    result["suite_path"] = job_spec.suite_path
+    result["emails"] = job_spec.emails
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def scheduler_queue(request):
+    result = []
+    queue_elements = JobQueue.objects.all().order_by('priority')
+    for queue_element in queue_elements:
+        one_element = {"job_id": queue_element.job_id,
+                       "priority": queue_element.priority,
+                       "test_bed_type": queue_element.test_bed_type,
+                       "job_spec": _get_job_spec(job_id=queue_element.job_id)}
+        result.append(one_element)
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def scheduler_queue_priorities(request):
+    return SchedulerJobPriority.__dict__
+
