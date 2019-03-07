@@ -910,7 +910,8 @@ if __name__ == "__main_reference__":
             entry.save()
     print "created reference values"
 
-if __name__ == "__main__":
+
+if __name__ == "__main_change_max__":
     entries = MetricChart.objects.all()
     count = 0
     for entry in entries:
@@ -927,3 +928,44 @@ if __name__ == "__main__":
             entry.data_sets = json.dumps(data_set)
             entry.save()
     print "maximum values for all data sets set to -1"
+
+if __name__ == "__main__":
+    flow_types = ["HU_HU_NFCP", "HU_NU_NFCP", "NU_HU_NFCP"]
+    model_name = "NuTransitPerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    input_choices = get_possible_values(model_name=model_name)
+    frame_size = 1500
+    name = "1500B"
+    output = "output_pps"
+    chart_name = "Extrapolated Packets per sec"
+    for flow_type in flow_types:
+        data_sets = []
+        internal_name = flow_type + '_' + output
+        one_data_set = {}
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_flow_type"] = flow_type
+        one_data_set["inputs"]["input_frame_size"] = frame_size
+        one_data_set["name"] = name
+        one_data_set["output"] = {"name": "output_pps", 'min': 0, "max": -1, "expected": -1, "reference": -1}
+        data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = True
+        y1_axis_title = "Mpps"
+        base_line_date = datetime(year=2019, month=1, day=22, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description="TBD",
+                owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                positive=positive,
+                y1_axis_title=y1_axis_title,
+                metric_model_name=model_name,
+                base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                           milestone_date=datetime(year=2018, month=9, day=16),
+                           milestone_name="Tape-out")
+        mmt.save()
+    print "create pps charts for 3 nw flow type metrics"
+
