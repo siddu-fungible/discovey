@@ -792,7 +792,7 @@ if __name__ == "__main_crypto_charts__":
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
 
-if __name__ == "__main_remove_nw__":
+if __name__ == "__main_nw_delete__":
     model = NuTransitPerformance
     entries = model.objects.all()
     entries.delete()
@@ -910,6 +910,25 @@ if __name__ == "__main_reference__":
             entry.save()
     print "created reference values"
 
+
+if __name__ == "__main_change_max__":
+    entries = MetricChart.objects.all()
+    count = 0
+    for entry in entries:
+        if entry.leaf:
+            count += 1
+            data_set = json.loads(entry.data_sets)
+            for data in data_set:
+                if "max" in data["output"]:
+                    maximum = data["output"]["max"]
+                    print (count, maximum)
+                    if str(maximum).startswith('99'):
+                        data["output"]["max"] = -1
+                        print (count, data["output"]["max"])
+            entry.data_sets = json.dumps(data_set)
+            entry.save()
+    print "maximum values for all data sets set to -1"
+
 if __name__ == "__main__":
     flow_types = ["HU_HU_NFCP", "HU_NU_NFCP", "NU_HU_NFCP"]
     model_name = "NuTransitPerformance"
@@ -949,3 +968,4 @@ if __name__ == "__main__":
                            milestone_name="Tape-out")
         mmt.save()
     print "create pps charts for 3 nw flow type metrics"
+

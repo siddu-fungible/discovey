@@ -296,9 +296,12 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
                                     "output"] else None  # reference is set in fixup_reference_values
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
+                            expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
 
                             # data_set_statuses.append(leaf_status)
                             if reference_value is not None:
+                                if expected_value != -1:
+                                    reference_value = expected_value
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
                                         output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0

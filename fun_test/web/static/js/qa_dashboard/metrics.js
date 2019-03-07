@@ -103,7 +103,7 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
         $scope.addDataSet = null;
         $scope.outputList = [];
         $scope.tableInfo = null;
-        $scope.dummyChartInfo = {"output": {"min": 0, "max": "99999"}};
+        $scope.dummyChartInfo = {"output": {"min": 0, "max": -1}};
         $scope.showOutputSelection = true;
         $scope.negativeGradient = null;
         $scope.metricId = metricId;
@@ -174,7 +174,7 @@ function MetricsController($scope, $http, $window, commonService, $timeout, $mod
 
 
             $scope.addDataSet["inputs"] = $scope.inputs;
-            $scope.addDataSet["output"] = {min: 0, max: 99999};
+            $scope.addDataSet["output"] = {min: 0, max: -1};
             /*
             let outputName = "";
             if($scope.previewDataSets.length > 0) {
