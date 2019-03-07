@@ -74,7 +74,10 @@ regression_urls = [
     url(r'^script_execution/(\d+)$', regression_views.script_execution),
     url(r'^job_spec/(\d+)$', regression_views.job_spec),
     url(r'^re_run_info$', regression_views.re_run_info),
-    url(r'^scheduler/.*$', views.angular_home),
+    url(r'^scheduler/admin$', views.angular_home),
+    url(r'^scheduler/queue$', regression_views.scheduler_queue),
+    url(r'^scheduler/queue_priorities$', regression_views.scheduler_queue_priorities),
+    url(r'^test_case_execution_info/(\d+)$', regression_views.test_case_execution_info),
     url(r'^git$', regression_views.git),
     url(r'^(?:\S+)$', views.angular_home)
 
