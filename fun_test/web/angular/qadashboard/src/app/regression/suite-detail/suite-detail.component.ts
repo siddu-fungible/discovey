@@ -204,9 +204,28 @@ export class SuiteDetailComponent implements OnInit {
   }
 
   hasReRuns(testCaseInfo) {
-    let i = 0;
     let reRunHistory = JSON.parse(testCaseInfo.re_run_history);
     return reRunHistory.length > 0;
+  }
+
+  getOriginalResult(testCaseInfo) {
+    let reRunHistory = JSON.parse(testCaseInfo.re_run_history);
+    let originalResult = "Unknown";
+    for (let index = 0; index < reRunHistory.length; index++) {
+      originalResult = reRunHistory[index].result;
+      break;
+    }
+    return originalResult;
+  }
+
+  getLatestRerunSuiteExecutionId(testCaseInfo) {
+    let suiteExecutionId = null;
+    let reRunHistory = JSON.parse(testCaseInfo.re_run_history);
+    if (reRunHistory.length > 0) {
+      let lastEntry = reRunHistory[reRunHistory.length - 1];
+      suiteExecutionId = lastEntry.re_run_suite_execution_id;
+    }
+    return suiteExecutionId;
   }
 
   setReRunInfo(testCaseInfo) {
