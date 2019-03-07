@@ -24,6 +24,7 @@ BASE_LINE_DATE = datetime(year=2019, month=4, day=1)
 
 class MetricsGlobalSettings(models.Model):
     tolerance_percentage = models.FloatField(default=3.0)
+    cache_valid = models.BooleanField(default=True)
 
 class MetricsGlobalSettingsSerializer(ModelSerializer):
 
@@ -247,7 +248,7 @@ class MetricChart(models.Model):
                 day_entries = None
             current_date = current_date - timedelta(days=1)  # TODO: if we know the holes jump to the next hole
 
-    def fixup_expected_values(self, data_set):
+    def fixup_reference_values(self, data_set):
         modified = 0
         # if self.chart_name == "BLK_LSV: Latency":
         #    j = 0
@@ -259,11 +260,11 @@ class MetricChart(models.Model):
             for first in first_record[::-1]:
                 if output_name in first:
                     if first[output_name] > 0:
-                        data_set["output"]["expected"] = first[output_name]
+                        data_set["output"]["reference"] = first[output_name]
                         modified = 1
                         break
             if modified == 0:
-                data_set["output"]["expected"] = 0
+                data_set["output"]["reference"] = 0
             # data_set["expected"] = first_rec
         # self.data_sets = json.dumps(data_set)
         # self.save()
@@ -937,7 +938,7 @@ class NuTransitPerformance(models.Model):
     output_jitter_min = models.FloatField(verbose_name="Jitter min in us", default=0)
     output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
-    output_pps = models.IntegerField(verbose_name="Packets per sec", default=0)
+    output_pps = models.FloatField(verbose_name="Packets per sec", default=0)
     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")

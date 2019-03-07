@@ -961,7 +961,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "SBP Boot Timing (Pre-host-boot)",
-            "label": "PSBP Boot Timing (Pre-host-boot)",
+            "label": "SBP Boot Timing (Pre-host-boot)",
             "children": [],
             "weight": 1
           },
@@ -1532,7 +1532,7 @@
                     "leaf": true,
                     "name": "NU_HNU_output_throughput",
                     "weight": 1,
-                    "label": "Throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "NU_HNU_output_pps",
@@ -1540,7 +1540,7 @@
                     "leaf": true,
                     "name": "NU_HNU_output_pps",
                     "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1558,7 +1558,7 @@
                     "leaf": true,
                     "name": "HNU_HNU_FCP_output_throughput",
                     "weight": 1,
-                    "label": "Throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "HNU_HNU_FCP_output_pps",
@@ -1566,7 +1566,7 @@
                     "leaf": true,
                     "name": "HNU_HNU_FCP_output_pps",
                     "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1584,7 +1584,7 @@
                     "leaf": true,
                     "name": "HNU_HNU_output_throughput",
                     "weight": 1,
-                    "label": "Throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "HNU_HNU_output_pps",
@@ -1592,7 +1592,7 @@
                     "leaf": true,
                     "name": "HNU_HNU_output_pps",
                     "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1610,7 +1610,7 @@
                     "leaf": true,
                     "name": "NU_NU_output_throughput",
                     "weight": 1,
-                    "label": "Throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "NU_NU_output_pps",
@@ -1618,7 +1618,7 @@
                     "leaf": true,
                     "name": "NU_NU_output_pps",
                     "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1636,7 +1636,7 @@
                     "leaf": true,
                     "name": "HNU_NU_output_throughput",
                     "weight": 1,
-                    "label": "Throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "HNU_NU_output_pps",
@@ -1644,7 +1644,7 @@
                     "leaf": true,
                     "name": "HNU_NU_output_pps",
                     "weight": 1,
-                    "label": "Packets per sec"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1662,15 +1662,7 @@
                     "leaf": true,
                     "name": "HU_NU_NFCP_output_throughput",
                     "weight": 1,
-                    "label": "Throughput"
-                  },
-                  {
-                    "info": "HU_NU_NFCP_output_latency_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HU_NU_NFCP_output_latency_avg",
-                    "weight": 1,
-                    "label": "Latency"
+                    "label": "Extrapolated Throughput"
                   }
                 ]
               },
@@ -1688,15 +1680,7 @@
                     "leaf": true,
                     "name": "HU_HU_NFCP_output_throughput",
                     "weight": 1,
-                    "label": "Throughput"
-                  },
-                  {
-                    "info": "HU_HU_NFCP_output_latency_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HU_HU_NFCP_output_latency_avg",
-                    "weight": 1,
-                    "label": "Latency"
+                    "label": "Extrapolated Throughput"
                   }
                 ]
               },
@@ -1714,15 +1698,7 @@
                     "leaf": true,
                     "name": "NU_HU_NFCP_output_throughput",
                     "weight": 1,
-                    "label": "Throughput"
-                  },
-                  {
-                    "info": "NU_HU_NFCP_output_latency_avg",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_HU_NFCP_output_latency_avg",
-                    "weight": 1,
-                    "label": "Latency"
+                    "label": "Extrapolated Throughput"
                   }
                 ]
               }

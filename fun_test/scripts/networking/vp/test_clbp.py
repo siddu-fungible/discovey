@@ -3,7 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, TCP, RangeModifier, Ipv4Header
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import *
+from scripts.networking.nu_config_manager import NuConfigManager
 
 num_ports = 2
 test_configs_json = SCRIPTS_DIR + "/" + "networking" + "/" + "vp" + "/" + "vp_test_configs.json"
@@ -46,7 +46,9 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2, gen_obj_2, flow_direction, fps
+            dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2, gen_obj_2, flow_direction, fps, nu_config_obj
+
+        nu_config_obj = NuConfigManager()
 
         nonfcp_xoff_thr = 16384
         fcp_xoff_thr = 16384
@@ -67,7 +69,6 @@ class SpirentSetup(FunTestScript):
                                                    flow_direction=flow_direction,
                                                    flow_type=NuConfigManager.VP_FLOW_TYPE)
 
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
@@ -84,8 +85,6 @@ class SpirentSetup(FunTestScript):
 
         dut_port_1 = dut_config['ports'][0]
         dut_port_2 = dut_config['ports'][1]
-
-
 
         if dut_config['enable_dpcsh']:
             # Create network controller object

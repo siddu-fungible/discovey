@@ -63,6 +63,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   expectedValues: any = [];
   showAllExpectedValues: boolean = false;
   y1AxisPlotLines: any = [];
+  showSelect: boolean = false;
 
   baseLineDate: string = null;
 
@@ -657,6 +658,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
         let oneChartDataSet = {name: this.filterDataSets[j].name, data: oneChartDataArray};
         chartDataSets.push(oneChartDataSet);
+        let output = {};
+        output["name"] = this.filterDataSets[j].name;
+        output["value"] = filterDataSets[j].output.expected;
+        output["unit"] = this.chart1YaxisTitle;
+        output["show"] = false;
+        if (!this.showSelect && output["value"] !== -1) {
+          this.showSelect = true;
+        }
+        this.expectedValues.push(output);
       }
       this.series = seriesDates;
       this.values = chartDataSets;

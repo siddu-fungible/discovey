@@ -342,12 +342,14 @@ class SampleIngressFPGtoFPGIPv6(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -611,18 +613,21 @@ class SampleIngressDropIpChecksumError(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
         
         checkpoint = "Ensure IN_FFE_DESC equal to OUT_PSW_DESC in sfg nu stats"
         sfg_diff_stats = get_diff_stats(old_stats=sfg_stats_before, new_stats=sfg_stats)
+        fun_test.log("SFG DIFF STATS: %s" % sfg_diff_stats)
         fun_test.test_assert_expected(expected=sfg_diff_stats[SFG_IN_FFE_DESC], actual=sfg_diff_stats[SFG_OUT_PSW_DESC],
                                       message=checkpoint)
         
@@ -898,12 +903,14 @@ class SampleSourceMultiDestination(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames for sample ID: %d" % self.sample_id1
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id1)],
                                            new_stats=sample_stats[str(self.sample_id1)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -911,6 +918,7 @@ class SampleSourceMultiDestination(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames for sample ID: %d" % self.sample_id2
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id2)],
                                            new_stats=sample_stats[str(self.sample_id2)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -1147,14 +1155,13 @@ class SampleFlagMaskTTL0Packets(FunTestCase):
         fun_test.log("Sample stats: %s" % sample_stats)
 
         if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_PALLADIUM:
-            checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to CC frame count"
             frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
                                                          tx=False)
             frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
                                                             stat_type=FRAMES_TRANSMITTED_OK)
             fun_test.log("Frames Received on FPG%d: %d and Frames Transmitted on FPG%d: %d" % (
                 dut_rx_port, frames_received, dut_cc_port, frames_transmitted))
-            fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
+            # fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
 
         checkpoint = "Ensure Tx frame count must be equal to sample frame count"
         frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
@@ -1175,12 +1182,14 @@ class SampleFlagMaskTTL0Packets(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -1505,6 +1514,7 @@ class SampleMultiSourceSameDestination(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=expected_sample_frames, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
@@ -1512,6 +1522,7 @@ class SampleMultiSourceSameDestination(FunTestCase):
                      "on FPG%d" % (dut_rx_port1, dut_rx_port2)
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=expected_sample_frames,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -1780,6 +1791,7 @@ class SampleIngressEgressMTUCase(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to no of Jumbo frames received"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -1930,6 +1942,7 @@ class SampleIngressEgressMTUCase(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to no of Jumbo frames received"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_after_disable[str(self.sample_id)],
                                            new_stats=sample_stats_egress[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -2236,12 +2249,14 @@ class SampleSamePortIngressEgress(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received1, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames for sample ID: %d" % self.sample_id1
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id1)],
                                            new_stats=sample_stats[str(self.sample_id1)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received1,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -2249,6 +2264,7 @@ class SampleSamePortIngressEgress(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames for sample ID: %d" % self.sample_id2
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id2)],
                                            new_stats=sample_stats[str(self.sample_id2)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received2,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -2560,12 +2576,14 @@ class SampleIngressEgressSamePacket(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames for sample ID: %d" % self.sample_id1
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id1)],
                                            new_stats=sample_stats[str(self.sample_id1)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -2573,6 +2591,7 @@ class SampleIngressEgressSamePacket(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames for sample ID: %d" % self.sample_id2
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id2)],
                                            new_stats=sample_stats[str(self.sample_id2)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -2865,12 +2884,14 @@ class SampleACLtoFPG(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -2968,6 +2989,7 @@ class SampleACLtoFPG(FunTestCase):
         checkpoint = "Ensure sample counter must be 0"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=0,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -3183,18 +3205,21 @@ class SampleIngressARPRequest(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
 
         checkpoint = "Ensure IN_FFE_DESC equal to OUT_PSW_DESC in sfg nu stats"
         sfg_diff_stats = get_diff_stats(old_stats=sfg_stats_before, new_stats=sfg_stats)
+        fun_test.log("SFG DIFF STATS: %s" % sfg_diff_stats)
         fun_test.test_assert_expected(expected=sfg_diff_stats[SFG_IN_FFE_DESC], actual=sfg_diff_stats[SFG_OUT_PSW_DESC],
                                       message=checkpoint)
 
@@ -3501,12 +3526,14 @@ class SampleIngressDropIPv4VerError(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -3732,6 +3759,7 @@ class SampleIngressDropFwdErrorWrongDIP(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_FRV_ERROR_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['frv_error']),
                                       message=checkpoint)
 
@@ -3745,6 +3773,7 @@ class SampleIngressDropFwdErrorWrongDIP(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -3986,6 +4015,7 @@ class SampleEgressMTUCase(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
@@ -3999,6 +4029,7 @@ class SampleEgressMTUCase(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -4117,6 +4148,7 @@ class SampleEgressMTUCase(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
@@ -4132,6 +4164,7 @@ class SampleEgressMTUCase(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -4145,6 +4178,7 @@ class SampleEgressMTUCase(FunTestCase):
         fun_test.test_assert(result['result'], checkpoint)
 
     def cleanup(self):
+        nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_rx_port = dut_config['ports'][0]
         dut_sample_port = dut_config['ports'][2]
 
@@ -4356,6 +4390,7 @@ class SampleEgressDropACL(FunTestCase):
         psw_diff_stats = get_diff_stats(old_stats=parsed_input_stats_1['input'],
                                         new_stats=parsed_input_stats_2['input'],
                                         stats_list=[PSW_SAMPLED_PACKET_COUNT])
+        fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
         fun_test.test_assert_expected(expected=frames_received, actual=int(psw_diff_stats['sampled_pkt']),
                                       message=checkpoint)
 
@@ -4369,6 +4404,7 @@ class SampleEgressDropACL(FunTestCase):
         checkpoint = "Ensure sample counter for a rule must be equal to Tx frames"
         sample_diff_stats = get_diff_stats(old_stats=sample_stats_before[str(self.sample_id)],
                                            new_stats=sample_stats[str(self.sample_id)])
+        fun_test.log("SAMPLE DIFF STATS: %s" % sample_diff_stats)
         fun_test.test_assert_expected(expected=frames_received,
                                       actual=int(sample_diff_stats['count']),
                                       message=checkpoint)
@@ -5200,7 +5236,9 @@ if __name__ == '__main__':
     ts.add_test_case(SampleIngressDropIpChecksumError())
 
     ts.add_test_case(SampleSourceMultiDestination())
+
     ts.add_test_case(SampleFlagMaskTTL0Packets())
+
     ts.add_test_case(SampleMultiSourceSameDestination())
 
     ts.add_test_case(SampleIngressEgressMTUCase())

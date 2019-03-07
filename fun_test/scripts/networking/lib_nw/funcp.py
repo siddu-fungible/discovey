@@ -1,3 +1,4 @@
+from lib.system.fun_test import *
 import os
 import re
 
@@ -35,6 +36,21 @@ class FunControlPlane:
         )
         output = self.linux_obj.command(';'.join(cmds), timeout=300)
         return re.search(r'funnel_gen.py', output, re.DOTALL) is not None
+
+    def make_gen_files(self):
+        fun_test.test_assert(os.path.exists('%s/%s/networking/tools/nmtf/setup.py' % (self.ws, self.name)),
+                             message="Check file exists locally")
+        fun_test.test_assert(os.path.exists('%s/%s/networking/tools/dpcsh/setup.py' % (self.ws, self.name)),
+                             message="Check file exists locally")
+        cmds = (
+            'cd %s/%s/networking/tools/dpcsh' % (self.ws, self.name),
+            'python setup.py install',
+            'cd %s/%s/networking/tools/nmtf' % (self.ws, self.name),
+            'sudo python setup.py install',
+        )
+
+        output = self.linux_obj.sudo_command(';'.join(cmds), timeout=120)
+        return output
 
     def setup_traffic_server(self, server='nu'):
         """Set up PTF traffic server."""

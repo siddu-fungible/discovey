@@ -42,6 +42,7 @@ class Node {
   upgrades: any = new Set();
   failures: any = new Set();
   bugs: any = {};
+  positive: boolean = true;
 }
 
 class FlatNode {
@@ -290,6 +291,7 @@ export class PerformanceComponent implements OnInit {
     node.numBugs = dagEntry.jira_ids.length;
     node.jiraIds = dagEntry.jira_ids;
     node.showAddJira = false;
+    node.positive = dagEntry.positive;
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
@@ -444,9 +446,9 @@ export class PerformanceComponent implements OnInit {
     if (node.metricModelName !== 'MetricContainer') {
       //$scope.showingContainerNodeInfo = !$scope.showingContainerNodeInfo;
       if (node.positive) {
-        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/expected value) * 100&nbsp)/n";
+        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/reference value) * 100&nbsp)/n";
       } else {
-        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
+        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(reference value/last actual value) * 100&nbsp)/n";
       }
       this.currentNodeInfo += "&nbsp, where n is the number of data-sets";
     }

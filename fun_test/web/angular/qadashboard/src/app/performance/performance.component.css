@@ -165,7 +165,7 @@ arrow-icon {
   /*height: 200px !important;*/
   border: solid 1px black !important;
   text-align: left !important;
-  max-width: 1000px !important;
+  max-width: 50% !important;
   min-width: 200px !important;
   /*display: table !important;*/
 }

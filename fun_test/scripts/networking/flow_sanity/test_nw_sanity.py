@@ -739,34 +739,6 @@ class TestCcFlows(FunTestCase):
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION)
 
-        '''
-        checkpoint = "Ensure Spirent stats fetched"
-        tx_results = template_obj.stc_manager.get_tx_stream_block_results(stream_block_handle=self.stream_obj.
-                                                                          spirent_handle,
-                                                                          subscribe_handle=subscribe_results
-                                                                          ['tx_subscribe'])
-        rx_results = template_obj.stc_manager.get_rx_stream_block_results(stream_block_handle=self.stream_obj.
-                                                                          spirent_handle,
-                                                                          subscribe_handle=subscribe_results
-                                                                          ['rx_subscribe'])
-        rx_port_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=self.port_3,
-                                                                                subscribe_handle=subscribe_results
-                                                                                ['analyzer_subscribe'])
-        rx_port2_results = template_obj.stc_manager.get_rx_port_analyzer_results(port_handle=self.port_2,
-                                                                                 subscribe_handle=subscribe_results
-                                                                                 ['analyzer_subscribe'])
-        tx_port_results = template_obj.stc_manager.get_generator_port_results(port_handle=self.port_1,
-                                                                              subscribe_handle=subscribe_results
-                                                                              ['generator_subscribe'])
-        fun_test.simple_assert(rx_port_results and tx_port_results and rx_port2_results, checkpoint)
-
-        fun_test.log("Tx Spirent Stats: %s" % tx_results)
-        fun_test.log("Rx Spirent Stats: %s" % rx_results)
-        fun_test.log("Tx Port Stats: %s" % tx_port_results)
-        fun_test.log("Rx Port Stats: %s" % rx_port_results)
-        fun_test.log("Rx Port 2 Stats: %s" % rx_port2_results)
-        '''
-        meter_stats = None
         checkpoint = "Fetch PSW and Parser DUT stats after traffic"
         psw_stats = dpcsh_obj.peek_psw_global_stats()
         parser_stats = dpcsh_obj.peek_parser_stats()
@@ -814,22 +786,6 @@ class TestCcFlows(FunTestCase):
         # validation asserts
         # Spirent stats validation
         # TODO: Skip Spirent validation for now as on real CC we don't have spirent
-        '''
-        checkpoint = "Validate Tx and Rx on spirent"
-        fun_test.log("Tx FrameCount: %d Rx FrameCount: %d" % (int(tx_port_results['GeneratorFrameCount']),
-                                                              int(rx_port_results['TotalFrameCount'])))
-        fun_test.test_assert((MIN_RX_PORT_COUNT <= int(rx_port_results['TotalFrameCount']) <= MAX_RX_PORT_COUNT),
-                             checkpoint)
-
-        checkpoint = "Ensure %s does not received any frames" % self.port_2
-        fun_test.log("Rx Port2 FrameCount: %d" % int(rx_port2_results['TotalFrameCount']))
-        fun_test.test_assert_expected(expected=0, actual=int(rx_port2_results['TotalFrameCount']),
-                                      message=checkpoint)
-
-        checkpoint = "Ensure no errors are seen on spirent"
-        result = template_obj.check_non_zero_error_count(rx_results=rx_port_results)
-        fun_test.test_assert(expression=result['result'], message=checkpoint)
-        '''
         # DUT stats validation
         frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_stats,
                                                      stat_type=FRAMES_RECEIVED_OK, tx=False)
@@ -841,6 +797,7 @@ class TestCcFlows(FunTestCase):
         checkpoint = "Validate meter stats ensure frames_received on FPG%d == (green pkts + yellow pkts + " \
                      "red_pkts)" % dut_port_1
         meter_stats_diff = get_diff_stats(old_stats=meter_stats_before, new_stats=meter_stats)
+        fun_test.log("METER STATS DIFF: %s" % meter_stats_diff)
         green_pkts = int(meter_stats_diff['green']['pkts'])
         yellow_pkts = int(meter_stats_diff['yellow']['pkts'])
         red_pkts = int(meter_stats_diff['red']['pkts'])
@@ -854,6 +811,7 @@ class TestCcFlows(FunTestCase):
         vp_stats_diff = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats,
                                        stats_list=[VP_PACKETS_CONTROL_T2C_COUNT, VP_PACKETS_CC_OUT,
                                                    VP_PACKETS_TOTAL_OUT, VP_PACKETS_TOTAL_IN])
+        fun_test.log("VP STATS DIFF: %s" % vp_stats_diff)
         # fun_test.test_assert_expected(expected=frames_received,
         #                               actual=vp_stats_diff[VP_PACKETS_CONTROL_T2C_COUNT],
         #                               message=checkpoint)
@@ -882,6 +840,7 @@ class TestCcFlows(FunTestCase):
                                                     ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE,
                                                     ERP_COUNT_FOR_ERP0_EFP_ERROR_INTERFACE_FLITS,
                                                     ERP_COUNT_FOR_EFP_FCP_VLD])
+        fun_test.log("ERP STATS DIFF: %s" % erp_stats_diff)
         # fun_test.test_assert_expected(expected=frames_received,
         #                               actual=erp_stats_diff[ERP_COUNT_FOR_EFP_WQM_DECREMENT_PULSE],
         #                               message=checkpoint)
@@ -927,6 +886,7 @@ class TestCcFlows(FunTestCase):
         # WRO stats validation
         checkpoint = "From WRO stats, Ensure WRO IN packets equal to spirent Tx"
         wro_stats_diff = get_diff_stats(old_stats=wro_stats_before, new_stats=wro_stats)
+        fun_test.log("WRO STATS DIFF: %s" % wro_stats_diff)
         # fun_test.test_assert_expected(expected=frames_received,
         #                              actual=wro_stats_diff['global'][WRO_IN_PKTS],
         #                               message=checkpoint)
@@ -1396,6 +1356,7 @@ class TestVpFlows(FunTestCase):
             if flow_direction != NuConfigManager.FLOW_DIRECTION_HNU_FPG and flow_direction != NuConfigManager.FLOW_DIRECTION_FCP_HNU_HNU:
                 diff_stats_erp = get_diff_stats(old_stats=erp_stats_1, new_stats=erp_stats_2,
                                                 stats_list=[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
+                fun_test.log("ERP DIFF STATS: %s" % diff_stats_erp)
                 actual_erp_stats = int(diff_stats_erp[ERP_COUNT_FOR_ALL_NON_FCP_PACKETS_RECEIVED])
                 fun_test.test_assert(actual_erp_stats >= dut_port_1_receive,
                                      message="Validate NU ERP NON FCP Packets received count."
@@ -1409,6 +1370,7 @@ class TestVpFlows(FunTestCase):
                               VP_FAE_RESPONSES_RECEIVED]
                 diff_stats_vppkts = get_diff_stats(old_stats=vp_pkts_stats_1, new_stats=vp_pkts_stats_2,
                                                    stats_list=stats_list)
+                fun_test.log("VP DIFF STATS: %s" % diff_stats_vppkts)
 
                 # fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
                 #                               actual=int(diff_stats_vppkts[VP_PACKETS_OUT_NU_ETP]),
@@ -1426,6 +1388,7 @@ class TestVpFlows(FunTestCase):
             else:
                 diff_stats_vppkts = get_diff_stats(old_stats=vp_pkts_stats_1, new_stats=vp_pkts_stats_2,
                                                    stats_list=stats_list)
+                fun_test.log("VP DIFF STATS: %s" % diff_stats_vppkts)
                 fun_test.test_assert_expected(expected=int(tx_results_1['FrameCount']),
                                               actual=int(diff_stats_vppkts[VP_PACKETS_FORWARDING_NU_LE]),
                                               message="Ensure VP stats has correct nu le packets")
@@ -1438,6 +1401,7 @@ class TestVpFlows(FunTestCase):
 
             # Check psw nu input stats
             psw_diff_stats = get_diff_stats(old_stats=parsed_input_1, new_stats=parsed_input_2)
+            fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
 
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
                 fun_test.test_assert(int(psw_diff_stats[epg0_pkt]) >= int(tx_results_1['FrameCount']),
@@ -1451,6 +1415,7 @@ class TestVpFlows(FunTestCase):
                                                  psw_diff_stats[epg0_pkt], tx_results_1['FrameCount']))
             # Check psw nu output stats
             psw_diff_stats = get_diff_stats(old_stats=parsed_output_1, new_stats=parsed_output_2)
+            fun_test.log("PSW DIFF STATS: %s" % psw_diff_stats)
             if flow_direction == NuConfigManager.FLOW_DIRECTION_HNU_FPG:
                 fun_test.test_assert(int(psw_diff_stats[fpg1_pkt]) >= int(tx_results_1['FrameCount']),
                                      message="Check epg_pkt counter in psw nu stats in output. "

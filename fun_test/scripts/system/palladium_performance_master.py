@@ -572,7 +572,6 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
             for line in self.lines:
                 m = re.search(
                     r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
-                    r'"(?P<metric_name>\S+)\s+(?:\S+\s+\d+:\s+)?(?P<metric_type>\S+):\s+(?P<value>{.*})\s+\[(?P<metric_id>\S+)\]',
                     line)
                 if m:
                     stats_found = True
@@ -609,7 +608,7 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
 
                     try:
                         units = j["unit"]
-                        fun_test.simple_assert(units in ["mbps", "nsecs", "iops"],
+                        fun_test.simple_assert(units in ["Mbps", "nsecs", "ops"],
                                                "Unexpected unit {} in line: {}".format(units, line))
                     except Exception as ex:
                         fun_test.critical(str(ex))
@@ -1610,8 +1609,12 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         metrics["input_version"] = line["version"]
                         metrics["input_frame_size"] = line["frame_size"]
                         date_time = get_time_from_timestamp(line["timestamp"])
-                        metrics["output_throughput"] = line["throughput"] if "throughput" in line else -1
-                        metrics["output_pps"] = line["pps"] if "pps" in line else -1
+                        if "HU" in metrics["input_flow_type"]:
+                            metrics["output_throughput"] = (float(line["throughput"]) * 4.8) if "throughput" in line else -1 #extrapolate by 4.8 for HU
+                            metrics["output_pps"] = (float(line["pps"]) * 0.0048) if "pps" in line else -1 #extrapolate by 0.0048 for HU
+                        else:
+                            metrics["output_throughput"] = (float(line["throughput"]) * 3.9) if "throughput" in line else -1
+                            metrics["output_pps"] = (float(line["pps"]) * 0.0039) if "pps" in line else -1
                         metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
                         metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
                         metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
