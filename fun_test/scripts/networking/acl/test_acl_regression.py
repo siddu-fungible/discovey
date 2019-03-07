@@ -318,4 +318,7 @@ class AclQosLog(AclQosColor):
 
     def run(self):
         super(AclQosLog, self).run()
-
+if __name__ == '__main__':
+    ts = SpirentSetup()
+    ts.add_test_case(AclQosColor())
+    ts.run()
