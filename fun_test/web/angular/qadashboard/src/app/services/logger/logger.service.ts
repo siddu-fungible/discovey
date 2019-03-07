@@ -48,6 +48,9 @@ export class LoggerService {
       log.timestamp = new Date().getTime();
     }
     this.logs.push(log);
+    if (log.alertLevel === AlertLevel.ERROR) {
+      this.commonService.setAlert();
+    }
   }
 
   error(args: any) {
@@ -65,7 +68,6 @@ export class LoggerService {
     this.toasterService.pop(toast);
     let plainLog = new Log(null, args, LogDataType.SIMPLE, AlertLevel.ERROR);
     this.addLog(plainLog);
-    this.commonService.setAlert();
   }
 
 
