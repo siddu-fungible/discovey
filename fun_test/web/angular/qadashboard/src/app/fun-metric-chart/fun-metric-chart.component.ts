@@ -64,9 +64,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   showAllExpectedValues: boolean = false;
   y1AxisPlotLines: any = [];
   showSelect: boolean = false;
-  maxDataSet: number = null;
-  maxExpected: number = null;
-  maxDataPoint: number = null;
+  //used for determining the display range max of the charts
+  maxDataSet: number = null; // maximum value of all the 'max' values of the datasets
+  maxExpected: number = null; // maximum value of all the 'expected' values of the datasets
+  maxDataPoint: number = null; // maximum value of all the data points from all the datasets
   yMax: number = null;
 
   baseLineDate: string = null;
@@ -514,7 +515,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.showAllExpectedValues = (this.expectedValues.length === this.y1AxisPlotLines.length);
   }
 
-  //select or unselect all checkbox
+  //change the show of all expected values using select or unselect all link
   changeAllExpectedValues(): void {
     this.showAllExpectedValues = !this.showAllExpectedValues;
     for (let output of this.expectedValues) {
@@ -523,6 +524,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.calculateYaxisPlotLines();
   }
 
+  // calculate the yaxis plotlines - horizontal lines that are to be seen on the chart
   calculateYaxisPlotLines(): void {
     this.expectedValues = [...this.expectedValues];
     this.y1AxisPlotLines = [];
@@ -546,6 +548,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.calculateMax();
   }
 
+  // calculate the yMax which is the maximum number of the display range on y axis
   calculateMax(): void {
     if (this.maxExpected !== -1) {
       if (this.maxDataSet !== -1) {
