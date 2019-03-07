@@ -64,6 +64,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   showAllExpectedValues: boolean = false;
   y1AxisPlotLines: any = [];
   showSelect: boolean = false;
+  maxDataSet: number = null;
+  maxExpected: number = null;
+  maxDataPoint: number = null;
+  yMax: number = null;
 
   baseLineDate: string = null;
 
@@ -76,7 +80,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.status = "Updating";
-    this.fetchNames();
     this.showingTable = false;
     this.showingConfigure = false;
     this.headers = null;
@@ -506,21 +509,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //change the output show of the expected value checkbox
   changeExpectedValueShow(output): void {
     output.show = !output.show;
-    this.expectedValues = [...this.expectedValues];
-    this.y1AxisPlotLines = [];
-    for (let dataset of this.expectedValues) {
-      if (dataset.show) {
-        let line = {};
-        line["text"] = dataset.name;
-        line["value"] = dataset.value;
-        this.y1AxisPlotLines.push(line);
-      }
-    }
-    if (this.expectedValues.length === this.y1AxisPlotLines.length) {
-      this.showAllExpectedValues = true;
-    } else {
-      this.showAllExpectedValues = false;
-    }
+    this.calculateYaxisPlotLines();
+    this.showAllExpectedValues = (this.expectedValues.length === this.y1AxisPlotLines.length);
   }
 
   //select or unselect all checkbox
@@ -529,15 +519,49 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     for (let output of this.expectedValues) {
       output.show = this.showAllExpectedValues;
     }
+    this.calculateYaxisPlotLines();
+  }
+
+  calculateYaxisPlotLines(): void {
     this.expectedValues = [...this.expectedValues];
     this.y1AxisPlotLines = [];
+    let maximum = null;
     for (let dataset of this.expectedValues) {
       if (dataset.show) {
         let line = {};
         line["text"] = dataset.name;
         line["value"] = dataset.value;
+        if (maximum === null) {
+          maximum = dataset.value;
+        } else {
+          if (dataset.value > maximum) {
+            maximum = dataset.value;
+          }
+        }
         this.y1AxisPlotLines.push(line);
       }
+    }
+    this.maxExpected = maximum;
+    this.calculateMax();
+  }
+
+  calculateMax(): void {
+    if (this.maxExpected !== -1) {
+      if (this.maxDataSet !== -1) {
+        if (this.maxDataSet > this.maxExpected) {
+          this.yMax = this.maxDataSet;
+        } else {
+          this.yMax = this.maxExpected;
+        }
+      } else {
+        if (this.maxDataPoint > this.maxExpected) {
+          this.yMax = this.maxDataPoint;
+        } else {
+          this.yMax = this.maxExpected;
+        }
+      }
+    } else {
+      this.yMax = null;
     }
   }
 
@@ -603,8 +627,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let chartDataSets = [];
       let seriesDates = [];
       this.expectedValues = [];
+      this.maxDataSet = null;
+      this.maxExpected = null;
+      this.maxDataPoint = null;
+      this.yMax = null;
       for (let j = 0; j < this.filterDataSets.length; j++) {
         let oneChartDataArray = [];
+        let thisMinimum = this.filterDataSets[j].output.min;
+        let thisMaximum = this.filterDataSets[j].output.max;
+        let outputName = this.filterDataSets[j].output.name;
+        let name = this.filterDataSets[j].name;
+        let expected = filterDataSets[j].output.expected;
         for (let i = 0; i < keyList.length; i++) {
           let output = null;
           let total = 0;
@@ -634,7 +667,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             if (keyValue[j][originalKeyList[startIndex]]) {
               let oneRecord = keyValue[j][originalKeyList[startIndex]];
               matchingDateFound = true;
-              let outputName = this.filterDataSets[j].output.name;
               output = oneRecord[outputName];
               total += output;
               count++;
@@ -652,22 +684,43 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           if (count !== 0) {
             output = total / count;
           }
-          let thisMinimum = this.filterDataSets[j].output.min;
-          let thisMaximum = this.filterDataSets[j].output.max;
-          oneChartDataArray.push(this.getValidatedData(output, thisMinimum, thisMaximum));
+          let result = this.getValidatedData(output, thisMinimum, thisMaximum);
+          if (this.maxDataPoint === null) {
+            this.maxDataPoint = result.y;
+          } else {
+            if (result.y > this.maxDataPoint) {
+              this.maxDataPoint = result.y;
+            }
+          }
+          oneChartDataArray.push(result);
         }
-        let oneChartDataSet = {name: this.filterDataSets[j].name, data: oneChartDataArray};
+        let oneChartDataSet = {name: name, data: oneChartDataArray};
         chartDataSets.push(oneChartDataSet);
         let output = {};
-        output["name"] = this.filterDataSets[j].name;
-        output["value"] = filterDataSets[j].output.expected;
+        output["name"] = name;
+        output["value"] = expected;
         output["unit"] = this.chart1YaxisTitle;
         output["show"] = false;
         if (!this.showSelect && output["value"] !== -1) {
           this.showSelect = true;
         }
         this.expectedValues.push(output);
+        if (this.maxDataSet === null) {
+          this.maxDataSet = thisMaximum;
+        } else {
+          if (thisMaximum > this.maxDataSet) {
+            this.maxDataSet = thisMaximum;
+          }
+        }
+        if (this.maxExpected === null) {
+          this.maxExpected = expected;
+        } else {
+          if (expected > this.maxExpected) {
+            this.maxExpected = expected;
+          }
+        }
       }
+      this.calculateMax();
       this.series = seriesDates;
       this.values = chartDataSets;
       this.headers = this.tableInfo;
@@ -706,6 +759,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
         self.data["totalLength"] = self.data["rows"].length;
       });
+      this.changeAllExpectedValues();
     }, error => {
       this.loggerService.error("fetchMetricsData");
     });
@@ -810,7 +864,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         radius: 3
       }
     };
-    if (data > maximum) {
+    if (data > maximum && maximum !== -1) {
       result.y = maximum;
       result.marker['symbol'] = "url(/static/media/red-x-png-7.png)";
       result.marker.radius = 3;
