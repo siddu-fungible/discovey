@@ -74,6 +74,30 @@ def get_snapshot_meter_id(snapshot_output, egress=False, erp=False):
     return result
 
 
+def get_pkt_color_from_snapshot(snapshot_output, erp=False):
+    result = None
+    try:
+        if erp:
+            result = snapshot_output['PSW_CTL']['MD']['pkt_color']
+        else:
+            result = snapshot_output['PSW_CTL']['MD']['pkt_color']
+    except Exception as ex:
+        fun_test.critical("Exception : %s" % ex)
+    return result
+
+
+def get_log_from_snapshot(snapshot_output, erp=False):
+    result = None
+    try:
+        if erp:
+            result = snapshot_output['Main SFG']['MD']['acl_log']
+        else:
+            result = snapshot_output['Main SFG']['MD']['acl_log']
+    except Exception as ex:
+        fun_test.critical("Exception : %s" % ex)
+    return result
+
+
 def get_snapshot_acl_label(snapshot_output, erp=False):
     result = None
     try:
