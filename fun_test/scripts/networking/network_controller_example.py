@@ -52,6 +52,9 @@ class FunTestCase1(FunTestCase):
                 result = dpcsh_obj.clear_port_stats(port_num=port, shape=0)
                 fun_test.simple_assert(result, "Cleat stats port: %d" % port)
 
+                stats = dpcsh_obj.peek_fpg_port_stats(port_num=port)
+                fun_test.simple_assert(stats, "Fetch FPG stats")
+
             '''
             vp_stats = dpcsh_obj.peek_vp_packets()
             fun_test.simple_assert(vp_stats, "Fetch VP stats")

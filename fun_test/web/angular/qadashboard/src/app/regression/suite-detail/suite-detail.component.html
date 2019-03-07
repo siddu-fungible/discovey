@@ -111,20 +111,41 @@
                 <td class="text-left">{{ script.value.test_case_id === 0? 'Script setup': script.value.summary }}</td>
                 <td>{{ parseInputs(script.value.inputs)  }}</td>
                 <td>
-                  <app-smart-label [value]="script.value.result" [type]="script.value.result"></app-smart-label>
-                  <ng-container *ngIf="hasReRuns(script.value)">
-                    &nbsp;
-                    <span (click)="setReRunInfo(script.value)" class="btn btn-link">Re-run history</span>
-                  </ng-container>
+                  <ng-container *ngIf="hasReRuns(script.value); else NonReRunResult">
+                    <div class="text-left">
+                      <p style="margin-bottom: unset">Latest-run: <app-smart-label [value]="script.value.result" [type]="script.value.result"></app-smart-label></p>
+                      <p style="margin-bottom: unset">Original: <app-smart-label [value]="getOriginalResult(script.value)" [type]="getOriginalResult(script.value)"></app-smart-label></p>
+                      <p><span style="text-align: unset" (click)="setReRunInfo(script.value)" class="pseudo-anchor">Re-run history</span></p>
+                    </div>
 
+                  </ng-container>
+                  <ng-template #NonReRunResult>
+                    <app-smart-label [value]="script.value.result" [type]="script.value.result"></app-smart-label>
+                  </ng-template>
                 </td>
                 <td>{{ localizeTime(script.value.started_time) }}</td>
-                <td><a [routerLink]=""
+                <td>
+                  <ng-container *ngIf="hasReRuns(script.value); else NonReRunHtml">
+                    <p>Latest: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, script.value.log_prefix)">HTML</a></p>
+                    <p>Original: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(executionId, script.value.script_path, script.value.log_prefix)">HTML</a>
+                    </p>
+                  </ng-container>
+                  <ng-template #NonReRunHtml>
+                    <a [routerLink]=""
                        (click)="getHtmlLogPath(executionId, script.value.script_path, script.value.log_prefix)">HTML</a>
+                  </ng-template>
                 </td>
-                <td><a [routerLink]=""
-                       (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</a>
-                </td>
+                <td>
+                  <ng-container *ngIf="hasReRuns(script.value); else NonReRunConsole">
+                    <p>Latest: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, script.value.log_prefix)">Console</a></p>
+                    <p>Original: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</a>
+                    </p>
+                  </ng-container>
+                  <ng-template #NonReRunConsole>
+                    <a [routerLink]="" (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</a>
+
+                  </ng-template>
+               </td>
                 <!--td>
 									<button data-placement="top" data-toggle="tooltip" title="Re-run"
 													(click)="rerunClick(executionId, script.value.test_case_id, script.value.script_path)"
