@@ -113,9 +113,12 @@
                 <td>
                   <ng-container *ngIf="hasReRuns(script.value); else NonReRunResult">
                     <div class="text-left">
-                      <p style="margin-bottom: unset">Latest-run: <app-smart-label [value]="script.value.result" [type]="script.value.result"></app-smart-label></p>
-                      <p style="margin-bottom: unset">Original: <app-smart-label [value]="getOriginalResult(script.value)" [type]="getOriginalResult(script.value)"></app-smart-label></p>
-                      <p><span style="text-align: unset" (click)="setReRunInfo(script.value)" class="pseudo-anchor">Re-run history</span></p>
+                      <ul>
+                        <li style="margin-bottom: unset">Latest-run: <app-smart-label [value]="script.value.result" [type]="script.value.result"></app-smart-label></li>
+                        <li style="margin-bottom: unset">Original: <app-smart-label [value]="getOriginalResult(script.value)" [type]="getOriginalResult(script.value)"></app-smart-label></li>
+                        <li><span style="text-align: unset" (click)="setReRunInfo(script.value)" class="pseudo-anchor">Re-run history</span></li>
+
+                      </ul>
                     </div>
 
                   </ng-container>
@@ -126,9 +129,10 @@
                 <td>{{ localizeTime(script.value.started_time) }}</td>
                 <td>
                   <ng-container *ngIf="hasReRuns(script.value); else NonReRunHtml">
-                    <p>Latest: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, script.value.log_prefix)">HTML</a></p>
-                    <p>Original: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(executionId, script.value.script_path, script.value.log_prefix)">HTML</a>
-                    </p>
+                    <ul>
+                      <li>Latest: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, script.value.log_prefix)">HTML</a></li>
+                      <li>Original: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(executionId, script.value.script_path, script.value.log_prefix)">HTML</a>
+                    </ul>
                   </ng-container>
                   <ng-template #NonReRunHtml>
                     <a [routerLink]=""
@@ -137,9 +141,10 @@
                 </td>
                 <td>
                   <ng-container *ngIf="hasReRuns(script.value); else NonReRunConsole">
-                    <p>Latest: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, script.value.log_prefix)">Console</a></p>
-                    <p>Original: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</a>
-                    </p>
+                    <ul>
+                      <li>Latest: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, script.value.log_prefix)">Console</a></li>
+                      <li>Original: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</a>
+                    </ul>
                   </ng-container>
                   <ng-template #NonReRunConsole>
                     <a [routerLink]="" (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</a>
@@ -162,7 +167,7 @@
     <div *ngIf="showReRunPanel" class="col">
       <div id="re-run-panel" class="card">
         <div class="card-header">
-          Re-run history Test-case ID: {{ currenReRunScriptInfo.test_case_id }}
+          Re-run history: <b>{{ currenReRunScriptInfo.script_path }}</b> Test-case ID: {{ currenReRunScriptInfo.test_case_id }}
           <span class="float-sm-right pseudo-anchor" (click)="showReRunPanel = false">Close</span>
 
         </div>
@@ -193,7 +198,7 @@
             </tr>
             <tr *ngFor="let reRun of currenReRunHistory">
               <td>
-                {{ reRun.result }}
+                <app-smart-label [value]="reRun.result" [type]="reRun.result"></app-smart-label>
               </td>
               <td>
                 {{ reRun.re_run_result }}
@@ -208,13 +213,13 @@
               <td>
                 {{ localizeTime(reRun.started_time) }}
               </td>
-              <td>
+              <td *ngIf="testCaseInfo.hasOwnProperty(reRun.re_run_test_case_execution_id)">
                 <a [routerLink]=""
-                   (click)="getHtmlLogPath(reRun.re_run_suite_execution_id, currenReRunScriptInfo.script_path, currenReRunScriptInfo.log_prefix)">HTML</a>
+                   (click)="getHtmlLogPath(reRun.re_run_suite_execution_id, currenReRunScriptInfo.script_path, testCaseInfo[reRun.re_run_test_case_execution_id].log_prefix)">HTML</a>
               </td>
-              <td>
+              <td *ngIf="testCaseInfo.hasOwnProperty(reRun.re_run_test_case_execution_id)">
                 <a [routerLink]=""
-                   (click)="getConsoleLogPath(reRun.re_run_suite_execution_id, currenReRunScriptInfo.script_path, currenReRunScriptInfo.log_prefix)">Console</a>
+                   (click)="getConsoleLogPath(reRun.re_run_suite_execution_id, currenReRunScriptInfo.script_path, testCaseInfo[reRun.re_run_test_case_execution_id].log_prefix)">Console</a>
               </td>
             </tr>
           </table>

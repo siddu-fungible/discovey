@@ -392,6 +392,7 @@ class Linux(object, ToDictMixin):
                 self.sendline(c)
                 if wait_until and (len(command_lines) == 1):
                     try:
+                        self.handle.timeout = wait_until_timeout  # Pexpect does not honor timeouts
                         self.handle.expect(wait_until, timeout=wait_until_timeout)
                     except (pexpect.EOF):
                         self.disconnect()
@@ -813,6 +814,7 @@ class Linux(object, ToDictMixin):
             options_str += "-E "
         cmd = 'sudo {}bash'.format(options_str)
         output = self.command(cmd, custom_prompts={prompt: self.ssh_password, mac_prompt: self.ssh_password})
+        result = True
         if "command not found" in output:
             result = False
         return result
@@ -2002,6 +2004,7 @@ class Linux(object, ToDictMixin):
         c = copy.copy(self)
         try:
             c.handle = None
+            c.buffer = None
         except:
             pass
         return c

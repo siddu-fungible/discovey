@@ -182,7 +182,7 @@ export class PerformanceComponent implements OnInit {
     return this.activatedRoute.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('goto')) {
         let queryPath = params['goto'];
-        console.log("QueryPath: " + this.queryPath);
+        // console.log("QueryPath: " + this.queryPath);
         return of(queryPath);
       }
       else {
@@ -420,7 +420,7 @@ export class PerformanceComponent implements OnInit {
     node.grid = [];
     let maxRowsInMiniChartGrid = 10;
     let maxColumns = this.numGridColumns;
-    console.log("Prepare Grid nodes");
+    // console.log("Prepare Grid nodes");
     let tempGrid = [];
     let rowIndex = 0;
     let childNodes = [];
@@ -941,7 +941,7 @@ export class PerformanceComponent implements OnInit {
       path = path.replace(this.gotoQueryBaseUrl, "");
       let parts = path.split("/");
       result = this._doPathToGuid(this.flatNodes[0], parts);
-      console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
+      // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 
     } catch (e) {
 
@@ -1005,6 +1005,19 @@ export class PerformanceComponent implements OnInit {
       this.showBugPanel = false;
     }
 
+  }
+
+  openScoreTip(t): void {
+    let x = <HTMLElement>document.getElementById("score-info");
+    let rect = x.getBoundingClientRect();
+    console.log(rect.top);
+    console.log(rect.left);
+    t.open();
+    setTimeout(key => {
+      let tip = <HTMLElement>document.getElementById("score-info").getElementsByClassName("tooltip")[0];
+      tip.setAttribute("style", "transform: translate(" + rect.left + "px ," + "0) !important");
+      console.log(tip.style.cssText);
+    }, 20);
   }
 
 }

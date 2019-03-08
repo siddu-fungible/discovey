@@ -55,4 +55,10 @@ export class RegressionService implements OnInit{
     return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
   }
 
+  getTestCaseExecution(executionId) {
+    return this.apiService.get('/regression/test_case_execution_info/' + executionId).pipe(switchMap((response) => {
+      return of(response.data);
+    }))
+  }
+
 }

@@ -35,6 +35,13 @@ def run_snapshot():
     else:
         return None
 
+def exit_snapshot():
+
+    global snapshot_obj
+    if snapshot_obj:
+        return snapshot_obj.do_exit()
+    else:
+        return None
 
 def exit_snapshot():
 

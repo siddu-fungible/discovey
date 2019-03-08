@@ -903,6 +903,24 @@ def jiras(request, script_pk, jira_id=None):
 
 @csrf_exempt
 @api_safe_json_response
+def test_case_execution_info(request, test_case_execution_id):
+    """
+    This one does not involve suite execution id
+    :param request:
+    :param test_case_execution_id:
+    :return:
+    """
+    result = {}
+    test_case_execution = TestCaseExecution.objects.get(execution_id=test_case_execution_id)
+    result["execution_id"] = test_case_execution.execution_id
+    result["suite_execution_id"] = test_case_execution.suite_execution_id
+    result["log_prefix"] = test_case_execution.log_prefix
+    result["re_run_history"] = test_case_execution.re_run_history
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
 def script_execution(request, pk):
     result = None
     try:
