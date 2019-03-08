@@ -1019,7 +1019,8 @@ export class PerformanceComponent implements OnInit {
     // let xpix = tipText['x'] + 2;
     // let ypix = tipText['y'] - 20;
     // console.log(xpix, ypix);
-    tip.style.cssText += 'transform = translate(' + rect.left + 'px ,' + rect.top + 'px) !important';
+    tip.setAttribute("style", "transform: translate(" + rect.left + "px ," + rect.top + "px) !important");
+    //tip.style.transform = 'translate(' + rect.left + 'px ,' + rect.top + 'px) !important';
     console.log(tip.style.cssText);
   }
 
