@@ -813,6 +813,7 @@ class Linux(object, ToDictMixin):
             options_str += "-E "
         cmd = 'sudo {}bash'.format(options_str)
         output = self.command(cmd, custom_prompts={prompt: self.ssh_password, mac_prompt: self.ssh_password})
+        result = True
         if "command not found" in output:
             result = False
         return result
@@ -2002,6 +2003,7 @@ class Linux(object, ToDictMixin):
         c = copy.copy(self)
         try:
             c.handle = None
+            c.buffer = None
         except:
             pass
         return c
