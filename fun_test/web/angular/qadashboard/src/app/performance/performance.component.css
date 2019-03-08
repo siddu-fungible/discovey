@@ -172,7 +172,7 @@ arrow-icon {
 
 ::ng-deep #score-info > .tooltip {
   top: 1px !important;
-  transform: translate(244px, 0) !important;
+  /*transform: translate(244px, 0) !important;*/
 }
 ::ng-deep #score-info > .tooltip.show {
   opacity: 1.0 !important;
@@ -182,7 +182,7 @@ arrow-icon {
   border-right-color: black !important;
 }
 ::ng-deep #score-info > .tooltip > .arrow {
-  top: calc(7% - .4rem) !important;
+  top: calc(4% - .4rem) !important;
 }
 ::ng-deep .tooltip-inner a {
   /*display: table-cell !important;*/
