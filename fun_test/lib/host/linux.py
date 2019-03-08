@@ -418,12 +418,12 @@ class Linux(object, ToDictMixin):
                     self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
                 except pexpect.EOF:
                     self.disconnect()
-                    return self.command(command=command,
-                                        sync=sync, timeout=timeout,
-                                        custom_prompts=custom_prompts,
-                                        wait_until=wait_until,
-                                        wait_until_timeout=wait_until_timeout,
-                                        include_last_line=include_last_line)
+                    # return self.command(command=command,
+                    #                    sync=sync, timeout=timeout,
+                    #                    custom_prompts=custom_prompts,
+                    #                    wait_until=wait_until,
+                    #                    wait_until_timeout=wait_until_timeout,
+                    #                    include_last_line=include_last_line)
                 except Exception as ex:
                     self.clean()
                     raise ex
