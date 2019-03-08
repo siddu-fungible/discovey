@@ -26,7 +26,7 @@ from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
 
-# from web.fun_test.models import SuiteReRunInfo, JobQueue, JobSpec
+from web.fun_test.models import SuiteReRunInfo, JobQueue, JobSpec
 import logging
 import subprocess
 import dateutil.parser
@@ -35,7 +35,7 @@ from django.apps import apps
 import time
 from django.db import transaction
 from django.db.models import Q
-# from scheduler.scheduler_global import SchedulerJobPriority
+from scheduler.scheduler_global import SchedulerJobPriority
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
