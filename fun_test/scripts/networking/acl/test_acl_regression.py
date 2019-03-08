@@ -135,7 +135,7 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
                                   actual=rx_stream_result_framecount,
                                   message=checkpoint)
     if acl_action == ACL_ACTION_COLOR:
-        print get_pkt_color_from_snapshot(snapshot_output=snapshot_output)
+        fun_test.log(get_pkt_color_from_snapshot(snapshot_output=snapshot_output))
     elif acl_action == ACL_ACTION_LOG:
         print get_log_from_snapshot(snapshot_output=snapshot_output)
 
@@ -268,12 +268,15 @@ class AclQosColor(FunTestCase):
         compare_acl_stream(active_stream=self.stream_obj_nu_nu, send_port=nu_ing_port, receive_port=nu_eg_port,
                            all_streams=all_streams, acl_action=self.acl_action, send_port_no=dut_config['ports'][0],
                            receive_port_no=dut_config['ports'][1])
-        compare_acl_stream(self.stream_obj_nu_hnu, nu_ing_port, hnu_eg_port, hnu_ing=False, hnu_eg=True,
-                           all_streams=all_streams, acl_action=self.acl_action)
-        compare_acl_stream(self.stream_obj_hnu_hnu, hnu_ing_port, hnu_eg_port, hnu_ing=True, hnu_eg=True,
-                           all_streams=all_streams, acl_action=self.acl_action)
-        compare_acl_stream(self.stream_obj_hnu_nu, hnu_ing_port, nu_eg_port, hnu_ing=True, hnu_eg=False,
-                           all_streams=all_streams, acl_action=self.acl_action)
+        compare_acl_stream(active_stream=self.stream_obj_nu_hnu, send_port=nu_ing_port, receive_port=hnu_eg_port,
+                           send_port_no=dut_config['ports'][0], receive_port_no=dut_config['ports'][3], hnu_ing=False,
+                           hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action)
+        compare_acl_stream(active_stream=self.stream_obj_hnu_hnu, send_port=hnu_ing_port, receive_port=hnu_eg_port,
+                           send_port_no=dut_config['ports'][2], receive_port_no=dut_config['ports'][3], hnu_ing=True,
+                           hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action)
+        compare_acl_stream(active_stream=self.stream_obj_hnu_nu, send_port=hnu_ing_port, receive_port=nu_eg_port,
+                           send_port_no=dut_config['ports'][2], receive_port_no=dut_config['ports'][1], hnu_ing=True,
+                           hnu_eg=False, all_streams=all_streams, acl_action=self.acl_action)
 
     def cleanup(self):
 
