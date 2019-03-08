@@ -7,9 +7,9 @@
         <tr>
           <th class="text-center">Aspect</th>
           <th id="score-info" class="text-center">
-            <label class="no-margin" data-placement="right" triggers="manual" #t="ngbTooltip" (click)="openScoreTip(t)"
+            <label class="no-margin" data-placement="right" triggers="click"
                    [ngbTooltip]="ScoreInfo" [autoClose]="'outside'">
-              Score <sup><i id="score-info-icon" class="fa fa-info-circle" style="padding: 2px"></i></sup></label>
+              Score <sup><i class="fa fa-info-circle" style="padding: 2px"></i></sup></label>
             <ng-template #LeafScoreInfo>
               <div style="color: black">
                 <p><strong>Score for leaf metrics:</strong><br/> The score approaches 100 as the actual value approaches
