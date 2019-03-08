@@ -7,10 +7,10 @@ class XtsOpenssl(CryptoTemplate):
 
     def install_ssl(self):
         self.host.command("wget https://ftp.openssl.org/source/old/1.0.1/openssl-1.0.1e.tar.gz -P /tmp/xts_ssl",
-                          timeout=80)
-        self.host.command("cd /tmp/xts_ssl && tar xf openssl-1.0.1e.tar.gz", timeout=80)
+                          timeout=120)
+        self.host.command("cd /tmp/xts_ssl && tar xf openssl-1.0.1e.tar.gz", timeout=120)
         self.host.command("cd /tmp/xts_ssl/openssl-1.0.1e && ./config &> /dev/null && make &> /dev/null && cd",
-                          timeout=180)
+                          timeout=300)
         check_ssl = self.host.command("/tmp/xts_ssl/openssl-1.0.1e/apps/openssl version")
         if "OpenSSL 1.0.1e" in check_ssl:
             return True
