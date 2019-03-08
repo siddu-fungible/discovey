@@ -1,4 +1,6 @@
 [
   {"info": {"tags": ["storage-sanity"]}},
-  {"path": "storage/zip_lsv.py"}
+  {"path": "storage/zip_lsv.py"},
+  {"path": "storage/zip_ec_voulme_qemu.py"}
+
 ]
