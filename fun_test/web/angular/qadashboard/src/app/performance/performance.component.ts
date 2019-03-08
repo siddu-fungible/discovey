@@ -1015,7 +1015,7 @@ export class PerformanceComponent implements OnInit {
     t.open();
     setTimeout(key => {
       let tip = <HTMLElement>document.getElementById("score-info").getElementsByClassName("tooltip")[0];
-      tip.setAttribute("style", "transform: translate(" + rect.left + "px ," + "0) !important");
+      tip.setAttribute("style", "transform: translate(" + rect.left + "px ," + rect.top + ") !important");
       console.log(tip.style.cssText);
     }, 20);
   }
