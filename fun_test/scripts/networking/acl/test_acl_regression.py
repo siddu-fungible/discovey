@@ -77,18 +77,17 @@ def create_streams(tx_port, dip, sip, dmac, s_port=1024, d_port=1024, sync_bit='
     return stream_obj
 
 
-def compare_acl_stream(active_stream, send_port, receive_port, acl_action, hnu_ing = False, hnu_eg=False, all_streams=[]):
-    setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip=dpc_server_ip,
-                   dpc_tcp_proxy_port=dpc_server_port)
+def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_port_no, receive_port_no,
+                       hnu_ing=False, hnu_eg=False, all_streams=[]):
 
     checkpoint = "Clear FPG port stats on DUT"
     shape = 0
-    if hnu_ing:
+    if send_port_no == 2 or send_port_no == 3:
         shape = 1
-    result = network_controller_obj.clear_port_stats(port_num=send_port, shape=shape)
-    fun_test.simple_assert(result, "Clear FPG stats for port %d" % send_port)
+    result = network_controller_obj.clear_port_stats(port_num=send_port_no, shape=shape)
+    fun_test.simple_assert(result, "Clear FPG stats for port %d" % send_port_no)
     shape = 0
-    if hnu_eg:
+    if receive_port_no == 2 or receive_port_no == 3:
         shape = 1
     result = network_controller_obj.clear_port_stats(port_num=receive_port, shape=shape)
     fun_test.simple_assert(result, "Clear FPG stats for port %d" % receive_port)
@@ -99,7 +98,9 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, hnu_i
     obj_list = []
     obj_list.append(active_stream)
     template_obj.activate_stream_blocks(stream_obj_list=obj_list)
-
+    network_controller_obj.disconnect()
+    setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip=dpc_server_ip,
+                   dpc_tcp_proxy_port=dpc_server_port)
     checkpoint = "Start traffic from %s port for %d secs stream" % (send_port, TRAFFIC_DURATION)
     result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[send_port]])
     fun_test.simple_assert(expression=result, message=checkpoint)
@@ -107,11 +108,12 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, hnu_i
     fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
     checkpoint = "Ensure tx and rx frame count matches on Spirent for NU NU traffic"
     snapshot_output = run_snapshot()
-    ing_port_results = network_controller_obj.peek_fpg_port_stats(nu_ing_port, hnu=hnu_ing)
-    fun_test.simple_assert(ing_port_results, "Fetch DUT Rx port results. FPG%d" % send_port)
+    exit_snapshot()
+    ing_port_results = network_controller_obj.peek_fpg_port_stats(send_port_no, hnu=hnu_ing)
+    fun_test.simple_assert(ing_port_results, "Fetch DUT Rx port results. FPG%d" % send_port_no)
 
-    eg_port_results = network_controller_obj.peek_fpg_port_stats(nu_eg_port, hnu=hnu_eg)
-    fun_test.simple_assert(eg_port_results, "Fetch DUT Tx port results. FPG%d" % receive_port)
+    eg_port_results = network_controller_obj.peek_fpg_port_stats(receive_port_no, hnu=hnu_eg)
+    fun_test.simple_assert(eg_port_results, "Fetch DUT Tx port results. FPG%d" % receive_port_no)
 
     checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
     frames_received = get_dut_output_stats_value(result_stats=ing_port_results, stat_type=FRAMES_RECEIVED_OK,
@@ -263,8 +265,9 @@ class AclQosColor(FunTestCase):
         all_streams.append(self.stream_obj_nu_hnu)
         all_streams.append(self.stream_obj_hnu_hnu)
         all_streams.append(self.stream_obj_hnu_nu)
-        compare_acl_stream(self.stream_obj_nu_nu, nu_ing_port, nu_eg_port, all_streams=all_streams,
-                           acl_action=self.acl_action)
+        compare_acl_stream(active_stream=self.stream_obj_nu_nu, send_port=nu_ing_port, receive_port=nu_eg_port,
+                           all_streams=all_streams, acl_action=self.acl_action, send_port_no=dut_config['ports'][0],
+                           receive_port_no=dut_config['ports'][1])
         compare_acl_stream(self.stream_obj_nu_hnu, nu_ing_port, hnu_eg_port, hnu_ing=False, hnu_eg=True,
                            all_streams=all_streams, acl_action=self.acl_action)
         compare_acl_stream(self.stream_obj_hnu_hnu, hnu_ing_port, hnu_eg_port, hnu_ing=True, hnu_eg=True,
@@ -318,6 +321,8 @@ class AclQosLog(AclQosColor):
 
     def run(self):
         super(AclQosLog, self).run()
+
+
 if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(AclQosColor())
