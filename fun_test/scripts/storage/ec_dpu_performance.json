@@ -131,7 +131,7 @@
     "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 300},
     "fio_modes": ["randwrite", "randread"],
-    "fio_pass_threshold": 0.05,
+    "fio_pass_threshold": 0.1,
     "volume_pass_threshold": 40,
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
@@ -179,7 +179,7 @@
         "ec": {
           "0": {
             "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 496256)"},
-            "mbuf": {"bm_in_use": "(0, 3)", "bm_num_bytes": "(0, 12288)", "in_use": "(0, 20)", "num_bytes": "(0, 81920)"},
+            "mbuf": {"bm_in_use": "(0, 3)", "bm_num_bytes": "(0, 12288)", "in_use": "(0, 31)", "num_bytes": "(0, 126976)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         }
