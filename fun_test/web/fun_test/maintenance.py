@@ -929,7 +929,7 @@ if __name__ == "__main_change_max__":
             entry.save()
     print "maximum values for all data sets set to -1"
 
-if __name__ == "__main__":
+if __name__ == "__main_create_pps__":
     flow_types = ["HU_HU_NFCP", "HU_NU_NFCP", "NU_HU_NFCP"]
     model_name = "NuTransitPerformance"
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -969,3 +969,16 @@ if __name__ == "__main__":
         mmt.save()
     print "create pps charts for 3 nw flow type metrics"
 
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.base_line_date:
+            if str(entry.base_line_date).startswith('2019-04-01'):
+                print (entry.chart_name, str(entry.base_line_date))
+                if entry.chart_name == "Compression":
+                    base_line_date = datetime(year=2019, month=1, day=30, minute=0, hour=0, second=0)
+                else:
+                    base_line_date = datetime(year=2019, month=2, day=7, minute=0, hour=0, second=0)
+                entry.base_line_date = base_line_date
+                entry.save()
+                print (entry.chart_name, str(entry.base_line_date))

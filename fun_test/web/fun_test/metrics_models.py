@@ -20,7 +20,7 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 LAST_ANALYTICS_DB_STATUS_UPDATE = "last_status_update"
-BASE_LINE_DATE = datetime(year=2019, month=4, day=1)
+BASE_LINE_DATE = datetime(year=2018, month=4, day=1)
 
 class MetricsGlobalSettings(models.Model):
     tolerance_percentage = models.FloatField(default=3.0)
