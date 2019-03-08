@@ -18,9 +18,11 @@ class Setup(FunTestScript):
         """)
 
     def setup(self):
+        global network_controller_obj
+        network_controller_obj = NetworkController(dpc_server_ip='10.1.21.120', dpc_server_port=40221)
+        fun_test.log("Network done1")
 
-        setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip='10.1.40.24',
-                       dpc_tcp_proxy_port=40221)
+
 
     def cleanup(self):
         pass
@@ -38,14 +40,25 @@ class SnapshotTest(FunTestCase):
                                   """)
 
     def setup(self):
+        network_controller_obj.echo_hello()
+        fun_test.log("echo done 1")
+
+        network_controller_obj.disconnect()
+
+        setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip='10.1.21.120',
+                       dpc_tcp_proxy_port=40221)
         fun_test.sleep(message="wait for traffic", seconds=10)
         ss = run_snapshot()
+        exit_snapshot()
         fun_test.log(ss)
-        # ss1 = fun_test.parse_file_to_json('snapshot_output.json')
+
         print get_snapshot_main_sfg(ss)
+        dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(5)
+        fun_test.log(dut_rx_port_results)
         print get_snapshot_meter_id(snapshot_output=ss)
         print get_snapshot_meter_id(snapshot_output=ss, erp=True)
-        print get_snapshot_acl_label(ss)
+        print get_snapshot_acl_label(ss, erp=True)
+        print get_pkt_color_from_snapshot(ss, erp=True)
 
     def run(self):
         pass

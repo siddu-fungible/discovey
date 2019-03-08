@@ -35,6 +35,13 @@ def run_snapshot():
     else:
         return None
 
+def exit_snapshot():
+
+    global snapshot_obj
+    if snapshot_obj:
+        return snapshot_obj.do_exit()
+    else:
+        return None
 
 def get_snapshot_main_sfg(snapshot_output, prv=False, md=False, frv=False, psw_ctl=False):
     result = {}
@@ -69,6 +76,30 @@ def get_snapshot_meter_id(snapshot_output, egress=False, erp=False):
                 result = snapshot_output['Main SFG']['MD']['meter1']
             else:
                 result = snapshot_output['Main SFG']['MD']['meter0']
+    except Exception as ex:
+        fun_test.critical("Exception : %s" % ex)
+    return result
+
+
+def get_pkt_color_from_snapshot(snapshot_output, erp=False):
+    result = None
+    try:
+        if erp:
+            result = snapshot_output['ERP SFG']['MD']['pkt_color']
+        else:
+            result = snapshot_output['Main SFG']['MD']['pkt_color']
+    except Exception as ex:
+        fun_test.critical("Exception : %s" % ex)
+    return result
+
+
+def get_log_from_snapshot(snapshot_output, erp=False):
+    result = None
+    try:
+        if erp:
+            result = snapshot_output['Main SFG']['MD']['acl_log']
+        else:
+            result = snapshot_output['Main SFG']['MD']['acl_log']
     except Exception as ex:
         fun_test.critical("Exception : %s" % ex)
     return result
