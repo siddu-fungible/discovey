@@ -1007,4 +1007,17 @@ export class PerformanceComponent implements OnInit {
 
   }
 
+  openScoreTip(t): void {
+    let x = <HTMLElement>document.getElementById("score-info");
+    let rect = x.getBoundingClientRect();
+    console.log(rect.top);
+    console.log(rect.left);
+    t.open();
+    setTimeout(key => {
+      let tip = <HTMLElement>document.getElementById("score-info").getElementsByClassName("tooltip")[0];
+      tip.setAttribute("style", "transform: translate(" + rect.left + "px ," + "0) !important");
+      console.log(tip.style.cssText);
+    }, 20);
+  }
+
 }
