@@ -109,6 +109,7 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     checkpoint = "Ensure tx and rx frame count matches on Spirent for NU NU traffic"
     snapshot_output = run_snapshot()
     exit_snapshot()
+    fun_test.simple_assert(expression=snapshot_output, message="Snapshot output received")
     ing_port_results = network_controller_obj.peek_fpg_port_stats(send_port_no, hnu=hnu_ing)
     fun_test.simple_assert(ing_port_results, "Fetch DUT Rx port results. FPG%d" % send_port_no)
 
@@ -118,8 +119,7 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
     frames_received = get_dut_output_stats_value(result_stats=ing_port_results, stat_type=FRAMES_RECEIVED_OK,
                                                  tx=False)
-    frames_transmitted = get_dut_output_stats_value(result_stats=eg_port_results,
-                                                       stat_type=FRAMES_TRANSMITTED_OK)
+    frames_transmitted = get_dut_output_stats_value(result_stats=eg_port_results, stat_type=FRAMES_TRANSMITTED_OK)
     fun_test.log("Frames Received on FPG%s: %s, Frames Transmitted on FPG%s: %s"
                  % (send_port, frames_received, receive_port, frames_transmitted))
     fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
@@ -134,6 +134,8 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     fun_test.test_assert_expected(expected=tx_stream_result_framecount,
                                   actual=rx_stream_result_framecount,
                                   message=checkpoint)
+    fun_test.log(acl_action)
+    fun_test.log(get_pkt_color_from_snapshot(snapshot_output=snapshot_output))
     if acl_action == ACL_ACTION_COLOR:
         fun_test.log(get_pkt_color_from_snapshot(snapshot_output=snapshot_output))
     elif acl_action == ACL_ACTION_LOG:
@@ -248,7 +250,7 @@ class AclQosColor(FunTestCase):
                                                 sip=self.acl_fields_dict_qos['source_ip'],
                                                 s_port=self.acl_fields_dict_qos['source_port_eg_hnu'],
                                                 d_port=self.acl_fields_dict_qos['dest_port_eg_hnu'])
-        self.stream_obj_hnu_hnu = create_streams(tx_port=nu_ing_port,
+        self.stream_obj_hnu_hnu = create_streams(tx_port=hnu_ing_port,
                                                  dmac=self.routes_config['routermac'],
                                                  dip=self.l3_config['hnu_destination_ip1'],
                                                  sip=self.acl_fields_dict_qos['source_ip'],
