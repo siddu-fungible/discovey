@@ -1013,15 +1013,19 @@ export class PerformanceComponent implements OnInit {
     console.log(rect.top);
     console.log(rect.left);
     t.open();
-    let tip = <HTMLElement>document.getElementById("score-info").getElementsByClassName("tooltip")[0];
+    setTimeout(key => {
+      let tip = <HTMLElement>document.getElementById("score-info").getElementsByClassName("tooltip")[0];
+      tip.setAttribute("style", "transform: translate(" + rect.left + "px ," + rect.top + "px) !important");
+    //tip.style.transform = 'translate(' + rect.left + 'px ,' + rect.top + 'px) !important';
+    console.log(tip.style.cssText);
+    }, 20);
+
     // let tipText = tip.children[0].getClientRects()[0];
     // console.log(tipText);
     // let xpix = tipText['x'] + 2;
     // let ypix = tipText['y'] - 20;
     // console.log(xpix, ypix);
-    tip.setAttribute("style", "transform: translate(" + rect.left + "px ," + rect.top + "px) !important");
-    //tip.style.transform = 'translate(' + rect.left + 'px ,' + rect.top + 'px) !important';
-    console.log(tip.style.cssText);
+
   }
 
 }
