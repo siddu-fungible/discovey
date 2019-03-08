@@ -1,0 +1,152 @@
+{
+  "RndDataWriteAndRead25PctWithDataVolumeFailure": {
+    "ndata_partition_start_range": 8,
+    "ndata_partition_end_range": 8,
+    "nparity_start_range": 4,
+    "nparity_end_range": 4,
+    "max_parity": 8,
+    "max_dpcsh_cmds": 32,
+    "track_num_cmds": 0,
+    "compress": true,
+    "encrypt": false,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter": "FILTER_TYPE_DEFLATE",
+    "compression_pct": 75,
+    "reboot_after_config": 1,
+    "volumes": [
+      "ndata",
+      "nparity",
+      "ec",
+      "lsv"
+    ],
+    "volume_types": {
+      "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+      "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+      "ec": "VOL_TYPE_BLK_EC",
+      "lsv": "VOL_TYPE_BLK_LSV",
+      "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+    },
+    "volume_capacity": {
+      "ndata": 16777216,
+      "nparity": 16777216,
+      "ec": 16777216,
+      "jvol": 524288
+    },
+    "volume_block": {
+      "ndata": 4096,
+      "nparity": 4096,
+      "ec": 4096,
+      "lsv": 4096,
+      "jvol": 512
+    },
+    // timeout used for the storage controller
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "use_lsv": 1,
+    "ns_id": 1,
+    "nvme_device": "/dev/nvme0",
+    "data_pattern": "/dev/urandom",
+    "input_data": "/tmp/input",
+    "output_data": "/tmp/output",
+    "dataset_size": 262144,
+    // Head room needed for the LS volume in percentage
+    "lsv_pct": 0.52,
+    "check_lsv_stats": 0,
+    "expected_compressed_bytes": 1080,
+    "zip_params_to_monitor": {
+      "accumulated_out_bytes": 1080,
+      "compress_reqs": 72,
+      "compress_done": 54,
+      "compress_fails": 0,
+      "uncompress_reqs": 0,
+      "uncompress_done": 0,
+      "uncompress_fails": 0
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    }
+  },
+
+  "ZeroDataWriteAndReadWithDataVolumeFailure": {
+    "ndata_partition_start_range": 8,
+    "ndata_partition_end_range": 8,
+    "nparity_start_range": 4,
+    "nparity_end_range": 4,
+    "max_parity": 8,
+    "max_dpcsh_cmds": 32,
+    "track_num_cmds": 0,
+    "compress": true,
+    "encrypt": false,
+    "compression_pct": 100,
+    "reboot_after_config": 1,
+    "zip_effort": "ZIP_EFFORT_AUTO",
+    "zfilter" : "FILTER_TYPE_DEFLATE",
+    "volumes": ["ndata", "nparity", "ec", "lsv"],
+    "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                     "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+    "volume_capacity": {"ndata": 16777216, "nparity": 16777216, "ec": 16777216, "jvol": 524288},
+    "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+    // timeout used for the storage controller
+    "command_timeout": 50,
+    "iter_interval": 2,
+    "use_lsv": 1,
+    "ns_id": 1,
+    "nvme_device": "/dev/nvme0",
+    "data_pattern": "/dev/zero",
+    "input_data": "/tmp/input",
+    "output_data": "/tmp/output",
+    "dataset_size": 262144,
+    // Head room needed for the LS volume in percentage
+    "lsv_pct": 0.52,
+    "check_lsv_stats": 0,
+    "expected_compressed_bytes": 1440,
+    "zip_params_to_monitor": {
+      "accumulated_out_bytes": 1080,
+      "compress_reqs": 72,
+      "compress_done": 72,
+      "compress_fails": 0,
+      "uncompress_reqs": 0,
+      "uncompress_done": 0,
+      "uncompress_fails": 0
+    },
+    "params_to_monitor_per_attach": {
+      "vol_filter_create_done":2,
+      "zipfilter_create":2,
+      "vol_uncompress_filter_added":1,
+      "vol_compress_filter_added":1,
+      "vol_decrypt_filter_added":0,
+      "vol_encrypt_filter_added":0,
+      "fun_crypto_aes_setkey":0,
+      "cryptofilter_xform_flow_alloc_done":0,
+      "hw_crypto_passthrough_done":0,
+      "hw_crypto_aes_keyx_hw_done":0,
+      "cryptofilter_create":0,
+      "fun_crypto_setkey":0
+    },
+    // encryption is disabled for this test
+    "enc_params_to_monitor": {
+      "cryptofilter_aes_xts":0,
+      "cryptofilter_done":0,
+      "fun_crypto_aes_wu":0,
+      "hw_crypto_aes_hw_done":0
+    }
+  }
+}
