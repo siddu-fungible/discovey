@@ -392,6 +392,7 @@ class Linux(object, ToDictMixin):
                 self.sendline(c)
                 if wait_until and (len(command_lines) == 1):
                     try:
+                        self.handle.timeout = wait_until_timeout  # Pexpect does not honor timeouts
                         self.handle.expect(wait_until, timeout=wait_until_timeout)
                     except (pexpect.EOF):
                         self.disconnect()
