@@ -89,8 +89,8 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     shape = 0
     if receive_port_no == 2 or receive_port_no == 3:
         shape = 1
-    result = network_controller_obj.clear_port_stats(port_num=receive_port, shape=shape)
-    fun_test.simple_assert(result, "Clear FPG stats for port %d" % receive_port)
+    result = network_controller_obj.clear_port_stats(port_num=receive_port_no, shape=shape)
+    fun_test.simple_assert(result, "Clear FPG stats for port %d" % receive_port_no)
 
     fun_test.add_checkpoint(checkpoint=checkpoint)
 
@@ -299,7 +299,7 @@ class AclQosLog(AclQosColor):
     stream_obj_hnu_hnu = None
     stream_obj_hnu_nu = None
     capture_results = None
-    acl_fields_dict_qos = acl_json_output['qos_log']
+    # acl_fields_dict_qos = acl_json_output['qos_log']
     acl_action = ACL_ACTION_LOG
 
     def describe(self):
