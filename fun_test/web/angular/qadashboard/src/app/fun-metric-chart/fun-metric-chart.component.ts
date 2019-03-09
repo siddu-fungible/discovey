@@ -532,7 +532,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     for (let dataset of this.expectedValues) {
       if (dataset.show) {
         let line = {};
-        line["text"] = dataset.name;
+        line["text"] = "Expected for " + dataset.name;
         line["value"] = dataset.value;
         if (maximum === null) {
           maximum = dataset.value;
@@ -567,6 +567,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     } else {
       this.yMax = null;
     }
+    this.yMax = this.yMax + (Number(this.yMax) * 0.05);
   }
 
   //fetch the data from backend
