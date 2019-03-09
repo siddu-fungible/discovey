@@ -90,7 +90,7 @@
       <!--</span>-->
       <br>
       <div *ngIf="modelName !== 'MetricContainer'">
-        <b>Expected values:</b>&nbsp;
+        <b>Show expected values:</b>&nbsp;
         <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
         <a *ngIf="showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>
         <table>
@@ -147,6 +147,7 @@
               <th>Field</th>
               <th>Min</th>
               <th>Max</th>
+              <th>Expected</th>
               <th>Reference</th>
             </tr>
             <tr *ngFor="let dataSet of previewDataSets">
@@ -155,6 +156,9 @@
               <td><input type="number" [(ngModel)]="dataSet.output.min" [value]="dataSet.output.min"
                          style="width: 100px"></td>
               <td><input type="number" [(ngModel)]="dataSet.output.max" [value]="dataSet.output.max"
+                         style="width: 100px"></td>
+              <td><input type="number" [(ngModel)]="dataSet.output.expected"
+                         [value]="dataSet.output.expected"
                          style="width: 100px"></td>
               <td><input type="number" [(ngModel)]="dataSet.output.reference"
                          [value]="dataSet.output.reference"
