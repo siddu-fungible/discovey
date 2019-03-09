@@ -115,7 +115,8 @@ export class FunChartComponent implements OnInit, OnChanges {
               value: dataSet.value, // Value of where the line will appear
               width: 2, // Width of the line
               label: {
-                text: dataSet.text
+                text: dataSet.text,
+                align: "right"
               }
             });
           }
