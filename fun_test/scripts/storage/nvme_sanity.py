@@ -328,7 +328,7 @@ class TestMultipleNS(NvmeSanityTestCase):
         nvme_reload = self.host.nvme_restart()
         fun_test.test_assert(nvme_reload, "nvme driver module reloaded")
         fun_test.sleep("Sleeping for {}", 2)
-        ns_list = int(self.host.command("nvme list-ns /dev/nvme0 | wc -l"))
+        ns_list = int(self.host.sudo_command("nvme list-ns /dev/nvme0 | wc -l"))
         fun_test.test_assert_expected(expected=self.num_namespace, actual=ns_list,
                                       message="Expected number of namespaces created")
         super(TestMultipleNS, self).run()
@@ -339,7 +339,7 @@ class TestMultipleNS(NvmeSanityTestCase):
         nvme_reload = self.host.nvme_restart()
         fun_test.test_assert(nvme_reload, "nvme driver module reloaded")
         fun_test.sleep("Sleeping for {}", 1)
-        ns_list = int(self.host.command("nvme list-ns /dev/nvme0 | wc -l"))
+        ns_list = int(self.host.sudo_command("nvme list-ns /dev/nvme0 | wc -l"))
         fun_test.test_assert_expected(expected=0, actual=ns_list,
                                       message="All namespaces deleted")
 
