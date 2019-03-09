@@ -409,6 +409,7 @@ class Linux(object, ToDictMixin):
                 elif custom_prompts:
                     all_prompts_list = custom_prompts.keys()
                     all_prompts_list.append(self.prompt_terminator)
+                    self.handle.timeout = timeout  # Pexpect does not honor timeouts
                     i = self.handle.expect(all_prompts_list, timeout=timeout)
                     if i == (len(all_prompts_list) - 1):
                         break

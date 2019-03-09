@@ -138,7 +138,7 @@ class F1(Linux, ToDictMixin):
                     # Formatting the drive
                     mdt_command = "./{} app=mdt_test nvfile=nvfile &> {}".format(self.FUN_OS_SIMULATION_PROCESS_NAME,
                                                                                  self.F1_LOG)
-                    self.command(command=mdt_command)
+                    self.command(command=mdt_command, timeout=32)
 
                     # Starting the funos-poix to run the prem_test app along with the dpc-server
                     funos_command = "./{} --dpc-server app=prem_test nvfile=nvfile".format(
