@@ -378,7 +378,7 @@ class DockerHost(Linux, ToDictMixin):
         ports_dict = collections.OrderedDict()
 
         port_retries = 0
-        max_port_retries = 100
+        max_port_retries = 500
 
         port_allocator0 = PortAllocator(base_port=self.BASE_CONTAINER_SSH_PORT,
                                         internal_ports=pool0_internal_ports,
