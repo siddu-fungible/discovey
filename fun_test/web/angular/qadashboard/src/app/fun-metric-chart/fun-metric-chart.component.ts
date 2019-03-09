@@ -815,7 +815,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             }
           });
           while (startIndex >= endIndex) {
-            if (keyValue[series[startIndex]] != -1) {
+            if (keyValue[series[startIndex]] && keyValue[series[startIndex]] !== -1) {
               total += keyValue[series[startIndex]];
               count++;
             }
