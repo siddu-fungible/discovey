@@ -344,7 +344,7 @@ def queue_job3(suite_path=None,
         job_spec_entry.repeat_in_minutes = repeat_in_minutes
 
         job_spec_entry.tags = tags
-        job_spec_entry.emails = emails
+        job_spec_entry.emails = json.dumps(emails)
         job_spec_entry.email_on_failure_only = email_on_fail_only
 
         job_spec_entry.environment = environment

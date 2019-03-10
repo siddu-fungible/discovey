@@ -1010,7 +1010,7 @@ def _get_job_spec(job_id):
     result["suite_type"] = job_spec.suite_type
     result["script_path"] = job_spec.script_path
     result["suite_path"] = job_spec.suite_path
-    result["emails"] = job_spec.emails
+    result["emails"] = json.loads(job_spec.emails) if job_spec.emails else []
     return result
 
 @csrf_exempt
