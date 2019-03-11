@@ -248,6 +248,9 @@ class TopologyHelper:
                                                                       dpc_server=True, pre_dpcsh_sleep=pre_dpcsh_sleep,
                                                                       dpcsh_directory=dpcsh_directory,
                                                                       mounts=[mount])
+                fun_test.simple_assert(docker_host.wait_for_handoff(container_name=container_name,
+                                                                    handoff_string="Idling"), message="Container handoff")
+
                 docker_host.describe_storage_container(container_asset)
                 container_asset["container_name"] = container_asset["name"]
                 container_asset["qemu_ports"] = container_asset["pool1_ports"]

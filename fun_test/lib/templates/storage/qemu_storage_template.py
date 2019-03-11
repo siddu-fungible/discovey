@@ -68,7 +68,7 @@ class QemuStorageTemplate(object):
 
     @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, **kwargs):
-        return self.host.dd(input_file, output_file, block_size, count, timeout=60, **kwargs)
+        return self.host.dd(input_file, output_file, block_size, count, timeout=60, sudo=True, **kwargs)
 
     @fun_test.safe
     def md5sum(self, file_name):
@@ -183,7 +183,7 @@ class QemuStorageTemplate(object):
 
         result = None
         nvme_write_cmd = "nvme write {} -s {} -c {} -z {} -d {}".format(device, start, count, size, data)
-        output = self.host.command(command=nvme_write_cmd, timeout=timeout)
+        output = self.host.sudo_command(command=nvme_write_cmd, timeout=timeout)
         match = re.search(r'(\w+):\s*(\S+)', output)
         if match:
             result = match.group(2)
@@ -194,7 +194,7 @@ class QemuStorageTemplate(object):
 
         result = None
         nvme_read_cmd = "nvme read {} -s {} -c {} -z {} -d {}".format(device, start, count, size, data)
-        output = self.host.command(command=nvme_read_cmd, timeout=timeout)
+        output = self.host.sudo_command(command=nvme_read_cmd, timeout=timeout)
         match = re.search(r'(\w+):\s*(\S+)', output)
         if match:
             result = match.group(2)
