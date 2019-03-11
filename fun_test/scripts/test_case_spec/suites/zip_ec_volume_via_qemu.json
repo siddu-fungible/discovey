@@ -1,5 +1,5 @@
 [
   {"info": {"tags": ["storage-sanity"]}},
-  {"path": "storage/zip_ec_volume_qemu.py"}
+  {"path": "storage/zip_ec_volume_via_qemu.py"}
 
 ]
