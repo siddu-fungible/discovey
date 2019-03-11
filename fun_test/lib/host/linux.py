@@ -633,7 +633,7 @@ class Linux(object, ToDictMixin):
         return pid
 
     @fun_test.safe
-    def dd(self, input_file, output_file, block_size, count, timeout=60, **kwargs):
+    def dd(self, input_file, output_file, block_size, count, timeout=60, sudo=False, **kwargs):
 
         result = 0
         dd_cmd = "dd if={} of={} bs={} count={}".format(input_file, output_file, block_size, count)
@@ -641,7 +641,11 @@ class Linux(object, ToDictMixin):
             for key, value in kwargs.items():
                 arg = key + "=" + str(value)
                 dd_cmd += " " + arg
-        output = self.command(command=dd_cmd, timeout=timeout)
+
+        if not sudo:
+            output = self.command(command=dd_cmd, timeout=timeout)
+        else:
+            output = self.sudo_command(command=dd_cmd, timeout=timeout)
         match = re.search(r'(\d+) bytes', output)
         if match:
             result = match.group(1)

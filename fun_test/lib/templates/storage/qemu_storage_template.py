@@ -68,7 +68,7 @@ class QemuStorageTemplate(object):
 
     @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, **kwargs):
-        return self.host.dd(input_file, output_file, block_size, count, timeout=60, **kwargs)
+        return self.host.dd(input_file, output_file, block_size, count, timeout=60, sudo=True, **kwargs)
 
     @fun_test.safe
     def md5sum(self, file_name):
