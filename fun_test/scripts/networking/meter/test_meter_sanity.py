@@ -153,9 +153,7 @@ class SpirentSetup(FunTestScript):
 
 class MeterBase(FunTestCase):
     stream_obj = None
-    load_type = test_config['load_type']
-    load = test_config['load_bps']
-    meter_fields = meter_json_output['bps_meter']
+
     mode = METER_MODE_BPS
     rate_mode = SrTCM
     erp=False
@@ -164,15 +162,15 @@ class MeterBase(FunTestCase):
         self.set_test_details(id=1, summary="Test SrTC meter transit for bps",
                               steps="""
                                   1. Create Stream on Tx port with defined kbps
-                                  2. Start Traffic for %d secs
+                                  2. Start Traffic 
                                   3. Make sure Rx and Tx framecount are equal
                                   4. Make sure Rx and Tx rate are same
                                   5. Make sure packets are seen in expected meter colors
                                   6. Ensure no errors are seen on spirent ports
-                                  """ % TRAFFIC_DURATION)
+                                  """ )
 
     def setup(self):
-
+        meter_fields = meter_json_output['bps_meter']
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
         # Multiple streams for seding packets with different fields
@@ -307,8 +305,7 @@ class MeterBase(FunTestCase):
 
 class MeterPps1Rate(MeterBase):
     load_type = "FRAMES_PER_SECOND"
-    load = test_config['load_pps']
-    meter_fields = meter_json_output['pps_meter']
+
     mode = METER_MODE_PPS
     rate_mode = SrTCM
 
@@ -316,13 +313,12 @@ class MeterPps1Rate(MeterBase):
         self.set_test_details(id=2, summary="Test SrTC meter transit for pps",
                               steps="""
                                   1. Create Stream on Tx port with defined kbps
-                                  2. Start Traffic for %d secs
+                                  2. Start Traffic 
                                   3. Make sure Rx and Tx framecount are equal
                                   4. Make sure Rx and Tx rate are same
                                   5. Make sure packets are seen in expected meter colors
                                   6. Ensure no errors are seen on spirent ports
-                                  """ % TRAFFIC_DURATION)
-
+                                  """)
     def setup(self):
         super(MeterPps1Rate, self).setup()
 
@@ -335,8 +331,6 @@ class MeterPps1Rate(MeterBase):
 
 class MeterPps2Rate(MeterBase):
     load_type = "FRAMES_PER_SECOND"
-    load = test_config['load_pps']
-    meter_fields = meter_json_output['pps_meter']
     mode = METER_MODE_PPS
     rate_mode = TrTCM
 
