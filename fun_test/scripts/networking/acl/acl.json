@@ -249,6 +249,7 @@
     "qos_log":{
     "source_ip": "192.85.1.20",
     "dest_port_ing_nu": 669,
+      "color_ing_nu": 1,
       "dest_port_ing_hnu": 669,
       "dest_port_eg_hnu": 1298,
       "counter_eg_hnu": 121,

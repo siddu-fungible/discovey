@@ -3,7 +3,7 @@
     "bps_meter":{
       "sport" : 1234,
       "dport" : 1024,
-      "meter_id" : 60,
+      "meter_id" : 2,
       "meter_interval" : 13,
       "meter_credit" : 4,
       "commit_rate" : 51,
@@ -14,7 +14,7 @@
     {
       "sport" : 1234,
       "dport" : 1024,
-      "meter_id" : 60,
+      "meter_id" : 2,
       "meter_interval" : 13,
       "meter_credit" : 6,
       "commit_rate" : 102,

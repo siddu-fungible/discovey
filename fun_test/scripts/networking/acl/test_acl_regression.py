@@ -77,7 +77,7 @@ def create_streams(tx_port, dip, sip, dmac, s_port=1024, d_port=1024, sync_bit='
     return stream_obj
 
 
-def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_port_no, receive_port_no,
+def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_port_no, receive_port_no, value_dict,
                        hnu_ing=False, hnu_eg=False, all_streams=[]):
 
     checkpoint = "Clear FPG port stats on DUT"
@@ -134,10 +134,9 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     fun_test.test_assert_expected(expected=tx_stream_result_framecount,
                                   actual=rx_stream_result_framecount,
                                   message=checkpoint)
-    fun_test.log(acl_action)
-    fun_test.log(get_pkt_color_from_snapshot(snapshot_output=snapshot_output))
     if acl_action == ACL_ACTION_COLOR:
-        fun_test.log(get_pkt_color_from_snapshot(snapshot_output=snapshot_output))
+        fun_test.test_assert_expected(expected=value_dict['color_ing_nu'],
+                                      actual=get_pkt_color_from_snapshot(snapshot_output))
     elif acl_action == ACL_ACTION_LOG:
         print get_log_from_snapshot(snapshot_output=snapshot_output)
 
@@ -269,7 +268,7 @@ class AclQosColor(FunTestCase):
         all_streams.append(self.stream_obj_hnu_nu)
         compare_acl_stream(active_stream=self.stream_obj_nu_nu, send_port=nu_ing_port, receive_port=nu_eg_port,
                            all_streams=all_streams, acl_action=self.acl_action, send_port_no=dut_config['ports'][0],
-                           receive_port_no=dut_config['ports'][1])
+                           receive_port_no=dut_config['ports'][1], value_dict=self.acl_fields_dict_qos)
         compare_acl_stream(active_stream=self.stream_obj_nu_hnu, send_port=nu_ing_port, receive_port=hnu_eg_port,
                            send_port_no=dut_config['ports'][0], receive_port_no=dut_config['ports'][3], hnu_ing=False,
                            hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action)
