@@ -771,7 +771,7 @@ class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
 
             for line in self.lines:
                 m = re.search(
-                    r'Average\s+wustack\s+alloc/+free\s+cycles:\s+(?P<average_json>{.*})\s+\[(?P<metric_name>wustack_alloc_free_cycles)\]',
+                    r'Average\s+wustack\s+alloc/+free\s+cycles:\s+(?P<average_json>{.*})\[(?P<metric_name>wustack_alloc_free_cycles)\]',
                     line)
                 if m:
                     average_json = json.loads(m.group("average_json"))
