@@ -23,8 +23,18 @@ class SuiteType:
     STATIC = "regular"
     DYNAMIC = "dynamic"  # Usually for re-runs
 
+
 class SchedulerJobPriority:
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
     RANGES = {LOW: (2049, 3072),  NORMAL: (1025, 2048), HIGH: (1, 1024)}
+
+
+class QueueOperations:
+    MOVE_UP = "move_up"
+    MOVE_DOWN = "move_down"
+    MOVE_TO_TOP = "move_to_top"
+    MOVE_TO_NEXT_QUEUE = "move_to_next_queue"
+    DELETE = "delete"
+    

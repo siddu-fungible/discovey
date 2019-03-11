@@ -9,6 +9,7 @@ from fun_global import is_production_mode, is_triaging_mode
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job3, queue_suite_container
 from scheduler.scheduler_helper import queue_dynamic_suite, get_archived_job_spec
+from scheduler.scheduler_helper import move_to_higher_queue, move_to_queue_head, increase_decrease_priority, delete_queued_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, \
     get_test_case_details, get_all_test_cases
@@ -35,7 +36,7 @@ from django.apps import apps
 import time
 from django.db import transaction
 from django.db.models import Q
-from scheduler.scheduler_global import SchedulerJobPriority
+from scheduler.scheduler_global import SchedulerJobPriority, QueueOperations
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
@@ -1016,18 +1017,38 @@ def _get_job_spec(job_id):
 @csrf_exempt
 @api_safe_json_response
 def scheduler_queue(request):
-    result = []
-    queue_elements = JobQueue.objects.all().order_by('priority')
-    for queue_element in queue_elements:
-        one_element = {"job_id": queue_element.job_id,
-                       "priority": queue_element.priority,
-                       "test_bed_type": queue_element.test_bed_type,
-                       "job_spec": _get_job_spec(job_id=queue_element.job_id)}
-        result.append(one_element)
+    result = None
+    if request.method == 'GET':
+        result = []
+        queue_elements = JobQueue.objects.all().order_by('priority')
+        for queue_element in queue_elements:
+            one_element = {"job_id": queue_element.job_id,
+                           "priority": queue_element.priority,
+                           "test_bed_type": queue_element.test_bed_type,
+                           "job_spec": _get_job_spec(job_id=queue_element.job_id)}
+            result.append(one_element)
+    elif request.method == 'POST':
+        result = None
+        request_json = json.loads(request.body)
+        operation = request_json['operation']
+        job_id = request_json["job_id"]
+        if operation == QueueOperations.MOVE_UP:
+            increase_decrease_priority(job_id=job_id, increase=True)
+        if operation == QueueOperations.MOVE_DOWN:
+            increase_decrease_priority(job_id=job_id, increase=False)
+        if operation == QueueOperations.MOVE_TO_TOP:
+            move_to_queue_head(job_id=job_id)
+        if operation == QueueOperations.MOVE_TO_NEXT_QUEUE:
+            move_to_higher_queue(job_id=job_id)
+        if operation == QueueOperations.DELETE:
+            delete_queued_job(job_id=job_id)
+        result = True
     return result
 
 @csrf_exempt
 @api_safe_json_response
 def scheduler_queue_priorities(request):
-    return SchedulerJobPriority.__dict__
-
+    if request.method == "GET":
+        return SchedulerJobPriority.__dict__
+    elif request.method == 'POST':
+        request_json = json.loads(request.body)
