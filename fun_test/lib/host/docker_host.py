@@ -119,7 +119,7 @@ class DockerHost(Linux, ToDictMixin):
                 if re.search(handoff_string, output):
                     result = True
                     break
-            fun_test.sleep("Waiting for container handoff string", seconds=2)
+            fun_test.sleep("Waiting for container handoff string: {}".format(handoff_string), seconds=10)
         return result
 
     def logs(self, container_name):
@@ -378,7 +378,7 @@ class DockerHost(Linux, ToDictMixin):
         ports_dict = collections.OrderedDict()
 
         port_retries = 0
-        max_port_retries = 100
+        max_port_retries = 500
 
         port_allocator0 = PortAllocator(base_port=self.BASE_CONTAINER_SSH_PORT,
                                         internal_ports=pool0_internal_ports,
@@ -435,7 +435,8 @@ class DockerHost(Linux, ToDictMixin):
                                                                      hostname=host_name,
                                                                      user=user,
                                                                      working_dir=working_dir,
-                                                                     auto_remove=auto_remove)
+                                                                     auto_remove=auto_remove,
+                                                                     cpu_shares=256)
                 else:
                     allocated_container = self.client.containers.run(image_name,
                                                                      detach=True,
@@ -447,7 +448,8 @@ class DockerHost(Linux, ToDictMixin):
                                                                      hostname=host_name,
                                                                      user=user,
                                                                      working_dir=working_dir,
-                                                                     auto_remove=auto_remove)
+                                                                     auto_remove=auto_remove,
+                                                                     cpu_shares=256)
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")

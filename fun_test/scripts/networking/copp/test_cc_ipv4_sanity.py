@@ -3,6 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
 from lib.host.network_controller import NetworkController
 from scripts.networking.nu_config_manager import *
 from scripts.networking.helper import *
+from scripts.networking.snapshot_helper import *
 
 dut_config = {}
 spirent_config = {}
@@ -170,7 +171,6 @@ class TestCcIPv4ICMP(FunTestCase):
         streams_group.append(self.stream_obj)
         self.meter_id = IPV4_COPP_ICMP_METER_ID
 
-        # TODO: Remove below meter configuration once CoPP meter is pre-configured in F1 csr_override
         if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
             result = network_controller_obj.update_meter(index=self.meter_id, interval=15, crd=1, commit_rate=14,
                                                          pps_mode=1, bank=0)
@@ -180,6 +180,30 @@ class TestCcIPv4ICMP(FunTestCase):
     def run(self):
         nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_port1 = dut_config['ports'][0]
+
+        checkpoint = "Fetch meter ID using snapshot"
+        network_controller_obj.disconnect()
+        dpcsh_server_ip = dut_config["dpcsh_tcp_proxy_ip"]
+        dpcsh_server_port = dut_config['dpcsh_tcp_proxy_port']
+
+        setup_snapshot(dpc_tcp_proxy_ip=dpcsh_server_ip, dpc_tcp_proxy_port=dpcsh_server_port)
+
+        template_obj.enable_generator_configs([generator_handle])
+        fun_test.sleep("to fetch meter id using snapshot", seconds=2)
+        snapshot_dict = run_snapshot()
+        fun_test.simple_assert(snapshot_dict, "Fetch snapshot dict")
+        template_obj.disable_generator_configs([generator_handle])
+
+        self.meter_id = get_snapshot_meter_id(snapshot_output=snapshot_dict)
+        fun_test.simple_assert(self.meter_id, checkpoint)
+        exit_snapshot()
+
+        checkpoint = "Get PSW and Parser NU stats before traffic"
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+        parser_stats = network_controller_obj.peek_parser_stats()
+        fun_test.log("PSW Stats: %s \n" % psw_stats)
+        fun_test.log("Parser stats: %s \n" % parser_stats)
+        fun_test.add_checkpoint(checkpoint)
 
         # TODO: Need to figure out better approach to determine if dut port is FPG or HNU
         checkpoint = "Clear FPG port stats on DUT"
@@ -192,13 +216,6 @@ class TestCcIPv4ICMP(FunTestCase):
             result = network_controller_obj.clear_port_stats(port_num=port_num, shape=shape)
             fun_test.simple_assert(result, "Clear FPG stats for port %d" % port_num)
         fun_test.add_checkpoint(checkpoint=checkpoint)
-
-        checkpoint = "Get PSW and Parser NU stats before traffic"
-        psw_stats = network_controller_obj.peek_psw_global_stats()
-        parser_stats = network_controller_obj.peek_parser_stats()
-        fun_test.log("PSW Stats: %s \n" % psw_stats)
-        fun_test.log("Parser stats: %s \n" % parser_stats)
-        fun_test.add_checkpoint(checkpoint)
 
         vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
 

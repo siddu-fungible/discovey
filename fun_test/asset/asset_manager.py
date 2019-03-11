@@ -132,6 +132,9 @@ class AssetManager:
                                                                            dpcsh_internal_ports=[
                                                                                F1.INTERNAL_DPCSH_PORT],
                                                                            vm_host_os=vm_host_os)
+                fun_test.simple_assert(self.docker_host.wait_for_handoff(container_name=container_name,
+                                                                         handoff_string="Idling"), message="Container handoff")
+
                 container_asset["host_type"] = self.docker_host.type # DESKTOP, BARE_METAL
 
                 fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(container_name))
