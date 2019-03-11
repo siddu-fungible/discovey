@@ -17,7 +17,7 @@ from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType
 from web.fun_test.models import JobSpec, SchedulerJobPriority, JobQueue
-
+from django.db import transaction
 from pytz import timezone
 from datetime import timedelta
 import random
@@ -565,7 +565,9 @@ def move_to_queue_head(job_id):
             queue_entry.priority += 1
             if queue_entry.priority > high:
                 raise SchedulerException("Unable to change priority. Job-id: {}, high mark: {}".format(job_id, high))
+            queue_entry.save()
         this_job_queue_entry.priority = low
+        this_job_queue_entry.save()
 
 
 def move_to_higher_queue(job_id):
@@ -587,11 +589,12 @@ def move_to_higher_queue(job_id):
 
 
 def swap_priorities(job1, job2):
-    temp = job1.priority
-    job1.priority = job2.priority
-    job2.priority = temp
-    job1.save()
-    job2.save()
+    with transaction.atomic():
+        temp = job1.priority
+        job1.priority = job2.priority
+        job2.priority = temp
+        job1.save()
+        job2.save()
 
 
 def increase_decrease_priority(job_id, increase=True):
@@ -601,9 +604,9 @@ def increase_decrease_priority(job_id, increase=True):
     low, high = SchedulerJobPriority.RANGES[priority_category]
 
     if increase:
-        other_priority_jobs = JobQueue.objects.filter(priority__lt=this_job_priority, priority__gte=low).order_by('-priority')
+        other_priority_jobs = JobQueue.objects.filter(priority__lt=this_job_priority, priority__gte=low).order_by('priority')
     else:
-        other_priority_jobs = JobQueue.objects.filter(priority__gt=this_job_priority, priority__lte=high).order_by('priority')
+        other_priority_jobs = JobQueue.objects.filter(priority__gt=this_job_priority, priority__lte=high).order_by('-priority')
 
     if other_priority_jobs.count():
         other_priority_job = other_priority_jobs.last()
