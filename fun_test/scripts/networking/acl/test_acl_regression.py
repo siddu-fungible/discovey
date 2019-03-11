@@ -110,6 +110,8 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     snapshot_output = run_snapshot()
     exit_snapshot()
     fun_test.simple_assert(expression=snapshot_output, message="Snapshot output received")
+    psw_stats = network_controller_obj.peek_psw_global_stats(hnu=hnu_eg)
+    fun_test.log(psw_stats)
     ing_port_results = network_controller_obj.peek_fpg_port_stats(send_port_no, hnu=hnu_ing)
     fun_test.simple_assert(ing_port_results, "Fetch DUT Rx port results. FPG%d" % send_port_no)
 
