@@ -349,7 +349,7 @@ class JobQueue(models.Model):
     """
     Scheduler's job queue
     """
-    priority = models.IntegerField(unique=True)
+    priority = models.IntegerField()
     job_id = models.IntegerField(unique=True)
     test_bed_type = models.TextField(default="", null=True)
 
