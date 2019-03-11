@@ -11,11 +11,12 @@
         <th>Suite</th>
         <th>Email</th>
       </tr>
-      <tr *ngFor="let queueEntry of queueOccupancy[category]">
+      <tr *ngFor="let queueEntry of queueOccupancy[category]; let i = index">
         <td>
-          <span class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, true)">Move up</span>
-          <span class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, false)">Move down</span>
-          <span class="btn btn-link" (click)="moveToTop(queueEntry.job_id, false)">Move to top</span>
+          <span *ngIf="queueOccupancy[category].length > 0" class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, true)">Move up</span>
+          <span *ngIf="queueOccupancy[category].length > 0" class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, false)">Move down</span>
+          <span *ngIf="i > 0" class="btn btn-link" (click)="moveToTop(queueEntry.job_id, false)">Move to top</span>
+          <span *ngIf="category === 'normal' || category === 'low' " class="btn btn-link" (click)="moveToNextQueue(queueEntry.job_id)">Move to next queue</span>
 
         </td>
         <td>{{ queueEntry.job_id }}</td>

@@ -1004,6 +1004,7 @@ def git(request):
             logger.exception(str(ex))
     return result
 
+
 def _get_job_spec(job_id):
     result = {}
     job_spec = JobSpec.objects.get(job_id=job_id)
@@ -1013,6 +1014,7 @@ def _get_job_spec(job_id):
     result["suite_path"] = job_spec.suite_path
     result["emails"] = json.loads(job_spec.emails) if job_spec.emails else []
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -1044,6 +1046,7 @@ def scheduler_queue(request):
             delete_queued_job(job_id=job_id)
         result = True
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
