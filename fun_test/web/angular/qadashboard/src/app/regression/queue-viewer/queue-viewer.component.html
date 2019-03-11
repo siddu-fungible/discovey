@@ -1,0 +1,30 @@
+<div class="card" *ngFor="let category of priorityCategories">
+  <div class="card-header">
+    {{ toTitleCase(category) }} priority jobs
+  </div>
+  <div class="card-body">
+    <table class="table table-nonfluid">
+      <tr>
+        <th></th>
+        <th>Job-Id</th>
+        <th>Priority</th>
+        <th>Suite</th>
+        <th>Email</th>
+      </tr>
+      <tr *ngFor="let queueEntry of queueOccupancy[category]">
+        <td>
+          <span class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, true)">Move up</span>
+          <span class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, false)">Move down</span>
+          <span class="btn btn-link" (click)="moveToTop(queueEntry.job_id, false)">Move to top</span>
+
+        </td>
+        <td>{{ queueEntry.job_id }}</td>
+        <td>{{ queueEntry.priority }}</td>
+        <td>{{ queueEntry.job_spec.suite_path }}</td>
+        <td>{{ queueEntry.job_spec.emails }}</td>
+
+      </tr>
+    </table>
+  </div>
+
+</div>
