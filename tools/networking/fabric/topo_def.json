@@ -1,0 +1,226 @@
+{
+  "Size": {
+    "Racks": 2,
+    "FSs"  : 2,
+    "Cx"   : {
+      "Physical": 1,
+      "Virtual": 8
+    }
+  },
+  "Racks": [
+    {
+      "id": 1,
+      "FS1600": [
+        {
+          "id": 1,
+          "F1s": [
+            {
+              "id": 0,
+              "MGMT_IP": "1.1.1.1",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/0"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG1": "et-0/0/1"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG2": "1_1",
+                "FPG3": "2_0",
+                "FPG4": "2_1"
+              }
+            },
+            {
+              "id": 1,
+              "MGMT_IP": "1.1.1.2",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/2"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG1": "et-0/0/3"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG2": "1_0",
+                "FPG3": "2_0",
+                "FPG4": "2_1"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "F1s": [
+            {
+              "id": 0,
+              "MGMT_IP": "1.1.1.3",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/4"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG1": "et-0/0/5"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG2": "2_1",
+                "FPG3": "1_0",
+                "FPG4": "1_1"
+              }
+            },
+            {
+              "id": 1,
+              "MGMT_IP": "1.1.1.4",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/6"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG1": "et-0/0/7"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG2": "2_0",
+                "FPG3": "1_0",
+                "FPG4": "1_1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "FS1600": [
+        {
+          "id": 1,
+          "F1s": [
+            {
+              "id": 0,
+              "MGMT_IP": "1.1.1.5",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/8"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG1": "et-0/0/9"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG2": "1_1",
+                "FPG3": "2_0",
+                "FPG4": "2_1"
+              }
+            },
+            {
+              "id": 1,
+              "MGMT_IP": "1.1.1.6",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/10"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG1": "et-0/0/11"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG2": "1_0",
+                "FPG3": "2_0",
+                "FPG4": "2_1"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "F1s": [
+            {
+              "id": 0,
+              "MGMT_IP": "1.1.1.7",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/12"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG1": "et-0/0/13"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG2": "2_1",
+                "FPG3": "1_0",
+                "FPG4": "1_1"
+              }
+            },
+            {
+              "id": 1,
+              "MGMT_IP": "1.1.1.8",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/14"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG1": "et-0/0/15"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG2": "2_0",
+                "FPG3": "1_0",
+                "FPG4": "1_1"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
