@@ -62,13 +62,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   mileStoneIndices: any = {}; // fun-chart requires indices to plot lines on xaxis
   expectedValues: any = [];
   showAllExpectedValues: boolean = false;
-  y1AxisPlotLines: any = [];
+  y1AxisPlotLines: any = []; //used to send the expected values plotlines to the fun chart
   showSelect: boolean = false;
   //used for determining the display range max of the charts
   maxDataSet: number = null; // maximum value of all the 'max' values of the datasets
   maxExpected: number = null; // maximum value of all the 'expected' values of the datasets
   maxDataPoint: number = null; // maximum value of all the data points from all the datasets
   yMax: number = null;
+  yAxisSet: any = new Set(); //to cehck for duplicates in the expected value so that the text is not overwritten
 
   baseLineDate: string = null;
 
@@ -307,6 +308,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.editingDescription = false;
     this.chart1YaxisTitle = "";
     this.y1AxisPlotLines = [];
+    this.yAxisSet = new Set();
     this.showAllExpectedValues = false;
     this.showSelect = false;
   }
@@ -541,7 +543,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             maximum = dataset.value;
           }
         }
-        this.y1AxisPlotLines.push(line);
+        //check if the expected values already has duplicate so that the text is not overwritten
+        if (this.yAxisSet.has(line["value"])) {
+          for (let y1axis of this.y1AxisPlotLines) {
+            if (line["value"] === y1axis["value"]) {
+              y1axis["text"] += ", " + dataset.name;
+            }
+          }
+        } else {
+          this.yAxisSet.add(line["value"]);
+          this.y1AxisPlotLines.push(line);
+        }
       }
     }
     this.maxExpected = maximum;
