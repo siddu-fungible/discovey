@@ -379,6 +379,7 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
                 if is_leaf_degrade or not current_score:
                     result["num_degrades"] = 1
                 current_date = current_date + timedelta(days=1)
+                current_date = set_local_timezone(current_date)
 
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
@@ -438,6 +439,9 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
     chart.save()
     return result
 
+def set_local_timezone(current_date):
+    date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day, hour=current_date.hour, second=current_date.second, minute=current_date.minute)
+    return get_localized_time(date_time_obj)
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
