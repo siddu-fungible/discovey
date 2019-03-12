@@ -449,8 +449,7 @@ class DockerHost(Linux, ToDictMixin):
                                                                      user=user,
                                                                      working_dir=working_dir,
                                                                      auto_remove=auto_remove,
-                                                                     cpu_shares=256,
-                                                                     device_write_bps="/dev/sda:{}".format(self.SDA_WRITE_BPS))
+                                                                     cpu_shares=256)
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
