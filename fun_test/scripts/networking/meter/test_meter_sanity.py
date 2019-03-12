@@ -26,9 +26,9 @@ def is_close(a, b, rel_tol=1e-01, abs_tol=0.0):
 
 
 def create_streams(tx_port, dip, dmac, sip="192.168.85.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
-                   ipv6=False, v6_traffic_class=0):
+                   ipv6=False, v6_traffic_class=0, load='load_bps', load_type="MEGABITS_PER_SECOND"):
     stream_obj = StreamBlock(fill_type=test_config['fill_type'], insert_signature=test_config['insert_signature'],
-                             load = test_config['load'], load_unit=test_config['load_type'],
+                             load=test_config[load], load_unit=load_type,
                              frame_length_mode= test_config['frame_length_mode'],
                              fixed_frame_length=test_config['fixed_frame_size'])
 
@@ -73,10 +73,10 @@ def create_streams(tx_port, dip, dmac, sip="192.168.85.2", s_port=1024, d_port=1
 
 def get_meter_dict(nu_config_object):
     result = {"acl_dict": {}, "traffic_dur": 0, "test_config": {}}
-    test_config_file = fun_test.get_script_parent_directory() + "/dut_configs.json"
+    test_config_file = fun_test.get_script_parent_directory() + "/meter_dut_configs.json"
     test_config = nu_config_object.read_test_configs_by_dut_type(config_file=test_config_file)
     dut_type_json = test_config['dut_type']
-    meter_json_file = fun_test.get_script_parent_directory() + '/acl.json'
+    meter_json_file = fun_test.get_script_parent_directory() + '/meter.json'
     meter_json_output_all = fun_test.parse_file_to_json(meter_json_file)
     meter_json_out = meter_json_output_all[dut_type_json]
     result['meter_dict'] = meter_json_out
@@ -124,24 +124,16 @@ class SpirentSetup(FunTestScript):
                                            duration_mode=GeneratorConfig.DURATION_MODE_SECONDS,
                                            time_stamp_latch_mode=GeneratorConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
 
-        analyzer_config = AnalyzerConfig(timestamp_latch_mode=AnalyzerConfig.TIME_STAMP_LATCH_MODE_END_OF_FRAME)
-        for port in result_setup['port_list']:
-            checkpoint = "Create Generator Config for %s port" % port
-            result = template_obj.configure_generator_config(port_handle=port,
-                                                             generator_config_obj=generator_config)
-            fun_test.simple_assert(expression=result, message=checkpoint)
+        port = result_setup['port_list'][0]
+        checkpoint = "Create Generator Config for %s port" % port
+        result = template_obj.configure_generator_config(port_handle=port,
+                                                         generator_config_obj=generator_config)
+        fun_test.simple_assert(expression=result, message=checkpoint)
 
-            checkpoint = "Create Analyzer Config for %s port" % port
-            result = template_obj.configure_analyzer_config(port_handle=port,
-                                                            analyzer_config_obj=analyzer_config)
-            fun_test.simple_assert(result, checkpoint)
-
-            generator_port_obj_dict[port] = template_obj.stc_manager.get_generator(port_handle=port)
-            analyzer_port_obj_dict[port] = template_obj.stc_manager.get_analyzer(port_handle=port)
+        generator_port_obj_dict[port] = template_obj.stc_manager.get_generator(port_handle=port)
         # Subscribe to all results
         project = template_obj.stc_manager.get_project_handle()
         subscribed_results = template_obj.subscribe_to_all_results(parent=project)
-        fun_test.test_assert(subscribed_results['result'], "Subscribing to all results")
         del subscribed_results['result']
 
         if dut_config['enable_dpcsh']:
@@ -153,11 +145,11 @@ class SpirentSetup(FunTestScript):
 
 class MeterBase(FunTestCase):
     stream_obj = None
-
     mode = METER_MODE_BPS
     rate_mode = SrTCM
-    erp=False
-
+    erp = False
+    load_type = "KILOBITS_PER_SECOND"
+    load = "load_bps"
     def describe(self):
         self.set_test_details(id=1, summary="Test SrTC meter transit for bps",
                               steps="""
@@ -176,39 +168,47 @@ class MeterBase(FunTestCase):
         # Multiple streams for seding packets with different fields
         checkpoint = "Creating multiple streams on %s port" % nu_ing_port
         self.stream_obj = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
-                                         dip=self.l3_config['destination_ip1'],
-                                         d_port=self.meter_fields['dport'], s_port=self.meter_fields['sport'])
+                                         dip=self.l3_config['destination_ip1'], load=self.load,
+                                         load_type=self.load_type, d_port=meter_fields['dport'],
+                                         s_port=meter_fields['sport'])
 
     def run(self):
+        meter_fields = meter_json_output['bps_meter']
         tx_port = nu_ing_port
         rx_port = nu_eg_port
-        if generator_config.duration == TRAFFIC_DURATION:
-            generator_config.duration = TRAFFIC_DURATION
-            for port in result_setup['port_list']:
-                checkpoint = "Update Generator Config for %s port" % port
-                result = template_obj.configure_generator_config(port_handle=port,
-                                                                 generator_config_obj=generator_config, update=True)
-                fun_test.simple_assert(expression=result, message=checkpoint)
+        if generator_config.Duration == TRAFFIC_DURATION:
+            generator_config.Duration = 1
+            port = result_setup['port_list'][0]
+            checkpoint = "Update Generator Config for %s port with duration %s" % (port, generator_config.Duration)
+            result = template_obj.configure_generator_config(port_handle=port,
+                                                             generator_config_obj=generator_config, update=True)
+            fun_test.simple_assert(expression=result, message=checkpoint)
+            generator_port_obj_dict[port] = template_obj.stc_manager.get_generator(port_handle=port)
 
         network_controller_obj.disconnect()
 
         setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip=dpc_server_ip,
                        dpc_tcp_proxy_port=dpc_server_port)
-        checkpoint = "Start traffic from to get meter ID from snapshot"
+        checkpoint = "Start traffic to get meter ID from snapshot"
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=2)
         snapshot_output = run_snapshot()
         exit_snapshot()
+        checkpoint = "Clear spirent results"
+        result = template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
+        fun_test.test_assert(result, checkpoint)
         meter_id = get_snapshot_meter_id(snapshot_output=snapshot_output, erp=self.erp)
+        fun_test.log("meter ID from snapshot : %s" % meter_id)
+        generator_config.Duration = TRAFFIC_DURATION
+        port = result_setup['port_list'][0]
+        checkpoint = "Update Generator Config for %s port with duration %s" % (port, generator_config.Duration)
+        result = template_obj.configure_generator_config(port_handle=port,
+                                                         generator_config_obj=generator_config, update=True)
+        fun_test.simple_assert(expression=result, message=checkpoint)
 
-        generator_config.duration = TRAFFIC_DURATION
-        for port in result_setup['port_list']:
-            checkpoint = "Update Generator Config for %s port" % port
-            result = template_obj.configure_generator_config(port_handle=port,
-                                                             generator_config_obj=generator_config, update=True)
-            fun_test.simple_assert(expression=result, message=checkpoint)
+        generator_port_obj_dict[port] = template_obj.stc_manager.get_generator(port_handle=port)
 
         checkpoint = "Clear FPG port stats on DUT"
         c = 0
@@ -221,13 +221,14 @@ class MeterBase(FunTestCase):
         fun_test.add_checkpoint(checkpoint=checkpoint)
 
         checkpoint = "Configure meter %s" % meter_id
-        result = network_controller_obj.update_meter(index=meter_id, interval=self.meter_fields['meter_interval'],
-                                                     crd=self.meter_fields['meter_credit'],
-                                                     commit_rate=self.meter_fields['commit_rate'],
+
+        result = network_controller_obj.update_meter(index=meter_id, interval=meter_fields['meter_interval'],
+                                                     crd=meter_fields['meter_credit'],
+                                                     commit_rate=meter_fields['commit_rate'],
                                                      pps_mode=self.mode, rate_mode=self.rate_mode,
-                                                     commit_burst=self.meter_fields['commit_burst'],
-                                                     excess_burst=self.meter_fields['excess_burst'])
-        fun_test.simple_assert(expression=result,message=checkpoint)
+                                                     commit_burst=meter_fields['commit_burst'],
+                                                     excess_burst=meter_fields['excess_burst'])
+        fun_test.simple_assert(expression=result, message=checkpoint)
 
         meter_before = network_controller_obj.peek_meter_stats_by_id(meter_id=meter_id)
         checkpoint = "Start traffic from %s port for %d secs" % (tx_port, TRAFFIC_DURATION)
@@ -240,7 +241,7 @@ class MeterBase(FunTestCase):
         rate_result = template_obj.get_traffic_rate_comparison(
             rx_summary_subscribe_handle=subscribed_results['rx_summary_subscribe'],
             tx_summary_subscribe_handle=subscribed_results['tx_stream_subscribe'],
-            stream_objects=stream_objs, kbps=True)
+            stream_objects=stream_objs, kbps=True, time_for_throughput=int(TRAFFIC_DURATION/3))
         fun_test.simple_assert(expression=rate_result['result'], message=checkpoint)
         pps_in = rate_result['pps_in']
         pps_out = rate_result['pps_out']
@@ -276,7 +277,7 @@ class MeterBase(FunTestCase):
             meter_green = (int(meter_after['green']['pkts']) - int(meter_before['green']['pkts']))
             meter_yellow = (int(meter_after['yellow']['pkts']) - int(meter_before['yellow']['pkts']))
             meter_red = (int(meter_after['red']['pkts']) - int(meter_before['red']['pkts']))
-            fun_test.test_assert_expected(expected=rx_stream_result_framecount, actual=meter_green + meter_yellow,
+            fun_test.test_assert_expected(expected=frames_received, actual=meter_green + meter_yellow,
                                           message=checkpoint)
             meter_color_ratio = (meter_red + meter_yellow + meter_green)/(meter_yellow + meter_green)
             fun_test.log("Meter Color Ratio : " + str(meter_color_ratio))
@@ -305,9 +306,11 @@ class MeterBase(FunTestCase):
 
 class MeterPps1Rate(MeterBase):
     load_type = "FRAMES_PER_SECOND"
-
+    stream_obj = None
     mode = METER_MODE_PPS
     rate_mode = SrTCM
+    erp = False
+    load = "load_pps"
 
     def describe(self):
         self.set_test_details(id=2, summary="Test SrTC meter transit for pps",
