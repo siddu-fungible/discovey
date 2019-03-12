@@ -30,7 +30,14 @@ from web.fun_test.set_base_line import SetBaseLine
 
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
-from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
+from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers, MetricChartUnits
+
+latency_category = ["nsecs", "usecs", "msecs", "secs"]
+ops_category = ["ops", "Kops", "Mops", "Gops"]
+operations_category = ["op", "Kop", "Mop", "Gop"]
+cycles_category = ["cycles"]
+bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
+bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
 
 
 class MetricHelper(object):
@@ -969,7 +976,7 @@ if __name__ == "__main_create_pps__":
         mmt.save()
     print "create pps charts for 3 nw flow type metrics"
 
-if __name__ == "__main__":
+if __name__ == "__main_compression__":
     entries = MetricChart.objects.all()
     for entry in entries:
         if entry.base_line_date:
@@ -982,3 +989,18 @@ if __name__ == "__main__":
                 entry.base_line_date = base_line_date
                 entry.save()
                 print (entry.chart_name, str(entry.base_line_date))
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.leaf:
+            model = MetricChartUnits.objects.filter(metric_model_name=entry.metric_model_name)
+            if len(model):
+                print "already exists"
+            else:
+                if entry.y1_axis_title:
+                    category
+                input = MetricChartUnits(metric_model_name=entry.metric_model_name, output_base_unit=entry.y1_axis_title)
+                input.save()
+
+

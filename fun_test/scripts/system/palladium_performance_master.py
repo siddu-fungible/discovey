@@ -6,7 +6,7 @@ from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSo
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
-    SoakClassicMallocPerformance, TeraMarkMultiClusterCryptoPerformance
+    SoakClassicMallocPerformance, TeraMarkMultiClusterCryptoPerformance, MetricChartUnits
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
@@ -72,6 +72,14 @@ def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenki
         chart.last_jenkins_job_id = jenkins_job_id
         chart.last_git_commit = git_commit
         chart.save()
+
+
+# def covert_to_base_unit(model_name, data):
+#     base_unit = MetricChartUnits.objects.get(metric_model_name=model_name)
+#     if base_unit:
+#         if base_unit.output_base_unit:
+
+
 
 
 class MyScript(FunTestScript):

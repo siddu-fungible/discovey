@@ -72,6 +72,16 @@ class MetricChartStatusSerializer(ModelSerializer):
         model = MetricChartStatus
         fields = "__all__"
 
+class MetricChartUnits(models.Model):
+    metric_model_name = models.TextField(default="Unknown")
+    date_time = models.DateTimeField(default=datetime.now)
+    output_base_unit = models.CharField(max_length=10, default="unknown")
+    unit_category = models.TextField(default="unknown")
+
+    def __str__(self):
+        s = "{}:{} {}".format(self.metric_id, self.chart_name, self.date_time)
+        return s
+
 class MetricChart(models.Model):
     last_build_status = models.CharField(max_length=15, default=RESULTS["PASSED"])
     last_build_date = models.DateTimeField(verbose_name="last_build_date", default=datetime.now)
@@ -109,6 +119,7 @@ class MetricChart(models.Model):
     source = models.TextField(default="Unknown")
     jira_ids = models.TextField(default="[]")
     base_line_date = models.DateTimeField(verbose_name="base_line_date", default=BASE_LINE_DATE)
+    visualization_unit = models.CharField(max_length=10, default="unknown")
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
