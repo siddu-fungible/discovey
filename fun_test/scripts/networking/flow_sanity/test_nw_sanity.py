@@ -10,6 +10,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
 from scripts.networking.nu_config_manager import *
+from scripts.networking.snapshot_helper import *
 
 spirent_config = {}
 subscribed_results = None
@@ -702,15 +703,6 @@ class TestCcFlows(FunTestCase):
 
     def run(self):
         meter_stats_before = None
-        checkpoint = "Clear FPG stats on all DUT ports"
-        for port in self.dut_config['ports']:
-            shape = 0
-            if port == 1 or port == 2:
-                shape = 1
-            clear_stats = dpcsh_obj.clear_port_stats(port_num=port, shape=shape)
-            fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
-        fun_test.add_checkpoint(checkpoint)
-
         checkpoint = "Get PSW and Parser NU stats before traffic"
         psw_stats = dpcsh_obj.peek_psw_global_stats()
         parser_stats = dpcsh_obj.peek_parser_stats()
@@ -723,6 +715,32 @@ class TestCcFlows(FunTestCase):
         erp_stats_before = get_erp_stats_values(network_controller_obj=dpcsh_obj)
 
         wro_stats_before = get_wro_global_stats_values(network_controller_obj=dpcsh_obj)
+
+        checkpoint = "Fetch meter ID using snapshot"
+        dpcsh_obj.disconnect()
+        dpcsh_server_ip = self.dut_config["dpcsh_tcp_proxy_ip"]
+        dpcsh_server_port = self.dut_config['dpcsh_tcp_proxy_port']
+
+        setup_snapshot(dpc_tcp_proxy_ip=dpcsh_server_ip, dpc_tcp_proxy_port=dpcsh_server_port)
+
+        template_obj.enable_generator_configs([self.generator_handle])
+        fun_test.sleep("to fetch meter id using snapshot", seconds=2)
+        snapshot_dict = run_snapshot()
+        fun_test.simple_assert(snapshot_dict, "Fetch snapshot dict")
+        template_obj.disable_generator_configs([self.generator_handle])
+
+        self.meter_id = get_snapshot_meter_id(snapshot_output=snapshot_dict)
+        fun_test.simple_assert(self.meter_id, checkpoint)
+        exit_snapshot()
+
+        checkpoint = "Clear FPG stats on all DUT ports"
+        for port in self.dut_config['ports']:
+            shape = 0
+            if port == 1 or port == 2:
+                shape = 1
+            clear_stats = dpcsh_obj.clear_port_stats(port_num=port, shape=shape)
+            fun_test.simple_assert(clear_stats, "FPG stats clear on DUT port %d" % port)
+        fun_test.add_checkpoint(checkpoint)
 
         if self.meter_id:
             meter_stats_before = dpcsh_obj.peek_meter_stats_by_id(meter_id=self.meter_id, erp=self.erp)
@@ -997,7 +1015,6 @@ class TestArpRequestFlow1(TestCcFlows):
                                                                 delete_header=[Ipv4Header.HEADER_TYPE])
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
-        self.meter_id = ETH_COPP_ARP_REQ_METER_ID
 
 
 class TestArpRequestFlow2(TestCcFlows):
