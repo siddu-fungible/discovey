@@ -58,7 +58,7 @@ class PortAllocator:
 
 
 class DockerHost(Linux, ToDictMixin):
-    SDA_WRITE_BPS = 5 * 1024 * 1024
+    SDA_WRITE_BPS = 12 * 1024 * 1024
     BASE_CONTAINER_SSH_PORT = 3219
     BASE_POOL1_PORT = 2219
     BASE_POOL2_PORT = 40219
