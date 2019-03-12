@@ -58,7 +58,7 @@ class PortAllocator:
 
 
 class DockerHost(Linux, ToDictMixin):
-
+    SDA_WRITE_BPS = "4mb"
     BASE_CONTAINER_SSH_PORT = 3219
     BASE_POOL1_PORT = 2219
     BASE_POOL2_PORT = 40219
@@ -449,7 +449,8 @@ class DockerHost(Linux, ToDictMixin):
                                                                      user=user,
                                                                      working_dir=working_dir,
                                                                      auto_remove=auto_remove,
-                                                                     cpu_shares=256)
+                                                                     cpu_shares=256,
+                                                                     device_write_bps="/dev/sda:{}".format(self.SDA_WRITE_BPS))
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")
