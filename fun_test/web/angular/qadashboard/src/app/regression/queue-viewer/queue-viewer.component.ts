@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
-import {Observable, of, interval} from "rxjs";
+import {Observable, of, interval, timer} from "rxjs";
 import {switchMap, switchMapTo} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
 
@@ -57,7 +57,7 @@ export class QueueViewerComponent implements OnInit {
     }).pipe(switchMap(() => {
       return this.getPriorityRanges();
     }), switchMap(()=> {
-      return interval(5000).pipe(switchMap ( () => {
+      return timer(0, 5000).pipe(switchMap ( () => {
         return this.getCurrentQueueOccupancy();
       }))
     }));
