@@ -1348,7 +1348,15 @@
                         "leaf": true,
                         "name": "JPEG Decompress_output_average_bandwidth",
                         "weight": 1,
-                        "label": "Throughput"
+                        "label": "Throughput (including driver)"
+                      },
+                      {
+                        "info": "Decompression Accelerator throughput_output_average_bandwidth",
+                        "metric_model_name": "TeraMarkJpegPerformance",
+                        "leaf": true,
+                        "name": "Decompression Accelerator throughput_output_average_bandwidth",
+                        "weight": 1,
+                        "label": "Throughput (excluding driver)"
                       }
                     ]
                   },
@@ -1366,7 +1374,15 @@
                         "leaf": true,
                         "name": "Compression throughput with Driver_output_average_bandwidth",
                         "weight": 1,
-                        "label": "Throughput"
+                        "label": "Throughput (including driver)"
+                      },
+                      {
+                        "info": "Compression Accelerator throughput_output_average_bandwidth",
+                        "metric_model_name": "TeraMarkJpegPerformance",
+                        "leaf": true,
+                        "name": "Compression Accelerator throughput_output_average_bandwidth",
+                        "weight": 1,
+                        "label": "Throughput (excluding driver)"
                       }
                     ]
                   }

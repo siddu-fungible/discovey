@@ -228,7 +228,7 @@ class FSOnBLTTestcase(FunTestCase):
                 fun_test.log("Device is accessible, setting the queue_length to {} and continuing with "
                              "test".format(self.queue_length))
                 # Setting queue_length
-                self.host.command("echo " + str(self.queue_length) + " >/sys/block/" + self.volume_name +
+                self.host.sudo_command("echo " + str(self.queue_length) + " >/sys/block/" + self.volume_name +
                                   "/queue/nr_requests")
                 break
             self.attempt += 1
