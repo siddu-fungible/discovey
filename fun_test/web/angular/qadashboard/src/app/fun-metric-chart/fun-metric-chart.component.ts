@@ -311,6 +311,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.yAxisSet = new Set();
     this.showAllExpectedValues = false;
     this.showSelect = false;
+    this.yMax = null;
+    this.series = null;
+    this.values = null;
+    this.maxDataSet = null;
+    this.maxExpected = null;
+    this.maxDataPoint = null;
   }
 
   closePointInfo(): void {
@@ -531,6 +537,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.expectedValues = [...this.expectedValues];
     this.y1AxisPlotLines = [];
     let maximum = null;
+    this.yAxisSet = new Set();
     for (let dataset of this.expectedValues) {
       if (dataset.show) {
         let line = {};
