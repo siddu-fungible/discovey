@@ -13,8 +13,8 @@
       </tr>
       <tr *ngFor="let queueEntry of queueOccupancy[category]; let i = index">
         <td>
-          <i *ngIf="queueOccupancy[category].length > 0" class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, true)" class="fa fa-arrow-up"></i>
-          <i *ngIf="queueOccupancy[category].length > 0" class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, false)" class="fa fa-arrow-down"></i>
+          <i *ngIf="queueOccupancy[category].length > 1" class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, true)" class="fa fa-arrow-up"></i>
+          <i *ngIf="queueOccupancy[category].length > 1" class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, false)" class="fa fa-arrow-down"></i>
           <span *ngIf="i > 0" class="btn btn-link" (click)="moveToTop(queueEntry.job_id, false)">Move to top</span>
           <span *ngIf="category === 'normal' || category === 'low' " class="btn btn-link" (click)="moveToNextQueue(queueEntry.job_id)">Move to next queue</span>
 
