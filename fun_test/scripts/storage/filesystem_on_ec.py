@@ -300,8 +300,10 @@ class FSOnECTestcase(FunTestCase):
         timeout_config = ""
         for key, value in self.nvme_timeouts.items():
             timeout_config += 'options nvme {}="{}"\n'.format(key, value)
+        self.host.enter_sudo()
         self.host.create_file(file_name=r"/etc/modprobe.d/nvme_core.conf", contents=timeout_config)
         self.host.command("cat /etc/modprobe.d/nvme_core.conf")
+        self.host.exit_sudo()
 
         # Configuring the controller
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)

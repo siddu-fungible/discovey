@@ -168,11 +168,11 @@ class FunethTestPacketSweep(FunTestCase):
             return pkt_size - 20 - 8  # IP header 20B, ICMP header 8B
 
         for intf, ip_addr in zip(interfaces, ip_addrs):
-            cmd = 'for i in {%s..%s}; do ping -c %s -i %s -s $i %s; done' % (
+            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i %s; done' % (
                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
             output = linux_obj.command(cmd, timeout=3000)
             fun_test.test_assert(
-                re.search(r'[1-9]+% packet loss', output) is None,
+                re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None,
                 'NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
 
 
@@ -414,8 +414,8 @@ if __name__ == "__main__":
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            FunethTestUnloadDriver,
-            #FunethTestReboot,  TODO: uncomment after SWTOOLS-877 is fixed
+            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestReboot,
     ):
         ts.add_test_case(tc())
     ts.run()
