@@ -88,3 +88,7 @@ class FunSDK:
         """Update SDK."""
         output = self.linux_obj.command('cd %s/%s; ./scripts/bob --sdkup' % (self.ws, self.name), timeout=300)
         return re.search(r'Updating current build number', output) is not None
+
+    def cleanup(self):
+        """Remove worksapce."""
+        return self.linux_obj.command('rm -fr {}/{}'.format(self.ws, self.name))
