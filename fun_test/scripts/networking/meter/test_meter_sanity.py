@@ -150,6 +150,7 @@ class MeterBase(FunTestCase):
     erp = False
     load_type = "KILOBITS_PER_SECOND"
     load = "load_bps"
+    json_key = "bps_meter"
     def describe(self):
         self.set_test_details(id=1, summary="Test SrTC meter transit for bps",
                               steps="""
@@ -162,18 +163,16 @@ class MeterBase(FunTestCase):
                                   """ )
 
     def setup(self):
-        meter_fields = meter_json_output['bps_meter']
-        self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
-        self.l3_config = self.routes_config['l3_config']
-        # Multiple streams for seding packets with different fields
-        checkpoint = "Creating multiple streams on %s port" % nu_ing_port
-        self.stream_obj = create_streams(tx_port=nu_ing_port, dmac=self.routes_config['routermac'],
-                                         dip=self.l3_config['destination_ip1'], load=self.load,
+        meter_fields = meter_json_output[self.json_key]
+        routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
+        l3_config = routes_config['l3_config']
+        self.stream_obj = create_streams(tx_port=nu_ing_port, dmac=routes_config['routermac'],
+                                         dip=l3_config['destination_ip1'], load=self.load,
                                          load_type=self.load_type, d_port=meter_fields['dport'],
                                          s_port=meter_fields['sport'])
 
     def run(self):
-        meter_fields = meter_json_output['bps_meter']
+        meter_fields = meter_json_output[self.json_key]
         tx_port = nu_ing_port
         rx_port = nu_eg_port
         if generator_config.Duration == TRAFFIC_DURATION:
@@ -279,6 +278,8 @@ class MeterBase(FunTestCase):
             meter_red = (int(meter_after['red']['pkts']) - int(meter_before['red']['pkts']))
             fun_test.test_assert_expected(expected=frames_received, actual=meter_green + meter_yellow,
                                           message=checkpoint)
+            fun_test.test_assert_expected(expected=frames_transmitted, actual=meter_green + meter_yellow+meter_red,
+                                          message="Comparing frames sent and all colored pkts")
             meter_color_ratio = (meter_red + meter_yellow + meter_green)/(meter_yellow + meter_green)
             fun_test.log("Meter Color Ratio : " + str(meter_color_ratio))
             if self.mode == METER_MODE_BPS:
@@ -311,6 +312,7 @@ class MeterPps1Rate(MeterBase):
     rate_mode = SrTCM
     erp = False
     load = "load_pps"
+    json_key = "pps_meter"
 
     def describe(self):
         self.set_test_details(id=2, summary="Test SrTC meter transit for pps",
