@@ -1,14 +1,8 @@
-from scripts.networking.lib_nw import funcp
-from lib.host.linux import Linux
 from lib.system.fun_test import *
 import subprocess
 import os
 import git
 
-USERNAME = "rushi"
-PASSWORD = "rushi@123"
-HOST_IP = "localhost"
-IS_LOCALHOST = True
 FUNCP = "FunControlPlane"
 FUNSDK = "FunSDK"
 FUNSDK_REPO = "FunSDK-small"
@@ -93,6 +87,7 @@ def make_gen_files():
 def setup_nmtf():
     result = False
     try:
+        fun_test.log("Setting up nmtf/snapshot lib by pulling and building pkgs....")
         fun_test.test_assert(setup_funcp_repo(), 'Setup FunControlPlane repo')
         fun_test.test_assert(get_funcp_prebuilt(), 'Get FunControlPlane prebuilt pkg')
         fun_test.test_assert(setup_funsdk_repo(), 'Setup FunSDK repo')
