@@ -50,6 +50,7 @@ import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.compo
 import { ToasterModule, ToasterService } from "angular2-toaster";
 import { LogViewerComponent } from './log-viewer/log-viewer.component';
 import { SmartLabelComponent } from './smart-label/smart-label.component';
+import {QueueViewerComponent} from "./regression/queue-viewer/queue-viewer.component";
 
 @NgModule({
   declarations: [
@@ -85,7 +86,8 @@ import { SmartLabelComponent } from './smart-label/smart-label.component';
     AlertsComponent,
     SchedulerAdminComponent,
     LogViewerComponent,
-    SmartLabelComponent
+    SmartLabelComponent,
+    QueueViewerComponent
   ],
   imports: [
     BsDropdownModule,
