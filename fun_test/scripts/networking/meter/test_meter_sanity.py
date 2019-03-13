@@ -265,7 +265,7 @@ class MeterBase(FunTestCase):
             fun_test.test_assert(port2_result, "Get %d Port FPG Stats" % dut_config['ports'][1])
 
             frames_transmitted = get_dut_output_stats_value(result_stats=port1_result,
-                                                            stat_type=FRAMES_RECEIVED_OK)
+                                                            stat_type=FRAMES_RECEIVED_OK, tx=False)
             frames_received = get_dut_output_stats_value(result_stats=port2_result, stat_type=FRAMES_TRANSMITTED_OK)
 
             fun_test.test_assert_expected(expected=rx_stream_result_framecount, actual=frames_received,
