@@ -72,6 +72,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   yAxisSet: any = new Set(); //to cehck for duplicates in the expected value so that the text is not overwritten
 
   baseLineDate: string = null;
+  visualizationUnit: string = null;
 
   public formatter: Function;
   public tooltip: Function;
@@ -286,6 +287,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.inner.leaf = this.leaf;
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
         this.baseLineDate = String(this.chartInfo.base_line_date);
+        this.visualizationUnit = this.chartInfo.visualization_unit;
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -369,6 +371,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     payload["base_line_date"] = this.baseLineDate;
+    payload["visualization_unit"] = this.visualizationUnit;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
         alert("Submitted");

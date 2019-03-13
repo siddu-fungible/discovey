@@ -72,16 +72,6 @@ class MetricChartStatusSerializer(ModelSerializer):
         model = MetricChartStatus
         fields = "__all__"
 
-class MetricChartUnits(models.Model):
-    metric_model_name = models.TextField(default="Unknown")
-    date_time = models.DateTimeField(default=datetime.now)
-    output_base_unit = models.CharField(max_length=10, default="unknown")
-    unit_category = models.TextField(default="unknown")
-
-    def __str__(self):
-        s = "{}:{} {}".format(self.metric_id, self.chart_name, self.date_time)
-        return s
-
 class MetricChart(models.Model):
     last_build_status = models.CharField(max_length=15, default=RESULTS["PASSED"])
     last_build_date = models.DateTimeField(verbose_name="last_build_date", default=datetime.now)
@@ -119,7 +109,7 @@ class MetricChart(models.Model):
     source = models.TextField(default="Unknown")
     jira_ids = models.TextField(default="[]")
     base_line_date = models.DateTimeField(verbose_name="base_line_date", default=BASE_LINE_DATE)
-    visualization_unit = models.CharField(max_length=10, default="unknown")
+    visualization_unit = models.CharField(max_length=20, default="Unknown")
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
@@ -1091,6 +1081,7 @@ class TeraMarkPkeRsaPerformance(models.Model):
     input_app = models.CharField(max_length=30, default="pke_rsa_crt_dec_no_pad_soak", choices=[(0, "pke_rsa_crt_dec_no_pad_soak")])
     input_metric_name = models.CharField(max_length=40, default="RSA_CRT_2048_decryptions", choices=[(0, "RSA_CRT_2048_decryptions")])
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    output_ops_per_sec_unit = models.CharField(max_length=10, default="Unknown")
     tag = "analytics"
 
     def __str__(self):
@@ -1107,6 +1098,7 @@ class TeraMarkPkeRsa4kPerformance(models.Model):
     input_app = models.CharField(max_length=50, default="pke_rsa_crt_dec_no_pad_4096_soak", choices=[(0, "pke_rsa_crt_dec_no_pad_4096_soak")])
     input_metric_name = models.CharField(max_length=40, default="RSA_CRT_4096_decryptions", choices=[(0, "RSA_CRT_4096_decryptions")])
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    output_ops_per_sec_unit = models.CharField(max_length=10, default="Unknown")
     tag = "analytics"
 
     def __str__(self):
@@ -1123,6 +1115,7 @@ class TeraMarkPkeEcdh256Performance(models.Model):
     input_app = models.CharField(max_length=30, default="pke_ecdh_soak_256", choices=[(0, "pke_ecdh_soak_256")])
     input_metric_name = models.CharField(max_length=40, default="ECDH_P256", choices=[(0, "ECDH_P256")])
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    output_ops_per_sec_unit = models.CharField(max_length=10, default="Unknown")
     tag = "analytics"
 
     def __str__(self):
@@ -1139,6 +1132,7 @@ class TeraMarkPkeEcdh25519Performance(models.Model):
     input_app = models.CharField(max_length=30, default="pke_ecdh_soak_25519", choices=[(0, "pke_ecdh_soak_25519")])
     input_metric_name = models.CharField(max_length=40, default="ECDH_25519", choices=[(0, "ECDH_25519")])
     output_ops_per_sec = models.IntegerField(verbose_name="ops per sec", default=-1)
+    output_ops_per_sec_unit = models.CharField(max_length=10, default="Unknown")
     tag = "analytics"
 
     def __str__(self):
@@ -1187,7 +1181,7 @@ class SoakDmaMemcpyCoherentPerformance(models.Model):
     input_size = models.TextField(verbose_name="Size")
     input_operation = models.TextField(verbose_name="Operation")
     input_log_size = models.TextField(verbose_name="Log Size")
-    input_unit = models.TextField(verbose_name="Unit")
+    output_bandwidth_unit = models.TextField(verbose_name="Unit")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     tag = "analytics"
@@ -1206,7 +1200,7 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
     input_size = models.TextField(verbose_name="Size")
     input_operation = models.TextField(verbose_name="Operation")
     input_log_size = models.TextField(verbose_name="Log Size")
-    input_unit = models.TextField(verbose_name="Unit")
+    output_bandwidth_unit = models.TextField(verbose_name="Unit")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     tag = "analytics"
@@ -1225,7 +1219,7 @@ class SoakDmaMemsetPerformance(models.Model):
     input_size = models.TextField(verbose_name="Size")
     input_operation = models.TextField(verbose_name="Operation")
     input_log_size = models.TextField(verbose_name="Log Size")
-    input_unit = models.TextField(verbose_name="Unit")
+    output_bandwidth_unit = models.TextField(verbose_name="Unit")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
     tag = "analytics"

@@ -3,7 +3,7 @@ import django
 import json
 import random, pytz
 import re
-from fun_global import get_current_time
+from fun_global import *
 from datetime import datetime
 from web.web_global import PRIMARY_SETTINGS_FILE
 from django.apps import apps
@@ -30,14 +30,7 @@ from web.fun_test.set_base_line import SetBaseLine
 
 from web.fun_test.analytics_models_helper import MetricChartHelper
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
-from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers, MetricChartUnits
-
-latency_category = ["nsecs", "usecs", "msecs", "secs"]
-ops_category = ["ops", "Kops", "Mops", "Gops"]
-operations_category = ["op", "Kop", "Mop", "Gop"]
-cycles_category = ["cycles"]
-bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
-bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
+from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
 
 
 class MetricHelper(object):
@@ -234,6 +227,7 @@ def get_entries_for_day(model, day, data_set):
 
 
 def get_possible_values(model_name):
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     metric_model = app_config.get_metric_models()[model_name]
     fields = metric_model._meta.get_fields()
     field_choices = {}
@@ -247,6 +241,17 @@ def get_possible_values(model_name):
                     choices.append(value[field.column])
 
                 field_choices[field.column] = choices
+    return field_choices
+
+
+def get_possible_output_values(model_name):
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model_name]
+    fields = metric_model._meta.get_fields()
+    field_choices = []
+    for field in fields:
+        if field.column.startswith("output_"):
+            field_choices.append(field.column)
     return field_choices
 
 
@@ -917,7 +922,6 @@ if __name__ == "__main_reference__":
             entry.save()
     print "created reference values"
 
-
 if __name__ == "__main_change_max__":
     entries = MetricChart.objects.all()
     count = 0
@@ -960,19 +964,19 @@ if __name__ == "__main_create_pps__":
         y1_axis_title = "Mpps"
         base_line_date = datetime(year=2019, month=1, day=22, minute=0, hour=0, second=0)
         MetricChart(chart_name=chart_name,
-                metric_id=metric_id,
-                internal_chart_name=internal_name,
-                data_sets=json.dumps(data_sets),
-                leaf=True,
-                description="TBD",
-                owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
-                positive=positive,
-                y1_axis_title=y1_axis_title,
-                metric_model_name=model_name,
-                base_line_date=base_line_date).save()
+                    metric_id=metric_id,
+                    internal_chart_name=internal_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
         mmt = MileStoneMarkers(metric_id=metric_id,
-                           milestone_date=datetime(year=2018, month=9, day=16),
-                           milestone_name="Tape-out")
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
         mmt.save()
     print "create pps charts for 3 nw flow type metrics"
 
@@ -994,13 +998,6 @@ if __name__ == "__main__":
     entries = MetricChart.objects.all()
     for entry in entries:
         if entry.leaf:
-            model = MetricChartUnits.objects.filter(metric_model_name=entry.metric_model_name)
-            if len(model):
-                print "already exists"
-            else:
-                if entry.y1_axis_title:
-                    category
-                input = MetricChartUnits(metric_model_name=entry.metric_model_name, output_base_unit=entry.y1_axis_title)
-                input.save()
-
-
+            entry.visualization_unit = entry.y1_axis_title
+            entry.save()
+    print "setting viz unit complete"

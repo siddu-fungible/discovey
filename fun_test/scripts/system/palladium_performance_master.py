@@ -6,7 +6,7 @@ from web.fun_test.metrics_models import BcopyFloodDmaPerformance, PkeX25519TlsSo
 from web.fun_test.metrics_models import EcPerformance, EcVolPerformance, VoltestPerformance
 from web.fun_test.metrics_models import WuSendSpeedTestPerformance, WuDispatchTestPerformance, FunMagentPerformanceTest
 from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMallocPerformance, \
-    SoakClassicMallocPerformance, TeraMarkMultiClusterCryptoPerformance, MetricChartUnits
+    SoakClassicMallocPerformance, TeraMarkMultiClusterCryptoPerformance
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
@@ -1076,6 +1076,7 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["input_ops_per_sec_unit"] = input_unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeRsaPerformance).add_entry(**d)
 
@@ -1117,6 +1118,7 @@ class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["input_ops_per_sec_unit"] = input_unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeRsa4kPerformance).add_entry(**d)
 
@@ -1158,6 +1160,7 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["input_ops_per_sec_unit"] = input_unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeEcdh256Performance).add_entry(**d)
 
@@ -1199,6 +1202,7 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["input_ops_per_sec_unit"] = input_unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeEcdh25519Performance).add_entry(**d)
 

@@ -6,7 +6,7 @@ import re
 import pytz
 from datetime import datetime, timedelta
 from web.web_global import PRIMARY_SETTINGS_FILE
-from fun_global import get_localized_time, get_current_time
+from fun_global import *
 from fun_settings import MAIN_WEB_APP
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
@@ -281,6 +281,7 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
                         if len(entries):
                             this_days_record = entries.last()
                             output_name = data_set["output"]["name"]  # TODO
+                            input_unit =  output_name + "_unit"
                             if "reference" in data_set["output"]:
                                 reference_value = data_set["output"]["reference"]
                                 if reference_value <= 0:
@@ -296,12 +297,15 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
                                     "output"] else None  # reference is set in fixup_reference_values
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
+                            output_value_unit = getattr(this_days_record, input_unit)
+                            output_value = convert_to_base_unit(output_value=output_value, input_unit_value=output_value_unit)
                             expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
 
                             # data_set_statuses.append(leaf_status)
                             if reference_value is not None:
                                 if expected_value != -1:
                                     reference_value = expected_value
+                                reference_value = convert_to_base_unit(output_value=reference_value, input_unit_value=chart.visualization_unit)
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
                                         output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
@@ -443,14 +447,85 @@ def set_local_timezone(current_date):
     date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day, hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
 
+def convert_to_base_unit(output_value, input_unit_value):
+    if input_unit_value in latency_category:
+        if input_unit_value == "nsecs":
+            output_value = output_value
+        elif input_unit_value == "usecs":
+            output_value = float(output_value * 1000)
+        elif input_unit_value == "msecs":
+            output_value = float(output_value * 1000000)
+        elif input_unit_value == "secs":
+            output_value = float(output_value * 1000000000)
+    elif input_unit_value in cycles_category:
+        output_value = output_value
+    elif input_unit_value in bandwidth_bits_category:
+        if input_unit_value == "Gbps":
+            output_value = output_value
+        elif input_unit_value == "Tbps":
+            output_value = float(output_value * 1000)
+        elif input_unit_value == "Mbps":
+            output_value = float(output_value / 1000)
+        elif input_unit_value == "Kbps":
+            output_value = float(output_value / 1000000)
+        elif input_unit_value == "bps":
+            output_value = float(output_value / 1000000000)
+    elif input_unit_value in bandwidth_bytes_category:
+        if input_unit_value == "GBps":
+            output_value = output_value
+        elif input_unit_value == "TBps":
+            output_value = float(output_value * 1000)
+        elif input_unit_value == "MBps":
+            output_value = float(output_value / 1000)
+        elif input_unit_value == "KBps":
+            output_value = float(output_value / 1000000)
+        elif input_unit_value == "Bps":
+            output_value = float(output_value / 1000000000)
+    elif input_unit_value in bits_bytes_category:
+        if input_unit_value == "GB":
+            output_value = output_value
+        elif input_unit_value == "b":
+            output_value = float(output_value / 8000000000)
+        elif input_unit_value == "B":
+            output_value = float(output_value / 1000000000)
+        elif input_unit_value == "KB":
+            output_value = float(output_value / 1000000)
+        elif input_unit_value == "MB":
+            output_value = float(output_value / 1000)
+        elif input_unit_value == "TB":
+            output_value = float(output_value * 1000)
+    elif input_unit_value in ops_category:
+        if input_unit_value == "ops":
+            output_value = output_value
+        elif input_unit_value == "Kops":
+            output_value = float(output_value * 1000)
+        elif input_unit_value == "Mops":
+            output_value = float(output_value * 1000000)
+        elif input_unit_value == "Gops":
+            output_value = float(output_value * 1000000000)
+    elif input_unit_value in operations_category:
+        if input_unit_value == "op":
+            output_value = output_value
+        elif input_unit_value == "Kop":
+            output_value = float(output_value * 1000)
+        elif input_unit_value == "Mop":
+            output_value = float(output_value * 1000000)
+        elif input_unit_value == "Gop":
+            output_value = float(output_value * 1000000000)
+    else:
+        output_value = output_value
+    return output_value
+
+
+
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="Networking_Teramarks")
-    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
-    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="MovingBits")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
-    all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
-    prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
+    # all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
+    # prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
 
 if __name__ == "__main2__":
     pass
