@@ -671,8 +671,8 @@ def get_psw_diff_counters(hnu_1, hnu_2, input_list=[], output_list=[],
                 result["output"][key] = int(new_val) - int(old_val)
 
             for key in input_list:
-                new_val = int(parsed_psw_stats_2['input'][key])
-                old_val = int(parsed_psw_stats_1['input'][key])
+                new_val = parsed_psw_stats_2['input'][key]
+                old_val = parsed_psw_stats_1['input'][key]
                 if not new_val:
                     new_val = 0
                 if not old_val:

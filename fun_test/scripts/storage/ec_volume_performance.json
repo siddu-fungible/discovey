@@ -79,7 +79,7 @@
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 300},
     "fio_modes": ["randwrite", "randread"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 40,
+    "volume_pass_threshold": 48,
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
       "(4, 1)": {"randwrite": {"write": {"bw": 57, "iops": 14, "latency": 69863}},
@@ -104,12 +104,12 @@
     "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
     "expected_stats": {
       "randwrite": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 829632)"},
         "mbuf": {"bm_in_use": "(0, 3)", "bm_num_bytes": "(0, 12288)", "in_use": "(0, 24)", "num_bytes": "(0, 98304)"},
         "wustacks": {"in_use": "(0, 1)"}
       },
       "randread": {
-        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 586816)"},
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 829632)"},
         "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 4096)", "in_use": "(0, 1)", "num_bytes": "(0, 4096)"},
         "wustacks": {"in_use": "(0, 1)"}
       }
@@ -244,7 +244,7 @@
     "fio_modes": ["randrw"],
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 32,
+    "volume_pass_threshold": 40,
     "expected_fio_result": {
       "(4, 1)": {"randrw": {"write": {"bw": 47, "iops": 12, "latency": 69532},
                             "read": {"bw": 14, "iops": 4, "latency": 47560}}},

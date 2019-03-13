@@ -68,7 +68,7 @@ def get_first_record(model, data_set):
     i = 0
 
 
-def fixup_expected_values(chart, model, data_set):
+def fixup_reference_values(chart, model, data_set):
     modified = 0
     first_record = get_first_record(model=model, data_set=data_set)
     if not first_record:
@@ -77,10 +77,10 @@ def fixup_expected_values(chart, model, data_set):
         first_record = first_record[-1]
         output_name = data_set["output"]["name"]
         if output_name in first_record:
-            data_set["output"]["expected"] = first_record[output_name]
+            data_set["output"]["reference"] = first_record[output_name]
             modified = 1
         j = 0
-        # data_set["expected"] = first_rec
+        # data_set["reference"] = first_rec
     # self.data_sets = json.dumps(data_set)
     # self.save()
     return modified
@@ -116,7 +116,7 @@ def get_tolerance():
     return global_settings.tolerance_percentage / 100
 
 
-def prepare_status(chart, purge_old_status=False):
+def prepare_status(chart, cache_valid, purge_old_status=False):
     metric_id = chart.metric_id
     chart_name = chart.chart_name
     result = {}
@@ -176,7 +176,7 @@ def prepare_status(chart, purge_old_status=False):
 
                 child_metric = MetricChart.objects.get(metric_id=child)
                 if child_metric.metric_id not in fixup_results_cache:
-                    temp_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status)
+                    temp_result = prepare_status(chart=child_metric, purge_old_status=purge_old_status, cache_valid=cache_valid)
                     fixup_results_cache[child_metric.metric_id] = temp_result
                 child_result = fixup_results_cache[child_metric.metric_id]
 
@@ -243,6 +243,17 @@ def prepare_status(chart, purge_old_status=False):
             current_score = 0
             is_leaf_degrade = False
             replacement = False
+            if cache_valid:
+                entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by("date_time")
+                if len(entries):
+                    last_entry = entries.last()
+                    last_date = last_entry.date_time
+                    last_good_score = chart.last_good_score
+                    penultimate_good_score = chart.penultimate_good_score
+                    for entry in entries:
+                        valid_dates.append(entry.date_time)
+                        scores[entry.date_time] = entry.score
+                    current_date = last_date + timedelta(days=1)
             while current_date <= to_date:
                 result["num_degrades"] = 0
                 valid_dates.append(current_date)
@@ -270,31 +281,34 @@ def prepare_status(chart, purge_old_status=False):
                         if len(entries):
                             this_days_record = entries.last()
                             output_name = data_set["output"]["name"]  # TODO
-                            if "expected" in data_set["output"]:
-                                expected_value = data_set["output"]["expected"]
-                                if expected_value <= 0:
-                                    data_set_mofified = data_set_mofified or chart.fixup_expected_values(
+                            if "reference" in data_set["output"]:
+                                reference_value = data_set["output"]["reference"]
+                                if reference_value <= 0:
+                                    data_set_mofified = data_set_mofified or chart.fixup_reference_values(
                                         data_set=data_set)
-                                    expected_value = data_set["output"]["expected"]
+                                    reference_value = data_set["output"]["reference"]
                             else:
                                 # let's fix it up
-                                print ("Fixing expected values")
-                                data_set_mofified = data_set_mofified or chart.fixup_expected_values(
+                                print ("Fixing reference values")
+                                data_set_mofified = data_set_mofified or chart.fixup_reference_values(
                                     data_set=data_set)
-                                expected_value = data_set["output"]["expected"] if "expected" in data_set[
-                                    "output"] else None  # expected is set in fixup_expected_values
+                                reference_value = data_set["output"]["reference"] if "reference" in data_set[
+                                    "output"] else None  # reference is set in fixup_reference_values
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
+                            expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
 
                             # data_set_statuses.append(leaf_status)
-                            if expected_value is not None:
+                            if reference_value is not None:
+                                if expected_value != -1:
+                                    reference_value = expected_value
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
-                                        output_value) / expected_value) * 100 if output_value >= 0 and expected_value > 0 else 0
+                                        output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
                                 else:
                                     if output_value:
                                         data_set_combined_goodness += (float(
-                                            expected_value) / output_value) * 100 if output_value >= 0 else 0
+                                            reference_value) / output_value) * 100 if output_value >= 0 else 0
                                     else:
                                         print "ERROR: {}, {}".format(chart.chart_name,
                                                                      chart.metric_model_name)
@@ -365,6 +379,7 @@ def prepare_status(chart, purge_old_status=False):
                 if is_leaf_degrade or not current_score:
                     result["num_degrades"] = 1
                 current_date = current_date + timedelta(days=1)
+                current_date = set_local_timezone(current_date)
 
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
@@ -424,15 +439,18 @@ def prepare_status(chart, purge_old_status=False):
     chart.save()
     return result
 
+def set_local_timezone(current_date):
+    date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day, hour=current_date.hour, second=current_date.second, minute=current_date.minute)
+    return get_localized_time(date_time_obj)
 
 if __name__ == "__main__":
-    "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="Security")
-    # prepare_status(chart=total_chart, purge_old_status=False)
+    # "Malloc agent rate : FunMagentPerformanceTest : 185"
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="Networking_Teramarks")
+    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=False)
+    prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
-    prepare_status(chart=all_metrics_chart, purge_old_status=False)
+    prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
 
 if __name__ == "__main2__":
     pass

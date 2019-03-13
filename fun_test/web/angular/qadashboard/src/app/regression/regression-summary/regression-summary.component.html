@@ -94,6 +94,7 @@
             <div class="col">
               <ng-container *ngIf="filters.length > 0">
                 <ng-container *ngFor="let filter of filters; index as index">
+                  <ng-container *ngIf="filter.timeBucketList?.length > 0">
                   <div id="summary-chart-{{ index }}">
                     <app-regression-summary-chart [title]="filter.info"
                                                   (pointInfo)="showPointDetails($event)"
@@ -103,6 +104,8 @@
                     </app-regression-summary-chart>
 
                   </div>
+                  </ng-container>
+
 
 
                 </ng-container>

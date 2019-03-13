@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
-from fun_global import is_production_mode
+from fun_global import is_production_mode, is_triaging_mode
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job2, queue_suite_container
 from scheduler.scheduler_helper import queue_dynamic_suite, get_archived_job_spec
@@ -359,7 +359,7 @@ def suite_detail(request, execution_id):
     suite_execution = all_objects_dict[0]
     suite_execution_attributes = _get_suite_execution_attributes(suite_execution=suite_execution)
     angular_home = 'qa_dashboard/angular_home_development.html'
-    if is_production_mode():
+    if is_production_mode() and not is_triaging_mode():
         angular_home = 'qa_dashboard/angular_home_production.html'
     return render(request, angular_home, locals())
 
@@ -898,6 +898,24 @@ def jiras(request, script_pk, jira_id=None):
         except ObjectDoesNotExist:
             logger.critical("No data found - Deleting jira ids for script pk id {}".format(script_pk))
         return "Ok"
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def test_case_execution_info(request, test_case_execution_id):
+    """
+    This one does not involve suite execution id
+    :param request:
+    :param test_case_execution_id:
+    :return:
+    """
+    result = {}
+    test_case_execution = TestCaseExecution.objects.get(execution_id=test_case_execution_id)
+    result["execution_id"] = test_case_execution.execution_id
+    result["suite_execution_id"] = test_case_execution.suite_execution_id
+    result["log_prefix"] = test_case_execution.log_prefix
+    result["re_run_history"] = test_case_execution.re_run_history
     return result
 
 

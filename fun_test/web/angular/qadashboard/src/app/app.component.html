@@ -24,7 +24,7 @@
 
       <li ngbDropdown class="nav-item dropdown">
         <a [routerLink]="" id="navbarDropdown" style="color: white;background-color: #337ab7"
-           class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+           class="nav-link dropdown-toggle"role="button" aria-haspopup="true"
            aria-expanded="false" ngbDropdownToggle>Regression</a>
         <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="/regression/summary">Summary</a>
@@ -63,47 +63,20 @@
       </li>
     </ul>
         <ul class="navbar-nav">
-      <li><a href="/common/alerts_page" role="button" style="color: white;background-color: #337ab7">Alerts</a></li>
+      <li><i [routerLink]="['/common/logs']" class="fa fa-bell fa-2x" style="color: gold;      text-shadow: 0 0 3px #000;" aria-hidden="true" *ngIf="showAlert"></i>&nbsp;
+          <a [routerLink]="['/common/logs']" role="button" style="color: white;background-color: #337ab7">Logs</a>
+      </li>
     </ul>
 
   </div>
 </nav>
 
-<!--div class="content" ng-controller="QaDashBoardController" ng-if="showCommonError">
-    <div class="alert alert-danger alert-dismissible show" role="alert">
-        <strong>{{ commonErrorMessage }} </strong>&nbsp <a href="{{ commonAlertLink }}">Details</a> {{ detailError }}
-        <button type="button" class="close" aria-label="Close">
-            <span aria-hidden="true" ng-click="closeCommonError()">&times;</span>
-        </button>
-    </div>
-</div>
-<div class="content" ng-controller="QaDashBoardController" ng-if="showCommonSuccess">
-    <div class="alert alert-success alert-dismissible show" role="alert">
-        <strong>{{ commonSuccessMessage }}</strong>
-        <button type="button" class="close" aria-label="Close">
-            <span aria-hidden="true" ng-click="closeCommonSuccess()">&times;</span>
-        </button>
-    </div>
-</div-->
-<!--<div class="content" ng-controller="QaDashBoardController" ng-if="showCommonError">-->
-<!--<div class="alert alert-danger alert-dismissible show" role="alert">-->
-<!--<strong>{{ commonErrorMessage }} </strong>&nbsp <a href="{{ commonAlertLink }}">Details</a> {{ detailError }}-->
-<!--<button type="button" class="close" aria-label="Close">-->
-<!--<span aria-hidden="true" ng-click="closeCommonError()">&times;</span>-->
-<!--</button>-->
-<!--</div>-->
-<!--</div>-->
-<!--<div class="content" ng-controller="QaDashBoardController" ng-if="showCommonSuccess">-->
-<!--<div class="alert alert-success alert-dismissible show" role="alert">-->
-<!--<strong>{{ commonSuccessMessage }}</strong>-->
-<!--<button type="button" class="close" aria-label="Close">-->
-<!--<span aria-hidden="true" ng-click="closeCommonSuccess()">&times;</span>-->
-<!--</button>-->
-<!--</div>-->
-<!--</div>-->
+
 
 <div>
+  <toaster-container></toaster-container>
   <router-outlet></router-outlet>
+
 </div>
 
 </body>

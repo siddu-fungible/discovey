@@ -593,7 +593,6 @@ class Pir_Q15(Pir_Q0):
 if __name__ == "__main__":
     ts = SpirentSetup()
     ts.add_test_case(Pir_Q0())
-    '''
     ts.add_test_case(Pir_Q1())
     ts.add_test_case(Pir_Q2())
     ts.add_test_case(Pir_Q3())
@@ -609,5 +608,4 @@ if __name__ == "__main__":
     ts.add_test_case(Pir_Q13())
     ts.add_test_case(Pir_Q14())
     ts.add_test_case(Pir_Q15())
-    '''
     ts.run()

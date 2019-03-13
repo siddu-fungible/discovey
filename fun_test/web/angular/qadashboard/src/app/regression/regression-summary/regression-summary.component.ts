@@ -4,7 +4,8 @@ import {LoggerService} from "../../services/logger/logger.service";
 import {CommonService} from "../../services/common/common.service";
 import {forkJoin, from, Observable, of} from 'rxjs';
 import {ReRunService} from "../re-run.service";
-import {concatMap, switchMap} from "rxjs/operators";
+import {concatMap, mergeMap, switchMap} from "rxjs/operators";
+import {RegressionService} from "../regression.service";
 
 
 @Component({
@@ -20,7 +21,8 @@ export class RegressionSummaryComponent implements OnInit {
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
               private commonService: CommonService,
-              private reRunService: ReRunService) {
+              private reRunService: ReRunService,
+              private regressionService: RegressionService) {
   }
 
   xValues: any [] = [];
@@ -37,7 +39,13 @@ export class RegressionSummaryComponent implements OnInit {
   showGlobalBugPanel = false;
   scriptSuiteBaselineMap = {};
 
-  initialFilterData = [{info: "Networking overall", payload: {module: "networking"}},
+  /*initialFilterData = [{info: "Networking overall", payload: {module: "networking"}},
+    {info: "Networking sanity", payload: {module: "networking", test_case_execution_tags: ["networking-sanity"]}}
+  ];*/
+
+    /*initialFilterData = [{info: "Networking overall", payload: {module: "networking"}}
+  ];*/
+    initialFilterData = [{info: "Networking overall", payload: {module: "networking"}},
     {info: "Storage overall", payload: {module: "storage"}},
     {info: "Networking sanity", payload: {module: "networking", test_case_execution_tags: ["networking-sanity"]}},
     {info: "Storage sanity", payload: {module: "storage", test_case_execution_tags: ["storage-sanity"]}},
@@ -343,7 +351,7 @@ export class RegressionSummaryComponent implements OnInit {
       let numbers = [];
       this.filters.map(filter => {numbers.push(numbers.length)});
         return from(numbers).pipe(
-     concatMap(filterIndex => this.fetchScriptInfo2(filterIndex))).subscribe(response => {
+     mergeMap(filterIndex => this.fetchScriptInfo2(filterIndex))).subscribe(response => {
 
         }, error => {
         this.loggerService.error("Unable to fetch script info");
@@ -480,19 +488,15 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   isSameDay(d1, d2) {
-    return d1.getUTCFullYear() === d2.getUTCFullYear() &&
-      d1.getUTCMonth() === d2.getUTCMonth() &&
-      d1.getUTCDate() === d2.getUTCDate();
+    return d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
   }
 
-  isSameDay2(d1, d2) {
-    console.log(d1.getUTCFullYear(), d2.getUTCFullYear());
-    console.log(d1.getUTCMonth(), d2.getUTCMonth());
-    console.log(d1.getUTCDate(), d2.getUTCDate());
-  }
+
 
   isGreaterThan(d1, d2) {
-    if ((d1.getUTCFullYear() > d2.getUTCFullYear()) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() > d2.getUTCMonth())) || ((d1.getUTCFullYear() === d2.getUTCFullYear()) && (d1.getUTCMonth() === d2.getUTCMonth()) && (d1.getUTCDate() > d2.getUTCDate()))) {
+    if ((d1.getFullYear() > d2.getFullYear()) || ((d1.getYear() === d2.getFullYear()) && (d1.getMonth() > d2.getMonth())) || ((d1.getFullYear() === d2.getFullYear()) && (d1.getMonth() === d2.getMonth()) && (d1.getDate() > d2.getDate()))) {
       return true;
     }
     return false;
@@ -503,7 +507,8 @@ export class RegressionSummaryComponent implements OnInit {
     //console.log(d.getYear());
     //console.log(d.getMonth());
     //console.log(d.getDate());
-    return d.getUTCMonth() + 1 + "/" + d.getUTCDate();
+    //return d.getUTCMonth() + 1 + "/" + d.getUTCDate();
+    return d.getMonth() + 1 + "/" + + d.getDate();
   }
 
   addToTimeBucket(index, d, history) {
@@ -527,9 +532,12 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   addHistoryToDateTimeBuckets(index, history) {
+    if (history.execution_id === 69570) {
+      let i = 0;
+    }
     let currentDate = this.filters[index].currentDate;
     let today = new Date();
-    let historyTime = new Date(history.started_time);
+    let historyTime = new Date(this.regressionService.convertToLocalTimezone(history.started_time)); //.replace(/\s+/g, 'T')); // For Safari
     if (this.isGreaterThan(currentDate, historyTime)) {
       /*if (index === 4) {
 
@@ -555,6 +563,12 @@ export class RegressionSummaryComponent implements OnInit {
     return this.apiService.post("/regression/get_test_case_executions_by_time", this.filters[index].payload).pipe(switchMap((response) => {
       this.filters[index].testCaseExecutions = response.data;
       this.filters[index].testCaseExecutions.forEach((historyElement) => {
+        if (historyElement.script_path === "/networking/qos/test_cir_1.py") {
+          if (historyElement.suite_execution_id === 6111)
+          {
+            let i = 0;
+          }
+        }
         //console.log(historyElement);
         if (!historyElement.is_re_run) {
           let elementSuiteExecutionId = historyElement.suite_execution_id;
@@ -670,5 +684,3 @@ export class RegressionSummaryComponent implements OnInit {
 
 
 }
-
-

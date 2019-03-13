@@ -144,7 +144,7 @@ export class RegressionComponent implements OnInit {
   };
 
   trimTime(t) {
-    return t.replace(/\..*$/, "").replace(/T/, " ");
+    return this.regressionService.getPrettyLocalizeTime(t);
   }
 
   getSuiteDetail(suiteId) {

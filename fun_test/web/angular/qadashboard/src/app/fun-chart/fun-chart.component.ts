@@ -16,6 +16,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() y1AxisLabel: string;
   @Input() mileStones: any = null;
   @Input() y1AxisPlotLines: any = null;
+  @Input() yMax: number = null;
   @Input() public xAxisFormatter: Function;
   @Input() public tooltipFormatter: Function;
   @Input() public pointClickCallback: Function;
@@ -101,18 +102,24 @@ export class FunChartComponent implements OnInit, OnChanges {
           });
         });
       }
+      if (this.yMax) {
+        chartOptions.yAxis["max"] = this.yMax;
+      }
       chartOptions.yAxis["plotLines"] = [];
       if (this.y1AxisPlotLines) {
         for (let dataSet of this.y1AxisPlotLines) {
-          chartOptions.yAxis["plotLines"].push({
-            color: 'grey', // Color value
-            dashStyle: 'shortdash', // Style of the plot line. Default to solid
-            value: dataSet.value, // Value of where the line will appear
-            width: 2, // Width of the line
-            label: {
-              text: dataSet.text
-            }
-          });
+          if (dataSet.value !== -1) {
+            chartOptions.yAxis["plotLines"].push({
+              color: 'grey', // Color value
+              dashStyle: 'shortdash', // Style of the plot line. Default to solid
+              value: dataSet.value, // Value of where the line will appear
+              width: 2, // Width of the line
+              label: {
+                text: dataSet.text,
+                align: "right"
+              }
+            });
+          }
         }
       }
     }

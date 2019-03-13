@@ -21,7 +21,7 @@ export class ReRunService {
   submitReRun(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null) {
     this.suitePath = suitePath;
     let submit$ = new Observable(observer => {
-      observer.next("Ok");
+      observer.next(true);
       observer.complete();
       //observer.error("Error");
       return () => {

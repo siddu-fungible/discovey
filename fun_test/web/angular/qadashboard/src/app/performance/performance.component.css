@@ -164,14 +164,15 @@ arrow-icon {
   /*width: 200px !important;*/
   /*height: 200px !important;*/
   border: solid 1px black !important;
-  text-align: left;
-  max-width: 1000px !important;
+  text-align: left !important;
+  max-width: 50% !important;
   min-width: 200px !important;
   /*display: table !important;*/
 }
 
 ::ng-deep #score-info > .tooltip {
-  top: 0 !important;
+  top: 245px !important;
+  /*transform: translate(244px, 0) !important;*/
 }
 ::ng-deep #score-info > .tooltip.show {
   opacity: 1.0 !important;
@@ -181,7 +182,7 @@ arrow-icon {
   border-right-color: black !important;
 }
 ::ng-deep #score-info > .tooltip > .arrow {
-  top: calc(7% - .4rem) !important;
+  top: calc(4% - .4rem) !important;
 }
 ::ng-deep .tooltip-inner a {
   /*display: table-cell !important;*/

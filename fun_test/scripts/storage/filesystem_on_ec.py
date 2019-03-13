@@ -221,7 +221,7 @@ class FSOnECTestcase(FunTestCase):
             io_timeout = 60
 
         # Write a file into the EC volume of size self.input_file_size bytes
-        return_size = self.host.dd(timeout=io_timeout, **self.dd_write_args)
+        return_size = self.host.dd(timeout=io_timeout, sudo=True, **self.dd_write_args)
         fun_test.test_assert_expected(self.input_file_size, return_size, "Writing {} bytes file into the EC volume".
                                       format(self.input_file_size))
         self.input_md5sum = self.host.md5sum(file_name=self.dd_write_args["output_file"], timeout=io_timeout)
@@ -250,7 +250,7 @@ class FSOnECTestcase(FunTestCase):
             self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=io_timeout)
 
         # Read the previously written file from the EC volume and calculate the md5sum of the same
-        return_size = self.host.dd(timeout=io_timeout, **self.dd_read_args)
+        return_size = self.host.dd(timeout=io_timeout, sudo=True, **self.dd_read_args)
         fun_test.test_assert_expected(self.input_file_size, return_size, "Reading {} bytes file into the EC volume".
                                       format(self.input_file_size))
         self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
@@ -300,8 +300,10 @@ class FSOnECTestcase(FunTestCase):
         timeout_config = ""
         for key, value in self.nvme_timeouts.items():
             timeout_config += 'options nvme {}="{}"\n'.format(key, value)
+        self.host.enter_sudo()
         self.host.create_file(file_name=r"/etc/modprobe.d/nvme_core.conf", contents=timeout_config)
         self.host.command("cat /etc/modprobe.d/nvme_core.conf")
+        self.host.exit_sudo()
 
         # Configuring the controller
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)

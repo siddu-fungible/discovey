@@ -74,7 +74,7 @@
             "leaf": false,
             "name": "NU_HNU",
             "weight": 1,
-            "label": "NU_HNU",
+            "label": " NU->HNU NFCP Flow",
             "reference": true
           },
           {
@@ -83,7 +83,7 @@
             "leaf": false,
             "name": "HNU_HNU_FCP",
             "weight": 1,
-            "label": "HNU_HNU_FCP",
+            "label": "HNU->HNU FCP Flow",
             "reference": true
           },
           {
@@ -92,7 +92,7 @@
             "leaf": false,
             "name": "HNU_HNU",
             "weight": 1,
-            "label": "HNU_HNU",
+            "label": "HNU->HNU NFCP Flow",
             "reference": true
           },
           {
@@ -101,7 +101,7 @@
             "leaf": false,
             "name": "NU_NU",
             "weight": 1,
-            "label": "NU_NU",
+            "label": "NU->NU NFCP Flow",
             "reference": true
           },
           {
@@ -110,7 +110,34 @@
             "leaf": false,
             "name": "HNU_NU",
             "weight": 1,
-            "label": "HNU_NU",
+            "label": "HNU->NU NFCP Flow",
+            "reference": true
+          },
+          {
+            "info": "HU_NU_NFCP",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "HU_NU_NFCP",
+            "weight": 1,
+            "label": "HU->NU NFCP Flow",
+            "reference": true
+          },
+          {
+            "info": "HU_HU_NFCP",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "HU_HU_NFCP",
+            "weight": 1,
+            "label": "HU->HU NFCP Flow",
+            "reference": true
+          },
+          {
+            "info": "NU_HU_NFCP",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "NU_HU_NFCP",
+            "weight": 1,
+            "label": "NU->HU NFCP Flow",
             "reference": true
           }
         ],
@@ -128,7 +155,7 @@
             "metric_model_name": "FlowTestPerformance",
             "leaf": true,
             "name": "flow_test",
-            "label": "flow_test",
+            "label": "Flowtest",
             "children": [],
             "weight": 1
           },
@@ -389,53 +416,7 @@
             "name": "Lookup-engine",
             "label": "Lookup-engine",
             "weight": 1,
-            "children": [
-              {
-                "info": "HT HBM non-coherent - FP HBM non-coherent",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "HT HBM non-coherent - FP HBM non-coherent",
-                "label": "HT HBM non-coherent - FP HBM non-coherent",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "HT HBM coherent - FP HBM coherent",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "HT HBM coherent - FP HBM coherent",
-                "label": "HT HBM coherent - FP HBM coherent",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "HT DDR non-coherent - FP DDR non-coherent",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "HT DDR non-coherent - FP DDR non-coherent",
-                "label": "HT DDR non-coherent - FP DDR non-coherent",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "HT DDR coherent - FP DDR coherent",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "HT DDR coherent - FP DDR coherent",
-                "label": "HT DDR coherent - FP DDR coherent",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "TCAM",
-                "metric_model_name": "TeraMarkLookupEnginePerformance",
-                "leaf": true,
-                "name": "TCAM",
-                "label": "TCAM",
-                "children": [],
-                "weight": 1
-              }
-            ]
+            "reference": true
           },
           {
             "info": "EC",
@@ -447,20 +428,29 @@
             "reference": true
           },
           {
-            "info": "DMA",
+            "info": "MovingBits",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "DMA",
-            "label": "DMA",
+            "name": "MovingBits",
+            "label": "MovingBits",
             "weight": 1,
             "reference": true
           },
           {
-            "info": "Crypto",
+            "info": "Crypto api throughput",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "Crypto",
-            "label": "Crypto",
+            "name": "Crypto api throughput",
+            "label": "Crypto API Throughput",
+            "weight": 1,
+            "reference": true
+          },
+          {
+            "info": "Crypto raw throughput",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Crypto raw throughput",
+            "label": "Crypto Raw Throughput",
             "weight": 1,
             "reference": true
           },
@@ -793,161 +783,139 @@
             "weight": 1,
             "children": [
               {
-                "info": "DMA",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "DMA",
-                "label": "DMA",
-                "weight": 1,
-                "children": [
-                  {
-                    "info": "memcpy",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "memcpy",
-                    "label": "Memcpy",
-                    "weight": 1,
-                    "children": [
-                      {
-                        "info": "memcpy_non_coherent_output_bandwidth_64B_2048B",
-                        "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                        "leaf": true,
-                        "name": "memcpy_non_coherent_output_bandwidth_64B_2048B",
-                        "label": "Non coherent: Bandwidth (64B-2048B)",
-                        "children": [],
-                        "weight": 1
-                      },
-                      {
-                        "info": "memcpy_non_coherent_output_bandwidth_4096B_64KB",
-                        "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                        "leaf": true,
-                        "name": "memcpy_non_coherent_output_bandwidth_4096B_64KB",
-                        "label": "Non coherent: Bandwidth (4096B-64KB)",
-                        "children": [],
-                        "weight": 1
-                      },
-                      {
-                        "info": "memcpy_non_coherent_output_bandwidth_128KB_512KB",
-                        "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                        "leaf": true,
-                        "name": "memcpy_non_coherent_output_bandwidth_128KB_512KB",
-                        "label": "Non coherent: Bandwidth (128KB-512KB)",
-                        "children": [],
-                        "weight": 1
-                      },
-                      {
-                        "info": "memcpy_non_coherent_output_bandwidth_1024KB_2048KB",
-                        "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
-                        "leaf": true,
-                        "name": "memcpy_non_coherent_output_bandwidth_1024KB_2048KB",
-                        "label": "Non coherent: Bandwidth (1024KB-2048KB)",
-                        "children": [],
-                        "weight": 1
-                      }
-                    ]
-                  },
-                  {
-                    "info": "memset",
-                    "metric_model_name": "MetricContainer",
-                    "leaf": false,
-                    "name": "memset",
-                    "label": "Memset",
-                    "weight": 1,
-                    "children": [
-                      {
-                        "info": "memset_output_bandwidth_64B_256B",
-                        "metric_model_name": "SoakDmaMemsetPerformance",
-                        "leaf": true,
-                        "name": "memset_output_bandwidth_64B_256B",
-                        "label": "Bandwidth (64B-256B)",
-                        "children": [],
-                        "weight": 1
-                      },
-                      {
-                        "info": "memset_output_bandwidth_1024B_16KB",
-                        "metric_model_name": "SoakDmaMemsetPerformance",
-                        "leaf": true,
-                        "name": "memset_output_bandwidth_1024B_16KB",
-                        "label": "Bandwidth (1024B-16KB)",
-                        "children": [],
-                        "weight": 1
-                      },
-                      {
-                        "info": "memset_output_bandwidth_64KB_256KB",
-                        "metric_model_name": "SoakDmaMemsetPerformance",
-                        "leaf": true,
-                        "name": "memset_output_bandwidth_64KB_256KB",
-                        "label": "Bandwidth (64KB-256KB)",
-                        "children": [],
-                        "weight": 1
-                      }
-                    ]
-                  }
-                ]
+                "info": "memcpy_coherent_output_bandwidth_below_4k",
+                "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_coherent_output_bandwidth_below_4k",
+                "label": "DMA soak memcpy coherent (Below 4K)",
+                "children": [],
+                "weight": 1
               },
               {
-                "info": "Bcopy",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "Bcopy",
-                "label": "Bcopy",
-                "weight": 1,
-                "children": [
-                  {
-                    "name": "Bcopy: Plain: Avg Bandwidth",
-                    "label": "Bcopy: Plain: Avg Bandwidth",
-                    "info": "Bcopy: Plain: Avg Bandwidth",
-                    "metric_model_name": "BcopyPerformance",
-                    "children": [],
-                    "leaf": true,
-                    "weight": 1
-                  },
-                  {
-                    "name": "Bcopy: Plain: Avg Latency",
-                    "label": "Bcopy: Plain: Avg Latency",
-                    "info": "Bcopy: Plain: Avg Latency",
-                    "metric_model_name": "BcopyPerformance",
-                    "children": [],
-                    "leaf": true,
-                    "weight": 1
-                  },
-                  {
-                    "name": "Bcopy: DMA: Avg Bandwidth",
-                    "label": "Bcopy: DMA: Avg Bandwidth",
-                    "info": "Bcopy: DMA: Avg Bandwidth",
-                    "metric_model_name": "BcopyPerformance",
-                    "children": [],
-                    "leaf": true,
-                    "weight": 1
-                  },
-                  {
-                    "name": "Bcopy: DMA: Avg Latency",
-                    "label": "Bcopy: DMA: Avg Latency",
-                    "info": "Bcopy: DMA: Avg Latency",
-                    "metric_model_name": "BcopyPerformance",
-                    "children": [],
-                    "leaf": true,
-                    "weight": 1
-                  },
-                  {
-                    "name": "Bcopy: Flood DMA: Avg Bandwidth",
-                    "label": "Bcopy: Flood DMA: Avg Bandwidth",
-                    "info": "Bcopy: Flood DMA: Avg Bandwidth",
-                    "metric_model_name": "BcopyFloodDmaPerformance",
-                    "children": [],
-                    "leaf": true,
-                    "weight": 1
-                  },
-                  {
-                    "name": "Bcopy: Flood DMA: Avg Latency",
-                    "label": "Bcopy: Flood DMA: Avg Latency",
-                    "info": "Bcopy: Flood DMA: Avg Latency",
-                    "metric_model_name": "BcopyFloodDmaPerformance",
-                    "children": [],
-                    "leaf": true,
-                    "weight": 1
-                  }
-                ]
+                "info": "memcpy_coherent_output_bandwidth_4k_1mb",
+                "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_coherent_output_bandwidth_4k_1mb",
+                "label": "DMA soak memcpy coherent (4K-1MB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memcpy_coherent_output_bandwidth_above_1mb",
+                "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_coherent_output_bandwidth_above_1mb",
+                "label": "DMA soak memcpy coherent (Above 1MB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memcpy_non_coherent_output_bandwidth_64B_2048B",
+                "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_non_coherent_output_bandwidth_64B_2048B",
+                "label": "DMA soak memcpy non coherent (Below 4K)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memcpy_non_coherent_output_bandwidth_4096B_64KB",
+                "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_non_coherent_output_bandwidth_4096B_64KB",
+                "label": "DMA soak memcpy non coherent (4K-1MB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memcpy_non_coherent_output_bandwidth_128KB_512KB",
+                "metric_model_name": "SoakDmaMemcpyNonCoherentPerformance",
+                "leaf": true,
+                "name": "memcpy_non_coherent_output_bandwidth_128KB_512KB",
+                "label": "DMA soak memcpy non coherent (Above 1MB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_output_bandwidth_64B_256B",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_output_bandwidth_64B_256B",
+                "label": "DMA soak memset (64B-256B)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_output_bandwidth_1024B_16KB",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_output_bandwidth_1024B_16KB",
+                "label": "DMA soak memset (1024B-16KB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_output_bandwidth_64KB_256KB",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_output_bandwidth_64KB_256KB",
+                "label": "DMA soak memset (64KB-256KB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: Plain: Avg Bandwidth",
+                "label": "Bcopy: Plain: Avg Bandwidth",
+                "info": "Bcopy: Plain: Avg Bandwidth",
+                "metric_model_name": "BcopyPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: Plain: Avg Latency",
+                "label": "Bcopy: Plain: Avg Latency",
+                "info": "Bcopy: Plain: Avg Latency",
+                "metric_model_name": "BcopyPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: DMA: Avg Bandwidth",
+                "label": "Bcopy: DMA: Avg Bandwidth",
+                "info": "Bcopy: DMA: Avg Bandwidth",
+                "metric_model_name": "BcopyPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: DMA: Avg Latency",
+                "label": "Bcopy: DMA: Avg Latency",
+                "info": "Bcopy: DMA: Avg Latency",
+                "metric_model_name": "BcopyPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: Flood DMA: Avg Bandwidth",
+                "label": "Bcopy: Flood DMA: Avg Bandwidth",
+                "info": "Bcopy: Flood DMA: Avg Bandwidth",
+                "metric_model_name": "BcopyFloodDmaPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
+              },
+              {
+                "name": "Bcopy: Flood DMA: Avg Latency",
+                "label": "Bcopy: Flood DMA: Avg Latency",
+                "info": "Bcopy: Flood DMA: Avg Latency",
+                "metric_model_name": "BcopyFloodDmaPerformance",
+                "children": [],
+                "leaf": true,
+                "weight": 1
               }
             ]
           }
@@ -993,7 +961,7 @@
             "metric_model_name": "BootTimePerformance",
             "leaf": true,
             "name": "SBP Boot Timing (Pre-host-boot)",
-            "label": "PSBP Boot Timing (Pre-host-boot)",
+            "label": "SBP Boot Timing (Pre-host-boot)",
             "children": [],
             "weight": 1
           },
@@ -1063,11 +1031,20 @@
             ]
           },
           {
-            "info": "Crypto",
+            "info": "Crypto api throughput",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "Crypto",
-            "label": "Crypto",
+            "name": "Crypto api throughput",
+            "label": "Crypto API Throughput",
+            "weight": 1,
+            "reference": true
+          },
+          {
+            "info": "Crypto raw throughput",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Crypto raw throughput",
+            "label": "Crypto Raw Throughput",
             "weight": 1,
             "reference": true
           }
@@ -1082,65 +1059,65 @@
         "weight": 1,
         "children": [
           {
-            "info": "TeraMark PKE",
+            "info": "TeraMark Security",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "TeraMark PKE",
-            "label": "PKE",
+            "name": "TeraMark Security",
+            "label": "Security",
             "weight": 1,
             "children": [
               {
-                "info": "RSA CRT 2048 decryptions",
-                "metric_model_name": "TeraMarkPkeRsaPerformance",
-                "leaf": true,
-                "name": "RSA CRT 2048 decryptions",
-                "label": "RSA CRT 2048 decryptions",
-                "children": [],
-                "weight": 1
+                "info": "TeraMark PKE",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "TeraMark PKE",
+                "label": "PKE",
+                "weight": 1,
+                "children": [
+                  {
+                    "info": "RSA CRT 2048 decryptions",
+                    "metric_model_name": "TeraMarkPkeRsaPerformance",
+                    "leaf": true,
+                    "name": "RSA CRT 2048 decryptions",
+                    "label": "RSA CRT 2048 decryptions",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "RSA CRT 4096 decryptions",
+                    "metric_model_name": "TeraMarkPkeRsa4kPerformance",
+                    "leaf": true,
+                    "name": "RSA CRT 4096 decryptions",
+                    "label": "RSA CRT 4096 decryptions",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "ECDH P256",
+                    "metric_model_name": "TeraMarkPkeEcdh256Performance",
+                    "leaf": true,
+                    "name": "ECDH P256",
+                    "label": "ECDH P256",
+                    "children": [],
+                    "weight": 1
+                  },
+                  {
+                    "info": "ECDH 25519",
+                    "metric_model_name": "TeraMarkPkeEcdh25519Performance",
+                    "leaf": true,
+                    "name": "ECDH 25519",
+                    "label": "ECDH 25519",
+                    "children": [],
+                    "weight": 1
+                  }
+                ]
               },
-              {
-                "info": "RSA CRT 4096 decryptions",
-                "metric_model_name": "TeraMarkPkeRsa4kPerformance",
-                "leaf": true,
-                "name": "RSA CRT 4096 decryptions",
-                "label": "RSA CRT 4096 decryptions",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "ECDH P256",
-                "metric_model_name": "TeraMarkPkeEcdh256Performance",
-                "leaf": true,
-                "name": "ECDH P256",
-                "label": "ECDH P256",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "ECDH 25519",
-                "metric_model_name": "TeraMarkPkeEcdh25519Performance",
-                "leaf": true,
-                "name": "ECDH 25519",
-                "label": "ECDH 25519",
-                "children": [],
-                "weight": 1
-              }
-            ]
-          },
-          {
-            "info": "Crypto",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "Crypto",
-            "label": "Crypto",
-            "weight": 1,
-            "children": [
               {
                 "info": "Crypto api throughput",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
                 "name": "Crypto api throughput",
-                "label": "API Throughput",
+                "label": "Crypto API Throughput",
                 "weight": 1,
                 "children": [
                   {
@@ -1186,7 +1163,7 @@
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
                 "name": "Crypto raw throughput",
-                "label": "Raw Throughput",
+                "label": "Crypto Raw Throughput",
                 "weight": 1,
                 "children": [
                   {
@@ -1258,266 +1235,156 @@
             ]
           },
           {
-            "info": "Zip",
+            "info": "TeraMark Compression",
             "metric_model_name": "MetricContainer",
             "leaf": false,
-            "name": "Zip",
-            "label": "Zip",
+            "name": "TeraMark Compression",
+            "label": "Compression",
             "weight": 1,
             "children": [
               {
-                "info": "Deflate",
+                "info": "Zip",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "Deflate",
-                "label": "Deflate",
+                "name": "Zip",
+                "label": "Zip",
                 "weight": 1,
                 "children": [
                   {
-                    "info": "Deflate Compression Throughput",
-                    "metric_model_name": "TeraMarkZipDeflatePerformance",
-                    "leaf": true,
-                    "name": "Deflate Compression Throughput",
-                    "label": "Deflate Compression Throughput",
-                    "children": [],
-                    "weight": 1
+                    "info": "Deflate",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "Deflate",
+                    "label": "Deflate",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "Deflate Compression Throughput",
+                        "metric_model_name": "TeraMarkZipDeflatePerformance",
+                        "leaf": true,
+                        "name": "Deflate Compression Throughput",
+                        "label": "Compression Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "Deflate Decompression Throughput",
+                        "metric_model_name": "TeraMarkZipDeflatePerformance",
+                        "leaf": true,
+                        "name": "Deflate Decompression Throughput",
+                        "label": "Decompression Throughput",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
                   },
                   {
-                    "info": "Deflate Decompression Throughput",
-                    "metric_model_name": "TeraMarkZipDeflatePerformance",
-                    "leaf": true,
-                    "name": "Deflate Decompression Throughput",
-                    "label": "Deflate Decompression Throughput",
-                    "children": [],
-                    "weight": 1
-                  },
-                  {
-                    "info": "Deflate Compression Latency",
-                    "metric_model_name": "TeraMarkZipDeflatePerformance",
-                    "leaf": true,
-                    "name": "Deflate Compression Latency",
-                    "label": "Deflate Compression Latency",
-                    "children": [],
-                    "weight": 1
-                  },
-                  {
-                    "info": "Deflate Decompression Latency",
-                    "metric_model_name": "TeraMarkZipDeflatePerformance",
-                    "leaf": true,
-                    "name": "Deflate Decompression Latency",
-                    "label": "Deflate Decompression Latency",
-                    "children": [],
-                    "weight": 1
+                    "info": "Lzma",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "Lzma",
+                    "label": "Lzma",
+                    "weight": 1,
+                    "children": [
+                      {
+                        "info": "Lzma Compression Throughput",
+                        "metric_model_name": "TeraMarkZipLzmaPerformance",
+                        "leaf": true,
+                        "name": "Lzma Compression Throughput",
+                        "label": "Compression Throughput",
+                        "children": [],
+                        "weight": 1
+                      },
+                      {
+                        "info": "Lzma Decompression Throughput",
+                        "metric_model_name": "TeraMarkZipLzmaPerformance",
+                        "leaf": true,
+                        "name": "Lzma Decompression Throughput",
+                        "label": "Decompression Throughput",
+                        "children": [],
+                        "weight": 1
+                      }
+                    ]
                   }
                 ]
               },
               {
-                "info": "Lzma",
+                "info": "JPEG",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
-                "name": "Lzma",
-                "label": "Lzma",
+                "name": "JPEG",
                 "weight": 1,
+                "label": "JPEG",
                 "children": [
                   {
-                    "info": "Lzma Compression Throughput",
-                    "metric_model_name": "TeraMarkZipLzmaPerformance",
-                    "leaf": true,
-                    "name": "Lzma Compression Throughput",
-                    "label": "Lzma Compression Throughput",
-                    "children": [],
-                    "weight": 1
+                    "info": "Compression-ratio",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "Compression-ratio",
+                    "weight": 1,
+                    "label": "Compression-ratio",
+                    "children": [
+                      {
+                        "info": "JPEG Compression_Compression-ratio",
+                        "metric_model_name": "TeraMarkJpegPerformance",
+                        "leaf": true,
+                        "name": "JPEG Compression_Compression-ratio",
+                        "weight": 1,
+                        "label": "Compression-ratio"
+                      }
+                    ]
                   },
                   {
-                    "info": "Lzma Decompression Throughput",
-                    "metric_model_name": "TeraMarkZipLzmaPerformance",
-                    "leaf": true,
-                    "name": "Lzma Decompression Throughput",
-                    "label": "Lzma Decompression Throughput",
-                    "children": [],
-                    "weight": 1
+                    "info": "JPEG Decompress",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "JPEG Decompress",
+                    "weight": 1,
+                    "label": "Decompression",
+                    "children": [
+                      {
+                        "info": "JPEG Decompress_output_average_bandwidth",
+                        "metric_model_name": "TeraMarkJpegPerformance",
+                        "leaf": true,
+                        "name": "JPEG Decompress_output_average_bandwidth",
+                        "weight": 1,
+                        "label": "Throughput (including driver)"
+                      },
+                      {
+                        "info": "Decompression Accelerator throughput_output_average_bandwidth",
+                        "metric_model_name": "TeraMarkJpegPerformance",
+                        "leaf": true,
+                        "name": "Decompression Accelerator throughput_output_average_bandwidth",
+                        "weight": 1,
+                        "label": "Throughput (excluding driver)"
+                      }
+                    ]
                   },
                   {
-                    "info": "Lzma Compression Latency",
-                    "metric_model_name": "TeraMarkZipLzmaPerformance",
-                    "leaf": true,
-                    "name": "Lzma Compression Latency",
-                    "label": "Lzma Compression Latency",
-                    "children": [],
-                    "weight": 1
-                  },
-                  {
-                    "info": "Lzma Decompression Latency",
-                    "metric_model_name": "TeraMarkZipLzmaPerformance",
-                    "leaf": true,
-                    "name": "Lzma Decompression Latency",
-                    "label": "Lzma Decompression Latency",
-                    "children": [],
-                    "weight": 1
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "info": "JPEG",
-            "metric_model_name": "MetricContainer",
-            "leaf": false,
-            "name": "JPEG",
-            "weight": 1,
-            "label": "JPEG",
-            "children": [
-              {
-                "info": "Compression-ratio",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "Compression-ratio",
-                "weight": 1,
-                "label": "Compression-ratio",
-                "children": [
-                  {
-                    "info": "JPEG Compression_Compression-ratio",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "JPEG Compression_Compression-ratio",
+                    "info": "Compression throughput with Driver",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "Compression throughput with Driver",
                     "weight": 1,
-                    "label": "JPEG Compression_Compression-ratio"
-                  }
-                ]
-              },
-              {
-                "info": "Decompression Accelerator throughput",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "Decompression Accelerator throughput",
-                "weight": 1,
-                "label": "Decompression Accelerator throughput",
-                "children": [
-                  {
-                    "info": "Decompression Accelerator throughput_output_average_bandwidth",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Decompression Accelerator throughput_output_average_bandwidth",
-                    "weight": 1,
-                    "label": "Decompression Accelerator throughput_output_average_bandwidth"
-                  },
-                  {
-                    "info": "Decompression Accelerator throughput_output_iops",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Decompression Accelerator throughput_output_iops",
-                    "weight": 1,
-                    "label": "Decompression Accelerator throughput_output_iops"
-                  },
-                  {
-                    "info": "Decompression Accelerator throughput_output_average_latency",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Decompression Accelerator throughput_output_average_latency",
-                    "weight": 1,
-                    "label": "Decompression Accelerator throughput_output_average_latency"
-                  }
-                ]
-              },
-              {
-                "info": "JPEG Decompress",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "JPEG Decompress",
-                "weight": 1,
-                "label": "JPEG Decompress",
-                "children": [
-                  {
-                    "info": "JPEG Decompress_output_average_bandwidth",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "JPEG Decompress_output_average_bandwidth",
-                    "weight": 1,
-                    "label": "JPEG Decompress_output_average_bandwidth"
-                  },
-                  {
-                    "info": "JPEG Decompress_output_iops",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "JPEG Decompress_output_iops",
-                    "weight": 1,
-                    "label": "JPEG Decompress_output_iops"
-                  },
-                  {
-                    "info": "JPEG Decompress_output_average_latency",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "JPEG Decompress_output_average_latency",
-                    "weight": 1,
-                    "label": "JPEG Decompress_output_average_latency"
-                  }
-                ]
-              },
-              {
-                "info": "Compression Accelerator throughput",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "Compression Accelerator throughput",
-                "weight": 1,
-                "label": "Compression Accelerator throughput",
-                "children": [
-                  {
-                    "info": "Compression Accelerator throughput_output_average_bandwidth",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Compression Accelerator throughput_output_average_bandwidth",
-                    "weight": 1,
-                    "label": "Compression Accelerator throughput_output_average_bandwidth"
-                  },
-                  {
-                    "info": "Compression Accelerator throughput_output_iops",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Compression Accelerator throughput_output_iops",
-                    "weight": 1,
-                    "label": "Compression Accelerator throughput_output_iops"
-                  },
-                  {
-                    "info": "Compression Accelerator throughput_output_average_latency",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Compression Accelerator throughput_output_average_latency",
-                    "weight": 1,
-                    "label": "Compression Accelerator throughput_output_average_latency"
-                  }
-                ]
-              },
-              {
-                "info": "Compression throughput with Driver",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "Compression throughput with Driver",
-                "weight": 1,
-                "label": "Compression throughput with Driver",
-                "children": [
-                  {
-                    "info": "Compression throughput with Driver_output_average_bandwidth",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Compression throughput with Driver_output_average_bandwidth",
-                    "weight": 1,
-                    "label": "Compression throughput with Driver_output_average_bandwidth"
-                  },
-                  {
-                    "info": "Compression throughput with Driver_output_iops",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Compression throughput with Driver_output_iops",
-                    "weight": 1,
-                    "label": "Compression throughput with Driver_output_iops"
-                  },
-                  {
-                    "info": "Compression throughput with Driver_output_average_latency",
-                    "metric_model_name": "TeraMarkJpegPerformance",
-                    "leaf": true,
-                    "name": "Compression throughput with Driver_output_average_latency",
-                    "weight": 1,
-                    "label": "Compression throughput with Driver_output_average_latency"
+                    "label": "Compression",
+                    "children": [
+                      {
+                        "info": "Compression throughput with Driver_output_average_bandwidth",
+                        "metric_model_name": "TeraMarkJpegPerformance",
+                        "leaf": true,
+                        "name": "Compression throughput with Driver_output_average_bandwidth",
+                        "weight": 1,
+                        "label": "Throughput (including driver)"
+                      },
+                      {
+                        "info": "Compression Accelerator throughput_output_average_bandwidth",
+                        "metric_model_name": "TeraMarkJpegPerformance",
+                        "leaf": true,
+                        "name": "Compression Accelerator throughput_output_average_bandwidth",
+                        "weight": 1,
+                        "label": "Throughput (excluding driver)"
+                      }
+                    ]
                   }
                 ]
               }
@@ -1537,7 +1404,7 @@
                 "leaf": false,
                 "name": "NU_HNU",
                 "weight": 1,
-                "label": "NU_HNU",
+                "label": "NU->HNU NFCP Flow",
                 "children": [
                   {
                     "info": "NU_HNU_output_throughput",
@@ -1545,7 +1412,7 @@
                     "leaf": true,
                     "name": "NU_HNU_output_throughput",
                     "weight": 1,
-                    "label": "NU_HNU_output_throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "NU_HNU_output_pps",
@@ -1553,7 +1420,7 @@
                     "leaf": true,
                     "name": "NU_HNU_output_pps",
                     "weight": 1,
-                    "label": "NU_HNU_output_pps"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1563,7 +1430,7 @@
                 "leaf": false,
                 "name": "HNU_HNU_FCP",
                 "weight": 1,
-                "label": "HNU_HNU_FCP",
+                "label": "HNU<->HNU FCP Flow",
                 "children": [
                   {
                     "info": "HNU_HNU_FCP_output_throughput",
@@ -1571,7 +1438,7 @@
                     "leaf": true,
                     "name": "HNU_HNU_FCP_output_throughput",
                     "weight": 1,
-                    "label": "HNU_HNU_FCP_output_throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "HNU_HNU_FCP_output_pps",
@@ -1579,7 +1446,7 @@
                     "leaf": true,
                     "name": "HNU_HNU_FCP_output_pps",
                     "weight": 1,
-                    "label": "HNU_HNU_FCP_output_pps"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1589,7 +1456,7 @@
                 "leaf": false,
                 "name": "HNU_HNU",
                 "weight": 1,
-                "label": "HNU_HNU",
+                "label": "HNU<->HNU NFCP Flow",
                 "children": [
                   {
                     "info": "HNU_HNU_output_throughput",
@@ -1597,7 +1464,7 @@
                     "leaf": true,
                     "name": "HNU_HNU_output_throughput",
                     "weight": 1,
-                    "label": "HNU_HNU_output_throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "HNU_HNU_output_pps",
@@ -1605,7 +1472,7 @@
                     "leaf": true,
                     "name": "HNU_HNU_output_pps",
                     "weight": 1,
-                    "label": "HNU_HNU_output_pps"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1615,7 +1482,7 @@
                 "leaf": false,
                 "name": "NU_NU",
                 "weight": 1,
-                "label": "NU_NU",
+                "label": "NU->NU NFCP Flow",
                 "children": [
                   {
                     "info": "NU_NU_output_throughput",
@@ -1623,7 +1490,7 @@
                     "leaf": true,
                     "name": "NU_NU_output_throughput",
                     "weight": 1,
-                    "label": "NU_NU_output_throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "NU_NU_output_pps",
@@ -1631,7 +1498,7 @@
                     "leaf": true,
                     "name": "NU_NU_output_pps",
                     "weight": 1,
-                    "label": "NU_NU_output_pps"
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               },
@@ -1641,7 +1508,7 @@
                 "leaf": false,
                 "name": "HNU_NU",
                 "weight": 1,
-                "label": "HNU_NU",
+                "label": "HNU->NU NFCP Flow",
                 "children": [
                   {
                     "info": "HNU_NU_output_throughput",
@@ -1649,7 +1516,7 @@
                     "leaf": true,
                     "name": "HNU_NU_output_throughput",
                     "weight": 1,
-                    "label": "HNU_NU_output_throughput"
+                    "label": "Extrapolated Throughput"
                   },
                   {
                     "info": "HNU_NU_output_pps",
@@ -1657,7 +1524,85 @@
                     "leaf": true,
                     "name": "HNU_NU_output_pps",
                     "weight": 1,
-                    "label": "HNU_NU_output_pps"
+                    "label": "Extrapolated Packets per sec"
+                  }
+                ]
+              },
+              {
+                "info": "HU_NU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_NU_NFCP",
+                "weight": 1,
+                "label": "HU->NU NFCP Flow",
+                "children": [
+                  {
+                    "info": "HU_NU_NFCP_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_NU_NFCP_output_throughput",
+                    "weight": 1,
+                    "label": "Extrapolated Throughput"
+                  },
+                  {
+                    "info": "HU_NU_NFCP_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_NU_NFCP_output_pps",
+                    "weight": 1,
+                    "label": "Extrapolated Packets per sec"
+                  }
+                ]
+              },
+              {
+                "info": "HU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "HU_HU_NFCP",
+                "weight": 1,
+                "label": "HU<->HU NFCP Flow",
+                "children": [
+                  {
+                    "info": "HU_HU_NFCP_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_HU_NFCP_output_throughput",
+                    "weight": 1,
+                    "label": "Extrapolated Throughput"
+                  },
+                  {
+                    "info": "HU_HU_NFCP_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_HU_NFCP_output_pps",
+                    "weight": 1,
+                    "label": "Extrapolated Packets per sec"
+                  }
+                ]
+              },
+              {
+                "info": "NU_HU_NFCP",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "NU_HU_NFCP",
+                "weight": 1,
+                "label": "NU->HU NFCP Flow",
+                "children": [
+                  {
+                    "info": "NU_HU_NFCP_output_throughput",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_HU_NFCP_output_throughput",
+                    "weight": 1,
+                    "label": "Extrapolated Throughput"
+                  },
+                  {
+                    "info": "NU_HU_NFCP_output_pps",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_HU_NFCP_output_pps",
+                    "weight": 1,
+                    "label": "Extrapolated Packets per sec"
                   }
                 ]
               }

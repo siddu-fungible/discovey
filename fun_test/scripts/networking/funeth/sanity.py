@@ -35,7 +35,7 @@ def setup_hu_host(funeth_obj, update_driver=True):
     fun_test.test_assert(funeth_obj.load(sriov=4), 'Load funeth driver.')
     fun_test.test_assert(funeth_obj.configure_interfaces('hu'), 'Configure funeth interfaces.')
     fun_test.test_assert(funeth_obj.configure_ipv4_routes('hu'), 'Configure HU host IPv4 routes.')
-    fun_test.test_assert(funeth_obj.loopback_test(packet_count=100),
+    fun_test.test_assert(funeth_obj.loopback_test(packet_count=80),
                         'HU PF and VF interface loopback ping test via NU')
 
 
@@ -80,7 +80,7 @@ def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces
                 ip_addr,
                 count=packet_count,
                 max_percentage_loss=0,
-                interval=0.01,
+                interval=0.1,
                 size=packet_size-20-8,  # IP header 20B, ICMP header 8B
                 sudo=True),
             'NU ping HU interfaces {} with {} packets and packet size {}B'.format(intf, packet_count, packet_size))
@@ -153,7 +153,10 @@ class FunethTestPacketSweep(FunTestCase):
         linux_obj = funeth_obj.linux_obj_dict['nu']
         tb_config_obj = funeth_obj.tb_config_obj
 
-        interfaces = tb_config_obj.get_all_interfaces('hu')
+        if emulation_target == 'palladium':  # Use only one PF and one VF interface to save run time
+            interfaces = [tb_config_obj.get_hu_pf_interface(), tb_config_obj.get_hu_vf_interface()]
+        elif emulation_target == 'f1':
+            interfaces = tb_config_obj.get_all_interfaces('hu')
         ip_addrs = [tb_config_obj.get_interface_ipv4_addr('hu', intf) for intf in interfaces]
 
         min_pkt_size = 46
@@ -165,11 +168,11 @@ class FunethTestPacketSweep(FunTestCase):
             return pkt_size - 20 - 8  # IP header 20B, ICMP header 8B
 
         for intf, ip_addr in zip(interfaces, ip_addrs):
-            cmd = 'for i in {%s..%s}; do ping -c %s -i %s -s $i %s; done' % (
+            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i %s; done' % (
                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
             output = linux_obj.command(cmd, timeout=3000)
             fun_test.test_assert(
-                re.search(r'[1-9]+% packet loss', output) is None,
+                re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None,
                 'NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
 
 
@@ -405,14 +408,14 @@ if __name__ == "__main__":
     ts = FunethSanity()
     for tc in (
             FunethTestNUPingHU,
-            #FunethTestPacketSweep,  # TODO: uncomment after EM-906 is fixed
+            FunethTestPacketSweep,
             FunethTestScpNU2HUPF,
             FunethTestScpNU2HUVF,
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            FunethTestUnloadDriver,
-            #FunethTestReboot,  TODO: uncomment after SWTOOLS-877 is fixed
+            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestReboot,
     ):
         ts.add_test_case(tc())
     ts.run()

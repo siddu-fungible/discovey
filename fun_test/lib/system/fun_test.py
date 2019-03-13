@@ -875,7 +875,7 @@ class FunTest:
             source_ip=None,
             source_username=None,
             source_password=None,
-            source_port=None,
+            source_port=22,
             target_ip=None,
             target_username=None,
             target_password=None,
@@ -1100,6 +1100,10 @@ class FunTestScript(object):
                                                          result=fun_test.FAILED)
             fun_test.critical(str(ex))
         fun_test._end_test(result=script_result)
+        if fun_test.suite_execution_id:
+            models_helper.report_test_case_execution_result(execution_id=setup_te.execution_id,
+                                                            result=script_result,
+                                                            re_run_info=fun_test.get_re_run_info())
 
         return script_result == FunTest.PASSED
 

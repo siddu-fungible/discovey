@@ -12,18 +12,18 @@
               Score <sup><i class="fa fa-info-circle" style="padding: 2px"></i></sup></label>
             <ng-template #LeafScoreInfo>
               <div style="color: black">
-                <b>Score for leaf metrics:</b><br>
-                The score approaches 100 as the actual value approaches the expected value (established baseline
-                number). Expected value for the product may vary.
+                <p><strong>Score for leaf metrics:</strong><br/> The score approaches 100 as the actual value approaches
+                  the</p>
                 <ul>
-                  <li>
-                    For metrics added before the Tapeout:
-                  </li>
-                  Expected value is derived from the Tapeout numbers as the baseline.
-                  <li>
-                    For metrics added after the Tapeout:
-                  </li>
-                  Expected value is derived from the first value entered into the database.
+                  <li>the reference value, if the expected value is not available</li>
+                  <li>the expected value, if available</li>
+                </ul>
+                <p>About reference values:</p>
+                <ul>
+                  <li>For metrics added before the Tapeout<span style="text-decoration: underline;">:</span></li>
+                  Reference value is derived from the Tapeout numbers as the baseline.
+                  <li>For metrics added after the Tapeout:</li>
+                  Reference value is derived from the first value entered into the database.
                 </ul>
               </div>
             </ng-template>
@@ -161,11 +161,6 @@
               <hr>
               <div *ngIf="currentJenkinsUrl || currentLsfUrl || currentRegressionUrl" style="color: black;">
                 <b>Current Failure:</b>
-                <!--<label data-placement="right" (click)="gitIdentify()" triggers="click"-->
-                <!--[ngbTooltip]="GitCommitInfo" [autoClose]="'outside'"-->
-                <!--class="badge failed-label no-margin git-commit">Git Commit History-->
-                <!--</label>-->
-
                 <br>
                 <a *ngIf="currentLsfUrl" [routerLink]="" (click)='openUrl(currentLsfUrl)'>Lsf log<br></a>
                 <a *ngIf="currentJenkinsUrl" [routerLink]="" (click)='openUrl(currentJenkinsUrl)'>Jenkins log<br></a>
@@ -210,26 +205,15 @@
                   </span>
               </span>
             </td>
-            <td valign="top" align="left">
+            <td valign="top" align="left" style="float: left;">
               <span id="score-table-info-icon">
                   <i class="fa fa-info-circle" style="padding: 2px"
                      (click)="showScoreInfoClick(currentNode)">
                   </i>
               </span>
             </td>
-            <td style="width: 100%" id="actions">
-              <span style="float: right;">
-                          <button class="btn" style="background-color: white"
-                                  (click)="openAtomicTab()">
-                              <i class="fa fa-external-link"></i></button>
-              </span>
-              <span style="float: right;" ngbTooltip="Copy chart URL to clipboard">
-                          <button id="copy-url-button" class="btn" style="background-color: white"
-                                  (click)="copyAtomicUrl()">
-                              <i id="copy-url-tooltip" placement="left" class="fa fa-chain"
-                                 ngbTooltip="{{ toolTipMessage }}" (mouseleave)="copyUrlTooltip.close()"
-                                 triggers="click" #copyUrlTooltip="ngbTooltip"></i></button>
-              </span>
+            <td style="width: 100%">
+
             </td>
           </tr>
         </table>

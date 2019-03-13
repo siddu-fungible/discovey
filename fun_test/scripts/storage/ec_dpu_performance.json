@@ -131,7 +131,7 @@
     "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "io_queues": 2, "timeout": 120},
     "fio_cmd_args": {"io_queues": 2, "size": "4m", "timeout": 300},
     "fio_modes": ["randwrite", "randread"],
-    "fio_pass_threshold": 0.05,
+    "fio_pass_threshold": 0.1,
     "volume_pass_threshold": 40,
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "expected_fio_result": {
@@ -159,27 +159,27 @@
       "randwrite": {
         "ndata": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 442048)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 496256)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 442048)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 496256)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "nparity": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 442048)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 496256)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "ec": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 442048)"},
-            "mbuf": {"bm_in_use": "(0, 3)", "bm_num_bytes": "(0, 12288)", "in_use": "(0, 13)", "num_bytes": "(0, 53248)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 496256)"},
+            "mbuf": {"bm_in_use": "(0, 3)", "bm_num_bytes": "(0, 12288)", "in_use": "(0, 31)", "num_bytes": "(0, 126976)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         }
@@ -187,26 +187,26 @@
       "randread": {
         "ndata": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 427712)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 497984)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 427712)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 497984)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "nparity": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 427712)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 497984)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "ec": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 427712)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 497984)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
@@ -288,26 +288,26 @@
       "randread": {
         "ndata": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 427712)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 550144)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 427712)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 550144)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "nparity": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 427712)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 550144)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "ec": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 427712)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 550144)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
@@ -333,7 +333,7 @@
     "fio_modes": ["rw"],
     "fio_bs_iodepth": ["(4, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
     "fio_pass_threshold": 0.05,
-    "volume_pass_threshold": 16,
+    "volume_pass_threshold": 24,
     "expected_fio_result": {
       "(4, 1)": {"rw": {"write": {"bw": 41, "iops": 10, "latency": 73621},
                          "read": {"bw": 13, "iops": 3, "latency": 72449}}},
@@ -446,19 +446,19 @@
       "randrw": {
         "ndata": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 545920)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 543040)"},
             "mbuf": {"bm_in_use": "(0, 40)", "bm_num_bytes": "(0, 163840)", "in_use": "(0, 40)", "num_bytes": "(0, 163840)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 534592)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 543040)"},
             "mbuf": {"bm_in_use": "(0, 40)", "bm_num_bytes": "(0, 163840)", "in_use": "(0, 40)", "num_bytes": "(0, 163840)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "nparity": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 534592)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 543040)"},
             "mbuf": {"bm_in_use": "(0, 40)", "bm_num_bytes": "(0, 163840)", "in_use": "(0, 40)", "num_bytes": "(0, 163840)"},
             "wustacks": {"in_use": "(0, 1)"}
           }

@@ -72,15 +72,25 @@ class FSOnBLTTestcase(FunTestCase):
 
     def do_write_test(self):
 
+        # Calculating filesize based on dataset_size_pct factor, if there is fraction factor after division adjusting
+        # it nearest value which is divisible by block_size value
+        temp = int(self.volume_params["volume_capacity"]["blt"] * self.dataset_size_pct)
+        self.input_file_size = temp - (temp % self.dd_write_args["block_size"])
+
+        # If data_size_pct of volume capacity exceeds 100MB, setting it to 100MB
+        if self.input_file_size > self.file_size_limit:
+            fun_test.log("50% of volume capacity exceeds the IO filesize limit,"
+                         "hence limiting IO filesize to {}".format(self.file_size_limit))
+            self.input_file_size = self.file_size_limit
+
         # Deriving dd command 'count' argument based on input file size
-        self.input_file_size_in_bytes = utils.convert_to_bytes(self.input_file_size)
-        self.dd_write_args["count"] = self.input_file_size_in_bytes / self.dd_write_args["block_size"]
-        cmd_timeout = self.dd_write_args["count"] / self.test_timeout_ratio
+        self.dd_write_args["count"] = self.input_file_size / self.dd_write_args["block_size"]
+        self.io_timeout = self.dd_write_args["count"] / self.test_timeout_ratio
 
         # Write a file into the BLT volume of size self.input_file_size bytes
-        return_size = self.host.dd(timeout=cmd_timeout, **self.dd_write_args)
+        return_size = self.host.dd(timeout=self.io_timeout, sudo=True, **self.dd_write_args)
         if not self.readonly_filesystem:
-            fun_test.test_assert_expected(self.input_file_size_in_bytes, return_size,
+            fun_test.test_assert_expected(self.input_file_size, return_size,
                                           "Writing {} bytes file into the BLT volume".format(self.input_file_size))
             self.input_md5sum = self.host.md5sum(file_name=self.dd_write_args["output_file"])
             fun_test.test_assert(self.input_md5sum, "Finding md5sum of input file {}".
@@ -89,19 +99,31 @@ class FSOnBLTTestcase(FunTestCase):
             # If filesystem is mounted as Read-only filesystem, write will fail
             fun_test.test_assert(not return_size, "Expected failure, write can't be performed on Read-only file system")
 
+        # If the testcase is a buffered I/O then flush the kernel buffers/pages after the write operation, so that
+        # the entire file will be flushed to the underlying volume
+        if "oflag" not in self.dd_write_args:
+            self.host.sudo_command("sync", timeout=self.io_timeout)
+            self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=self.io_timeout)
+
     def do_read_test(self):
 
-        self.dd_read_args["count"] = self.input_file_size_in_bytes / self.dd_read_args["block_size"]
-        cmd_timeout = self.dd_read_args["count"] / self.test_timeout_ratio
+        self.dd_read_args["count"] = self.input_file_size / self.dd_read_args["block_size"]
+        self.io_timeout = self.dd_read_args["count"] / self.test_timeout_ratio
+
+        # If the test case is a buffered I/O then flush the kernel buffers/pages before the read operation, so that
+        # the entire file will be read from the underlying volume
+        if "iflag" not in self.dd_read_args:
+            self.host.sudo_command("sync", timeout=self.io_timeout)
+            self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=self.io_timeout)
 
         # Read the previously written file from the BLT volume and calculate the md5sum of the same
-        return_size = self.host.dd(timeout=cmd_timeout, **self.dd_read_args)
-        if not self.readonly_filesystem:
+        return_size = self.host.dd(timeout=self.io_timeout, sudo=True, **self.dd_read_args)
+        if not self.readonly_filesystem or self.remount_as_readonly:
             fun_test.test_assert_expected(
-                self.input_file_size_in_bytes, return_size,
-                "Reading {} bytes file into the BLT volume".format(self.input_file_size_in_bytes))
+                self.input_file_size, return_size,
+                "Reading {} bytes file into the BLT volume".format(self.input_file_size))
             self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
-            fun_test.test_assert(self.output_md5sum, "Finding md5sum of ouptut file {}".
+            fun_test.test_assert(self.output_md5sum, "Finding md5sum of output file {}".
                                  format(self.dd_read_args["output_file"]))
             fun_test.test_assert_expected(self.input_md5sum, self.output_md5sum,
                                           "Comparing md5sum of input & output file")
@@ -131,6 +153,7 @@ class FSOnBLTTestcase(FunTestCase):
             setattr(self, k, v)
         # End of config json file parsing
 
+        # If test case doesn't have required parameter defined in config, setting it to default values
         if not hasattr(self, "remount_filesystem"):
             self.remount_filesystem = False
         if not hasattr(self, "readonly_filesystem"):
@@ -138,7 +161,11 @@ class FSOnBLTTestcase(FunTestCase):
         if not hasattr(self, "remount_as_readonly"):
             self.remount_as_readonly = False
         if not hasattr(self, "create_fs_timeout"):
-            self.create_fs_timeout = 60
+            self.create_fs_timeout = 300
+        if not hasattr(self, "max_retries"):
+            self.max_retries = 10
+        if not hasattr(self, "wait_time"):
+            self.wait_time = 1
 
         self.topology = fun_test.shared_variables["topology"]
         self.dut = self.topology.get_dut_instance(index=0)
@@ -159,6 +186,16 @@ class FSOnBLTTestcase(FunTestCase):
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
         self.volume_attached = False
 
+        # Increasing the nvme driver timeouts for posix platform
+        timeout_config = ""
+        for key, value in self.nvme_timeouts.items():
+            timeout_config += 'options nvme {}="{}"\n'.format(key, value)
+
+        self.host.enter_sudo()
+        self.host.create_file(file_name=r"/etc/modprobe.d/nvme_core.conf", contents=timeout_config)
+        self.host.command("cat /etc/modprobe.d/nvme_core.conf")
+        self.host.exit_sudo()
+
         # Creating BLT volumes
         self.this_uuid = utils.generate_uuid()
         command_result = self.storage_controller.create_volume(
@@ -172,7 +209,7 @@ class FSOnBLTTestcase(FunTestCase):
                              format("blt", self.volume_params["volume_types"]["blt"],
                                     self.volume_params["volume_capacity"]["blt"]))
 
-        # Attaching BLT volume to the external server
+        # Attaching BLT volume to the host
         command_result = self.storage_controller.volume_attach_pcie(
             ns_id=self.ns_id, uuid=self.this_uuid, command_duration=self.command_timeout)
         fun_test.log(command_result)
@@ -182,6 +219,22 @@ class FSOnBLTTestcase(FunTestCase):
         if self.reload_after_config:
             command_result = self.host.nvme_restart()
             fun_test.simple_assert(command_result, "Reloading nvme driver")
+
+        # Additional sleep after nvme reload, required due to changes in lib to avoid #SWOS-3822
+        self.attempt = 0
+        while self.attempt < self.max_retries:
+            fun_test.log("Current Attempt: {}, Max Attempts: {}".format(self.attempt + 1, self.max_retries))
+            fun_test.sleep("Waiting after nvme driver reload..", self.wait_time)
+            fun_test.log("Checking if device is available")
+            lsblk_output = self.host.lsblk("-b")
+            if self.volume_name in lsblk_output:
+                fun_test.log("Device is accessible, setting the queue_length to {} and continuing with "
+                             "test".format(self.queue_length))
+                # Setting queue_length
+                self.host.sudo_command("echo " + str(self.queue_length) + " >/sys/block/" + self.volume_name +
+                                  "/queue/nr_requests")
+                break
+            self.attempt += 1
 
         # Checking that the volume is accessible to the host
         lsblk_output = self.host.lsblk("-b")
@@ -209,23 +262,31 @@ class FSOnBLTTestcase(FunTestCase):
         if self.fs_type == "f2fs":
             install_status = self.host.install_package("f2fs-tools")
             fun_test.test_assert(install_status, "Installed f2fs-tools Package")
+
+        # Formatting block device with filesystem
         fs_status = self.host.create_filesystem(self.fs_type, self.nvme_block_device, timeout=self.create_fs_timeout)
         fun_test.test_assert(fs_status, "Creating {} filesystem on BLT volume {}".format(self.fs_type,
-                                                                                        self.volume_name))
+                                                                                         self.volume_name))
+        # Creating a directory for mount point
         command_result = self.host.create_directory(self.mount_point)
         fun_test.test_assert(command_result, "Creating mount point directory {}".format(self.mount_point))
+
+        # Mounting the volume on mount point
         command_result = self.host.mount_volume(self.nvme_block_device, self.mount_point,
                                                 readonly=self.readonly_filesystem)
         fun_test.simple_assert(command_result, "Mounting BLT volume {} on {}".format(self.nvme_block_device,
-                                                                                    self.mount_point))
+                                                                                     self.mount_point))
+        # Verifying if device is mounted
         lsblk_output = self.host.lsblk("-b")
         fun_test.test_assert_expected(expected=self.mount_point,
                                       actual=lsblk_output[self.volume_name]["mount_point"],
                                       message="Mounting BLT volume {} on {}".format(self.nvme_block_device,
-                                                                                   self.mount_point))
+                                                                                    self.mount_point))
+        # Verification if device is mounted as read-only
         if self.readonly_filesystem:
             check_fs_ro = self.host.is_mount_ro(self.mount_point)
             fun_test.test_assert_expected(True, check_fs_ro, "File system is mounted as read only filesystem")
+
         # Write and read a file into the newly mounted BLT volume
         self.do_write_test()
         self.do_read_test()
@@ -233,12 +294,12 @@ class FSOnBLTTestcase(FunTestCase):
         # Now unmount the BLT volume
         command_result = self.host.unmount_volume(volume=self.nvme_block_device)
         fun_test.simple_assert(command_result, "Unmounting BLT volume {} from {}".format(self.nvme_block_device,
-                                                                                        self.mount_point))
+                                                                                         self.mount_point))
         lsblk_output = self.host.lsblk("-b")
         fun_test.test_assert_expected(expected=None,
                                       actual=lsblk_output[self.volume_name]["mount_point"],
                                       message="Unmounting BLT volume {} from {}".format(self.nvme_block_device,
-                                                                                       self.mount_point))
+                                                                                        self.mount_point))
         # Remount file system on host and verify file contents
         if self.remount_filesystem:
             if self.remount_as_readonly:
@@ -256,14 +317,16 @@ class FSOnBLTTestcase(FunTestCase):
             fun_test.test_assert_expected(expected=self.mount_point,
                                           actual=lsblk_output[self.volume_name]["mount_point"],
                                           message="Mounting BLT volume {} on {}".format(self.nvme_block_device,
-                                                                                            self.mount_point))
+                                                                                        self.mount_point))
             # Check if existing file retains the file contents
+            self.do_read_test()
             self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])
             fun_test.test_assert(self.output_md5sum, "Finding md5sum of existing ouptut file {} after remount".
                                  format(self.dd_read_args["output_file"]))
             fun_test.test_assert_expected(self.input_md5sum, self.output_md5sum,
                                           "md5sum of input & output file matches after remount")
 
+            # Performing new write and read after remounting
             if not self.remount_as_readonly:
                 # Cleaning up old files
                 del_input_file = self.host.remove_file(self.dd_read_args["input_file"])
@@ -489,7 +552,7 @@ class NTFSOnBLT(FSOnBLTTestcase):
 
 class Ext4OnBLTWithRemount(FSOnBLTTestcase):
     def describe(self):
-        self.set_test_details(id=8,
+        self.set_test_details(id=9,
                               summary="Building EXT4 filesystem on BLT volume, Create File in it and verifying md5sum "
                                       "of write and read file, remount filesystem and verify contents after remount",
                               steps="""
@@ -521,7 +584,7 @@ class Ext4OnBLTWithRemount(FSOnBLTTestcase):
 
 class Ext4OnBLTWithReadOnlyFS(FSOnBLTTestcase):
     def describe(self):
-        self.set_test_details(id=9,
+        self.set_test_details(id=10,
                               summary="Building EXT4 filesystem as Read-only filesystem on BLT volume, Verifying "
                                       "Write on Read-only filesystem fails",
                               steps="""
@@ -545,7 +608,7 @@ class Ext4OnBLTWithReadOnlyFS(FSOnBLTTestcase):
 
 class XFSOnBLTWithRemountAsReadOnlyFS(FSOnBLTTestcase):
     def describe(self):
-        self.set_test_details(id=10,
+        self.set_test_details(id=8,
                               summary="Building XFS filesystem on BLT volume, Create a file and verify write and read,"
                                       " Remount XFS file system as Read-only filesystem. File read should succeed",
                               steps="""
@@ -584,7 +647,10 @@ if __name__ == "__main__":
     fsonblt_script.add_test_case(BTRFSOnBLT())
     fsonblt_script.add_test_case(F2FSOnBLT())
     fsonblt_script.add_test_case(NTFSOnBLT())
-    fsonblt_script.add_test_case(Ext4OnBLTWithRemount())
-    fsonblt_script.add_test_case(Ext4OnBLTWithReadOnlyFS())
     fsonblt_script.add_test_case(XFSOnBLTWithRemountAsReadOnlyFS())
+    ##########
+    # Commenting out below two TCs as it's filesystems specific verification and not contributing to storage IO
+    # fsonblt_script.add_test_case(Ext4OnBLTWithRemount())
+    # fsonblt_script.add_test_case(Ext4OnBLTWithReadOnlyFS())
+    ##########
     fsonblt_script.run()

@@ -45,4 +45,27 @@ export class RegressionService implements OnInit{
     }));
   }
 
+  convertToLocalTimezone(t) {
+    let d = new Date(t.replace(/\s+/g, 'T'));
+    let epochValue = d.getTime();
+    return new Date(epochValue);
+  }
+
+  getPrettyLocalizeTime(t) {
+    return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
+  }
+
+  getTestCaseExecution(executionId) {
+    return this.apiService.get('/regression/test_case_execution_info/' + executionId).pipe(switchMap((response) => {
+      return of(response.data);
+    }))
+  }
+
+  fetchScriptInfoByScriptPath(scriptPath) {
+    let payload = {script_path: scriptPath};
+    return this.apiService.post('/regression/script', payload).pipe(switchMap((response) => {
+      return of(response.data);
+    }));
+  }
+
 }

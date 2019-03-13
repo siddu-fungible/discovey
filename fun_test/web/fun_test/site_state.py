@@ -101,7 +101,7 @@ class SiteState():
                 description = metric["info"]
             # m = MetricChart.objects.get(metric_model_name=metric_model_name, chart_name=metric["name"])
             m = MetricChart.objects.get(metric_model_name=metric_model_name, internal_chart_name=metric["name"])
-
+            m.chart_name = metric["label"]
             m.save()
             if description and not m.description:
                 m.description = description
@@ -176,6 +176,9 @@ class SiteState():
             self._do_register_metric(metric=all_metrics_metric)
             for metric in metrics:
                 self._do_register_metric(metric=metric)
+                global_setting = MetricsGlobalSettings.objects.first()
+                global_setting.cache_valid = False
+                global_setting.save()
 
     def set_metrics_settings(self):
         if MetricsGlobalSettings.objects.count() == 0:

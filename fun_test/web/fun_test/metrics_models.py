@@ -20,9 +20,11 @@ logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 LAST_ANALYTICS_DB_STATUS_UPDATE = "last_status_update"
+BASE_LINE_DATE = datetime(year=2018, month=4, day=1)
 
 class MetricsGlobalSettings(models.Model):
     tolerance_percentage = models.FloatField(default=3.0)
+    cache_valid = models.BooleanField(default=True)
 
 class MetricsGlobalSettingsSerializer(ModelSerializer):
 
@@ -172,7 +174,7 @@ class MetricChart(models.Model):
     owner_info = models.TextField(default="UNKNOWN")
     source = models.TextField(default="Unknown")
     jira_ids = models.TextField(default="[]")
-    base_line_date = models.DateTimeField(verbose_name="base_line_date", default=datetime.now)
+    base_line_date = models.DateTimeField(verbose_name="base_line_date", default=BASE_LINE_DATE)
 
     def __str__(self):
         return "{}: {} : {} : {}".format(self.internal_chart_name, self.chart_name, self.metric_model_name, self.metric_id)
@@ -312,7 +314,7 @@ class MetricChart(models.Model):
                 day_entries = None
             current_date = current_date - timedelta(days=1)  # TODO: if we know the holes jump to the next hole
 
-    def fixup_expected_values(self, data_set):
+    def fixup_reference_values(self, data_set):
         modified = 0
         # if self.chart_name == "BLK_LSV: Latency":
         #    j = 0
@@ -324,11 +326,11 @@ class MetricChart(models.Model):
             for first in first_record[::-1]:
                 if output_name in first:
                     if first[output_name] > 0:
-                        data_set["output"]["expected"] = first[output_name]
+                        data_set["output"]["reference"] = first[output_name]
                         modified = 1
                         break
             if modified == 0:
-                data_set["output"]["expected"] = 0
+                data_set["output"]["reference"] = 0
             # data_set["expected"] = first_rec
         # self.data_sets = json.dumps(data_set)
         # self.save()
@@ -1018,7 +1020,7 @@ class NuTransitPerformance(models.Model):
     interpolated = models.BooleanField(default=False)
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_frame_size = models.IntegerField(verbose_name="Fixed Frame Size Test", choices=[(0, 1500), (1, 1000), (2, 200), (3, 9000), (4, 16380), (5, 64)])
-    output_throughput = models.FloatField(verbose_name="Throughput in Mbps")
+    output_throughput = models.FloatField(verbose_name="Throughput in Gbps")
     output_latency_avg = models.FloatField(verbose_name="Latency Avg in us")
     output_latency_max = models.FloatField(verbose_name="Latency Max in us")
     output_latency_min = models.FloatField(verbose_name="Latency Min in us")
@@ -1026,7 +1028,7 @@ class NuTransitPerformance(models.Model):
     output_jitter_min = models.FloatField(verbose_name="Jitter min in us", default=0)
     output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
-    output_pps = models.IntegerField(verbose_name="Packets per sec", default=0)
+    output_pps = models.FloatField(verbose_name="Packets per sec", default=0)
     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
@@ -1084,13 +1086,13 @@ class VoltestPerformance(models.Model):
     output_VOL_TYPE_BLK_EC_write_latency_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_latency_avg", default=-1)
     output_VOL_TYPE_BLK_EC_write_latency_min = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_latency_min", default=-1)
     output_VOL_TYPE_BLK_EC_write_IOPS = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_IOPS", default=-1)
-    output_VOL_TYPE_BLK_EC_write_Bandwidth_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_Bandwidth_avg", default=0)
+    output_VOL_TYPE_BLK_EC_write_Bandwidth_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_Bandwidth_avg", default=-1)
     output_VOL_TYPE_BLK_EC_write_Bandwidth_total = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_write_Bandwidth_total", default=-1)
     output_VOL_TYPE_BLK_EC_read_latency_max = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_latency_max", default=-1)
     output_VOL_TYPE_BLK_EC_read_latency_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_latency_avg", default=-1)
     output_VOL_TYPE_BLK_EC_read_latency_min = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_latency_min", default=-1)
     output_VOL_TYPE_BLK_EC_read_IOPS = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_IOPS", default=-1)
-    output_VOL_TYPE_BLK_EC_read_Bandwidth_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth avg", default=0)
+    output_VOL_TYPE_BLK_EC_read_Bandwidth_avg = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth avg", default=-1)
     output_VOL_TYPE_BLK_EC_read_Bandwidth_total = models.IntegerField(verbose_name="output_VOL_TYPE_BLK_EC_read_Bandwidth total", default=-1)
 
     def __str__(self):

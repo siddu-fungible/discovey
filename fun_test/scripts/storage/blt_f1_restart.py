@@ -99,11 +99,13 @@ class BLTF1RestartTestCase(FunTestCase):
 
             if not hasattr(self, "vol_stats_threshold_pass"):
                 self.vol_stats_threshold_pass = 0
+            if not hasattr(self, "trigger_blt_failure"):
+                self.trigger_blt_failure = 0
 
             # LS volume capacity is the ndata times of the BLT volume capacity
             if self.use_lsv:
                 fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
-                             "rounding that to the nearest 8MB value")
+                             "rounding that to the nearest 8KB value")
                 eight_kb = 1024 * 8
                 tmp = self.volume_params["capacity"]["lsv"] * (1 + self.lsv_pct)
                 self.volume_params["capacity"]["blt"] = int(tmp + (eight_kb - (tmp % eight_kb)))
@@ -198,7 +200,12 @@ class BLTF1RestartTestCase(FunTestCase):
                     uuid=self.lsv_uuid, group=self.group, jvol_uuid=self.jvol_uuid, pvol_id=self.uuids["blt"],
                     command_duration=self.volume_params["command_timeout"])
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Mounting LS volume in the DUT instance")
+                # changes after fixing issue SWOS-3813 - LSV mount fails if underlying BLT is faulty
+                if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+                    fun_test.test_assert(not command_result["status"],
+                                         "Mounting LS volume should fail as underlying BLT volume is faulty")
+                else:
+                    fun_test.test_assert(command_result["status"], "Mounting LS volume in the DUT instance")
 
                 '''
                 # TODO: Inject fault for LSV, if trigger_lsv_failure is enabled
@@ -229,7 +236,15 @@ class BLTF1RestartTestCase(FunTestCase):
             ns_id=self.ns_id, uuid=self.attach_uuid, remote_ip=self.linux_host.internal_ip,
             command_duration=self.volume_params["command_timeout"])
         fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"], "Attaching volume in the DUT instance")
+        if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+            if command_result["status"]:
+                fun_test.critical(
+                    "Attach is expected to FAIL however it's PASSED. Please check. Continuing with further steps")
+            else:
+                fun_test.test_assert(not command_result["status"],
+                                     "Attaching of LSV should fail because LSV Mount has failed")
+        else:
+            fun_test.test_assert(command_result["status"], "Attaching volume in the DUT instance")
 
         fun_test.shared_variables["setup_created"] = True
         fun_test.shared_variables["uuids"] = self.uuids
@@ -319,14 +334,14 @@ class BLTF1RestartTestCase(FunTestCase):
             fun_test.log("Diff volume stats is: {}".format(diff_volume_stats[mode]))
 
             size_in_bytes = utils.convert_to_bytes(str(self.fio_params["size"]))
-            fun_test.test_assert(size_in_bytes != -1, "Converted fio size in bytes")
+            fun_test.simple_assert(size_in_bytes != -1, "Converted fio size in bytes")
 
             for type in volumes:
                 if type == "jvol":
                     continue
                 fun_test.log("Stats validation for volume {}".format(type))
                 bs_in_bytes = utils.convert_to_bytes(str(self.volume_params["block_size"][type]))
-                fun_test.test_assert(bs_in_bytes != -1, "Converted volume block size in bytes")
+                fun_test.simple_assert(bs_in_bytes != -1, "Converted volume block size in bytes")
 
                 expected_write = (size_in_bytes / bs_in_bytes)
                 expected_read = (size_in_bytes / bs_in_bytes)
@@ -348,8 +363,7 @@ class BLTF1RestartTestCase(FunTestCase):
                     if (expected_write > actual_write) and (expected_write - actual_write) \
                             <= self.vol_stats_threshold_pass or (actual_write > expected_write) and \
                             (actual_write - expected_write) <= self.vol_stats_threshold_pass:
-                        fun_test.add_checkpoint("Actual {} write stat is within expected range {}".
-                                                format(actual_write, expected_write), "PASSED",
+                        fun_test.add_checkpoint("Write stat is within expected range", "PASSED",
                                                 expected_write, actual_write)
                         fun_test.critical(
                             "Write stat: actual: {}, expected: {} it's within the expected range".format(
@@ -357,10 +371,10 @@ class BLTF1RestartTestCase(FunTestCase):
                     else:
                         fun_test.log("Actual Stats are not within pass threshold range")
                         fun_test.test_assert_expected(expected=expected_write, actual=actual_write,
-                                                          message="Write counter is correct")
+                                                      message="Write counter is correct for {}".format(type.upper()))
                 else:
                     fun_test.test_assert_expected(expected=expected_write, actual=actual_write,
-                                                  message="Write counter is correct")
+                                                  message="Write counter is correct for {}".format(type.upper()))
 
                 if expected_read != actual_read:
                     fun_test.log(
@@ -369,18 +383,17 @@ class BLTF1RestartTestCase(FunTestCase):
                     if (expected_read > actual_read) and (expected_read - actual_read) \
                             <= self.vol_stats_threshold_pass or (actual_read > expected_read) and \
                             (actual_read - expected_read) <= self.vol_stats_threshold_pass:
-                        fun_test.add_checkpoint("Actual {} read stat is within expected range {}".
-                                                format(actual_read, expected_read), "PASSED",
+                        fun_test.add_checkpoint("Read stat is within expected range", "PASSED",
                                                 expected_read, actual_read)
                         fun_test.critical("Actual {} Read stat is within the expected range {}".format(
                             actual_read, expected_read))
                     else:
                         fun_test.log("Actual Stats are not within pass threshold range")
                         fun_test.test_assert_expected(expected=expected_read, actual=actual_read,
-                                                      message="Read counter is correct")
+                                                      message="Read counter is correct for {}".format(type.upper()))
                 else:
                     fun_test.test_assert_expected(expected=expected_read, actual=actual_read,
-                                                  message="Read counter is correct")
+                                                  message="Read counter is correct for {}".format(type.upper()))
 
         if self.restart_f1:
             sc_disconnect = self.storage_controller.disconnect()
@@ -427,10 +440,18 @@ class BLTF1RestartTestCase(FunTestCase):
                                                                  "stats")
                     command_result = {}
                     command_result = self.storage_controller.peek(storage_props_tree)
-                    fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
-                                           format(type, index))
+                    if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure and type == "lsv":
+                        if command_result["status"]:
+                            fun_test.critical(
+                                "Vol stats is expected to FAIL however it's PASSED. Please check.")
+                        else:
+                            fun_test.test_assert(not command_result["status"],
+                                                 "Initial stats for LSV should fail because LSV is not Mounted")
+                    else:
+                        fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
+                                               format(type.upper(), index))
                     initial_volume_status[mode][type][index] = command_result["data"]
-                    fun_test.log("{} {} volume Status at the beginning of the test:".format(type, index))
+                    fun_test.log("{} {} volume Status at the beginning of the test:".format(type.upper(), index))
                     fun_test.log(initial_volume_status[mode][type][index])
 
             # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
@@ -458,9 +479,9 @@ class BLTF1RestartTestCase(FunTestCase):
                         command_result = {}
                         command_result = self.storage_controller.peek(storage_props_tree)
                         fun_test.simple_assert(command_result["status"], "Initial {} {} volume stats".
-                                               format(type, index))
+                                               format(type.upper(), index))
                         final_volume_status[mode][type][index] = command_result["data"]
-                        fun_test.log("{} {} volume Status at the end of the test:".format(type, index))
+                        fun_test.log("{} {} volume Status at the end of the test:".format(type.upper(), index))
                         fun_test.log(final_volume_status[mode][type][index])
 
                 # Finding the difference between the internal volume stats before and after the test
@@ -479,7 +500,7 @@ class BLTF1RestartTestCase(FunTestCase):
                                 ivalue = initial_volume_status[mode][type][index][fkey]
                                 diff_volume_stats[mode][type][index][fkey] = fvalue - ivalue
                         fun_test.log("Difference of {} {} volume status before and after the test:".
-                                     format(type, index))
+                                     format(type.upper(), index))
                         fun_test.log(diff_volume_stats[mode][type][index])
                 fun_test.log("Diff volume stats is: {}".format(diff_volume_stats))
 
@@ -487,7 +508,7 @@ class BLTF1RestartTestCase(FunTestCase):
                     if type == "jvol":
                         continue
                     bs_in_bytes = utils.convert_to_bytes(str(self.volume_params["block_size"][type]))
-                    fun_test.test_assert(bs_in_bytes != -1, "Converted volume block size in bytes")
+                    fun_test.simple_assert(bs_in_bytes != -1, "Converted volume block size in bytes")
                     expected_read = (size_in_bytes / bs_in_bytes)
                     actual_read = diff_volume_stats[mode][type][0]["num_reads"]
                     if ((hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure)
@@ -502,19 +523,19 @@ class BLTF1RestartTestCase(FunTestCase):
                         if (expected_read > actual_read) and (expected_read - actual_read) \
                                 <= self.vol_stats_threshold_pass or (actual_read > expected_read) and \
                                 (actual_read - expected_read) <= self.vol_stats_threshold_pass:
-                            fun_test.add_checkpoint("Actual {} read stat is within expected range {}".
-                                                    format(actual_read, expected_read), "PASSED",
+                            fun_test.add_checkpoint("Read stat is within expected range", "PASSED",
                                                     expected_read, actual_read)
                             fun_test.critical("Actual {} value is within the expected range {}".format(
                                 actual_read, expected_read))
                         else:
                             fun_test.log("Actual Stats are not within pass threshold range")
                             fun_test.test_assert_expected(expected=expected_read, actual=actual_read,
-                                                          message="Read counter is correct")
+                                                          message="Read counter is correct for {}".format(type.upper()))
                     else:
                         fun_test.test_assert_expected(expected=expected_read, actual=actual_read,
-                                                      message="Read counter is correct")
-                    fun_test.test_assert_expected(expected=0, actual=actual_write, message="Write counter is correct")
+                                                      message="Read counter is correct for {}".format(type.upper()))
+                    fun_test.test_assert_expected(expected=0, actual=actual_write,
+                                                  message="Write counter is correct for {}".format(type.upper()))
             else:
                 fun_test.test_assert(not fio_output[mode], "Expected fio error".format(mode))
 
@@ -532,7 +553,16 @@ class BLTF1RestartTestCase(FunTestCase):
 
             result_detach_volume = self.storage_controller.volume_detach_remote(
                 ns_id=self.ns_id, uuid=uuid, remote_ip=self.linux_host.internal_ip)
-            fun_test.test_assert(result_detach_volume["status"], "{} volume is detached".format(type))
+
+            if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+                if result_detach_volume["status"]:
+                    fun_test.critical(
+                        "DETACH is expected to be FAIL however it's PASSED. Please check. Continuing with further step")
+                else:
+                    fun_test.test_assert(not result_detach_volume["status"],
+                                         "Detaching of LSV should fail because LSV Mount & Attach has failed")
+            else:
+                fun_test.test_assert(result_detach_volume["status"], "{} volume is detached".format(type.upper()))
 
             # Deleting LS volume and Journal volume
             if self.use_lsv:
@@ -541,7 +571,13 @@ class BLTF1RestartTestCase(FunTestCase):
                     uuid=self.uuids["lsv"][0], block_size=self.volume_params["block_size"]["lsv"],
                     name=self.volume_params["name"]["lsv"])
                 fun_test.shared_variables["setup_created"] = False
-                fun_test.test_assert(result_delete_lsv["status"], "LS volume is deleted")
+                # changes after fixing issue SWOS-3813 - LSV mount fails if underlying BLT is faulty, hence LSV delete
+                # will fail as it's not mounted
+                if hasattr(self, "trigger_blt_failure") and self.trigger_blt_failure:
+                    fun_test.test_assert(not result_delete_lsv["status"],
+                                         "Expected failure in LSV delete as it was not mounted")
+                else:
+                    fun_test.test_assert(result_delete_lsv["status"], "LSV volume is deleted")
 
                 result_delete_jvol = self.storage_controller.delete_volume(
                     type=self.volume_params["type"]["jvol"], capacity=self.volume_params["capacity"]["jvol"],
@@ -552,13 +588,14 @@ class BLTF1RestartTestCase(FunTestCase):
 
             # Deleting BLT volume
             uuid = self.uuids["blt"][0]
+            type = "blt"
             result_delete_volume = self.storage_controller.delete_thin_block_volume(
                 capacity=self.volume_params["capacity"][type], uuid=uuid,
                 block_size=self.volume_params["block_size"][type], name=self.volume_params["name"][type])
             fun_test.shared_variables["setup_created"] = False
-            fun_test.test_assert(result_delete_volume["status"], "{} volume is deleted".format(type))
 
-            # self.storage_controller.disconnect()
+            # Below assert will fails due to SWOS-4234, (until it's fixed)
+            fun_test.test_assert(result_delete_volume["status"], "{} volume is deleted".format(type.upper()))
 
 
 class BLTF1RestartFio(BLTF1RestartTestCase):

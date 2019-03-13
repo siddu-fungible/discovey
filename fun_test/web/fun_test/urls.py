@@ -76,6 +76,7 @@ regression_urls = [
     url(r'^job_spec/(\d+)$', regression_views.job_spec),
     url(r'^re_run_info$', regression_views.re_run_info),
     url(r'^scheduler/.*$', views.angular_home),
+    url(r'^test_case_execution_info/(\d+)$', regression_views.test_case_execution_info),
     url(r'^git$', regression_views.git),
     url(r'^(?:\S+)$', views.angular_home)
 
@@ -112,6 +113,7 @@ tcm_urls = [
 common_urls = [
     url(r'^time_keeper/(.*)$', common_views.time_keeper),
     url(r'^alerts', views.angular_home),
+    url(r'^logs$', views.angular_home),
     url(r'^add_session_log$', common_views.add_session_log),
     url(r'^get_session_logs$', common_views.get_session_logs),
     url(r'^home$', common_views.home),
@@ -158,7 +160,9 @@ metric_urls = [
 
 test_urls = [
     url(r'^datetime$', tests_views.date_test),
-    url(r'^bg$', tests_views.bg)
+    url(r'^bg$', tests_views.bg),
+    url(r'^crash$', tests_views.crash)
+
 ]
 
 upgrade_urls = [

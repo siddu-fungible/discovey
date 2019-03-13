@@ -491,12 +491,18 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             job_inputs = fun_test.get_job_inputs()
             fun_test.simple_assert(job_inputs, "Job inputs are not found")
             if job_inputs['speed'] == SpirentManager.SPEED_100G:
+                # To avoid latency spikes at 100% rate we need to adjust internal clock source to -10
                 interface_obj = Ethernet100GigFiberInterface(line_speed=Ethernet100GigFiberInterface.SPEED_100G,
                                                              auto_negotiation=False,
-                                                             forward_error_correction=False)
+                                                             forward_error_correction=False,
+                                                             internal_ppm_adjust=-10,
+                                                             transmit_clock_source="INTERNAL_PPM_ADJ")
             elif job_inputs['speed'] == SpirentManager.SPEED_25G:
+                # To avoid latency spikes at 100% rate we need to adjust internal clock source to -10
                 interface_obj = Ethernet25GigFiberInterface(auto_negotiation=False,
-                                                            line_speed=Ethernet25GigFiberInterface.SPEED_25G)
+                                                            line_speed=Ethernet25GigFiberInterface.SPEED_25G,
+                                                            internal_ppm_adjust=-10,
+                                                            transmit_clock_source="INTERNAL_PPM_ADJ")
             attributes = interface_obj.get_attributes_dict()
             spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
                                                                         interface_type=str(interface_obj),

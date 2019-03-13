@@ -1,4 +1,4 @@
-<div class="card">
+<div *ngIf="filterEntry.timeBucketList.length > 0" class="card">
   <div class="card-body">
     <div>
       <label for="mode">
@@ -13,7 +13,8 @@
       </label>
 
     </div>
-    <fun-chart
+    <div style="width:100%;margin: 0 auto">
+      <fun-chart
       [pointClickCallback]="pointClickCallback"
       (pointInfo)="showPointDetails($event)"
       [title]="title"
@@ -22,6 +23,8 @@
       [xValues]="x1Values"
       [chartType]="'vertical_colored_bar_chart'">
     </fun-chart>
+    </div>
+
   </div>
 
 

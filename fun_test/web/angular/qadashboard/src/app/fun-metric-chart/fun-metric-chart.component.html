@@ -22,7 +22,7 @@
     </div>
 
     <!-- fun chart component -->
-    <fun-chart [mileStones]="mileStoneIndices" [y1AxisPlotLines]="y1AxisPlotLines" [y1Values]="values"
+    <fun-chart [mileStones]="mileStoneIndices" [y1AxisPlotLines]="y1AxisPlotLines" [yMax]="yMax" [y1Values]="values"
                [xValues]="series"
                [title]="chartName"
                [xAxisLabel]="chart1XaxisTitle"
@@ -96,12 +96,12 @@
       <!--</span>-->
       <br>
       <div *ngIf="modelName !== 'MetricContainer'">
-        <b>Expected values:</b>&nbsp;
-        <a *ngIf="!showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
-        <a *ngIf="showAllExpectedValues" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>
+        <b>Show expected values:</b>&nbsp;
+        <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
+        <a *ngIf="showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>
         <table>
           <tr *ngFor="let output of expectedValues">
-            <td>
+            <td *ngIf="output.value !== -1">
               <input
                 type="checkbox"
                 [checked]="output.show"
@@ -110,8 +110,11 @@
             <td>
               <i>{{ output.name }}:</i>&nbsp;
             </td>
-            <td>
+            <td *ngIf="output.value !== -1">
               {{ output.value }} {{ output.unit }}
+            </td>
+            <td *ngIf="output.value === -1">
+              Not set
             </td>
           </tr>
         </table>
@@ -145,15 +148,16 @@
       </a>
     </span>
         <div *ngIf="showingConfigure">
-          <table class="table table-nonfluid table-borderless" *ngFor="let dataSet of previewDataSets">
+          <table class="table table-nonfluid table-borderless">
             <tr>
               <th>Name</th>
               <th>Field</th>
               <th>Min</th>
               <th>Max</th>
               <th>Expected</th>
+              <th>Reference</th>
             </tr>
-            <tr>
+            <tr *ngFor="let dataSet of previewDataSets">
               <td>{{ dataSet.name }}</td>
               <td>{{ dataSet.output.name }}</td>
               <td><input type="number" [(ngModel)]="dataSet.output.min" [value]="dataSet.output.min"
@@ -163,6 +167,17 @@
               <td><input type="number" [(ngModel)]="dataSet.output.expected"
                          [value]="dataSet.output.expected"
                          style="width: 100px"></td>
+              <td><input type="number" [(ngModel)]="dataSet.output.reference"
+                         [value]="dataSet.output.reference"
+                         style="width: 100px"></td>
+            </tr>
+          </table>
+          <table class="table table-nonfluid table-borderless">
+            <tr>
+              <td>
+                BaseLine Date:&nbsp;<input type="text" [(ngModel)]="baseLineDate" [value]=""
+                                           style="width: 300px">
+              </td>
             </tr>
           </table>
           <p><input type="checkbox" [checked]="negativeGradient" [(ngModel)]="inner.negativeGradient">&nbsp;Negative

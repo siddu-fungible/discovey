@@ -3,7 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, TCP, UDP, RangeModifier, Ipv4Header, Ipv6Header
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import *
+from scripts.networking.nu_config_manager import NuConfigManager
 
 loads_file = "interface_loads.json"
 min_frame_length_ipv4 = 78
@@ -52,10 +52,14 @@ class SpirentSetup(FunTestScript):
         global template_obj, port_1, port_2, interface_1_obj, interface_2_obj, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
             dut_config, spirent_config, hnu_1, hnu_2, shape_1, shape_2, gen_obj_2, dut_type, destination_mac, \
-            ul_ipv4_l3_config, ul_ipv6_l3_config, ol_ipv4_l3_config, ol_ipv6_l3_config, flow_direction, fps
+            ul_ipv4_l3_config, ul_ipv6_l3_config, ol_ipv4_l3_config, ol_ipv6_l3_config, flow_direction, fps, nu_config_obj
+
+        nu_config_obj = NuConfigManager()
 
         flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
         fps = 100
+        if nu_config_obj.DUT_TYPE == nu_config_obj.DUT_TYPE_F1:
+            fps = 1000
 
         output = set_shape_hnu(flow_direction=flow_direction)
         shape_1 = output["shape_1"]
@@ -65,18 +69,22 @@ class SpirentSetup(FunTestScript):
         fun_test.log("Variables shape1, shape2, hnu1 and hnu2 have values %s, %s, %s and %s" % (shape_1, shape_2,
                                                                                                 hnu_1, hnu_2))
 
-        dut_type = fun_test.get_local_setting(setting="dut_type")
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type,
+        # UNCOMMENT below lines for fakehu
+        # REMOVE BELOW LINES
+        #shape_1 = 0
+        #shape_2 = 0
+        #hnu_1 = 0
+        #hnu_2 = 0
+
+        dut_type = nu_config_obj.DUT_TYPE
+        dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE,
                                                    flow_direction=flow_direction,
                                                    flow_type=NuConfigManager.VP_FLOW_TYPE)
-        dut_type = nu_config_obj.get_dut_type()
-
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
         template_obj = SpirentEthernetTrafficTemplate(session_name="vp-sanity-random", spirent_config=spirent_config,
-                                                      chassis_type=chassis_type)
+                                                      chassis_type=nu_config_obj.CHASSIS_TYPE)
         fun_test.test_assert(template_obj, "Create template object")
 
         result = template_obj.setup(no_of_ports_needed=num_ports, flow_type=NuConfigManager.VP_FLOW_TYPE,
@@ -186,7 +194,7 @@ class VPPathIPv4TCP(FunTestCase):
     streamblock_obj_1 = None
     min_frame_size = min_frame_length_ipv4
     generator_step_size = generator_step
-    flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
+    flow_direction = NuConfigManager.FLOW_DIRECTION_FPG_HNU
 
     def describe(self):
         self.set_test_details(id=1,
@@ -396,6 +404,11 @@ class VPPathIPv4TCP(FunTestCase):
                                             check_list_keys=['erp', 'fpg' + str(dut_port_1_fpg_value)],
                                             parser_old_result=parser_stats_nu_1, match_values=False)
                 fun_test.simple_assert(out, "Parser ingress stats")
+
+                # UNCOMMENT below lines for fakehu
+                # REMOVE below 2 lines
+                #parser_stats_hnu_2 = parser_stats_nu_2
+                #parser_stats_hnu_1 = parser_stats_nu_1
                 out = validate_parser_stats(parser_result=parser_stats_hnu_2,
                                             compare_value=int(tx_results_1['FrameCount']),
                                             check_list_keys=['etp'],
@@ -1013,7 +1026,7 @@ class OverlayMPLSUDP(OverlayMPLSTCP):
         
         
 class VPPathIPv4TCP_HNU_FPG(VPPathIPv4TCP):
-    flow_direction = nu_config_obj.FLOW_DIRECTION_HNU_FPG
+    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
 
     def describe(self):
         self.set_test_details(id=9,
@@ -1036,7 +1049,7 @@ class VPPathIPv4TCP_HNU_FPG(VPPathIPv4TCP):
 
 
 class VPPathIPv4UDP_HNU_FPG(VPPathIPv4UDP):
-    flow_direction = nu_config_obj.FLOW_DIRECTION_HNU_FPG
+    flow_direction = NuConfigManager.FLOW_DIRECTION_HNU_FPG
 
     def describe(self):
         self.set_test_details(id=10,

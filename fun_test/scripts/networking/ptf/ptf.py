@@ -62,11 +62,13 @@ class PTFTestSuite(FunTestScript):
 
         fun_test.shared_variables['linux_obj'] = linux_obj
         fun_test.shared_variables['funcp_obj'] = funcp_obj
+        fun_test.shared_variables['funsdk_obj'] = funsdk_obj
 
     def cleanup(self):
         linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
         linux_obj_ptf.command('sudo pkill ptf')
         fun_test.shared_variables['funcp_obj'].cleanup()
+        fun_test.shared_variables['funsdk_obj'].cleanup()
         fun_test.shared_variables['linux_obj'].command('export WORKSPACE=$WSTMP')
 
 
@@ -74,8 +76,12 @@ def run_ptf_test(tc, server, timeout, tc_desc):
     """Run PTF test cases."""
 
     job_environment = fun_test.get_job_environment()
-    dpc_proxy_ip = str(job_environment['UART_HOST'])
-    dpc_proxy_port = int(job_environment['UART_TCP_PORT_0'])
+    try:
+        dpc_proxy_ip = str(job_environment['UART_HOST'])
+        dpc_proxy_port = int(job_environment['UART_TCP_PORT_0'])
+    except:
+        dpc_proxy_ip = '10.1.21.120'
+        dpc_proxy_port = '40221'
 
     funcp_obj = fun_test.shared_variables['funcp_obj']
     output = funcp_obj.send_traffic(tc, server=server, dpc_proxy_ip=dpc_proxy_ip, dpc_proxy_port=dpc_proxy_port,
@@ -131,15 +137,9 @@ class EtpTest(FunTestCase):
         """)
 
     def setup(self):
-        # TODO: Remove below workaround after SWOS-2890 is fixed
-        #linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        #linux_obj_ptf.command('nohup ping 19.1.1.1 -i 100 &')
         pass
 
     def cleanup(self):
-        # TODO: Remove below workaround after SWOS-2890 is fixed
-        #linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
-        #linux_obj_ptf.command('pkill ping')
         get_ptf_log()
 
     def run(self):

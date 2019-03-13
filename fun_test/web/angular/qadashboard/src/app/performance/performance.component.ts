@@ -3,7 +3,6 @@ import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {Title} from "@angular/platform-browser";
 import {CommonService} from "../services/common/common.service";
-import {ClipboardService} from 'ngx-clipboard';
 import {ActivatedRoute, Router} from "@angular/router";
 import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -43,6 +42,7 @@ class Node {
   upgrades: any = new Set();
   failures: any = new Set();
   bugs: any = {};
+  positive: boolean = true;
 }
 
 class FlatNode {
@@ -146,7 +146,6 @@ export class PerformanceComponent implements OnInit {
     private loggerService: LoggerService,
     private title: Title,
     private commonService: CommonService,
-    private clipboardService: ClipboardService,
     private activatedRoute: ActivatedRoute,
     private router: Router
   ) {
@@ -156,9 +155,6 @@ export class PerformanceComponent implements OnInit {
     console.log("Component Init");
     this.title.setTitle('Performance');
     this.status = "Loading";
-    //let myMap = new Map().set('a', 1).set('b', 2);
-    //let keys = Array.from(myMap.keys());
-    //console.log(keys);
     this.numGridColumns = 2;
     this.miniGridMaxWidth = '50%';
     this.miniGridMaxHeight = '50%';
@@ -187,7 +183,7 @@ export class PerformanceComponent implements OnInit {
     return this.activatedRoute.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('goto')) {
         let queryPath = params['goto'];
-        console.log("QueryPath: " + this.queryPath);
+        // console.log("QueryPath: " + this.queryPath);
         return of(queryPath);
       }
       else {
@@ -296,6 +292,7 @@ export class PerformanceComponent implements OnInit {
     node.numBugs = dagEntry.jira_ids.length;
     node.jiraIds = dagEntry.jira_ids;
     node.showAddJira = false;
+    node.positive = dagEntry.positive;
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
@@ -424,7 +421,7 @@ export class PerformanceComponent implements OnInit {
     node.grid = [];
     let maxRowsInMiniChartGrid = 10;
     let maxColumns = this.numGridColumns;
-    console.log("Prepare Grid nodes");
+    // console.log("Prepare Grid nodes");
     let tempGrid = [];
     let rowIndex = 0;
     let childNodes = [];
@@ -450,9 +447,9 @@ export class PerformanceComponent implements OnInit {
     if (node.metricModelName !== 'MetricContainer') {
       //$scope.showingContainerNodeInfo = !$scope.showingContainerNodeInfo;
       if (node.positive) {
-        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/expected value) * 100&nbsp)/n";
+        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(last actual value/reference value) * 100&nbsp)/n";
       } else {
-        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(expected value/last actual value) * 100&nbsp)/n";
+        this.currentNodeInfo = "(&nbsp&#8721; <sub>i = 1 to n </sub>(reference value/last actual value) * 100&nbsp)/n";
       }
       this.currentNodeInfo += "&nbsp, where n is the number of data-sets";
     }
@@ -864,12 +861,6 @@ export class PerformanceComponent implements OnInit {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   };
 
-  openAtomicTab = () => {
-    let url = "/performance/atomic/" + this.currentNode.metricId;
-    window.open(url, '_blank');
-  };
-
-
   expandNode = (flatNode, all = false) => {
     let topLineage = null;
     if (flatNode.hasOwnProperty("lineage")) {
@@ -959,7 +950,7 @@ export class PerformanceComponent implements OnInit {
       path = path.replace(this.gotoQueryBaseUrl, "");
       let parts = path.split("/");
       result = this._doPathToGuid(this.flatNodes[0], parts);
-      console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
+      // console.log("Path: " + path + " : guid: " + result + " c: " + this.getFlatNodeByGuid(result).node.chartName);
 
     } catch (e) {
 
@@ -1023,23 +1014,6 @@ export class PerformanceComponent implements OnInit {
       this.showBugPanel = false;
     }
 
-  }
-
-  //copy atomic URL to clipboard
-  copyAtomicUrl(): string {
-    let baseUrl = window.location.protocol +
-      '//' + window.location.hostname;
-    if (window.location.port !== "") {
-      baseUrl += ':' + window.location.port;
-    }
-
-    let url = baseUrl + "/performance/atomic/" + this.currentNode.metricId;
-    this.clipboardService.copyFromContent(url);
-    let message = 'URL: ' + url + " copied to clipboard";
-    this.toolTipMessage = message;
-    //alert(message);
-    this.copyUrlTooltip.open();
-    return message;
   }
 
 }

@@ -24,5 +24,16 @@
     "fill_type": "PRBS",
     "soc_clk_in_khz": 1000000,
     "frame_length_mode": "RANDOM"
+  },
+  {
+    "name": "sample_advanced_pps_config_f1",
+    "dut_type": "f1",
+    "fixed_frame_size": 128,
+    "load_type": "PERCENT_LINE_RATE",
+    "load": 50,
+    "insert_signature": true,
+    "fill_type": "PRBS",
+    "soc_clk_in_khz": 1000000,
+    "frame_length_mode": "FIXED"
   }
 ]

@@ -439,3 +439,17 @@ input:checked + .slider:before {
 .pseudo-table {
   border: 0;
 }
+
+tr.text-center > th {
+  text-align: center;
+}
+
+/* toaster */
+#toast-container > div {
+  opacity: unset;
+}
+
+/* label */
+.passed-label {
+
+}

@@ -72,17 +72,15 @@
           "destination_ip2": "19.1.1.1",
           "destination_ip3": "60.1.1.1",
           "destination_ip4": "61.1.1.1",
-          "hnu_destination_ip2": "29.1.1.1",
-          "cc_destination_ip1": "20.1.1.2",
-          "cc_glean_ip1": "32.1.1.1"
+          "hnu_destination_ip2": "29.1.1.1"
         },
         "ipv6": {
           "source_ip1": "2000::2",
           "destination_ip1": "2001::20:1:1:1",
-          "destination_ip2": "2001::19:1:1:1"
-        }
-      },
-      "overlay_routes": {
+          "destination_ip2": "2001::19:1:1:1",
+          "hnu_destination_ip2": "2001::29:1:1:1"
+        }},
+        "overlay_routes": {
         "ipv4": {
           "destination_ip1": "50.0.3.1",
           "destination_ip2": "50.0.2.1"
@@ -92,8 +90,8 @@
           "destination_ip2": "2001::50:0:2:1"
         }
       }
-    }
-  },
+      }
+    },
   {
     "name": "palladium_spirent_map",
     "transit_flow": {
@@ -139,8 +137,8 @@
     "ecmp_flow" : {
       "FPG_ECMP": {"FPG1": "10.1.23.139/1/1", "FPG19": "10.1.23.140/1/1", "FPG18": "10.1.23.138/1/2"} 
     },
-    "cc_flow": {
-      "NU_CC": {"FPG0": "10.1.40.91/2/1", "FPG1": "10.1.40.91/2/2", "FPG2": "10.1.40.91/2/3", "FPG3": "10.1.40.91/2/4"}
-    }
-  }
+    "vp_flow": {
+      "NU_HNU": {"FPG1": "10.1.40.91/2/2", "FPG3": "10.1.40.91/2/4", "FPG0": "10.1.40.91/2/1"},
+      "HNU_NU": {"FPG3": "10.1.40.91/2/4", "FPG1": "10.1.40.91/2/2"}
+    }}
 ]

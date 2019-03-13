@@ -797,8 +797,21 @@ if __name__ == "__main_nw_delete__":
     entries = model.objects.all()
     entries.delete()
     print "deleted nu transit model"
+    global_setting = MetricsGlobalSettings.objects.first()
+    global_setting.cache_valid = False
+    global_setting.save()
+    print "cache valid is false"
+    charts = MetricChart.objects.all()
+    for chart in charts:
+        if chart.metric_model_name == "NuTransitPerformance":
+            if chart.y1_axis_title == "packets/sec":
+                chart.y1_axis_title = "Mpps"
+            if chart.y1_axis_title == "Mbps":
+                chart.y1_axis_title = "Gbps"
+            chart.save()
+    print "changed y1 axis title"
 
-if __name__ == "__main__":
+if __name__ == "__main_remove_mm__":
     model = MetricChart
     model_name = "NuTransitPerformance"
     internal_chart_names = ["Networking", "Networking_Teramarks", "NU_HNU", "HNU_HNU_FCP", "HNU_HNU", "NU_NU", "HNU_NU",
@@ -827,9 +840,9 @@ if __name__ == "__main_create_nw__":
 
     flow_types = ["HU_HU_NFCP", "NU_HU_NFCP"]
     flow_type_map = {"HU_HU_Throughput": "HU_HU_NFCP",
-                         "HU_HU_Latency": "HU_HU_NFCP",
-                         "NU_HU_Throughput": "NU_HU_NFCP",
-                         "NU_HU_Latency": "NU_HU_NFCP"}
+                     "HU_HU_Latency": "HU_HU_NFCP",
+                     "NU_HU_Throughput": "NU_HU_NFCP",
+                     "NU_HU_Latency": "NU_HU_NFCP"}
     frame_sizes = [64, 1500]
 
     for internal_name in internal_name_map:
@@ -860,18 +873,112 @@ if __name__ == "__main_create_nw__":
                     positive = False
                     y1_axis_title = "ns"
                 MetricChart(chart_name=chart_name,
-                        metric_id=metric_id,
-                        internal_chart_name=internal_chart_name,
-                        data_sets=json.dumps(data_sets),
-                        leaf=True,
-                        description="TBD",
-                        owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
-                        positive=positive,
-                        y1_axis_title=y1_axis_title,
-                        metric_model_name=model_name,
-                        base_line_date=base_line_date).save()
+                            metric_id=metric_id,
+                            internal_chart_name=internal_chart_name,
+                            data_sets=json.dumps(data_sets),
+                            leaf=True,
+                            description="TBD",
+                            owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                            positive=positive,
+                            y1_axis_title=y1_axis_title,
+                            metric_model_name=model_name,
+                            base_line_date=base_line_date).save()
                 mmt = MileStoneMarkers(metric_id=metric_id,
-                                   milestone_date=datetime(year=2018, month=9, day=16),
-                                   milestone_name="Tape-out")
+                                       milestone_date=datetime(year=2018, month=9, day=16),
+                                       milestone_name="Tape-out")
                 mmt.save()
     print "Creating charts and setting baseline for networking flow types is completed programatically"
+
+if __name__ == "__main_reference__":
+    entries = MetricChart.objects.all()
+    count = 0
+    for entry in entries:
+        if entry.leaf and entry.data_sets:
+            count += 1
+            print entry.chart_name
+            jsonData = json.loads(entry.data_sets)
+            for data in jsonData:
+                if "expected" in data["output"]:
+                    expected = data["output"]["expected"]
+                    print (count, ". old ", expected)
+                    data["output"]["reference"] = expected
+                    reference = data["output"]["reference"]
+                    print (count, ". new ", reference)
+                    data["output"]["expected"] = -1
+                    print (count, ". old ", data["output"]["expected"])
+            entry.data_sets = json.dumps(jsonData)
+            entry.save()
+    print "created reference values"
+
+
+if __name__ == "__main_change_max__":
+    entries = MetricChart.objects.all()
+    count = 0
+    for entry in entries:
+        if entry.leaf:
+            count += 1
+            data_set = json.loads(entry.data_sets)
+            for data in data_set:
+                if "max" in data["output"]:
+                    maximum = data["output"]["max"]
+                    print (count, maximum)
+                    if str(maximum).startswith('99'):
+                        data["output"]["max"] = -1
+                        print (count, data["output"]["max"])
+            entry.data_sets = json.dumps(data_set)
+            entry.save()
+    print "maximum values for all data sets set to -1"
+
+if __name__ == "__main_create_pps__":
+    flow_types = ["HU_HU_NFCP", "HU_NU_NFCP", "NU_HU_NFCP"]
+    model_name = "NuTransitPerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    input_choices = get_possible_values(model_name=model_name)
+    frame_size = 1500
+    name = "1500B"
+    output = "output_pps"
+    chart_name = "Extrapolated Packets per sec"
+    for flow_type in flow_types:
+        data_sets = []
+        internal_name = flow_type + '_' + output
+        one_data_set = {}
+        one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_flow_type"] = flow_type
+        one_data_set["inputs"]["input_frame_size"] = frame_size
+        one_data_set["name"] = name
+        one_data_set["output"] = {"name": "output_pps", 'min': 0, "max": -1, "expected": -1, "reference": -1}
+        data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = True
+        y1_axis_title = "Mpps"
+        base_line_date = datetime(year=2019, month=1, day=22, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description="TBD",
+                owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                positive=positive,
+                y1_axis_title=y1_axis_title,
+                metric_model_name=model_name,
+                base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                           milestone_date=datetime(year=2018, month=9, day=16),
+                           milestone_name="Tape-out")
+        mmt.save()
+    print "create pps charts for 3 nw flow type metrics"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.base_line_date:
+            if str(entry.base_line_date).startswith('2019-04-01'):
+                print (entry.chart_name, str(entry.base_line_date))
+                if entry.chart_name == "Compression":
+                    base_line_date = datetime(year=2019, month=1, day=30, minute=0, hour=0, second=0)
+                else:
+                    base_line_date = datetime(year=2019, month=2, day=7, minute=0, hour=0, second=0)
+                entry.base_line_date = base_line_date
+                entry.save()
+                print (entry.chart_name, str(entry.base_line_date))

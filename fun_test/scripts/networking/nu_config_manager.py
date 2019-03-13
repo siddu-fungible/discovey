@@ -411,16 +411,22 @@ class NuConfigManager(object):
             fun_test.critical(str(ex))
         return self.DUT_TYPE
 
-    def read_test_configs_by_dut_type(self, config_file):
+    def read_test_configs_by_dut_type(self, config_file, config_name=None):
         result = None
         try:
             all_configs = self._parse_file_to_json_in_order(file_name=config_file)
             fun_test.simple_assert(all_configs, "Read all Configs")
             for config in all_configs:
                 if config['dut_type'] == self.DUT_TYPE:
-                    fun_test.log("Test Config Fetched: %s" % config)
-                    result = config
-                    break
+                    if config_name:
+                        if config['name'] == config_name:
+                            fun_test.log("Test Config Fetched: %s" % config)
+                            result = config
+                            break
+                    else:
+                        fun_test.log("Test Config Fetched: %s" % config)
+                        result = config
+                        break
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

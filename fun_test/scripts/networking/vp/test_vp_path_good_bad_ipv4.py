@@ -3,7 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import Sp
     StreamBlock, GeneratorConfig, Ethernet2Header, TCP, UDP, Ipv4Header, RangeModifier, CustomBytePatternHeader, VxLAN
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
-from scripts.networking.nu_config_manager import *
+from scripts.networking.nu_config_manager import NuConfigManager
 
 num_ports = 3
 total_packets = 10
@@ -51,7 +51,7 @@ custom_headers = {UL_BAD_IP_LEN_ERROR_INCR: ['4500', '1500', '00010000FF11', 'CD
                   OL_MPLS_BAD_TCP_XSUM: ['00012140'],
                   OL_MPLS_BAD_TCP_ZERO_XSUM: ['00012140'],
                   UL_GOOD_UDP_ZERO_XSUM: ['00010001006E0000'],
-                  UL_GOOD_UDP_FFFF_XSUM: ['000125B9', '006EFFFF'],
+                  UL_GOOD_UDP_FFFF_XSUM: ['00011FB8', '006EFFFF'],
                   OL_VXLAN_GOOD_UDP_FFFF_XSUM: ['0001F9D60008FFFF']}
 
 
@@ -68,16 +68,23 @@ class SpirentSetup(FunTestScript):
     def setup(self):
         global template_obj, port_1, port_2, gen_config_obj, \
             gen_obj_1, subscribe_results, dut_port_2, dut_port_1, network_controller_obj, \
-            dut_config, spirent_config, l2_config, l3_config, dut_port_3, port_3, gen_obj_3, dut_type, flow_direction, destination_mac
+            dut_config, spirent_config, l2_config, l3_config, dut_port_3, port_3, gen_obj_3, dut_type, flow_direction, destination_mac, nu_config_obj, hnu, shape
 
+        nu_config_obj = NuConfigManager()
+        dut_type = nu_config_obj.DUT_TYPE
         flow_direction = nu_config_obj.FLOW_DIRECTION_FPG_HNU
 
-        dut_type = nu_config_obj.get_dut_type()
-        dut_config = nu_config_obj.read_dut_config(dut_type=dut_type,
+        # UNCOMMENT below lines for fakehu
+        # REMOVE below lines
+        #hnu = False
+        #shape = 0
+
+        hnu = True
+        shape = 1
+
+        dut_config = nu_config_obj.read_dut_config(dut_type=nu_config_obj.DUT_TYPE,
                                                    flow_direction=flow_direction,
                                                    flow_type=NuConfigManager.VP_FLOW_TYPE)
-
-        chassis_type = fun_test.get_local_setting(setting="chassis_type")
         spirent_config = nu_config_obj.read_traffic_generator_config()
 
         fun_test.log("Creating Template object")
@@ -103,7 +110,6 @@ class SpirentSetup(FunTestScript):
 
         destination_mac = routes_config['routermac']
 
-        l2_config = spirent_config["l2_config"]
         ether_type = Ethernet2Header.INTERNET_IP_ETHERTYPE
 
         # Configure Generator
@@ -233,7 +239,7 @@ class UlBadIpLenErrorIncremental(FunTestCase):
             clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
             fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=1)
+            clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
             fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
             
             # Get stats before starting traffic
@@ -294,14 +300,14 @@ class UlBadIpLenErrorIncremental(FunTestCase):
                                           message="Ensure all frames transmitted from spirent are seen on ingress dut")
 
             # Check VP pkts
-            vp_check_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE, VP_PACKETS_OUT_HNU_ETP, VP_NO_DROP_PACKETS_TO_HNU_ETP]
+            vp_check_list = [VP_PACKETS_TOTAL_IN, VP_PACKETS_TOTAL_OUT, VP_PACKETS_FORWARDING_NU_LE, VP_PACKETS_OUT_HNU_ETP]
             for stat in vp_check_list:
                 count = int(vp_pkts_stats_2[stat])
                 if stat in vp_pkts_stats_1:
                     count = int(vp_pkts_stats_2[stat]) - int(vp_pkts_stats_1[stat])
                 fun_test.test_assert(int(tx_results_1['FrameCount']) > count,
                                      message="Verify vp block did not receive %s for frames. Expected %s. "
-                                             "Actual seen %s" % (stat, tx_results_1['FrameCount'], count))
+                                             "Actual seen %s" % (stat, 0, count))
 
         # ASSERTS
         # Spirent asserts
@@ -1006,7 +1012,6 @@ class GoodBad(FunTestCase):
         if is_test_physical and (dut_type == nu_config_obj.DUT_TYPE_PALLADIUM):
             pass
         else:
-
             # Enable stream
             activate = template_obj.activate_stream_blocks()
             fun_test.test_assert(activate, "Activate all streamblocks")
@@ -1377,6 +1382,9 @@ class GoodBad(FunTestCase):
                                  % (tcp._spirent_handle, modify_attribute))
             stream_objs['good'][OL_MPLS_GOOD_UDP_ZERO_XSUM] = self.current_streamblock_obj
 
+            '''
+            #destination = l3_config['hnu_destination_ip2']
+            #tcp=TCP()
             fun_test.log("========= NEW GOOD STREAM =========")
             self.current_streamblock_obj = None
             fun_test.log("Create stream %s" % OL_MPLS_GOOD_UDP_XSUM)
@@ -1422,7 +1430,9 @@ class GoodBad(FunTestCase):
             fun_test.test_assert(create_range, "Ensure range modifier created on %s for attribute %s"
                                  % (tcp._spirent_handle, modify_attribute))
             stream_objs['good'][OL_MPLS_GOOD_UDP_XSUM] = self.current_streamblock_obj
-
+            
+            destination = l3_config['hnu_destination_ip2']
+            tcp=TCP()
             fun_test.log("========= NEW GOOD STREAM =========")
             self.current_streamblock_obj = None
             fun_test.log("Create stream %s" % OL_MPLS_GOOD_TCP_XSUM)
@@ -1481,7 +1491,7 @@ class GoodBad(FunTestCase):
             fun_test.test_assert(create_range, "Ensure range modifier created for attribute %s"
                                  % modify_attribute)
             stream_objs['good'][OL_MPLS_GOOD_TCP_XSUM] = self.current_streamblock_obj
-
+            '''
             for stream in stream_objs['good'].values():
                 good_stream_handle_list.append(stream._spirent_handle)
 
@@ -1493,7 +1503,7 @@ class GoodBad(FunTestCase):
                 clear_1 = network_controller_obj.clear_port_stats(port_num=dut_port_1)
                 fun_test.test_assert(clear_1, message="Clear stats on port num %s of dut" % dut_port_1)
 
-                clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=1)
+                clear_2 = network_controller_obj.clear_port_stats(port_num=dut_port_2, shape=shape)
                 fun_test.test_assert(clear_2, message="Clear stats on port num %s of dut" % dut_port_2)
 
                 clear_3 = network_controller_obj.clear_port_stats(port_num=dut_port_3)
@@ -1539,7 +1549,7 @@ class GoodBad(FunTestCase):
                 psw_stats_2 = network_controller_obj.peek_psw_global_stats()
 
                 dut_port_1_results = network_controller_obj.peek_fpg_port_stats(dut_port_1)
-                dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=True)
+                dut_port_2_results = network_controller_obj.peek_fpg_port_stats(dut_port_2, hnu=hnu)
                 dut_port_3_results = network_controller_obj.peek_fpg_port_stats(dut_port_3)
 
                 # ASSERTS
@@ -1568,8 +1578,7 @@ class GoodBad(FunTestCase):
             for handle in good_stream_handle_list:
                 positive_packets_spirent_tx += int(stream_result_dict[handle]['tx_result']['FrameCount'])
 
-            fun_test.test_assert_expected(expected=int(positive_packets_spirent_tx),
-                                          actual=int(port_2_analyzer_result['TotalFrameCount']),
+            fun_test.test_assert_expected(expected=int(positive_packets_spirent_tx), actual=int(port_2_analyzer_result['TotalFrameCount']),
                                           message="Ensure all good streams are transmitted and seen on spirent port_2")
 
 

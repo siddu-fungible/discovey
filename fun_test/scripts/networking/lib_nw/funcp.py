@@ -1,3 +1,4 @@
+from lib.system.fun_test import *
 import os
 import re
 
@@ -14,14 +15,14 @@ class FunControlPlane:
     def clone(self, git_base='git@github.com:fungible-inc', repo_name='FunControlPlane'):
         """git clone."""
         output = self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
-                                        timeout=120)
+                                        timeout=300)
         done_list = re.findall(r'done', output)
         return done_list == ['done'] * 5 or done_list == ['done'] * 6
 
     def pull(self, branch='master'):
         """git pull."""
         output = self.linux_obj.command('cd %s/%s; git pull; git checkout %s' % (self.ws, self.name, branch),
-                                        timeout=120)
+                                        timeout=300)
         return re.search(r'Already up[-| ]to[-| ]date.', output) is not None
 
     def get_prebuilt(self):
@@ -33,13 +34,28 @@ class FunControlPlane:
             'wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/%s' % filename,
             'tar xzvf %s' % filename,
         )
-        output = self.linux_obj.command(';'.join(cmds), timeout=120)
+        output = self.linux_obj.command(';'.join(cmds), timeout=300)
         return re.search(r'funnel_gen.py', output, re.DOTALL) is not None
+
+    def make_gen_files(self):
+        fun_test.test_assert(os.path.exists('%s/%s/networking/tools/nmtf/setup.py' % (self.ws, self.name)),
+                             message="Check file exists locally")
+        fun_test.test_assert(os.path.exists('%s/%s/networking/tools/dpcsh/setup.py' % (self.ws, self.name)),
+                             message="Check file exists locally")
+        cmds = (
+            'cd %s/%s/networking/tools/dpcsh' % (self.ws, self.name),
+            'sudo python setup.py install',
+            'cd %s/%s/networking/tools/nmtf' % (self.ws, self.name),
+            'sudo python setup.py install',
+        )
+
+        output = self.linux_obj.command(';'.join(cmds), timeout=120, custom_prompts={"password": "rushi@123"})
+        return output
 
     def setup_traffic_server(self, server='nu'):
         """Set up PTF traffic server."""
         if server.lower() in ('nu', 'hu', 'sb'):
-            return self.linux_obj.command('%s/setup_traffic_server %s' % (self.palladium_test_path, server))
+            return self.linux_obj.command('%s/setup_traffic_server %s' % (self.palladium_test_path, server), timeout=300)
         else:
             return 'error'
 
@@ -50,7 +66,7 @@ class FunControlPlane:
 
     def cleanup(self):
         """Remove worksapce."""
-        return self.linux_obj.command('rm -fr {}'.format(self.ws))
+        return self.linux_obj.command('rm -fr {}/{}'.format(self.ws, self.name))
 
 
 class FunSDK:
@@ -64,11 +80,15 @@ class FunSDK:
     def clone(self, git_base='git@github.com:fungible-inc', repo_name='FunSDK-small'):
         """git clone."""
         output = self.linux_obj.command('cd %s; git clone %s/%s.git %s' % (self.ws, git_base, repo_name, self.name),
-                                        timeout=120)
+                                        timeout=300)
         done_list = re.findall(r'done', output)
         return done_list == ['done'] * 5 or done_list == ['done'] * 6
 
     def sdkup(self):
         """Update SDK."""
-        output = self.linux_obj.command('cd %s/%s; ./scripts/bob --sdkup' % (self.ws, self.name))
+        output = self.linux_obj.command('cd %s/%s; ./scripts/bob --sdkup' % (self.ws, self.name), timeout=300)
         return re.search(r'Updating current build number', output) is not None
+
+    def cleanup(self):
+        """Remove worksapce."""
+        return self.linux_obj.command('rm -fr {}/{}'.format(self.ws, self.name))

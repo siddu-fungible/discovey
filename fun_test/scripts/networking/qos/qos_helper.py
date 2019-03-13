@@ -13,6 +13,8 @@ ECN_BITS_01 = 01
 NON_ECN_BITS = 00
 CONGESTION_BITS = 11
 CONGESTION_BITS_DECIMAL = 3
+NOTED_PALLADIUM_LOAD = 6.44
+F1_FACTOR = 4.0
 
 def get_load_value_from_load_percent(load_percent, max_egress_load):
     result = None
@@ -25,11 +27,20 @@ def get_load_value_from_load_percent(load_percent, max_egress_load):
         fun_test.critical(str(ex))
     return result
 
+
 def get_accept_range(accept_value, max_egress_val):
     result = 0
     try:
-        default_load_calculated = 6.44
-        result = (max_egress_val * accept_value) / (default_load_calculated * 4.0)
+        result = (max_egress_val * accept_value) / (NOTED_PALLADIUM_LOAD * F1_FACTOR)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def get_dut_equivalent_of_palladium(current_val, max_egress_val):
+    result = 0
+    try:
+        result = (max_egress_val * current_val) / NOTED_PALLADIUM_LOAD
     except Exception as ex:
         fun_test.critical(str(ex))
     return result

@@ -46,7 +46,7 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -142,7 +142,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "rw"
@@ -234,7 +234,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -326,7 +326,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -347,7 +347,7 @@
       "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1028, "num_writes": 500}},
       "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1042, "num_writes": 546}}
     },
-    "ec_pass_threshold": 15,
+    "ec_pass_threshold": 50,
     "expected_ec_stats": {
       "(4, 1)": {"randrw": {"fault_injection": 0,"num_reads": 544, "num_writes": 144}},
       "(8, 1)": {"randrw": {"fault_injection": 0,"num_reads": 754, "num_writes": 153}},
@@ -417,7 +417,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -512,7 +512,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "rw"
@@ -604,7 +604,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -696,7 +696,7 @@
       "verify": "pattern",
       "verify_pattern": "0xFEEDFACECAFEBEEF",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -791,7 +791,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -902,7 +902,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "rw"
@@ -1010,7 +1010,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "randrw"
@@ -1104,7 +1104,7 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1183,7 +1183,7 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1280,7 +1280,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1364,7 +1364,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "\\\"0x000000000\\\"",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1448,7 +1448,7 @@
       "do_verify": 1,
       "verify_fatal": 1,
       "verify_pattern": "0x0000000000000",
-      "timeout": 120
+      "timeout": 240
     },
     "fio_modes": [
       "write",
@@ -1479,7 +1479,7 @@
       "randwrite": {"fault_injection": 0,"num_reads": 1158, "num_writes": 315},
       "randread": {"fault_injection": 0,"num_reads": 1019, "num_writes": 0}
     },
-    "blt_write_pass_threshold": 30,
+    "blt_write_pass_threshold": 40,
     "blt_read_pass_threshold": 80,
     "expected_blt_stats": {
       "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 283},
