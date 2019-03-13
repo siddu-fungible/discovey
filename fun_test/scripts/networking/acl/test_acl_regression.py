@@ -78,16 +78,16 @@ def create_streams(tx_port, dip, sip, dmac, s_port=1024, d_port=1024, sync_bit='
 
 
 def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_port_no, receive_port_no, value_dict,
-                       hnu_ing=False, hnu_eg=False, all_streams=[]):
+                       hnu_ing=False, hnu_eg=False, all_streams=[], acl_counter=0):
 
     checkpoint = "Clear FPG port stats on DUT"
     shape = 0
-    if send_port_no == 2 or send_port_no == 3:
+    if hnu_ing:
         shape = 1
     result = network_controller_obj.clear_port_stats(port_num=send_port_no, shape=shape)
     fun_test.simple_assert(result, "Clear FPG stats for port %d" % send_port_no)
     shape = 0
-    if receive_port_no == 2 or receive_port_no == 3:
+    if hnu_eg:
         shape = 1
     result = network_controller_obj.clear_port_stats(port_num=receive_port_no, shape=shape)
     fun_test.simple_assert(result, "Clear FPG stats for port %d" % receive_port_no)
@@ -104,11 +104,14 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     checkpoint = "Start traffic from %s port for %d secs stream" % (send_port, TRAFFIC_DURATION)
     result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[send_port]])
     fun_test.simple_assert(expression=result, message=checkpoint)
-
     fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
     checkpoint = "Ensure tx and rx frame count matches on Spirent for NU NU traffic"
     snapshot_output = run_snapshot()
     exit_snapshot()
+    flex_counter_val_bef = 0
+    if acl_counter != 0:
+        flex_counter_val_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                                       counter_id=acl_counter, erp=hnu_eg)
     fun_test.simple_assert(expression=snapshot_output, message="Snapshot output received")
     psw_stats = network_controller_obj.peek_psw_global_stats(hnu=hnu_eg)
     fun_test.log(psw_stats)
@@ -136,12 +139,25 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     fun_test.test_assert_expected(expected=tx_stream_result_framecount,
                                   actual=rx_stream_result_framecount,
                                   message=checkpoint)
+    fun_test.log(snapshot_output)
+    if acl_counter != 0:
+        if hnu_eg:
+            flex_counter_val_aft = get_flex_counter_values(network_controller_obj=network_controller_obj,
+                                                           counter_id=acl_counter, erp=hnu_eg)
+            flex_counter_val = flex_counter_val_aft - flex_counter_val_bef
+            if flex_counter_val != 0:
+                checkpoint = "Compare ACL counter and frames transmitted"
+                fun_test.log("Counter value : %s" % flex_counter_val)
+                fun_test.test_assert_expected(expected=frames_received, actual=flex_counter_val, message=checkpoint)
     if acl_action == ACL_ACTION_COLOR:
+        erp = False
+        if not hnu_ing and hnu_eg:
+            erp = True
         checkpoint = "Fetch pkt color using snapshot"
-        color_from_snapshot = get_pkt_color_from_snapshot(snapshot_output)
+        color_from_snapshot = get_pkt_color_from_snapshot(snapshot_output, erp=erp)
         fun_test.simple_assert(expression=color_from_snapshot, message=checkpoint)
         fun_test.test_assert_expected(expected=value_dict['color_ing_nu'],
-                                      actual=get_pkt_color_from_snapshot(snapshot_output))
+                                      actual=color_from_snapshot, message="Make sure pkt color is as expected")
     elif acl_action == ACL_ACTION_LOG:
         print get_log_from_snapshot(snapshot_output=snapshot_output)
 
@@ -250,13 +266,13 @@ class AclQosColor(FunTestCase):
                                                d_port=self.acl_fields_dict_qos['dest_port_ing_nu'])
         self.stream_obj_nu_hnu = create_streams(tx_port=nu_ing_port,
                                                 dmac=self.routes_config['routermac'],
-                                                dip=self.l3_config['hnu_destination_ip1'],
+                                                dip=self.l3_config['hnu_destination_ip2'],
                                                 sip=self.acl_fields_dict_qos['source_ip'],
                                                 s_port=self.acl_fields_dict_qos['source_port_eg_hnu'],
                                                 d_port=self.acl_fields_dict_qos['dest_port_eg_hnu'])
         self.stream_obj_hnu_hnu = create_streams(tx_port=hnu_ing_port,
                                                  dmac=self.routes_config['routermac'],
-                                                 dip=self.l3_config['hnu_destination_ip1'],
+                                                 dip=self.l3_config['hnu_destination_ip2'],
                                                  sip=self.acl_fields_dict_qos['source_ip'],
                                                  d_port=self.acl_fields_dict_qos['dest_port_ing_hnu'])
         self.stream_obj_hnu_nu = create_streams(tx_port=hnu_ing_port,
@@ -271,18 +287,21 @@ class AclQosColor(FunTestCase):
         all_streams.append(self.stream_obj_nu_hnu)
         all_streams.append(self.stream_obj_hnu_hnu)
         all_streams.append(self.stream_obj_hnu_nu)
-        compare_acl_stream(active_stream=self.stream_obj_nu_nu, send_port=nu_ing_port, receive_port=nu_eg_port,
-                           all_streams=all_streams, acl_action=self.acl_action, send_port_no=dut_config['ports'][0],
-                           receive_port_no=dut_config['ports'][1], value_dict=self.acl_fields_dict_qos)
-        compare_acl_stream(active_stream=self.stream_obj_nu_hnu, send_port=nu_ing_port, receive_port=hnu_eg_port,
-                           send_port_no=dut_config['ports'][0], receive_port_no=dut_config['ports'][3], hnu_ing=False,
-                           hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action)
-        compare_acl_stream(active_stream=self.stream_obj_hnu_hnu, send_port=hnu_ing_port, receive_port=hnu_eg_port,
-                           send_port_no=dut_config['ports'][2], receive_port_no=dut_config['ports'][3], hnu_ing=True,
-                           hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action)
+        # compare_acl_stream(active_stream=self.stream_obj_nu_nu, send_port=nu_ing_port, receive_port=nu_eg_port,
+        #                    all_streams=all_streams, acl_action=self.acl_action, send_port_no=dut_config['ports'][0],
+        #                    receive_port_no=dut_config['ports'][1], value_dict=self.acl_fields_dict_qos)
+        # compare_acl_stream(active_stream=self.stream_obj_nu_hnu, send_port=nu_ing_port, receive_port=hnu_eg_port,
+        #                    send_port_no=dut_config['ports'][0], receive_port_no=dut_config['ports'][3], hnu_ing=False,
+        #                    hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action, acl_counter=121,
+        #                    value_dict=self.acl_fields_dict_qos)
+        # compare_acl_stream(active_stream=self.stream_obj_hnu_hnu, send_port=hnu_ing_port, receive_port=hnu_eg_port,
+        #                    send_port_no=dut_config['ports'][2], receive_port_no=dut_config['ports'][3], hnu_ing=True,
+        #                    hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action,
+        #                    value_dict=self.acl_fields_dict_qos)
         compare_acl_stream(active_stream=self.stream_obj_hnu_nu, send_port=hnu_ing_port, receive_port=nu_eg_port,
                            send_port_no=dut_config['ports'][2], receive_port_no=dut_config['ports'][1], hnu_ing=True,
-                           hnu_eg=False, all_streams=all_streams, acl_action=self.acl_action)
+                           hnu_eg=False, all_streams=all_streams, acl_action=self.acl_action,
+                           value_dict=self.acl_fields_dict_qos)
 
     def cleanup(self):
 
