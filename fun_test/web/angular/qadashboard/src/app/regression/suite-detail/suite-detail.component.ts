@@ -24,6 +24,7 @@ export class SuiteDetailComponent implements OnInit {
   showReRunPanel: boolean = false;
   currenReRunHistory: any = null;
   currenReRunScriptInfo: any = null;
+  testCaseInfo: any = {};
 
   constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService, private commonService: CommonService) {
   }
@@ -73,6 +74,7 @@ export class SuiteDetailComponent implements OnInit {
           }
           ctrl.scriptExecutionsMap[data.script_path][data.execution_id] = data;
           let i = 0;
+          ctrl.fetchTestCaseInfo(testCaseExecutionId);
         });
       }
     });
@@ -82,6 +84,7 @@ export class SuiteDetailComponent implements OnInit {
     if (suiteExecution.fields.suite_type === 'regular') {
       this.reRunService.getOriginalSuiteReRunInfo(suiteExecution.fields.execution_id).subscribe(response => {
       suiteExecution["reRunInfo"] = response;
+      let i = 0;
       }, error => {
 
       })
@@ -177,18 +180,6 @@ export class SuiteDetailComponent implements OnInit {
     return this.regressionService.getSchedulerLogDir(suiteId);
   }
 
-  /*
-  rerunClick(suiteExecutionId, testCaseExecutionId, scriptPath) {
-    let payload = {};
-    payload["suite_execution_id"] = suiteExecutionId;
-    payload["test_case_execution_id"] = testCaseExecutionId;
-    payload["script_path"] = scriptPath;
-    this.apiService.post("/regression/test_case_re_run", payload).subscribe(function (result) {
-      let jobId = parseInt(result.data);
-      alert("Rerun Successful");
-      window.location.href = "/regression/suite_detail/" + jobId;
-    });
-  }*/
 
   reRunClick(suiteExecutionId, suitePath, resultFilter=null, scriptFilter=null) {
     this.reRunService.submitReRun(suiteExecutionId, suitePath, resultFilter, scriptFilter).subscribe(response => {
@@ -205,6 +196,12 @@ export class SuiteDetailComponent implements OnInit {
 
   hasReRuns(testCaseInfo) {
     let reRunHistory = JSON.parse(testCaseInfo.re_run_history);
+    if (reRunHistory.length > 0) {
+      let i = 0;
+      reRunHistory.forEach(reRun => {
+        //this.fetchTestCaseInfo(reRun.re_run_test_case_execution_id);
+      });
+    }
     return reRunHistory.length > 0;
   }
 
@@ -250,6 +247,26 @@ export class SuiteDetailComponent implements OnInit {
     return suitePath;
   }
 
+  fetchTestCaseInfo(testCaseExecutionId) {
+    if (this.testCaseInfo.hasOwnProperty(testCaseExecutionId)) {
+      return true;
+    } else {
+      this.regressionService.getTestCaseExecution(testCaseExecutionId).subscribe((response) => {
+        this.testCaseInfo[testCaseExecutionId] = response;
+        let reRunHistory = JSON.parse(this.testCaseInfo[testCaseExecutionId].re_run_history);
+        reRunHistory.forEach(reRun => {
+          this.fetchTestCaseInfo(reRun.re_run_test_case_execution_id);
+        })
+      }, error => {
+        this.logger.error(`Unable to fetch test case info for ${testCaseExecutionId}`);
+      });
+      return false;
+    }
+  }
+
+  toInt(s) {
+    return parseInt(s);
+  }
 
 
 }

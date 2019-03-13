@@ -392,6 +392,7 @@ class Linux(object, ToDictMixin):
                 self.sendline(c)
                 if wait_until and (len(command_lines) == 1):
                     try:
+                        self.handle.timeout = wait_until_timeout  # Pexpect does not honor timeouts
                         self.handle.expect(wait_until, timeout=wait_until_timeout)
                     except (pexpect.EOF):
                         self.disconnect()
@@ -408,8 +409,10 @@ class Linux(object, ToDictMixin):
                 elif custom_prompts:
                     all_prompts_list = custom_prompts.keys()
                     all_prompts_list.append(self.prompt_terminator)
+                    self.handle.timeout = timeout  # Pexpect does not honor timeouts
                     i = self.handle.expect(all_prompts_list, timeout=timeout)
                     if i == (len(all_prompts_list) - 1):
+                        buf = buf + self.handle.before.lstrip()
                         break
                     else:
                         self.sendline(custom_prompts[custom_prompts.keys()[i]])
@@ -417,12 +420,12 @@ class Linux(object, ToDictMixin):
                     self.handle.expect(self.prompt_terminator + r'$', timeout=timeout)
                 except pexpect.EOF:
                     self.disconnect()
-                    return self.command(command=command,
-                                        sync=sync, timeout=timeout,
-                                        custom_prompts=custom_prompts,
-                                        wait_until=wait_until,
-                                        wait_until_timeout=wait_until_timeout,
-                                        include_last_line=include_last_line)
+                    # return self.command(command=command,
+                    #                    sync=sync, timeout=timeout,
+                    #                    custom_prompts=custom_prompts,
+                    #                    wait_until=wait_until,
+                    #                    wait_until_timeout=wait_until_timeout,
+                    #                    include_last_line=include_last_line)
                 except Exception as ex:
                     self.clean()
                     raise ex
@@ -630,7 +633,7 @@ class Linux(object, ToDictMixin):
         return pid
 
     @fun_test.safe
-    def dd(self, input_file, output_file, block_size, count, timeout=60, **kwargs):
+    def dd(self, input_file, output_file, block_size, count, timeout=60, sudo=False, **kwargs):
 
         result = 0
         dd_cmd = "dd if={} of={} bs={} count={}".format(input_file, output_file, block_size, count)
@@ -638,7 +641,11 @@ class Linux(object, ToDictMixin):
             for key, value in kwargs.items():
                 arg = key + "=" + str(value)
                 dd_cmd += " " + arg
-        output = self.command(command=dd_cmd, timeout=timeout)
+
+        if not sudo:
+            output = self.command(command=dd_cmd, timeout=timeout)
+        else:
+            output = self.sudo_command(command=dd_cmd, timeout=timeout)
         match = re.search(r'(\d+) bytes', output)
         if match:
             result = match.group(1)
@@ -813,6 +820,7 @@ class Linux(object, ToDictMixin):
             options_str += "-E "
         cmd = 'sudo {}bash'.format(options_str)
         output = self.command(cmd, custom_prompts={prompt: self.ssh_password, mac_prompt: self.ssh_password})
+        result = True
         if "command not found" in output:
             result = False
         return result
@@ -2002,6 +2010,7 @@ class Linux(object, ToDictMixin):
         c = copy.copy(self)
         try:
             c.handle = None
+            c.buffer = None
         except:
             pass
         return c

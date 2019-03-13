@@ -204,11 +204,12 @@ export class RegressionAdminComponent implements OnInit {
     console.log(this.info["storage"].detailedInfo.scriptDetailedInfo);
   }
 
+  /*
   public functionCalledOnEachIteration(index, item) {
     debugger;
     console.log('trackByFn', index, item);
     return item;
-  }
+  }*/
 
 }
 

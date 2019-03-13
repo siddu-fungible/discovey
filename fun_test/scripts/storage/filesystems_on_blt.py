@@ -88,7 +88,7 @@ class FSOnBLTTestcase(FunTestCase):
         self.io_timeout = self.dd_write_args["count"] / self.test_timeout_ratio
 
         # Write a file into the BLT volume of size self.input_file_size bytes
-        return_size = self.host.dd(timeout=self.io_timeout, **self.dd_write_args)
+        return_size = self.host.dd(timeout=self.io_timeout, sudo=True, **self.dd_write_args)
         if not self.readonly_filesystem:
             fun_test.test_assert_expected(self.input_file_size, return_size,
                                           "Writing {} bytes file into the BLT volume".format(self.input_file_size))
@@ -117,7 +117,7 @@ class FSOnBLTTestcase(FunTestCase):
             self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=self.io_timeout)
 
         # Read the previously written file from the BLT volume and calculate the md5sum of the same
-        return_size = self.host.dd(timeout=self.io_timeout, **self.dd_read_args)
+        return_size = self.host.dd(timeout=self.io_timeout, sudo=True, **self.dd_read_args)
         if not self.readonly_filesystem or self.remount_as_readonly:
             fun_test.test_assert_expected(
                 self.input_file_size, return_size,
@@ -190,8 +190,11 @@ class FSOnBLTTestcase(FunTestCase):
         timeout_config = ""
         for key, value in self.nvme_timeouts.items():
             timeout_config += 'options nvme {}="{}"\n'.format(key, value)
+
+        self.host.enter_sudo()
         self.host.create_file(file_name=r"/etc/modprobe.d/nvme_core.conf", contents=timeout_config)
         self.host.command("cat /etc/modprobe.d/nvme_core.conf")
+        self.host.exit_sudo()
 
         # Creating BLT volumes
         self.this_uuid = utils.generate_uuid()
@@ -228,7 +231,7 @@ class FSOnBLTTestcase(FunTestCase):
                 fun_test.log("Device is accessible, setting the queue_length to {} and continuing with "
                              "test".format(self.queue_length))
                 # Setting queue_length
-                self.host.command("echo " + str(self.queue_length) + " >/sys/block/" + self.volume_name +
+                self.host.sudo_command("echo " + str(self.queue_length) + " >/sys/block/" + self.volume_name +
                                   "/queue/nr_requests")
                 break
             self.attempt += 1

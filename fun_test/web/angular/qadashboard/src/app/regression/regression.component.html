@@ -1,5 +1,7 @@
 <div class="card" style="padding-top: 70px;">
-  <app-queue-viewer></app-queue-viewer>
+<div class="component" >
+  <!--app-queue-viewer></app-queue-viewer-->
+
   <!-- button ng-click="test()">Test</button -->
   <div class="card card-primary">
     <div class="card-header"><b>Suite Executions</b></div>
@@ -41,7 +43,7 @@
                      class="badge badge-warning">Skipped</label></th>
           <th># TC</th>
           <th>Version</th>
-          <th>Scheduled At</th>
+          <th>Scheduled at</th>
           <th>Path</th>
           <th>Action</th>
           <th>Re-runs</th>
@@ -68,7 +70,7 @@
           <td>{{ suiteExecution.num_in_progress }}</td>
           <td>{{ suiteExecution.num_skipped }}</td>
           <td>{{ testCaseLength(suiteExecution.fields.test_case_execution_ids) }}</td>
-          <td>{{ suiteExecution.fields.version }}</td>
+          <td>{{ suiteExecution.fields.version === 'UNKNOWN'? '-': suiteExecution.fields.version }}</td>
           <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
           <td>{{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}</td>
           <td>
@@ -111,3 +113,4 @@
   </div>
 
 </div>
+

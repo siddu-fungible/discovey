@@ -1479,7 +1479,7 @@
       "randwrite": {"fault_injection": 0,"num_reads": 1158, "num_writes": 315},
       "randread": {"fault_injection": 0,"num_reads": 1019, "num_writes": 0}
     },
-    "blt_write_pass_threshold": 30,
+    "blt_write_pass_threshold": 40,
     "blt_read_pass_threshold": 80,
     "expected_blt_stats": {
       "write": {"fault_injection": 0,"num_reads": 560, "num_writes": 283},

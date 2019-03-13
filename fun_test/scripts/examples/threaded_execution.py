@@ -4,6 +4,8 @@ from lib.system.fun_test import *
 def some_func(a):
     fun_test.log("Time elapsed: {}".format(fun_test.get_wall_clock_time()))
     fun_test.log("Value: {}".format(a))
+    fun_test.shared_variables["shared"] += 1
+    fun_test.log("Shared variable = {}".format(fun_test.shared_variables["shared"]))
 
 
 class MyScript(FunTestScript):
@@ -13,7 +15,7 @@ class MyScript(FunTestScript):
         2. Step 2""")
 
     def setup(self):
-        pass
+        fun_test.shared_variables["shared"] = 2
 
     def cleanup(self):
         pass

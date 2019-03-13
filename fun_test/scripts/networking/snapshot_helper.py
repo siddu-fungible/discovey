@@ -1,6 +1,7 @@
 from dpcsh.dpcsh_client import DpcshClient
 from dpcsh.snapshot import Snapshot
 from lib.system.fun_test import *
+from lib.utilities.setup_nmtf import WORKSPACE
 
 
 def setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip='127.0.0.1', dpc_tcp_proxy_port=40221):
@@ -8,6 +9,10 @@ def setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_p
     global snapshot_obj
     dpc_client_obj = None
     snapshot_obj = None
+
+    workspace = fun_test.get_environment_variable(variable="WORKSPACE")
+    if not workspace or workspace != WORKSPACE:
+        os.environ['WORKSPACE'] = WORKSPACE
 
     if dpc_client_obj is None:
         dpc_client_obj = DpcshClient(target_ip=dpc_tcp_proxy_ip, target_port=dpc_tcp_proxy_port,
@@ -32,6 +37,14 @@ def run_snapshot():
     global snapshot_obj
     if snapshot_obj:
         return snapshot_obj.do_analyze(return_dict=True)
+    else:
+        return None
+
+def exit_snapshot():
+
+    global snapshot_obj
+    if snapshot_obj:
+        return snapshot_obj.do_exit()
     else:
         return None
 
@@ -69,6 +82,30 @@ def get_snapshot_meter_id(snapshot_output, egress=False, erp=False):
                 result = snapshot_output['Main SFG']['MD']['meter1']
             else:
                 result = snapshot_output['Main SFG']['MD']['meter0']
+    except Exception as ex:
+        fun_test.critical("Exception : %s" % ex)
+    return result
+
+
+def get_pkt_color_from_snapshot(snapshot_output, erp=False):
+    result = None
+    try:
+        if erp:
+            result = snapshot_output['ERP SFG']['MD']['pkt_color']
+        else:
+            result = snapshot_output['Main SFG']['MD']['pkt_color']
+    except Exception as ex:
+        fun_test.critical("Exception : %s" % ex)
+    return result
+
+
+def get_log_from_snapshot(snapshot_output, erp=False):
+    result = None
+    try:
+        if erp:
+            result = snapshot_output['Main SFG']['MD']['acl_log']
+        else:
+            result = snapshot_output['Main SFG']['MD']['acl_log']
     except Exception as ex:
         fun_test.critical("Exception : %s" % ex)
     return result

@@ -296,9 +296,12 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
                                     "output"] else None  # reference is set in fixup_reference_values
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
+                            expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
 
                             # data_set_statuses.append(leaf_status)
                             if reference_value is not None:
+                                if expected_value != -1:
+                                    reference_value = expected_value
                                 if chart.positive:
                                     data_set_combined_goodness += (float(
                                         output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
@@ -376,6 +379,7 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
                 if is_leaf_degrade or not current_score:
                     result["num_degrades"] = 1
                 current_date = current_date + timedelta(days=1)
+                current_date = set_local_timezone(current_date)
 
         result["scores"] = scores
         result["last_build_status"] = chart.last_build_status == "PASSED"
@@ -435,6 +439,9 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
     chart.save()
     return result
 
+def set_local_timezone(current_date):
+    date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day, hour=current_date.hour, second=current_date.second, minute=current_date.minute)
+    return get_localized_time(date_time_obj)
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"

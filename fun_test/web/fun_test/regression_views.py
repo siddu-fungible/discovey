@@ -918,6 +918,7 @@ def test_case_execution_info(request, test_case_execution_id):
     result["execution_id"] = test_case_execution.execution_id
     result["suite_execution_id"] = test_case_execution.suite_execution_id
     result["log_prefix"] = test_case_execution.log_prefix
+    result["re_run_history"] = test_case_execution.re_run_history
     return result
 
 
