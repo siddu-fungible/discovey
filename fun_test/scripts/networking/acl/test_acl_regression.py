@@ -137,6 +137,9 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
                                   actual=rx_stream_result_framecount,
                                   message=checkpoint)
     if acl_action == ACL_ACTION_COLOR:
+        checkpoint = "Fetch pkt color using snapshot"
+        color_from_snapshot = get_pkt_color_from_snapshot(snapshot_output)
+        fun_test.simple_assert(expression=color_from_snapshot, message=checkpoint)
         fun_test.test_assert_expected(expected=value_dict['color_ing_nu'],
                                       actual=get_pkt_color_from_snapshot(snapshot_output))
     elif acl_action == ACL_ACTION_LOG:
