@@ -44,12 +44,12 @@ class FunControlPlane:
                              message="Check file exists locally")
         cmds = (
             'cd %s/%s/networking/tools/dpcsh' % (self.ws, self.name),
-            'python setup.py install',
+            'sudo python setup.py install',
             'cd %s/%s/networking/tools/nmtf' % (self.ws, self.name),
             'sudo python setup.py install',
         )
 
-        output = self.linux_obj.sudo_command(';'.join(cmds), timeout=120)
+        output = self.linux_obj.command(';'.join(cmds), timeout=120, custom_prompts={"password": "rushi@123"})
         return output
 
     def setup_traffic_server(self, server='nu'):
@@ -88,3 +88,7 @@ class FunSDK:
         """Update SDK."""
         output = self.linux_obj.command('cd %s/%s; ./scripts/bob --sdkup' % (self.ws, self.name), timeout=300)
         return re.search(r'Updating current build number', output) is not None
+
+    def cleanup(self):
+        """Remove worksapce."""
+        return self.linux_obj.command('rm -fr {}/{}'.format(self.ws, self.name))

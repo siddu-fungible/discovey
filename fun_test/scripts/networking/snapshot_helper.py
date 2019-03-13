@@ -1,6 +1,7 @@
 from dpcsh.dpcsh_client import DpcshClient
 from dpcsh.snapshot import Snapshot
 from lib.system.fun_test import *
+from lib.utilities.setup_nmtf import WORKSPACE
 
 
 def setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip='127.0.0.1', dpc_tcp_proxy_port=40221):
@@ -8,6 +9,10 @@ def setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_p
     global snapshot_obj
     dpc_client_obj = None
     snapshot_obj = None
+
+    workspace = fun_test.get_environment_variable(variable="WORKSPACE")
+    if not workspace or workspace != WORKSPACE:
+        os.environ['WORKSPACE'] = WORKSPACE
 
     if dpc_client_obj is None:
         dpc_client_obj = DpcshClient(target_ip=dpc_tcp_proxy_ip, target_port=dpc_tcp_proxy_port,
@@ -43,13 +48,6 @@ def exit_snapshot():
     else:
         return None
 
-def exit_snapshot():
-
-    global snapshot_obj
-    if snapshot_obj:
-        return snapshot_obj.do_exit()
-    else:
-        return None
 
 def get_snapshot_main_sfg(snapshot_output, prv=False, md=False, frv=False, psw_ctl=False):
     result = {}
