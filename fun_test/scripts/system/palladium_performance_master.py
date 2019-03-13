@@ -1568,10 +1568,10 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
                                     metrics["input_operation"] = d["Operation"]
                                 metrics["input_count"] = d['Stats']['_count']
                                 metrics["input_image"] = final_file_name
-                                metrics["output_iops"] = d['Stats']['_iops']
-                                metrics["output_max_latency"] = d['Stats']['_max_latency']
-                                metrics["output_min_latency"] = d['Stats']['_min_latency']
-                                metrics["output_average_latency"] = d['Stats']['_avg_latency']
+                                # metrics["output_iops"] = d['Stats']['_iops']
+                                # metrics["output_max_latency"] = d['Stats']['_max_latency']
+                                # metrics["output_min_latency"] = d['Stats']['_min_latency']
+                                # metrics["output_average_latency"] = d['Stats']['_avg_latency']
                                 metrics["output_average_bandwidth"] = d['Stats']['_avg_bw_gbps']
                             else:
                                 if d["Operation"] in jpeg_operations:

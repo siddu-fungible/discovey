@@ -62,11 +62,13 @@ class PTFTestSuite(FunTestScript):
 
         fun_test.shared_variables['linux_obj'] = linux_obj
         fun_test.shared_variables['funcp_obj'] = funcp_obj
+        fun_test.shared_variables['funsdk_obj'] = funsdk_obj
 
     def cleanup(self):
         linux_obj_ptf = Linux(host_ip=PTF_SERVER, ssh_username=PTF_SERVER_USERNAME, ssh_password=PTF_SERVER_PASSWD)
         linux_obj_ptf.command('sudo pkill ptf')
         fun_test.shared_variables['funcp_obj'].cleanup()
+        fun_test.shared_variables['funsdk_obj'].cleanup()
         fun_test.shared_variables['linux_obj'].command('export WORKSPACE=$WSTMP')
 
 

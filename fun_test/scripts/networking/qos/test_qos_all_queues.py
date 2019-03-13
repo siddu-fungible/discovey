@@ -520,7 +520,7 @@ class All_Queues_WRED(FunTestCase):
                                                                                  queue_num=queue,
                                                                                  wred_enable=self.wred_enable,
                                                                                  wred_prof_num=self.prof_num,
-                                                                                 wred_weight=self.wred_weight)
+                                                                                 wred_weight=self.wred_weight, enable_ecn=0)
                 fun_test.simple_assert(set_queue_cfg, "Ensure queue config is set for queue %s" % queue)
         else:
             set_prob = set_default_qos_probability(network_controller_obj=network_controller_obj,
@@ -536,7 +536,7 @@ class All_Queues_WRED(FunTestCase):
                 set_queue_cfg = network_controller_obj.set_qos_wred_queue_config(port_num=dut_port_2,
                                                                                  queue_num=queue,
                                                                                  ecn_profile_num=self.prof_num,
-                                                                                 enable_ecn=self.ecn_enable)
+                                                                                 enable_ecn=self.ecn_enable, wred_enable=0)
                 fun_test.simple_assert(set_queue_cfg, "Ensure queue config is set for queue %s" % queue)
         fun_test.simple_assert(wred_profile, "Ensure profile is set")
 
@@ -600,8 +600,16 @@ class All_Queues_WRED(FunTestCase):
             q_depth_lower_limit = int(self.normal_stream_pps[key][q_depth]['lower_limit'])
             q_depth_upper_limit = int(self.normal_stream_pps[key][q_depth]['upper_limit'])
 
-            wred_q_drop_lower_limit = int(self.normal_stream_pps[key][wred_q_drop]['lower_limit'])
-            wred_q_drop_upper_limit = int(self.normal_stream_pps[key][wred_q_drop]['upper_limit'])
+            lower_limit_val = int(self.normal_stream_pps[key][wred_q_drop]['lower_limit'])
+            upper_limit_val = int(self.normal_stream_pps[key][wred_q_drop]['upper_limit'])
+
+            wred_q_drop_lower_limit = get_dut_equivalent_of_palladium(current_val=lower_limit_val,
+                                                                      max_egress_val=max_egress_load)
+            wred_q_drop_upper_limit = get_dut_equivalent_of_palladium(current_val=upper_limit_val,
+                                                                      max_egress_val=max_egress_load)
+
+            fun_test.log("Lower limit referrecnce value for pps %s of wred_q_drop is %s " % (pps, wred_q_drop_lower_limit))
+            fun_test.log("Upper limit referrecnce value for pps %s of wred_q_drop is %s " % (pps, wred_q_drop_upper_limit))
 
             for queue in queue_list:
                 fun_test.test_assert(q_depth_lower_limit <= int(result_dict[str(pps)][str(queue)][q_depth]) <=
