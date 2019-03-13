@@ -1430,7 +1430,7 @@
                 "leaf": false,
                 "name": "HNU_HNU_FCP",
                 "weight": 1,
-                "label": "HNU->HNU FCP Flow",
+                "label": "HNU<->HNU FCP Flow",
                 "children": [
                   {
                     "info": "HNU_HNU_FCP_output_throughput",
@@ -1456,7 +1456,7 @@
                 "leaf": false,
                 "name": "HNU_HNU",
                 "weight": 1,
-                "label": "HNU->HNU NFCP Flow",
+                "label": "HNU<->HNU NFCP Flow",
                 "children": [
                   {
                     "info": "HNU_HNU_output_throughput",
@@ -1560,7 +1560,7 @@
                 "leaf": false,
                 "name": "HU_HU_NFCP",
                 "weight": 1,
-                "label": "HU->HU NFCP Flow",
+                "label": "HU<->HU NFCP Flow",
                 "children": [
                   {
                     "info": "HU_HU_NFCP_output_throughput",
