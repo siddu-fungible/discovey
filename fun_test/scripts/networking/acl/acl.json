@@ -320,6 +320,7 @@
     "qos_color":{
       "source_ip": "192.85.1.20",
       "dest_port_ing_nu": 671,
+      "color_ing_nu" : 1,
       "dest_port_ing_hnu": 671,
       "source_port_eg_hnu": 1234,
       "dest_port_eg_hnu": 897,
