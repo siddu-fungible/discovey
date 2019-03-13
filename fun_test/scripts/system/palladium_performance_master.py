@@ -1764,7 +1764,7 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     metrics["input_size"] = input_size
                     metrics["input_operation"] = input_operation
                     metrics["output_bandwidth"] = output_bandwidth
-                    metrics["input_unit"] = input_unit
+                    metrics["output_bandwidth_unit"] = input_unit
                     metrics["input_log_size"] = input_log_size
                     metrics["input_metric_name"] = metric_name
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
