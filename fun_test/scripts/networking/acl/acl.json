@@ -236,7 +236,26 @@
     "dest_port": 867,
     "queue_id": 8,
     "default_queue": 0
-  }
+  },
+    "qos_color":{
+      "source_ip": "192.85.1.20",
+      "dest_port_ing_nu": 671,
+      "color_ing_nu" : 1,
+      "dest_port_ing_hnu": 671,
+      "source_port_eg_hnu": 1234,
+      "dest_port_eg_hnu": 897,
+      "counter_eg_hnu": 121,
+      "dest_port_eg_nu": 867
+    },
+    "qos_log":{
+    "source_ip": "192.85.1.20",
+    "dest_port_ing_nu": 669,
+      "color_ing_nu": 1,
+      "dest_port_ing_hnu": 669,
+      "dest_port_eg_hnu": 1298,
+      "counter_eg_hnu": 121,
+      "counter_ing_nu": 125
+    }
 },
   "f1" : {
      "sanity_test_nu_nu": {
@@ -298,6 +317,24 @@
     "tcp_reset_bit": "0",
     "tcp_ack_bit": "0",
     "counter_id": 130
-  }
+  },
+    "qos_color":{
+      "source_ip": "192.85.1.20",
+      "dest_port_ing_nu": 671,
+      "color_ing_nu" : 1,
+      "dest_port_ing_hnu": 671,
+      "source_port_eg_hnu": 1234,
+      "dest_port_eg_hnu": 897,
+      "counter_eg_hnu": 121,
+      "dest_port_eg_nu": 867
+    },
+    "qos_log":{
+    "source_ip": "192.85.1.20",
+    "dest_port_ing_nu": 669,
+      "dest_port_ing_hnu": 669,
+      "dest_port_eg_hnu": 1298,
+      "counter_eg_hnu": 121,
+      "counter_ing_nu": 125
+    }
   }
 }
