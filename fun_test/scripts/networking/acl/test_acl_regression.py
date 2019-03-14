@@ -289,17 +289,17 @@ class AclQosColor(FunTestCase):
         all_streams.append(self.stream_obj_nu_hnu)
         all_streams.append(self.stream_obj_hnu_hnu)
         all_streams.append(self.stream_obj_hnu_nu)
-        # compare_acl_stream(active_stream=self.stream_obj_nu_nu, send_port=nu_ing_port, receive_port=nu_eg_port,
-        #                    all_streams=all_streams, acl_action=self.acl_action, send_port_no=dut_config['ports'][0],
-        #                    receive_port_no=dut_config['ports'][1], value_dict=self.acl_fields_dict_qos)
-        # compare_acl_stream(active_stream=self.stream_obj_nu_hnu, send_port=nu_ing_port, receive_port=hnu_eg_port,
-        #                    send_port_no=dut_config['ports'][0], receive_port_no=dut_config['ports'][3], hnu_ing=False,
-        #                    hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action, acl_counter=121,
-        #                    value_dict=self.acl_fields_dict_qos)
-        # compare_acl_stream(active_stream=self.stream_obj_hnu_hnu, send_port=hnu_ing_port, receive_port=hnu_eg_port,
-        #                    send_port_no=dut_config['ports'][2], receive_port_no=dut_config['ports'][3], hnu_ing=True,
-        #                    hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action,
-        #                    value_dict=self.acl_fields_dict_qos)
+        compare_acl_stream(active_stream=self.stream_obj_nu_nu, send_port=nu_ing_port, receive_port=nu_eg_port,
+                           all_streams=all_streams, acl_action=self.acl_action, send_port_no=dut_config['ports'][0],
+                           receive_port_no=dut_config['ports'][1], value_dict=self.acl_fields_dict_qos)
+        compare_acl_stream(active_stream=self.stream_obj_nu_hnu, send_port=nu_ing_port, receive_port=hnu_eg_port,
+                           send_port_no=dut_config['ports'][0], receive_port_no=dut_config['ports'][3], hnu_ing=False,
+                           hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action, acl_counter=121,
+                           value_dict=self.acl_fields_dict_qos)
+        compare_acl_stream(active_stream=self.stream_obj_hnu_hnu, send_port=hnu_ing_port, receive_port=hnu_eg_port,
+                           send_port_no=dut_config['ports'][2], receive_port_no=dut_config['ports'][3], hnu_ing=True,
+                           hnu_eg=True, all_streams=all_streams, acl_action=self.acl_action,
+                           value_dict=self.acl_fields_dict_qos)
         compare_acl_stream(active_stream=self.stream_obj_hnu_nu, send_port=hnu_ing_port, receive_port=nu_eg_port,
                            send_port_no=dut_config['ports'][2], receive_port_no=dut_config['ports'][1], hnu_ing=True,
                            hnu_eg=False, all_streams=all_streams, acl_action=self.acl_action,
