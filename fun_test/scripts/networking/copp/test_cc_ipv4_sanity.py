@@ -3,7 +3,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
 from lib.host.network_controller import NetworkController
 from scripts.networking.nu_config_manager import *
 from scripts.networking.helper import *
-from scripts.networking.snapshot_helper import *
+from scripts.networking.snapshot_helper import SnapshotHelper
 
 dut_config = {}
 spirent_config = {}
@@ -185,18 +185,18 @@ class TestCcIPv4ICMP(FunTestCase):
         network_controller_obj.disconnect()
         dpcsh_server_ip = dut_config["dpcsh_tcp_proxy_ip"]
         dpcsh_server_port = dut_config['dpcsh_tcp_proxy_port']
-
-        setup_snapshot(dpc_tcp_proxy_ip=dpcsh_server_ip, dpc_tcp_proxy_port=dpcsh_server_port)
+        snapshot_obj = SnapshotHelper(dpc_proxy_ip=dpcsh_server_ip, dpc_proxy_port=dpcsh_server_port)
+        snapshot_obj.setup_snapshot()
 
         template_obj.enable_generator_configs([generator_handle])
         fun_test.sleep("to fetch meter id using snapshot", seconds=2)
-        snapshot_dict = run_snapshot()
+        snapshot_dict = snapshot_obj.run_snapshot()
         fun_test.simple_assert(snapshot_dict, "Fetch snapshot dict")
         template_obj.disable_generator_configs([generator_handle])
 
-        self.meter_id = get_snapshot_meter_id(snapshot_output=snapshot_dict)
+        self.meter_id = snapshot_obj.get_snapshot_meter_id(snapshot_output=snapshot_dict)
         fun_test.simple_assert(self.meter_id, checkpoint)
-        exit_snapshot()
+        snapshot_obj.exit_snapshot()
 
         checkpoint = "Get PSW and Parser NU stats before traffic"
         psw_stats = network_controller_obj.peek_psw_global_stats()
@@ -1547,5 +1547,4 @@ if __name__ == '__main__':
     # ts.add_test_case(TestCcMtuCaseForUs())
     # TODO: Need to test this manually
     ts.add_test_case(TestCcIpv4AllTogether())
-
     ts.run()

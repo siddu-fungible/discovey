@@ -10,7 +10,7 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
 from lib.host.network_controller import NetworkController
 from scripts.networking.helper import *
 from scripts.networking.nu_config_manager import *
-from scripts.networking.snapshot_helper import *
+from scripts.networking.snapshot_helper import SnapshotHelper
 
 spirent_config = {}
 subscribed_results = None
@@ -663,6 +663,7 @@ class TestCcFlows(FunTestCase):
     detach_ports = True
     erp = False
     routes_config = None
+    stream = None
 
     def describe(self):
         pass
@@ -720,18 +721,18 @@ class TestCcFlows(FunTestCase):
         dpcsh_obj.disconnect()
         dpcsh_server_ip = self.dut_config["dpcsh_tcp_proxy_ip"]
         dpcsh_server_port = self.dut_config['dpcsh_tcp_proxy_port']
-
-        setup_snapshot(dpc_tcp_proxy_ip=dpcsh_server_ip, dpc_tcp_proxy_port=dpcsh_server_port)
+        snapshot_obj = SnapshotHelper(dpc_proxy_ip=dpcsh_server_ip, dpc_proxy_port=dpcsh_server_port)
+        snapshot_obj.setup_snapshot(stream=self.stream)
 
         template_obj.enable_generator_configs([self.generator_handle])
         fun_test.sleep("to fetch meter id using snapshot", seconds=2)
-        snapshot_dict = run_snapshot()
+        snapshot_dict = snapshot_obj.run_snapshot()
         fun_test.simple_assert(snapshot_dict, "Fetch snapshot dict")
         template_obj.disable_generator_configs([self.generator_handle])
 
-        self.meter_id = get_snapshot_meter_id(snapshot_output=snapshot_dict)
+        self.meter_id = snapshot_obj.get_snapshot_meter_id(snapshot_output=snapshot_dict)
         fun_test.simple_assert(self.meter_id, checkpoint)
-        exit_snapshot()
+        snapshot_obj.exit_snapshot()
 
         checkpoint = "Clear FPG stats on all DUT ports"
         for port in self.dut_config['ports']:
@@ -1077,6 +1078,7 @@ class TestArpRequestFlow2(TestCcFlows):
         fun_test.test_assert(result, checkpoint)
         streams_group.append(self.stream_obj)
         self.meter_id = ETH_COPP_ARP_REQ_METER_ID
+        self.stream = "etp"
 
 
 class TestVpFlows(FunTestCase):
