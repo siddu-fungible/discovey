@@ -127,48 +127,26 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
         chart.score_cache_valid = False
         chart.save()
 
-    valid_dates = []
-    scores = {}
+    result = {}
 
-    result["num_build_failed"] = 0
-    result["num_degrades"] = 0
-    result["children_score_map"] = {}
-    result["valid_dates"] = []
-    result["num_leaves"] = 0
-    result["last_good_score"] = -1
-    result["penultimate_good_score"] = -1
-    result["copied_score"] = False
-    result["copied_score_disposition"] = 0
-
+    #calculate the from date and to date for fetching the data
     today = datetime.now(pytz.timezone('US/Pacific'))
     from_date = chart.base_line_date
     from_date = from_date.replace(tzinfo=pytz.timezone('US/Pacific'))
     from_date = get_rounded_time(from_date)
-
     yesterday = today  # - timedelta(days=0) # Just use today
-
     yesterday = get_rounded_time(yesterday)
     to_date = yesterday
-    current_date = get_rounded_time(from_date)
+
 
     if not chart.score_cache_valid:
         if not chart.leaf:
-            calculate_container_scores(cache_valid=cache_valid, chart=chart, to_date=to_date, purge_old_status=purge_old_status, result=result, scores=scores)
+            calculate_container_scores(cache_valid=cache_valid, chart=chart, to_date=to_date, purge_old_status=purge_old_status, result=result)
         else:
-            calculate_leaf_scores(cache_valid=cache_valid, chart=chart, from_date=from_date, to_date=to_date, result=result, scores=scores, valid_dates=valid_dates, current_date=current_date)
+            calculate_leaf_scores(cache_valid=cache_valid, chart=chart, from_date=from_date, to_date=to_date, result=result)
 
-        result["scores"] = scores
-        result["last_build_status"] = chart.last_build_status == "PASSED"
-        result["valid_dates"] = valid_dates
-        if not result["last_build_status"]:
-            result["num_build_failed"] = 1
-        if valid_dates:
-            print "Chart: {} num_degrades: {}, last_score: {}, num_leaves: {}".format(chart.chart_name,
-                                                                                      result["num_degrades"],
-                                                                                      result["scores"][valid_dates[-1]],
-                                                                                      result["num_leaves"])
-        chart.save()
     else:
+        set_result_dict(result)
         date_range = [from_date, to_date]
         entries = MetricChartStatus.objects.filter(date_time__range=date_range,
                                                    chart_name=chart.chart_name,
@@ -179,7 +157,22 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
         for element in serialized_data:
             j = dict(element)
             result["scores"][j["date_time"]] = j
+        set_chart_status_details(chart=chart, result=result)
 
+    return result
+
+def set_result_dict(result):
+    result["num_build_failed"] = 0
+    result["num_degrades"] = 0
+    result["children_score_map"] = {}
+    result["valid_dates"] = []
+    result["num_leaves"] = 0
+    result["last_good_score"] = -1
+    result["penultimate_good_score"] = -1
+    result["copied_score"] = False
+    result["copied_score_disposition"] = 0
+
+def set_chart_status_details(chart, result):
     # chart.last_build_status = result["last_build_status"]
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by('-date_time')[:2]
     if chart_status_entries:
@@ -203,23 +196,18 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
     chart.penultimate_good_score = result["penultimate_good_score"]
     chart.copied_score = result["copied_score"]
     chart.copied_score_disposition = result["copied_score_disposition"]
-    if chart.leaf:
-        print "Leaf Chart: {} num_degrades: {} score: {} penultimate_score: {} build date: {}".format(chart.chart_name,
-                                                                                                      result[
-                                                                                                          "num_degrades"],
-                                                                                                      chart.last_good_score,
-                                                                                                      chart.penultimate_good_score,
-                                                                                                      chart.last_build_date)
     chart.save()
-    return result
 
 def set_local_timezone(current_date):
     date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day, hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
 
-def calculate_leaf_scores(cache_valid, chart, from_date, to_date, result, valid_dates, scores, current_date):
+def calculate_leaf_scores(cache_valid, chart, from_date, to_date, result, from_log=False):
     # print "Reached leaf: {}".format(chart.chart_name)
-    data_sets = []
+    set_result_dict(result)
+    scores = {}
+    valid_dates = []
+    current_date = get_rounded_time(from_date)
     model = app_config.get_metric_models()[chart.metric_model_name]
     if model.objects.first().interpolation_allowed:
         interpolate(model=model, from_date=from_date, to_date=to_date, chart=chart)
@@ -229,151 +217,166 @@ def calculate_leaf_scores(cache_valid, chart, from_date, to_date, result, valid_
     current_score = 0
     is_leaf_degrade = False
     replacement = False
-    if cache_valid:
-        entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by("date_time")
-        if len(entries):
-            last_entry = entries.last()
-            last_date = last_entry.date_time
-            last_good_score = chart.last_good_score
-            penultimate_good_score = chart.penultimate_good_score
-            for entry in entries:
-                valid_dates.append(entry.date_time)
-                scores[entry.date_time] = entry.score
-            current_date = last_date + timedelta(days=1)
-    while current_date <= to_date:
-        result["num_degrades"] = 0
-        valid_dates.append(current_date)
+    if from_log:
+        print "from_log"
+    else:
+        if cache_valid:
+            entries = MetricChartStatus.objects.filter(metric_id=chart.metric_id).order_by("date_time")
+            if len(entries):
+                last_entry = entries.last()
+                last_date = last_entry.date_time
+                last_good_score = chart.last_good_score
+                penultimate_good_score = chart.penultimate_good_score
+                for entry in entries:
+                    valid_dates.append(entry.date_time)
+                    scores[entry.date_time] = entry.score
+                current_date = last_date + timedelta(days=1)
+                current_date = set_local_timezone(current_date)
+        while current_date <= to_date:
+            result["num_degrades"] = 0
+            valid_dates.append(current_date)
+            data_set_mofified = False
+            data_sets = json.loads(chart.data_sets)
 
-        # print current_date
-
-        data_sets = data_sets
-        children = json.loads(chart.children)
-        children_weights = json.loads(chart.children_weights)
-        children_weights = {int(x): y for x, y in children_weights.iteritems()}
-
-        children_info = {}
-        data_set_mofified = False
-        data_sets = json.loads(chart.data_sets)
-
-        if len(data_sets):
-            data_set_combined_goodness = 0
-            for data_set in data_sets:
-                if current_date > get_localized_time(datetime(year=2018, month=8, day=10)):
-                    j = 0
-                # print "Processing data-set: {}".format(json.dumps(data_set))
-                entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
-                score = -1
-                this_days_record = None
-                if len(entries):
-                    this_days_record = entries.last()
-                    output_name = data_set["output"]["name"]  # TODO
-                    input_unit = output_name + "_unit"
-                    if "reference" in data_set["output"]:
-                        reference_value = data_set["output"]["reference"]
-                        if reference_value <= 0:
+            if len(data_sets):
+                data_set_combined_goodness = 0
+                for data_set in data_sets:
+                    if current_date > get_localized_time(datetime(year=2018, month=8, day=10)):
+                        j = 0
+                    # print "Processing data-set: {}".format(json.dumps(data_set))
+                    entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
+                    score = -1
+                    this_days_record = None
+                    if len(entries):
+                        this_days_record = entries.last()
+                        output_name = data_set["output"]["name"]  # TODO
+                        input_unit = output_name + "_unit"
+                        if "reference" in data_set["output"]:
+                            reference_value = data_set["output"]["reference"]
+                            if reference_value <= 0:
+                                data_set_mofified = data_set_mofified or chart.fixup_reference_values(
+                                    data_set=data_set)
+                                reference_value = data_set["output"]["reference"]
+                        else:
+                            # let's fix it up
+                            print ("Fixing reference values")
                             data_set_mofified = data_set_mofified or chart.fixup_reference_values(
                                 data_set=data_set)
-                            reference_value = data_set["output"]["reference"]
-                    else:
-                        # let's fix it up
-                        print ("Fixing reference values")
-                        data_set_mofified = data_set_mofified or chart.fixup_reference_values(
-                            data_set=data_set)
-                        reference_value = data_set["output"]["reference"] if "reference" in data_set[
-                            "output"] else None  # reference is set in fixup_reference_values
-                    get_first_record(model=model, data_set=data_set)
-                    output_value = getattr(this_days_record, output_name)
-                    output_value_unit = getattr(this_days_record, input_unit)
-                    output_value = convert_to_base_unit(output_value=output_value, input_unit_value=output_value_unit)
-                    expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
+                            reference_value = data_set["output"]["reference"] if "reference" in data_set[
+                                "output"] else None  # reference is set in fixup_reference_values
+                        get_first_record(model=model, data_set=data_set)
+                        output_value = getattr(this_days_record, output_name)
+                        output_value_unit = getattr(this_days_record, input_unit)
+                        output_value = convert_to_base_unit(output_value=output_value, input_unit_value=output_value_unit)
+                        expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
 
-                    # data_set_statuses.append(leaf_status)
-                    if reference_value is not None:
-                        if expected_value != -1:
-                            reference_value = expected_value
-                        reference_value = convert_to_base_unit(output_value=reference_value,
-                                                               input_unit_value=chart.visualization_unit)
-                        if chart.positive:
-                            data_set_combined_goodness += (float(
-                                output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
-                        else:
-                            if output_value:
+                        # data_set_statuses.append(leaf_status)
+                        if reference_value is not None:
+                            if expected_value != -1:
+                                reference_value = expected_value
+                            reference_value = convert_to_base_unit(output_value=reference_value,
+                                                                   input_unit_value=chart.visualization_unit)
+                            if chart.positive:
                                 data_set_combined_goodness += (float(
-                                    reference_value) / output_value) * 100 if output_value >= 0 else 0
+                                    output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
                             else:
-                                print "ERROR: {}, {}".format(chart.chart_name,
-                                                             chart.metric_model_name)
-            current_score = round(data_set_combined_goodness / len(data_sets), 1)
+                                if output_value:
+                                    data_set_combined_goodness += (float(
+                                        reference_value) / output_value) * 100 if output_value >= 0 else 0
+                                else:
+                                    print "ERROR: {}, {}".format(chart.chart_name,
+                                                                 chart.metric_model_name)
+                current_score = round(data_set_combined_goodness / len(data_sets), 1)
 
-            # is_leaf_degrade = current_score < last_good_score
-            replacement = False
-            if current_score <= 0:
-                current_score = last_good_score
-                replacement = True
-                # is_leaf_degrade = penultimate_good_score > current_score
+                # is_leaf_degrade = current_score < last_good_score
+                replacement = False
+                if current_score <= 0:
+                    current_score = last_good_score
+                    replacement = True
+                    # is_leaf_degrade = penultimate_good_score > current_score
 
-            if not replacement:  # Bertrand wanted to keep track of the last good score
-                if last_good_score:
-                    penultimate_good_score = last_good_score
-                is_leaf_degrade = current_score < (last_good_score * (1 - get_tolerance()))
-                last_good_score = current_score
-            else:
-                is_leaf_degrade = current_score < (penultimate_good_score * (1 - get_tolerance()))
-
-            scores[current_date] = current_score
-
-        if data_set_mofified:
-            chart.data_sets = json.dumps(data_sets)
-            chart.save()
-
-        chart_status = MetricChartStatus.objects.filter(date_time=current_date, metric_id=chart.metric_id)
-        if not chart_status:
-            mcs = MetricChartStatus(date_time=current_date,
-                                    metric_id=chart.metric_id,
-                                    chart_name=chart.chart_name,
-                                    data_sets=data_sets,
-                                    score=current_score)
-            if replacement:
-                mcs.copied_score = True
-                mcs.copied_score_disposition = 0
-                if current_score > penultimate_good_score:
-                    if current_score > (penultimate_good_score * (1 + get_tolerance())):
-                        mcs.copied_score_disposition = 1
-                elif current_score < penultimate_good_score:
-                    if current_score < (penultimate_good_score * (1 - get_tolerance())):
-                        mcs.copied_score_disposition = -1
+                if not replacement:  # Bertrand wanted to keep track of the last good score
+                    if last_good_score:
+                        penultimate_good_score = last_good_score
+                    is_leaf_degrade = current_score < (last_good_score * (1 - get_tolerance()))
+                    last_good_score = current_score
                 else:
+                    is_leaf_degrade = current_score < (penultimate_good_score * (1 - get_tolerance()))
+
+                scores[current_date] = current_score
+
+            if data_set_mofified:
+                chart.data_sets = json.dumps(data_sets)
+                chart.save()
+
+            chart_status = MetricChartStatus.objects.filter(date_time=current_date, metric_id=chart.metric_id)
+            if not chart_status:
+                mcs = MetricChartStatus(date_time=current_date,
+                                        metric_id=chart.metric_id,
+                                        chart_name=chart.chart_name,
+                                        data_sets=data_sets,
+                                        score=current_score)
+                if replacement:
+                    mcs.copied_score = True
                     mcs.copied_score_disposition = 0
-            # print current_date, scores
-            # print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
-            #                                                     scores[current_date])
-            mcs.save()
-        else:
-            if replacement:
-                chart_status[0].copied_score = True
-                chart_status[0].copied_score_disposition = 0
-                if current_score > penultimate_good_score:
-                    if current_score > (penultimate_good_score * (1 + get_tolerance())):
-                        chart_status[0].copied_score_disposition = 1
-                elif current_score < penultimate_good_score:
-                    if current_score < (penultimate_good_score * (1 - get_tolerance())):
-                        chart_status[0].copied_score_disposition = -1
-                else:
-                    chart_status[0].copied_score_disposition = 0
+                    if current_score > penultimate_good_score:
+                        if current_score > (penultimate_good_score * (1 + get_tolerance())):
+                            mcs.copied_score_disposition = 1
+                    elif current_score < penultimate_good_score:
+                        if current_score < (penultimate_good_score * (1 - get_tolerance())):
+                            mcs.copied_score_disposition = -1
+                    else:
+                        mcs.copied_score_disposition = 0
+                # print current_date, scores
+                # print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
+                #                                                     scores[current_date])
+                mcs.save()
             else:
-                chart_status[0].copied_score = False
-                chart_status[0].copied_score_disposition = 0
-            chart_status[0].score = current_score
-            chart_status[0].data_sets = data_sets
-            chart_status[0].save()
+                if replacement:
+                    chart_status[0].copied_score = True
+                    chart_status[0].copied_score_disposition = 0
+                    if current_score > penultimate_good_score:
+                        if current_score > (penultimate_good_score * (1 + get_tolerance())):
+                            chart_status[0].copied_score_disposition = 1
+                    elif current_score < penultimate_good_score:
+                        if current_score < (penultimate_good_score * (1 - get_tolerance())):
+                            chart_status[0].copied_score_disposition = -1
+                    else:
+                        chart_status[0].copied_score_disposition = 0
+                else:
+                    chart_status[0].copied_score = False
+                    chart_status[0].copied_score_disposition = 0
+                chart_status[0].score = current_score
+                chart_status[0].data_sets = data_sets
+                chart_status[0].save()
 
-        if is_leaf_degrade or not current_score:
-            result["num_degrades"] = 1
-        current_date = current_date + timedelta(days=1)
-        current_date = set_local_timezone(current_date)
+            if is_leaf_degrade or not current_score:
+                result["num_degrades"] = 1
+            current_date = current_date + timedelta(days=1)
+            current_date = set_local_timezone(current_date)
+        result["scores"] = scores
+        result["last_build_status"] = chart.last_build_status == "PASSED"
+        result["valid_dates"] = valid_dates
+        if not result["last_build_status"]:
+            result["num_build_failed"] = 1
+        valid_dates = result["valid_dates"]
+        if valid_dates:
+            print "Chart: {} num_degrades: {}, last_score: {}, num_leaves: {}".format(chart.chart_name,
+                                                                                      result["num_degrades"],
+                                                                                      result["scores"][valid_dates[-1]],
+                                                                                      result["num_leaves"])
+        print "Leaf Chart: {} num_degrades: {} score: {} penultimate_score: {} build date: {}".format(chart.chart_name,
+                                                                                                      result[
+                                                                                                          "num_degrades"],
+                                                                                                      chart.last_good_score,
+                                                                                                      chart.penultimate_good_score,
+                                                                                                      chart.last_build_date)
+        set_chart_status_details(chart=chart, result=result)
 
-
-def calculate_container_scores(chart, purge_old_status, to_date, cache_valid, result, scores):
+def calculate_container_scores(chart, purge_old_status, to_date, cache_valid, result):
+    set_result_dict(result)
+    scores = {}
+    valid_dates = []
     children = json.loads(chart.children)
     children_weights = json.loads(chart.children_weights)
     children_weights = {int(x): y for x, y in children_weights.iteritems()}
@@ -440,6 +443,18 @@ def calculate_container_scores(chart, purge_old_status, to_date, cache_valid, re
             chart_status[0].children_score_map = result["children_score_map"]
             chart_status[0].data_sets = data_sets
             chart_status[0].save()
+    result["scores"] = scores
+    result["last_build_status"] = chart.last_build_status == "PASSED"
+    result["valid_dates"] = valid_dates
+    if not result["last_build_status"]:
+        result["num_build_failed"] = 1
+    valid_dates = result["valid_dates"]
+    if valid_dates:
+        print "Chart: {} num_degrades: {}, last_score: {}, num_leaves: {}".format(chart.chart_name,
+                                                                                  result["num_degrades"],
+                                                                                  result["scores"][valid_dates[-1]],
+                                                                                  result["num_leaves"])
+    set_chart_status_details(chart=chart, result=result)
 
 
 def convert_to_base_unit(output_value, input_unit_value):
@@ -520,6 +535,3 @@ if __name__ == "__main__":
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     # all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
     # prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
-
-if __name__ == "__main2__":
-    pass
