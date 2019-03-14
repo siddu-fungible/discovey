@@ -134,7 +134,7 @@
                 <td>
                   <ng-container *ngIf="hasReRuns(script.value); else NonReRunHtml">
                     <ul>
-                      <li>Latest: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, script.value.log_prefix)">HTML</a></li>
+                      <li>Latest: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, getLatestRerunEntry(script.value).log_prefix)">HTML</a></li>
                       <li>Original: <a [routerLink]="" target="_blank" (click)="getHtmlLogPath(executionId, script.value.script_path, script.value.log_prefix)">HTML</a>
                     </ul>
                   </ng-container>
@@ -146,7 +146,7 @@
                 <td>
                   <ng-container *ngIf="hasReRuns(script.value); else NonReRunConsole">
                     <ul>
-                      <li>Latest: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, script.value.log_prefix)">Console</a></li>
+                      <li>Latest: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(getLatestRerunSuiteExecutionId(script.value), script.value.script_path, getLatestRerunEntry(script.value).log_prefix)">Console</a></li>
                       <li>Original: <a [routerLink]="" target="_blank" (click)="getConsoleLogPath(executionId, script.value.script_path, script.value.log_prefix)">Console</a>
                     </ul>
                   </ng-container>
