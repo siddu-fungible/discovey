@@ -36,34 +36,14 @@ class SnapshotHelper():
                 self.snapshot_obj.do_unit(unit)
             if instance is not None:
                 self.snapshot_obj.do_instance(instance=instance)
+            fun_test.log("Captured Filter: %s" % self.snapshot_obj.capture_filter)
+            fun_test.log("Captured Filter ERP: %s" % self.snapshot_obj.capture_filter_erp)
             self.snapshot_obj.do_capture()
             result = True
         except ImportError as ex:
             fun_test.log("Exception: %s" % str(ex))
             fun_test.log("Installing nmtf....")
             fun_test.simple_assert(setup_nmtf(), "Setup nmtf")
-            from dpcsh.dpcsh_client import DpcshClient
-            from dpcsh.snapshot import Snapshot
-
-            if not self.dpc_client_obj:
-                self.dpc_client_obj = DpcshClient(target_ip=self.dpc_proxy_ip, target_port=self.dpc_proxy_port,
-                                                  verbose=False)
-            if not self.snapshot_obj:
-                self.snapshot_obj = Snapshot(self.dpc_client_obj)
-
-            self.snapshot_obj.do_filter_reset()
-            if smac is not None:
-                self.snapshot_obj.do_smac(smac)
-            if psw_stream is not None:
-                self.snapshot_obj.do_psw_stream(psw_stream)
-            if stream is not None:
-                self.snapshot_obj.do_stream(stream)
-            if unit is not None:
-                self.snapshot_obj.do_unit(unit)
-            if instance is not None:
-                self.snapshot_obj.do_instance(instance=instance)
-            self.snapshot_obj.do_capture()
-            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
