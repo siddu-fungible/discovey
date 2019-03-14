@@ -8,7 +8,9 @@
       "meter_credit" : 4,
       "commit_rate" : 51,
       "commit_burst" : 82,
-      "excess_burst" : 1
+      "excess_burst" : 1,
+      "load_type": "KILOBITS_PER_SECOND",
+      "load": 50
     },
     "pps_meter":
     {
@@ -19,30 +21,63 @@
       "meter_credit" : 6,
       "commit_rate" : 102,
       "commit_burst" : 82,
-      "excess_burst" : 1
-    }
-  },
-  "f1":{
-     "bps_meter":{
+      "excess_burst" : 1,
+      "load_type": "FRAMES_PER_SECOND",
+      "load": 50
+    },
+    "pps_meter_2_rate":
+      {
       "sport" : 1234,
       "dport" : 1024,
-      "meter_id" : 60,
-      "meter_interval" : 14,
+      "meter_id" : 2,
+      "meter_interval" : 4,
       "meter_credit" : 4,
-      "commit_rate" : 21,
+      "commit_rate" : 4,
       "commit_burst" : 82,
-      "excess_burst" : 1
+      "excess_burst" : 1,
+      "load_type": "FRAMES_PER_SECOND",
+      "load": 250
+    }
+  },
+  "f1":
+          {
+    "bps_meter":{
+      "sport" : 1234,
+      "dport" : 1024,
+      "meter_id" : 2,
+      "meter_interval" : 13,
+      "meter_credit" : 4,
+      "commit_rate" : 51,
+      "commit_burst" : 82,
+      "excess_burst" : 1,
+      "load_type": "KILOBITS_PER_SECOND",
+      "load": 50
     },
     "pps_meter":
     {
       "sport" : 1234,
       "dport" : 1024,
-      "meter_id" : 60,
-      "meter_interval" : 14,
-      "meter_credit" : 4,
-      "commit_rate" : 21,
+      "meter_id" : 2,
+      "meter_interval" : 13,
+      "meter_credit" : 6,
+      "commit_rate" : 102,
       "commit_burst" : 82,
-      "excess_burst" : 1
+      "excess_burst" : 1,
+      "load_type": "FRAMES_PER_SECOND",
+      "load": 50
+    },
+    "pps_meter_2_rate":
+      {
+      "sport" : 1234,
+      "dport" : 1024,
+      "meter_id" : 2,
+      "meter_interval" : 4,
+      "meter_credit" : 4,
+      "commit_rate" : 4,
+      "commit_burst" : 82,
+      "excess_burst" : 1,
+      "load_type": "FRAMES_PER_SECOND",
+      "load": 250
     }
   }
 }

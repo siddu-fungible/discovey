@@ -26,9 +26,9 @@ def is_close(a, b, rel_tol=1e-01, abs_tol=0.0):
 
 
 def create_streams(tx_port, dip, dmac, sip="192.168.85.2", s_port=1024, d_port=1024, sync_bit='0', ack_bit='1', ecn_v4=0,
-                   ipv6=False, v6_traffic_class=0, load='load_bps', load_type="MEGABITS_PER_SECOND"):
+                   ipv6=False, v6_traffic_class=0, load=50, load_type="MEGABITS_PER_SECOND"):
     stream_obj = StreamBlock(fill_type=test_config['fill_type'], insert_signature=test_config['insert_signature'],
-                             load=test_config[load], load_unit=load_type,
+                             load=load, load_unit=load_type,
                              frame_length_mode= test_config['frame_length_mode'],
                              fixed_frame_length=test_config['fixed_frame_size'])
 
@@ -148,8 +148,6 @@ class MeterBase(FunTestCase):
     mode = METER_MODE_BPS
     rate_mode = SrTCM
     erp = False
-    load_type = "KILOBITS_PER_SECOND"
-    load = "load_bps"
     json_key = "bps_meter"
     def describe(self):
         self.set_test_details(id=1, summary="Test SrTC meter transit for bps",
@@ -167,8 +165,8 @@ class MeterBase(FunTestCase):
         routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         l3_config = routes_config['l3_config']
         self.stream_obj = create_streams(tx_port=nu_ing_port, dmac=routes_config['routermac'],
-                                         dip=l3_config['destination_ip1'], load=self.load,
-                                         load_type=self.load_type, d_port=meter_fields['dport'],
+                                         dip=l3_config['destination_ip1'], load=meter_fields['load'],
+                                         load_type=meter_fields['load_type'], d_port=meter_fields['dport'],
                                          s_port=meter_fields['sport'])
 
     def run(self):
@@ -305,12 +303,10 @@ class MeterBase(FunTestCase):
 
 
 class MeterPps1Rate(MeterBase):
-    load_type = "FRAMES_PER_SECOND"
     stream_obj = None
     mode = METER_MODE_PPS
     rate_mode = SrTCM
     erp = False
-    load = "load_pps"
     json_key = "pps_meter"
 
     def describe(self):
@@ -334,6 +330,33 @@ class MeterPps1Rate(MeterBase):
 
 
 class MeterPps2Rate(MeterBase):
+    stream_obj = None
+    mode = METER_MODE_PPS
+    rate_mode = SrTCM
+    erp = False
+    json_key = "pps_meter_2_rate"
+
+    def describe(self):
+        self.set_test_details(id=3, summary="Test TrTC meter transit for pps",
+                              steps="""
+                                  1. Create Stream on Tx port with defined kbps
+                                  2. Start Traffic 
+                                  3. Make sure Rx and Tx framecount are equal
+                                  4. Make sure Rx and Tx rate are same
+                                  5. Make sure packets are seen in expected meter colors
+                                  6. Ensure no errors are seen on spirent ports
+                                  """)
+    def setup(self):
+        super(MeterPps2Rate, self).setup()
+
+    def cleanup(self):
+        super(MeterPps2Rate, self).cleanup()
+
+    def run(self):
+        super(MeterPps2Rate, self).run()
+
+
+class MeterBps2Rate(MeterBase):
     load_type = "FRAMES_PER_SECOND"
     mode = METER_MODE_PPS
     rate_mode = TrTCM
@@ -343,5 +366,5 @@ if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(MeterBase())
     ts.add_test_case(MeterPps1Rate())
-    # ts.add_test_case(MeterPps2Rate())
+    ts.add_test_case(MeterPps2Rate())
     ts.run()
