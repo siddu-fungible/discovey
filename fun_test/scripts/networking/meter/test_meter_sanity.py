@@ -185,20 +185,19 @@ class MeterBase(FunTestCase):
             generator_port_obj_dict[port] = template_obj.stc_manager.get_generator(port_handle=port)
 
         network_controller_obj.disconnect()
-
-        setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip=dpc_server_ip,
-                       dpc_tcp_proxy_port=dpc_server_port)
+        snapshot_obj = SnapshotHelper(dpc_proxy_ip=dpc_server_ip, dpc_proxy_port=dpc_server_port)
+        snapshot_obj.setup_snapshot()
         checkpoint = "Start traffic to get meter ID from snapshot"
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=2)
-        snapshot_output = run_snapshot()
-        exit_snapshot()
+        snapshot_output = snapshot_obj.run_snapshot()
+        snapshot_obj.exit_snapshot()
         checkpoint = "Clear spirent results"
         result = template_obj.clear_subscribed_results(subscribe_handle_list=subscribed_results.values())
         fun_test.test_assert(result, checkpoint)
-        meter_id = get_snapshot_meter_id(snapshot_output=snapshot_output, erp=self.erp)
+        meter_id = snapshot_obj.get_snapshot_meter_id(snapshot_output=snapshot_output, erp=self.erp)
         fun_test.log("meter ID from snapshot : %s" % meter_id)
         generator_config.Duration = TRAFFIC_DURATION
         port = result_setup['port_list'][0]

@@ -99,15 +99,17 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     obj_list.append(active_stream)
     template_obj.activate_stream_blocks(stream_obj_list=obj_list)
     network_controller_obj.disconnect()
-    setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip=dpc_server_ip,
-                   dpc_tcp_proxy_port=dpc_server_port)
+
+    snapshot_obj = SnapshotHelper(dpc_proxy_ip=dpc_server_ip, dpc_proxy_port=dpc_server_port)
+    snapshot_obj.setup_snapshot()
+
     checkpoint = "Start traffic from %s port for %d secs stream" % (send_port, TRAFFIC_DURATION)
     result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[send_port]])
     fun_test.simple_assert(expression=result, message=checkpoint)
     fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
     checkpoint = "Ensure tx and rx frame count matches on Spirent for NU NU traffic"
-    snapshot_output = run_snapshot()
-    exit_snapshot()
+    snapshot_output = snapshot_obj.run_snapshot()
+    snapshot_obj.exit_snapshot()
     flex_counter_val_bef = 0
     if acl_counter != 0:
         flex_counter_val_bef = get_flex_counter_values(network_controller_obj=network_controller_obj,
@@ -154,12 +156,12 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
         if not hnu_ing and hnu_eg:
             erp = True
         checkpoint = "Fetch pkt color using snapshot"
-        color_from_snapshot = get_pkt_color_from_snapshot(snapshot_output, erp=erp)
+        color_from_snapshot = snapshot_obj.get_pkt_color_from_snapshot(snapshot_output, erp=erp)
         fun_test.simple_assert(expression=color_from_snapshot, message=checkpoint)
         fun_test.test_assert_expected(expected=value_dict['color_ing_nu'],
                                       actual=color_from_snapshot, message="Make sure pkt color is as expected")
     elif acl_action == ACL_ACTION_LOG:
-        print get_log_from_snapshot(snapshot_output=snapshot_output)
+        print snapshot_obj.get_log_from_snapshot(snapshot_output=snapshot_output)
 
 
 class SpirentSetup(FunTestScript):
