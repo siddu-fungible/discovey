@@ -3,7 +3,7 @@
     "Racks": 2,
     "FSs"  : 2,
     "Cx"   : {
-      "Physical": 1,
+      "Physical": 0,
       "Virtual": 8
     }
   },

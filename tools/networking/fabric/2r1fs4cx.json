@@ -1,0 +1,116 @@
+{
+  "Size": {
+    "Racks": 2,
+    "FSs"  : 1,
+    "Cx"   : {
+      "Physical": 1,
+      "Virtual": 4
+    }
+  },
+  "Racks": [
+    {
+      "id": 1,
+      "FS1600": [
+        {
+          "id": 1,
+          "F1s": [
+            {
+              "id": 0,
+              "MGMT_IP": "1.1.1.1",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/0"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG4": "et-0/0/1"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG8": "1_1"
+              }
+            },
+            {
+              "id": 1,
+              "MGMT_IP": "1.1.1.2",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/2"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG4": "et-0/0/3"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG8": "1_0"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "FS1600": [
+        {
+          "id": 1,
+          "F1s": [
+            {
+              "id": 0,
+              "MGMT_IP": "1.1.1.5",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/4"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG4": "et-0/0/5"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG8": "1_1"
+              }
+            },
+            {
+              "id": 1,
+              "MGMT_IP": "1.1.1.6",
+              "CxLinks": [
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG0": "et-0/0/6"
+                  }
+                },
+                {
+                  "MGMT_IP": "2.2.2.1",
+                  "INTERFACES": {
+                    "FPG4": "et-0/0/7"
+                  }
+                }
+              ],
+              "FabLinks": {
+                "FPG8": "1_0"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

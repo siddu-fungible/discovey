@@ -1,0 +1,104 @@
+{
+    "bgp": {
+        "neighbors": [
+            {
+                "ip": "193.0.0.18", 
+                "as": 64513, 
+                "allowas-in": true, 
+                "next-hop-self": true
+            }, 
+            {
+                "ip": "193.0.0.22", 
+                "as": 64513, 
+                "allowas-in": true, 
+                "next-hop-self": true
+            }
+        ], 
+        "router_id": "192.0.2.1", 
+        "as": 64512, 
+        "network": "10.0.2.0/28"
+    }, 
+    "global": {
+        "f1_num": 0, 
+        "f1_ftep": "192.0.2.1", 
+        "fcp_config": {
+            "fcp_req_dscp_ecn": 252, 
+            "fcp_data_dscp_ecn": 244, 
+            "fcp_hdr_ver": 0, 
+            "fcp_hdr_udp_dport": 7085, 
+            "fcp_blk_size_2power": 7, 
+            "fcp_hdr_ipv4_id": 0, 
+            "fcp_nq_per_tunnel_2power": 3, 
+            "fcp_hdr_v4_etype": 2048, 
+            "fcp_gnt_dscp_ecn": 248, 
+            "fcp_hdr_udp_sport": 1
+        }
+    }, 
+    "intfs": [
+        {
+            "description": "spine link from FS 1 f1 0 port FPG0 to Cx 2.2.2.1 port et-0/0/4", 
+            "ip": {
+                "netmask": "30", 
+                "peer_ip": "193.0.0.18", 
+                "my_ip": "193.0.0.17"
+            }, 
+            "gph_index": [
+                {
+                    "index": 0
+                }
+            ], 
+            "bandwidth": "100", 
+            "spine_index": 0, 
+            "type": "spine_facing", 
+            "id": "FPG0"
+        }, 
+        {
+            "description": "spine link from FS 1 f1 0 port FPG4 to Cx 2.2.2.1 port et-0/0/5", 
+            "ip": {
+                "netmask": "30", 
+                "peer_ip": "193.0.0.22", 
+                "my_ip": "193.0.0.21"
+            }, 
+            "gph_index": [
+                {
+                    "index": 1
+                }
+            ], 
+            "bandwidth": "100", 
+            "spine_index": 1, 
+            "type": "spine_facing", 
+            "id": "FPG4"
+        }, 
+        {
+            "description": "fab link from FS 1 F1 0 port FPG8 to FS 1 F1 1", 
+            "remote_f1_id": 1, 
+            "gph_index": [
+                {
+                    "index": 2
+                }, 
+                {
+                    "index": 3
+                }
+            ], 
+            "bandwidth": 100, 
+            "type": "fabric_facing", 
+            "id": "FPG8"
+        }, 
+        {
+            "ip": "10.0.2.1", 
+            "netmask": "28", 
+            "id": "vlan2"
+        }, 
+        {
+            "ip": "192.0.2.1", 
+            "netmask": "32", 
+            "id": "lo0"
+        }
+    ], 
+    "cx_config": {
+        "1": "set routing-instances Cx1 instance-type virtual-router\nset routing-instanaces Cx1 routing-options router-id 194.0.0.1\nset routing-instances Cx1 routing-options autonomous-system 64513\nset routing-instances Cx1 protocols bgp group external-peers type external\nset routing-instances Cx1 protocols bgp group external-peers advertise-peer-as\nset routing-instances Cx1 protocols bgp group external-peers peer-as 64512\nset routing-instance Cx1 interface et-0/0/0\nset routing-instance Cx1 protocols bgp group external-peers neighbor 193.0.0.1\nset interfaces et-0/0/0 unit 0 family inet addess 193.0.0.2/30\nset routing-instance Cx1 interface et-0/0/4\nset routing-instance Cx1 protocols bgp group external-peers neighbor 193.0.0.17\nset interfaces et-0/0/4 unit 0 family inet addess 193.0.0.18/30\n", 
+        "3": "set routing-instances Cx3 instance-type virtual-router\nset routing-instanaces Cx3 routing-options router-id 194.0.0.3\nset routing-instances Cx3 routing-options autonomous-system 64513\nset routing-instances Cx3 protocols bgp group external-peers type external\nset routing-instances Cx3 protocols bgp group external-peers advertise-peer-as\nset routing-instances Cx3 protocols bgp group external-peers peer-as 64512\nset routing-instance Cx3 interface et-0/0/2\nset routing-instance Cx3 protocols bgp group external-peers neighbor 193.0.0.9\nset interfaces et-0/0/2 unit 0 family inet addess 193.0.0.10/30\n", 
+        "2": "set routing-instances Cx2 instance-type virtual-router\nset routing-instanaces Cx2 routing-options router-id 194.0.0.2\nset routing-instances Cx2 routing-options autonomous-system 64513\nset routing-instances Cx2 protocols bgp group external-peers type external\nset routing-instances Cx2 protocols bgp group external-peers advertise-peer-as\nset routing-instances Cx2 protocols bgp group external-peers peer-as 64512\nset routing-instance Cx2 interface et-0/0/1\nset routing-instance Cx2 protocols bgp group external-peers neighbor 193.0.0.5\nset interfaces et-0/0/1 unit 0 family inet addess 193.0.0.6/30\nset routing-instance Cx2 interface et-0/0/5\nset routing-instance Cx2 protocols bgp group external-peers neighbor 193.0.0.21\nset interfaces et-0/0/5 unit 0 family inet addess 193.0.0.22/30\n", 
+        "4": "set routing-instances Cx4 instance-type virtual-router\nset routing-instanaces Cx4 routing-options router-id 194.0.0.4\nset routing-instances Cx4 routing-options autonomous-system 64513\nset routing-instances Cx4 protocols bgp group external-peers type external\nset routing-instances Cx4 protocols bgp group external-peers advertise-peer-as\nset routing-instances Cx4 protocols bgp group external-peers peer-as 64512\nset routing-instance Cx4 interface et-0/0/3\nset routing-instance Cx4 protocols bgp group external-peers neighbor 193.0.0.13\nset interfaces et-0/0/3 unit 0 family inet addess 193.0.0.14/30\n"
+    }
+}
