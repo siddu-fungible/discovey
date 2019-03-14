@@ -21,15 +21,49 @@ SPINE_AS = 64513
 TOPO_DATA = {}
 F1_CONFIG = {}
 CX_CONFIG = {}
-OUTPUT_JSON = ''
+
 
 def readTopoDefinition(filename):
+
     topo_def_data = None
     try:
         topo_def_data = json.loads(open(filename).read())
     except Exception as ex:
         print str(ex)
     return topo_def_data
+
+def writeCxConfig():
+
+    for k,v in CX_CONFIG.items():
+        v += "commit\n"
+        abs_path = os.path.join(OUTPUT_DIR, 'Cx-' + str(k) + ".txt")
+        with open(abs_path, 'w') as outfile:
+            outfile.write(v)
+
+def getCxConfig(cx_id):
+
+    spine_subnet = SPINE_LO_SUBNETS.pop(0)
+    spine_lo_ips = spine_subnet.iter_hosts()
+    spine_lo_ip = spine_lo_ips.next()
+
+    cx_name = "Cx"+str(cx_id)
+    config = "set routing-instances %s instance-type virtual-router\n" % cx_name
+    config += "set routing-instanaces %s routing-options router-id %s\n" % (cx_name, str(spine_lo_ip))
+    config += "set routing-instances %s routing-options autonomous-system %s\n" % (cx_name, SPINE_AS)
+    config += "set routing-instances %s protocols bgp group external-peers type external\n" % cx_name
+    config += "set routing-instances %s protocols bgp group external-peers advertise-peer-as\n" % cx_name
+    config += "set routing-instances %s protocols bgp group external-peers peer-as %s\n" % (cx_name, F1_AS)
+
+    return config
+
+def pretty(d, indent=0):
+
+    for key, value in d.items():
+        print('\t' * indent + str(key))
+        if isinstance(value, dict):
+            pretty(value, indent+1)
+        else:
+            print('\t' * (indent+1) + str(value))
 
 
 def configureTopoSubnets():
