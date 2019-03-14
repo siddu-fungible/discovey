@@ -25,6 +25,7 @@ export class SuiteDetailComponent implements OnInit {
   currenReRunHistory: any = null;
   currenReRunScriptInfo: any = null;
   testCaseInfo: any = {};
+  scriptInfo: any = {};
 
   constructor(private apiService: ApiService, private route: ActivatedRoute, private reRunService: ReRunService, private logger: LoggerService, private regressionService: RegressionService, private commonService: CommonService) {
   }
@@ -69,6 +70,8 @@ export class SuiteDetailComponent implements OnInit {
           let moreInfo = result.data.more_info;
           data.summary = moreInfo.summary;
           self.testCaseExecutions.push(data);
+
+          ctrl.fetchScriptInfo(data.script_path);
           if (!ctrl.scriptExecutionsMap.hasOwnProperty(data.script_path)) {
             ctrl.scriptExecutionsMap[data.script_path] = {};
           }
@@ -77,6 +80,13 @@ export class SuiteDetailComponent implements OnInit {
           ctrl.fetchTestCaseInfo(testCaseExecutionId);
         });
       }
+    });
+  }
+
+  fetchScriptInfo(scriptPath) {
+    this.regressionService.fetchScriptInfoByScriptPath(scriptPath).subscribe(response => {
+      this.scriptInfo[scriptPath] = response;
+      let i = 0;
     });
   }
 
@@ -266,6 +276,11 @@ export class SuiteDetailComponent implements OnInit {
 
   toInt(s) {
     return parseInt(s);
+  }
+
+  clickHistory(scriptPath) {
+    let url = "/regression/script_history_page/" + this.scriptInfo[scriptPath].pk;
+    window.open(url, '_blank');
   }
 
 
