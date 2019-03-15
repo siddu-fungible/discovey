@@ -998,7 +998,26 @@ if __name__ == "__main__":
     entries = MetricChart.objects.all()
     for entry in entries:
         if entry.leaf:
+            if entry.y1_axis_title == "ns":
+                entry.y1_axis_title = "nsecs"
+            elif entry.y1_axis_title == "ops/sec":
+                entry.y1_axis_title = "ops"
+            elif entry.y1_axis_title == "ms":
+                entry.y1_axis_title = "msecs"
+            elif entry.y1_axis_title == "us":
+                entry.y1_axis_title = "usecs"
+            elif entry.y1_axis_title == "seconds":
+                entry.y1_axis_title = "secs"
+            elif entry.y1_axis_title == "IOPS":
+                entry.y1_axis_title = "ops"
+            elif entry.y1_axis_title == "Cycles":
+                entry.y1_axis_title = "cycles"
+            elif entry.y1_axis_title == "mbps":
+                entry.y1_axis_title = "Mbps"
+            elif entry.y1_axis_title == "Kops/sec":
+                entry.y1_axis_title = "Kops"
+            entry.save()
             entry.visualization_unit = entry.y1_axis_title
             entry.score_unit = entry.y1_axis_title
             entry.save()
-    print "setting viz unit complete"
+    print "setting y1axis title, score and viz unit complete"

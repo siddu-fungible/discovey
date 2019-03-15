@@ -8,25 +8,25 @@
         <a (click)="setTimeMode('week')"> Week </a>/
         <a (click)="setTimeMode('month')"> Month </a>/
         <b><u><a (click)="setTimeMode('all')"> All </a></u></b>
-        <select style="float: right">
-          <option [ngValue]="" *ngFor="let units of category">{{ units }}</option>
+        <select [(ngModel)]="selectedUnit" (ngModelChange)="onChange($event)" style="float: right">
+          <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
         </select>
       </div>
       <div *ngSwitchCase="'week'">
         <b><u><a (click)="setTimeMode('week')"> Week </a></u></b>/
         <a (click)="setTimeMode('month')"> Month </a>/
         <a (click)="setTimeMode('all')"> All </a>
-        <!--<select style="float: right">-->
-          <!--<option [value]="" *ngFor="let units of category">{{ units }}</option>-->
-        <!--</select>-->
+        <select [(ngModel)]="selectedUnit" (ngModelChange)="onChange($event)" style="float: right">
+          <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
+        </select>
       </div>
       <div *ngSwitchCase="'month'">
         <a (click)="setTimeMode('week')"> Week </a>/
         <b><u><a (click)="setTimeMode('month')"> Month </a></u></b>/
         <a (click)="setTimeMode('all')"> All </a>
-        <!--<select style="float: right">-->
-          <!--<option [value]="" *ngFor="let units of category">{{ units }}</option>-->
-        <!--</select>-->
+        <select [(ngModel)]="selectedUnit" (ngModelChange)="onChange($event)" style="float: right">
+          <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
+        </select>
       </div>
     </div>
     <!-- fun chart component -->
