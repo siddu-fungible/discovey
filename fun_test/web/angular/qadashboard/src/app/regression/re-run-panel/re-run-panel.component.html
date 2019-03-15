@@ -11,8 +11,8 @@
       <tr *ngFor="let entry of reRunInfo.reRunInfo">
         <td><a target="_blank" href="/regression/suite_detail/{{ entry.re_run.suite_execution_id }}">{{ entry.re_run.suite_execution_id }}</a></td>
         <td>{{ entry.re_run.attributes.result }}</td>
-        <td>localizeTime({{ entry.re_run.attributes.scheduled_time }})</td>
-        <td>localizeTime({{ entry.re_run.attributes.completed_time }})</td>
+        <td>{{ localizeTime(entry.re_run.attributes.scheduled_time) }}</td>
+        <td>{{ localizeTime(entry.re_run.attributes.completed_time) }}</td>
       </tr>
     </table>
   </div>

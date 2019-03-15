@@ -225,6 +225,15 @@ export class SuiteDetailComponent implements OnInit {
     return originalResult;
   }
 
+  getLatestRerunEntry(testCaseInfo) {
+    let entry = null;
+    let reRunHistory = JSON.parse(testCaseInfo.re_run_history);
+    if (reRunHistory.length > 0) {
+      entry = reRunHistory[reRunHistory.length - 1];
+    }
+    return entry;
+  }
+
   getLatestRerunSuiteExecutionId(testCaseInfo) {
     let suiteExecutionId = null;
     let reRunHistory = JSON.parse(testCaseInfo.re_run_history);
