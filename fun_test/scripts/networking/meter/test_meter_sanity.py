@@ -332,7 +332,7 @@ class MeterPps1Rate(MeterBase):
 class MeterPps2Rate(MeterBase):
     stream_obj = None
     mode = METER_MODE_PPS
-    rate_mode = SrTCM
+    rate_mode = TrTCM
     erp = False
     json_key = "pps_meter_2_rate"
 
@@ -357,9 +357,31 @@ class MeterPps2Rate(MeterBase):
 
 
 class MeterBps2Rate(MeterBase):
-    load_type = "FRAMES_PER_SECOND"
-    mode = METER_MODE_PPS
+    stream_obj = None
+    mode = METER_MODE_BPS
     rate_mode = TrTCM
+    erp = False
+    json_key = "bps_meter_2_rate"
+
+    def describe(self):
+        self.set_test_details(id=4, summary="Test TrTC meter transit for pps",
+                              steps="""
+                                      1. Create Stream on Tx port with defined kbps
+                                      2. Start Traffic 
+                                      3. Make sure Rx and Tx framecount are equal
+                                      4. Make sure Rx and Tx rate are same
+                                      5. Make sure packets are seen in expected meter colors
+                                      6. Ensure no errors are seen on spirent ports
+                                      """)
+
+    def setup(self):
+        super(MeterBps2Rate, self).setup()
+
+    def cleanup(self):
+        super(MeterBps2Rate, self).cleanup()
+
+    def run(self):
+        super(MeterBps2Rate, self).run()
 
 
 if __name__ == '__main__':
@@ -367,4 +389,5 @@ if __name__ == '__main__':
     ts.add_test_case(MeterBase())
     ts.add_test_case(MeterPps1Rate())
     ts.add_test_case(MeterPps2Rate())
+    ts.add_test_case(MeterBps2Rate())
     ts.run()
