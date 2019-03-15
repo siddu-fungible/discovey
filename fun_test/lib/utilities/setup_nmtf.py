@@ -44,8 +44,8 @@ def setup_funsdk_repo():
     try:
         if not os.path.exists(SYSTEM_TMP_DIR + "/%s" % FUNSDK):
             git.Git(SYSTEM_TMP_DIR).clone("%s/%s.git" % (GIT_BASE, FUNSDK_REPO))
-            cmd = 'mv %s %s' % (FUNSDK_REPO, FUNSDK)
-            subprocess.call(cmd, shell=True)
+            cmd = 'mv %s/%s %s/%s' % (SYSTEM_TMP_DIR, FUNSDK_REPO, SYSTEM_TMP_DIR, FUNSDK)
+            os.system(cmd)
     except Exception as ex:
         result = False
         fun_test.critical(str(ex))

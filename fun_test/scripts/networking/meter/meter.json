@@ -25,6 +25,18 @@
       "load_type": "FRAMES_PER_SECOND",
       "load": 50
     },
+    "bps_meter_2_rate":{
+      "sport" : 1234,
+      "dport" : 1024,
+      "meter_id" : 2,
+      "meter_interval" : 15,
+      "meter_credit" : 12,
+      "commit_rate" : 127,
+      "commit_burst" : 82,
+      "excess_burst" : 1,
+      "load_type": "MEGABITS_PER_SECOND",
+      "load": 8
+    },
     "pps_meter_2_rate":
       {
       "sport" : 1234,
