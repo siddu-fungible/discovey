@@ -117,7 +117,6 @@ def get_tolerance():
 
 
 def prepare_status(chart, cache_valid, purge_old_status=False):
-    result = {}
     if purge_old_status:
         chart.score_cache_valid = False
         chart.save()
@@ -129,24 +128,17 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
 
     result = {}
 
-    #calculate the from date and to date for fetching the data
-    today = datetime.now(pytz.timezone('US/Pacific'))
-    from_date = chart.base_line_date
-    from_date = from_date.replace(tzinfo=pytz.timezone('US/Pacific'))
-    from_date = get_rounded_time(from_date)
-    yesterday = today  # - timedelta(days=0) # Just use today
-    yesterday = get_rounded_time(yesterday)
-    to_date = yesterday
-
-
     if not chart.score_cache_valid:
         if not chart.leaf:
-            calculate_container_scores(cache_valid=cache_valid, chart=chart, to_date=to_date, purge_old_status=purge_old_status, result=result)
+            calculate_container_scores(cache_valid=cache_valid, chart=chart, purge_old_status=purge_old_status, result=result)
         else:
-            calculate_leaf_scores(cache_valid=cache_valid, chart=chart, from_date=from_date, to_date=to_date, result=result)
+            calculate_leaf_scores(cache_valid=cache_valid, chart=chart, result=result, from_log=False)
 
     else:
-        set_result_dict(result)
+        set_result_dict(result=result)
+        dates = set_from_to_dates(chart=chart)
+        from_date = dates["from_date"]
+        to_date = dates["to_date"]
         date_range = [from_date, to_date]
         entries = MetricChartStatus.objects.filter(date_time__range=date_range,
                                                    chart_name=chart.chart_name,
@@ -171,6 +163,20 @@ def set_result_dict(result):
     result["penultimate_good_score"] = -1
     result["copied_score"] = False
     result["copied_score_disposition"] = 0
+
+def set_from_to_dates(chart):
+    dates = {}
+    # calculate the from date and to date for fetching the data
+    today = datetime.datetime.now(pytz.timezone('US/Pacific'))
+    from_date = chart.base_line_date
+    from_date = from_date.replace(tzinfo=pytz.timezone('US/Pacific'))
+    from_date = get_rounded_time(from_date)
+    yesterday = today  # - timedelta(days=0) # Just use today
+    yesterday = get_rounded_time(yesterday)
+    to_date = yesterday
+    dates["from_date"] = from_date
+    dates["to_date"] = to_date
+    return dates
 
 def set_chart_status_details(chart, result):
     # chart.last_build_status = result["last_build_status"]
@@ -199,12 +205,15 @@ def set_chart_status_details(chart, result):
     chart.save()
 
 def set_local_timezone(current_date):
-    date_time_obj = datetime(year=current_date.year, month=current_date.month, day=current_date.day, hour=current_date.hour, second=current_date.second, minute=current_date.minute)
+    date_time_obj = datetime.datetime(year=current_date.year, month=current_date.month, day=current_date.day, hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
 
-def calculate_leaf_scores(cache_valid, chart, from_date, to_date, result, from_log=False):
+def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     # print "Reached leaf: {}".format(chart.chart_name)
-    set_result_dict(result)
+    set_result_dict(result=result)
+    dates = set_from_to_dates(chart=chart)
+    from_date = dates["from_date"]
+    to_date = dates["to_date"]
     scores = {}
     valid_dates = []
     current_date = get_rounded_time(from_date)
@@ -241,7 +250,7 @@ def calculate_leaf_scores(cache_valid, chart, from_date, to_date, result, from_l
             if len(data_sets):
                 data_set_combined_goodness = 0
                 for data_set in data_sets:
-                    if current_date > get_localized_time(datetime(year=2018, month=8, day=10)):
+                    if current_date > get_localized_time(datetime.datetime(year=2018, month=8, day=10)):
                         j = 0
                     # print "Processing data-set: {}".format(json.dumps(data_set))
                     entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
@@ -274,8 +283,8 @@ def calculate_leaf_scores(cache_valid, chart, from_date, to_date, result, from_l
                         if reference_value is not None:
                             if expected_value != -1:
                                 reference_value = expected_value
-                            reference_value = convert_to_base_unit(output_value=reference_value,
-                                                                   input_unit_value=chart.visualization_unit)
+                            # reference_value = convert_to_base_unit(output_value=reference_value,
+                            #                                        input_unit_value=chart.visualization_unit)
                             if chart.positive:
                                 data_set_combined_goodness += (float(
                                     output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
@@ -327,9 +336,6 @@ def calculate_leaf_scores(cache_valid, chart, from_date, to_date, result, from_l
                             mcs.copied_score_disposition = -1
                     else:
                         mcs.copied_score_disposition = 0
-                # print current_date, scores
-                # print "Chart: {} Date: {} score: {}".format(chart.chart_name, current_date,
-                #                                                     scores[current_date])
                 mcs.save()
             else:
                 if replacement:
@@ -373,8 +379,10 @@ def calculate_leaf_scores(cache_valid, chart, from_date, to_date, result, from_l
                                                                                                       chart.last_build_date)
         set_chart_status_details(chart=chart, result=result)
 
-def calculate_container_scores(chart, purge_old_status, to_date, cache_valid, result):
+def calculate_container_scores(chart, purge_old_status, cache_valid, result):
     set_result_dict(result)
+    dates = set_from_to_dates(chart=chart)
+    to_date = dates["to_date"]
     scores = {}
     valid_dates = []
     children = json.loads(chart.children)
@@ -469,7 +477,7 @@ def convert_to_base_unit(output_value, input_unit_value):
             output_value = float(output_value * 1000000000)
     elif input_unit_value in cycles_category:
         output_value = output_value
-    elif input_unit_value in bandwidth_bits_category:
+    elif input_unit_value in bandwidth_category:
         if input_unit_value == "Gbps":
             output_value = output_value
         elif input_unit_value == "Tbps":
@@ -480,7 +488,6 @@ def convert_to_base_unit(output_value, input_unit_value):
             output_value = float(output_value / 1000000)
         elif input_unit_value == "bps":
             output_value = float(output_value / 1000000000)
-    elif input_unit_value in bandwidth_bytes_category:
         if input_unit_value == "GBps":
             output_value = output_value
         elif input_unit_value == "TBps":
@@ -529,9 +536,9 @@ def convert_to_base_unit(output_value, input_unit_value):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="MovingBits")
-    prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="MovingBits")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
-    # all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
-    # prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
+    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
+    all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
+    prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)

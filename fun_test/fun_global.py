@@ -29,8 +29,7 @@ ops_category = ["ops", "Kops", "Mops", "Gops"]
 operations_category = ["op", "Kop", "Mop", "Gop"]
 cycles_category = ["cycles"]
 bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
-bandwidth_bits_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps"]
-bandwidth_bytes_category = ["Bps", "KBps", "MBps", "GBps", "TBps"]
+bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
 
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())

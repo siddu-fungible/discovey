@@ -134,7 +134,8 @@ def chart_info(request):
                   "owner_info": chart.owner_info,
                   "source": chart.source,
                   "base_line_date": chart.base_line_date,
-                  "visualization_unit": chart.visualization_unit}
+                  "visualization_unit": chart.visualization_unit,
+                  "score_unit": chart.score_unit}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict

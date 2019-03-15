@@ -73,6 +73,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   baseLineDate: string = null;
   visualizationUnit: string = null;
+  scoreUnit: string = null;
+  category: any[] = [];
+
+  latency_category: string[] = ["nsecs", "usecs", "msecs", "secs"];
+  ops_category: string[] = ["ops", "Kops", "Mops", "Gops"];
+  operations_category: string[] = ["op", "Kop", "Mop", "Gop"];
+  cycles_category: string[] = ["cycles"];
+  bits_bytes_category: string[] = ["b", "B", "KB", "MB", "GB", "TB"];
+  bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
 
   public formatter: Function;
   public tooltip: Function;
@@ -288,6 +297,21 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
         this.baseLineDate = String(this.chartInfo.base_line_date);
         this.visualizationUnit = this.chartInfo.visualization_unit;
+        this.scoreUnit = this.chartInfo.score_unit;
+
+        if (this.latency_category.includes(this.visualizationUnit)) {
+          this.category = [...this.latency_category]
+        } else if (this.bandwidth_category.includes(this.visualizationUnit)) {
+          this.category = [...this.bandwidth_category]
+        } else if (this.cycles_category.includes(this.visualizationUnit)) {
+          this.category = [...this.cycles_category]
+        } else if (this.operations_category.includes(this.visualizationUnit)) {
+          this.category = [...this.operations_category]
+        } else if (this.bits_bytes_category.includes(this.visualizationUnit)) {
+          this.category = [...this.bits_bytes_category]
+        } else if (this.ops_category.includes(this.visualizationUnit)) {
+          this.category = [...this.ops_category]
+        }
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -319,6 +343,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.maxDataSet = null;
     this.maxExpected = null;
     this.maxDataPoint = null;
+    this.category = [];
   }
 
   closePointInfo(): void {
@@ -695,6 +720,12 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               let oneRecord = keyValue[j][originalKeyList[startIndex]];
               matchingDateFound = true;
               output = oneRecord[outputName];
+              let unit = outputName + '_unit';
+              let outputUnit = oneRecord[unit];
+              if (outputUnit !== "" && outputUnit !== this.visualizationUnit) {
+                output = this.convertToBaseUnit(outputUnit, output);
+                output = this.convertToVisualizationUnit(output);
+              }
               total += output;
               count++;
               if (chartInfo && chartInfo.y1_axis_title) {
@@ -791,6 +822,81 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.loggerService.error("fetchMetricsData");
     });
     this.status = null;
+  }
+
+  convertToBaseUnit(outputUnit, output): any {
+    if (this.latency_category.includes(outputUnit)) {
+
+    } else if (this.bandwidth_category.includes(outputUnit)) {
+      if (outputUnit === "Kbps") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "Mbps") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "Gbps") {
+        output = output * Math.pow(10, 9);
+      } else if (outputUnit === "Tbps") {
+        output = output * Math.pow(10, 12);
+      } else if (outputUnit === "Bps") {
+        output = output * 8;
+      } else if (outputUnit === "KBps") {
+        output = output * 8 * Math.pow(10, 3);
+      } else if (outputUnit === "MBps") {
+        output = output * 8 * Math.pow(10, 6);
+      } else if (outputUnit === "GBps") {
+        output = output * 8 * Math.pow(10, 9);
+      } else if (outputUnit === "TBps") {
+        output = output * 8 * Math.pow(10, 12);
+      }
+
+    } else if (this.cycles_category.includes(outputUnit)) {
+
+    } else if (this.operations_category.includes(outputUnit)) {
+
+    } else if (this.bits_bytes_category.includes(outputUnit)) {
+
+    } else if (this.ops_category.includes(outputUnit)) {
+
+    }
+
+    return output;
+  }
+
+  convertToVisualizationUnit(output): void {
+    let outputUnit = this.visualizationUnit;
+    if (this.latency_category.includes(outputUnit)) {
+
+    } else if (this.bandwidth_category.includes(outputUnit)) {
+      if (outputUnit === "Kbps") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "Mbps") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "Gbps") {
+        output = output / Math.pow(10, 9);
+      } else if (outputUnit === "Tbps") {
+        output = output / Math.pow(10, 12);
+      } else if (outputUnit === "Bps") {
+        output = output / 8;
+      } else if (outputUnit === "KBps") {
+        output = output / (8 * Math.pow(10, 3));
+      } else if (outputUnit === "MBps") {
+        output = output / (8 * Math.pow(10, 6));
+      } else if (outputUnit === "GBps") {
+        output = output / (8 * Math.pow(10, 9));
+      } else if (outputUnit === "TBps") {
+        output = output / (8 * Math.pow(10, 12));
+      }
+
+    } else if (this.cycles_category.includes(outputUnit)) {
+
+    } else if (this.operations_category.includes(outputUnit)) {
+
+    } else if (this.bits_bytes_category.includes(outputUnit)) {
+
+    } else if (this.ops_category.includes(outputUnit)) {
+
+    }
+
+    return output;
   }
 
   //fetching container data

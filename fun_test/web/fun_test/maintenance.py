@@ -999,5 +999,6 @@ if __name__ == "__main__":
     for entry in entries:
         if entry.leaf:
             entry.visualization_unit = entry.y1_axis_title
+            entry.score_unit = entry.y1_axis_title
             entry.save()
     print "setting viz unit complete"
