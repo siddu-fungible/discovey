@@ -13,7 +13,10 @@ try:
     if emulation_target == 'palladium':
         TB = 'SN2'
     elif emulation_target == 'f1':
-        TB = 'SB5'
+        if str(job_environment['HARDWARE_MODEL']) == 'F1Endpoint':
+            TB = 'FS7'
+        else:
+            TB = 'SB5'
 except KeyError:
     #DPC_PROXY_IP = '10.1.21.120'
     #DPC_PROXY_PORT = 40221
