@@ -162,7 +162,7 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
                                       actual=color_from_snapshot, message="Make sure pkt color is as expected")
     elif acl_action == ACL_ACTION_LOG:
         print snapshot_obj.get_log_from_snapshot(snapshot_output=snapshot_output)
-
+        print network_controller_obj.peek_vp_packets()
 
 class SpirentSetup(FunTestScript):
 
@@ -261,7 +261,7 @@ class AclQosColor(FunTestCase):
         self.l3_config = self.routes_config['l3_config']
         if self.acl_action == ACL_ACTION_COLOR:
             self.acl_fields_dict_qos = acl_json_output['qos_color']
-        elif self.acl_action == ACL_ACTION_COLOR:
+        elif self.acl_action == ACL_ACTION_LOG:
             self.acl_fields_dict_qos = acl_json_output['qos_log']
         checkpoint = "Creating multiple streams on port"
         self.stream_obj_nu_nu = create_streams(tx_port=nu_ing_port,
@@ -338,13 +338,12 @@ class AclQosLog(AclQosColor):
     def describe(self):
         self.set_test_details(id=2, summary="Test QoS ACL for log action for all directions",
                               steps="""
-                                  1. Create Stream on Tx port with defined kbps
-                                  2. Start Traffic for %d secs
+                                  1. Create Stream on Tx port wi
                                   3. Make sure Rx and Tx framecount are equal
                                   4. Make sure Rx and Tx rate are same
                                   5. Make sure packets are seen in expected meter colors
                                   6. Ensure no errors are seen on spirent ports
-                                  """ % TRAFFIC_DURATION)
+                                  """ )
 
     def setup(self):
         super(AclQosLog, self).setup()
@@ -358,6 +357,6 @@ class AclQosLog(AclQosColor):
 
 if __name__ == '__main__':
     ts = SpirentSetup()
-    ts.add_test_case(AclQosColor())
+    # ts.add_test_case(AclQosColor())
     ts.add_test_case(AclQosLog())
     ts.run()
