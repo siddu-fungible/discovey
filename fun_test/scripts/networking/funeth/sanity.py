@@ -17,7 +17,7 @@ try:
             TB = 'FS7'
         else:
             TB = 'SB5'
-except KeyError:
+except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.21.120'
     #DPC_PROXY_PORT = 40221
     #TB = 'SN2'
