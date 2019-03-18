@@ -335,8 +335,11 @@
     "dest_port_ing_nu": 669,
       "dest_port_ing_hnu": 669,
       "dest_port_eg_hnu": 1298,
+      "src_port_eg_nu": 1654,
+      "dest_port_eg_nu": 1655,
       "counter_eg_hnu": 121,
-      "counter_ing_nu": 125
+      "counter_ing_nu": 125,
+      "counter_eg_nu": 89
     }
   }
 }
