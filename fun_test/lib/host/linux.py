@@ -821,7 +821,7 @@ class Linux(object, ToDictMixin):
         cmd = 'sudo {}bash'.format(options_str)
         output = self.command(cmd, custom_prompts={prompt: self.ssh_password, mac_prompt: self.ssh_password})
         result = True
-        if "command not found" in output:
+        if "not found" in output:
             result = False
         return result
 
