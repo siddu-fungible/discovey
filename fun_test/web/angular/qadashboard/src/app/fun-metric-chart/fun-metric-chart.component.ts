@@ -83,6 +83,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   cycles_category: string[] = ["cycles"];
   bits_bytes_category: string[] = ["b", "B", "KB", "MB", "GB", "TB"];
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
+  packets_per_second_category: string[] = ["Mpps"];
 
   public formatter: Function;
   public tooltip: Function;
@@ -300,17 +301,19 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.visualizationUnit = this.chartInfo.visualization_unit;
 
         if (this.latency_category.includes(this.visualizationUnit)) {
-          this.category = [...this.latency_category]
+          this.category = [...this.latency_category];
         } else if (this.bandwidth_category.includes(this.visualizationUnit)) {
-          this.category = [...this.bandwidth_category]
+          this.category = [...this.bandwidth_category];
         } else if (this.cycles_category.includes(this.visualizationUnit)) {
-          this.category = [...this.cycles_category]
+          this.category = [...this.cycles_category];
         } else if (this.operations_category.includes(this.visualizationUnit)) {
-          this.category = [...this.operations_category]
+          this.category = [...this.operations_category];
         } else if (this.bits_bytes_category.includes(this.visualizationUnit)) {
-          this.category = [...this.bits_bytes_category]
+          this.category = [...this.bits_bytes_category];
         } else if (this.ops_category.includes(this.visualizationUnit)) {
-          this.category = [...this.ops_category]
+          this.category = [...this.ops_category];
+        } else if (this.packets_per_second_category.includes(this.visualizationUnit)) {
+          this.category = [...this.packets_per_second_category];
         }
         this.selectedUnit = this.visualizationUnit;
       }

@@ -1896,7 +1896,7 @@ if __name__ == "__main__":
     # myscript.add_test_case(TeraMarkZipPerformanceTC())
     # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
     # myscript.add_test_case(TeraMarkJpegPerformanceTC())
-    # myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
     # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
     # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
     # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())

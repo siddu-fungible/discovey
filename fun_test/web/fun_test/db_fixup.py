@@ -283,7 +283,10 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                 "output"] else None  # reference is set in fixup_reference_values
                         get_first_record(model=model, data_set=data_set)
                         output_value = getattr(this_days_record, output_name)
-                        output_unit = getattr(this_days_record, output_unit)
+                        if hasattr(this_days_record, output_unit):
+                            output_unit = getattr(this_days_record, output_unit)
+                        else:
+                            output_unit = None
                         output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
                         expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
 
@@ -473,63 +476,64 @@ def calculate_container_scores(chart, purge_old_status, cache_valid, result):
     set_chart_status_details(chart=chart, result=result)
 
 def convert_to_base_unit(output_value, output_unit):
-    if output_unit in latency_category:
-        if output_unit == "usecs":
-            output_value = float(output_value * math.pow(10, 3))
-        elif output_unit == "msecs":
-            output_value = float(output_value * math.pow(10, 6))
-        elif output_unit == "secs":
-            output_value = float(output_value * math.pow(10, 9))
-    elif output_unit in bandwidth_category:
-        if output_unit == "Gbps":
-            output_value = float(output_value * math.pow(10, 9))
-        elif output_unit == "Tbps":
-            output_value = float(output_value * math.pow(10, 12))
-        elif output_unit == "Mbps":
-            output_value = float(output_value * math.pow(10, 6))
-        elif output_unit == "Kbps":
-            output_value = float(output_value * math.pow(10, 3))
-        if output_unit == "GBps":
-            output_value = float(output_value * 8 * math.pow(10, 9))
-        elif output_unit == "TBps":
-            output_value = float(output_value * 8 * math.pow(10, 12))
-        elif output_unit == "MBps":
-            output_value = float(output_value * 8 * math.pow(10, 6))
-        elif output_unit == "KBps":
-            output_value = float(output_value * 8 * math.pow(10, 3))
-        elif output_unit == "Bps":
-            output_value = float(output_value * 8)
-    elif output_unit in bits_bytes_category:
-        if output_unit == "GB":
-            output_value = float(output_value * 8 * math.pow(10, 9))
-        elif output_unit == "B":
-            output_value = float(output_value * 8)
-        elif output_unit == "KB":
-            output_value = float(output_value * 8 * math.pow(10, 3))
-        elif output_unit == "MB":
-            output_value = float(output_value * 8 * math.pow(10, 6))
-        elif output_unit == "TB":
-            output_value = float(output_value * 8 * math.pow(10, 12))
-    elif output_unit in ops_category:
-        if output_unit == "Kops":
-            output_value = float(output_value * math.pow(10, 3))
-        elif output_unit == "Mops":
-            output_value = float(output_value * math.pow(10, 6))
-        elif output_unit == "Gops":
-            output_value = float(output_value * math.pow(10, 9))
-    elif output_unit in operations_category:
-        if output_unit == "Kop":
-            output_value = float(output_value * math.pow(10, 3))
-        elif output_unit == "Mop":
-            output_value = float(output_value * math.pow(10, 6))
-        elif output_unit == "Gop":
-            output_value = float(output_value * math.pow(10, 9))
+    if output_unit:
+        if output_unit in latency_category:
+            if output_unit == "usecs":
+                output_value = float(output_value * math.pow(10, 3))
+            elif output_unit == "msecs":
+                output_value = float(output_value * math.pow(10, 6))
+            elif output_unit == "secs":
+                output_value = float(output_value * math.pow(10, 9))
+        elif output_unit in bandwidth_category:
+            if output_unit == "Gbps":
+                output_value = float(output_value * math.pow(10, 9))
+            elif output_unit == "Tbps":
+                output_value = float(output_value * math.pow(10, 12))
+            elif output_unit == "Mbps":
+                output_value = float(output_value * math.pow(10, 6))
+            elif output_unit == "Kbps":
+                output_value = float(output_value * math.pow(10, 3))
+            if output_unit == "GBps":
+                output_value = float(output_value * 8 * math.pow(10, 9))
+            elif output_unit == "TBps":
+                output_value = float(output_value * 8 * math.pow(10, 12))
+            elif output_unit == "MBps":
+                output_value = float(output_value * 8 * math.pow(10, 6))
+            elif output_unit == "KBps":
+                output_value = float(output_value * 8 * math.pow(10, 3))
+            elif output_unit == "Bps":
+                output_value = float(output_value * 8)
+        elif output_unit in bits_bytes_category:
+            if output_unit == "GB":
+                output_value = float(output_value * 8 * math.pow(10, 9))
+            elif output_unit == "B":
+                output_value = float(output_value * 8)
+            elif output_unit == "KB":
+                output_value = float(output_value * 8 * math.pow(10, 3))
+            elif output_unit == "MB":
+                output_value = float(output_value * 8 * math.pow(10, 6))
+            elif output_unit == "TB":
+                output_value = float(output_value * 8 * math.pow(10, 12))
+        elif output_unit in ops_category:
+            if output_unit == "Kops":
+                output_value = float(output_value * math.pow(10, 3))
+            elif output_unit == "Mops":
+                output_value = float(output_value * math.pow(10, 6))
+            elif output_unit == "Gops":
+                output_value = float(output_value * math.pow(10, 9))
+        elif output_unit in operations_category:
+            if output_unit == "Kop":
+                output_value = float(output_value * math.pow(10, 3))
+            elif output_unit == "Mop":
+                output_value = float(output_value * math.pow(10, 6))
+            elif output_unit == "Gop":
+                output_value = float(output_value * math.pow(10, 9))
     return output_value
 
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="MovingBits")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="NU->HNU NFCP Flow")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
