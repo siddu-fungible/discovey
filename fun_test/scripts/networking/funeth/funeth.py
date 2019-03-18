@@ -9,7 +9,7 @@ from time import asctime
 class Funeth:
     """Funeth driver class"""
 
-    def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, ws='/mnt/workspace'):
+    def __init__(self, tb_config_obj, funos_branch=None, fundrv_branch=None, funsdk_branch=None, ws='/mnt/ws'):
         self.tb_config_obj = tb_config_obj
         self.linux_obj_dict = {}
         for nu_or_hu in ('nu', 'hu'):
@@ -93,7 +93,7 @@ class Funeth:
         if self.funos_branch:
             self.linux_obj_dict['hu'].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-        output = self.linux_obj_dict['hu'].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir))
+        output = self.linux_obj_dict['hu'].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=180)
         return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
     def load(self, sriov=0, cc=False, debug=False):

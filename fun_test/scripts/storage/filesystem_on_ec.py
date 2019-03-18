@@ -211,27 +211,30 @@ class FSOnECTestcase(FunTestCase):
         tmp = int(round(self.ec_info["attach_size"] * self.dataset_size_pct))
         self.input_file_size = ((tmp + self.lsv_chunk_size_in_bytes - 1) / self.lsv_chunk_size_in_bytes) * \
                                self.lsv_chunk_size_in_bytes
+        # Capping the input file size to max_dataset_size size
+        if self.input_file_size > self.max_dataset_size:
+            self.input_file_size = self.max_dataset_size
 
         # Calculate the block size and count options of dd command based on the stripe size(number of data volumes)
         # and the total file size
         self.dd_write_args["block_size"] = self.ec_info["volume_block"]["ndata"] * self.ec_info["ndata"]
         self.dd_write_args["count"] = self.input_file_size / self.dd_write_args["block_size"]
-        io_timeout = self.dd_write_args["count"] / self.test_timeout_ratio
-        if io_timeout < 60:
-            io_timeout = 60
+        self.io_timeout = self.dd_write_args["count"] / self.test_timeout_ratio
+        if self.io_timeout < self.test_min_timeeout:
+            self.io_timeout = self.test_min_timeeout
 
         # Write a file into the EC volume of size self.input_file_size bytes
-        return_size = self.host.dd(timeout=io_timeout, sudo=True, **self.dd_write_args)
+        return_size = self.host.dd(timeout=self.io_timeout, sudo=True, **self.dd_write_args)
         fun_test.test_assert_expected(self.input_file_size, return_size, "Writing {} bytes file into the EC volume".
                                       format(self.input_file_size))
-        self.input_md5sum = self.host.md5sum(file_name=self.dd_write_args["output_file"], timeout=io_timeout)
+        self.input_md5sum = self.host.md5sum(file_name=self.dd_write_args["output_file"], timeout=self.io_timeout)
         fun_test.test_assert(self.input_md5sum, "Finding md5sum of input file {}".
                              format(self.dd_write_args["output_file"]))
         # If the testcase is a buffered I/O then flush the kernel buffers/pages after the write operation, so that
         # the entire file will be flushed to the underlying volume
         if "oflag" not in self.dd_write_args:
-            self.host.sudo_command("sync", timeout=io_timeout)
-            self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=io_timeout)
+            self.host.sudo_command("sync", timeout=self.io_timeout)
+            self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=self.io_timeout)
 
     def do_read_test(self, ndata, nparity):
 
@@ -239,18 +242,18 @@ class FSOnECTestcase(FunTestCase):
         # and the total file size
         self.dd_read_args["block_size"] = self.ec_info["volume_block"]["ndata"] * self.ec_info["ndata"]
         self.dd_read_args["count"] = self.input_file_size / self.dd_read_args["block_size"]
-        io_timeout = self.dd_read_args["count"] / self.test_timeout_ratio
-        if io_timeout < 60:
-            io_timeout = 60
+        self.io_timeout = self.dd_read_args["count"] / self.test_timeout_ratio
+        if self.io_timeout < self.test_min_timeeout:
+            self.io_timeout = self.test_min_timeeout
 
         # If the testcase is a buffered I/O then flush the kernel buffers/pages before the readoperation, so that
         # the entire file will be read from the underlying volume
         if "iflag" not in self.dd_read_args:
-            self.host.sudo_command("sync", timeout=io_timeout)
-            self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=io_timeout)
+            self.host.sudo_command("sync", timeout=self.io_timeout)
+            self.host.sudo_command("echo 3 >/proc/sys/vm/drop_caches", timeout=self.io_timeout)
 
         # Read the previously written file from the EC volume and calculate the md5sum of the same
-        return_size = self.host.dd(timeout=io_timeout, sudo=True, **self.dd_read_args)
+        return_size = self.host.dd(timeout=self.io_timeout, sudo=True, **self.dd_read_args)
         fun_test.test_assert_expected(self.input_file_size, return_size, "Reading {} bytes file into the EC volume".
                                       format(self.input_file_size))
         self.output_md5sum = self.host.md5sum(file_name=self.dd_read_args["output_file"])

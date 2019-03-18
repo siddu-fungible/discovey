@@ -2094,15 +2094,15 @@ class Linux(object, ToDictMixin):
         """
         result = None
         if re.search(r'\d+\.\d+\.\d+\.\d+', self.host_ip):
-            result = self.host_ip
+            ip_addr = self.host_ip
         else:
-            result = self.nslookup(self.host_ip)
-            if result:
-                ip_addr = result['ip_address']
-                output = self.command('ip address show | grep {} -A2 -B2'.format(ip_addr))
-                match2 = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(ip_addr), output, re.DOTALL)
-                if match2:
-                    result = match2.group(1)
+            r = self.nslookup(self.host_ip)
+            if r:
+                ip_addr = r['ip_address']
+        output = self.command('ip address show | grep {} -A2 -B2'.format(ip_addr))
+        match = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(ip_addr), output, re.DOTALL)
+        if match:
+            result = match.group(1)
 
         return result
 

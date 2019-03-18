@@ -15,9 +15,12 @@ try:
     elif emulation_target == 'f1':
         TB = 'SB5'
 except KeyError:
-    DPC_PROXY_IP = '10.1.21.120'
-    DPC_PROXY_PORT = 40221
-    TB = 'SN2'
+    #DPC_PROXY_IP = '10.1.21.120'
+    #DPC_PROXY_PORT = 40221
+    #TB = 'SN2'
+    DPC_PROXY_IP = '10.1.20.129'
+    DPC_PROXY_PORT = 40220
+    TB = 'FS7'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
@@ -29,6 +32,7 @@ def setup_nu_host(funeth_obj):
 
 def setup_hu_host(funeth_obj, update_driver=True):
     if update_driver:
+        funeth_obj.setup_workspace()
         fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
@@ -53,7 +57,6 @@ class FunethSanity(FunTestScript):
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
-        funeth_obj.setup_workspace()
 
         # NU host
         setup_nu_host(funeth_obj)
@@ -71,11 +74,14 @@ class FunethSanity(FunTestScript):
 
 
 def collect_stats():
-    network_controller_obj = fun_test.shared_variables['network_controller_obj']
-    network_controller_obj.peek_fpg_port_stats(port_num=0)
-    network_controller_obj.peek_fpg_port_stats(port_num=1)
-    network_controller_obj.peek_psw_global_stats()
-    network_controller_obj.peek_vp_packets()
+    try:
+        network_controller_obj = fun_test.shared_variables['network_controller_obj']
+        network_controller_obj.peek_fpg_port_stats(port_num=0)
+        network_controller_obj.peek_fpg_port_stats(port_num=1)
+        network_controller_obj.peek_psw_global_stats()
+        network_controller_obj.peek_vp_packets()
+    except:
+        pass
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[]):

@@ -20,6 +20,8 @@ class IPerfManager:
             # Install linuxptp package
             for pkg in ('linuxptp',):
                 result &= linux_obj.install_package(pkg)
+                if not result:
+                    break
 
             # Start ptp4l for PTP clock, and phy2c for sync system clock to PTP clock
             if (linux_obj.get_process_id_by_pattern('ptp4l') is None or
@@ -32,15 +34,21 @@ class IPerfManager:
                     linux_obj.sudo_command(cmd)
                 result &= (linux_obj.get_process_id_by_pattern('ptp4l') is not None) & (
                     linux_obj.get_process_id_by_pattern('phc2sys') is not None)
+                if not result:
+                    break
 
             # Install iperf/iperf3 and start server mode
             for pkg in ('iperf', 'iperf3'):
                 result &= linux_obj.install_package(pkg)
+                if not result:
+                    break
                 if linux_obj.get_process_id_by_pattern(pkg) is None:
                     linux_obj.command('{} -sD'.format(pkg))
                     for ns in linux_obj.get_namespaces():
                         linux_obj.sudo_command('ip netns exec {} {} -sD'.format(ns, pkg))
                     result &= linux_obj.get_process_id_by_pattern(pkg) is not None
+                    if not result:
+                        break
 
             # Install perfsonar-tools for owampd and owping
             for pkg in ('perfsonar-tools',):
@@ -51,6 +59,8 @@ class IPerfManager:
                 )
                 linux_obj.sudo_command(';'.join(cmds))
                 result &= linux_obj.install_package(pkg)
+                if not result:
+                    break
 
             # Start owampd server
             if linux_obj.get_process_id_by_pattern('owampd') is None:
@@ -59,6 +69,8 @@ class IPerfManager:
                 for ns in linux_obj.get_namespaces():
                     linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
                 result &= linux_obj.get_process_id_by_pattern('owampd') is not None
+                if not result:
+                    break
 
             # Install netperf
             for pkg in ('netperf',):
@@ -69,6 +81,8 @@ class IPerfManager:
                     )
                     linux_obj.sudo_command(';'.join(cmds))
                     result &= linux_obj.check_package(pkg)
+                    if not result:
+                        break
 
             # Start netserver
             if linux_obj.get_process_id_by_pattern('netserveer') is None:
@@ -77,6 +91,8 @@ class IPerfManager:
                 for ns in linux_obj.get_namespaces():
                     linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
                 result &= linux_obj.get_process_id_by_pattern('owampd') is not None
+                if not result:
+                    break
 
         fun_test.sleep("Waiting for PTP clock sync", seconds=10)
 
@@ -416,7 +432,7 @@ def do_test(linux_obj, dip, tool='iperf3', protocol='udp', parallel=1, duration=
         elif protocol.lower() == 'tcp':
             t = 'TCP_STREAM'
             send_size = frame_size-18-20-20
-        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -m {} -j -- -k "MIN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT"'.format(t, dip, duration, send_size)
+        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
         output = linux_obj.command(cmd, timeout=duration+30)
         pat = r'MIN_LATENCY=(\d+).*?P50_LATENCY=(\d+).*?P90_LATENCY=(\d+).*?P99_LATENCY=(\d+).*?MAX_LATENCY=(\d+).*?THROUGHPUT=(\d+)'
         match = re.search(pat, output, re.DOTALL)
