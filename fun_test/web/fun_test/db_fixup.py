@@ -467,9 +467,7 @@ def calculate_container_scores(chart, purge_old_status, cache_valid, result):
 
 def convert_to_base_unit(output_value, output_unit):
     if output_unit in latency_category:
-        if output_unit == "nsecs":
-            output_value = output_value
-        elif output_unit == "usecs":
+        if output_unit == "usecs":
             output_value = float(output_value * math.pow(10, 3))
         elif output_unit == "msecs":
             output_value = float(output_value * math.pow(10, 6))
@@ -484,8 +482,6 @@ def convert_to_base_unit(output_value, output_unit):
             output_value = float(output_value * math.pow(10, 6))
         elif output_unit == "Kbps":
             output_value = float(output_value * math.pow(10, 3))
-        elif output_unit == "bps":
-            output_value = output_value
         if output_unit == "GBps":
             output_value = float(output_value * 8 * math.pow(10, 9))
         elif output_unit == "TBps":
