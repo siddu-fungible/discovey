@@ -13,14 +13,17 @@ try:
     if emulation_target == 'palladium':
         TB = 'SN2'
     elif emulation_target == 'f1':
-        TB = 'SB5'
-except KeyError:
+        if str(job_environment['HARDWARE_MODEL']) == 'F1Endpoint':
+            TB = 'FS5'
+        else:
+            TB = 'SB5'
+except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.21.120'
     #DPC_PROXY_PORT = 40221
     #TB = 'SN2'
     DPC_PROXY_IP = '10.1.20.129'
     DPC_PROXY_PORT = 40220
-    TB = 'FS7'
+    TB = 'FS5'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
