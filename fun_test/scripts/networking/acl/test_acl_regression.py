@@ -259,7 +259,10 @@ class AclQosColor(FunTestCase):
     def setup(self):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
-        self.acl_fields_dict_qos = acl_json_output['qos_color']
+        if self.acl_action == ACL_ACTION_COLOR:
+            self.acl_fields_dict_qos = acl_json_output['qos_color']
+        elif self.acl_action == ACL_ACTION_COLOR:
+            self.acl_fields_dict_qos = acl_json_output['qos_log']
         checkpoint = "Creating multiple streams on port"
         self.stream_obj_nu_nu = create_streams(tx_port=nu_ing_port,
                                                dmac=self.routes_config['routermac'],
@@ -356,4 +359,5 @@ class AclQosLog(AclQosColor):
 if __name__ == '__main__':
     ts = SpirentSetup()
     ts.add_test_case(AclQosColor())
+    ts.add_test_case(AclQosLog())
     ts.run()
