@@ -1018,6 +1018,5 @@ if __name__ == "__main__":
                 entry.y1_axis_title = "Kops"
             entry.save()
             entry.visualization_unit = entry.y1_axis_title
-            entry.score_unit = entry.y1_axis_title
             entry.save()
     print "setting y1axis title, score and viz unit complete"

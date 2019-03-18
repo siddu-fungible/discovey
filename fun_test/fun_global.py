@@ -24,12 +24,6 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
 
-latency_category = ["nsecs", "usecs", "msecs", "secs"]
-ops_category = ["ops", "Kops", "Mops", "Gops"]
-operations_category = ["op", "Kop", "Mop", "Gop"]
-cycles_category = ["cycles"]
-bits_bytes_category = ["b", "B", "KB", "MB", "GB", "TB"]
-bandwidth_category = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"]
 
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())

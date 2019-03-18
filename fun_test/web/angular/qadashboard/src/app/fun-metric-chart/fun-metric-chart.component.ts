@@ -74,7 +74,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   baseLineDate: string = null;
   visualizationUnit: string = null;
-  scoreUnit: string = null;
   selectedUnit: string = null;
   category: any[] = [];
 
@@ -299,7 +298,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
         this.baseLineDate = String(this.chartInfo.base_line_date);
         this.visualizationUnit = this.chartInfo.visualization_unit;
-        this.scoreUnit = this.chartInfo.score_unit;
 
         if (this.latency_category.includes(this.visualizationUnit)) {
           this.category = [...this.latency_category]
