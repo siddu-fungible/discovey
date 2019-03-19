@@ -90,7 +90,7 @@ class IPerfManager:
                 linux_obj.sudo_command(cmd)
                 for ns in linux_obj.get_namespaces():
                     linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
-                result &= linux_obj.get_process_id_by_pattern('owampd') is not None
+                result &= linux_obj.get_process_id_by_pattern('netserver') is not None
                 if not result:
                     break
 
