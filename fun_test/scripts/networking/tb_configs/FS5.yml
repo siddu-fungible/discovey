@@ -20,13 +20,13 @@ nu:
           ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
-          nexthop: 19.1.1.2
+          nexthop: 21.1.1.2
         - prefix: 53.1.2.0/24
-          nexthop: 19.1.1.2
+          nexthop: 21.1.1.2
         - prefix: 53.1.9.0/24
-          nexthop: 19.1.1.2
+          nexthop: 21.1.1.2
         - prefix: 53.1.10.0/24
-          nexthop: 19.1.1.2
+          nexthop: 21.1.1.2
 
 # HU host
 hu:
