@@ -984,7 +984,7 @@ if __name__ == "__main_compression__":
                 entry.save()
                 print (entry.chart_name, str(entry.base_line_date))
 
-if __name__ == "__main__":
+if __name__ == "__main_ec_perf__":
     entries = MetricChart.objects.all()
     for entry in entries:
         if entry.chart_name == "EC 8:4 Throughput":
@@ -1004,3 +1004,5 @@ if __name__ == "__main__":
             entry.output_recovery_throughput_avg = entry.output_recovery_throughput_avg / 1000
             entry.save()
             print "updated"
+
+
