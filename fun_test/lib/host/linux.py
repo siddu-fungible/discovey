@@ -308,6 +308,8 @@ class Linux(object, ToDictMixin):
             if not self._set_paths():
                 raise Exception("Unable to set paths")
             result = True
+        else:
+            self.handle = None
         return result
 
     def _set_term_settings(self):
@@ -613,8 +615,10 @@ class Linux(object, ToDictMixin):
         return pid
 
     @fun_test.safe
-    def get_process_id_by_pattern(self, process_pat):
+    def get_process_id_by_pattern(self, process_pat, multiple=False):
+        result = None
         pid = None
+        pids = []
         command = "ps -ef | grep '" + process_pat + "'| grep -v grep"
         try:
             output = self.command(command)
@@ -623,14 +627,19 @@ class Linux(object, ToDictMixin):
                 output = output.split('\n')
                 # If the output contains 2 lines, then the process matching the given pattern exists
                 if len(output) >= 1:
-                    # Extracting the pid of the process matched the given pattern
-                    pid = output[0].split()[1]
+                    if not multiple:
+                        # Extracting the pid of the process matched the given pattern
+                        pid = output[0].split()[1]
+                        result = pid
+                    else:
+                        pids = [x.split()[1] for x in output]
+                        result = pids
         except Exception as ex:
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
 
-        return pid
+        return result
 
     @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, sudo=False, **kwargs):
