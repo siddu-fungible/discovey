@@ -74,8 +74,25 @@
             "leaf": false,
             "name": "NU_HNU",
             "weight": 1,
-            "label": " NU->HNU NFCP Flow",
-            "reference": true
+            "label": "NU->HNU NFCP Flow",
+            "children": [
+              {
+                "info": "NU_HNU_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU_HNU_output_throughput",
+                "weight": 1,
+                "label": "Extrapolated Throughput"
+              },
+              {
+                "info": "NU_HNU_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU_HNU_output_pps",
+                "weight": 1,
+                "label": "Extrapolated Packets per sec"
+              }
+            ]
           },
           {
             "info": "HNU_HNU_FCP",
@@ -83,8 +100,25 @@
             "leaf": false,
             "name": "HNU_HNU_FCP",
             "weight": 1,
-            "label": "HNU->HNU FCP Flow",
-            "reference": true
+            "label": "HNU<->HNU FCP Flow",
+            "children": [
+              {
+                "info": "HNU_HNU_FCP_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HNU_HNU_FCP_output_throughput",
+                "weight": 1,
+                "label": "Extrapolated Throughput"
+              },
+              {
+                "info": "HNU_HNU_FCP_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HNU_HNU_FCP_output_pps",
+                "weight": 1,
+                "label": "Extrapolated Packets per sec"
+              }
+            ]
           },
           {
             "info": "HNU_HNU",
@@ -92,8 +126,25 @@
             "leaf": false,
             "name": "HNU_HNU",
             "weight": 1,
-            "label": "HNU->HNU NFCP Flow",
-            "reference": true
+            "label": "HNU<->HNU NFCP Flow",
+            "children": [
+              {
+                "info": "HNU_HNU_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HNU_HNU_output_throughput",
+                "weight": 1,
+                "label": "Extrapolated Throughput"
+              },
+              {
+                "info": "HNU_HNU_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HNU_HNU_output_pps",
+                "weight": 1,
+                "label": "Extrapolated Packets per sec"
+              }
+            ]
           },
           {
             "info": "NU_NU",
@@ -101,8 +152,25 @@
             "leaf": false,
             "name": "NU_NU",
             "weight": 1,
-            "label": "NU->NU NFCP Flow",
-            "reference": true
+            "label": "NU->NU NFCP",
+            "children": [
+              {
+                "info": "NU_NU_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU_NU_output_throughput",
+                "weight": 1,
+                "label": "Extrapolated Throughput"
+              },
+              {
+                "info": "NU_NU_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU_NU_output_pps",
+                "weight": 1,
+                "label": "Extrapolated Packets per sec"
+              }
+            ]
           },
           {
             "info": "HNU_NU",
@@ -111,7 +179,24 @@
             "name": "HNU_NU",
             "weight": 1,
             "label": "HNU->NU NFCP Flow",
-            "reference": true
+            "children": [
+              {
+                "info": "HNU_NU_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HNU_NU_output_throughput",
+                "weight": 1,
+                "label": "Extrapolated Throughput"
+              },
+              {
+                "info": "HNU_NU_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HNU_NU_output_pps",
+                "weight": 1,
+                "label": "Extrapolated Packets per sec"
+              }
+            ]
           },
           {
             "info": "HU_NU_NFCP",
@@ -119,8 +204,25 @@
             "leaf": false,
             "name": "HU_NU_NFCP",
             "weight": 1,
-            "label": "HU->NU NFCP Flow",
-            "reference": true
+            "label": "Host->DPU->NU",
+            "children": [
+              {
+                "info": "HU_NU_NFCP_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_NU_NFCP_output_throughput",
+                "weight": 1,
+                "label": "Extrapolated Throughput"
+              },
+              {
+                "info": "HU_NU_NFCP_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_NU_NFCP_output_pps",
+                "weight": 1,
+                "label": "Extrapolated Packets per sec"
+              }
+            ]
           },
           {
             "info": "HU_HU_NFCP",
@@ -128,8 +230,25 @@
             "leaf": false,
             "name": "HU_HU_NFCP",
             "weight": 1,
-            "label": "HU->HU NFCP Flow",
-            "reference": true
+            "label": "Host<->DPU<->DPU<->Host (NFCP)",
+            "children": [
+              {
+                "info": "HU_HU_NFCP_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_HU_NFCP_output_throughput",
+                "weight": 1,
+                "label": "Extrapolated Throughput"
+              },
+              {
+                "info": "HU_HU_NFCP_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_HU_NFCP_output_pps",
+                "weight": 1,
+                "label": "Extrapolated Packets per sec"
+              }
+            ]
           },
           {
             "info": "NU_HU_NFCP",
@@ -137,8 +256,25 @@
             "leaf": false,
             "name": "NU_HU_NFCP",
             "weight": 1,
-            "label": "NU->HU NFCP Flow",
-            "reference": true
+            "label": "NU->DPU->Host",
+            "children": [
+              {
+                "info": "NU_HU_NFCP_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU_HU_NFCP_output_throughput",
+                "weight": 1,
+                "label": "Extrapolated Throughput"
+              },
+              {
+                "info": "NU_HU_NFCP_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU_HU_NFCP_output_pps",
+                "weight": 1,
+                "label": "Extrapolated Packets per sec"
+              }
+            ]
           }
         ],
         "weight": 1
@@ -1390,90 +1526,12 @@
             "label": "Networking",
             "children": [
               {
-                "info": "NU_HNU",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "NU_HNU",
-                "weight": 1,
-                "label": "NU->HNU NFCP Flow",
-                "children": [
-                  {
-                    "info": "NU_HNU_output_throughput",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_HNU_output_throughput",
-                    "weight": 1,
-                    "label": "Extrapolated Throughput"
-                  },
-                  {
-                    "info": "NU_HNU_output_pps",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "NU_HNU_output_pps",
-                    "weight": 1,
-                    "label": "Extrapolated Packets per sec"
-                  }
-                ]
-              },
-              {
-                "info": "HNU_HNU_FCP",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "HNU_HNU_FCP",
-                "weight": 1,
-                "label": "HNU<->HNU FCP Flow",
-                "children": [
-                  {
-                    "info": "HNU_HNU_FCP_output_throughput",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_HNU_FCP_output_throughput",
-                    "weight": 1,
-                    "label": "Extrapolated Throughput"
-                  },
-                  {
-                    "info": "HNU_HNU_FCP_output_pps",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_HNU_FCP_output_pps",
-                    "weight": 1,
-                    "label": "Extrapolated Packets per sec"
-                  }
-                ]
-              },
-              {
-                "info": "HNU_HNU",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "HNU_HNU",
-                "weight": 1,
-                "label": "HNU<->HNU NFCP Flow",
-                "children": [
-                  {
-                    "info": "HNU_HNU_output_throughput",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_HNU_output_throughput",
-                    "weight": 1,
-                    "label": "Extrapolated Throughput"
-                  },
-                  {
-                    "info": "HNU_HNU_output_pps",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_HNU_output_pps",
-                    "weight": 1,
-                    "label": "Extrapolated Packets per sec"
-                  }
-                ]
-              },
-              {
                 "info": "NU_NU",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
                 "name": "NU_NU",
                 "weight": 1,
-                "label": "NU->NU NFCP Flow",
+                "label": "NU->NU NFCP",
                 "children": [
                   {
                     "info": "NU_NU_output_throughput",
@@ -1494,38 +1552,12 @@
                 ]
               },
               {
-                "info": "HNU_NU",
-                "metric_model_name": "MetricContainer",
-                "leaf": false,
-                "name": "HNU_NU",
-                "weight": 1,
-                "label": "HNU->NU NFCP Flow",
-                "children": [
-                  {
-                    "info": "HNU_NU_output_throughput",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_NU_output_throughput",
-                    "weight": 1,
-                    "label": "Extrapolated Throughput"
-                  },
-                  {
-                    "info": "HNU_NU_output_pps",
-                    "metric_model_name": "NuTransitPerformance",
-                    "leaf": true,
-                    "name": "HNU_NU_output_pps",
-                    "weight": 1,
-                    "label": "Extrapolated Packets per sec"
-                  }
-                ]
-              },
-              {
                 "info": "HU_NU_NFCP",
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
                 "name": "HU_NU_NFCP",
                 "weight": 1,
-                "label": "HU->NU NFCP Flow",
+                "label": "Host->DPU->NU",
                 "children": [
                   {
                     "info": "HU_NU_NFCP_output_throughput",
@@ -1551,7 +1583,7 @@
                 "leaf": false,
                 "name": "HU_HU_NFCP",
                 "weight": 1,
-                "label": "HU<->HU NFCP Flow",
+                "label": "Host<->DPU<->DPU<->Host (NFCP)",
                 "children": [
                   {
                     "info": "HU_HU_NFCP_output_throughput",
@@ -1577,7 +1609,7 @@
                 "leaf": false,
                 "name": "NU_HU_NFCP",
                 "weight": 1,
-                "label": "NU->HU NFCP Flow",
+                "label": "NU->DPU->Host",
                 "children": [
                   {
                     "info": "NU_HU_NFCP_output_throughput",
