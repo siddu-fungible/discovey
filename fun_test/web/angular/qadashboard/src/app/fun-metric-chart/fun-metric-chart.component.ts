@@ -754,7 +754,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         let output = {};
         output["name"] = name;
         output["value"] = expected;
-        output["unit"] = this.chart1YaxisTitle;
+        output["unit"] = this.visualizationUnit;
         output["show"] = false;
         if (!this.showSelect && output["value"] !== -1) {
           this.showSelect = true;

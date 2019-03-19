@@ -294,8 +294,9 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                         if reference_value is not None:
                             if expected_value != -1:
                                 reference_value = expected_value
-                            reference_value = convert_to_base_unit(output_value=reference_value,
-                                                                  output_unit=chart.visualization_unit)
+                            if output_unit:
+                                reference_value = convert_to_base_unit(output_value=reference_value,
+                                                                    output_unit=chart.visualization_unit)
                             if chart.positive:
                                 data_set_combined_goodness += (float(
                                     output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
@@ -533,9 +534,9 @@ def convert_to_base_unit(output_value, output_unit):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="NU->HNU NFCP Flow")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="HNU->NU NFCP Flow")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
-    prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
+    prepare_status(chart=total_chart, purge_old_status=False, cache_valid=True)
     all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
-    prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
+    prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=True)

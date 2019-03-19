@@ -676,14 +676,14 @@ class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     average_json = json.loads(m.group("average_json"))
                     output_average = int(average_json["value"])
-                    input_unit = average_json["unit"]
+                    unit = average_json["unit"]
                     input_app = "dispatch_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_average"] = output_average
-                    metrics["output_average_unit"] = input_unit
+                    metrics["output_average_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=WuDispatchTestPerformance).add_entry(**d)
 
@@ -719,14 +719,14 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     average_json = json.loads(m.group("average_json"))
                     output_average = int(average_json["value"])
-                    input_unit = average_json["unit"]
+                    unit = average_json["unit"]
                     input_app = "wu_send_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_average"] = output_average
-                    metrics["output_average_unit"] = input_unit
+                    metrics["output_average_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=WuSendSpeedTestPerformance).add_entry(**d)
 
@@ -803,14 +803,14 @@ class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     average_json = json.loads(m.group("average_json"))
                     output_average = int(average_json["value"])
-                    input_unit = average_json["unit"]
+                    unit = average_json["unit"]
                     input_app = "wustack_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_average"] = output_average
-                    metrics["output_average_unit"] = input_unit
+                    metrics["output_average_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=WuStackSpeedTestPerformance).add_entry(**d)
 
@@ -845,14 +845,14 @@ class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "soak_malloc_fun_malloc"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = input_unit
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=SoakFunMallocPerformance).add_entry(**d)
 
@@ -887,14 +887,14 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "soak_malloc_classic"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = input_unit
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=SoakClassicMallocPerformance).add_entry(**d)
 
@@ -1102,14 +1102,14 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_rsa_crt_dec_no_pad_soak"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = input_unit
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeRsaPerformance).add_entry(**d)
 
@@ -1144,14 +1144,14 @@ class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_rsa_crt_dec_no_pad_4096_soak"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = input_unit
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeRsa4kPerformance).add_entry(**d)
 
@@ -1186,14 +1186,14 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_ecdh_soak_256"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = input_unit
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeEcdh256Performance).add_entry(**d)
 
@@ -1228,14 +1228,14 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_ecdh_soak_25519"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
-                    metrics["output_ops_per_sec_unit"] = input_unit
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeEcdh25519Performance).add_entry(**d)
 
@@ -1282,7 +1282,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             input_pkt_size = int(pkt_size_json["value"])
                             output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
                             output_throughput = float(bandwidth_json["value"])
-                            input_unit = bandwidth_json["units"]
+                            unit = bandwidth_json["units"]
 
                             metrics["input_app"] = input_app
                             metrics["input_algorithm"] = input_algorithm
@@ -1291,7 +1291,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_ops_per_sec"] = output_ops_per_sec
                             metrics["output_throughput"] = output_throughput
                             metrics["output_ops_per_sec_unit"] = "ops"
-                            metrics["output_throughput_unit"] = input_unit
+                            metrics["output_throughput_unit"] = unit
                             # metrics["output_latency_min"] = output_latency_min
                             # metrics["output_latency_avg"] = output_latency_avg
                             # metrics["output_latency_max"] = output_latency_max
@@ -1311,7 +1311,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             input_pkt_size = int(pkt_size_json["value"])
                             output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
                             output_throughput = float(bandwidth_json["value"])
-                            input_unit = bandwidth_json["units"]
+                            unit = bandwidth_json["units"]
 
                             metrics["input_app"] = input_app
                             metrics["input_key_size"] = input_key_size
@@ -1321,7 +1321,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             metrics["output_ops_per_sec"] = output_ops_per_sec
                             metrics["output_throughput"] = output_throughput
                             metrics["output_ops_per_sec_unit"] = "ops"
-                            metrics["output_throughput_unit"] = input_unit
+                            metrics["output_throughput_unit"] = unit
                             # metrics["output_latency_min"] = output_latency_min
                             # metrics["output_latency_avg"] = output_latency_avg
                             # metrics["output_latency_max"] = output_latency_max
@@ -1721,13 +1721,14 @@ class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_x25519_2k_tls_soak"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=PkeX25519TlsSoakPerformance).add_entry(**d)
             self.result = fun_test.PASSED
@@ -1760,13 +1761,14 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_p256_2k_tls_soak"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=PkeP256TlsSoakPerformance).add_entry(**d)
 
@@ -1802,13 +1804,13 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     input_size = m.group("size")
                     bandwidth_json = json.loads(m.group("bandwidth_json"))
                     output_bandwidth = float(bandwidth_json["value"])
-                    input_unit = bandwidth_json["unit"]
+                    unit = bandwidth_json["unit"]
                     input_log_size = bandwidth_json["log_size"]
                     metric_name = m.group("metric_name")
                     metrics["input_size"] = input_size
                     metrics["input_operation"] = input_operation
                     metrics["output_bandwidth"] = output_bandwidth
-                    metrics["output_bandwidth_unit"] = input_unit
+                    metrics["output_bandwidth_unit"] = unit
                     metrics["input_log_size"] = input_log_size
                     metrics["input_metric_name"] = metric_name
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
@@ -1873,36 +1875,36 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
     myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
     myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
     myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
     myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # myscript.add_test_case(FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # # myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkZipPerformanceTC())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJpegPerformanceTC())
     myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemsetPerformanceTC())
-    # myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
     # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
