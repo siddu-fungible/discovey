@@ -6,6 +6,9 @@
       "mgmt_ssh_password": "superuser"
     },
     "fpga": {
+      "mgmt_ip": "10.1.20.125",
+      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "root"
 
     }
   }

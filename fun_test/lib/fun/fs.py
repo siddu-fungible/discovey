@@ -3,6 +3,7 @@ from lib.system.utils import parse_file_to_json
 from lib.host.linux import Linux
 from fun_settings import TFTP_SERVER, ASSET_DIR
 import re
+import pexpect
 
 
 # BMC_IP = "10.1.20.149"
@@ -36,7 +37,9 @@ class BootPhases:
 class F1InFs:
     SERIAL_SPEED_DEFAULT = 1000000
     ELF_ADDRESS = "0xffffffff99000000"
-    def __init__(self, bmc, serial_device_path, serial_sbp_device_path):
+
+    def __init__(self, index, bmc, serial_device_path, serial_sbp_device_path):
+        self.index = index
         self.bmc = bmc.clone()
         self.bmc._connect()
         self.serial_device_path = serial_device_path
@@ -48,7 +51,8 @@ class F1InFs:
 
     def set_boot_phase(self, phase):
         self.boot_phase = phase
-        fun_test.log_section(phase)
+        fun_test.add_checkpoint("Started boot phase: {}".format(phase))
+        fun_test.log_section("F1_{}:{}".format(self.index, phase))
 
     def u_boot_load_image(self,
                           tftp_load_address="0xa800000080000000",
@@ -56,9 +60,21 @@ class F1InFs:
         result = None
         handle = self.bmc.handle
         self.set_boot_phase(BootPhases.U_BOOT_INIT)
+
+        process_ids = self.bmc.get_process_id_by_pattern("microcom.*{}".format(self.serial_device_path), multiple=True)
+        if process_ids:
+            for process_id in process_ids:
+                self.bmc.kill_process(process_id)
+                self.bmc.command("rm -f /var/lock/LCK..{}".format(self.serial_device_path.replace("/dev/", "")))
+        process_id = self.bmc.get_process_id_by_pattern("microcom.*{}".format(self.serial_device_path))
+
         handle.sendline("microcom -s {} {}".format(self.SERIAL_SPEED_DEFAULT, self.serial_device_path))
-        handle.sendline("\n")
-        i = handle.expect('f1 # ', timeout=20)
+        try:
+            handle.sendline("\n")
+            i = handle.expect('f1 # ', timeout=20)
+        except pexpect.TIMEOUT:
+            handle.sendline("\n")
+            i = handle.expect('f1 # ', timeout=20)
         self.set_boot_phase(BootPhases.U_BOOT_MICROCOM_STARTED)
 
         handle.sendline("lfw; lmpg; ltrain; lstatus")
@@ -104,11 +120,21 @@ class F1InFs:
 class Fs():
     BMC_SCRIPT_DIRECTORY = "/mnt/sdmmc0p1/scripts"
 
-    def __init__(self, bmc_mgmt_ip, bmc_mgmt_ssh_username, bmc_mgmt_ssh_password):
+    def __init__(self,
+                 bmc_mgmt_ip,
+                 bmc_mgmt_ssh_username,
+                 bmc_mgmt_ssh_password,
+                 fpga_mgmt_ip,
+                 fpga_mgmt_ssh_username,
+                 fpga_mgmt_ssh_password):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
+        self.fpga_mgmt_ip = fpga_mgmt_ip
+        self.fpga_mgmt_ssh_username = fpga_mgmt_ssh_username
+        self.fpga_mgmt_ssh_password = fpga_mgmt_ssh_password
         self.bmc = None
+        self.fpga = None
         self.f1s = {}
 
     def get_f1_0(self):
@@ -123,22 +149,32 @@ class Fs():
     @staticmethod
     def get(spec):
         bmc_spec = spec["bmc"]
+        fpga_spec = spec["fpga"]
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
-                  bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"])
+                  bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
+                  fpga_mgmt_ip=fpga_spec["mgmt_ip"],
+                  fpga_mgmt_ssh_username=fpga_spec["mgmt_ssh_username"],
+                  fpga_mgmt_ssh_password=fpga_spec["mgmt_ssh_password"])
 
     def bootup(self):
-        fun_test.simple_assert(self.bmc_initialize(), "BMC initialize")
-        for f1_index, f1 in self.f1s.iteritems():
-            fun_test.add_checkpoint("Booting up f1: {}".format(f1_index))
-            fun_test.test_assert(f1.bootup(), "Bootup f1: {} complete".format(f1_index))
+        fun_test.test_assert(self.bmc_initialize(), "BMC initialize")
+        fun_test.test_assert(self.fpga_initialize(), "FPGA initiaize")
 
-        # fun_test.
+        for f1_index, f1 in self.f1s.iteritems():
+            # fun_test.add_checkpoint("Booting up f1: {}".format(f1_index))
+            fun_test.test_assert(f1.bootup(), "Bootup f1: {} complete".format(f1_index))
+        return True
 
     def get_bmc(self):
         if not self.bmc:
             self.bmc_initialize()
         return self.bmc
+
+    def get_fpga(self):
+        if not self.fpga:
+            self.fpga_initialize()
+        return self.fpga
 
     def bmc_initialize(self):
         self.bmc = Linux(host_ip=self.bmc_mgmt_ip,
@@ -151,6 +187,23 @@ class Fs():
         self._set_f1s()
         return self.bmc
 
+    def fpga_initialize(self):
+        result = None
+        fun_test.add_checkpoint("FPGA initialize")
+        self.fpga = Linux(host_ip=self.fpga_mgmt_ip,
+                          ssh_username=self.fpga_mgmt_ssh_username,
+                          ssh_password=self.fpga_mgmt_ssh_password)
+
+        for f1_index, f1 in self.f1s.iteritems():
+            self.fpga.command("./f1reset -s {0} 0; sleep 2; ./f1reset -s {0} 1".format(f1_index))
+            output = self.fpga.command("./f1reset -g")
+            fun_test.simple_assert("F1_{} is out of reset".format(f1_index) in output, "F1 {} out of reset".format(f1_index))
+
+        fun_test.sleep("FPGA reset", seconds=15)
+
+        result = True
+        return result
+
     def _set_f1s(self):
         result = None
         output = self.bmc.command("./f1_uartmux.sh 1")
@@ -162,6 +215,9 @@ class Fs():
                 f1_index = int(m.group(1))
                 console_or_sbp = m.group(2)
                 device_path = m.group(3)
+                if f1_index > 0:
+                    fun_test.critical("Disabling F1_1 for now")
+                    continue
                 if f1_index not in f1_info:
                     f1_info[f1_index] = {}
                 if console_or_sbp == "console":
@@ -171,19 +227,23 @@ class Fs():
         # F1InFs()
         # flatten
         for f1_index in sorted(f1_info.keys()):
-            self.f1s[f1_index] = F1InFs(bmc=self.bmc,
+            self.f1s[f1_index] = F1InFs(index=f1_index,
+                                        bmc=self.bmc,
                                         serial_device_path=f1_info[f1_index]["f1_device_path"],
                                         serial_sbp_device_path=f1_info[f1_index]["sbp_device_path"])
+
+            if f1_index > 0:
+                fun_test.critical("Disabling F1_1 for now")
+                continue
 
         fun_test.simple_assert(len(self.f1s.keys()), "Both F1 device paths found")
         return result
 
 
+if __name__ == "__main__":
+    fs_json = ASSET_DIR + "/fs.json"
+    json_spec = parse_file_to_json(file_name=fs_json)
 
-
-fs_json = ASSET_DIR + "/fs.json"
-json_spec = parse_file_to_json(file_name=fs_json)
-
-fs = Fs.get(spec=json_spec[0])
-fs.bootup()
+    fs = Fs.get(spec=json_spec[0])
+    fs.bootup()
 # fs.u_boot_load_image(fs.)
