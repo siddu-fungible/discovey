@@ -37,40 +37,40 @@ class IPerfManager:
                 if not result:
                     break
 
-            ## Install iperf/iperf3 and start server mode
-            #for pkg in ('iperf', 'iperf3'):
-            #    result &= linux_obj.install_package(pkg)
-            #    if not result:
-            #        break
-            #    if linux_obj.get_process_id_by_pattern(pkg) is None:
-            #        linux_obj.command('{} -sD'.format(pkg))
-            #        for ns in linux_obj.get_namespaces():
-            #            linux_obj.sudo_command('ip netns exec {} {} -sD'.format(ns, pkg))
-            #        result &= linux_obj.get_process_id_by_pattern(pkg) is not None
-            #        if not result:
-            #            break
-            #
-            ## Install perfsonar-tools for owampd and owping
-            #for pkg in ('perfsonar-tools',):
-            #    cmds = (
-            #        'cd /etc/apt/sources.list.d/',
-            #        'wget http://downloads.perfsonar.net/debian/perfsonar-release.list',
-            #        'wget -qO - http://downloads.perfsonar.net/debian/perfsonar-debian-official.gpg.key | apt-key add -',
-            #    )
-            #    linux_obj.sudo_command(';'.join(cmds))
-            #    result &= linux_obj.install_package(pkg)
-            #    if not result:
-            #        break
-            #
-            ## Start owampd server
-            #if linux_obj.get_process_id_by_pattern('owampd') is None:
-            #    cmd = '/usr/sbin/owampd -c /etc/owamp-server -R /var/run'
-            #    linux_obj.sudo_command(cmd)
-            #    for ns in linux_obj.get_namespaces():
-            #        linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
-            #    result &= linux_obj.get_process_id_by_pattern('owampd') is not None
-            #    if not result:
-            #        break
+            # Install iperf/iperf3 and start server mode
+            for pkg in ('iperf', 'iperf3'):
+                result &= linux_obj.install_package(pkg)
+                if not result:
+                    break
+                if linux_obj.get_process_id_by_pattern(pkg) is None:
+                    linux_obj.command('{} -sD'.format(pkg))
+                    for ns in linux_obj.get_namespaces():
+                        linux_obj.sudo_command('ip netns exec {} {} -sD'.format(ns, pkg))
+                    result &= linux_obj.get_process_id_by_pattern(pkg) is not None
+                    if not result:
+                        break
+
+            # Install perfsonar-tools for owampd and owping
+            for pkg in ('perfsonar-tools',):
+                cmds = (
+                    'cd /etc/apt/sources.list.d/',
+                    'wget http://downloads.perfsonar.net/debian/perfsonar-release.list',
+                    'wget -qO - http://downloads.perfsonar.net/debian/perfsonar-debian-official.gpg.key | apt-key add -',
+                )
+                linux_obj.sudo_command(';'.join(cmds))
+                result &= linux_obj.install_package(pkg)
+                if not result:
+                    break
+
+            # Start owampd server
+            if linux_obj.get_process_id_by_pattern('owampd') is None:
+                cmd = '/usr/sbin/owampd -c /etc/owamp-server -R /var/run'
+                linux_obj.sudo_command(cmd)
+                for ns in linux_obj.get_namespaces():
+                    linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
+                result &= linux_obj.get_process_id_by_pattern('owampd') is not None
+                if not result:
+                    break
 
             # Install netperf
             for pkg in ('netperf',):

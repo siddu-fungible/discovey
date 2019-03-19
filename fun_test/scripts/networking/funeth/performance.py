@@ -597,37 +597,37 @@ if __name__ == "__main__":
             # iperf3/owping
 
             # HU -> NU Non-FCP
-            #FunethPerformance_HU_HU_64B_UDP,
-            #FunethPerformance_HU_HU_800B_UDP,
-            #FunethPerformance_HU_HU_1500B_UDP,
-            #FunethPerformance_HU_HU_146B_TCP,
-            #FunethPerformance_HU_HU_800B_TCP,
-            #FunethPerformance_HU_HU_1500B_TCP,
-            #
-            ## TODO: Add HU -> NU FCP
-            #
-            ## HU -> NU Non-FCP
-            #FunethPerformance_HU_NU_64B_UDP,
-            #FunethPerformance_HU_NU_800B_UDP,
-            #FunethPerformance_HU_NU_1500B_UDP,
-            #FunethPerformance_HU_NU_146B_TCP,
-            #FunethPerformance_HU_NU_800B_TCP,
-            #FunethPerformance_HU_NU_1500B_TCP,
-            #
-            ## NU -> HU Non-FCP
-            #FunethPerformance_NU_HU_64B_UDP,
-            #FunethPerformance_NU_HU_800B_UDP,
-            #FunethPerformance_NU_HU_1500B_UDP,
-            #FunethPerformance_NU_HU_146B_TCP,
-            #FunethPerformance_NU_HU_800B_TCP,
-            #FunethPerformance_NU_HU_1500B_TCP,
+            FunethPerformance_HU_HU_64B_UDP,
+            FunethPerformance_HU_HU_800B_UDP,
+            FunethPerformance_HU_HU_1500B_UDP,
+            FunethPerformance_HU_HU_146B_TCP,
+            FunethPerformance_HU_HU_800B_TCP,
+            FunethPerformance_HU_HU_1500B_TCP,
+
+            # TODO: Add HU -> NU FCP
+
+            # HU -> NU Non-FCP
+            FunethPerformance_HU_NU_64B_UDP,
+            FunethPerformance_HU_NU_800B_UDP,
+            FunethPerformance_HU_NU_1500B_UDP,
+            FunethPerformance_HU_NU_146B_TCP,
+            FunethPerformance_HU_NU_800B_TCP,
+            FunethPerformance_HU_NU_1500B_TCP,
+
+            # NU -> HU Non-FCP
+            FunethPerformance_NU_HU_64B_UDP,
+            FunethPerformance_NU_HU_800B_UDP,
+            FunethPerformance_NU_HU_1500B_UDP,
+            FunethPerformance_NU_HU_146B_TCP,
+            FunethPerformance_NU_HU_800B_TCP,
+            FunethPerformance_NU_HU_1500B_TCP,
 
             # netperf
 
             # HU -> NU Non-FCP
-            #FunethPerformance_HU_HU_64B_UDP_NETPERF,
-            #FunethPerformance_HU_HU_800B_UDP_NETPERF,
-            #FunethPerformance_HU_HU_1500B_UDP_NETPERF,
+            FunethPerformance_HU_HU_64B_UDP_NETPERF,
+            FunethPerformance_HU_HU_800B_UDP_NETPERF,
+            FunethPerformance_HU_HU_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_64B_TCP_NETPERF,
             FunethPerformance_HU_HU_800B_TCP_NETPERF,
             FunethPerformance_HU_HU_1500B_TCP_NETPERF,
@@ -635,17 +635,17 @@ if __name__ == "__main__":
             # TODO: Add HU -> NU FCP
 
             # HU -> NU Non-FCP
-            #FunethPerformance_HU_NU_64B_UDP_NETPERF,
-            #FunethPerformance_HU_NU_800B_UDP_NETPERF,
-            #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
+            FunethPerformance_HU_NU_64B_UDP_NETPERF,
+            FunethPerformance_HU_NU_800B_UDP_NETPERF,
+            FunethPerformance_HU_NU_1500B_UDP_NETPERF,
             FunethPerformance_HU_NU_64B_TCP_NETPERF,
             FunethPerformance_HU_NU_800B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
 
             # NU -> HU Non-FCP
-            #FunethPerformance_NU_HU_64B_UDP_NETPERF,
-            #FunethPerformance_NU_HU_800B_UDP_NETPERF,
-            #FunethPerformance_NU_HU_1500B_UDP_NETPERF,
+            FunethPerformance_NU_HU_64B_UDP_NETPERF,
+            FunethPerformance_NU_HU_800B_UDP_NETPERF,
+            FunethPerformance_NU_HU_1500B_UDP_NETPERF,
             FunethPerformance_NU_HU_64B_TCP_NETPERF,
             FunethPerformance_NU_HU_800B_TCP_NETPERF,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF,
