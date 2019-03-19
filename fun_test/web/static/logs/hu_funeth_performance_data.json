@@ -427,5 +427,113 @@
         "throughput": 1.531,
         "timestamp": "2019-03-03 05:30:18.018528-08:00",
         "version": 5426
+    },
+    {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 800,
+        "latency_P99.0": 20.0,
+        "latency_avg": 1.0,
+        "latency_max": 716.0,
+        "latency_min": 0.0,
+        "pps": 167789.76,
+        "throughput": 1073.854,
+        "timestamp": "2019-03-15 14:35:28.234285-07:00",
+        "version": 5537
+    },
+    {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 800,
+        "latency_P99.0": 21.0,
+        "latency_avg": 1.0,
+        "latency_max": 623.0,
+        "latency_min": 0.0,
+        "pps": 169979.78,
+        "throughput": 1087.871,
+        "timestamp": "2019-03-15 14:40:17.247880-07:00",
+        "version": 5537
+    },
+    {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 64,
+        "latency_P99.0": 4.0,
+        "latency_avg": 1.0,
+        "latency_max": 201.0,
+        "latency_min": 0.0,
+        "pps": 1187500.0,
+        "throughput": 608.0,
+        "timestamp": "2019-03-15 15:00:54.105852-07:00",
+        "version": 5537
+    },
+    {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 800,
+        "latency_P99.0": 22.0,
+        "latency_avg": 2.0,
+        "latency_max": 649.0,
+        "latency_min": 0.0,
+        "pps": 169811.32,
+        "throughput": 1086.792,
+        "timestamp": "2019-03-15 15:00:54.105852-07:00",
+        "version": 5537
+    },
+    {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 1500,
+        "latency_P99.0": 458.0,
+        "latency_avg": 2.0,
+        "latency_max": 600.0,
+        "latency_min": 0.0,
+        "pps": 86771.84,
+        "throughput": 1041.262,
+        "timestamp": "2019-03-15 15:00:54.105852-07:00",
+        "version": 5537
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 64,
+        "latency_P99.0": 4.0,
+        "latency_avg": 1.0,
+        "latency_max": 192.0,
+        "latency_min": 0.0,
+        "pps": 1312500.0,
+        "throughput": 672.0,
+        "timestamp": "2019-03-15 15:00:54.105852-07:00",
+        "version": 5537
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 800,
+        "latency_P99.0": 19.0,
+        "latency_avg": 1.0,
+        "latency_max": 1064.0,
+        "latency_min": 0.0,
+        "pps": 219845.01,
+        "throughput": 1407.008,
+        "timestamp": "2019-03-15 15:00:54.105852-07:00",
+        "version": 5537
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 1500,
+        "latency_P99.0": 36.0,
+        "latency_avg": 2.0,
+        "latency_max": 1135.0,
+        "latency_min": 0.0,
+        "pps": 113210.82,
+        "throughput": 1358.53,
+        "timestamp": "2019-03-15 15:00:54.105852-07:00",
+        "version": 5537
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 64,
+        "latency_P99.0": 3.0,
+        "latency_avg": 1.0,
+        "latency_max": 278.0,
+        "latency_min": 0.0,
+        "pps": 1520833.33,
+        "throughput": 778.667,
+        "timestamp": "2019-03-15 15:00:54.105852-07:00",
+        "version": 5537
     }
 ]
