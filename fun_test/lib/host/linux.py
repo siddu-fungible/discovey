@@ -308,6 +308,8 @@ class Linux(object, ToDictMixin):
             if not self._set_paths():
                 raise Exception("Unable to set paths")
             result = True
+        else:
+            self.handle = None
         return result
 
     def _set_term_settings(self):

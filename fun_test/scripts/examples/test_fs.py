@@ -37,7 +37,7 @@ class FunTestCase1(FunTestCase):
         fs_json = ASSET_DIR + "/fs.json"
         json_spec = parse_file_to_json(file_name=fs_json)
         fs = Fs.get(spec=json_spec[0])
-        fun_test.test_assert(fs.bootup(), "FS bootup")
+        fun_test.test_assert(fs.bootup(reboot_bmc=True), "FS bootup")
 
 
 

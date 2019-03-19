@@ -1,4 +1,4 @@
-from lib.system.fun_test import fun_test
+from lib.system.fun_test import fun_test, FunTimer
 from lib.system.utils import parse_file_to_json
 from lib.host.linux import Linux
 from fun_settings import TFTP_SERVER, ASSET_DIR
@@ -32,6 +32,7 @@ class BootPhases:
     F1_BOOT_NETWORK_STARTED = "f1: network started"
     F1_BOOT_PCI_STARTED = "f1: pci started"
     F1_BOOT_READY = "f1: ready"
+    F1_DPC_SERVER_STARTED = "f1: dpc server started"
 
 
 class F1InFs:
@@ -71,10 +72,10 @@ class F1InFs:
         handle.sendline("microcom -s {} {}".format(self.SERIAL_SPEED_DEFAULT, self.serial_device_path))
         try:
             handle.sendline("\n")
-            i = handle.expect('f1 # ', timeout=20)
+            i = handle.expect('f1 # ', timeout=60)
         except pexpect.TIMEOUT:
             handle.sendline("\n")
-            i = handle.expect('f1 # ', timeout=20)
+            i = handle.expect('f1 # ', timeout=60)
         self.set_boot_phase(BootPhases.U_BOOT_MICROCOM_STARTED)
 
         handle.sendline("lfw; lmpg; ltrain; lstatus")
@@ -82,7 +83,7 @@ class F1InFs:
         i = handle.expect("f1 # ")
         self.set_boot_phase(BootPhases.U_BOOT_TRAIN)
 
-        handle.sendline("setenv bootargs app=hw_hsu_test sku=SKU_FS1600_0")
+        handle.sendline("setenv bootargs hw_hsu_test sku=SKU_FS1600_{} --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit".format(self.index))
         i = handle.expect("f1 # ")
         self.set_boot_phase(BootPhases.U_BOOT_SET_BOOT_ARGS)
 
@@ -107,11 +108,14 @@ class F1InFs:
         branch = handle.match.group(2)
         self.set_boot_phase(BootPhases.U_BOOT_ELF)
 
-        i = handle.expect(r'NETWORK_STARTED')
-        self.set_boot_phase(BootPhases.F1_BOOT_NETWORK_STARTED)
+        # i = handle.expect(r'NETWORK_STARTED')
+        # self.set_boot_phase(BootPhases.F1_BOOT_NETWORK_STARTED)
 
-        i = handle.expect(r'PCI_STARTED')
-        self.set_boot_phase(BootPhases.F1_BOOT_PCI_STARTED)
+        # i = handle.expect(r'PCI_STARTED')
+        # self.set_boot_phase(BootPhases.F1_BOOT_PCI_STARTED)
+
+        i = handle.expect(r'DPC_SERVER_STARTED')
+        self.set_boot_phase(BootPhases.F1_DPC_SERVER_STARTED)
 
         result = True
         return result
@@ -157,12 +161,13 @@ class Fs():
                   fpga_mgmt_ssh_username=fpga_spec["mgmt_ssh_username"],
                   fpga_mgmt_ssh_password=fpga_spec["mgmt_ssh_password"])
 
-    def bootup(self):
+    def bootup(self, reboot_bmc=False):
+        if reboot_bmc:
+            fun_test.test_assert(self.reboot_bmc(), "Reboot BMC")
         fun_test.test_assert(self.bmc_initialize(), "BMC initialize")
         fun_test.test_assert(self.fpga_initialize(), "FPGA initiaize")
 
         for f1_index, f1 in self.f1s.iteritems():
-            # fun_test.add_checkpoint("Booting up f1: {}".format(f1_index))
             fun_test.test_assert(f1.bootup(), "Bootup f1: {} complete".format(f1_index))
         return True
 
@@ -199,7 +204,7 @@ class Fs():
             output = self.fpga.command("./f1reset -g")
             fun_test.simple_assert("F1_{} is out of reset".format(f1_index) in output, "F1 {} out of reset".format(f1_index))
 
-        fun_test.sleep("FPGA reset", seconds=15)
+        fun_test.sleep("FPGA reset", seconds=25)
 
         result = True
         return result
@@ -240,10 +245,40 @@ class Fs():
         return result
 
 
+    def reboot_bmc(self):
+        result = None
+        fun_test.add_checkpoint("Rebooting BMC")
+        bmc = self.get_bmc()
+        bmc.command("reboot")
+        powered_down = False
+        power_down_timer = FunTimer(max_time=60)
+        while not power_down_timer.is_expired():
+            try:
+                bmc.command("date")
+                fun_test.sleep("Powering down BMC")
+            except:
+                powered_down = True
+                bmc.disconnect()
+                break
+        bmc.disconnect()
+        fun_test.simple_assert(not power_down_timer.is_expired(), "Power down timer is not expired")
+        fun_test.simple_assert(powered_down, "Power down detected")
+        power_up_timer = FunTimer(max_time=180)
+        while not power_up_timer.is_expired():
+            try:
+                bmc.command("date")
+                break
+            except:
+                fun_test.sleep("Rebooting BMC", seconds=10)
+        fun_test.simple_assert(not power_up_timer.is_expired(), "Power up timer is not expired")
+
+        fun_test.add_checkpoint("Reboot procedure completed")
+        result = True
+        return result
+
 if __name__ == "__main__":
     fs_json = ASSET_DIR + "/fs.json"
     json_spec = parse_file_to_json(file_name=fs_json)
-
     fs = Fs.get(spec=json_spec[0])
-    fs.bootup()
+    fs.bootup(reboot_bmc=True)
 # fs.u_boot_load_image(fs.)
