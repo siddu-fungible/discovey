@@ -30,7 +30,7 @@ nu:
 
 # HU host
 hu:
-  hostname: 10.1.20.129
+  hostname: 10.1.20.112
   username: fun
   password: "123"
   mgmt_interface: enp3s0f0
