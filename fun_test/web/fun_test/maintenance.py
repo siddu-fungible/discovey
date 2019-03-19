@@ -2,6 +2,7 @@ import os
 import django
 import json
 import random, pytz
+from dateutil.parser import parse
 import re
 from fun_global import *
 from datetime import datetime
@@ -993,6 +994,27 @@ if __name__ == "__main_compression__":
                 entry.base_line_date = base_line_date
                 entry.save()
                 print (entry.chart_name, str(entry.base_line_date))
+
+if __name__ == "__main_EC_Perf__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.chart_name == "EC 8:4 Throughput":
+            entry.y1_axis_title = "Gbps"
+            entry.save()
+    model = apps.get_model(app_label='fun_test', model_name='EcPerformance')
+    mcs_entries = model.objects.all()
+    base_line_date = datetime(year=2019, month=3, day=14, minute=0, hour=0, second=0)
+    for entry in mcs_entries:
+        if entry.input_date_time.day >= base_line_date.day and entry.input_date_time.month >= base_line_date.month and entry.input_date_time.year >= base_line_date.year:
+            print entry.input_date_time
+            entry.output_encode_throughput_min = entry.output_encode_throughput_min / 1000
+            entry.output_encode_throughput_max = entry.output_encode_throughput_max / 1000
+            entry.output_encode_throughput_avg = entry.output_encode_throughput_avg / 1000
+            entry.output_recovery_throughput_min = entry.output_recovery_throughput_min / 1000
+            entry.output_recovery_throughput_max = entry.output_recovery_throughput_max / 1000
+            entry.output_recovery_throughput_avg = entry.output_recovery_throughput_avg / 1000
+            entry.save()
+            print "updated"
 
 if __name__ == "__main__":
     entries = MetricChart.objects.all()

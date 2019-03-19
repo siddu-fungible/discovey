@@ -469,7 +469,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
 
-                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_latency)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_latency)\]', line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_encode_latency_min = int(d["min"])
@@ -478,7 +478,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     input_metric_name = m.group("metric_name")
                     encode_latency_unit = d["unit"]
 
-                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]', line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_encode_throughput_min = int(d["min"])
@@ -487,7 +487,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     input_metric_name = m.group("metric_name")
                     encode_throughput_unit = d["unit"]
 
-                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]', line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_recovery_latency_min = int(d["min"])
@@ -496,7 +496,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     input_metric_name = m.group("metric_name")
                     recovery_latency_unit = d["unit"]
 
-                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]', line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_recovery_throughput_min = int(d["min"])
