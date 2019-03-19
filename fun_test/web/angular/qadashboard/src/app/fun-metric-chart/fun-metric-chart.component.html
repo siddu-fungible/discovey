@@ -100,8 +100,10 @@
       <br>
       <div *ngIf="modelName !== 'MetricContainer'">
         <b>Show expected values:</b>&nbsp;
-        <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
-        <a *ngIf="showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>
+        <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select
+          All</a>
+        <a *ngIf="showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Deselect
+          All</a>
         <table>
           <tr *ngFor="let output of expectedValues">
             <td *ngIf="output.value !== -1">
@@ -183,8 +185,10 @@
             </tr>
             <tr>
               <td>
-                Visualization Unit:&nbsp;<input type="text" [(ngModel)]="visualizationUnit" [value]=""
-                                           style="width: 100px">
+                Visualization Unit:&nbsp;
+                <select [(ngModel)]="visualizationUnit" (ngModelChange)="onChange($event)" style="width: 100px">
+                  <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
+                </select>
               </td>
             </tr>
           </table>

@@ -818,11 +818,11 @@ class EcPerformance(models.Model):
     output_encode_latency_avg_unit = models.TextField(default="nsecs")
 
     output_encode_throughput_min = models.IntegerField(verbose_name="Encode Throughput min")
-    output_encode_throughput_min_unit = models.TextField(default="Mbps")
+    output_encode_throughput_min_unit = models.TextField(default="Gbps")
     output_encode_throughput_max = models.IntegerField(verbose_name="Encode Throughput max")
-    output_encode_throughput_max_unit = models.TextField(default="Mbps")
+    output_encode_throughput_max_unit = models.TextField(default="Gbps")
     output_encode_throughput_avg = models.IntegerField(verbose_name="Encode Throughput avg")
-    output_encode_throughput_avg_unit = models.TextField(default="Mbps")
+    output_encode_throughput_avg_unit = models.TextField(default="Gbps")
 
     output_recovery_latency_min = models.IntegerField(verbose_name="Recovery Latency min")
     output_recovery_latency_min_unit = models.TextField(default="nsecs")
@@ -832,11 +832,11 @@ class EcPerformance(models.Model):
     output_recovery_latency_avg_unit = models.TextField(default="nsecs")
 
     output_recovery_throughput_min = models.IntegerField(verbose_name="Recovery Throughput min")
-    output_recovery_throughput_min_unit = models.TextField(default="Mbps")
+    output_recovery_throughput_min_unit = models.TextField(default="Gbps")
     output_recovery_throughput_max = models.IntegerField(verbose_name="Recovery Throughput max")
-    output_recovery_throughput_max_unit = models.TextField(default="Mbps")
+    output_recovery_throughput_max_unit = models.TextField(default="Gbps")
     output_recovery_throughput_avg = models.IntegerField(verbose_name="Recovery Throughput avg")
-    output_recovery_throughput_avg_unit = models.TextField(default="Mbps")
+    output_recovery_throughput_avg_unit = models.TextField(default="Gbps")
 
     def __str__(self):
         return str(self.__dict__)
