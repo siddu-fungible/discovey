@@ -1271,7 +1271,7 @@ class Linux(object, ToDictMixin):
         output = self.command(command)
         lines = output.split("\n")
         for line in lines:
-            m = re.search(r'((\d+):(\d+)\.(\d+))\s+(.*?):', output)
+            m = re.search(r'((\d+):(\d+)\.(\d+))\s+(.*?):', line)
             if m:
                 id = m.group(1)
                 bus_number = m.group(2)

@@ -77,9 +77,9 @@ class ComE(Linux):
         for device in devices:
             if "Unassigned class" in device["device_class"]:
                 self.funq_bind_device = device["id"]
-                fun_test.test_assert_expected(actual=self.funq_bind_device,
-                                              expected=self.EXPECTED_FUNQ_DEVICE_ID,
-                                              message="funq bind device found")
+        fun_test.test_assert_expected(actual=self.funq_bind_device,
+                                      expected=self.EXPECTED_FUNQ_DEVICE_ID,
+                                      message="funq bind device found")
         return True
 
 class F1InFs:
