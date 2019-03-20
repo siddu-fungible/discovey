@@ -1,6 +1,7 @@
 from lib.system.fun_test import fun_test, FunTimer
 from lib.system.utils import parse_file_to_json
 from lib.host.linux import Linux
+from asset.asset_manager import AssetManager
 from fun_settings import TFTP_SERVER, ASSET_DIR
 import re
 import pexpect
@@ -58,18 +59,28 @@ class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = "04:00.1"
     def initialize(self, reset=False):
         self.funq_bind_device = None
-        self.setup_workspace()
+        fun_test.simple_assert(self.setup_workspace(), "ComE workspace setup")
+        self.setup_dpc()
         return True
 
     def setup_workspace(self):
         working_directory = "/tmp"
         self.command("cd {}".format(working_directory))
-        self.command("mkdir workspace; cd workspace")
+        self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
         self.command(
             "wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
         files = self.list_files("functrlp_palladium.tgz")
         fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
+        self.command("wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
+        fun_test.test_assert(self.list_files("dpcsh.tgz"), "functrlp_palladium.tgz downloaded")
+        self.command("mkdir -p FunControlPlane FunSDK")
+        self.command("tar -zxvf functrlp_palladium.tgz -C ../workspace/FunControlPlane")
+        self.command("tar -zxvf dpcsh.tgz -C ../workspace/FunSDK")
+        return True
+
+    def setup_dpc(self):
+        pass
 
     def detect_pfs(self):
         devices = self.lspci(grep_filter="dad")
@@ -375,9 +386,7 @@ class Fs():
         return result
 
 if __name__ == "__main__":
-    fs_json = ASSET_DIR + "/fs.json"
-    json_spec = parse_file_to_json(file_name=fs_json)
-    fs = Fs.get(spec=json_spec[0])
+    fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"))
     #fs.bootup(reboot_bmc=False)
     #fs.come_initialize()
     #fs.come_reset()
