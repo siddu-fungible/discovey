@@ -535,37 +535,57 @@
     {
         "flow_type": "HU_NU_NFCP",
         "frame_size": 800,
-        "latency_P99.0": 16000,
-        "latency_avg": 1000,
-        "latency_max": 2615000,
-        "latency_min": 0.0,
-        "pps": 1337220.35,
-        "throughput": 8558.21,
-        "timestamp": "2019-03-19 11:41:44.623889-07:00",
-        "version": 5559
+        "latency_P50": 293.0,
+        "latency_P90": 888.0,
+        "latency_P99": 1147.0,
+        "latency_max": 21953.0,
+        "latency_avg": 429.0,
+        "latency_min": 55.0,
+        "pps": 1137129.38,
+        "throughput": 7277.628,
+        "timestamp": "2019-03-19 16:49:31.354939-07:00",
+        "version": 5567
     },
     {
         "flow_type": "HU_HU_NFCP",
         "frame_size": 800,
-        "latency_P99.0": -1,
-        "latency_avg": -1,
+        "latency_P50": -1,
+        "latency_P90": -1,
+        "latency_P99": -1,
         "latency_max": -1,
+        "latency_avg": -1,
         "latency_min": -1,
         "pps": -1,
         "throughput": -1,
-        "timestamp": "2019-03-19 11:41:44.623889-07:00",
-        "version": 5559
+        "timestamp": "2019-03-19 16:49:31.354939-07:00",
+        "version": 5567
+    },
+    {
+        "flow_type": "HU_HU_FCP",
+        "frame_size": 800,
+        "latency_P50": -1,
+        "latency_P90": -1,
+        "latency_P99": -1,
+        "latency_max": -1,
+        "latency_avg": -1,
+        "latency_min": -1,
+        "pps": -1,
+        "throughput": -1,
+        "timestamp": "2019-03-19 16:49:31.354939-07:00",
+        "version": 5567
     },
     {
         "flow_type": "NU_HU_NFCP",
         "frame_size": 800,
-        "latency_P99.0": -1,
-        "latency_avg": -1,
+        "latency_P50": -1,
+        "latency_P90": -1,
+        "latency_P99": -1,
         "latency_max": -1,
+        "latency_avg": -1,
         "latency_min": -1,
         "pps": -1,
         "throughput": -1,
-        "timestamp": "2019-03-19 11:41:44.623889-07:00",
-        "version": 5559
+        "timestamp": "2019-03-19 16:49:31.354939-07:00",
+        "version": 5567
     }
 ]

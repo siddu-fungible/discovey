@@ -251,6 +251,32 @@
             ]
           },
           {
+            "info": "HU_HU_FCP",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "HU_HU_FCP",
+            "weight": 1,
+            "label": "Host<->DPU<->DPU<->Host (FCP)",
+            "children": [
+              {
+                "info": "HU_HU_FCP_output_throughput",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_HU_FCP_output_throughput",
+                "weight": 1,
+                "label": "Throughput"
+              },
+              {
+                "info": "HU_HU_FCP_output_pps",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_HU_FCP_output_pps",
+                "weight": 1,
+                "label": "Packets per sec"
+              }
+            ]
+          },
+          {
             "info": "NU_HU_NFCP",
             "metric_model_name": "MetricContainer",
             "leaf": false,
