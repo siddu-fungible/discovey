@@ -260,26 +260,26 @@
       "read": {
         "ndata": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 442560)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 498624)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 442560)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 498624)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "nparity": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 442560)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 498624)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "ec": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 442560)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 498624)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }

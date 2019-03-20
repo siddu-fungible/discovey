@@ -6,18 +6,6 @@ import re
 import pexpect
 
 
-# BMC_IP = "10.1.20.149"
-# BMC_USERNAME = "sysadmin"
-# BMC_PASSWORD = "superuser"
-# l = Linux(host_ip=BMC_IP, ssh_username=BMC_USERNAME, ssh_password=BMC_PASSWORD)
-# l.set_prompt_terminator(r'# $')
-# l.command("cd {}".format(SCRIPT_DIRECTORY))
-# l.command("./f1_uartmux.sh 1")
-# l.command("./f1_console.sh 1")
-# process_id = l.get_process_id_by_pattern("microcom ")
-# if process_id:
-#    l.kill_process(process_id)
-# process_id = l.get_process_id_by_pattern("microcom ")
 
 class BootPhases:
     U_BOOT_INIT = "u-boot: init"
@@ -33,6 +21,7 @@ class BootPhases:
     F1_BOOT_PCI_STARTED = "f1: pci started"
     F1_BOOT_READY = "f1: ready"
     F1_DPC_SERVER_STARTED = "f1: dpc server started"
+    F1_BOOT_EP_CONTROLLER_READY = "f1: ep controller ready"
 
 
 class F1InFs:
@@ -55,6 +44,23 @@ class F1InFs:
         fun_test.add_checkpoint("Started boot phase: {}".format(phase))
         fun_test.log_section("F1_{}:{}".format(self.index, phase))
 
+    def u_boot_command(self, command, timeout=15, expected=None):
+        output = self.bmc.command("python /tmp/u_boot_interface.py --device_path={} --speed {} --command='{}' --timeout={}".format(self.serial_device_path,
+                                                                                           self.SERIAL_SPEED_DEFAULT,
+                                                                                                          command, timeout), timeout=timeout + 5)
+        if expected:
+            fun_test.simple_assert(expected in output, "{} not in output: {}".format(expected, output))
+        return output
+
+    def receive_serial(self, handle, expect=None, timeout=60):
+        buffer = ""
+        handle.sendline("cat {}".format(self.serial_device_path))
+        if expect:
+            handle.timeout = timeout
+            handle.expect(expect)
+            buffer += handle.before
+        return buffer
+
     def u_boot_load_image(self,
                           tftp_load_address="0xa800000080000000",
                           tftp_server=TFTP_SERVER):
@@ -62,61 +68,47 @@ class F1InFs:
         handle = self.bmc.handle
         self.set_boot_phase(BootPhases.U_BOOT_INIT)
 
-        process_ids = self.bmc.get_process_id_by_pattern("microcom.*{}".format(self.serial_device_path), multiple=True)
-        if process_ids:
-            for process_id in process_ids:
-                self.bmc.kill_process(process_id)
-                self.bmc.command("rm -f /var/lock/LCK..{}".format(self.serial_device_path.replace("/dev/", "")))
-        process_id = self.bmc.get_process_id_by_pattern("microcom.*{}".format(self.serial_device_path))
-
-        handle.sendline("microcom -s {} {}".format(self.SERIAL_SPEED_DEFAULT, self.serial_device_path))
-        try:
-            handle.sendline("\n")
-            i = handle.expect('f1 # ', timeout=60)
-        except pexpect.TIMEOUT:
-            handle.sendline("\n")
-            i = handle.expect('f1 # ', timeout=60)
-        self.set_boot_phase(BootPhases.U_BOOT_MICROCOM_STARTED)
-
-        handle.sendline("lfw; lmpg; ltrain; lstatus")
-        i = handle.expect('Fifo Out of Reset')
-        i = handle.expect("f1 # ")
+        self.u_boot_command(command="lfw; lmpg; ltrain; lstatus", timeout=15, expected='Fifo Out of Reset')
         self.set_boot_phase(BootPhases.U_BOOT_TRAIN)
 
-        handle.sendline("setenv bootargs hw_hsu_test sku=SKU_FS1600_{} --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit".format(self.index))
-        i = handle.expect("f1 # ")
+        self.u_boot_command(command="setenv bootargs app=hw_hsu_test sku=SKU_FS1600_{} --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit".format(self.index), timeout=5)
         self.set_boot_phase(BootPhases.U_BOOT_SET_BOOT_ARGS)
 
-        handle.sendline("dhcp")
-        i = handle.expect("f1 # ")
+        self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is")
         self.set_boot_phase(BootPhases.U_BOOT_DHCP)
 
-        handle.sendline("tftpboot {} {}:funos-f1.stripped.gz".format(tftp_load_address, tftp_server))
-        i = handle.expect(r'Bytes transferred = (\d+)')
-        bytes_transferred = handle.match.group(1)
-        self.set_boot_phase(BootPhases.U_BOOT_TFTP_DOWNLOAD)
+        output = self.u_boot_command(command="tftpboot {} {}:funos-f1.stripped.gz".format(tftp_load_address, tftp_server), timeout=15)
+        m = re.search(r'Bytes transferred = (\d+)', output)
+        if m:
+            bytes_transferred = int(m.group(1))
+            fun_test.test_assert(bytes_transferred > 1000, "FunOs download size: {}".format(bytes_transferred))
+            self.set_boot_phase(BootPhases.U_BOOT_TFTP_DOWNLOAD)
 
-        handle.sendline("unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS))
-        i = handle.expect(r'Uncompressed size: (\d+) =')
-        uncompressed_size = handle.match.group(1)
-        self.set_boot_phase(BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
 
-        handle.sendline("bootelf -p {}".format(self.ELF_ADDRESS))
-        i = handle.expect(r'Welcome to FunOS')
-        i = handle.expect(r'Version=(\S+), Branch=(\S+)')
-        version = handle.match.group(1)
-        branch = handle.match.group(2)
+        output = self.u_boot_command(command="unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS), timeout=10)
+        m = re.search(r'Uncompressed size: (\d+) =', output)
+        if m:
+            uncompressed_size = int(m.group(1))
+            fun_test.test_assert(uncompressed_size > 1000, "FunOs uncompressed size: {}".format(uncompressed_size))
+            self.set_boot_phase(BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
+
+        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=60, expected="Welcome to FunOS")
+        m = re.search(r'Version=(\S+), Branch=(\S+)', output)
+        if m:
+            version = m.group(1)
+            branch = m.group(2)
+            fun_test.add_checkpoint("Version: {}, branch: {}".format(version, branch))
         self.set_boot_phase(BootPhases.U_BOOT_ELF)
 
-        # i = handle.expect(r'NETWORK_STARTED')
-        # self.set_boot_phase(BootPhases.F1_BOOT_NETWORK_STARTED)
+        sections = ['NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
+        for section in sections:
+            fun_test.test_assert(section in output, "{} seen".format(section))
 
-        # i = handle.expect(r'PCI_STARTED')
-        # self.set_boot_phase(BootPhases.F1_BOOT_PCI_STARTED)
-
-        i = handle.expect(r'DPC_SERVER_STARTED')
-        self.set_boot_phase(BootPhases.F1_DPC_SERVER_STARTED)
-
+        '''
+        handle.timeout = 60
+        i = handle.expect(r'EP: controller is ready')
+        self.set_boot_phase(BootPhases.F1_BOOT_EP_CONTROLLER_READY)
+        '''
         result = True
         return result
 
@@ -130,15 +122,22 @@ class Fs():
                  bmc_mgmt_ssh_password,
                  fpga_mgmt_ip,
                  fpga_mgmt_ssh_username,
-                 fpga_mgmt_ssh_password):
+                 fpga_mgmt_ssh_password,
+                 come_mgmt_ip,
+                 come_mgmt_ssh_username,
+                 come_mgmt_ssh_password):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
         self.fpga_mgmt_ip = fpga_mgmt_ip
         self.fpga_mgmt_ssh_username = fpga_mgmt_ssh_username
         self.fpga_mgmt_ssh_password = fpga_mgmt_ssh_password
+        self.come_mgmt_ip = come_mgmt_ip
+        self.come_mgmt_ssh_username = come_mgmt_ssh_username
+        self.come_mgmt_ssh_password = come_mgmt_ssh_password
         self.bmc = None
         self.fpga = None
+        self.come = None
         self.f1s = {}
 
     def get_f1_0(self):
@@ -154,12 +153,16 @@ class Fs():
     def get(spec):
         bmc_spec = spec["bmc"]
         fpga_spec = spec["fpga"]
+        come_spec = spec["come"]
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
                   fpga_mgmt_ip=fpga_spec["mgmt_ip"],
                   fpga_mgmt_ssh_username=fpga_spec["mgmt_ssh_username"],
-                  fpga_mgmt_ssh_password=fpga_spec["mgmt_ssh_password"])
+                  fpga_mgmt_ssh_password=fpga_spec["mgmt_ssh_password"],
+                  come_mgmt_ip=come_spec["mgmt_ip"],
+                  come_mgmt_ssh_username=come_spec["mgmt_ssh_username"],
+                  come_mgmt_ssh_password=come_spec["mgmt_ssh_password"])
 
     def bootup(self, reboot_bmc=False):
         if reboot_bmc:
@@ -181,10 +184,29 @@ class Fs():
             self.fpga_initialize()
         return self.fpga
 
+    def get_come(self):
+        if not self.come:
+            self.come_initialize()
+        return self.come
+
+    def come_initialize(self):
+        self.come = Linux(host_ip=self.come_mgmt_ip,
+                          ssh_username=self.come_mgmt_ssh_username,
+                          ssh_password=self.come_mgmt_ssh_password, set_term_settings=True)
+        working_directory = "/tmp"
+        self.come.command("cd {}".format(working_directory))
+        self.come.command("mkdir workspace; cd workspace")
+        self.come.command("export WORKSPACE=$PWD")
+        self.come.command("wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
+        files = self.come.list_files("functrlp_palladium.tgz")
+        fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
+        return True
+
+
     def bmc_initialize(self):
         self.bmc = Linux(host_ip=self.bmc_mgmt_ip,
                          ssh_username=self.bmc_mgmt_ssh_username,
-                         ssh_password=self.bmc_mgmt_ssh_password)
+                         ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True)
         self.bmc.set_prompt_terminator(r'# $')
         fun_test.simple_assert(self.bmc._connect(), "BMC connected")
         self.bmc.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
@@ -197,14 +219,14 @@ class Fs():
         fun_test.add_checkpoint("FPGA initialize")
         self.fpga = Linux(host_ip=self.fpga_mgmt_ip,
                           ssh_username=self.fpga_mgmt_ssh_username,
-                          ssh_password=self.fpga_mgmt_ssh_password)
+                          ssh_password=self.fpga_mgmt_ssh_password, set_term_settings=True)
 
         for f1_index, f1 in self.f1s.iteritems():
             self.fpga.command("./f1reset -s {0} 0; sleep 2; ./f1reset -s {0} 1".format(f1_index))
             output = self.fpga.command("./f1reset -g")
             fun_test.simple_assert("F1_{} is out of reset".format(f1_index) in output, "F1 {} out of reset".format(f1_index))
 
-        fun_test.sleep("FPGA reset", seconds=25)
+        fun_test.sleep("FPGA reset", seconds=10)
 
         result = True
         return result
@@ -248,7 +270,7 @@ class Fs():
     def reboot_bmc(self):
         result = None
         fun_test.add_checkpoint("Rebooting BMC")
-        bmc = self.get_bmc()
+        bmc = self.get_bmc().clone()
         bmc.command("reboot")
         powered_down = False
         power_down_timer = FunTimer(max_time=60)
@@ -261,6 +283,7 @@ class Fs():
                 bmc.disconnect()
                 break
         bmc.disconnect()
+        self.bmc = None
         fun_test.simple_assert(not power_down_timer.is_expired(), "Power down timer is not expired")
         fun_test.simple_assert(powered_down, "Power down detected")
         power_up_timer = FunTimer(max_time=180)
@@ -280,5 +303,5 @@ if __name__ == "__main__":
     fs_json = ASSET_DIR + "/fs.json"
     json_spec = parse_file_to_json(file_name=fs_json)
     fs = Fs.get(spec=json_spec[0])
-    fs.bootup(reboot_bmc=True)
-# fs.u_boot_load_image(fs.)
+    #fs.bootup(reboot_bmc=True)
+    fs.come_initialize()
