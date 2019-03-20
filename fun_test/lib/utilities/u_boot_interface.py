@@ -29,8 +29,8 @@ class F1UBootInterface:
         while True:
             bytes_to_read = self.handle.inWaiting()
             new_data = self.handle.read(bytes_to_read)
-            sys.stdout.write(new_data)
-            sys.stdout.flush()
+            # sys.stdout.write(new_data)
+            # sys.stdout.flush()
             s += new_data
             now = time.time()
             if (now - start) > timeout or (self.PROMPT_TERMINATOR in s):
