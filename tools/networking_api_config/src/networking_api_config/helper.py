@@ -26,3 +26,19 @@ class BaseSetup (object):
         all_config= self.parse_file_to_json_in_order(file_name=file_name)
         bgp_dict = all_config["bgp"]
         return bgp_dict
+
+    def get_intf_config(self,file_name):
+        all_config= self.parse_file_to_json_in_order(file_name=file_name)
+        intf_dict = all_config["intfs"]
+        return intf_dict
+
+    def get_intf_config_by_id(self, id, intf_json):
+       result = []
+       try:
+           for item in intf_json:
+               if item['id'] == id:
+                   result=item
+       except Exception as ex:
+           fun_test.critical(str(ex))
+       return result
+

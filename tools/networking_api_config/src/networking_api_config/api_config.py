@@ -21,7 +21,6 @@ class SDKClient(object):
 
     def patchall(self, url, data, verify=False):
         try:
-            import pdb;pdb.set_trace() 
             response = requests.patch(url, headers=self.headers, data=data, verify=False)
             return response
         except requests.exceptions.HTTPError as e:
