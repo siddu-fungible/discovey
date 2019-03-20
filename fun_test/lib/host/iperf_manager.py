@@ -116,8 +116,6 @@ class IPerfManager:
         else:
             for arg_dict in arg_dicts:
                 linux_obj = arg_dict.get('linux_obj')
-                hostname = linux_obj.hostname()
-                result.update({hostname: {}})
                 dip = arg_dict.get('dip')
                 tool = arg_dict.get('tool', 'iperf3')
                 protocol = arg_dict.get('protocol', 'udp')
@@ -125,8 +123,8 @@ class IPerfManager:
                 duration = arg_dict.get('duration', 10)
                 frame_size = arg_dict.get('frame_size', 1518)
                 bw = arg_dict.get('bw', '5m')
-                result[hostname] = do_test(linux_obj, dip=dip, tool=tool, protocol=protocol, parallel=parallel,
-                                           duration=duration, frame_size=frame_size, bw=bw)
+                result = do_test(linux_obj, dip=dip, tool=tool, protocol=protocol, parallel=parallel,
+                                 duration=duration, frame_size=frame_size, bw=bw)
         return result
 
 

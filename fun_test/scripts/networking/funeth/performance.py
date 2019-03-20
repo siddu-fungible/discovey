@@ -2,6 +2,7 @@ from lib.system.fun_test import *
 from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
 from lib.host.iperf_manager import IPerfManager
+from lib.host.netperf_manager import NetperfManager
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity
 import json
@@ -15,14 +16,15 @@ else:
     BW_LIMIT = '25G'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 TIMESTAMP = get_current_time()
+PARALLEL = 6
 
 
 class FunethPerformance(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
                               """
-        1. In NU and HU hosts, run iperf/iperf3 server and owampd
-        2. In NU and HU host, do throughput/latency test with 64B/1500B frame sizes - a. NU->HU,  b. HU->NU, c. HU->HU
+        1. In NU and HU hosts, run netserver
+        2. In NU and HU host, do throughput/latency test with 64B/800B/1500B frame sizes - a. NU->HU,  b. HU->NU, c. HU->HU
         """)
 
     def setup(self):
@@ -30,14 +32,17 @@ class FunethPerformance(FunTestScript):
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
         linux_objs = [funeth_obj.linux_obj_dict['nu'], funeth_obj.linux_obj_dict['hu']]
-        self.iperf_manager_obj = IPerfManager(linux_objs)
+        #self.iperf_manager_obj = IPerfManager(linux_objs)
+        self.netperf_manager_obj = NetperfManager(linux_objs)
 
-        fun_test.test_assert(self.iperf_manager_obj.setup(), 'Set up for throughput/latency test')
+        #fun_test.test_assert(self.iperf_manager_obj.setup(), 'Set up for throughput/latency test')
+        fun_test.test_assert(self.netperf_manager_obj.setup(), 'Set up for throughput/latency test')
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
     def cleanup(self):
-        fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
+        #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
+        fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
 
 
 class FunethPerformanceBase(FunTestCase):
@@ -50,10 +55,11 @@ class FunethPerformanceBase(FunTestCase):
     def cleanup(self):
         fun_test.sleep("Waiting for buffer drain to run next test case", seconds=60)
 
-    def _run(self, flow_type, tool='iperf3', protocol='udp', parallel=1, duration=10, frame_size=1500, bw=BW_LIMIT):
+    def _run(self, flow_type, tool='iperf3', protocol='udp', parallel=1, duration=30, frame_size=800, bw=BW_LIMIT):
 
         funeth_obj = fun_test.shared_variables['funeth_obj']
 
+        linux_objs = []
         if flow_type.startswith('NU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['nu']
             if 'VF' in flow_type:
@@ -66,8 +72,12 @@ class FunethPerformanceBase(FunTestCase):
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
+        linux_objs.append(linux_obj)
 
-        iperf_manager_obj = IPerfManager([linux_obj])
+        if tool == 'netperf':
+            perf_manager_obj = NetperfManager(linux_objs)
+        else:
+            perf_manager_obj = IPerfManager(linux_objs)
         arg_dicts = [
             {'linux_obj': linux_obj,
              'dip': dip,
@@ -79,7 +89,10 @@ class FunethPerformanceBase(FunTestCase):
              'bw': bw,
              }
         ]
-        result = iperf_manager_obj.run(*arg_dicts).values()[0]
+        if tool == 'netperf':
+            for arg_dict in arg_dicts:
+                arg_dict.pop('bw')  # 'bw' is n/a in NetperfManager
+        result = perf_manager_obj.run(*arg_dicts)
 
         # check for 'nan'
         passed = True
@@ -374,7 +387,7 @@ class FunethPerformance_HU_HU_64B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=64)
 
 
 class FunethPerformance_HU_HU_800B_UDP_NETPERF(FunethPerformanceBase):
@@ -386,7 +399,7 @@ class FunethPerformance_HU_HU_800B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', frame_size=800)
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=800)
 
 
 class FunethPerformance_HU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
@@ -398,7 +411,7 @@ class FunethPerformance_HU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=1500)
 
 # TCP
 
@@ -411,7 +424,8 @@ class FunethPerformance_HU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=64)
 
 
 class FunethPerformance_HU_HU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -423,7 +437,8 @@ class FunethPerformance_HU_HU_800B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=800)
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=800)
 
 
 class FunethPerformance_HU_HU_1500B_TCP_NETPERF(FunethPerformanceBase):
@@ -435,7 +450,8 @@ class FunethPerformance_HU_HU_1500B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=1500)
 
 # HU -> NU
 
@@ -450,7 +466,7 @@ class FunethPerformance_HU_NU_64B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=64)
 
 
 class FunethPerformance_HU_NU_800B_UDP_NETPERF(FunethPerformanceBase):
@@ -462,7 +478,7 @@ class FunethPerformance_HU_NU_800B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', frame_size=800)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=800)
 
 
 class FunethPerformance_HU_NU_1500B_UDP_NETPERF(FunethPerformanceBase):
@@ -474,7 +490,7 @@ class FunethPerformance_HU_NU_1500B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=1500)
 
 # TCP
 
@@ -487,7 +503,8 @@ class FunethPerformance_HU_NU_64B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=64)
 
 
 class FunethPerformance_HU_NU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -499,7 +516,8 @@ class FunethPerformance_HU_NU_800B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', frame_size=800)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=800)
 
 
 class FunethPerformance_HU_NU_1500B_TCP_NETPERF(FunethPerformanceBase):
@@ -511,7 +529,8 @@ class FunethPerformance_HU_NU_1500B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=1500)
 
 # NU -> HU
 
@@ -526,7 +545,7 @@ class FunethPerformance_NU_HU_64B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=64)
 
 
 class FunethPerformance_NU_HU_800B_UDP_NETPERF(FunethPerformanceBase):
@@ -538,7 +557,7 @@ class FunethPerformance_NU_HU_800B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', frame_size=800)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=800)
 
 
 class FunethPerformance_NU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
@@ -550,7 +569,7 @@ class FunethPerformance_NU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', parallel=PARALLEL, frame_size=1500)
 
 # TCP
 
@@ -563,7 +582,8 @@ class FunethPerformance_NU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=64)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=64)
 
 
 class FunethPerformance_NU_HU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -575,7 +595,8 @@ class FunethPerformance_NU_HU_800B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=800)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=800)
 
 
 class FunethPerformance_NU_HU_1500B_TCP_NETPERF(FunethPerformanceBase):
@@ -587,7 +608,8 @@ class FunethPerformance_NU_HU_1500B_TCP_NETPERF(FunethPerformanceBase):
         """)
 
     def run(self):
-        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', frame_size=1500)
+        FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=1500)
 
 
 if __name__ == "__main__":
@@ -597,6 +619,14 @@ if __name__ == "__main__":
             # iperf3/owping
 
             # HU -> NU Non-FCP
+            FunethPerformance_HU_NU_64B_UDP,
+            FunethPerformance_HU_NU_800B_UDP,
+            FunethPerformance_HU_NU_1500B_UDP,
+            FunethPerformance_HU_NU_146B_TCP,
+            FunethPerformance_HU_NU_800B_TCP,
+            FunethPerformance_HU_NU_1500B_TCP,
+
+            # HU -> HU Non-FCP
             FunethPerformance_HU_HU_64B_UDP,
             FunethPerformance_HU_HU_800B_UDP,
             FunethPerformance_HU_HU_1500B_UDP,
@@ -604,15 +634,7 @@ if __name__ == "__main__":
             FunethPerformance_HU_HU_800B_TCP,
             FunethPerformance_HU_HU_1500B_TCP,
 
-            # TODO: Add HU -> NU FCP
-
-            # HU -> NU Non-FCP
-            FunethPerformance_HU_NU_64B_UDP,
-            FunethPerformance_HU_NU_800B_UDP,
-            FunethPerformance_HU_NU_1500B_UDP,
-            FunethPerformance_HU_NU_146B_TCP,
-            FunethPerformance_HU_NU_800B_TCP,
-            FunethPerformance_HU_NU_1500B_TCP,
+            # TODO: Add HU -> HU FCP
 
             # NU -> HU Non-FCP
             FunethPerformance_NU_HU_64B_UDP,
@@ -625,6 +647,14 @@ if __name__ == "__main__":
             # netperf
 
             # HU -> NU Non-FCP
+            FunethPerformance_HU_NU_64B_UDP_NETPERF,
+            FunethPerformance_HU_NU_800B_UDP_NETPERF,
+            FunethPerformance_HU_NU_1500B_UDP_NETPERF,
+            FunethPerformance_HU_NU_64B_TCP_NETPERF,
+            FunethPerformance_HU_NU_800B_TCP_NETPERF,
+            FunethPerformance_HU_NU_1500B_TCP_NETPERF,
+
+            # HU -> HU Non-FCP
             FunethPerformance_HU_HU_64B_UDP_NETPERF,
             FunethPerformance_HU_HU_800B_UDP_NETPERF,
             FunethPerformance_HU_HU_1500B_UDP_NETPERF,
@@ -632,15 +662,7 @@ if __name__ == "__main__":
             FunethPerformance_HU_HU_800B_TCP_NETPERF,
             FunethPerformance_HU_HU_1500B_TCP_NETPERF,
 
-            # TODO: Add HU -> NU FCP
-
-            # HU -> NU Non-FCP
-            FunethPerformance_HU_NU_64B_UDP_NETPERF,
-            FunethPerformance_HU_NU_800B_UDP_NETPERF,
-            FunethPerformance_HU_NU_1500B_UDP_NETPERF,
-            FunethPerformance_HU_NU_64B_TCP_NETPERF,
-            FunethPerformance_HU_NU_800B_TCP_NETPERF,
-            FunethPerformance_HU_NU_1500B_TCP_NETPERF,
+            # TODO: Add HU -> HU FCP
 
             # NU -> HU Non-FCP
             FunethPerformance_NU_HU_64B_UDP_NETPERF,
