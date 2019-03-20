@@ -24,6 +24,64 @@ class BootPhases:
     F1_BOOT_EP_CONTROLLER_READY = "f1: ep controller ready"
 
 
+class Bmc(Linux):
+    @fun_test.safe
+    def ping(self,
+             dst,
+             count=5,
+             max_percentage_loss=50,
+             timeout=30,
+             interval=1,
+             size=56,
+             sudo=False):
+        result = False
+        percentage_loss = 100
+        try:
+            command = 'ping %s -c %d -s %s' % (str(dst), count, size)
+            if sudo:
+                output = self.sudo_command(command, timeout=timeout)
+            else:
+                output = self.command(command, timeout=timeout)
+            m = re.search(r'(\d+)%\s+packet\s+loss', output)
+            if m:
+                percentage_loss = int(m.group(1))
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+            self.logger.critical(critical_str)
+        if percentage_loss <= max_percentage_loss:
+            result = True
+        return result
+
+
+class ComE(Linux):
+    EXPECTED_FUNQ_DEVICE_ID = "04:00.1"
+    def initialize(self, reset=False):
+        self.funq_bind_device = None
+        self.setup_workspace()
+        return True
+
+    def setup_workspace(self):
+        working_directory = "/tmp"
+        self.command("cd {}".format(working_directory))
+        self.command("mkdir workspace; cd workspace")
+        self.command("export WORKSPACE=$PWD")
+        self.command(
+            "wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
+        files = self.list_files("functrlp_palladium.tgz")
+        fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
+
+    def detect_pfs(self):
+        devices = self.lspci(grep_filter="dad")
+        fun_test.test_assert(devices, "PCI devices detected")
+        for device in devices:
+            if "Unassigned class" in device["device_class"]:
+                self.funq_bind_device = device["id"]
+                fun_test.test_assert_expected(actual=self.funq_bind_device,
+                                              expected=self.EXPECTED_FUNQ_DEVICE_ID,
+                                              message="funq bind device found")
+        return True
+
 class F1InFs:
     SERIAL_SPEED_DEFAULT = 1000000
     ELF_ADDRESS = "0xffffffff99000000"
@@ -172,6 +230,10 @@ class Fs():
 
         for f1_index, f1 in self.f1s.iteritems():
             fun_test.test_assert(f1.bootup(), "Bootup f1: {} complete".format(f1_index))
+
+        fun_test.test_assert(self.come_reset(), "ComE rebooted successfully")
+        fun_test.test_assert(self.come_initialize(), "ComE initialized")
+        fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
         return True
 
     def get_bmc(self):
@@ -190,21 +252,34 @@ class Fs():
         return self.come
 
     def come_initialize(self):
-        self.come = Linux(host_ip=self.come_mgmt_ip,
+        self.come = ComE(host_ip=self.come_mgmt_ip,
                           ssh_username=self.come_mgmt_ssh_username,
                           ssh_password=self.come_mgmt_ssh_password, set_term_settings=True)
-        working_directory = "/tmp"
-        self.come.command("cd {}".format(working_directory))
-        self.come.command("mkdir workspace; cd workspace")
-        self.come.command("export WORKSPACE=$PWD")
-        self.come.command("wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
-        files = self.come.list_files("functrlp_palladium.tgz")
-        fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
+        self.come.initialize()
         return True
 
+    def come_reset(self, max_wait_time=180):
+        if not self.bmc:
+            self.bmc_initialize()
+        self.bmc.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
+        fun_test.test_assert(self.bmc.ping(self.come_mgmt_ip), "ComE reachable before reset")
+        self.bmc.command("./come-power.sh")
+        fun_test.sleep("ComE powering down", seconds=15)
+        fun_test.test_assert(not self.bmc.ping(self.come_mgmt_ip), "ComE should be unreachable")
+
+        # Ensure come restarted
+        come_restart_timer = FunTimer(max_time=max_wait_time)
+        ping_result = False
+        while not come_restart_timer.is_expired():
+            ping_result = self.bmc.ping(self.come_mgmt_ip)
+            if ping_result:
+                break
+            fun_test.sleep("ComE power up")
+        fun_test.test_assert(not come_restart_timer.is_expired() and ping_result, "ComE reachable")
+        return True
 
     def bmc_initialize(self):
-        self.bmc = Linux(host_ip=self.bmc_mgmt_ip,
+        self.bmc = Bmc(host_ip=self.bmc_mgmt_ip,
                          ssh_username=self.bmc_mgmt_ssh_username,
                          ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True)
         self.bmc.set_prompt_terminator(r'# $')
@@ -303,5 +378,8 @@ if __name__ == "__main__":
     fs_json = ASSET_DIR + "/fs.json"
     json_spec = parse_file_to_json(file_name=fs_json)
     fs = Fs.get(spec=json_spec[0])
-    #fs.bootup(reboot_bmc=True)
-    fs.come_initialize()
+    #fs.bootup(reboot_bmc=False)
+    #fs.come_initialize()
+    #fs.come_reset()
+    come = fs.get_come()
+    come.detect_pfs()
