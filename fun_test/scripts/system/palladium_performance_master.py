@@ -51,6 +51,7 @@ internal_chart_names_for_flows = {
     "HNU_NU_NFCP": ["HNU_NU_output_throughput", "HNU_NU_output_pps"],
     "HU_NU_NFCP": ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps"],
     "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps"],
+    "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps"],
     "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps"]
 }
 
