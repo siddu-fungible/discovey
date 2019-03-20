@@ -2,7 +2,6 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
-import {t} from "../../../node_modules/@angular/core/src/render3";
 
 enum TimeMode {
   ALL = "all",
@@ -70,7 +69,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   maxDataSet: number = null; // maximum value of all the 'max' values of the datasets
   maxExpected: number = null; // maximum value of all the 'expected' values of the datasets
   maxDataPoint: number = null; // maximum value of all the data points from all the datasets
-  originalMaxDataPoint: number = null;
+  originalMaxDataPoint: number = null;//when the unit changes, restore to original max
   yMax: number = null;
   yAxisSet: any = new Set(); //to cehck for duplicates in the expected value so that the text is not overwritten
 
@@ -79,6 +78,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   selectedUnit: string = null;
   category: any[] = [];
 
+  //category of the units for the unit conversion
   latency_category: string[] = ["nsecs", "usecs", "msecs", "secs"];
   ops_category: string[] = ["ops", "Kops", "Mops", "Gops"];
   operations_category: string[] = ["op", "Kop", "Mop", "Gop"];
