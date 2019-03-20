@@ -23,8 +23,8 @@ class FunethPerformance(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
                               """
-        1. In NU and HU hosts, run iperf/iperf3 server and owampd
-        2. In NU and HU host, do throughput/latency test with 64B/1500B frame sizes - a. NU->HU,  b. HU->NU, c. HU->HU
+        1. In NU and HU hosts, run netserver
+        2. In NU and HU host, do throughput/latency test with 64B/800B/1500B frame sizes - a. NU->HU,  b. HU->NU, c. HU->HU
         """)
 
     def setup(self):

@@ -96,7 +96,7 @@ class NetperfManager:
             mp_task_obj = MultiProcessingTasks()
             rlist = []
             for i in range(1, parallel):
-                # parallel -1 task to measure throughput
+                # parallel-1 tasks to measure throughput
                 mp_task_obj.add_task(
                     func=do_test,
                     func_args=(linux_obj, dip, protocol, duration, frame_size, i),
