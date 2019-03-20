@@ -112,7 +112,7 @@ class NetperfManager:
 
             throughput = sum(r.get('throughput') for r in rlist)
             latency_min = rlist[parallel-1].get('latency_min')
-            latency_mean = rlist[parallel-1].get('latency_mean')
+            latency_avg = rlist[parallel-1].get('latency_avg')
             latency_max = rlist[parallel-1].get('latency_max')
             latency_P50 = rlist[parallel-1].get('latency_P50')
             latency_P90 = rlist[parallel-1].get('latency_P90')
@@ -121,7 +121,7 @@ class NetperfManager:
             result = {
                 'throughput': round(throughput, 3),
                 'latency_min': round(latency_min, 1),
-                'latency_mean': round(latency_mean, 1),
+                'latency_avg': round(latency_avg, 1),
                 'latency_max': round(latency_max, 1),
                 'latency_P50': round(latency_P50, 1),
                 'latency_P90': round(latency_P90, 1),
@@ -182,7 +182,7 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     #linux_obj.sudo_command('ethtool --offload {} rx off tx off sg off tso off gso off gro off'.format(interface))
 
     result = {}
-    throughput = latency_min = latency_mean = latency_max = latency_P50 = latency_P90 = latency_P99 = float('nan')
+    throughput = latency_min = latency_avg = latency_max = latency_P50 = latency_P90 = latency_P99 = float('nan')
     if protocol.lower() == 'udp':
         t = 'UDP_STREAM'
     elif protocol.lower() == 'tcp':
@@ -209,7 +209,7 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
             )
         else:
             latency_min = float(match.group(1))
-            latency_mean = float(match.group(2))
+            latency_avg = float(match.group(2))
             latency_P50 = float(match.group(3))
             latency_P90 = float(match.group(4))
             latency_P99 = float(match.group(5))
@@ -218,7 +218,7 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
 
             result.update(
                 {'latency_min': round(latency_min, 1),
-                 'latency_mean': round(latency_mean, 1),
+                 'latency_avg': round(latency_avg, 1),
                  'latency_max': round(latency_max, 1),
                  'latency_P50': round(latency_P50, 1),
                  'latency_P90': round(latency_P90, 1),
