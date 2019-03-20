@@ -96,7 +96,8 @@ class Linux(object, ToDictMixin):
                  telnet_port=TELNET_PORT_DEFAULT,
                  connect_retry_timeout_max=20,
                  use_paramiko=False,
-                 localhost=None):
+                 localhost=None,
+                 set_term_settings=None):
 
         self.host_ip = host_ip
         self.ssh_username = ssh_username
@@ -104,7 +105,7 @@ class Linux(object, ToDictMixin):
         self.ssh_port = ssh_port
         self.connect_retry_timeout_max = connect_retry_timeout_max
         self.handle = None
-
+        self.set_term_settings = set_term_settings
         self.localhost = localhost
         self.use_paramiko = use_paramiko
         self.paramiko_handle = None
@@ -303,7 +304,7 @@ class Linux(object, ToDictMixin):
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
         if connected:
-            if not self._set_term_settings():
+            if self.set_term_settings and not self._set_term_settings():
                 raise Exception("Unable to set term settings")
             if not self._set_paths():
                 raise Exception("Unable to set paths")
@@ -1259,6 +1260,30 @@ class Linux(object, ToDictMixin):
         if re_output:
             result['size'] = int(re_output.group(1))
             result['used_by'] = int(re_output.group(2))
+        return result
+
+    @fun_test.safe
+    def lspci(self, grep_filter=None):
+        result = []
+        command = "lspci"
+        if grep_filter:
+            command += " | grep {}".format(grep_filter)
+        output = self.command(command)
+        lines = output.split("\n")
+        for line in lines:
+            m = re.search(r'((\d+):(\d+)\.(\d+))\s+(.*?):', line)
+            if m:
+                id = m.group(1)
+                bus_number = m.group(2)
+                device_number = m.group(3)
+                function_number = m.group(4)
+                device_class = m.group(5)
+                record = {"id": id,
+                          "bus_number": bus_number,
+                          "device_number": device_number,
+                          "function_number": function_number,
+                          "device_class": device_class}
+                result.append(record)
         return result
 
     @fun_test.safe

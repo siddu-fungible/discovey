@@ -152,8 +152,14 @@ class AssetManager:
         self.orchestrators.append(orchestrator)
         return orchestrator
 
-
-
-
+    @fun_test.safe
+    def get_fs_by_name(self, name):
+        result = None
+        fs_json = ASSET_DIR + "/fs.json"
+        json_spec = parse_file_to_json(file_name=fs_json)
+        for fs in json_spec:
+            if fs["name"] == name:
+                result = fs
+        return result
 
 asset_manager = AssetManager()
