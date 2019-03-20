@@ -2,6 +2,7 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
+import {t} from "../../../node_modules/@angular/core/src/render3";
 
 enum TimeMode {
   ALL = "all",
@@ -69,6 +70,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   maxDataSet: number = null; // maximum value of all the 'max' values of the datasets
   maxExpected: number = null; // maximum value of all the 'expected' values of the datasets
   maxDataPoint: number = null; // maximum value of all the data points from all the datasets
+  originalMaxDataPoint: number = null;
   yMax: number = null;
   yAxisSet: any = new Set(); //to cehck for duplicates in the expected value so that the text is not overwritten
 
@@ -602,7 +604,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   // calculate the yMax which is the maximum number of the display range on y axis
   calculateMax(): void {
-    if (this.maxExpected !== -1) {
+    if (this.maxExpected && this.maxExpected !== -1) {
       if (this.maxDataSet !== -1) {
         if (this.maxDataSet > this.maxExpected) {
           this.yMax = this.maxDataSet;
@@ -742,9 +744,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let result = this.getValidatedData(output, thisMinimum, thisMaximum);
           if (this.maxDataPoint === null) {
             this.maxDataPoint = result.y;
+            this.originalMaxDataPoint = this.maxDataPoint;
           } else {
             if (result.y > this.maxDataPoint) {
               this.maxDataPoint = result.y;
+              this.originalMaxDataPoint = this.maxDataPoint;
             }
           }
           oneChartDataArray.push(result);
@@ -887,7 +891,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     return output;
   }
 
-  convertToVisualizationUnit(outputUnit, output): void {
+  convertToVisualizationUnit(outputUnit, output): any {
     if (this.latency_category.includes(outputUnit)) {
       if (outputUnit === "usecs") {
         output = output / Math.pow(10, 3);
@@ -956,6 +960,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   onChange(newUnit) {
     console.log(newUnit);
     this.chart1YaxisTitle = newUnit;
+    let maximum = null;
     this.selectedUnit = newUnit;
     if (this.selectedUnit !== this.visualizationUnit) {
       this.values = JSON.parse(JSON.stringify(this.originalValues));
@@ -965,6 +970,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           if (output.y && output.y !== 0) {
             output.y = this.convertToBaseUnit(this.visualizationUnit, output.y);
             output.y = this.convertToVisualizationUnit(this.selectedUnit, output.y);
+            if (output.y > maximum) {
+              maximum = output.y;
+            }
           }
         }
       }
@@ -972,6 +980,19 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     } else {
       this.values = JSON.parse(JSON.stringify(this.originalValues));
     }
+    for (let output of this.expectedValues) {
+      if (output.value && output.value !== -1) {
+        output.value = this.convertToBaseUnit(output.unit, output.value);
+      output.value = this.convertToVisualizationUnit(this.selectedUnit, output.value);
+      output.unit = this.selectedUnit;
+      }
+    }
+    if (maximum === null) {
+      this.maxDataPoint = this.originalMaxDataPoint;
+    } else {
+      this.maxDataPoint = maximum;
+    }
+    this.calculateYaxisPlotLines();
   }
 
   //fetching container data

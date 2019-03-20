@@ -1905,6 +1905,6 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
     myscript.add_test_case(SoakDmaMemsetPerformanceTC())
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
