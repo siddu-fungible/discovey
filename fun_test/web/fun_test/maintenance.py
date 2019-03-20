@@ -1050,5 +1050,12 @@ if __name__ == "__main__":
                                    milestone_name="Tape-out")
             mmt.save()
     print "chart creation for HU_HU_FCP is done"
-
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if not entry.leaf:
+            if "Host" in entry.chart_name:
+                base_line_date = datetime(year=2019, month=3, day=18, minute=0, hour=0, second=0)
+                entry.base_line_date = base_line_date
+                entry.save()
+                print entry.chart_name
 
