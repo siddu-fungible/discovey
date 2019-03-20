@@ -10,8 +10,8 @@
   {
     "name": "f1_configs",
     "type": "f1",
-    "dpcsh_tcp_proxy_ip": "10.1.40.24",
-    "dpcsh_tcp_proxy_port": 40221,
+    "dpcsh_tcp_proxy_ip": "10.1.20.129",
+    "dpcsh_tcp_proxy_port": 40220,
     "enable_dpcsh": true
   },
   {
@@ -68,17 +68,19 @@
       "routes": {
         "ipv4": {
           "source_ip1": "192.85.1.2",
-          "destination_ip1": "20.1.1.1",
-          "destination_ip2": "19.1.1.1",
-          "destination_ip3": "60.1.1.1",
-          "destination_ip4": "61.1.1.1",
-          "hnu_destination_ip2": "29.1.1.1"
+          "destination_ip1": "50.0.4.1",
+          "destination_ip2": "75.0.0.5",
+          "destination_ip3": "75.0.0.3",
+          "destination_ip4": "75.0.0.2",
+          "hnu_destination_ip1": "51.1.1.4",
+          "hnu_destination_ip2": "52.1.1.4"
         },
-        "ipv6": {
+         "ipv6": {
           "source_ip1": "2000::2",
-          "destination_ip1": "2001::20:1:1:1",
-          "destination_ip2": "2001::19:1:1:1",
-          "hnu_destination_ip2": "2001::29:1:1:1"
+          "destination_ip1": "2001::50:0:4:1",
+          "destination_ip2": "2001::50:0:2:1",
+          "hnu_destination_ip1": "2001::51:1:1:1",
+          "hnu_destination_ip2": "2001::52:1:1:1"
         }},
         "overlay_routes": {
         "ipv4": {
@@ -132,7 +134,7 @@
       "NU_NU": {"FPG0": "10.1.40.91/2/1", "FPG1": "10.1.40.91/2/2", "FPG2": "10.1.40.91/2/3", "FPG3": "10.1.40.91/2/4"}
     },
     "acl_flow" : {
-      "ALL": {"FPG0": "10.1.40.91/2/1", "FPG1": "10.1.40.91/2/2", "FPG2": "10.1.40.91/2/3", "FPG3": "10.1.40.91/2/4"}
+      "ALL": {"FPG18": "10.1.40.91/2/11", "FPG8": "10.1.40.91/2/1", "FPG1": "10.1.40.91/2/14", "FPG2": "10.1.40.91/2/15"}
     },
     "ecmp_flow" : {
       "FPG_ECMP": {"FPG1": "10.1.23.139/1/1", "FPG19": "10.1.23.140/1/1", "FPG18": "10.1.23.138/1/2"} 

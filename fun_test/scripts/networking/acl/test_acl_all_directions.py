@@ -1022,7 +1022,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION+3)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION+4)
         # Getting Spirent results - only when analyzer/generator is subscribed
 
         checkpoint = "Fetch Tx Port Results for %s" % tx_port
@@ -1096,13 +1096,13 @@ class AclEgressDropNUtoHNU(FunTestCase):
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 3)
             psw_stats = network_controller_obj.peek_psw_global_stats(hnu=True)
             fun_test.log(psw_stats)
             dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
             fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
-            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
             fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
 
             fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
@@ -1278,7 +1278,7 @@ class AclIngressDropHNUtoHNU(FunTestCase):
 
         self.stream_obj_sip = create_streams(tx_port=hnu_ing_port,
                                              dmac=self.routes_config['routermac'],
-                                             dip=self.l3_config['hnu_destination_ip2'], sip="192.168.2.10",
+                                             dip=self.l3_config['hnu_destination_ip2'], sip="192.168.8.10",
                                              s_port=self.acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
                                              d_port=self.acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
                                              sync_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
@@ -2991,14 +2991,14 @@ class AclRangeDropNUtoNU(FunTestCase):
 
 if __name__ == '__main__':
     ts = SpirentSetup()
-    ts.add_test_case(AclIngressDropNUtoNU())
-    ts.add_test_case(AclIPv6DropNUtoNU())
-    ts.add_test_case(AclQosTCNuNu())
+    # ts.add_test_case(AclIngressDropNUtoNU())
+    # ts.add_test_case(AclIPv6DropNUtoNU())
+    # ts.add_test_case(AclQosTCNuNu())
     ts.add_test_case(AclEgressDropNUtoHNU())
-    ts.add_test_case(AclIngressDropHNUtoHNU())
+    # ts.add_test_case(AclIngressDropHNUtoHNU())
     ts.add_test_case(AclEgressDropHNUtoNU())
-    ts.add_test_case(AclIPv6DropNUtoHNU())
-    ts.add_test_case(AclIPv6DropHNUtoHNU())
-    ts.add_test_case(AclIPv6DropHNUtoNU())
-    ts.add_test_case(AclRangeDropNUtoNU())
+    # ts.add_test_case(AclIPv6DropNUtoHNU())
+    # ts.add_test_case(AclIPv6DropHNUtoHNU())
+    # ts.add_test_case(AclIPv6DropHNUtoNU())
+    # ts.add_test_case(AclRangeDropNUtoNU())
     ts.run()
