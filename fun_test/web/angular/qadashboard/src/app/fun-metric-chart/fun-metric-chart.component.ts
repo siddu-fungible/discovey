@@ -76,7 +76,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   baseLineDate: string = null;
   visualizationUnit: string = null;
   selectedUnit: string = null;
-  category: any[] = [];
+  category: string[] = [];
 
   //category of the units for the unit conversion
   latency_category: string[] = ["nsecs", "usecs", "msecs", "secs"];
@@ -85,7 +85,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   cycles_category: string[] = ["cycles"];
   bits_bytes_category: string[] = ["b", "B", "KB", "MB", "GB", "TB"];
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
-  packets_per_second_category: string[] = ["Mpps"];
+  packets_per_second_category: string[] = ["Mpps", "pps"];
 
   public formatter: Function;
   public tooltip: Function;
@@ -830,11 +830,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   convertToBaseUnit(outputUnit, output): any {
     if (this.latency_category.includes(outputUnit)) {
       if (outputUnit === "usecs") {
-        output = output * Math.pow(10, 3);
+        output = output / Math.pow(10, 6);
       } else if (outputUnit === "msecs") {
-        output = output * Math.pow(10, 6);
-      } else if (outputUnit === "secs") {
-        output = output * Math.pow(10, 9);
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "nsecs") {
+        output = output / Math.pow(10, 9);
       }
     } else if (this.bandwidth_category.includes(outputUnit)) {
       if (outputUnit === "Kbps") {
@@ -886,6 +886,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Gops") {
         output = output * Math.pow(10, 9);
       }
+    } else if (this.packets_per_second_category.includes(outputUnit)) {
+      if (outputUnit === "Mpps") {
+        output = output * Math.pow(10, 6);
+      }
     }
 
     return output;
@@ -893,14 +897,13 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   convertToVisualizationUnit(outputUnit, output): any {
     if (this.latency_category.includes(outputUnit)) {
-      if (outputUnit === "usecs") {
-        output = output / Math.pow(10, 3);
+     if (outputUnit === "usecs") {
+        output = output * Math.pow(10, 6);
       } else if (outputUnit === "msecs") {
-        output = output / Math.pow(10, 6);
-      } else if (outputUnit === "secs") {
-        output = output / Math.pow(10, 9);
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "nsecs") {
+        output = output * Math.pow(10, 9);
       }
-
     } else if (this.bandwidth_category.includes(outputUnit)) {
       if (outputUnit === "Kbps") {
         output = output / Math.pow(10, 3);
@@ -952,12 +955,16 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       } else if (outputUnit === "Gops") {
         output = output / Math.pow(10, 9);
       }
+    } else if (this.packets_per_second_category.includes(outputUnit)) {
+      if (outputUnit === "Mpps") {
+        output = output / Math.pow(10, 6);
+      }
     }
 
     return output;
   }
 
-  onChange(newUnit) {
+  onUnitChange(newUnit) {
     console.log(newUnit);
     this.chart1YaxisTitle = newUnit;
     let maximum = null;
