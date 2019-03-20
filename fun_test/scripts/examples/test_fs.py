@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from lib.fun.fs import Fs
+from asset.asset_manager import AssetManager
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -34,9 +35,7 @@ class FunTestCase1(FunTestCase):
         fun_test.log("Testcase cleanup")
 
     def run(self):
-        fs_json = ASSET_DIR + "/fs.json"
-        json_spec = parse_file_to_json(file_name=fs_json)
-        fs = Fs.get(spec=json_spec[0])
+        fs = Fs.get(AssetManager().get_fs_by_name("fs-9"))
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
 
 
