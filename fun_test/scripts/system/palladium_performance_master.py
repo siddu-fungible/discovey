@@ -437,7 +437,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
 
-                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_latency)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_latency)\]', line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_encode_latency_min = int(d["min"])
@@ -445,9 +445,8 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     ec_encode_latency_avg = int(d["avg"])
                     input_metric_name = m.group("metric_name")
                     unit = d["unit"]
-                    fun_test.test_assert_expected(actual=unit, expected="nsecs", message="perf_ec_encode_latency unit")
 
-                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]', line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_encode_throughput_min = int(d["min"])
@@ -455,10 +454,8 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     ec_encode_throughput_avg = int(d["avg"])
                     input_metric_name = m.group("metric_name")
                     unit = d["unit"]
-                    fun_test.test_assert_expected(actual=unit, expected="Mbps",
-                                                  message="perf_ec_encode_throughput unit")
 
-                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]', line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_recovery_latency_min = int(d["min"])
@@ -466,10 +463,8 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     ec_recovery_latency_avg = int(d["avg"])
                     input_metric_name = m.group("metric_name")
                     unit = d["unit"]
-                    fun_test.test_assert_expected(actual=unit, expected="nsecs",
-                                                  message="perf_ec_recovery_latency unit")
 
-                m = re.search(r'(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]', line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_recovery_throughput_min = int(d["min"])
@@ -477,8 +472,6 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     ec_recovery_throughput_avg = int(d["avg"])
                     input_metric_name = m.group("metric_name")
                     unit = d["unit"]
-                    fun_test.test_assert_expected(actual=unit, expected="Mbps",
-                                                  message="perf_ec_recovery_throughput unit")
             self.result = fun_test.PASSED
 
         except Exception as ex:

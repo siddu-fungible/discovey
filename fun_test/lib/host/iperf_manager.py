@@ -37,40 +37,40 @@ class IPerfManager:
                 if not result:
                     break
 
-            # Install iperf/iperf3 and start server mode
-            for pkg in ('iperf', 'iperf3'):
-                result &= linux_obj.install_package(pkg)
-                if not result:
-                    break
-                if linux_obj.get_process_id_by_pattern(pkg) is None:
-                    linux_obj.command('{} -sD'.format(pkg))
-                    for ns in linux_obj.get_namespaces():
-                        linux_obj.sudo_command('ip netns exec {} {} -sD'.format(ns, pkg))
-                    result &= linux_obj.get_process_id_by_pattern(pkg) is not None
-                    if not result:
-                        break
-
-            # Install perfsonar-tools for owampd and owping
-            for pkg in ('perfsonar-tools',):
-                cmds = (
-                    'cd /etc/apt/sources.list.d/',
-                    'wget http://downloads.perfsonar.net/debian/perfsonar-release.list',
-                    'wget -qO - http://downloads.perfsonar.net/debian/perfsonar-debian-official.gpg.key | apt-key add -',
-                )
-                linux_obj.sudo_command(';'.join(cmds))
-                result &= linux_obj.install_package(pkg)
-                if not result:
-                    break
-
-            # Start owampd server
-            if linux_obj.get_process_id_by_pattern('owampd') is None:
-                cmd = '/usr/sbin/owampd -c /etc/owamp-server -R /var/run'
-                linux_obj.sudo_command(cmd)
-                for ns in linux_obj.get_namespaces():
-                    linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
-                result &= linux_obj.get_process_id_by_pattern('owampd') is not None
-                if not result:
-                    break
+            ## Install iperf/iperf3 and start server mode
+            #for pkg in ('iperf', 'iperf3'):
+            #    result &= linux_obj.install_package(pkg)
+            #    if not result:
+            #        break
+            #    if linux_obj.get_process_id_by_pattern(pkg) is None:
+            #        linux_obj.command('{} -sD'.format(pkg))
+            #        for ns in linux_obj.get_namespaces():
+            #            linux_obj.sudo_command('ip netns exec {} {} -sD'.format(ns, pkg))
+            #        result &= linux_obj.get_process_id_by_pattern(pkg) is not None
+            #        if not result:
+            #            break
+            #
+            ## Install perfsonar-tools for owampd and owping
+            #for pkg in ('perfsonar-tools',):
+            #    cmds = (
+            #        'cd /etc/apt/sources.list.d/',
+            #        'wget http://downloads.perfsonar.net/debian/perfsonar-release.list',
+            #        'wget -qO - http://downloads.perfsonar.net/debian/perfsonar-debian-official.gpg.key | apt-key add -',
+            #    )
+            #    linux_obj.sudo_command(';'.join(cmds))
+            #    result &= linux_obj.install_package(pkg)
+            #    if not result:
+            #        break
+            #
+            ## Start owampd server
+            #if linux_obj.get_process_id_by_pattern('owampd') is None:
+            #    cmd = '/usr/sbin/owampd -c /etc/owamp-server -R /var/run'
+            #    linux_obj.sudo_command(cmd)
+            #    for ns in linux_obj.get_namespaces():
+            #        linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
+            #    result &= linux_obj.get_process_id_by_pattern('owampd') is not None
+            #    if not result:
+            #        break
 
             # Install netperf
             for pkg in ('netperf',):
@@ -90,7 +90,7 @@ class IPerfManager:
                 linux_obj.sudo_command(cmd)
                 for ns in linux_obj.get_namespaces():
                     linux_obj.sudo_command('ip netns exec {} {}'.format(ns, cmd))
-                result &= linux_obj.get_process_id_by_pattern('owampd') is not None
+                result &= linux_obj.get_process_id_by_pattern('netserver') is not None
                 if not result:
                     break
 
@@ -116,8 +116,6 @@ class IPerfManager:
         else:
             for arg_dict in arg_dicts:
                 linux_obj = arg_dict.get('linux_obj')
-                hostname = linux_obj.hostname()
-                result.update({hostname: {}})
                 dip = arg_dict.get('dip')
                 tool = arg_dict.get('tool', 'iperf3')
                 protocol = arg_dict.get('protocol', 'udp')
@@ -125,8 +123,8 @@ class IPerfManager:
                 duration = arg_dict.get('duration', 10)
                 frame_size = arg_dict.get('frame_size', 1518)
                 bw = arg_dict.get('bw', '5m')
-                result[hostname] = do_test(linux_obj, dip=dip, tool=tool, protocol=protocol, parallel=parallel,
-                                           duration=duration, frame_size=frame_size, bw=bw)
+                result = do_test(linux_obj, dip=dip, tool=tool, protocol=protocol, parallel=parallel,
+                                 duration=duration, frame_size=frame_size, bw=bw)
         return result
 
 
