@@ -10,8 +10,8 @@
   {
     "name": "f1_configs",
     "type": "f1",
-    "dpcsh_tcp_proxy_ip": "10.1.40.24",
-    "dpcsh_tcp_proxy_port": 40221,
+    "dpcsh_tcp_proxy_ip": "10.1.20.129",
+    "dpcsh_tcp_proxy_port": 40220,
     "enable_dpcsh": true
   },
   {
