@@ -266,7 +266,17 @@ class Fs():
         return self.f1s[index]
 
     @staticmethod
-    def get(test_bed_spec, tftp_image_path):
+    def get(test_bed_spec=None, tftp_image_path=None):
+        if not test_bed_spec:
+            test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
+            fun_test.log("Testbed-type: {}".format(test_bed_type))
+            test_bed_spec = AssetManager().get_fs_by_name(test_bed_type)
+            fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_type))
+
+        if not tftp_image_path:
+            tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+        fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path))
+
         fun_test.simple_assert(test_bed_spec, "Testbed spec available")
         bmc_spec = test_bed_spec["bmc"]
         fpga_spec = test_bed_spec["fpga"]
