@@ -49,10 +49,10 @@ internal_chart_names_for_flows = {
     "HNU_HNU_NFCP": ["HNU_HNU_output_throughput", "HNU_HNU_output_pps"],
     "NU_NU_NFCP": ["NU_NU_output_throughput", "NU_NU_output_pps"],
     "HNU_NU_NFCP": ["HNU_NU_output_throughput", "HNU_NU_output_pps"],
-    "HU_NU_NFCP": ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps"],
-    "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps"],
-    "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps"],
-    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps"]
+    "HU_NU_NFCP": ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "HU_NU_NFCP_output_latency_avg"],
+    "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps", "HU_HU_NFCP_output_latency_avg"],
+    "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps", "HU_HU_FCP_output_latency_avg"],
+    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"]
 }
 
 
@@ -89,7 +89,7 @@ def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenki
 
 
 def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, git_commit,
-                                 internal_chart_name):
+                     internal_chart_name):
     charts = MetricChart.objects.filter(internal_chart_name=internal_chart_name)
     for chart in charts:
         chart.last_build_status = result
@@ -1688,7 +1688,6 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
     def run(self):
         metrics = collections.OrderedDict()
         try:
-
             fun_test.test_assert(self.validate_json_file(), "validate json file and output")
             for lines in self.lines:
                 for line in lines:
@@ -1702,9 +1701,11 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         date_time = get_time_from_timestamp(line["timestamp"])
                         if "HU" in metrics["input_flow_type"]:
                             metrics["output_throughput"] = (float(
-                                line["throughput"]) / 1000) if "throughput" in line and line["throughput"] != -1 else -1  # extrapolate by 4.8 for HU
+                                line["throughput"]) / 1000) if "throughput" in line and line[
+                                "throughput"] != -1 else -1  # extrapolate by 4.8 for HU
                             metrics["output_pps"] = (float(
-                                line["pps"]) / 1000000) if "pps" in line and line["pps"] != -1 else -1  # extrapolate by 0.0048 for HU
+                                line["pps"]) / 1000000) if "pps" in line and line[
+                                "pps"] != -1 else -1  # extrapolate by 0.0048 for HU
                         else:
                             metrics["output_throughput"] = (
                                     float(line["throughput"]) * 3.9) if "throughput" in line else -1
@@ -1729,25 +1730,52 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         d["input_date_time"] = date_time
                         if date_time.year >= 2019:
                             MetricHelper(model=NuTransitPerformance).add_entry(**d)
-                        if metrics["output_throughput"] == -1:
-                            chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                            for names in chart_names:
-                                if "throughput" in names:
+                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
+                        for names in chart_names:
+                            if "throughput" in names:
+                                if metrics["output_throughput"] == -1:
                                     set_chart_status(result=fun_test.FAILED,
                                                      suite_execution_id=fun_test.get_suite_execution_id(),
                                                      test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
                                                      git_commit="", internal_chart_name=names)
-                        if metrics["output_pps"] == -1:
-                            chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                            for names in chart_names:
-                                if "pps" in names:
+                                else:
+                                    set_chart_status(result=fun_test.PASSED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+
+                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
+                        for names in chart_names:
+                            if "pps" in names:
+                                if metrics["output_pps"] == -1:
                                     set_chart_status(result=fun_test.FAILED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+                                else:
+                                    set_chart_status(result=fun_test.PASSED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
+                        for names in chart_names:
+                            if "latency" in names:
+                                if metrics["output_latency_avg"] == -1 or metrics["output_latency_min"] == -1 or \
+                                        metrics["output_latency_max"] == -1 or metrics["output_latency_P90"] == -1 or \
+                                        metrics["output_latency_P50"] == -1 or metrics["output_latency_P99"] == -1:
+                                    set_chart_status(result=fun_test.FAILED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+                                else:
+                                    set_chart_status(result=fun_test.PASSED,
                                                      suite_execution_id=fun_test.get_suite_execution_id(),
                                                      test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
                                                      git_commit="", internal_chart_name=names)
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
+
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
