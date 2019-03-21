@@ -1299,7 +1299,7 @@ class TeraMarkZipDeflatePerformance(models.Model):
     output_bandwidth_avg = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
     output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
-    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.BigIntegerField(verbose_name="ns", default=-1)
     output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
     output_iops = models.IntegerField(verbose_name="ops per sec", default=-1)
     tag = "analytics"
@@ -1321,7 +1321,7 @@ class TeraMarkZipLzmaPerformance(models.Model):
     output_bandwidth_avg = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
     output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
-    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.BigIntegerField(verbose_name="ns", default=-1)
     output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
     output_iops = models.IntegerField(verbose_name="ops per sec", default=-1)
     tag = "analytics"
