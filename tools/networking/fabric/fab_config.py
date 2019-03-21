@@ -149,15 +149,16 @@ def generateF1Config(rack_id, fs_id, f1, cx_id):
             "id": fport,
             "description": "spine link from FS %s f1 %s port %s to Cx %s port %s" % (
                 fs_id, f1["id"], fport, Cxlink["MGMT_IP"], cxport),
-            "bandwidth": "%d" % (100 if TOPO_DATA["Size"]["FSs"] <= 2 else 50),
+            "bandwidth": 100,
+            "mtu": 9000,
+            "vrf": 1,
             "type": "spine_facing",
             "spine_index": spine_index,
             "gph_index": [
                 {"index": spine_index}
             ],
             "ip": {
-                "my_ip": my_ip,
-                "peer_ip": peer_ip,
+                "address": my_ip,
                 "netmask": spine_prefixlen
             }
         }
@@ -168,7 +169,7 @@ def generateF1Config(rack_id, fs_id, f1, cx_id):
             "ip": peer_ip,
             "as": SPINE_AS,
             "next-hop-self": True,
-            "allowas-in": True
+            "allowas-in": 1
         }
         f1_bgp_config["neighbors"].append(bgp_n)
 
@@ -198,6 +199,8 @@ def generateF1Config(rack_id, fs_id, f1, cx_id):
             "description": "fab link from FS %s F1 %s port %s to FS %s F1 %s" % (
                 fs_id, f1["id"], intf, peer_fs_id, peer_f1_id),
             "bandwidth": 100 if TOPO_DATA["Size"]["FSs"] <= 2 else 50,
+            "mtu": 9000,
+            "vrf": 1,
             "type": "fabric_facing",
             "remote_f1_id": remote_f1_id,
             "gph_index": gph_index
