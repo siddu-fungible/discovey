@@ -4,7 +4,7 @@ import json
 import random, pytz
 from dateutil.parser import parse
 import re
-from fun_global import get_current_time
+from fun_global import *
 from datetime import datetime
 from web.web_global import PRIMARY_SETTINGS_FILE
 from django.apps import apps
@@ -228,6 +228,7 @@ def get_entries_for_day(model, day, data_set):
 
 
 def get_possible_values(model_name):
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
     metric_model = app_config.get_metric_models()[model_name]
     fields = metric_model._meta.get_fields()
     field_choices = {}
@@ -241,6 +242,17 @@ def get_possible_values(model_name):
                     choices.append(value[field.column])
 
                 field_choices[field.column] = choices
+    return field_choices
+
+
+def get_possible_output_values(model_name):
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    metric_model = app_config.get_metric_models()[model_name]
+    fields = metric_model._meta.get_fields()
+    field_choices = []
+    for field in fields:
+        if field.column.startswith("output_"):
+            field_choices.append(field.column)
     return field_choices
 
 
@@ -911,7 +923,6 @@ if __name__ == "__main_reference__":
             entry.save()
     print "created reference values"
 
-
 if __name__ == "__main_change_max__":
     entries = MetricChart.objects.all()
     count = 0
@@ -954,19 +965,19 @@ if __name__ == "__main_create_pps__":
         y1_axis_title = "Mpps"
         base_line_date = datetime(year=2019, month=1, day=22, minute=0, hour=0, second=0)
         MetricChart(chart_name=chart_name,
-                metric_id=metric_id,
-                internal_chart_name=internal_name,
-                data_sets=json.dumps(data_sets),
-                leaf=True,
-                description="TBD",
-                owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
-                positive=positive,
-                y1_axis_title=y1_axis_title,
-                metric_model_name=model_name,
-                base_line_date=base_line_date).save()
+                    metric_id=metric_id,
+                    internal_chart_name=internal_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
         mmt = MileStoneMarkers(metric_id=metric_id,
-                           milestone_date=datetime(year=2018, month=9, day=16),
-                           milestone_name="Tape-out")
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
         mmt.save()
     print "create pps charts for 3 nw flow type metrics"
 
@@ -984,7 +995,7 @@ if __name__ == "__main_compression__":
                 entry.save()
                 print (entry.chart_name, str(entry.base_line_date))
 
-if __name__ == "__main__":
+if __name__ == "__main_EC_Perf__":
     entries = MetricChart.objects.all()
     for entry in entries:
         if entry.chart_name == "EC 8:4 Throughput":
@@ -1004,3 +1015,30 @@ if __name__ == "__main__":
             entry.output_recovery_throughput_avg = entry.output_recovery_throughput_avg / 1000
             entry.save()
             print "updated"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if entry.leaf:
+            if entry.y1_axis_title == "ns":
+                entry.y1_axis_title = "nsecs"
+            elif entry.y1_axis_title == "ops/sec":
+                entry.y1_axis_title = "ops"
+            elif entry.y1_axis_title == "ms":
+                entry.y1_axis_title = "msecs"
+            elif entry.y1_axis_title == "us":
+                entry.y1_axis_title = "usecs"
+            elif entry.y1_axis_title == "seconds":
+                entry.y1_axis_title = "secs"
+            elif entry.y1_axis_title == "IOPS":
+                entry.y1_axis_title = "ops"
+            elif entry.y1_axis_title == "Cycles":
+                entry.y1_axis_title = "cycles"
+            elif entry.y1_axis_title == "mbps":
+                entry.y1_axis_title = "Mbps"
+            elif entry.y1_axis_title == "Kops/sec":
+                entry.y1_axis_title = "Kops"
+            entry.save()
+            entry.visualization_unit = entry.y1_axis_title
+            entry.save()
+    print "setting y1axis title, score and viz unit complete"

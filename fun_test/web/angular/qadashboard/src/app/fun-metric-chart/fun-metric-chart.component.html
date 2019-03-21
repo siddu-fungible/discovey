@@ -8,16 +8,25 @@
         <a (click)="setTimeMode('week')"> Week </a>/
         <a (click)="setTimeMode('month')"> Month </a>/
         <b><u><a (click)="setTimeMode('all')"> All </a></u></b>
+        <select [(ngModel)]="selectedUnit" (ngModelChange)="onUnitChange($event)" style="float: right">
+          <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
+        </select>
       </div>
       <div *ngSwitchCase="'week'">
         <b><u><a (click)="setTimeMode('week')"> Week </a></u></b>/
         <a (click)="setTimeMode('month')"> Month </a>/
         <a (click)="setTimeMode('all')"> All </a>
+        <select [(ngModel)]="selectedUnit" (ngModelChange)="onUnitChange($event)" style="float: right">
+          <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
+        </select>
       </div>
       <div *ngSwitchCase="'month'">
         <a (click)="setTimeMode('week')"> Week </a>/
         <b><u><a (click)="setTimeMode('month')"> Month </a></u></b>/
         <a (click)="setTimeMode('all')"> All </a>
+        <select [(ngModel)]="selectedUnit" (ngModelChange)="onUnitChange($event)" style="float: right">
+          <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
+        </select>
       </div>
     </div>
     <!-- fun chart component -->
@@ -91,8 +100,10 @@
       <br>
       <div *ngIf="modelName !== 'MetricContainer'">
         <b>Show expected values:</b>&nbsp;
-        <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select All</a>
-        <a *ngIf="showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Deselect All</a>
+        <a *ngIf="!showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Select
+          All</a>
+        <a *ngIf="showAllExpectedValues && showSelect" [routerLink]="" (click)="changeAllExpectedValues()">Deselect
+          All</a>
         <table>
           <tr *ngFor="let output of expectedValues">
             <td *ngIf="output.value !== -1">
@@ -170,6 +181,14 @@
               <td>
                 BaseLine Date:&nbsp;<input type="text" [(ngModel)]="baseLineDate" [value]=""
                                            style="width: 300px">
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Visualization Unit:&nbsp;
+                <select [(ngModel)]="visualizationUnit" style="width: 100px">
+                  <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
+                </select>
               </td>
             </tr>
           </table>
