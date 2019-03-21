@@ -36,11 +36,13 @@ class FunTestCase1(FunTestCase):
         fun_test.shared_variables["fs"].cleanup()
 
     def run(self):
-        fs = Fs.get(AssetManager().get_fs_by_name("fs-9"))
+        fs = Fs.get()
         fun_test.shared_variables["fs"] = fs
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
         f1 = fs.get_f1(index=0)
         f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+
+
 
 if __name__ == "__main__":
     myscript = MyScript()

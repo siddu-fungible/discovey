@@ -180,12 +180,14 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                     alloc_speed_test_found = True
                     d = json.loads(m.group(1))
                     output_one_malloc_free_wu = int(d["avg"])
+                    output_one_malloc_free_wu_unit = d["unit"]
                 m = re.search(
                     r'Time for one fun_malloc\+fun_free \(threaded\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_threaded_ns\]',
                     line)
                 if m:
                     d = json.loads(m.group(1))
                     output_one_malloc_free_threaded = int(d['avg'])
+                    output_one_malloc_free_threaded_unit = d["unit"]
                 m = re.search(
                     r'Time for one malloc\+free \(classic\):\s+(.*)\s+nsecs\s+\[perf_malloc_free_classic_ns\]', line)
                 if m:
@@ -193,6 +195,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                     output_one_malloc_free_classic_avg = int(d['avg'])
                     output_one_malloc_free_classic_min = int(d['min'])
                     output_one_malloc_free_classic_max = int(d['max'])
+                    output_one_malloc_free_classic_avg_unit = d["unit"]
+                    output_one_malloc_free_classic_min_unit = d["unit"]
+                    output_one_malloc_free_classic_max_unit = d["unit"]
 
                 # wu_latency_test
                 m = re.search(r' wu_latency_test.*({.*}).*perf_wu_alloc_stack_ns', line)
@@ -202,6 +207,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                     wu_alloc_stack_ns_min = int(d["min"])
                     wu_alloc_stack_ns_avg = int(d["avg"])
                     wu_alloc_stack_ns_max = int(d["max"])
+                    wu_alloc_stack_ns_min_unit = d["unit"]
+                    wu_alloc_stack_ns_avg_unit = d["unit"]
+                    wu_alloc_stack_ns_max_unit = d["unit"]
                 m = re.search(r' wu_latency_test.*({.*}).*perf_wu_ungated_ns', line)
                 if m:
                     d = json.loads(m.group(1))
@@ -209,6 +217,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                     wu_ungated_ns_min = int(d["min"])
                     wu_ungated_ns_avg = int(d["avg"])
                     wu_ungated_ns_max = int(d["max"])
+                    wu_ungated_ns_min_unit = d["unit"]
+                    wu_ungated_ns_avg_unit = d["unit"]
+                    wu_ungated_ns_max_unit = d["unit"]
 
             fun_test.log("Malloc Free threaded: {}".format(output_one_malloc_free_threaded))
             fun_test.log("Malloc Free WU: {}".format(output_one_malloc_free_wu))
@@ -232,12 +243,20 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                                                                 output_one_malloc_free_classic_min=output_one_malloc_free_classic_min,
                                                                 output_one_malloc_free_classic_avg=output_one_malloc_free_classic_avg,
                                                                 output_one_malloc_free_classic_max=output_one_malloc_free_classic_max,
+                                                                output_one_malloc_free_wu_unit=output_one_malloc_free_wu_unit,
+                                                                output_one_malloc_free_threaded_unit=output_one_malloc_free_threaded_unit,
+                                                                output_one_malloc_free_classic_min_unit=output_one_malloc_free_classic_min_unit,
+                                                                output_one_malloc_free_classic_avg_unit=output_one_malloc_free_classic_avg_unit,
+                                                                output_one_malloc_free_classic_max_unit=output_one_malloc_free_classic_max_unit,
                                                                 input_date_time=self.dt)
 
             MetricHelper(model=WuLatencyUngated).add_entry(status=self.result, input_app="wu_latency_test",
                                                            output_min=wu_ungated_ns_min,
                                                            output_max=wu_ungated_ns_max,
                                                            output_avg=wu_ungated_ns_avg,
+                                                           output_min_unit=wu_ungated_ns_min_unit,
+                                                           output_max_unit=wu_ungated_ns_max_unit,
+                                                           output_avg_unit=wu_ungated_ns_avg_unit,
                                                            input_date_time=self.dt)
 
             MetricHelper(model=WuLatencyAllocStack).add_entry(status=self.result,
@@ -245,6 +264,9 @@ class AllocSpeedPerformanceTc(PalladiumPerformanceTc):
                                                               output_min=wu_alloc_stack_ns_min,
                                                               output_max=wu_alloc_stack_ns_max,
                                                               output_avg=wu_alloc_stack_ns_avg,
+                                                              output_min_unit=wu_alloc_stack_ns_min_unit,
+                                                              output_max_unit=wu_alloc_stack_ns_max_unit,
+                                                              output_avg_unit=wu_alloc_stack_ns_avg_unit,
                                                               input_date_time=self.dt)
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
@@ -316,6 +338,7 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                     latency_min = latency_json["min"]
                     latency_max = latency_json["max"]
                     latency_avg = latency_json["avg"]
+                    latency_unit = latency_json["unit"]
                     latency_perf_name = m.group("latency_perf_name")
                     bandwidth_json = json.loads(n.group("bandwidth_json"))
                     average_bandwidth_unit = bandwidth_json["unit"]
@@ -336,8 +359,12 @@ class BcopyPerformanceTc(PalladiumPerformanceTc):
                                                                    output_latency_min=latency_min,
                                                                    output_latency_max=latency_max,
                                                                    output_latency_avg=latency_avg,
+                                                                   output_latency_min_unit=latency_unit,
+                                                                   output_latency_max_unit=latency_unit,
+                                                                   output_latency_avg_unit=latency_unit,
                                                                    input_latency_perf_name=latency_perf_name,
                                                                    output_average_bandwith=average_bandwidth,
+                                                                   output_average_bandwith_unit=average_bandwidth_unit,
                                                                    input_average_bandwith_perf_name=average_bandwidth_perf_name)
                     m = None
                     n = None
@@ -386,6 +413,7 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
                     latency_min = latency_json["min"]
                     latency_max = latency_json["max"]
                     latency_avg = latency_json["avg"]
+                    latency_unit = latency_json["unit"]
                     latency_perf_name = m.group("latency_perf_name")
                     bandwidth_json = json.loads(m.group("bandwidth_json"))
                     average_bandwidth_unit = bandwidth_json["unit"]
@@ -405,8 +433,12 @@ class BcopyFloodPerformanceTc(PalladiumPerformanceTc):
                                                                            output_latency_min=latency_min,
                                                                            output_latency_max=latency_max,
                                                                            output_latency_avg=latency_avg,
+                                                                           output_latency_min_unit=latency_unit,
+                                                                           output_latency_max_unit=latency_unit,
+                                                                           output_latency_avg_unit=latency_unit,
                                                                            input_latency_perf_name=latency_perf_name,
                                                                            output_average_bandwith=average_bandwidth,
+                                                                           output_average_bandwith_unit=average_bandwidth_unit,
                                                                            input_average_bandwith_perf_name=average_bandwidth_perf_name
                                                                            )
             self.result = fun_test.PASSED
@@ -444,7 +476,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     ec_encode_latency_max = int(d["max"])
                     ec_encode_latency_avg = int(d["avg"])
                     input_metric_name = m.group("metric_name")
-                    unit = d["unit"]
+                    encode_latency_unit = d["unit"]
 
                 m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]', line)
                 if m:
@@ -453,7 +485,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     ec_encode_throughput_max = int(d["max"])
                     ec_encode_throughput_avg = int(d["avg"])
                     input_metric_name = m.group("metric_name")
-                    unit = d["unit"]
+                    encode_throughput_unit = d["unit"]
 
                 m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]', line)
                 if m:
@@ -462,7 +494,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     ec_recovery_latency_max = int(d["max"])
                     ec_recovery_latency_avg = int(d["avg"])
                     input_metric_name = m.group("metric_name")
-                    unit = d["unit"]
+                    recovery_latency_unit = d["unit"]
 
                 m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]', line)
                 if m:
@@ -471,7 +503,7 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     ec_recovery_throughput_max = int(d["max"])
                     ec_recovery_throughput_avg = int(d["avg"])
                     input_metric_name = m.group("metric_name")
-                    unit = d["unit"]
+                    recovery_throughput_unit = d["unit"]
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -490,7 +522,19 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                                                         output_recovery_latency_avg=ec_recovery_latency_avg,
                                                         output_recovery_throughput_min=ec_recovery_throughput_min,
                                                         output_recovery_throughput_max=ec_recovery_throughput_max,
-                                                        output_recovery_throughput_avg=ec_recovery_throughput_avg
+                                                        output_recovery_throughput_avg=ec_recovery_throughput_avg,
+                                                        output_encode_latency_min_unit=encode_latency_unit,
+                                                        output_encode_latency_max_unit=encode_latency_unit,
+                                                        output_encode_latency_avg_unit=encode_latency_unit,
+                                                        output_encode_throughput_min_unit=encode_throughput_unit,
+                                                        output_encode_throughput_max_unit=encode_throughput_unit,
+                                                        output_encode_throughput_avg_unit=encode_throughput_unit,
+                                                        output_recovery_latency_min_unit=recovery_latency_unit,
+                                                        output_recovery_latency_max_unit=recovery_latency_unit,
+                                                        output_recovery_latency_avg_unit=recovery_latency_unit,
+                                                        output_recovery_throughput_min_unit=recovery_throughput_unit,
+                                                        output_recovery_throughput_max_unit=recovery_throughput_unit,
+                                                        output_recovery_throughput_avg_unit=recovery_throughput_unit
                                                         )
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
@@ -527,17 +571,13 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
                         for key, value in j.iteritems():
                             if key != "unit" and key != "value":
                                 metrics["output_" + metric_name + "_" + key] = value
+                                metrics["output_" + metric_name + "_" + key + "_unit"] = j["unit"]
                             if key == "value":
                                 metrics["output_" + metric_name] = value
+                                metrics["output_" + metric_name + "_unit"] = j["unit"]
                     except:
                         metrics["output_" + metric_name] = value
-                    try:
-                        # if units not in ["mbps", "nsecs", "iops"]:
-                        units = j["unit"]
-                        fun_test.simple_assert(units in ["mbps", "nsecs", "iops"],
-                                               "Unexpected unit {} in line: {}".format(units, line))
-                    except Exception as ex:
-                        pass
+                        metrics["output_" + metric_name + "_unit"] = j["unit"]
                     d = self.metrics_to_dict(metrics, self.result)
                     MetricHelper(model=EcVolPerformance).add_entry(**d)
             self.result = fun_test.PASSED
@@ -594,17 +634,13 @@ class VoltestPerformanceTc(PalladiumPerformanceTc):
                         for key, value in j.iteritems():
                             if key != "unit" and key != "value":
                                 metrics["output_" + metric_name + "_" + metric_type + "_" + key] = value
+                                metrics["output_" + metric_name + "_" + metric_type + "_" + key + "_unit"] = j["unit"]
                             if key == "value":
                                 metrics["output_" + metric_name + "_" + metric_type] = value
+                                metrics["output_" + metric_name + "_" + metric_type + "_unit"] = j["unit"]
                     except Exception as ex:
                         metrics["output_" + metric_name + "_" + metric_type] = value
-
-                    try:
-                        units = j["unit"]
-                        fun_test.simple_assert(units in ["Mbps", "nsecs", "ops"],
-                                               "Unexpected unit {} in line: {}".format(units, line))
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
+                        metrics["output_" + metric_name + "_" + metric_type + "_unit"] = j["unit"]
                     d = self.metrics_to_dict(metrics, self.result)
                     MetricHelper(model=VoltestPerformance).add_entry(**d)
 
@@ -640,15 +676,15 @@ class WuDispatchTestPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     average_json = json.loads(m.group("average_json"))
                     output_average = int(average_json["value"])
-                    input_unit = average_json["unit"]
+                    unit = average_json["unit"]
                     input_app = "dispatch_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_average"] = output_average
+                    metrics["output_average_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    j = 0
                     MetricHelper(model=WuDispatchTestPerformance).add_entry(**d)
 
             self.result = fun_test.PASSED
@@ -683,15 +719,15 @@ class WuSendSpeedTestPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     average_json = json.loads(m.group("average_json"))
                     output_average = int(average_json["value"])
-                    input_unit = average_json["unit"]
+                    unit = average_json["unit"]
                     input_app = "wu_send_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_average"] = output_average
+                    metrics["output_average_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    j = 0
                     MetricHelper(model=WuSendSpeedTestPerformance).add_entry(**d)
 
             self.result = fun_test.PASSED
@@ -717,7 +753,6 @@ class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
         metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            i = 0
 
             for line in self.lines:
                 m = re.search(
@@ -726,7 +761,6 @@ class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
                 if m:
                     latency_json = json.loads(m.group("latency_json"))
                     unit = latency_json["unit"]
-                    fun_test.test_assert(unit, "Kops", "Valid Unit")
                     output_latency = int(latency_json["value"])
                     input_app = "fun_magent_perf_test"
                     input_metric_name = m.group("metric_name")
@@ -734,8 +768,8 @@ class FunMagentPerformanceTestTc(PalladiumPerformanceTc):
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_latency"] = output_latency
+                    metrics["output_latency_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                    j = 0
                     MetricHelper(model=FunMagentPerformanceTest).add_entry(**d)
 
             self.result = fun_test.PASSED
@@ -769,13 +803,14 @@ class WuStackSpeedTestPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     average_json = json.loads(m.group("average_json"))
                     output_average = int(average_json["value"])
-                    input_unit = average_json["unit"]
+                    unit = average_json["unit"]
                     input_app = "wustack_speed_test"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("average: {}, metric_name: {}".format(output_average, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_average"] = output_average
+                    metrics["output_average_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=WuStackSpeedTestPerformance).add_entry(**d)
 
@@ -810,13 +845,14 @@ class SoakFunMallocPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "soak_malloc_fun_malloc"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=SoakFunMallocPerformance).add_entry(**d)
 
@@ -851,13 +887,14 @@ class SoakClassicMallocPerformanceTc(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "soak_malloc_classic"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=SoakClassicMallocPerformance).add_entry(**d)
 
@@ -902,6 +939,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "boot type: Firmware, boot time: {}, boot cycles: {}".format(output_firmware_boot_time,
                                                                                          output_firmware_boot_cycles))
                         metrics["output_firmware_boot_time"] = output_firmware_boot_time
+                        metrics["output_firmware_boot_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Flash\s+type\s+detection',
@@ -913,6 +951,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             output_flash_type_boot_time,
                             output_flash_type_boot_cycles))
                         metrics["output_flash_type_boot_time"] = output_flash_type_boot_time
+                        metrics["output_flash_type_boot_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+EEPROM\s+Loading',
@@ -924,6 +963,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "boot type: EEPROM Loading, boot time: {}, boot cycles: {}".format(output_eeprom_boot_time,
                                                                                                output_eeprom_boot_cycles))
                         metrics["output_eeprom_boot_time"] = output_eeprom_boot_time
+                        metrics["output_eeprom_boot_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+SBUS\s+Loading',
@@ -935,6 +975,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "boot type: SBUS Loading, boot time: {}, boot cycles: {}".format(output_sbus_boot_time,
                                                                                              output_sbus_boot_cycles))
                         metrics["output_sbus_boot_time"] = output_sbus_boot_time
+                        metrics["output_sbus_boot_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Host\s+BOOT',
@@ -946,6 +987,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "boot type: Host BOOT, boot time: {}, boot cycles: {}".format(output_host_boot_time,
                                                                                           output_host_boot_cycles))
                         metrics["output_host_boot_time"] = output_host_boot_time
+                        metrics["output_host_boot_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Main\s+Loop',
@@ -957,6 +999,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "boot type: Main Loop, boot time: {}, boot cycles: {}".format(output_main_loop_boot_time,
                                                                                           output_main_loop_boot_cycles))
                         metrics["output_main_loop_boot_time"] = output_main_loop_boot_time
+                        metrics["output_main_loop_boot_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Boot\s+success',
@@ -969,6 +1012,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                                 output_boot_success_boot_time,
                                 output_boot_success_boot_cycles))
                         metrics["output_boot_success_boot_time"] = output_boot_success_boot_time
+                        metrics["output_boot_success_boot_time_unit"] = "msecs"
 
             log = self.lsf_status_server.get_raw_file(job_id=self.job_id, file_name="cdn_uartout0.txt")
             fun_test.test_assert(log, "fetched mmc time uart log")
@@ -987,6 +1031,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "MMC INIT Time: {}, cycles: {}".format(output_init_mmc_time,
                                                                    output_init_mmc_cycles))
                         metrics["output_init_mmc_time"] = output_init_mmc_time
+                        metrics["output_init_mmc_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff90000000)\s+size=(?P<size>\d+)',
@@ -998,6 +1043,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "MMC Boot Read Time: {}, cycles: {}".format(output_boot_read_mmc_time,
                                                                         output_boot_read_mmc_cycles))
                         metrics["output_boot_read_mmc_time"] = output_boot_read_mmc_time
+                        metrics["output_boot_read_mmc_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+MMC\s+load\s+dest=(?P<dest>ffffffff91000000)\s+size=(?P<size>\d+)',
@@ -1009,6 +1055,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "MMC FunOS Read Time: {}, cycles: {}".format(output_funos_read_mmc_time,
                                                                          output_funos_read_mmc_cycles))
                         metrics["output_funos_read_mmc_time"] = output_funos_read_mmc_time
+                        metrics["output_funos_read_mmc_time_unit"] = "msecs"
 
                     m = re.search(
                         r'\[(?P<time>\d+)\s+microseconds\]:\s+\((?P<cycle>\d+)\s+cycles\)\s+Start\s+ELF',
@@ -1020,6 +1067,7 @@ class BootTimingPerformanceTc(PalladiumPerformanceTc):
                             "ELF FunOS Load Time: {}, cycles: {}".format(output_funos_load_elf_time,
                                                                          output_funos_load_elf_cycles))
                         metrics["output_funos_load_elf_time"] = output_funos_load_elf_time
+                        metrics["output_funos_load_elf_time_unit"] = "msecs"
 
             d = self.metrics_to_dict(metrics, fun_test.PASSED)
             MetricHelper(model=BootTimePerformance).add_entry(**d)
@@ -1054,13 +1102,14 @@ class TeraMarkPkeRsaPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_rsa_crt_dec_no_pad_soak"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeRsaPerformance).add_entry(**d)
 
@@ -1095,13 +1144,14 @@ class TeraMarkPkeRsa4kPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_rsa_crt_dec_no_pad_4096_soak"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeRsa4kPerformance).add_entry(**d)
 
@@ -1136,13 +1186,14 @@ class TeraMarkPkeEcdh256PerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_ecdh_soak_256"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeEcdh256Performance).add_entry(**d)
 
@@ -1177,13 +1228,14 @@ class TeraMarkPkeEcdh25519PerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_ecdh_soak_25519"
                     input_metric_name = m.group("metric_name").replace(" ", "_")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=TeraMarkPkeEcdh25519Performance).add_entry(**d)
 
@@ -1230,6 +1282,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             input_pkt_size = int(pkt_size_json["value"])
                             output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
                             output_throughput = float(bandwidth_json["value"])
+                            unit = bandwidth_json["units"]
 
                             metrics["input_app"] = input_app
                             metrics["input_algorithm"] = input_algorithm
@@ -1237,6 +1290,8 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             metrics["input_pkt_size"] = input_pkt_size
                             metrics["output_ops_per_sec"] = output_ops_per_sec
                             metrics["output_throughput"] = output_throughput
+                            metrics["output_ops_per_sec_unit"] = "ops"
+                            metrics["output_throughput_unit"] = unit
                             # metrics["output_latency_min"] = output_latency_min
                             # metrics["output_latency_avg"] = output_latency_avg
                             # metrics["output_latency_max"] = output_latency_max
@@ -1256,6 +1311,7 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             input_pkt_size = int(pkt_size_json["value"])
                             output_ops_per_sec = int(ops_json["value"]) if ops_json else -1
                             output_throughput = float(bandwidth_json["value"])
+                            unit = bandwidth_json["units"]
 
                             metrics["input_app"] = input_app
                             metrics["input_key_size"] = input_key_size
@@ -1264,6 +1320,8 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
                             metrics["input_pkt_size"] = input_pkt_size
                             metrics["output_ops_per_sec"] = output_ops_per_sec
                             metrics["output_throughput"] = output_throughput
+                            metrics["output_ops_per_sec_unit"] = "ops"
+                            metrics["output_throughput_unit"] = unit
                             # metrics["output_latency_min"] = output_latency_min
                             # metrics["output_latency_avg"] = output_latency_avg
                             # metrics["output_latency_max"] = output_latency_max
@@ -1307,6 +1365,9 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
                         output_lookup_per_sec_min = int(m.group("minimum"))
                         output_lookup_per_sec_avg = int(m.group("average"))
                         output_lookup_per_sec_max = int(m.group("maximum"))
+                        output_lookup_per_sec_min_unit = m.group("unit")
+                        output_lookup_per_sec_avg_unit = m.group("unit")
+                        output_lookup_per_sec_max_unit = m.group("unit")
                         input_test = "le_test_perf"
                         fun_test.log("memory: {}, lookup per sec: min {}, avg {}, max {}".format(input_memory,
                                                                                                  output_lookup_per_sec_min,
@@ -1317,6 +1378,9 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
                         metrics["output_lookup_per_sec_min"] = output_lookup_per_sec_min
                         metrics["output_lookup_per_sec_avg"] = output_lookup_per_sec_avg
                         metrics["output_lookup_per_sec_max"] = output_lookup_per_sec_max
+                        metrics["output_lookup_per_sec_min_unit"] = output_lookup_per_sec_min_unit
+                        metrics["output_lookup_per_sec_avg_unit"] = output_lookup_per_sec_avg_unit
+                        metrics["output_lookup_per_sec_max_unit"] = output_lookup_per_sec_max_unit
                         d = self.metrics_to_dict(metrics, fun_test.PASSED)
                         MetricHelper(model=TeraMarkLookupEnginePerformance).add_entry(**d)
 
@@ -1363,6 +1427,7 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
                     if match:
                         metrics["input_iterations"] = input_iterations
                         metrics["output_time"] = output_time
+                        metrics["output_time_unit"] = "secs"
                         metrics["input_app"] = input_app
                         d = self.metrics_to_dict(metrics, fun_test.PASSED)
                         MetricHelper(model=FlowTestPerformance).add_entry(**d)
@@ -1648,13 +1713,14 @@ class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_x25519_2k_tls_soak"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=PkeX25519TlsSoakPerformance).add_entry(**d)
             self.result = fun_test.PASSED
@@ -1687,13 +1753,14 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
                 if m:
                     value_json = json.loads(m.group("value_json"))
                     output_ops_per_sec = float(value_json["value"])
-                    input_unit = value_json["unit"]
+                    unit = value_json["unit"]
                     input_app = "pke_p256_2k_tls_soak"
                     input_metric_name = m.group("metric_name")
                     fun_test.log("ops per sec: {}, metric_name: {}".format(output_ops_per_sec, input_metric_name))
                     metrics["input_app"] = input_app
                     metrics["input_metric_name"] = input_metric_name
                     metrics["output_ops_per_sec"] = output_ops_per_sec
+                    metrics["output_ops_per_sec_unit"] = unit
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)
                     MetricHelper(model=PkeP256TlsSoakPerformance).add_entry(**d)
 
@@ -1729,15 +1796,13 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     input_size = m.group("size")
                     bandwidth_json = json.loads(m.group("bandwidth_json"))
                     output_bandwidth = float(bandwidth_json["value"])
-                    input_unit = bandwidth_json["unit"]
-                    if input_unit == "MBps":
-                        output_bandwidth = float(output_bandwidth / 1000)
+                    unit = bandwidth_json["unit"]
                     input_log_size = bandwidth_json["log_size"]
                     metric_name = m.group("metric_name")
                     metrics["input_size"] = input_size
                     metrics["input_operation"] = input_operation
                     metrics["output_bandwidth"] = output_bandwidth
-                    metrics["input_unit"] = input_unit
+                    metrics["output_bandwidth_unit"] = unit
                     metrics["input_log_size"] = input_log_size
                     metrics["input_metric_name"] = metric_name
                     d = self.metrics_to_dict(metrics, fun_test.PASSED)

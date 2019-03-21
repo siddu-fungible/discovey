@@ -237,6 +237,13 @@ class FunTest:
             result = self.parse_string_to_json(self.environment)
         return result
 
+    def get_job_environment_variable(self, variable):
+        result = None
+        job_environment = self.get_job_environment()
+        if variable in job_environment:
+            result = job_environment[variable]
+        return result
+
     def get_job_inputs(self):
         result = None
         if self.inputs:
@@ -395,10 +402,7 @@ class FunTest:
         return artifact_file
 
     def enable_pause_on_failure(self):
-        if not is_regression_server():
-            self.pause_on_failure = True
-        else:
-            fun_test.critical("Pause on failure not allowed on a regression server")
+        self.pause_on_failure = True
 
     def disable_pause_on_failure(self):
         self.pause_on_failure = False

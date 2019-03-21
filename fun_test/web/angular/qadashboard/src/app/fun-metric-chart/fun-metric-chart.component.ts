@@ -36,6 +36,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   currentSource: string;
   waitTime: number = 0;
   values: any;
+  originalValues: any;
   charting: any;
   width: any;
   height: any;
@@ -68,10 +69,23 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   maxDataSet: number = null; // maximum value of all the 'max' values of the datasets
   maxExpected: number = null; // maximum value of all the 'expected' values of the datasets
   maxDataPoint: number = null; // maximum value of all the data points from all the datasets
+  originalMaxDataPoint: number = null;//when the unit changes, restore to original max
   yMax: number = null;
   yAxisSet: any = new Set(); //to cehck for duplicates in the expected value so that the text is not overwritten
 
   baseLineDate: string = null;
+  visualizationUnit: string = null;
+  selectedUnit: string = null;
+  category: string[] = [];
+
+  //category of the units for the unit conversion
+  latency_category: string[] = ["nsecs", "usecs", "msecs", "secs"];
+  ops_category: string[] = ["ops", "Kops", "Mops", "Gops"];
+  operations_category: string[] = ["op", "Kop", "Mop", "Gop"];
+  cycles_category: string[] = ["cycles"];
+  bits_bytes_category: string[] = ["b", "B", "KB", "MB", "GB", "TB"];
+  bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
+  packets_per_second_category: string[] = ["Mpps", "pps"];
 
   public formatter: Function;
   public tooltip: Function;
@@ -286,6 +300,24 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.inner.leaf = this.leaf;
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
         this.baseLineDate = String(this.chartInfo.base_line_date);
+        this.visualizationUnit = this.chartInfo.visualization_unit;
+
+        if (this.latency_category.includes(this.visualizationUnit)) {
+          this.category = [...this.latency_category];
+        } else if (this.bandwidth_category.includes(this.visualizationUnit)) {
+          this.category = [...this.bandwidth_category];
+        } else if (this.cycles_category.includes(this.visualizationUnit)) {
+          this.category = [...this.cycles_category];
+        } else if (this.operations_category.includes(this.visualizationUnit)) {
+          this.category = [...this.operations_category];
+        } else if (this.bits_bytes_category.includes(this.visualizationUnit)) {
+          this.category = [...this.bits_bytes_category];
+        } else if (this.ops_category.includes(this.visualizationUnit)) {
+          this.category = [...this.ops_category];
+        } else if (this.packets_per_second_category.includes(this.visualizationUnit)) {
+          this.category = [...this.packets_per_second_category];
+        }
+        this.selectedUnit = this.visualizationUnit;
       }
       setTimeout(() => {
         this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets);
@@ -317,6 +349,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.maxDataSet = null;
     this.maxExpected = null;
     this.maxDataPoint = null;
+    this.category = [];
+    this.selectedUnit = null;
   }
 
   closePointInfo(): void {
@@ -369,6 +403,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     payload["base_line_date"] = this.baseLineDate;
+    payload["visualization_unit"] = this.visualizationUnit;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
         alert("Submitted");
@@ -569,7 +604,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   // calculate the yMax which is the maximum number of the display range on y axis
   calculateMax(): void {
-    if (this.maxExpected !== -1) {
+    if (this.maxExpected && this.maxExpected !== -1) {
       if (this.maxDataSet !== -1) {
         if (this.maxDataSet > this.maxExpected) {
           this.yMax = this.maxDataSet;
@@ -692,16 +727,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
               let oneRecord = keyValue[j][originalKeyList[startIndex]];
               matchingDateFound = true;
               output = oneRecord[outputName];
+              let unit = outputName + '_unit';
+              let outputUnit = oneRecord[unit];
+              if (outputUnit && outputUnit !== "" && outputUnit !== this.visualizationUnit) {
+                output = this.convertToBaseUnit(outputUnit, output);
+                output = this.convertToVisualizationUnit(this.visualizationUnit, output);
+              }
               total += output;
               count++;
-              if (chartInfo && chartInfo.y1_axis_title) {
-                this.chart1YaxisTitle = chartInfo.y1_axis_title;
-              } else {
-                this.chart1YaxisTitle = tableInfo[outputName].verbose_name;
-              }
-              if (this.y1AxisTitle) {
-                this.chart1YaxisTitle = this.y1AxisTitle;
-              }
             }
             startIndex--;
           }
@@ -711,9 +744,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           let result = this.getValidatedData(output, thisMinimum, thisMaximum);
           if (this.maxDataPoint === null) {
             this.maxDataPoint = result.y;
+            this.originalMaxDataPoint = this.maxDataPoint;
           } else {
             if (result.y > this.maxDataPoint) {
               this.maxDataPoint = result.y;
+              this.originalMaxDataPoint = this.maxDataPoint;
             }
           }
           oneChartDataArray.push(result);
@@ -723,7 +758,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         let output = {};
         output["name"] = name;
         output["value"] = expected;
-        output["unit"] = this.chart1YaxisTitle;
+        output["unit"] = this.visualizationUnit;
         output["show"] = false;
         if (!this.showSelect && output["value"] !== -1) {
           this.showSelect = true;
@@ -745,8 +780,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         }
       }
       this.calculateMax();
+      this.chart1YaxisTitle = this.visualizationUnit;
       this.series = seriesDates;
-      this.values = chartDataSets;
+      this.values = chartDataSets.slice();
+      this.originalValues = JSON.parse(JSON.stringify(this.values));
       this.headers = this.tableInfo;
       //this.data has values for the fun table
       this.data["rows"] = [];
@@ -788,6 +825,181 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       this.loggerService.error("fetchMetricsData");
     });
     this.status = null;
+  }
+
+  convertToBaseUnit(outputUnit, output): any {
+    if (this.latency_category.includes(outputUnit)) {
+      if (outputUnit === "usecs") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "msecs") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "nsecs") {
+        output = output / Math.pow(10, 9);
+      }
+    } else if (this.bandwidth_category.includes(outputUnit)) {
+      if (outputUnit === "Kbps") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "Mbps") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "Gbps") {
+        output = output * Math.pow(10, 9);
+      } else if (outputUnit === "Tbps") {
+        output = output * Math.pow(10, 12);
+      } else if (outputUnit === "Bps") {
+        output = output * 8;
+      } else if (outputUnit === "KBps") {
+        output = output * 8 * Math.pow(10, 3);
+      } else if (outputUnit === "MBps") {
+        output = output * 8 * Math.pow(10, 6);
+      } else if (outputUnit === "GBps") {
+        output = output * 8 * Math.pow(10, 9);
+      } else if (outputUnit === "TBps") {
+        output = output * 8 * Math.pow(10, 12);
+      }
+
+    } else if (this.operations_category.includes(outputUnit)) {
+      if (outputUnit === "Kop") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "Mop") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "Gop") {
+        output = output * Math.pow(10, 9);
+      }
+    } else if (this.bits_bytes_category.includes(outputUnit)) {
+      if (outputUnit === "B") {
+        output = output * 8;
+      } else if (outputUnit === "KB") {
+        output = output * 8 * Math.pow(10, 3);
+      } else if (outputUnit === "MB") {
+        output = output * 8 * Math.pow(10, 6);
+      } else if (outputUnit === "GB") {
+        output = output * 8 * Math.pow(10, 9);
+      } else if (outputUnit === "TB") {
+        output = output * 8 * Math.pow(10, 12);
+      }
+
+    } else if (this.ops_category.includes(outputUnit)) {
+      if (outputUnit === "Kops") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "Mops") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "Gops") {
+        output = output * Math.pow(10, 9);
+      }
+    } else if (this.packets_per_second_category.includes(outputUnit)) {
+      if (outputUnit === "Mpps") {
+        output = output * Math.pow(10, 6);
+      }
+    }
+
+    return output;
+  }
+
+  convertToVisualizationUnit(outputUnit, output): any {
+    if (this.latency_category.includes(outputUnit)) {
+     if (outputUnit === "usecs") {
+        output = output * Math.pow(10, 6);
+      } else if (outputUnit === "msecs") {
+        output = output * Math.pow(10, 3);
+      } else if (outputUnit === "nsecs") {
+        output = output * Math.pow(10, 9);
+      }
+    } else if (this.bandwidth_category.includes(outputUnit)) {
+      if (outputUnit === "Kbps") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "Mbps") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "Gbps") {
+        output = output / Math.pow(10, 9);
+      } else if (outputUnit === "Tbps") {
+        output = output / Math.pow(10, 12);
+      } else if (outputUnit === "Bps") {
+        output = output / 8;
+      } else if (outputUnit === "KBps") {
+        output = output / (8 * Math.pow(10, 3));
+      } else if (outputUnit === "MBps") {
+        output = output / (8 * Math.pow(10, 6));
+      } else if (outputUnit === "GBps") {
+        output = output / (8 * Math.pow(10, 9));
+      } else if (outputUnit === "TBps") {
+        output = output / (8 * Math.pow(10, 12));
+      }
+
+    } else if (this.operations_category.includes(outputUnit)) {
+      if (outputUnit === "Kop") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "Mop") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "Gop") {
+        output = output / Math.pow(10, 9);
+      }
+
+    } else if (this.bits_bytes_category.includes(outputUnit)) {
+      if (outputUnit === "B") {
+        output = output / 8;
+      } else if (outputUnit === "KB") {
+        output = output / (8 * Math.pow(10, 3));
+      } else if (outputUnit === "MB") {
+        output = output / (8 * Math.pow(10, 6));
+      } else if (outputUnit === "GB") {
+        output = output / (8 * Math.pow(10, 9));
+      } else if (outputUnit === "TB") {
+        output = output / (8 * Math.pow(10, 12));
+      }
+
+    } else if (this.ops_category.includes(outputUnit)) {
+      if (outputUnit === "Kops") {
+        output = output / Math.pow(10, 3);
+      } else if (outputUnit === "Mops") {
+        output = output / Math.pow(10, 6);
+      } else if (outputUnit === "Gops") {
+        output = output / Math.pow(10, 9);
+      }
+    } else if (this.packets_per_second_category.includes(outputUnit)) {
+      if (outputUnit === "Mpps") {
+        output = output / Math.pow(10, 6);
+      }
+    }
+
+    return output;
+  }
+
+  onUnitChange(newUnit) {
+    console.log(newUnit);
+    this.chart1YaxisTitle = newUnit;
+    let maximum = null;
+    this.selectedUnit = newUnit;
+    if (this.selectedUnit !== this.visualizationUnit) {
+      this.values = JSON.parse(JSON.stringify(this.originalValues));
+      let values = JSON.parse(JSON.stringify(this.values));
+      for (let value of values) {
+        for (let output of value.data) {
+          if (output.y && output.y !== 0) {
+            output.y = this.convertToBaseUnit(this.visualizationUnit, output.y);
+            output.y = this.convertToVisualizationUnit(this.selectedUnit, output.y);
+            if (output.y > maximum) {
+              maximum = output.y;
+            }
+          }
+        }
+      }
+      this.values = JSON.parse(JSON.stringify(values));
+    } else {
+      this.values = JSON.parse(JSON.stringify(this.originalValues));
+    }
+    for (let output of this.expectedValues) {
+      if (output.value && output.value !== -1) {
+        output.value = this.convertToBaseUnit(output.unit, output.value);
+      output.value = this.convertToVisualizationUnit(this.selectedUnit, output.value);
+      output.unit = this.selectedUnit;
+      }
+    }
+    if (maximum === null) {
+      this.maxDataPoint = this.originalMaxDataPoint;
+    } else {
+      this.maxDataPoint = maximum;
+    }
+    this.calculateYaxisPlotLines();
   }
 
   //fetching container data

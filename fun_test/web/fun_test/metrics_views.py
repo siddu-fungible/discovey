@@ -133,7 +133,8 @@ def chart_info(request):
                   "last_git_commit": chart.last_git_commit,
                   "owner_info": chart.owner_info,
                   "source": chart.source,
-                  "base_line_date": chart.base_line_date}
+                  "base_line_date": chart.base_line_date,
+                  "visualization_unit": chart.visualization_unit}
         for markers in milestones:
             markers_dict[markers.milestone_name] = markers.milestone_date
         result["milestone_markers"] = markers_dict
@@ -443,6 +444,9 @@ def update_chart(request):
             c.source = source
         if base_line_date:
             c.base_line_date = base_line_date
+        if "visualization_unit" in request_json:
+            visualization_unit = request_json["visualization_unit"]
+            c.visualization_unit = visualization_unit
         c.save()
         global_settings = MetricsGlobalSettings.objects.first()
         global_settings.cache_valid = False
