@@ -17,8 +17,19 @@ class BGPConfig(CodecService , CodecServiceProvider):
         self.codec_service = CodecService()
 
     def read_bgp_config(self, config_json):
-        bgp_cfg = openconfig_bgp.Bgp()
 
+        # Create routing policy for nexthop self 
+        routing_policy = RoutingPolicy()
+        next_hop_self_defn = RoutingPolicy.PolicyDefinitions.PolicyDefinition()
+        next_hop_self_defn.name = 'Next-Hop-Self'
+        statement=next_hop_self_defn.statements.Statement()
+        statement.name="next-hop-self" 
+        statement.actions.BgpActions().config.set_next_hop = "SELF"
+        next_hop_self_defn.statements.statement.append(statement)
+        routing_policy.policy_definitions.policy_definition.append(next_hop_self_defn)
+        next_hop_self_defn.parent = routing_policy.policy_definitions
+        
+        bgp_cfg = openconfig_bgp.Bgp()
         # Config Local AS
         bgp_cfg.global_.config.as_ = config_json["as"]
         # Config Router ID
@@ -32,6 +43,22 @@ class BGPConfig(CodecService , CodecServiceProvider):
             nbr_ipv4.neighbor_address = item["ip"]
             nbr_ipv4.config.neighbor_address = item["ip"]
             nbr_ipv4.config.peer_as = item["as"]
+
+            # Configure allow own as 
+            nbr_ipv4.as_path_options.config.allow_own_as=1
+
+            
+            # Append nexthop-self policy
+            #nbr_ipv4_afsf = nbr_ipv4.afi_safis.AfiSafi()
+            #nbr_ipv4_afsf.afi_safi_name = openconfig_bgp_types.IPV4UNICAST()
+            #nbr_ipv4_afsf.config.afi_safi_name = openconfig_bgp_types.IPV4UNICAST()
+            #nbr_ipv4_afsf.config.enabled = True
+
+            # Create afi-safi policy instances
+            #nbr_ipv4_afsf.apply_policy.config.import_policy.append('Next-Hop-Self')
+            #nbr_ipv4_afsf.apply_policy.config.export_policy.append('Next-Hop-Self')
+            #nbr_ipv4.afi_safis.afi_safi.append(nbr_ipv4_afsf)
+
             bgp_cfg.neighbors.neighbor.append(nbr_ipv4)
             nbr_ipv4.parent = bgp_cfg.neighbors
         return bgp_cfg
