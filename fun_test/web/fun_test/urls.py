@@ -77,6 +77,7 @@ regression_urls = [
     url(r'^scheduler/.*$', views.angular_home),
     url(r'^test_case_execution_info/(\d+)$', regression_views.test_case_execution_info),
     url(r'^git$', regression_views.git),
+    url(r'^testbeds$', regression_views.testbeds),
     url(r'^(?:\S+)$', views.angular_home)
 
 ]

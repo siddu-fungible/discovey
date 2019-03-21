@@ -221,7 +221,8 @@ class Fs():
                  fpga_mgmt_ssh_password,
                  come_mgmt_ip,
                  come_mgmt_ssh_username,
-                 come_mgmt_ssh_password):
+                 come_mgmt_ssh_password,
+                 tftp_image_path="funos-f1.stripped.gz"):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -234,6 +235,7 @@ class Fs():
         self.bmc = None
         self.fpga = None
         self.come = None
+        self.tftp_image_path = tftp_image_path
         self.f1s = {}
         self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
 
@@ -264,10 +266,11 @@ class Fs():
         return self.f1s[index]
 
     @staticmethod
-    def get(spec):
-        bmc_spec = spec["bmc"]
-        fpga_spec = spec["fpga"]
-        come_spec = spec["come"]
+    def get(test_bed_spec, tftp_image_path):
+        fun_test.simple_assert(test_bed_spec, "Testbed spec available")
+        bmc_spec = test_bed_spec["bmc"]
+        fpga_spec = test_bed_spec["fpga"]
+        come_spec = test_bed_spec["come"]
         return Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
                   bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
                   bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
@@ -276,7 +279,8 @@ class Fs():
                   fpga_mgmt_ssh_password=fpga_spec["mgmt_ssh_password"],
                   come_mgmt_ip=come_spec["mgmt_ip"],
                   come_mgmt_ssh_username=come_spec["mgmt_ssh_username"],
-                  come_mgmt_ssh_password=come_spec["mgmt_ssh_password"])
+                  come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
+                  tftp_image_path=tftp_image_path)
 
     def bootup(self, reboot_bmc=False):
         if reboot_bmc:
@@ -360,19 +364,21 @@ class Fs():
         self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_DHCP)
 
-        output = self.u_boot_command(command="tftpboot {} {}:funos-f1.stripped.gz".format(tftp_load_address, tftp_server), timeout=15, f1_index=index)
+        output = self.u_boot_command(command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, self.tftp_image_path), timeout=15, f1_index=index)
         m = re.search(r'Bytes transferred = (\d+)', output)
+        bytes_transferred = 0
         if m:
             bytes_transferred = int(m.group(1))
-            fun_test.test_assert(bytes_transferred > 1000, "FunOs download size: {}".format(bytes_transferred))
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
+        fun_test.test_assert(bytes_transferred > 1000, "FunOs download size: {}".format(bytes_transferred))
 
         output = self.u_boot_command(command="unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS), timeout=10, f1_index=index)
         m = re.search(r'Uncompressed size: (\d+) =', output)
+        uncompressed_size = 0
         if m:
             uncompressed_size = int(m.group(1))
-            fun_test.test_assert(uncompressed_size > 1000, "FunOs uncompressed size: {}".format(uncompressed_size))
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
+        fun_test.test_assert(uncompressed_size > 1000, "FunOs uncompressed size: {}".format(uncompressed_size))
 
         output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=60, f1_index=index)
         m = re.search(r'Version=(\S+), Branch=(\S+)', output)

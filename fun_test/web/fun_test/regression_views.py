@@ -26,6 +26,7 @@ from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
 from web.fun_test.models import SuiteReRunInfo
+from web.fun_test.models import TestBed
 import logging
 import subprocess
 import dateutil.parser
@@ -1000,4 +1001,14 @@ def git(request):
                 result["logs"] = output
         except Exception as ex:
             logger.exception(str(ex))
+    return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def testbeds(request):
+    result = {}
+    testbeds = TestBed.objects.all()
+    for testbed in testbeds:
+        result[testbed.name] = {"name": testbed.name, "description": testbed.description}
     return result
