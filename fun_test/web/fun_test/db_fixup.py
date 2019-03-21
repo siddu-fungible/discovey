@@ -287,12 +287,13 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                             output_unit = getattr(this_days_record, output_unit)
                         else:
                             output_unit = None
-                        output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
+                        if output_value and output_value != -1:
+                            output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
                         expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
 
                         # data_set_statuses.append(leaf_status)
                         if reference_value is not None:
-                            if expected_value != -1:
+                            if expected_value and expected_value != -1:
                                 reference_value = expected_value
                             if output_unit:
                                 reference_value = convert_to_base_unit(output_value=reference_value,
@@ -480,11 +481,11 @@ def convert_to_base_unit(output_value, output_unit):
     if output_unit:
         if output_unit in latency_category:
             if output_unit == "usecs":
-                output_value = float(output_value * math.pow(10, 3))
+                output_value = float(output_value / math.pow(10, 6))
             elif output_unit == "msecs":
-                output_value = float(output_value * math.pow(10, 6))
-            elif output_unit == "secs":
-                output_value = float(output_value * math.pow(10, 9))
+                output_value = float(output_value / math.pow(10, 3))
+            elif output_unit == "nsecs":
+                output_value = float(output_value / math.pow(10, 9))
         elif output_unit in bandwidth_category:
             if output_unit == "Gbps":
                 output_value = float(output_value * math.pow(10, 9))
@@ -494,7 +495,7 @@ def convert_to_base_unit(output_value, output_unit):
                 output_value = float(output_value * math.pow(10, 6))
             elif output_unit == "Kbps":
                 output_value = float(output_value * math.pow(10, 3))
-            if output_unit == "GBps":
+            elif output_unit == "GBps":
                 output_value = float(output_value * 8 * math.pow(10, 9))
             elif output_unit == "TBps":
                 output_value = float(output_value * 8 * math.pow(10, 12))
@@ -534,7 +535,7 @@ def convert_to_base_unit(output_value, output_unit):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="HNU->NU NFCP Flow")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Deflate")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
