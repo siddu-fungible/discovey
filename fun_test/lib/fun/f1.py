@@ -112,8 +112,9 @@ class F1(Linux, ToDictMixin):
                     #                          expected_prompt="Remote PCIe EP NVME Test")
                     self.command("./{} app=mdt_test nvfile=nvfile &> {}".format(self.FUN_OS_SIMULATION_PROCESS_NAME,
                                                                                 self.F1_LOG))
+                    # adding --wustack-stale to find the root cause for the bug SWOS-4219 and SWOS-4423
                     new_process_id = self.start_bg_process(
-                        command="./{} app=prem_test nvfile=nvfile".format(
+                        command="./{} --wustack-stale app=prem_test nvfile=nvfile".format(
                             self.FUN_OS_SIMULATION_PROCESS_NAME), output_file=self.F1_LOG)
                     fun_test.sleep("Ensure FunOS is started", seconds=10)
                     fun_test.test_assert(new_process_id, "Started FunOs")
@@ -141,7 +142,8 @@ class F1(Linux, ToDictMixin):
                     self.command(command=mdt_command, timeout=32)
 
                     # Starting the funos-poix to run the prem_test app along with the dpc-server
-                    funos_command = "./{} --dpc-server app=prem_test nvfile=nvfile".format(
+                    # adding --wustack-stale to find the root cause for the bug SWOS-4219 and SWOS-4423
+                    funos_command = "./{} --dpc-server --wustack-stale app=prem_test nvfile=nvfile".format(
                         self.FUN_OS_SIMULATION_PROCESS_NAME)
                     self.fun_os_process_id = self.start_bg_process(command=funos_command, output_file=self.F1_LOG)
                     fun_test.sleep("Ensure FunOS is started", seconds=10)
