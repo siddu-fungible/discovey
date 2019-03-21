@@ -53,7 +53,11 @@ class FunethPerformanceBase(FunTestCase):
         pass
 
     def cleanup(self):
-        fun_test.sleep("Waiting for buffer drain to run next test case", seconds=60)
+        if TB == 'SN2':
+            interval = 60
+        else:
+            interval = 5
+        fun_test.sleep("Waiting for buffer drain to run next test case", seconds=interval)
 
     def _run(self, flow_type, tool='iperf3', protocol='udp', parallel=1, duration=30, frame_size=800, bw=BW_LIMIT):
 
@@ -618,58 +622,58 @@ if __name__ == "__main__":
 
             # iperf3/owping
 
-            # HU -> NU Non-FCP
-            FunethPerformance_HU_NU_64B_UDP,
-            FunethPerformance_HU_NU_800B_UDP,
-            FunethPerformance_HU_NU_1500B_UDP,
-            FunethPerformance_HU_NU_146B_TCP,
-            FunethPerformance_HU_NU_800B_TCP,
-            FunethPerformance_HU_NU_1500B_TCP,
-
-            # HU -> HU Non-FCP
-            FunethPerformance_HU_HU_64B_UDP,
-            FunethPerformance_HU_HU_800B_UDP,
-            FunethPerformance_HU_HU_1500B_UDP,
-            FunethPerformance_HU_HU_146B_TCP,
-            FunethPerformance_HU_HU_800B_TCP,
-            FunethPerformance_HU_HU_1500B_TCP,
-
-            # TODO: Add HU -> HU FCP
-
-            # NU -> HU Non-FCP
-            FunethPerformance_NU_HU_64B_UDP,
-            FunethPerformance_NU_HU_800B_UDP,
-            FunethPerformance_NU_HU_1500B_UDP,
-            FunethPerformance_NU_HU_146B_TCP,
-            FunethPerformance_NU_HU_800B_TCP,
-            FunethPerformance_NU_HU_1500B_TCP,
+            ## HU -> NU Non-FCP
+            #FunethPerformance_HU_NU_64B_UDP,
+            #FunethPerformance_HU_NU_800B_UDP,
+            #FunethPerformance_HU_NU_1500B_UDP,
+            #FunethPerformance_HU_NU_146B_TCP,
+            #FunethPerformance_HU_NU_800B_TCP,
+            #FunethPerformance_HU_NU_1500B_TCP,
+            #
+            ## HU -> HU Non-FCP
+            #FunethPerformance_HU_HU_64B_UDP,
+            #FunethPerformance_HU_HU_800B_UDP,
+            #FunethPerformance_HU_HU_1500B_UDP,
+            #FunethPerformance_HU_HU_146B_TCP,
+            #FunethPerformance_HU_HU_800B_TCP,
+            #FunethPerformance_HU_HU_1500B_TCP,
+            #
+            ## TODO: Add HU -> HU FCP
+            #
+            ## NU -> HU Non-FCP
+            #FunethPerformance_NU_HU_64B_UDP,
+            #FunethPerformance_NU_HU_800B_UDP,
+            #FunethPerformance_NU_HU_1500B_UDP,
+            #FunethPerformance_NU_HU_146B_TCP,
+            #FunethPerformance_NU_HU_800B_TCP,
+            #FunethPerformance_NU_HU_1500B_TCP,
 
             # netperf
 
             # HU -> NU Non-FCP
-            FunethPerformance_HU_NU_64B_UDP_NETPERF,
-            FunethPerformance_HU_NU_800B_UDP_NETPERF,
-            FunethPerformance_HU_NU_1500B_UDP_NETPERF,
-            FunethPerformance_HU_NU_64B_TCP_NETPERF,
+            #FunethPerformance_HU_NU_800B_UDP_NETPERF,
+            #FunethPerformance_HU_NU_64B_UDP_NETPERF,
+            #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
             FunethPerformance_HU_NU_800B_TCP_NETPERF,
+            FunethPerformance_HU_NU_64B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
 
-            # HU -> HU Non-FCP
-            FunethPerformance_HU_HU_64B_UDP_NETPERF,
-            FunethPerformance_HU_HU_800B_UDP_NETPERF,
-            FunethPerformance_HU_HU_1500B_UDP_NETPERF,
-            FunethPerformance_HU_HU_64B_TCP_NETPERF,
+            ## HU -> HU Non-FCP
+            #FunethPerformance_HU_HU_800B_UDP_NETPERF,
+            #FunethPerformance_HU_HU_64B_UDP_NETPERF,
+            #FunethPerformance_HU_HU_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_800B_TCP_NETPERF,
+            FunethPerformance_HU_HU_64B_TCP_NETPERF,
             FunethPerformance_HU_HU_1500B_TCP_NETPERF,
-
-            # TODO: Add HU -> HU FCP
-
-            # NU -> HU Non-FCP
-            FunethPerformance_NU_HU_64B_UDP_NETPERF,
-            FunethPerformance_NU_HU_800B_UDP_NETPERF,
-            FunethPerformance_NU_HU_1500B_UDP_NETPERF,
-            FunethPerformance_NU_HU_64B_TCP_NETPERF,
+            #
+            ## TODO: Add HU -> HU FCP
+            #
+            ## NU -> HU Non-FCP
+            #FunethPerformance_NU_HU_800B_UDP_NETPERF,
+            #FunethPerformance_NU_HU_64B_UDP_NETPERF,
+            #FunethPerformance_NU_HU_1500B_UDP_NETPERF,
             FunethPerformance_NU_HU_800B_TCP_NETPERF,
+            FunethPerformance_NU_HU_64B_TCP_NETPERF,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF,
     ):
         ts.add_test_case(tc())
