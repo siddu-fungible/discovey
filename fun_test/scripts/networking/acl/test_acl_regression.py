@@ -98,8 +98,10 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     obj_list = []
     obj_list.append(active_stream)
     template_obj.activate_stream_blocks(stream_obj_list=obj_list)
+    vp_pkts_sample_bef = 0
+    if acl_action == ACL_ACTION_LOG:
+        vp_pkts_sample_bef = network_controller_obj.sample_vp_pkts()
     network_controller_obj.disconnect()
-
     snapshot_obj = SnapshotHelper(dpc_proxy_ip=dpc_server_ip, dpc_proxy_port=dpc_server_port)
     snapshot_obj.setup_snapshot()
 
@@ -107,7 +109,8 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
     result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[send_port]])
     fun_test.simple_assert(expression=result, message=checkpoint)
     fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
-    checkpoint = "Ensure tx and rx frame count matches on Spirent for NU NU traffic"
+    checkpoint = "Running Snapshot"
+    fun_test.log(checkpoint)
     snapshot_output = snapshot_obj.run_snapshot()
     snapshot_obj.exit_snapshot()
     flex_counter_val_bef = 0
@@ -161,8 +164,16 @@ def compare_acl_stream(active_stream, send_port, receive_port, acl_action, send_
         fun_test.test_assert_expected(expected=value_dict['color_ing_nu'],
                                       actual=color_from_snapshot, message="Make sure pkt color is as expected")
     elif acl_action == ACL_ACTION_LOG:
-        print snapshot_obj.get_log_from_snapshot(snapshot_output=snapshot_output)
-
+        erp = False
+        if not hnu_ing and hnu_eg:
+            erp = True
+        checkpoint = "Confirm ACL log action from snapshot"
+        acl_log = snapshot_obj.get_log_from_snapshot(snapshot_output=snapshot_output, erp=erp)
+        fun_test.simple_assert(acl_log, message=checkpoint)
+        checkpoint = "Compare frames transmitted with sampled packets from vp_pkts"
+        vp_pkts_sample_aft = network_controller_obj.sample_vp_pkts()
+        fun_test.test_assert_expected(expected=frames_received, actual=(vp_pkts_sample_aft-vp_pkts_sample_bef),
+                                      message=checkpoint)
 
 class SpirentSetup(FunTestScript):
 
@@ -259,7 +270,10 @@ class AclQosColor(FunTestCase):
     def setup(self):
         self.routes_config = nu_config_obj.get_traffic_routes_by_chassis_type(spirent_config=spirent_config)
         self.l3_config = self.routes_config['l3_config']
-        self.acl_fields_dict_qos = acl_json_output['qos_color']
+        if self.acl_action == ACL_ACTION_COLOR:
+            self.acl_fields_dict_qos = acl_json_output['qos_color']
+        elif self.acl_action == ACL_ACTION_LOG:
+            self.acl_fields_dict_qos = acl_json_output['qos_log']
         checkpoint = "Creating multiple streams on port"
         self.stream_obj_nu_nu = create_streams(tx_port=nu_ing_port,
                                                dmac=self.routes_config['routermac'],
@@ -335,13 +349,12 @@ class AclQosLog(AclQosColor):
     def describe(self):
         self.set_test_details(id=2, summary="Test QoS ACL for log action for all directions",
                               steps="""
-                                  1. Create Stream on Tx port with defined kbps
-                                  2. Start Traffic for %d secs
+                                  1. Create Stream on Tx port wi
                                   3. Make sure Rx and Tx framecount are equal
                                   4. Make sure Rx and Tx rate are same
                                   5. Make sure packets are seen in expected meter colors
                                   6. Ensure no errors are seen on spirent ports
-                                  """ % TRAFFIC_DURATION)
+                                  """ )
 
     def setup(self):
         super(AclQosLog, self).setup()
@@ -355,5 +368,6 @@ class AclQosLog(AclQosColor):
 
 if __name__ == '__main__':
     ts = SpirentSetup()
-    ts.add_test_case(AclQosColor())
+    # ts.add_test_case(AclQosColor())
+    ts.add_test_case(AclQosLog())
     ts.run()
