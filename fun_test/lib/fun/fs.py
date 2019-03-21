@@ -4,6 +4,7 @@ from lib.host.linux import Linux
 from asset.asset_manager import AssetManager
 from fun_settings import TFTP_SERVER, ASSET_DIR
 import re
+import os
 
 
 
@@ -25,6 +26,8 @@ class BootPhases:
 
 
 class Bmc(Linux):
+    U_BOOT_INTERFACE_PATH = "/tmp/u_boot_interface.py"
+    F1_UART_LOG_LISTENER_PATH = "/tmp/uart_log_listener.py"
     @fun_test.safe
     def ping(self,
              dst,
@@ -90,6 +93,7 @@ class ComE(Linux):
         self.command("tar -zxvf dpcsh.tgz -C ../workspace/FunSDK")
         return True
 
+
     def cleanup_dpc(self):
         self.command("cd $WORKSPACE/FunControlPlane")
         self.sudo_command("pkill dpc")
@@ -124,8 +128,6 @@ class ComE(Linux):
         return self.dpc_ready
 
 class F1InFs:
-
-
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
         self.index = index
         self.fs = fs
@@ -178,7 +180,25 @@ class Fs():
         self.fpga = None
         self.come = None
         self.f1s = {}
+        self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
 
+    def reachability_check(self):
+        # TODO
+        pass
+
+    def cleanup(self):
+        for f1_index, f1 in self.f1s.iteritems():
+            uart_log_filename = self.get_f1_uart_log_filename(f1_index)
+            artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
+
+            fun_test.scp(source_ip=self.bmc.host_ip,
+                         source_file_path=uart_log_filename,
+                         source_username=self.bmc.ssh_username,
+                         source_password=self.bmc.ssh_password,
+                         source_port=22,
+                         target_file_path=artifact_file_name)
+            fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
+                                        filename=artifact_file_name)
     def get_f1_0(self):
         return self.get_f1(index=0)
 
@@ -212,14 +232,44 @@ class Fs():
         for f1_index, f1 in self.f1s.iteritems():
             fun_test.test_assert(self.u_boot_load_image(index=f1_index), "U-Bootup f1: {} complete".format(f1_index))
 
+        for f1_index, f1 in self.f1s.iteritems():
+            self.kill_f1_uart_log_listener(f1_index=f1_index)
+
+        for f1_index, f1 in self.f1s.iteritems():
+            self.setup_f1_uart_log_listener(f1_index=f1_index)
+
         fun_test.test_assert(self.come_reset(), "ComE rebooted successfully")
         fun_test.test_assert(self.come_initialize(), "ComE initialized")
         fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
         fun_test.test_assert(self.come.setup_dpc(), "Setup DPC")
         fun_test.test_assert(self.come.is_dpc_ready(), "DPC ready")
+
+
         for f1_index, f1 in self.f1s.iteritems():
             f1.set_dpc_port(self.come.get_dpc_port(f1_index))
+
         return True
+
+    def get_f1_uart_log_filename(self, f1_index):
+        return "/tmp/f1_{}_uart_log.txt".format(f1_index)
+
+    def kill_f1_uart_log_listener(self, f1_index):
+        process_ids = self.bmc.get_process_id_by_pattern("{}".format(os.path.basename(self.bmc.F1_UART_LOG_LISTENER_PATH)), multiple=True)
+        if process_ids:
+            for process_id in process_ids:
+                self.bmc.kill_process(process_id=process_id)
+
+    def setup_f1_uart_log_listener(self, f1_index):
+        f1 = self.get_f1(index=f1_index)
+        command = "python {} --device_path={} --speed={} --log_filename={}".format(self.bmc.F1_UART_LOG_LISTENER_PATH,
+                                            f1.serial_device_path,
+                                                                            self.SERIAL_SPEED_DEFAULT,
+                                                                            self.get_f1_uart_log_filename(f1_index=f1_index))
+        process_id = self.bmc.start_bg_process(command, nohup=False)
+        self.set_uart_log_process_id(f1_index=f1_index, process_id=process_id)
+
+    def set_uart_log_process_id(self, f1_index, process_id):
+        pass
 
     def set_boot_phase(self, index, phase):
         self.boot_phase = phase
@@ -227,7 +277,7 @@ class Fs():
         fun_test.log_section("F1_{}:{}".format(index, phase))
 
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
-        output = self.bmc.command("python /tmp/u_boot_interface.py --device_path={} --speed {} --command='{}' --timeout={}".format(self.f1s[f1_index].serial_device_path,
+        output = self.bmc.command("python {} --device_path={} --speed {} --command='{}' --timeout={}".format(self.bmc.U_BOOT_INTERFACE_PATH, self.f1s[f1_index].serial_device_path,
                                                                                            self.SERIAL_SPEED_DEFAULT,
                                                                                                           command, timeout), timeout=timeout + 5)
         if expected:
@@ -258,7 +308,6 @@ class Fs():
             fun_test.test_assert(bytes_transferred > 1000, "FunOs download size: {}".format(bytes_transferred))
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
 
-
         output = self.u_boot_command(command="unzip {} {};".format(tftp_load_address, self.ELF_ADDRESS), timeout=10, f1_index=index)
         m = re.search(r'Uncompressed size: (\d+) =', output)
         if m:
@@ -266,7 +315,7 @@ class Fs():
             fun_test.test_assert(uncompressed_size > 1000, "FunOs uncompressed size: {}".format(uncompressed_size))
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_UNCOMPRESS_IMAGE)
 
-        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=60, expected="Welcome to FunOS", f1_index=index)
+        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=70, expected="Welcome to FunOS", f1_index=index)
         m = re.search(r'Version=(\S+), Branch=(\S+)', output)
         if m:
             version = m.group(1)

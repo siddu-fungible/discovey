@@ -39,7 +39,7 @@ class FunTestCase1(FunTestCase):
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
         f1 = fs.get_f1(index=0)
         f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
-
+        fs.cleanup()
 
 if __name__ == "__main__":
     myscript = MyScript()
