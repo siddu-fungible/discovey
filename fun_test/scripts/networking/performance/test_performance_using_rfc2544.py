@@ -72,8 +72,8 @@ class ScriptSetup(FunTestScript):
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
-        fun_test.simple_assert(ensure_dpcsh_ready(network_controller_obj=network_controller_obj),
-                               "Ensure DPCsh ready to process commands")
+        # fun_test.simple_assert(ensure_dpcsh_ready(network_controller_obj=network_controller_obj),
+        #                        "Ensure DPCsh ready to process commands")
 
         checkpoint = "Configure QoS settings"
         enable_pfc = network_controller_obj.enable_qos_pfc()
@@ -106,19 +106,19 @@ class ScriptSetup(FunTestScript):
                                                                             mode="hnu")
         fun_test.test_assert(buffer_pool_set, checkpoint)
 
-        port_list = [5, 13, 15, 18, 1, 2]
+        nu_port_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        hnu_port_list = [0, 1, 2, 3]
         shape = 0
-        for port in port_list:
-            if port == 1 or port == 2:
-                shape = 1
+        for port in nu_port_list:
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        for port in [0, 1, 2, 3, 17]:
-            mtu = network_controller_obj.set_port_mtu(port_num=port, shape=0, mtu_value=9000)
-            fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
+        for port in hnu_port_list:
+            shape = 1
+            result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
+            fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        self._setup_fcp_external_routes()
+        # self._setup_fcp_external_routes()
 
         TIMESTAMP = get_current_time()
 
@@ -130,7 +130,7 @@ class TestTransitPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
     flow_direction = FLOW_TYPE_NU_NU_NFCP
-    tcc_file_name = "transit_single_flow.tcc"  # Uni-directional
+    tcc_file_name = "transit_single_flow_rfc.tcc"  # Uni-directional
     spray = False
 
     def _get_tcc_config_file_path(self, flow_direction):
@@ -158,7 +158,7 @@ class TestTransitPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1000B, 9000B, IMIX(AvgFrameSize: 361 B)]" % (
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 800B, 1500B, 9000B, IMIX]" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -257,42 +257,42 @@ class TestTransitPerformance(FunTestCase):
 class TestNuHnuPerformance(TestTransitPerformance):
     tc_id = 2
     flow_direction = FLOW_TYPE_NU_HNU_NFCP
-    tcc_file_name = "nu_hnu_palladium_2ports.tcc"  # 2 Ports with Spray Enable
+    tcc_file_name = "nu_hnu_fs1600_2ports.tcc"  # 2 Ports with Spray Enable
     spray = True
 
 
 class TestHnuNuPerformance(TestTransitPerformance):
     tc_id = 3
     flow_direction = FLOW_TYPE_HNU_NU_NFCP
-    tcc_file_name = "hnu_nu_palladium_2ports.tcc"  # 2 Ports with Spray Enable
+    tcc_file_name = "hnu_nu_fs1600_2ports.tcc"  # 2 Ports with Spray Enable
     spray = True
 
 
 class TestHnuHnuNonFcpPerformance(TestTransitPerformance):
     tc_id = 4
     flow_direction = FLOW_TYPE_HNU_HNU_NFCP
-    tcc_file_name = "hnu_hnu_palladium_2ports.tcc"  # Bi-directional with Spray Enable
+    tcc_file_name = "hnu_hnu_fs1600_2ports_nfcp.tcc"  # Bi-directional with Spray Enable
     spray = True
 
 
 class TestNuHnuPerformanceSingleFlow(TestTransitPerformance):
     tc_id = 5
     flow_direction = FLOW_TYPE_NU_HNU_NFCP
-    tcc_file_name = "nu_hnu_palladium_single_flow.tcc"  # Single Port with Spray Disable
+    tcc_file_name = "nu_hnu_fs1600_single.tcc"  # Single Port with Spray Disable
     spray = False
 
 
 class TestHnuNuPerformanceSingleFlow(TestTransitPerformance):
     tc_id = 6
     flow_direction = FLOW_TYPE_HNU_NU_NFCP
-    tcc_file_name = "hnu_nu_palladium_single_flow.tcc"  # Single Port with Spray Disable
+    tcc_file_name = "hnu_nu_fs1600_single.tcc"  # Single Port with Spray Disable
     spray = False
 
 
 class TestHnuHnuNonFcpPerformanceSingleFlow(TestTransitPerformance):
     tc_id = 7
     flow_direction = FLOW_TYPE_HNU_HNU_NFCP
-    tcc_file_name = "hnu_hnu_palladium_single_flow.tcc"  # Single Port with Spray Disable
+    tcc_file_name = "hnu_hnu_fs1600_single_nfcp.tcc"  # Single Port with Spray Disable
     spray = False
 
 
@@ -325,6 +325,6 @@ if __name__ == '__main__':
     ts.add_test_case(TestHnuHnuNonFcpPerformanceSingleFlow())
 
     # FCP cases
-    ts.add_test_case(TestHnuHnuFcpPerformance())
-    ts.add_test_case(TestHnuHnuFcpPerformanceSingleFlow())
+    # ts.add_test_case(TestHnuHnuFcpPerformance())
+    # ts.add_test_case(TestHnuHnuFcpPerformanceSingleFlow())
     ts.run()
