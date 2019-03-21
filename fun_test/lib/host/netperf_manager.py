@@ -16,6 +16,15 @@ class NetperfManager:
         result = True
         for linux_obj in self.linux_objs:
 
+            # CPU governor
+            for pkg in ('cpufrequtils',):
+                result &= linux_obj.install_package(pkg)
+                if not result:
+                    break
+            cmds = ('cpufreq-set -r -g performance', 'cpufreq-info -m -s',)
+            for cmd in cmds:
+                linux_obj.sudo_command(cmd)
+
             # Tune TCP buffer
             cmds = (
                 'sysctl -w net.core.rmem_max=2147483647',
@@ -199,6 +208,7 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
         pat = r'MIN_LATENCY=(\d+).*?MEAN_LATENCY=(\d+).*?P50_LATENCY=(\d+).*?P90_LATENCY=(\d+).*?P99_LATENCY=(\d+).*?MAX_LATENCY=(\d+).*?THROUGHPUT=(\d+)'
     if cpu:
         cmd = 'taskset -c {} {}'.format(cpu, cmd)
+    # TODO: use numactl if necessary
     output = linux_obj.command(cmd, timeout=duration+30)
     match = re.search(pat, output, re.DOTALL)
     if match:
