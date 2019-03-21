@@ -21,7 +21,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     USER_WORKING_DIR = "USER_WORKING_DIR"
     FRAME_SIZE_64 = "64.0"
     FRAME_SIZE_1500 = "1500.0"
-    FRAME_SIZE_IMIX = "361.8"
+    FRAME_SIZE_800 = "800.0"
+    FRAME_SIZE_IMIX = None
     FRAME_SIZE_1000 = "1000.0"
     FRAME_SIZE_9000 = "9000.0"
     FRAME_SIZE_8900 = "8900.0"
@@ -199,7 +200,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         result = OrderedDict()
         result[self.FRAME_SIZE_64] = []
         result[self.FRAME_SIZE_1500] = []
-        result[self.FRAME_SIZE_IMIX] = []
+        result[self.FRAME_SIZE_800] = []
+        result['IMIX'] = []
         result[self.FRAME_SIZE_1000] = []
         result[self.FRAME_SIZE_9000] = []
         try:
@@ -215,18 +217,16 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         result[self.FRAME_SIZE_64].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_1500 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_1500].append(data_dict)
-                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_IMIX == data_dict['AvgFrameSize']:
-                        result[self.FRAME_SIZE_IMIX].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_800 == data_dict['AvgFrameSize']:
+                        result[self.FRAME_SIZE_800].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_1000 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_1000].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_9000 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_9000].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_8900 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_9000].append(data_dict)
-                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_IMIX == str(round(float(
-                            data_dict['AvgFrameSize']), 1)) \
-                            and data_dict['iMIXDistribution'] == 'Default':
-                        result[self.FRAME_SIZE_IMIX].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and data_dict['iMIXDistribution'] == 'Default':
+                        result['IMIX'].append(data_dict)
             output['status'] = True
             output['summary_result'] = result
         except Exception as ex:
@@ -320,7 +320,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             forwarding_rates = []
             for record in records:
                 if float(record['AvgFrameSize']) == frame_size:
-                    forwarding_rates.append(float(record['ForwardingRate(fps)']))
+                    if record['Result'] == self.PASSED:
+                        forwarding_rates.append(float(record['ForwardingRate(fps)']))
             max_rate = max(forwarding_rates)
             for record in records:
                 if max_rate == float(record['ForwardingRate(fps)']):

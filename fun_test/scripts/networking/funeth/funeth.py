@@ -93,7 +93,7 @@ class Funeth:
         if self.funos_branch:
             self.linux_obj_dict['hu'].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-        output = self.linux_obj_dict['hu'].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=180)
+        output = self.linux_obj_dict['hu'].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=300)
         return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
     def load(self, sriov=0, cc=False, debug=False):

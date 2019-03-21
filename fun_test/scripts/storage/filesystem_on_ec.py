@@ -308,6 +308,10 @@ class FSOnECTestcase(FunTestCase):
         self.host.command("cat /etc/modprobe.d/nvme_core.conf")
         self.host.exit_sudo()
 
+        # Reloading the nvme driver to make the above modified timeouts to take effect
+        command_result = self.host.nvme_restart()
+        fun_test.simple_assert(command_result, "Reloading nvme driver")
+
         # Configuring the controller
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)
         fun_test.log(command_result)
@@ -369,12 +373,10 @@ class FSOnECTestcase(FunTestCase):
                 fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                               message="Ensuring error_injection got disabled")
 
-                # Reloading the nvme driver before checking the disk and decrease the queue length
-                if self.reload_after_config:
-                    command_result = self.host.nvme_restart()
-                    fun_test.simple_assert(command_result, "Reloading nvme driver")
-                    fun_test.sleep("Waiting for the nvme driver reload to complete", 5)
-                    self.host.sudo_command("echo 8 >/sys/block/nvme0n1/queue/nr_requests")
+                # Resetting the nvme controller to make the newly created volume accessible to the host
+                self.reset_command = "echo 1 >/sys/class/nvme/" + self.nvme_device.split("/")[2] + "/reset_controller"
+                self.host.sudo_command(self.reset_command)
+                fun_test.sleep("Sleeping for couple of seconds to the host to identify the volume", 2)
 
                 # Checking that the volume is accessible to the host
                 lsblk_output = self.host.lsblk("-b")
@@ -384,6 +386,9 @@ class FSOnECTestcase(FunTestCase):
                 fun_test.test_assert_expected(expected=self.ec_info["attach_size"],
                                               actual=lsblk_output[self.volume_name]["size"],
                                               message="{} volume size check".format(self.volume_name))
+
+                # Reducing the queue length of the block device to 8
+                self.host.sudo_command("echo 8 >/sys/block/nvme0n1/queue/nr_requests")
 
                 # Creating self.fs_type filesystem in EC volume and mount the same
                 # Checking if the filesystem type is XFS, if so at first ensure the xfs is installed in the qemu host
