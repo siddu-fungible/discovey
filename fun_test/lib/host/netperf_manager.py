@@ -17,13 +17,12 @@ class NetperfManager:
         for linux_obj in self.linux_objs:
 
             # CPU governor
-            for pkg in ('cpufrequtils',):
-                result &= linux_obj.install_package(pkg)
-                if not result:
-                    break
-            cmds = ('cpufreq-set -r -g performance', 'cpufreq-info -m -s',)
-            for cmd in cmds:
-                linux_obj.sudo_command(cmd)
+            cmd = 'cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor'
+            linux_obj.sudo_command(cmd)
+            for i in range(0, 32):  # TODO: Use actual CPU number
+                linux_obj.sudo_command(
+                    'echo performance > /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor'.format(i))
+            linux_obj.sudo_command(cmd)
 
             # Tune TCP buffer
             cmds = (
