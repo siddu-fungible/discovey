@@ -258,7 +258,6 @@ def generateF1Config(rack_id, fs_id, f1, cx_id):
     F1_CONFIG["global"] = f1_global_config
     F1_CONFIG["intfs"] = f1_interfaces
     F1_CONFIG["bgp"] = f1_bgp_config
-    F1_CONFIG["cx_config"] = CX_CONFIG
 
     #pretty(F1_CONFIG)
     #import pdb; pdb.set_trace()
