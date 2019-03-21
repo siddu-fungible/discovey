@@ -1471,8 +1471,10 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
                         input_effort = int(m.group("effort"))
                         bandwidth_json = json.loads(m.group("throughput_json"))
                         output_bandwidth_avg = bandwidth_json['value']
+                        output_bandwidth_avg_unit = bandwidth_json["unit"]
                         latency_json = json.loads(m.group("latency_json"))
                         output_latency_avg = latency_json['value']
+                        output_latency_unit = latency_json["unit"]
 
                         fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
                                                                                             input_effort, bandwidth_json))
@@ -1480,7 +1482,9 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
                         metrics["input_operation"] = input_operation
                         metrics["input_effort"] = input_effort
                         metrics["output_bandwidth_avg"] = output_bandwidth_avg
+                        metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
                         metrics["output_latency_avg"] = output_latency_avg
+                        metrics["output_latency_avg_unit"] = output_latency_unit
                         d = self.metrics_to_dict(metrics, fun_test.PASSED)
                         if input_type == "Deflate":
                             MetricHelper(model=TeraMarkZipDeflatePerformance).add_entry(**d)
