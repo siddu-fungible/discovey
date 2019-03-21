@@ -212,7 +212,7 @@
                 "leaf": true,
                 "name": "HU_NU_NFCP_output_throughput",
                 "weight": 1,
-                "label": "Extrapolated Throughput"
+                "label": "Throughput"
               },
               {
                 "info": "HU_NU_NFCP_output_pps",
@@ -220,7 +220,15 @@
                 "leaf": true,
                 "name": "HU_NU_NFCP_output_pps",
                 "weight": 1,
-                "label": "Extrapolated Packets per sec"
+                "label": "Packets per sec"
+              },
+              {
+                "info": "HU_NU_NFCP_output_latency_avg",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_NU_NFCP_output_latency_avg",
+                "weight": 1,
+                "label": "Latency"
               }
             ]
           },
@@ -238,7 +246,7 @@
                 "leaf": true,
                 "name": "HU_HU_NFCP_output_throughput",
                 "weight": 1,
-                "label": "Extrapolated Throughput"
+                "label": "Throughput"
               },
               {
                 "info": "HU_HU_NFCP_output_pps",
@@ -246,7 +254,15 @@
                 "leaf": true,
                 "name": "HU_HU_NFCP_output_pps",
                 "weight": 1,
-                "label": "Extrapolated Packets per sec"
+                "label": "Packets per sec"
+              },
+              {
+                "info": "HU_HU_NFCP_output_latency_avg",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_HU_NFCP_output_latency_avg",
+                "weight": 1,
+                "label": "Latency"
               }
             ]
           },
@@ -273,6 +289,14 @@
                 "name": "HU_HU_FCP_output_pps",
                 "weight": 1,
                 "label": "Packets per sec"
+              },
+              {
+                "info": "HU_HU_FCP_output_latency_avg",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "HU_HU_FCP_output_latency_avg",
+                "weight": 1,
+                "label": "Latency"
               }
             ]
           },
@@ -290,7 +314,7 @@
                 "leaf": true,
                 "name": "NU_HU_NFCP_output_throughput",
                 "weight": 1,
-                "label": "Extrapolated Throughput"
+                "label": "Throughput"
               },
               {
                 "info": "NU_HU_NFCP_output_pps",
@@ -298,7 +322,15 @@
                 "leaf": true,
                 "name": "NU_HU_NFCP_output_pps",
                 "weight": 1,
-                "label": "Extrapolated Packets per sec"
+                "label": "Packets per sec"
+              },
+              {
+                "info": "NU_HU_NFCP_output_latency_avg",
+                "metric_model_name": "NuTransitPerformance",
+                "leaf": true,
+                "name": "NU_HU_NFCP_output_latency_avg",
+                "weight": 1,
+                "label": "Latency"
               }
             ]
           }
@@ -1549,7 +1581,7 @@
             "leaf": false,
             "name": "Networking_Teramarks",
             "weight": 1,
-            "label": "Networking",
+            "label": "Networking - (work in progress)",
             "children": [
               {
                 "info": "HU_NU_NFCP",
@@ -1574,6 +1606,14 @@
                     "name": "HU_NU_NFCP_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
+                  },
+                  {
+                    "info": "HU_NU_NFCP_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_NU_NFCP_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
                   }
                 ]
               },
@@ -1600,6 +1640,14 @@
                     "name": "HU_HU_NFCP_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
+                  },
+                  {
+                    "info": "HU_HU_NFCP_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_HU_NFCP_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
                   }
                 ]
               },
@@ -1626,6 +1674,14 @@
                     "name": "HU_HU_FCP_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
+                  },
+                  {
+                    "info": "HU_HU_FCP_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "HU_HU_FCP_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
                   }
                 ]
               },
@@ -1652,6 +1708,14 @@
                     "name": "NU_HU_NFCP_output_pps",
                     "weight": 1,
                     "label": "Packets per sec"
+                  },
+                  {
+                    "info": "NU_HU_NFCP_output_latency_avg",
+                    "metric_model_name": "NuTransitPerformance",
+                    "leaf": true,
+                    "name": "NU_HU_NFCP_output_latency_avg",
+                    "weight": 1,
+                    "label": "Latency"
                   }
                 ]
               }

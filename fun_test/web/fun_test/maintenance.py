@@ -1023,8 +1023,8 @@ if __name__ == "__main__":
     input_choices = get_possible_values(model_name=model_name)
     frame_size = 800
     name = "800B"
-    outputs = ["output_throughput", "output_pps"]
-    chart_names = ["Throughput", "Packets per sec"]
+    outputs = ["output_throughput", "output_pps", "output_latency_avg"]
+    chart_names = ["Throughput", "Packets per sec", "Latency"]
     for flow_type in flow_types:
         for output in outputs:
             data_sets = []
@@ -1041,10 +1041,14 @@ if __name__ == "__main__":
             if "throughput" in output:
                 y1_axis_title = "Gbps"
                 chart_name = "Throughput"
-            else:
+            elif "pps" in output:
                 y1_axis_title = "Mpps"
                 chart_name = "Packets per sec"
-            base_line_date = datetime(year=2019, month=3, day=18, minute=0, hour=0, second=0)
+            else:
+                y1_axis_title = "usecs"
+                chart_name = "Latency"
+                positive = False
+            base_line_date = datetime(year=2019, month=3, day=19, minute=0, hour=0, second=0)
             MetricChart(chart_name=chart_name,
                         metric_id=metric_id,
                         internal_chart_name=internal_name,
@@ -1065,7 +1069,7 @@ if __name__ == "__main__":
     for entry in entries:
         if not entry.leaf:
             if "Host" in entry.chart_name:
-                base_line_date = datetime(year=2019, month=3, day=18, minute=0, hour=0, second=0)
+                base_line_date = datetime(year=2019, month=3, day=19, minute=0, hour=0, second=0)
                 entry.base_line_date = base_line_date
                 entry.save()
                 print entry.chart_name
