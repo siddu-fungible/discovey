@@ -296,12 +296,15 @@ class Bmc(Linux):
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = "04:00.1"
     DEFAULT_DPC_PORT = 40220
+    DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
 
     def initialize(self, reset=False):
         self.funq_bind_device = None
         self.dpc_ready = None
         fun_test.simple_assert(self.setup_workspace(), "ComE workspace setup")
         fun_test.simple_assert(self.cleanup_dpc(), "Cleanup dpc")
+        for f1_index in range(2):
+            self.command("rm {}".format(self.get_dpc_log_path(f1_index=f1_index)))
         return True
 
     def get_dpc_port(self, f1_index):
@@ -329,17 +332,17 @@ class ComE(Linux):
         self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
-    def setup_dpc(self):
-        dpc_log = "/tmp/dpc.txt"
+    def setup_dpc(self, f1_index=0):
+
         self.command("cd $WORKSPACE/FunControlPlane")
         output = self.sudo_command("build/posix/bin/funq-setup bind")
         fun_test.test_assert("Binding {}".format(self.funq_bind_device) in output,
                              "Bound to {}".format(self.funq_bind_device))
         command = "LD_LIBRARY_PATH=$PWD/build/posix/lib build/posix/bin/dpc -j -d {} &> {} &".format(
-            self.funq_bind_device, dpc_log)
+            self.funq_bind_device, self.get_dpc_log_path(f1_index=f1_index))
         self.sudo_command(command)
         fun_test.sleep("dpc socket creation")
-        output = self.command("cat {}".format(dpc_log))
+        output = self.command("cat {}".format(self.get_dpc_log_path(f1_index=f1_index)))
         fun_test.test_assert("socket creation: Success" in output, "DPC Socket creation success")
         self.dpc_ready = True
         return True
@@ -358,6 +361,15 @@ class ComE(Linux):
     def is_dpc_ready(self):
         return self.dpc_ready
 
+    def get_dpc_log_path(self, f1_index):
+        return self.DPC_LOG_PATH.format(f1_index)
+
+    def cleanup(self):
+        for f1_index in range(2):
+            artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_dpc_log.txt".format(f1_index))
+            fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
+            fun_test.add_auxillary_file(description="F1_{} DPC Log".format(f1_index),
+                                        filename=artifact_file_name)
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
@@ -422,6 +434,7 @@ class Fs():
 
     def cleanup(self):
         self.bmc.cleanup()
+        self.come.cleanup()
 
 
     def get_f1_0(self):
