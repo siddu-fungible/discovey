@@ -10,7 +10,8 @@ from web.fun_test.metrics_models import WuStackSpeedTestPerformance, SoakFunMall
 from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, BootTimePerformance, NuTransitPerformance
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
-    TeraMarkCryptoPerformance, SoakDmaMemcpyCoherentPerformance, SoakDmaMemcpyNonCoherentPerformance, SoakDmaMemsetPerformance
+    TeraMarkCryptoPerformance, SoakDmaMemcpyCoherentPerformance, SoakDmaMemcpyNonCoherentPerformance, \
+    SoakDmaMemsetPerformance, MetricChart
 from web.fun_test.metrics_models import TeraMarkLookupEnginePerformance, FlowTestPerformance, \
     TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance, TeraMarkJpegPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
@@ -41,6 +42,19 @@ jpeg_operations = {"Compression throughput": "Compression throughput with Driver
                    "JPEG Compression": "JPEG Compression"}
 nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+
+internal_chart_names_for_flows = {
+    "NU_HNU_NFCP": ["NU_HNU_output_throughput", "NU_HNU_output_pps"],
+    "HNU_HNU_FCP": ["HNU_HNU_FCP_output_throughput", "HNU_HNU_FCP_output_pps"],
+    "HNU_HNU_NFCP": ["HNU_HNU_output_throughput", "HNU_HNU_output_pps"],
+    "NU_NU_NFCP": ["NU_NU_output_throughput", "NU_NU_output_pps"],
+    "HNU_NU_NFCP": ["HNU_NU_output_throughput", "HNU_NU_output_pps"],
+    "HU_NU_NFCP": ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "HU_NU_NFCP_output_latency_avg"],
+    "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps", "HU_HU_NFCP_output_latency_avg"],
+    "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps", "HU_HU_FCP_output_latency_avg"],
+    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"]
+}
+
 
 def get_rounded_time():
     dt = get_current_time()
@@ -74,6 +88,20 @@ def set_build_details_for_charts(result, suite_execution_id, test_case_id, jenki
         chart.save()
 
 
+def set_chart_status(result, suite_execution_id, test_case_id, jenkins_job_id, job_id, git_commit,
+                     internal_chart_name):
+    charts = MetricChart.objects.filter(internal_chart_name=internal_chart_name)
+    for chart in charts:
+        chart.last_build_status = result
+        chart.last_build_date = get_current_time()
+        chart.last_suite_execution_id = suite_execution_id
+        chart.last_test_case_id = test_case_id
+        chart.last_lsf_job_id = job_id
+        chart.last_jenkins_job_id = jenkins_job_id
+        chart.last_git_commit = git_commit
+        chart.save()
+
+
 class MyScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps=
@@ -84,7 +112,8 @@ class MyScript(FunTestScript):
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
-                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG, SOAK_DMA_MEMCPY_COH, SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET]
+                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG, SOAK_DMA_MEMCPY_COH,
+                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -469,7 +498,8 @@ class EcPerformanceTc(PalladiumPerformanceTc):
             fun_test.test_assert(self.validate_job(), "validating job")
             for line in self.lines:
 
-                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_latency)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_latency)\]',
+                              line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_encode_latency_min = int(d["min"])
@@ -478,7 +508,8 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     input_metric_name = m.group("metric_name")
                     encode_latency_unit = d["unit"]
 
-                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_encode_throughput)\]',
+                              line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_encode_throughput_min = int(d["min"])
@@ -487,7 +518,8 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     input_metric_name = m.group("metric_name")
                     encode_throughput_unit = d["unit"]
 
-                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_latency)\]',
+                              line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_recovery_latency_min = int(d["min"])
@@ -496,7 +528,8 @@ class EcPerformanceTc(PalladiumPerformanceTc):
                     input_metric_name = m.group("metric_name")
                     recovery_latency_unit = d["unit"]
 
-                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]', line)
+                m = re.search(r'Aggregated.*\s+(?P<value_json>{.*})\s+\[(?P<metric_name>perf_ec_recovery_throughput)\]',
+                              line)
                 if m:
                     d = json.loads(m.group("value_json"))
                     ec_recovery_throughput_min = int(d["min"])
@@ -1335,8 +1368,8 @@ class TeraMarkCryptoPerformanceTC(PalladiumPerformanceTc):
             fun_test.critical(str(ex))
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                             test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                             git_commit=self.git_commit, model_name=self.model)
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1655,7 +1688,6 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
     def run(self):
         metrics = collections.OrderedDict()
         try:
-
             fun_test.test_assert(self.validate_json_file(), "validate json file and output")
             for lines in self.lines:
                 for line in lines:
@@ -1668,18 +1700,25 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         metrics["input_frame_size"] = line["frame_size"]
                         date_time = get_time_from_timestamp(line["timestamp"])
                         if "HU" in metrics["input_flow_type"]:
-                            metrics["output_throughput"] = (float(line["throughput"]) * 4.8) if "throughput" in line else -1 #extrapolate by 4.8 for HU
-                            metrics["output_pps"] = (float(line["pps"]) * 0.0048) if "pps" in line else -1 #extrapolate by 0.0048 for HU
+                            metrics["output_throughput"] = (float(
+                                line["throughput"]) / 1000) if "throughput" in line and line[
+                                "throughput"] != -1 else -1  # extrapolate by 4.8 for HU
+                            metrics["output_pps"] = (float(
+                                line["pps"]) / 1000000) if "pps" in line and line[
+                                "pps"] != -1 else -1  # extrapolate by 0.0048 for HU
                         else:
-                            metrics["output_throughput"] = (float(line["throughput"]) * 3.9) if "throughput" in line else -1
+                            metrics["output_throughput"] = (
+                                    float(line["throughput"]) * 3.9) if "throughput" in line else -1
                             metrics["output_pps"] = (float(line["pps"]) * 0.0039) if "pps" in line else -1
                         metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
                         metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
                         metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
-                        if "latency_P99.0" in line:
-                            metrics["output_latency_P99"] = line["latency_P99.0"]
+                        if "latency_P99" in line:
+                            metrics["output_latency_P99"] = line["latency_P99"]
                         else:
                             metrics["output_latency_P99"] = -1
+                        metrics["output_latency_P90"] = line["latency_P90"] if "latency_P90" in line else -1
+                        metrics["output_latency_P50"] = line["latency_P50"] if "latency_P50" in line else -1
                         metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
                         metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
                         metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
@@ -1691,15 +1730,54 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         d["input_date_time"] = date_time
                         if date_time.year >= 2019:
                             MetricHelper(model=NuTransitPerformance).add_entry(**d)
-            self.result = fun_test.PASSED
+                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
+                        for names in chart_names:
+                            if "throughput" in names:
+                                if metrics["output_throughput"] == -1 and metrics["input_frame_size"] == 800:
+                                    set_chart_status(result=fun_test.FAILED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+                                else:
+                                    set_chart_status(result=fun_test.PASSED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
 
+                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
+                        for names in chart_names:
+                            if "pps" in names:
+                                if metrics["output_pps"] == -1 and metrics["input_frame_size"] == 800:
+                                    set_chart_status(result=fun_test.FAILED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+                                else:
+                                    set_chart_status(result=fun_test.PASSED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
+                        for names in chart_names:
+                            if "latency" in names and metrics["input_frame_size"] == 800:
+                                if metrics["output_latency_avg"] == -1 or metrics["output_latency_min"] == -1 or \
+                                        metrics["output_latency_P90"] == -1 or \
+                                        metrics["output_latency_P50"] == -1 or metrics["output_latency_P99"] == -1:
+                                    set_chart_status(result=fun_test.FAILED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+                                else:
+                                    set_chart_status(result=fun_test.PASSED,
+                                                     suite_execution_id=fun_test.get_suite_execution_id(),
+                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                     git_commit="", internal_chart_name=names)
+            self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
-                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                     git_commit="", model_name="NuTransitPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 
 class PkeX25519TlsSoakPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_PKE
@@ -1782,6 +1860,7 @@ class PkeP256TlsSoakPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name="PkeP256TlsSoakPerformance")
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
 class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
     tag = SOAK_DMA_MEMCPY_COH
     model = "SoakDmaMemcpyCoherentPerformance"
@@ -1827,6 +1906,7 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                                      git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
+
 class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
     tag = SOAK_DMA_MEMCPY_NON_COH
     model = "SoakDmaMemcpyNonCoherentPerformance"
@@ -1836,6 +1916,7 @@ class SoakDmaMemcpyNonCohPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
                               summary="Soak DMA memcpy Non coherent Performance Test",
                               steps="Steps 1")
 
+
 class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
     tag = SOAK_DMA_MEMSET
     model = "SoakDmaMemsetPerformance"
@@ -1844,6 +1925,7 @@ class SoakDmaMemsetPerformanceTC(SoakDmaMemcpyCohPerformanceTC):
         self.set_test_details(id=29,
                               summary="Soak DMA memset Performance Test",
                               steps="Steps 1")
+
 
 class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
     tag = TERAMARK_CRYPTO
