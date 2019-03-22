@@ -1,0 +1,4 @@
+
+[
+  {"path": "networking/acl/test_acl_all_directions.py", "inputs": {"speed": "SPEED_25G"}}
+]

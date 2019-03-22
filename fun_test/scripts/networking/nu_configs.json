@@ -69,9 +69,9 @@
         "ipv4": {
           "source_ip1": "192.85.1.2",
           "destination_ip1": "50.0.4.1",
-          "destination_ip2": "75.0.0.5",
-          "destination_ip3": "75.0.0.3",
-          "destination_ip4": "75.0.0.2",
+          "destination_ip2": "75.5.0.1",
+          "destination_ip3": "75.3.0.1",
+          "destination_ip4": "75.2.0.1",
           "hnu_destination_ip1": "51.1.1.4",
           "hnu_destination_ip2": "52.1.1.4"
         },

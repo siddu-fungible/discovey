@@ -23,7 +23,7 @@
                   </select>
               </td>
             </tr>
-            <tr>
+            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
               <td class="no-wrap">
                 <label for="tftp-path">TFTP path (F1 stripped image)</label>
               </td>
