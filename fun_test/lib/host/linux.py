@@ -97,7 +97,7 @@ class Linux(object, ToDictMixin):
                  connect_retry_timeout_max=20,
                  use_paramiko=False,
                  localhost=None,
-                 set_term_settings=None):
+                 set_term_settings=True):
 
         self.host_ip = host_ip
         self.ssh_username = ssh_username

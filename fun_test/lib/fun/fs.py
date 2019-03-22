@@ -144,7 +144,7 @@ class Bmc(Linux):
         nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc.write(command + "\n")
         output = nc.read_until(data=expected, timeout=timeout)
-        print output
+        fun_test.log(output)
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output: {}".format(expected, output))
         nc.close()
