@@ -1,13 +1,9 @@
 [
-  {"path": "networking/test_snapshot_ready.py", "inputs": {"speed": "SPEED_25G"}},
   {"path": "networking/flow_sanity/test_nw_sanity.py", "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/qos/test_pfc_on_2ports.py", "test_case_ids": [4], "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/qos/test_pfc_on_4ports.py", "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/qos/test_qos_strict_priority.py", "test_case_ids": [1], "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/qos/test_cir_1.py", "test_case_ids": [1], "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/qos/test_pir.py", "test_case_ids": [1], "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/qos/test_qos_dwrr.py", "test_case_ids": [1], "inputs": {"speed": "SPEED_25G"}},
-  {"path": "networking/qos/test_qos_wred_ecn.py", "test_case_ids": [1, 2], "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/copp/test_cc_ethernet_sanity.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/copp/test_cc_ipv4_sanity.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/copp/test_cc_error_traps.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/copp/test_cc_not_for_us.py", "inputs": {"speed": "SPEED_25G"}}
   {"path": "networking/sample/test_sample.py", "test_case_ids": [1], "inputs": {"speed": "SPEED_25G"}},
   {"path": "networking/sample/test_advanced_sampling.py", "test_case_ids": [3, 4], "inputs": {"speed": "SPEED_25G"}},
   {"path": "networking/copp/test_cc_ipv4_sanity.py", "test_case_ids": [1], "inputs": {"speed": "SPEED_25G"}},
