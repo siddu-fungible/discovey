@@ -22,11 +22,14 @@ class UartLogger(Thread):
     def run(self):
         nc = Netcat(ip=self.ip, port=self.port)
 
-        while not self.stopped:
-            self.buf += nc.read()
+        while not self.stopped and not fun_test.closed:
+            self.buf += nc.read_until(data="PUlsAr", timeout=0.001)
 
     def get_log(self):
         return self.buf
+
+    def close(self):
+        self.stopped = True
 
 
 class BootPhases:
@@ -144,6 +147,7 @@ class Bmc(Linux):
         print output
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output: {}".format(expected, output))
+        nc.close()
         return output
 
     def start_uart_log_listener(self, f1_index):
@@ -237,6 +241,7 @@ class Bmc(Linux):
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
             log = uart_log_thread.get_log()
+            uart_log_thread.close()
             with open(artifact_file_name, "w") as f:
                 f.write(log)
             fun_test.add_auxillary_file(description="F1_{} UART Log".format(f1_index),
