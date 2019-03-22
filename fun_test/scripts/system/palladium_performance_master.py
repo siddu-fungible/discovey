@@ -1733,7 +1733,7 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
                         for names in chart_names:
                             if "throughput" in names:
-                                if metrics["output_throughput"] == -1:
+                                if metrics["output_throughput"] == -1 and metrics["input_frame_size"] == 800:
                                     set_chart_status(result=fun_test.FAILED,
                                                      suite_execution_id=fun_test.get_suite_execution_id(),
                                                      test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
@@ -1747,7 +1747,7 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
                         for names in chart_names:
                             if "pps" in names:
-                                if metrics["output_pps"] == -1:
+                                if metrics["output_pps"] == -1 and metrics["input_frame_size"] == 800:
                                     set_chart_status(result=fun_test.FAILED,
                                                      suite_execution_id=fun_test.get_suite_execution_id(),
                                                      test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
@@ -1759,9 +1759,9 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                                                      git_commit="", internal_chart_name=names)
                         chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
                         for names in chart_names:
-                            if "latency" in names:
+                            if "latency" in names and metrics["input_frame_size"] == 800:
                                 if metrics["output_latency_avg"] == -1 or metrics["output_latency_min"] == -1 or \
-                                        metrics["output_latency_max"] == -1 or metrics["output_latency_P90"] == -1 or \
+                                        metrics["output_latency_P90"] == -1 or \
                                         metrics["output_latency_P50"] == -1 or metrics["output_latency_P99"] == -1:
                                     set_chart_status(result=fun_test.FAILED,
                                                      suite_execution_id=fun_test.get_suite_execution_id(),
