@@ -392,8 +392,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
-  //saves the edited data back to the DB
-  submit(): void {
+  convertExpected(): void {
     for (let dataSet of this.previewDataSets) {
       if (dataSet.output.max && dataSet.output.max !== -1) {
         dataSet.output.max = this.convertToBaseUnit(this.visualizationUnit, dataSet.output.max);
@@ -408,6 +407,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         dataSet.output.reference = this.convertToVisualizationUnit(this.changingVizUnit, dataSet.output.reference);
       }
     }
+  }
+
+  //saves the edited data back to the DB
+  submit(): void {
+    this.convertExpected();
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
