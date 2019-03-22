@@ -13,6 +13,3 @@
   {"path": "networking/copp/test_cc_ipv4_sanity.py", "test_case_ids": [1], "inputs": {"speed": "SPEED_25G"}},
   {"path": "networking/acl/test_acl_all_directions.py", "test_case_ids":[1, 2, 3, 4, 5, 6, 8, 9], "inputs": {"speed": "SPEED_25G"}}
 ]
-[
-  {"path": "networking/acl/test_acl_all_directions.py", "inputs": {"speed": "SPEED_25G"}}
-]
