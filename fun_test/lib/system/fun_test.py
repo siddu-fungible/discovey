@@ -627,7 +627,7 @@ class FunTest:
     def sleep(self, message, seconds=5):
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
-        self._print_log_green("zzz...: Sleeeping for :" + str(seconds) + "s : " + message,
+        self._print_log_green("zzz...: Sleeping for :" + str(seconds) + "s : " + message,
                               calling_module=calling_module)
         time.sleep(seconds)
 

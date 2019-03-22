@@ -43,7 +43,6 @@ class FunTestCase1(FunTestCase):
         f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
 
 
-
 if __name__ == "__main__":
     myscript = MyScript()
     myscript.add_test_case(FunTestCase1())
