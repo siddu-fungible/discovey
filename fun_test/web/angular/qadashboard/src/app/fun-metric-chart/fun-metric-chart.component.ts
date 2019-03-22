@@ -75,6 +75,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   baseLineDate: string = null;
   visualizationUnit: string = null;
+  changingVizUnit: string = null;
   selectedUnit: string = null;
   category: string[] = [];
 
@@ -301,6 +302,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
         this.baseLineDate = String(this.chartInfo.base_line_date);
         this.visualizationUnit = this.chartInfo.visualization_unit;
+        this.changingVizUnit = this.visualizationUnit;
 
         if (this.latency_category.includes(this.visualizationUnit)) {
           this.category = [...this.latency_category];
@@ -390,8 +392,26 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
+  convertExpected(): void {
+    for (let dataSet of this.previewDataSets) {
+      if (dataSet.output.max && dataSet.output.max !== -1) {
+        dataSet.output.max = this.convertToBaseUnit(this.visualizationUnit, dataSet.output.max);
+        dataSet.output.max = this.convertToVisualizationUnit(this.changingVizUnit, dataSet.output.max);
+      }
+      if (dataSet.output.expected && dataSet.output.expected !== -1) {
+        dataSet.output.expected = this.convertToBaseUnit(this.visualizationUnit, dataSet.output.expected);
+        dataSet.output.expected = this.convertToVisualizationUnit(this.changingVizUnit, dataSet.output.expected);
+      }
+      if (dataSet.output.reference && dataSet.output.reference !== -1) {
+        dataSet.output.reference = this.convertToBaseUnit(this.visualizationUnit, dataSet.output.reference);
+        dataSet.output.reference = this.convertToVisualizationUnit(this.changingVizUnit, dataSet.output.reference);
+      }
+    }
+  }
+
   //saves the edited data back to the DB
   submit(): void {
+    this.convertExpected();
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
@@ -403,14 +423,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     payload["base_line_date"] = this.baseLineDate;
-    payload["visualization_unit"] = this.visualizationUnit;
+    payload["visualization_unit"] = this.changingVizUnit;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
-        alert("Submitted");
         this.editingDescription = false;
         this.editingOwner = false;
         this.editingSource = false;
+        this.visualizationUnit = this.changingVizUnit;
         this.setTimeMode(TimeMode.ALL);
+        this.selectedUnit = this.visualizationUnit;
       } else {
         alert("Submission failed. Please check alerts");
       }
@@ -897,7 +918,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   convertToVisualizationUnit(outputUnit, output): any {
     if (this.latency_category.includes(outputUnit)) {
-     if (outputUnit === "usecs") {
+      if (outputUnit === "usecs") {
         output = output * Math.pow(10, 6);
       } else if (outputUnit === "msecs") {
         output = output * Math.pow(10, 3);
@@ -990,8 +1011,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     for (let output of this.expectedValues) {
       if (output.value && output.value !== -1) {
         output.value = this.convertToBaseUnit(output.unit, output.value);
-      output.value = this.convertToVisualizationUnit(this.selectedUnit, output.value);
-      output.unit = this.selectedUnit;
+        output.value = this.convertToVisualizationUnit(this.selectedUnit, output.value);
+        output.unit = this.selectedUnit;
       }
     }
     if (maximum === null) {
@@ -1001,6 +1022,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
     this.calculateYaxisPlotLines();
   }
+
 
   //fetching container data
   fetchContainerData(payload): void {
