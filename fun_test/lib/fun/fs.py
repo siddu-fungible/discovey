@@ -155,8 +155,13 @@ class Bmc(Linux):
         self.uart_log_threads[f1_index] = t
         t.start()
 
+    def _get_boot_args_for_index(self, bootargs, f1_index):
+        return "sku=SKU_FS1600_{} ".format(f1_index) + bootargs
+
+
     def u_boot_load_image(self,
                           index,
+                          bootargs,
                           tftp_load_address="0xa800000080000000",
                           tftp_server=TFTP_SERVER,
                           tftp_image_path="funos-f1.stripped.gz"):
@@ -168,8 +173,8 @@ class Bmc(Linux):
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
 
         self.u_boot_command(
-            command="setenv bootargs app=hw_hsu_test sku=SKU_FS1600_{} --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit".format(
-                index), timeout=5, f1_index=index)
+            command="setenv bootargs {}".format(
+                self._get_boot_args_for_index(bootargs=bootargs, f1_index=index)), timeout=5, f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
         self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
@@ -271,26 +276,6 @@ class Bmc(Linux):
 
     def get_f1_uart_log_filename(self, f1_index):
         return "/tmp/f1_{}_uart_log.txt".format(f1_index)
-
-    def kill_f1_uart_log_listener(self, f1_index):
-        process_ids = self.get_process_id_by_pattern(
-            "{}".format(os.path.basename(self.F1_UART_LOG_LISTENER_PATH)), multiple=True)
-        if process_ids:
-            for process_id in process_ids:
-                self.kill_process(process_id=process_id)
-
-    def setup_f1_uart_log_listener(self, f1_index):
-        f1 = self.get_f1(index=f1_index)
-        command = "python {} --device_path={} --speed={} --log_filename={}".format(self.bmc.F1_UART_LOG_LISTENER_PATH,
-                                                                                   f1.serial_device_path,
-                                                                                   self.SERIAL_SPEED_DEFAULT,
-                                                                                   self.get_f1_uart_log_filename(
-                                                                                       f1_index=f1_index))
-        process_id = self.start_bg_process(command, nohup=False)
-        self.set_uart_log_process_id(f1_index=f1_index, process_id=process_id)
-
-    def set_uart_log_process_id(self, f1_index, process_id):
-        pass
 
 
 class ComE(Linux):
@@ -400,7 +385,8 @@ class F1InFs:
 
 
 class Fs():
-
+    #  sku=SKU_FS1600_{}
+    DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit"
     def __init__(self,
                  bmc_mgmt_ip,
                  bmc_mgmt_ssh_username,
@@ -411,7 +397,8 @@ class Fs():
                  come_mgmt_ip,
                  come_mgmt_ssh_username,
                  come_mgmt_ssh_password,
-                 tftp_image_path="funos-f1.stripped.gz"):
+                 tftp_image_path="funos-f1.stripped.gz",
+                 bootargs=DEFAULT_BOOT_ARGS):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -427,6 +414,7 @@ class Fs():
         self.tftp_image_path = tftp_image_path
         self.f1s = {}
         self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
+        self.bootargs = bootargs
 
     def reachability_check(self):
         # TODO
@@ -447,7 +435,7 @@ class Fs():
         return self.f1s[index]
 
     @staticmethod
-    def get(test_bed_spec=None, tftp_image_path=None):
+    def get(test_bed_spec=None, tftp_image_path=None, bootargs=None):
         if not test_bed_spec:
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
             fun_test.log("Testbed-type: {}".format(test_bed_type))
@@ -458,6 +446,8 @@ class Fs():
             tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
         fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path))
 
+        if not bootargs:
+            bootargs = Fs.DEFAULT_BOOT_ARGS
         fun_test.simple_assert(test_bed_spec, "Testbed spec available")
         bmc_spec = test_bed_spec["bmc"]
         fpga_spec = test_bed_spec["fpga"]
@@ -471,7 +461,8 @@ class Fs():
                   come_mgmt_ip=come_spec["mgmt_ip"],
                   come_mgmt_ssh_username=come_spec["mgmt_ssh_username"],
                   come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
-                  tftp_image_path=tftp_image_path)
+                  tftp_image_path=tftp_image_path,
+                  bootargs=bootargs)
 
     def bootup(self, reboot_bmc=False):
         if reboot_bmc:
@@ -481,7 +472,7 @@ class Fs():
         fun_test.test_assert(self.fpga_initialize(), "FPGA initiaize")
 
         for f1_index, f1 in self.f1s.iteritems():
-            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path), "U-Bootup f1: {} complete".format(f1_index),)
+            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, bootargs=self.bootargs), "U-Bootup f1: {} complete".format(f1_index))
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
         #for f1_index, f1 in self.f1s.iteritems():
