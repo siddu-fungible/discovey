@@ -97,7 +97,7 @@ class Linux(object, ToDictMixin):
                  connect_retry_timeout_max=20,
                  use_paramiko=False,
                  localhost=None,
-                 set_term_settings=None):
+                 set_term_settings=True):
 
         self.host_ip = host_ip
         self.ssh_username = ssh_username
@@ -635,6 +635,9 @@ class Linux(object, ToDictMixin):
                     else:
                         pids = [x.split()[1] for x in output]
                         result = pids
+            else:
+                if multiple:
+                    result = []
         except Exception as ex:
             critical_str = str(ex)
             fun_test.critical(critical_str)

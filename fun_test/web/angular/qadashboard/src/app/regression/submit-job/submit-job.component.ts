@@ -40,7 +40,7 @@ export class SubmitJobComponent implements OnInit {
   testBedTypes: any = null;
   testBedNames: string[] = [];
   submitting: string = null;
-  tftpImagePath: string = null;
+  tftpImagePath: string = "funos-f1.stripped.gz";
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -238,6 +238,16 @@ export class SubmitJobComponent implements OnInit {
     this.selectedInfo = null;
     this.selectedScriptPk = pk;
   }
+
+  /*
+
+  isTestBedFs(): boolean {
+    let result = null;
+    if (this.selectedTestBedType) {
+      result = this.selectedTestBedType.indexOf('fs') > 0;
+    }
+    return result;
+  }*/
 
 
 

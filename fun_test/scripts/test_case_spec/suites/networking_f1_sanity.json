@@ -1,0 +1,11 @@
+[
+  {"path": "networking/flow_sanity/test_nw_sanity.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/copp/test_cc_ethernet_sanity.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/copp/test_cc_ipv4_sanity.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/copp/test_cc_error_traps.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/copp/test_cc_not_for_us.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/sample/test_sample.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/sample/test_advanced_sampling.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/acl/test_acl_all_directions.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/meter/test_meter_sanity.py", "inputs": {"speed": "SPEED_25G"}}
+]
