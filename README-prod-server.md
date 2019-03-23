@@ -71,4 +71,10 @@ export PRODUCTION_MODE=1
 ~~~~
 - Ensure that ps -ef | grep scheduler_main does not show any entry
 
+## Debugging postgres
+Check: /var/log/syslog, 
+Run without daemon mode:
+/usr/lib/postgresql/9.5/bin/postgres -d 3 -D /project/users/QA/regression/database/postgresql/9.5/main  -c config_file=/etc/postgresql/9.5/main/postgresql.conf 
+
+
 
