@@ -21,9 +21,12 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.21.120'
     #DPC_PROXY_PORT = 40221
     #TB = 'SN2'
+    #DPC_PROXY_IP = '10.1.40.24'
+    #DPC_PROXY_PORT = 40221
+    #TB = 'SB5'
     DPC_PROXY_IP = '10.1.20.129'
     DPC_PROXY_PORT = 40220
-    TB = 'FS5'
+    TB = 'FS7'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
