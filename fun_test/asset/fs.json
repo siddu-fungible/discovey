@@ -35,6 +35,24 @@
       "mgmt_ssh_username": "fun",
       "mgmt_ssh_password": "123"
     }
+  }, {
+    "name": "fs-6",
+    "bmc": {
+      "mgmt_ip": "10.1.20.153",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ssh_password": "superuser"
+    },
+    "fpga": {
+      "mgmt_ip": "10.1.20.124",
+      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "root"
+
+    },
+    "come": {
+      "mgmt_ip": "10.1.20.154",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ssh_password": "123"
+    }
   }
 
 
