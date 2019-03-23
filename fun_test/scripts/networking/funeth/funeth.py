@@ -129,29 +129,54 @@ class Funeth:
         """Configure interfaces in a namespace."""
         result = True
         for intf in self.tb_config_obj.get_interfaces(nu_or_hu, ns):
+            cmds = []
             mac_addr = self.tb_config_obj.get_interface_mac_addr(nu_or_hu, intf)
             ipv4_addr = self.tb_config_obj.get_interface_ipv4_addr(nu_or_hu, intf)
             ipv4_netmask = self.tb_config_obj.get_interface_ipv4_netmask(nu_or_hu, intf)
-            cmds = [
-                'ifconfig {} hw ether {}'.format(intf, mac_addr),
-                'ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
-                'ifconfig {} up'.format(intf),
-                'ifconfig {}'.format(intf),
-            ]
-            if ns != 'default':
+            mtu = self.tb_config_obj.get_interface_mtu(nu_or_hu, intf)
+
+            # macvlan interface, e.g. fpg1.1
+            if self.tb_config_obj.is_macvlan(nu_or_hu, intf):
+                cmds.extend(
+                    ['sudo ip link delete {}'.format(intf),
+                     'sudo ip link add link {} address {} {} type macvlan'.format(intf.split('.')[0], mac_addr, intf),
+                    ]
+                )
+
+            # ip alias, e.g. hu3-f0:1, has no mac/mtu config
+            if not self.tb_config_obj.is_alias(nu_or_hu, intf):
+                cmds.extend(
+                    ['ifconfig {} hw ether {}'.format(intf, mac_addr),
+                     'ifconfig {} mtu {}'.format(intf, mtu),
+                    ]
+                )
+
+            cmds.extend(
+                ['ifconfig {} {} netmask {}'.format(intf, ipv4_addr, ipv4_netmask),
+                 'ifconfig {} up'.format(intf),
+                 'ifconfig {}'.format(intf),
+                ]
+            )
+            if ns:
                 cmds = ['ip netns add {}'.format(ns), 'ip link set {} netns {}'.format(intf, ns)] + cmds
             for cmd in cmds:
-                if ns == 'default' or 'netns' in cmd:
+                if ns is None or 'netns' in cmd:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                 else:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
             # Ubuntu 16.04
-            match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
-                              output, re.DOTALL)
+            if self.tb_config_obj.is_alias(nu_or_hu, intf):
+                match = re.search(r'inet addr:{}.*Mask:{}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
+            else:
+                match = re.search(r'HWaddr {}.*inet addr:{}.*Mask:{}'.format(mac_addr, ipv4_addr, ipv4_netmask),
+                                  output, re.DOTALL)
             if not match:
                 # Ubuntu 18.04
-                match = re.search(r'inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
-                                  output, re.DOTALL)
+                if self.tb_config_obj.is_alias(nu_or_hu, intf):
+                    match = re.search(r'inet {}\s+netmask {}'.format(ipv4_addr, ipv4_netmask), output, re.DOTALL)
+                else:
+                    match = re.search(r'inet {}\s+netmask {}.*ether {}'.format(ipv4_addr, ipv4_netmask, mac_addr),
+                                      output, re.DOTALL)
             result &= match is not None
 
         return result
@@ -187,7 +212,7 @@ class Funeth:
                 'ip route',
             )
             for cmd in cmds:
-                if ns == 'default':
+                if ns is None:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                 else:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
@@ -200,7 +225,7 @@ class Funeth:
                 'arp -na',
             )
             for cmd in cmds:
-                if ns == 'default':
+                if ns is None:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo {}'.format(cmd))
                 else:
                     output = self.linux_obj_dict[nu_or_hu].command('sudo ip netns exec {} {}'.format(ns, cmd))
