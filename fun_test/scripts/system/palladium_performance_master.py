@@ -1496,32 +1496,28 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
                     teramark_begin = False
                 if teramark_begin:
                     m = re.search(
-                        r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+"(?P<operation>\S+)",\s+"Effort":\s+(?P<effort>\S+),\s+"Stats":\s+(?P<stats>.*)}',
+                        r'{"Type":\s+"(?P<type>\S+)",\s+"Operation":\s+(?P<operation>\S+),\s+"Effort":\s+(?P<effort>\S+),.*\s+"Duration"\s+:\s+(?P<latency_json>{.*}),\s+"Throughput":\s+(?P<throughput_json>{.*})}',
                         line)
                     if m:
                         input_type = m.group("type")
                         input_operation = m.group("operation")
                         input_effort = int(m.group("effort"))
-                        output_stats = json.loads(m.group("stats"))
-                        output_bandwidth_avg = output_stats['_avg_bw_gbps']
-                        output_bandwidth_total = output_stats['_total_bw_kbps']
-                        output_latency_min = output_stats['_min_latency']
-                        output_latency_avg = output_stats['_avg_latency']
-                        output_latency_max = output_stats['_max_latency']
-                        output_iops = output_stats['_iops']
-                        output_count = output_stats["_count"]
+                        bandwidth_json = json.loads(m.group("throughput_json"))
+                        output_bandwidth_avg = bandwidth_json['value']
+                        output_bandwidth_avg_unit = bandwidth_json["unit"]
+                        latency_json = json.loads(m.group("latency_json"))
+                        output_latency_avg = latency_json['value']
+                        output_latency_unit = latency_json["unit"]
 
                         fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
-                                                                                            input_effort, output_stats))
+                                                                                            input_effort, bandwidth_json))
                         metrics["input_type"] = input_type
                         metrics["input_operation"] = input_operation
                         metrics["input_effort"] = input_effort
                         metrics["output_bandwidth_avg"] = output_bandwidth_avg
-                        metrics["output_bandwidth_total"] = output_bandwidth_total
-                        metrics["output_latency_min"] = output_latency_min
+                        metrics["output_bandwidth_avg_unit"] = output_bandwidth_avg_unit
                         metrics["output_latency_avg"] = output_latency_avg
-                        metrics["output_latency_max"] = output_latency_max
-                        metrics["output_iops"] = output_iops
+                        metrics["output_latency_avg_unit"] = output_latency_unit
                         d = self.metrics_to_dict(metrics, fun_test.PASSED)
                         if input_type == "Deflate":
                             MetricHelper(model=TeraMarkZipDeflatePerformance).add_entry(**d)
