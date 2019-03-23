@@ -223,6 +223,7 @@ class FunTest:
         self.fun_test_timers = []
         self.version = "1"
         self.determine_version()
+        self.closed = False
 
 
     def abort(self):
@@ -627,7 +628,7 @@ class FunTest:
     def sleep(self, message, seconds=5):
         outer_frames = inspect.getouterframes(inspect.currentframe())
         calling_module = self._get_calling_module(outer_frames)
-        self._print_log_green("zzz...: Sleeeping for :" + str(seconds) + "s : " + message,
+        self._print_log_green("zzz...: Sleeping for :" + str(seconds) + "s : " + message,
                               calling_module=calling_module)
         time.sleep(seconds)
 
@@ -688,6 +689,7 @@ class FunTest:
             for thread_to_check in threads_to_check:
                 thread_to_check.join()
         self._print_summary()
+        self.closed = True
 
     def _get_test_case_text(self,
                             id,

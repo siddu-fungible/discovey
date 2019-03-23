@@ -971,6 +971,8 @@ class NuTransitPerformance(models.Model):
     output_latency_max = models.FloatField(verbose_name="Latency Max in us")
     output_latency_min = models.FloatField(verbose_name="Latency Min in us")
     output_latency_P99 = models.FloatField(verbose_name="Tail Latency in us", default=-1)
+    output_latency_P90 = models.FloatField(verbose_name="P90 Latency in us", default=-1)
+    output_latency_P50 = models.FloatField(verbose_name="P50 Latency in us", default=-1)
     output_jitter_min = models.FloatField(verbose_name="Jitter min in us", default=0)
     output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
@@ -1273,6 +1275,7 @@ class SoakDmaMemcpyCoherentPerformance(models.Model):
     output_bandwidth_unit = models.TextField(default="GBps")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    input_unit = models.TextField(default="GBps")
     tag = "analytics"
 
     def __str__(self):
@@ -1292,6 +1295,7 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
     output_bandwidth_unit = models.TextField(default="GBps")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    input_unit = models.TextField(default="GBps")
     tag = "analytics"
 
     def __str__(self):
@@ -1311,6 +1315,7 @@ class SoakDmaMemsetPerformance(models.Model):
     output_bandwidth_unit = models.TextField(default="GBps")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    input_unit = models.TextField(default="GBps")
     tag = "analytics"
 
     def __str__(self):
