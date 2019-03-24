@@ -728,7 +728,7 @@ if __name__ == "__main_DMA__":
             mmt.save()
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main_crypto_baseline__":
+if __name__ == "__main__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
     internal_chart_names = ["Crypto raw throughput", "Crypto api throughput"]

@@ -12,7 +12,7 @@ from web.web_global import api_safe_json_response
 from web.fun_test.site_state import site_state
 from collections import OrderedDict
 from web.fun_test.metrics_models import MetricChart, ModelMapping, VolumePerformanceSerializer, WuLatencyAllocStack
-from web.fun_test.metrics_models import LastMetricId
+from web.fun_test.metrics_models import LastMetricId, LastTriageId
 from web.fun_test.metrics_models import AllocSpeedPerformanceSerializer, MetricChartSerializer, EcPerformance, \
     BcopyPerformanceSerializer
 from web.fun_test.metrics_models import BcopyFloodDmaPerformanceSerializer
@@ -26,10 +26,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 from analytics_models_helper import invalidate_goodness_cache
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import parser
 from lib.utilities.jira_manager import JiraManager
 from lib.utilities.git_manager import GitManager
+from web.fun_test.metrics_models import Triage, TriageFlow
 from web.fun_test.metrics_models import MetricsGlobalSettings, MetricsGlobalSettingsSerializer, MileStoneMarkers
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -346,6 +347,114 @@ def get_past_build_status(request):
               "failed_git_commit": previous_entry.git_commit}
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def get_first_degrade(request):
+    previous_entry = {}
+    current_entry = {}
+    previous_score = None
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
+    for entry in chart_status_entries:
+        if previous_score:
+            current_score = entry.score
+            if current_score == previous_score or current_score < previous_score:
+                previous_entry = entry
+                previous_score = entry.score
+            else:
+                current_entry = entry
+                break
+        else:
+            previous_score = entry.score
+            previous_entry = entry
+
+    result = {"passed_jenkins_job_id": current_entry.jenkins_job_id,
+                      "passed_suite_execution_id": current_entry.suite_execution_id,
+                      "passed_lsf_job_id": current_entry.lsf_job_id,
+                      "passed_date_time": current_entry.date_time,
+                      "passed_git_commit": current_entry.git_commit,
+                      "passed_score": current_entry.score,
+                      "degraded_jenkins_job_id": previous_entry.jenkins_job_id,
+                      "degraded_suite_execution_id": previous_entry.suite_execution_id,
+                      "degraded_lsf_job_id": previous_entry.lsf_job_id,
+                      "degraded_date_time": previous_entry.date_time,
+                      "degraded_git_commit": previous_entry.git_commit,
+                      "degraded_score": previous_entry.score,
+              "boot_args": "",
+              "metric_type": "SCORES"
+              }
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def get_triage_info(request):
+    previous_entry = {}
+    current_entry = {}
+    request_json = json.loads(request.body)
+    metric_id = int(request_json["metric_id"])
+    from_dict = request_json["from_date"]
+    to_dict = request_json["to_date"]
+    from_date = datetime(year=from_dict["year"], month=from_dict["month"], day=from_dict["day"])
+    to_date = datetime(year=to_dict["year"], month=to_dict["month"], day=to_dict["day"])
+    boot_args = request_json["boot_args"]
+    metric_type= request_json["metric_type"]
+    chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
+    for entry in chart_status_entries:
+        if same_day(from_date, entry.date_time):
+            if entry.git_commit != "":
+                current_entry = entry
+                break
+            else:
+                from_date = from_date - timedelta(days=1)
+        if same_day(to_date, entry.date_time):
+            if entry.git_commit != "":
+                previous_entry = entry
+            else:
+                to_date = to_date - timedelta(days=1)
+    result = {"passed_jenkins_job_id": current_entry.jenkins_job_id,
+                      "passed_suite_execution_id": current_entry.suite_execution_id,
+                      "passed_lsf_job_id": current_entry.lsf_job_id,
+                      "passed_date_time": current_entry.date_time,
+                      "passed_git_commit": current_entry.git_commit,
+                      "passed_score": current_entry.score,
+                      "degraded_jenkins_job_id": previous_entry.jenkins_job_id,
+                      "degraded_suite_execution_id": previous_entry.suite_execution_id,
+                      "degraded_lsf_job_id": previous_entry.lsf_job_id,
+                      "degraded_date_time": previous_entry.date_time,
+                      "degraded_git_commit": previous_entry.git_commit,
+                      "degraded_score": previous_entry.score,
+              "boot_args": boot_args,
+              "metric_type": metric_type}
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def get_triage_info_from_commits(request):
+    request_json = json.loads(request.body)
+    # metric_id = int(request_json["metric_id"])
+    from_commit = request_json["from_commit"]
+    to_commit = request_json["to_commit"]
+    boot_args = request_json["boot_args"]
+    metric_type= request_json["metric_type"]
+    result = {"passed_jenkins_job_id": -1,
+                      "passed_suite_execution_id": -1,
+                      "passed_lsf_job_id": -1,
+                      "passed_date_time": -1,
+                      "passed_git_commit": to_commit,
+                      "passed_score": -1,
+                      "degraded_jenkins_job_id": -1,
+                      "degraded_suite_execution_id": -1,
+                      "degraded_lsf_job_id": -1,
+                      "degraded_date_time": -1,
+                      "degraded_git_commit": from_commit,
+                      "degraded_score": -1,
+              "boot_args": boot_args,
+              "metric_type": metric_type}
+    return result
+
+def same_day(from_to_date, current_date):
+    return (from_to_date.day == current_date.day) and (from_to_date.month == current_date.month) and (from_to_date.year == current_date.year)
 
 @csrf_exempt
 @api_safe_json_response
@@ -800,8 +909,7 @@ def get_git_commits(request):
     request_json = json.loads(request.body)
     faulty_commit = request_json["faulty_commit"]
     success_commit = request_json["success_commit"]
-    m = GitManager()
-    commits = m.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
+    git_obj = app_config.get_git_manager()
+    commits = git_obj.get_commits_between(faulty_commit=faulty_commit, success_commit=success_commit)
     result["commits"] = commits["commits"]
-    result["changed_files"] = commits["changed_files"]
     return result

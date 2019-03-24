@@ -29,6 +29,7 @@
         </select>
       </div>
     </div>
+
     <!-- fun chart component -->
     <fun-chart [mileStones]="mileStoneIndices" [y1AxisPlotLines]="y1AxisPlotLines" [yMax]="yMax" [y1Values]="values"
                [xValues]="series"
@@ -94,6 +95,11 @@
           <a style="padding: 5px;" (click)="toggleEdit()">Cancel</a>
         </div>
       </div>
+      <br>
+      <!--<button (click)="openTriaging()"-->
+              <!--class="btn btn-sm failed-label no-margin git-commit">-->
+        <!--Triage-->
+      <!--</button>-->
       <!--<span style="float: right;">-->
       <!--<a target="_blank" href="/metrics/score_table/{{ metricId }}">Scores</a>-->
       <!--</span>-->
@@ -125,6 +131,7 @@
         </table>
       </div>
     </div>
+    <br>
     <div class="closed-section"></div>
     <!-- Show tables below the leaf chart -->
     <div *ngIf="!minimal && modelName !== 'MetricContainer'" style="padding-top: 10px; padding-bottom: 10px;">
