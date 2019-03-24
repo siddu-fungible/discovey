@@ -66,15 +66,18 @@ class FunethPerformanceBase(FunTestCase):
         linux_objs = []
         if flow_type.startswith('NU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['nu']
+            ns = None
             if 'VF' in flow_type:
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
             else:  # Default use PF interface
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
         elif flow_type.startswith('HU_NU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
+            ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
+            ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
         linux_objs.append(linux_obj)
 
@@ -91,6 +94,7 @@ class FunethPerformanceBase(FunTestCase):
              'duration': duration,
              'frame_size': frame_size,
              'bw': bw,
+             'ns': ns
              }
         ]
         if tool == 'netperf':
