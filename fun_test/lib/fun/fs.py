@@ -3,7 +3,6 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from asset.asset_manager import AssetManager
 from fun_settings import TFTP_SERVER, FUN_TEST_DIR, INTEGRATION_DIR
 from lib.utilities.netcat import Netcat
 from threading import Thread
@@ -439,7 +438,7 @@ class Fs():
         if not test_bed_spec:
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
             fun_test.log("Testbed-type: {}".format(test_bed_type))
-            test_bed_spec = AssetManager().get_fs_by_name(test_bed_type)
+            test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_type)
             fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_type))
 
         if not tftp_image_path:
