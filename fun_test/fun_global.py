@@ -24,9 +24,6 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
 
-METRIC_TYPE = {"SCORES": "SCORES",
-               "PASS/FAIL": "PASS/FAIL"}
-
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())
     return utc.astimezone(pytz.timezone(TIME_ZONE))

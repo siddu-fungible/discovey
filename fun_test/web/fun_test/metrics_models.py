@@ -2,7 +2,7 @@ from fun_settings import MAIN_WEB_APP
 from django.db import models
 from django.apps import apps
 #from web.fun_test import apps
-from fun_global import RESULTS, METRIC_TYPE, get_current_time, get_localized_time
+from fun_global import RESULTS, get_current_time, get_localized_time
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 import json
@@ -31,6 +31,11 @@ class MetricsGlobalSettingsSerializer(ModelSerializer):
     class Meta:
         model = MetricsGlobalSettings
         fields = "__all__"
+
+
+class TriageType:
+    SCORES = "SCORES"
+    PASS_FAIL = "PASS/FAIL"
 
 class SchedulingStates:
     ACTIVE = "Active"
@@ -83,7 +88,7 @@ class MetricChartStatus(models.Model):
 
 class Triage(models.Model):
     metric_id = models.IntegerField(default=-1)
-    metric_type = models.CharField(max_length=15, default=METRIC_TYPE["SCORES"])
+    metric_type = models.CharField(max_length=15, default=TriageType.SCORES)
     triage_id = models.IntegerField(default=-1)
     date_time = models.DateTimeField(default=datetime.now)
     degraded_suite_execution_id = models.IntegerField(default=-1)
@@ -108,7 +113,7 @@ class Triage(models.Model):
 
 class TriageFlow(models.Model):
     metric_id = models.IntegerField(default=-1)
-    metric_type = models.CharField(max_length=15, default=METRIC_TYPE["SCORES"])
+    metric_type = models.CharField(max_length=15, default=TriageType.SCORES)
     triage_id = models.IntegerField(default=-1)
     triage_flow_id = models.IntegerField(default=-1, unique=True)
     date_time = models.DateTimeField(default=datetime.now)

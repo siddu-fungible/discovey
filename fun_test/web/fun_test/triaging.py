@@ -3,7 +3,6 @@ import json
 import random
 import re
 import jenkins, sys
-from jenkinsapi.jenkins import Jenkins
 import requests
 from django.core.exceptions import ObjectDoesNotExist
 import web.fun_test.django_interactive
