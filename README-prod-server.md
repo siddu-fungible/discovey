@@ -2,6 +2,8 @@
 # Setup needed for the main regression server
 
 ## Initial setup
+All configuration steps below need to be performed with "qa-admin" as the user
+
 ### Account settings
 
 ~~~~
