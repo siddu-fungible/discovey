@@ -5,6 +5,8 @@ from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
 from fun_settings import TFTP_SERVER, FUN_TEST_DIR, INTEGRATION_DIR
 from lib.utilities.netcat import Netcat
+from lib.system.utils import ToDictMixin
+
 from threading import Thread
 import re
 import os
@@ -383,9 +385,20 @@ class F1InFs:
 
 
 
-class Fs():
+class Fs(object, ToDictMixin):
     #  sku=SKU_FS1600_{}
     DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit"
+    TO_DICT_VARS = ["bmc_mgmt_ip",
+                    "bmc_mgmt_ssh_username",
+                    "bmc_mgmt_ssh_password",
+                    "fpga_mgmt_ip",
+                    "fpga_mgmt_ssh_username",
+                    "fpga_mgmt_ssh_password",
+                    "come_mgmt_ip",
+                    "come_mgmt_ssh_username",
+                    "come_mgmt_ssh_password"]
+
+
     def __init__(self,
                  bmc_mgmt_ip,
                  bmc_mgmt_ssh_username,

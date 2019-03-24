@@ -59,6 +59,9 @@ class AssetManager:
                     fun_test.log("Destroying container: {}".format(container_name))
                     self.docker_host.destroy_container(container_name=container_name)
 
+            elif orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_REAL:
+                orchestrator.get_dut_instance().cleanup()
+
 
     def describe(self):
         fun_test.log_section("Printing assets")
