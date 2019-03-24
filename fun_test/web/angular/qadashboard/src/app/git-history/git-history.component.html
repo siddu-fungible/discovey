@@ -1,0 +1,17 @@
+<fun-spinner [status]="status"></fun-spinner>
+<div *ngIf="status===null" style="color: black;">
+  <u><b>Commit History:</b></u><br>
+  <p class="no-margin" style="color: red">
+    {{ faultyCommit }}
+  </p>
+  <p class="no-margin" *ngFor="let commit of commits">
+    {{ commit }}
+  </p>
+  <p class="no-margin" style="color: green">
+    {{ successCommit }}
+  </p>
+  <u><b>Changed Files:</b></u><br>
+  <p class="no-margin" *ngFor="let fileNames of changedFiles">
+    {{ fileNames }}
+  </p>
+</div>

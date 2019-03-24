@@ -161,7 +161,9 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
             # fun_test.sleep("modprobe -r nvme")
             # i.command("modprobe nvme")
             i.exit_sudo()
-            i.nvme_restart()
+            # Don't need to reload the nvme driver while bringing up the setup. If driver reload is required it has to
+            # be taken care inside the test cases. Avoiding this reload will avoid the bug #SWOS-3822
+            # i.nvme_restart()
             instance = i
         except Exception as ex:
             fun_test.critical(str(ex))

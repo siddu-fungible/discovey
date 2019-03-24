@@ -159,14 +159,18 @@ class TopologyHelper:
 
     @fun_test.safe
     def allocate_dut(self, dut_obj, orchestrator_obj=None):
-        if dut_obj.mode == dut_obj.MODE_SIMULATION:
-            if not orchestrator_obj:
-                orchestrator_obj = asset_manager.get_orchestrator(asset_manager.ORCHESTRATOR_TYPE_DOCKER_SIMULATION)
-            fun_test.simple_assert(orchestrator_obj, "orchestrator")
+        #if dut_obj.mode == dut_obj.MODE_SIMULATION:
+        fun_test.simple_assert(orchestrator_obj, "orchestrator")
+        dut_instance = None
+        if fun_test.is_simulation():
             dut_instance = orchestrator_obj.launch_dut_instance(spec=dut_obj.spec,
                                                                 external_dpcsh_port=orchestrator_obj.dpcsh_port)
-            fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
-            dut_obj.set_instance(dut_instance)
+        else:
+            dut_instance = orchestrator_obj.launch_dut_instance(spec=dut_obj.spec)
+        fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
+        dut_obj.set_instance(dut_instance)
+
+
 
     @fun_test.safe
     def allocate_hypervisor(self, hypervisor_end_point, orchestrator_obj=None):  # TODO
@@ -227,7 +231,7 @@ class TopologyHelper:
                             dpcsh_directory=None,
                             mount=None):
 
-        docker_host = AssetManager().get_any_docker_host()
+        docker_host = fun_test.get_asset_manager().get_any_docker_host()
         docker_host.connect()
         if not cleanup:
             self.f1_assets = []

@@ -96,7 +96,8 @@ class Linux(object, ToDictMixin):
                  telnet_port=TELNET_PORT_DEFAULT,
                  connect_retry_timeout_max=20,
                  use_paramiko=False,
-                 localhost=None):
+                 localhost=None,
+                 set_term_settings=True):
 
         self.host_ip = host_ip
         self.ssh_username = ssh_username
@@ -104,7 +105,7 @@ class Linux(object, ToDictMixin):
         self.ssh_port = ssh_port
         self.connect_retry_timeout_max = connect_retry_timeout_max
         self.handle = None
-
+        self.set_term_settings = set_term_settings
         self.localhost = localhost
         self.use_paramiko = use_paramiko
         self.paramiko_handle = None
@@ -303,11 +304,13 @@ class Linux(object, ToDictMixin):
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
         if connected:
-            if not self._set_term_settings():
+            if self.set_term_settings and not self._set_term_settings():
                 raise Exception("Unable to set term settings")
             if not self._set_paths():
                 raise Exception("Unable to set paths")
             result = True
+        else:
+            self.handle = None
         return result
 
     def _set_term_settings(self):
@@ -613,8 +616,10 @@ class Linux(object, ToDictMixin):
         return pid
 
     @fun_test.safe
-    def get_process_id_by_pattern(self, process_pat):
+    def get_process_id_by_pattern(self, process_pat, multiple=False):
+        result = None
         pid = None
+        pids = []
         command = "ps -ef | grep '" + process_pat + "'| grep -v grep"
         try:
             output = self.command(command)
@@ -623,14 +628,22 @@ class Linux(object, ToDictMixin):
                 output = output.split('\n')
                 # If the output contains 2 lines, then the process matching the given pattern exists
                 if len(output) >= 1:
-                    # Extracting the pid of the process matched the given pattern
-                    pid = output[0].split()[1]
+                    if not multiple:
+                        # Extracting the pid of the process matched the given pattern
+                        pid = output[0].split()[1]
+                        result = pid
+                    else:
+                        pids = [x.split()[1] for x in output]
+                        result = pids
+            else:
+                if multiple:
+                    result = []
         except Exception as ex:
             critical_str = str(ex)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
 
-        return pid
+        return result
 
     @fun_test.safe
     def dd(self, input_file, output_file, block_size, count, timeout=60, sudo=False, **kwargs):
@@ -821,7 +834,7 @@ class Linux(object, ToDictMixin):
         cmd = 'sudo {}bash'.format(options_str)
         output = self.command(cmd, custom_prompts={prompt: self.ssh_password, mac_prompt: self.ssh_password})
         result = True
-        if "command not found" in output:
+        if "not found" in output:
             result = False
         return result
 
@@ -1250,6 +1263,30 @@ class Linux(object, ToDictMixin):
         if re_output:
             result['size'] = int(re_output.group(1))
             result['used_by'] = int(re_output.group(2))
+        return result
+
+    @fun_test.safe
+    def lspci(self, grep_filter=None):
+        result = []
+        command = "lspci"
+        if grep_filter:
+            command += " | grep {}".format(grep_filter)
+        output = self.command(command)
+        lines = output.split("\n")
+        for line in lines:
+            m = re.search(r'((\d+):(\d+)\.(\d+))\s+(.*?):', line)
+            if m:
+                id = m.group(1)
+                bus_number = m.group(2)
+                device_number = m.group(3)
+                function_number = m.group(4)
+                device_class = m.group(5)
+                record = {"id": id,
+                          "bus_number": bus_number,
+                          "device_number": device_number,
+                          "function_number": function_number,
+                          "device_class": device_class}
+                result.append(record)
         return result
 
     @fun_test.safe
@@ -2094,15 +2131,15 @@ class Linux(object, ToDictMixin):
         """
         result = None
         if re.search(r'\d+\.\d+\.\d+\.\d+', self.host_ip):
-            result = self.host_ip
+            ip_addr = self.host_ip
         else:
-            result = self.nslookup(self.host_ip)
-            if result:
-                ip_addr = result['ip_address']
-                output = self.command('ip address show | grep {} -A2 -B2'.format(ip_addr))
-                match2 = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(ip_addr), output, re.DOTALL)
-                if match2:
-                    result = match2.group(1)
+            r = self.nslookup(self.host_ip)
+            if r:
+                ip_addr = r['ip_address']
+        output = self.command('ip address show | grep {} -A2 -B2'.format(ip_addr))
+        match = re.search(r'\d+: (\w+):.*?mtu.*?state.*?inet {}'.format(ip_addr), output, re.DOTALL)
+        if match:
+            result = match.group(1)
 
         return result
 

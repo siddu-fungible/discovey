@@ -140,7 +140,7 @@ export class RegressionSummaryComponent implements OnInit {
   }
 
   fetchScripts() {
-    this.numBugs = 0;
+    //this.numBugs = 0;
     this.apiService.get("/regression/scripts").subscribe(response => {
       response.data.forEach(entry => {
         this.scriptInfoMap[entry.script_path] = {entry: entry};
@@ -152,9 +152,9 @@ export class RegressionSummaryComponent implements OnInit {
 
           });
         }
-        if (entry.bugs.length) {
+        /*if (entry.bugs.length) {
           this.numBugs += entry.bugs.length;
-        }
+        }*/
       });
       this.fetchModules();
     }, error => {

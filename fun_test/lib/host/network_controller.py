@@ -1522,3 +1522,8 @@ class NetworkController(DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def sample_vp_pkts(self):
+        vp_pkts = self.peek_vp_packets()
+        result = vp_pkts['VP Packets Sample']
+        return result
