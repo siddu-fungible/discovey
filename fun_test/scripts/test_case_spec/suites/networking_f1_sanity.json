@@ -1,4 +1,5 @@
 [
   {"info": {"tags": ["networking-sanity"]}},
-  {"path": "networking/meter/test_meter_sanity.py", "inputs": {"speed": "SPEED_25G"}}
+  {"path": "networking/sample/test_sample.py", "inputs": {"speed": "SPEED_25G"}},
+  {"path": "networking/acl/test_acl_all_directions.py", "inputs": {"speed": "SPEED_25G"}}
 ]
