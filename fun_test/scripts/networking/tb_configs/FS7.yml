@@ -10,10 +10,10 @@ nu:
   namespaces:
     default:
       interfaces:
-        - fpg0:
-            mac_addr: fe:dc:ba:44:66:33
-            ipv4_addr: 19.1.1.1
-            ipv4_netmask: 255.255.255.0
+        #- fpg0:
+        #    mac_addr: fe:dc:ba:44:66:33
+        #    ipv4_addr: 19.1.1.1
+        #    ipv4_netmask: 255.255.255.0
         - fpg1:
             mac_addr: fe:dc:ba:44:55:77
             ipv4_addr: 21.1.1.1
@@ -46,10 +46,6 @@ nu:
         - prefix: 53.1.10.0/24
           nexthop: 21.1.1.2
         - prefix: 180.0.4.0/24
-          nexthop: 21.1.1.2
-        - prefix: 180.0.3.0/24
-          nexthop: 60.1.1.2
-        - prefix: 180.0.4.0/24
           nexthop: 1.1.1.2
         - prefix: 180.0.3.0/24
           nexthop: 1.1.2.2
@@ -62,6 +58,8 @@ hu:
   mgmt_interface: enp3s0f0
   pf_interface: hu3-f0
   vf_interface: hu3-f8
+  pf_interface_fcp: "hu3-f0:1"
+  vf_interface_fcp: "hu3-f8:1"
   namespaces:
     default:
       interfaces:
@@ -70,7 +68,7 @@ hu:
             ipv4_addr: 53.1.1.5
             ipv4_netmask: 255.255.255.0
         - "hu3-f0:1":
-            ipv4_addr: 53.1.1.15
+            ipv4_addr: 53.1.1.15  # FCP tunnel
             ipv4_netmask: 255.255.255.0
             type: alias
       routes:
@@ -104,7 +102,7 @@ hu:
             ipv4_addr: 53.1.9.5
             ipv4_netmask: 255.255.255.0
         - "hu3-f8:1":
-            ipv4_addr: 53.1.9.15
+            ipv4_addr: 53.1.9.15  # FCP tunnel
             ipv4_netmask: 255.255.255.0
             type: alias
       routes:

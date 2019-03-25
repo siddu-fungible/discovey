@@ -99,6 +99,7 @@ class NetperfManager:
             protocol = arg_dict.get('protocol', 'tcp')
             duration = arg_dict.get('duration', 30)
             frame_size = arg_dict.get('frame_size', 800)
+            sip = arg_dict.get('sip', None)
             ns = arg_dict.get('ns', None)
 
         if parallel > 1:
@@ -106,14 +107,16 @@ class NetperfManager:
             rlist = []
             for i in range(1, parallel):
                 # parallel-1 tasks to measure throughput
+                measure_latency = False
                 mp_task_obj.add_task(
                     func=do_test,
-                    func_args=(linux_obj, dip, protocol, duration, frame_size, i, False, ns),
+                    func_args=(linux_obj, dip, protocol, duration, frame_size, i, measure_latency, sip, ns),
                     task_key=i)
             # One task to measure latency
+            measure_latency = True
             mp_task_obj.add_task(
                 func=do_test,
-                func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, True, ns),
+                func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, measure_latency, sip, ns),
                 task_key=parallel)
             mp_task_obj.run(max_parallel_processes=parallel)
             for i in range(1, parallel+1):
@@ -162,7 +165,8 @@ def get_send_size(protocol, frame_size):
     return send_size
 
 
-def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=None, measure_latency=False, ns=None):
+def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=None, measure_latency=False, sip=None,
+            ns=None):
     """Use Netperf measure TCP throughput (Mbps) and latency (us).
 
 
@@ -206,6 +210,8 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     else:
         cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
         pat = r'MIN_LATENCY=(\d+).*?MEAN_LATENCY=(\d+).*?P50_LATENCY=(\d+).*?P90_LATENCY=(\d+).*?P99_LATENCY=(\d+).*?MAX_LATENCY=(\d+).*?THROUGHPUT=(\d+)'
+    if sip:
+        cmd = '{} -L {}'.format(cmd, sip)
     if ns:
         cmd = 'sudo ip netns exec {} {}'.format(ns, cmd)
     if cpu:

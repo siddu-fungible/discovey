@@ -3,6 +3,7 @@ from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
 from lib.host.iperf_manager import IPerfManager
 from lib.host.netperf_manager import NetperfManager
+from lib.host.network_controller import NetworkController
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity
 import json
@@ -17,6 +18,7 @@ else:
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 TIMESTAMP = get_current_time()
 PARALLEL = 6
+FPG_MTU = 1556
 
 
 class FunethPerformance(FunTestScript):
@@ -37,6 +39,25 @@ class FunethPerformance(FunTestScript):
 
         #fun_test.test_assert(self.iperf_manager_obj.setup(), 'Set up for throughput/latency test')
         fun_test.test_assert(self.netperf_manager_obj.setup(), 'Set up for throughput/latency test')
+
+        network_controller_obj = NetworkController(dpc_server_ip=sanity.DPC_PROXY_IP,
+                                                   dpc_server_port=sanity.DPC_PROXY_PORT, verbose=True)
+        for intf in funeth_obj.tb_config_obj.get_all_interfaces('nu'):
+            i = int(intf.lstrip('fpg')[0])
+            fun_test.test_assert(network_controller_obj.set_port_mtu(i, FPG_MTU),
+                                 'Configure interface {} mtu {}'.format(intf, FPG_MTU))
+        buffer_pool_set = network_controller_obj.set_qos_egress_buffer_pool(sf_thr=4000,
+                                                                            sf_xoff_thr=3500,
+                                                                            sx_thr=4000,
+                                                                            dx_thr=4000,
+                                                                            df_thr=4000,
+                                                                            fcp_thr=8000,
+                                                                            fcp_xoff_thr=7000,
+                                                                            nonfcp_thr=8000,
+                                                                            nonfcp_xoff_thr=7000,
+                                                                            sample_copy_thr=255,
+                                                                            mode='nu')
+        fun_test.test_assert(buffer_pool_set, 'Configure QoS egress buffer pool')
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
 
@@ -69,16 +90,26 @@ class FunethPerformanceBase(FunTestCase):
             ns = None
             if 'VF' in flow_type:
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
+                sip = None
             else:  # Default use PF interface
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
+                sip = None
         elif flow_type.startswith('HU_NU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
+            sip = None
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
-            dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
+            if flow_type == 'HU_HU_NFCP':
+                dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
+                sip = None
+            elif flow_type == 'HU_HU_FCP':
+                dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
+                                                                    funeth_obj.tb_config_obj.get_hu_vf_interface_fcp())
+                sip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
+                                                                    funeth_obj.tb_config_obj.get_hu_pf_interface_fcp())
         linux_objs.append(linux_obj)
 
         if tool == 'netperf':
@@ -88,6 +119,7 @@ class FunethPerformanceBase(FunTestCase):
         arg_dicts = [
             {'linux_obj': linux_obj,
              'dip': dip,
+             'sip': sip,
              'tool': tool,
              'protocol': protocol,
              'parallel': parallel,
@@ -382,7 +414,7 @@ class FunethPerformance_NU_HU_1500B_TCP(FunethPerformanceBase):
 
 # Netperf
 
-# HU -> HU
+# HU -> HU Non_FCP
 
 # UDP
 
@@ -620,6 +652,83 @@ class FunethPerformance_NU_HU_1500B_TCP_NETPERF(FunethPerformanceBase):
                                    frame_size=1500)
 
 
+# HU -> HU FCP
+
+# UDP
+
+class FunethPerformance_HU_HU_FCP_64B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=131,
+                              summary="Do throughput and latency test of HU -> HU FCP with 64B frames of UDP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via FCP tunnel loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_FCP', tool='netperf', parallel=PARALLEL, frame_size=64)
+
+
+class FunethPerformance_HU_HU_FCP_800B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=132,
+                              summary="Do throughput and latency test of HU -> HU FCP with 800B frames of UDP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via FCP tunnel loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_FCP', tool='netperf', parallel=PARALLEL, frame_size=800)
+
+class FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=133,
+                              summary="Do throughput and latency test of HU -> HU FCP with 1500B frames of UDP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via FCP tunnel loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_FCP', tool='netperf', parallel=PARALLEL, frame_size=1500)
+
+# TCP
+
+class FunethPerformance_HU_HU_FCP_64B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=134,
+                              summary="Do throughput and latency test of HU -> HU FCP with 64B frames of TCP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via FCP tunnel loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_FCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=64)
+
+class FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=135,
+                              summary="Do throughput and latency test of HU -> HU FCP with 800B frames of TCP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via FCP tunnel loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_FCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=800)
+
+class FunethPerformance_HU_HU_FCP_1500B_TCP_NETPERF(FunethPerformanceBase):
+    def describe(self):
+        self.set_test_details(id=136,
+                              summary="Do throughput and latency test of HU -> HU FCP with 1500B frames of TCP",
+                              steps="""
+        1. From HU host PF, run netperf to HU host VF interface as destination via FCP tunnel loopback
+        """)
+
+    def run(self):
+        FunethPerformanceBase._run(self, flow_type='HU_HU_FCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
+                                   frame_size=1500)
+
+
 if __name__ == "__main__":
     ts = FunethPerformance()
     for tc in (
@@ -662,17 +771,23 @@ if __name__ == "__main__":
             FunethPerformance_HU_NU_64B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
 
-            ## HU -> HU Non-FCP
+            # HU -> HU Non-FCP
             #FunethPerformance_HU_HU_800B_UDP_NETPERF,
             #FunethPerformance_HU_HU_64B_UDP_NETPERF,
             #FunethPerformance_HU_HU_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_800B_TCP_NETPERF,
             FunethPerformance_HU_HU_64B_TCP_NETPERF,
             FunethPerformance_HU_HU_1500B_TCP_NETPERF,
-            #
-            ## TODO: Add HU -> HU FCP
-            #
-            ## NU -> HU Non-FCP
+
+            # HU -> HU FCP
+            #FunethPerformance_HU_HU_FCP_800B_UDP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_64B_UDP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF,
+            FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF,
+            FunethPerformance_HU_HU_FCP_64B_TCP_NETPERF,
+            FunethPerformance_HU_HU_FCP_1500B_TCP_NETPERF,
+
+            # NU -> HU Non-FCP
             #FunethPerformance_NU_HU_800B_UDP_NETPERF,
             #FunethPerformance_NU_HU_64B_UDP_NETPERF,
             #FunethPerformance_NU_HU_1500B_UDP_NETPERF,
