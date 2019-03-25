@@ -1,7 +1,8 @@
+from lib.system.fun_test import *
+from lib.fun.fs import Fs
+from lib.host.network_controller import NetworkController
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
-from lib.system.fun_test import *
-from lib.host.network_controller import NetworkController
 import re
 
 
@@ -72,6 +73,11 @@ class FunethSanity(FunTestScript):
         """)
 
     def setup(self):
+
+        # Boot up FS1600
+        if fun_test.get_job_environment_variable('test_bed_type').lower() == 'fs-7':
+            fs = Fs.get()
+            fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
