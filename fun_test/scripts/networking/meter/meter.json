@@ -62,8 +62,8 @@
       "commit_rate" : 51,
       "commit_burst" : 82,
       "excess_burst" : 1,
-      "load_type": "KILOBITS_PER_SECOND",
-      "load": 50
+      "load_type": "MEGABITS_PER_SECOND",
+      "load": 200
     },
     "pps_meter":
     {
@@ -76,7 +76,7 @@
       "commit_burst" : 82,
       "excess_burst" : 1,
       "load_type": "FRAMES_PER_SECOND",
-      "load": 50
+      "load": 200000
     },
     "pps_meter_2_rate":
       {
@@ -89,7 +89,19 @@
       "commit_burst" : 82,
       "excess_burst" : 1,
       "load_type": "FRAMES_PER_SECOND",
-      "load": 250
+      "load": 1000000
+    },
+      "bps_meter_2_rate":{
+      "sport" : 1234,
+      "dport" : 1024,
+      "meter_id" : 2,
+      "meter_interval" : 4,
+      "meter_credit" : 4,
+      "commit_rate" : 8,
+      "commit_burst" : 82,
+      "excess_burst" : 1,
+      "load_type": "MEGABITS_PER_SECOND",
+      "load": 8000
     }
   }
 }
