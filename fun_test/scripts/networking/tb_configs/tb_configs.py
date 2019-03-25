@@ -40,6 +40,12 @@ class TBConfigs:
     def get_hu_vf_interface(self):
         return self.configs['hu']['vf_interface']
 
+    def get_hu_pf_interface_fcp(self):
+        return self.configs['hu']['pf_interface_fcp']
+
+    def get_hu_vf_interface_fcp(self):
+        return self.configs['hu']['vf_interface_fcp']
+
     def get_namespaces(self, nu_or_hu):
         return [n if n != 'default' else None for n in self.configs[nu_or_hu]['namespaces'].keys()]
 
