@@ -354,6 +354,15 @@
             "weight": 1
           },
           {
+            "info": "flow_test_f1",
+            "metric_model_name": "F1FlowTestPerformance",
+            "leaf": true,
+            "name": "flow_test_f1",
+            "label": "Flowtest on F1",
+            "children": [],
+            "weight": 1
+          },
+          {
             "info": "Volume Type",
             "metric_model_name": "MetricContainer",
             "leaf": false,
