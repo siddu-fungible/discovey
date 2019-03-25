@@ -1117,6 +1117,7 @@ if __name__ == "__main__":
                 owner_info="Divya Krishnankutty (divya.krishnankutty@fungible.com)",
                 positive=positive,
                 y1_axis_title=y1_axis_title,
+                visualization_unit=y1_axis_title,
                 metric_model_name=model_name,
                 base_line_date=base_line_date).save()
     mmt = MileStoneMarkers(metric_id=metric_id,
