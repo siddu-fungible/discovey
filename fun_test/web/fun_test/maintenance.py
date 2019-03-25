@@ -728,7 +728,7 @@ if __name__ == "__main_DMA__":
             mmt.save()
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_crypto_raw__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
     internal_chart_names = ["Crypto raw throughput", "Crypto api throughput"]
@@ -805,7 +805,7 @@ if __name__ == "__main_crypto_charts__":
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
 
-if __name__ == "__main_nw_delete__":
+if __name__ == "__main__":
     model = NuTransitPerformance
     entries = model.objects.all()
     entries.delete()
@@ -814,15 +814,6 @@ if __name__ == "__main_nw_delete__":
     global_setting.cache_valid = False
     global_setting.save()
     print "cache valid is false"
-    charts = MetricChart.objects.all()
-    for chart in charts:
-        if chart.metric_model_name == "NuTransitPerformance":
-            if chart.y1_axis_title == "packets/sec":
-                chart.y1_axis_title = "Mpps"
-            if chart.y1_axis_title == "Mbps":
-                chart.y1_axis_title = "Gbps"
-            chart.save()
-    print "changed y1 axis title"
 
 if __name__ == "__main_remove_mm__":
     model = MetricChart
@@ -1016,7 +1007,7 @@ if __name__ == "__main_EC_Perf__":
             entry.save()
             print "updated"
 
-if __name__ == "__main__":
+if __name__ == "__main_create_hu_fcp__":
     flow_types = ["HU_HU_FCP"]
     model_name = "NuTransitPerformance"
     app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
