@@ -15,6 +15,7 @@ from web.fun_test.metrics_models import SchedulingStates
 from lib.host.lsf_status_server import LsfStatusServer
 from lib.system.fun_test import *
 
+BASE_TAG = "qa_triage"
 JENKINS_URL = "http://jenkins-sw-master:8080/"
 BUILD_PARAMS = {
     "RUN_TARGET": "F1",
@@ -54,6 +55,8 @@ BUILD_PARAMS = {
     "BRANCH_FunTools": "",
     "RUN_PIPELINE": ""
 }
+
+#"FUNOS_MAKEFLAGS": "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list",
 
 jenkins_server = jenkins.Jenkins(JENKINS_URL, username='jenkins.service', password='117071d3cb2cae6c964099664b271e4011')
 
@@ -262,11 +265,13 @@ def start_flow(entries, l, r, boot_args):
         mid = l + (r - l) / 2
         entry = entries[mid]
         if entry.status == SchedulingStates.WAITING:
-            tags = "qa_triage"
+            tags = BASE_TAG
             BUILD_PARAMS["TAGS"] = tags
             BUILD_PARAMS["BOOTARGS"] = boot_args
             BUILD_PARAMS["BRANCH_FunOS"] = entry.git_commit
             try:
+                entry.status = SchedulingStates.SELECTED_FOR_TRIAL
+                entry.save()
                 next_build_number = jenkins_server.get_job_info('emulation/fun_on_demand')['nextBuildNumber']
                 output = jenkins_server.build_job('emulation/fun_on_demand', BUILD_PARAMS)
                 time.sleep(10)

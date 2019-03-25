@@ -48,6 +48,7 @@ class SchedulingStates:
     SUBMITTED = "Submitted"
     IN_JENKINS = "In Jenkins"
     WAITING = "Waiting"
+    SELECTED_FOR_TRIAL = "Selected for trial"
     BUILD_COMPLETE = "Build complete"
     IN_LSF = "In Lsf"
     PASSED = "Passed"
