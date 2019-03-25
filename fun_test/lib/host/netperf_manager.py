@@ -35,25 +35,25 @@ class NetperfManager:
             for cmd in cmds:
                 linux_obj.sudo_command(cmd)
 
-            # Install linuxptp package
-            for pkg in ('linuxptp',):
-                result &= linux_obj.install_package(pkg)
-                if not result:
-                    break
-
-            # Start ptp4l for PTP clock, and phy2c for sync system clock to PTP clock
-            if (linux_obj.get_process_id_by_pattern('ptp4l') is None or
-                        linux_obj.get_process_id_by_pattern('phc2sys') is None):
-                cmds = (
-                    'ptp4l -i {} -2 &'.format(linux_obj.get_mgmt_interface()),
-                    'phc2sys -a -rr &',
-                )
-                for cmd in cmds:
-                    linux_obj.sudo_command(cmd)
-                result &= (linux_obj.get_process_id_by_pattern('ptp4l') is not None) & (
-                    linux_obj.get_process_id_by_pattern('phc2sys') is not None)
-                if not result:
-                    break
+            ## Install linuxptp package
+            #for pkg in ('linuxptp',):
+            #    result &= linux_obj.install_package(pkg)
+            #    if not result:
+            #        break
+            #
+            ## Start ptp4l for PTP clock, and phy2c for sync system clock to PTP clock
+            #if (linux_obj.get_process_id_by_pattern('ptp4l') is None or
+            #            linux_obj.get_process_id_by_pattern('phc2sys') is None):
+            #    cmds = (
+            #        'ptp4l -i {} -2 &'.format(linux_obj.get_mgmt_interface()),
+            #        'phc2sys -a -rr &',
+            #    )
+            #    for cmd in cmds:
+            #        linux_obj.sudo_command(cmd)
+            #    result &= (linux_obj.get_process_id_by_pattern('ptp4l') is not None) & (
+            #        linux_obj.get_process_id_by_pattern('phc2sys') is not None)
+            #    if not result:
+            #        break
 
             # Install Netperf
             for pkg in ('netperf',):
@@ -77,7 +77,7 @@ class NetperfManager:
                 if not result:
                     break
 
-        fun_test.sleep("Waiting for PTP clock sync", seconds=10)
+        #fun_test.sleep("Waiting for PTP clock sync", seconds=10)
 
         return result
 
@@ -99,20 +99,24 @@ class NetperfManager:
             protocol = arg_dict.get('protocol', 'tcp')
             duration = arg_dict.get('duration', 30)
             frame_size = arg_dict.get('frame_size', 800)
+            sip = arg_dict.get('sip', None)
+            ns = arg_dict.get('ns', None)
 
         if parallel > 1:
             mp_task_obj = MultiProcessingTasks()
             rlist = []
             for i in range(1, parallel):
                 # parallel-1 tasks to measure throughput
+                measure_latency = False
                 mp_task_obj.add_task(
                     func=do_test,
-                    func_args=(linux_obj, dip, protocol, duration, frame_size, i),
+                    func_args=(linux_obj, dip, protocol, duration, frame_size, i, measure_latency, sip, ns),
                     task_key=i)
             # One task to measure latency
+            measure_latency = True
             mp_task_obj.add_task(
                 func=do_test,
-                func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, True),
+                func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, measure_latency, sip, ns),
                 task_key=parallel)
             mp_task_obj.run(max_parallel_processes=parallel)
             for i in range(1, parallel+1):
@@ -137,7 +141,7 @@ class NetperfManager:
             }
 
         else:
-            result = do_test(linux_obj, dip=dip, protocol=protocol, duration=duration, frame_size=frame_size)
+            result = do_test(linux_obj, dip=dip, protocol=protocol, duration=duration, frame_size=frame_size, ns=ns)
 
         throughput = result.get('throughput')
         send_size = get_send_size(protocol, frame_size)
@@ -161,7 +165,8 @@ def get_send_size(protocol, frame_size):
     return send_size
 
 
-def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=None, measure_latency=False):
+def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=None, measure_latency=False, sip=None,
+            ns=None):
     """Use Netperf measure TCP throughput (Mbps) and latency (us).
 
 
@@ -205,6 +210,10 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     else:
         cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
         pat = r'MIN_LATENCY=(\d+).*?MEAN_LATENCY=(\d+).*?P50_LATENCY=(\d+).*?P90_LATENCY=(\d+).*?P99_LATENCY=(\d+).*?MAX_LATENCY=(\d+).*?THROUGHPUT=(\d+)'
+    if sip:
+        cmd = '{} -L {}'.format(cmd, sip)
+    if ns:
+        cmd = 'sudo ip netns exec {} {}'.format(ns, cmd)
     if cpu:
         cmd = 'taskset -c {} {}'.format(cpu, cmd)
     # TODO: use numactl if necessary

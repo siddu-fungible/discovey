@@ -3,9 +3,10 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from asset.asset_manager import AssetManager
 from fun_settings import TFTP_SERVER, FUN_TEST_DIR, INTEGRATION_DIR
 from lib.utilities.netcat import Netcat
+from lib.system.utils import ToDictMixin
+
 from threading import Thread
 import re
 import os
@@ -144,7 +145,7 @@ class Bmc(Linux):
         nc = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
         nc.write(command + "\n")
         output = nc.read_until(data=expected, timeout=timeout)
-        print output
+        fun_test.log(output)
         if expected:
             fun_test.simple_assert(expected in output, "{} not in output: {}".format(expected, output))
         nc.close()
@@ -155,8 +156,13 @@ class Bmc(Linux):
         self.uart_log_threads[f1_index] = t
         t.start()
 
+    def _get_boot_args_for_index(self, bootargs, f1_index):
+        return "sku=SKU_FS1600_{} ".format(f1_index) + bootargs
+
+
     def u_boot_load_image(self,
                           index,
+                          bootargs,
                           tftp_load_address="0xa800000080000000",
                           tftp_server=TFTP_SERVER,
                           tftp_image_path="funos-f1.stripped.gz"):
@@ -168,8 +174,8 @@ class Bmc(Linux):
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TRAIN)
 
         self.u_boot_command(
-            command="setenv bootargs app=hw_hsu_test sku=SKU_FS1600_{} --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit".format(
-                index), timeout=5, f1_index=index)
+            command="setenv bootargs {}".format(
+                self._get_boot_args_for_index(bootargs=bootargs, f1_index=index)), timeout=5, f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
         self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
@@ -272,36 +278,19 @@ class Bmc(Linux):
     def get_f1_uart_log_filename(self, f1_index):
         return "/tmp/f1_{}_uart_log.txt".format(f1_index)
 
-    def kill_f1_uart_log_listener(self, f1_index):
-        process_ids = self.get_process_id_by_pattern(
-            "{}".format(os.path.basename(self.F1_UART_LOG_LISTENER_PATH)), multiple=True)
-        if process_ids:
-            for process_id in process_ids:
-                self.kill_process(process_id=process_id)
-
-    def setup_f1_uart_log_listener(self, f1_index):
-        f1 = self.get_f1(index=f1_index)
-        command = "python {} --device_path={} --speed={} --log_filename={}".format(self.bmc.F1_UART_LOG_LISTENER_PATH,
-                                                                                   f1.serial_device_path,
-                                                                                   self.SERIAL_SPEED_DEFAULT,
-                                                                                   self.get_f1_uart_log_filename(
-                                                                                       f1_index=f1_index))
-        process_id = self.start_bg_process(command, nohup=False)
-        self.set_uart_log_process_id(f1_index=f1_index, process_id=process_id)
-
-    def set_uart_log_process_id(self, f1_index, process_id):
-        pass
-
 
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = "04:00.1"
     DEFAULT_DPC_PORT = 40220
+    DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
 
     def initialize(self, reset=False):
         self.funq_bind_device = None
         self.dpc_ready = None
         fun_test.simple_assert(self.setup_workspace(), "ComE workspace setup")
         fun_test.simple_assert(self.cleanup_dpc(), "Cleanup dpc")
+        for f1_index in range(2):
+            self.command("rm {}".format(self.get_dpc_log_path(f1_index=f1_index)))
         return True
 
     def get_dpc_port(self, f1_index):
@@ -329,17 +318,17 @@ class ComE(Linux):
         self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
-    def setup_dpc(self):
-        dpc_log = "/tmp/dpc.txt"
+    def setup_dpc(self, f1_index=0):
+
         self.command("cd $WORKSPACE/FunControlPlane")
         output = self.sudo_command("build/posix/bin/funq-setup bind")
         fun_test.test_assert("Binding {}".format(self.funq_bind_device) in output,
                              "Bound to {}".format(self.funq_bind_device))
         command = "LD_LIBRARY_PATH=$PWD/build/posix/lib build/posix/bin/dpc -j -d {} &> {} &".format(
-            self.funq_bind_device, dpc_log)
+            self.funq_bind_device, self.get_dpc_log_path(f1_index=f1_index))
         self.sudo_command(command)
         fun_test.sleep("dpc socket creation")
-        output = self.command("cat {}".format(dpc_log))
+        output = self.command("cat {}".format(self.get_dpc_log_path(f1_index=f1_index)))
         fun_test.test_assert("socket creation: Success" in output, "DPC Socket creation success")
         self.dpc_ready = True
         return True
@@ -358,6 +347,15 @@ class ComE(Linux):
     def is_dpc_ready(self):
         return self.dpc_ready
 
+    def get_dpc_log_path(self, f1_index):
+        return self.DPC_LOG_PATH.format(f1_index)
+
+    def cleanup(self):
+        for f1_index in range(2):
+            artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_dpc_log.txt".format(f1_index))
+            fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
+            fun_test.add_auxillary_file(description="F1_{} DPC Log".format(f1_index),
+                                        filename=artifact_file_name)
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
@@ -387,7 +385,19 @@ class F1InFs:
 
 
 
-class Fs():
+class Fs(object, ToDictMixin):
+    #  sku=SKU_FS1600_{}
+    DEFAULT_BOOT_ARGS = "app=hw_hsu_test --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit"
+    TO_DICT_VARS = ["bmc_mgmt_ip",
+                    "bmc_mgmt_ssh_username",
+                    "bmc_mgmt_ssh_password",
+                    "fpga_mgmt_ip",
+                    "fpga_mgmt_ssh_username",
+                    "fpga_mgmt_ssh_password",
+                    "come_mgmt_ip",
+                    "come_mgmt_ssh_username",
+                    "come_mgmt_ssh_password"]
+
 
     def __init__(self,
                  bmc_mgmt_ip,
@@ -399,7 +409,8 @@ class Fs():
                  come_mgmt_ip,
                  come_mgmt_ssh_username,
                  come_mgmt_ssh_password,
-                 tftp_image_path="funos-f1.stripped.gz"):
+                 tftp_image_path="funos-f1.stripped.gz",
+                 bootargs=DEFAULT_BOOT_ARGS):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -415,6 +426,7 @@ class Fs():
         self.tftp_image_path = tftp_image_path
         self.f1s = {}
         self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
+        self.bootargs = bootargs
 
     def reachability_check(self):
         # TODO
@@ -422,6 +434,7 @@ class Fs():
 
     def cleanup(self):
         self.bmc.cleanup()
+        self.come.cleanup()
 
 
     def get_f1_0(self):
@@ -434,17 +447,19 @@ class Fs():
         return self.f1s[index]
 
     @staticmethod
-    def get(test_bed_spec=None, tftp_image_path=None):
+    def get(test_bed_spec=None, tftp_image_path=None, bootargs=None):
         if not test_bed_spec:
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
             fun_test.log("Testbed-type: {}".format(test_bed_type))
-            test_bed_spec = AssetManager().get_fs_by_name(test_bed_type)
+            test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_type)
             fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_type))
 
         if not tftp_image_path:
             tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
         fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path))
 
+        if not bootargs:
+            bootargs = Fs.DEFAULT_BOOT_ARGS
         fun_test.simple_assert(test_bed_spec, "Testbed spec available")
         bmc_spec = test_bed_spec["bmc"]
         fpga_spec = test_bed_spec["fpga"]
@@ -458,7 +473,8 @@ class Fs():
                   come_mgmt_ip=come_spec["mgmt_ip"],
                   come_mgmt_ssh_username=come_spec["mgmt_ssh_username"],
                   come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
-                  tftp_image_path=tftp_image_path)
+                  tftp_image_path=tftp_image_path,
+                  bootargs=bootargs)
 
     def bootup(self, reboot_bmc=False):
         if reboot_bmc:
@@ -468,7 +484,7 @@ class Fs():
         fun_test.test_assert(self.fpga_initialize(), "FPGA initiaize")
 
         for f1_index, f1 in self.f1s.iteritems():
-            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path), "U-Bootup f1: {} complete".format(f1_index),)
+            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, bootargs=self.bootargs), "U-Bootup f1: {} complete".format(f1_index))
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
         #for f1_index, f1 in self.f1s.iteritems():

@@ -75,6 +75,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   baseLineDate: string = null;
   visualizationUnit: string = null;
+  changingVizUnit: string = null;
   selectedUnit: string = null;
   category: string[] = [];
 
@@ -86,6 +87,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   bits_bytes_category: string[] = ["b", "B", "KB", "MB", "GB", "TB"];
   bandwidth_category: string[] = ["bps", "Kbps", "Mbps", "Gbps", "Tbps", "Bps", "KBps", "MBps", "GBps", "TBps"];
   packets_per_second_category: string[] = ["Mpps", "pps"];
+
+
+  triageInfo: any = null;
+  successCommit: string = null;
+  faultyCommit: string = null;
+  faultyMessage: string = null;
+  successMessage: string = null;
+  faultyAuthor: string = null;
+  successAuthor: string = null;
+  commits: any = null;
+  message: any = null;
 
   public formatter: Function;
   public tooltip: Function;
@@ -301,6 +313,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.mileStoneMarkers = this.chartInfo.milestone_markers;
         this.baseLineDate = String(this.chartInfo.base_line_date);
         this.visualizationUnit = this.chartInfo.visualization_unit;
+        this.changingVizUnit = this.visualizationUnit;
 
         if (this.latency_category.includes(this.visualizationUnit)) {
           this.category = [...this.latency_category];
@@ -390,8 +403,26 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
+  convertExpected(): void {
+    for (let dataSet of this.previewDataSets) {
+      if (dataSet.output.max && dataSet.output.max !== -1) {
+        dataSet.output.max = this.convertToBaseUnit(this.visualizationUnit, dataSet.output.max);
+        dataSet.output.max = this.convertToVisualizationUnit(this.changingVizUnit, dataSet.output.max);
+      }
+      if (dataSet.output.expected && dataSet.output.expected !== -1) {
+        dataSet.output.expected = this.convertToBaseUnit(this.visualizationUnit, dataSet.output.expected);
+        dataSet.output.expected = this.convertToVisualizationUnit(this.changingVizUnit, dataSet.output.expected);
+      }
+      if (dataSet.output.reference && dataSet.output.reference !== -1) {
+        dataSet.output.reference = this.convertToBaseUnit(this.visualizationUnit, dataSet.output.reference);
+        dataSet.output.reference = this.convertToVisualizationUnit(this.changingVizUnit, dataSet.output.reference);
+      }
+    }
+  }
+
   //saves the edited data back to the DB
   submit(): void {
+    this.convertExpected();
     let payload = {};
     payload["metric_model_name"] = this.modelName;
     payload["chart_name"] = this.chartName;
@@ -403,14 +434,15 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     payload["negative_gradient"] = this.inner.negativeGradient;
     payload["leaf"] = this.inner.leaf;
     payload["base_line_date"] = this.baseLineDate;
-    payload["visualization_unit"] = this.visualizationUnit;
+    payload["visualization_unit"] = this.changingVizUnit;
     this.apiService.post('/metrics/update_chart', payload).subscribe((data) => {
       if (data) {
-        alert("Submitted");
         this.editingDescription = false;
         this.editingOwner = false;
         this.editingSource = false;
+        this.visualizationUnit = this.changingVizUnit;
         this.setTimeMode(TimeMode.ALL);
+        this.selectedUnit = this.visualizationUnit;
       } else {
         alert("Submission failed. Please check alerts");
       }
@@ -427,6 +459,80 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }, error => {
       this.loggerService.error("regression/build_to_date_map");
     });
+  }
+
+  // enterTriaging(): void {
+  //   this.message = {
+  //   "metric_type": this.selectedOption,
+  //   "from_date": this.fromDate,
+  //   "to_date": this.toDate,
+  //   "boot_args": this.bootArgs
+  //   };
+  //     this.sharedData.changeMessage(this.message);
+  //   //   alert("submitted");
+  //
+  //   //   let url = "/performance/atomic/" + this.metricId + "/triage";
+  //   // window.open(url, '_blank');
+  //   let payload = {"metric_id": this.metricId,
+  //   "metric_type": this.selectedOption,
+  //   "from_date": this.fromDate,
+  //   "to_date": this.toDate,
+  //   "boot_args": this.bootArgs};
+  //   this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
+  //     let result = data.data;
+  //     this.triageInfo = result;
+  //     if (result.passed_git_commit && result.passed_git_commit !== "") {
+  //       this.successCommit = result.passed_git_commit;
+  //     }
+  //     if (result.degraded_git_commit && result.degraded_git_commit !== "") {
+  //       this.faultyCommit = result.degraded_git_commit;
+  //     }
+  //     this.fetchGitCommits();
+  //   }, error => {
+  //     this.loggerService.error("Traiging info fetch failed");
+  //   });
+  //
+  // }
+  // fetchGitCommits(): void {
+  //   if (this.faultyCommit && this.successCommit) {
+  //     let payload = {};
+  //     payload = {
+  //       "faulty_commit": this.faultyCommit,
+  //       "success_commit": this.successCommit
+  //     };
+  //     this.apiService.post('/metrics/git_commits', payload).subscribe(result => {
+  //       this.commits = result.data.commits;
+  //       let total = this.commits.length - 1;
+  //       this.faultyMessage = this.commits[0].message;
+  //       this.faultyAuthor = this.commits[0].author;
+  //       this.successAuthor = this.commits[total].author;
+  //       this.successMessage = this.commits[total].message;
+  //       this.startTriaging();
+  //     }, error => {
+  //       this.loggerService.error("Fetching git Commits between the faulty and success commits");
+  //     });
+  //   }
+  //   else {
+  //     console.log("Git commit is missing from the data");
+  //   }
+  // }
+  //
+  // startTriaging(): void {
+  //   let payload = {
+  //     "metric_id": this.id,
+  //     "commits": this.commits,
+  //     "triage_info": this.triageInfo
+  //   };
+  //   this.apiService.post('/triage/insert_db', payload).subscribe(response => {
+  //     alert("submitted");
+  //   }, error => {
+  //     this.loggerService.error("Updating DB Failed");
+  //   });
+  // }
+
+  openTriaging(): void {
+    let url = "/performance/atomic/" + this.metricId + "/triage";
+    window.open(url, '_blank');
   }
 
   openSource(url): void {
@@ -897,7 +1003,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   convertToVisualizationUnit(outputUnit, output): any {
     if (this.latency_category.includes(outputUnit)) {
-     if (outputUnit === "usecs") {
+      if (outputUnit === "usecs") {
         output = output * Math.pow(10, 6);
       } else if (outputUnit === "msecs") {
         output = output * Math.pow(10, 3);
@@ -990,8 +1096,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     for (let output of this.expectedValues) {
       if (output.value && output.value !== -1) {
         output.value = this.convertToBaseUnit(output.unit, output.value);
-      output.value = this.convertToVisualizationUnit(this.selectedUnit, output.value);
-      output.unit = this.selectedUnit;
+        output.value = this.convertToVisualizationUnit(this.selectedUnit, output.value);
+        output.unit = this.selectedUnit;
       }
     }
     if (maximum === null) {
@@ -1001,6 +1107,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
     this.calculateYaxisPlotLines();
   }
+
 
   //fetching container data
   fetchContainerData(payload): void {

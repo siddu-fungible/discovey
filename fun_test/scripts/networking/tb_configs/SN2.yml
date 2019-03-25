@@ -10,14 +10,10 @@ nu:
   namespaces:
     default:
       interfaces:
-        fpg0:
-          mac_addr: fe:dc:ba:44:66:33
-          ipv4_addr: 19.1.1.1
-          ipv4_netmask: 255.255.255.0
-        #fpg1:
-        #  mac_addr: fe:dc:ba:44:55:77
-        #  ipv4_addr: 21.1.1.1
-        #  ipv4_netmask: 255.255.255.0
+        - fpg0:
+            mac_addr: fe:dc:ba:44:66:33
+            ipv4_addr: 19.1.1.1
+            ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 19.1.1.2
@@ -39,10 +35,10 @@ hu:
   namespaces:
     default:
       interfaces:
-        hu3-f0:
-          mac_addr: 00:de:ad:be:ef:11
-          ipv4_addr: 53.1.1.5
-          ipv4_netmask: 255.255.255.0
+        - hu3-f0:
+            mac_addr: 00:de:ad:be:ef:11
+            ipv4_addr: 53.1.1.5
+            ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.9.0/24
           nexthop: 53.1.1.1
@@ -50,10 +46,10 @@ hu:
           nexthop: 53.1.1.1
     n1:
       interfaces:
-        hu3-f1:
-          mac_addr: 00:de:ad:be:ef:21
-          ipv4_addr: 53.1.2.5
-          ipv4_netmask: 255.255.255.0
+        - hu3-f1:
+            mac_addr: 00:de:ad:be:ef:21
+            ipv4_addr: 53.1.2.5
+            ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 53.1.2.1
@@ -61,10 +57,10 @@ hu:
           nexthop: 53.1.2.1
     n8:
       interfaces:
-        hu3-f8:
-          mac_addr: 00:de:ad:be:ef:51
-          ipv4_addr: 53.1.9.5
-          ipv4_netmask: 255.255.255.0
+        - hu3-f8:
+            mac_addr: 00:de:ad:be:ef:51
+            ipv4_addr: 53.1.9.5
+            ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 53.1.9.1
@@ -72,10 +68,10 @@ hu:
           nexthop: 53.1.9.1
     n9:
       interfaces:
-        hu3-f9:
-          mac_addr: 00:de:ad:be:ef:61
-          ipv4_addr: 53.1.10.5
-          ipv4_netmask: 255.255.255.0
+        - hu3-f9:
+            mac_addr: 00:de:ad:be:ef:61
+            ipv4_addr: 53.1.10.5
+            ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 53.1.1.0/24
           nexthop: 53.1.10.1

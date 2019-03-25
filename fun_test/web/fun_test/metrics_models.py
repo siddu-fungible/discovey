@@ -33,6 +33,34 @@ class MetricsGlobalSettingsSerializer(ModelSerializer):
         fields = "__all__"
 
 
+class TriageType:
+    SCORES = "SCORES"
+    PASS_FAIL = "PASS/FAIL"
+
+class SchedulingStates:
+    ACTIVE = "Active"
+    COMPLETED = "Completed"
+    FAILED = "Failed"
+    SUCCESS = "Success"
+    SUSPENDED = "Suspended"
+    RUNNING = "Running"
+    KILLED = "Killed"
+    SUBMITTED = "Submitted"
+    IN_JENKINS = "In Jenkins"
+    WAITING = "Waiting"
+    SELECTED_FOR_TRIAL = "Selected for trial"
+    BUILD_COMPLETE = "Build complete"
+    IN_LSF = "In Lsf"
+    PASSED = "Passed"
+    ABORTED = "Aborted"
+    SUBMITTED_TO_JENKINS = "Submitted to Jenkins"
+    BUILDING_ON_JENKINS = "Building on Jenkins"
+    JENKINS_BUILD_COMPLETE = "Jenkins build complete"
+    QUEUED_ON_LSF = "Queued on Lsf"
+    RUNNING_ON_LSF = "Running on Lsf"
+    IN_PROGRESS = "In progress"
+
+
 class MetricChartStatus(models.Model):
     metric_id = models.IntegerField(default=-1)
     chart_name = models.TextField(default="Unknown")
@@ -59,6 +87,50 @@ class MetricChartStatus(models.Model):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.chart_name, self.date_time, self.score)
         return s
 
+class Triage(models.Model):
+    metric_id = models.IntegerField(default=-1)
+    metric_type = models.CharField(max_length=15, default=TriageType.SCORES)
+    triage_id = models.IntegerField(default=-1)
+    date_time = models.DateTimeField(default=datetime.now)
+    degraded_suite_execution_id = models.IntegerField(default=-1)
+    degraded_jenkins_job_id = models.IntegerField(default=-1)
+    degraded_lsf_job_id = models.IntegerField(default=-1)
+    degraded_git_commit = models.TextField(default="")
+    degraded_build_properties = models.TextField(default="")
+    stable_suite_execution_id = models.IntegerField(default=-1)
+    stable_jenkins_job_id = models.IntegerField(default=-1)
+    stable_lsf_job_id = models.IntegerField(default=-1)
+    stable_git_commit = models.TextField(default="")
+    stable_build_properties = models.TextField(default="")
+    last_good_score = models.FloatField(default=-1)
+    status = models.CharField(max_length=30, default=SchedulingStates.ACTIVE)
+    max_tries = models.IntegerField(default=-1)
+    faulty_commit = models.TextField(default="")
+    boot_args = models.TextField(default="")
+
+    def __str__(self):
+        s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.last_good_score)
+        return s
+
+class TriageFlow(models.Model):
+    metric_id = models.IntegerField(default=-1)
+    metric_type = models.CharField(max_length=15, default=TriageType.SCORES)
+    triage_id = models.IntegerField(default=-1)
+    triage_flow_id = models.IntegerField(default=-1, unique=True)
+    date_time = models.DateTimeField(default=datetime.now)
+    score = models.FloatField(default=-1)
+    suite_execution_id = models.IntegerField(default=-1)
+    jenkins_job_id = models.IntegerField(default=-1)
+    lsf_job_id = models.IntegerField(default=-1)
+    status = models.CharField(max_length=30, default=SchedulingStates.WAITING)
+    git_commit = models.TextField(default="")
+    committer = models.TextField(default="")
+    build_properties = models.TextField(default="")
+    boot_args = models.TextField(default="")
+
+    def __str__(self):
+        s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.score)
+        return s
 
 class TimestampField(serializers.Field):
     def to_representation(self, value):
@@ -582,6 +654,30 @@ class LastMetricId(models.Model):
         last.save()
         return last.last_id
 
+class LastTriageId(models.Model):
+    last_id = models.IntegerField(unique=True, default=100)
+
+    @staticmethod
+    def get_next_id():
+        if not LastTriageId.objects.count():
+            LastTriageId().save()
+        last = LastTriageId.objects.all().last()
+        last.last_id = last.last_id + 1
+        last.save()
+        return last.last_id
+
+class LastTriageFlowId(models.Model):
+    last_id = models.IntegerField(unique=True, default=100)
+
+    @staticmethod
+    def get_next_id():
+        if not LastTriageFlowId.objects.count():
+            LastTriageFlowId().save()
+        last = LastTriageFlowId.objects.all().last()
+        last.last_id = last.last_id + 1
+        last.save()
+        return last.last_id
+
 class ModelMapping(models.Model):
     module = models.TextField()
     component = models.TextField()
@@ -971,6 +1067,8 @@ class NuTransitPerformance(models.Model):
     output_latency_max = models.FloatField(verbose_name="Latency Max in us")
     output_latency_min = models.FloatField(verbose_name="Latency Min in us")
     output_latency_P99 = models.FloatField(verbose_name="Tail Latency in us", default=-1)
+    output_latency_P90 = models.FloatField(verbose_name="P90 Latency in us", default=-1)
+    output_latency_P50 = models.FloatField(verbose_name="P50 Latency in us", default=-1)
     output_jitter_min = models.FloatField(verbose_name="Jitter min in us", default=0)
     output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
@@ -1273,6 +1371,7 @@ class SoakDmaMemcpyCoherentPerformance(models.Model):
     output_bandwidth_unit = models.TextField(default="GBps")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    input_unit = models.TextField(default="GBps")
     tag = "analytics"
 
     def __str__(self):
@@ -1292,6 +1391,7 @@ class SoakDmaMemcpyNonCoherentPerformance(models.Model):
     output_bandwidth_unit = models.TextField(default="GBps")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    input_unit = models.TextField(default="GBps")
     tag = "analytics"
 
     def __str__(self):
@@ -1311,6 +1411,7 @@ class SoakDmaMemsetPerformance(models.Model):
     output_bandwidth_unit = models.TextField(default="GBps")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
+    input_unit = models.TextField(default="GBps")
     tag = "analytics"
 
     def __str__(self):
@@ -1406,7 +1507,7 @@ class TeraMarkZipDeflatePerformance(models.Model):
     output_bandwidth_avg = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
     output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
-    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.BigIntegerField(verbose_name="ns", default=-1)
     output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
     output_iops = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_bandwidth_avg_unit = models.TextField(default="Gbps")
@@ -1434,7 +1535,7 @@ class TeraMarkZipLzmaPerformance(models.Model):
     output_bandwidth_avg = models.FloatField(verbose_name="Gbps", default=-1)
     output_bandwidth_total = models.IntegerField(verbose_name="Kbps", default=-1)
     output_latency_min = models.IntegerField(verbose_name="ns", default=-1)
-    output_latency_avg = models.IntegerField(verbose_name="ns", default=-1)
+    output_latency_avg = models.BigIntegerField(verbose_name="ns", default=-1)
     output_latency_max = models.IntegerField(verbose_name="ns", default=-1)
     output_iops = models.IntegerField(verbose_name="ops per sec", default=-1)
     output_bandwidth_avg_unit = models.TextField(default="Gbps")

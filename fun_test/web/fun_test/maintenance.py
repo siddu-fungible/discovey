@@ -728,7 +728,7 @@ if __name__ == "__main_DMA__":
             mmt.save()
     print "Milestone and Baseline Setting Complete"
 
-if __name__ == "__main_crypto_baseline__":
+if __name__ == "__main_crypto_raw__":
     entries = MetricChart.objects.all()
     sbl = SetBaseLine()
     internal_chart_names = ["Crypto raw throughput", "Crypto api throughput"]
@@ -805,7 +805,7 @@ if __name__ == "__main_crypto_charts__":
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
 
-if __name__ == "__main_nw_delete__":
+if __name__ == "__main__":
     model = NuTransitPerformance
     entries = model.objects.all()
     entries.delete()
@@ -814,15 +814,6 @@ if __name__ == "__main_nw_delete__":
     global_setting.cache_valid = False
     global_setting.save()
     print "cache valid is false"
-    charts = MetricChart.objects.all()
-    for chart in charts:
-        if chart.metric_model_name == "NuTransitPerformance":
-            if chart.y1_axis_title == "packets/sec":
-                chart.y1_axis_title = "Mpps"
-            if chart.y1_axis_title == "Mbps":
-                chart.y1_axis_title = "Gbps"
-            chart.save()
-    print "changed y1 axis title"
 
 if __name__ == "__main_remove_mm__":
     model = MetricChart
@@ -1016,7 +1007,65 @@ if __name__ == "__main_EC_Perf__":
             entry.save()
             print "updated"
 
-if __name__ == "__main__":
+if __name__ == "__main_create_hu_fcp__":
+    flow_types = ["HU_HU_FCP"]
+    model_name = "NuTransitPerformance"
+    app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+    input_choices = get_possible_values(model_name=model_name)
+    frame_size = 800
+    name = "800B"
+    outputs = ["output_throughput", "output_pps", "output_latency_avg"]
+    chart_names = ["Throughput", "Packets per sec", "Latency"]
+    for flow_type in flow_types:
+        for output in outputs:
+            data_sets = []
+            internal_name = flow_type + '_' + output
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_flow_type"] = flow_type
+            one_data_set["inputs"]["input_frame_size"] = frame_size
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+            metric_id = LastMetricId.get_next_id()
+            positive = True
+            if "throughput" in output:
+                y1_axis_title = "Gbps"
+                chart_name = "Throughput"
+            elif "pps" in output:
+                y1_axis_title = "Mpps"
+                chart_name = "Packets per sec"
+            else:
+                y1_axis_title = "usecs"
+                chart_name = "Latency"
+                positive = False
+            base_line_date = datetime(year=2019, month=3, day=19, minute=0, hour=0, second=0)
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Zhuo (George) Liang (george.liang@fungible.com)",
+                        positive=positive,
+                        y1_axis_title=y1_axis_title,
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date).save()
+            mmt = MileStoneMarkers(metric_id=metric_id,
+                                   milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+    print "chart creation for HU_HU_FCP is done"
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if not entry.leaf:
+            if "Host" in entry.chart_name:
+                base_line_date = datetime(year=2019, month=3, day=19, minute=0, hour=0, second=0)
+                entry.base_line_date = base_line_date
+                entry.save()
+                print entry.chart_name
+
+if __name__ == "__main_unit_change__":
     entries = MetricChart.objects.all()
     for entry in entries:
         if entry.leaf:

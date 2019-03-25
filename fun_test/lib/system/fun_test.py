@@ -223,6 +223,7 @@ class FunTest:
         self.fun_test_timers = []
         self.version = "1"
         self.determine_version()
+        self.asset_manager = None
         self.closed = False
 
 
@@ -243,6 +244,13 @@ class FunTest:
         job_environment = self.get_job_environment()
         if variable in job_environment:
             result = job_environment[variable]
+        return result
+
+    def is_simulation(self):
+        result = True
+        test_bed_type = self.get_job_environment_variable(variable="test_bed_type")
+        if test_bed_type and test_bed_type != "simulation":
+            result = False
         return result
 
     def get_job_inputs(self):
@@ -350,6 +358,12 @@ class FunTest:
 
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
+
+    def get_asset_manager(self):
+        from asset.asset_manager import AssetManager
+        if not self.asset_manager:
+            self.asset_manager = AssetManager()
+        return self.asset_manager
 
     def parse_string_to_json(self, string):
         result = None
@@ -1100,6 +1114,7 @@ class FunTestScript(object):
                                                          result=fun_test.FAILED)
         except (Exception) as ex:
             self.at_least_one_failed = True
+            fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
                                                          suite_execution_id=fun_test.suite_execution_id,

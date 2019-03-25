@@ -218,8 +218,9 @@ sup {
   cursor: pointer;
 }
 .git-commit {
-  color: black;
+  color: white;
   border: solid 1px black;
+  background-color: #337ab7;
 }
 .highlight {
   text-decoration: underline;
