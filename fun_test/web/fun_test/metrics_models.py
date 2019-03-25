@@ -600,7 +600,7 @@ class MetricChart(models.Model):
                 if d == "input_date_time":
                     continue
                 d[input_name] = input_value
-            d["input_date_time__range"] = [earlier_day, yesterday]
+            d["input_date_time__range"] = [earlier_day, today]
             order_by = "-input_date_time"
             if not chronologically_recent:
                 order_by = "input_date_time"
