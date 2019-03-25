@@ -18,23 +18,19 @@ nu:
             mac_addr: fe:dc:ba:44:55:77
             ipv4_addr: 21.1.1.1
             ipv4_netmask: 255.255.255.0
-            mtu: 1538
         - fpg2:
             mac_addr: fe:dc:ba:44:55:99
             ipv4_addr: 60.1.1.1
             ipv4_netmask: 255.255.255.0
-            mtu: 1538
         - fpg1.1:
             mac_addr: fe:dc:ba:fc:b1:03
             ipv4_addr: 1.1.1.1
             ipv4_netmask: 255.255.255.0
-            mtu: 1538
             type: macvlan
         - fpg2.1:
             mac_addr: fe:dc:ba:fc:b1:04
             ipv4_addr: 1.1.2.1
             ipv4_netmask: 255.255.255.0
-            mtu: 1538
             type: macvlan
       routes:
         - prefix: 53.1.1.0/24
