@@ -102,7 +102,7 @@ class FunethPerformanceBase(FunTestCase):
             if flow_type == 'HU_HU_NFCP':
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
                 sip = None
-            elif flow_type == 'HU_HU_FCP':
+            elif flow_type.startswith('HU_HU_FCP'):
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
                                                                     funeth_obj.tb_config_obj.get_hu_vf_interface_fcp())
                 sip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
@@ -767,27 +767,39 @@ class FunethPerformanceFcpSecureBase(FunethPerformanceFcpBase):
         # TODO: Get FCP tunnel_id from configs instead of hardcoded here
         src_queues = [216, 224]
         dst_queues = [224, 216]
+        dst_fteps = [0xB4000301, 0xB4000401]
         if secure:
             remote_key_indexes = [0, 2]
             local_key_indexes = [2, 0]
         else:
             remote_key_indexes = local_key_indexes = [0, 0]
-        for src_queue, dst_queue, remote_key_index, local_key_index in zip(src_queues, dst_queues, remote_key_indexes,
-                                                                           local_key_indexes):
-            result = network_controller_obj.configure_fcp_tunnel(src_queue=src_queue,
-                                                                 dst_queue=dst_queue,
-                                                                 secure_tunnel=secure,
-                                                                 remote_key_index=remote_key_index,
-                                                                 local_key_index=local_key_index)
+
+        # Delete FCP tunnel
+        for src_queue in src_queues:
+            result = network_controller_obj.delete_fcp_tunnel(src_queue=src_queue)
+            fun_test.test_assert(result, 'Delete FCP tunnel src_queue {}'.format(src_queue))
+
+        # Create FCP tunnel
+        for src_queue, dst_queue, dst_ftep, remote_key_index, local_key_index in zip(src_queues,
+                                                                                     dst_queues,
+                                                                                     dst_fteps,
+                                                                                     remote_key_indexes,
+                                                                                     local_key_indexes):
+            result = network_controller_obj.create_fcp_tunnel(src_queue=src_queue,
+                                                              dst_queue=dst_queue,
+                                                              dst_ftep=dst_ftep,
+                                                              secure_tunnel=secure,
+                                                              remote_key_index=remote_key_index,
+                                                              local_key_index=local_key_index)
             fun_test.test_assert(result, 'Configure FCP tunnel src_queue {} dst_queue {} to {}'.format(
                 src_queue, dst_queue, 'secure' if secure else 'non-secure'))
 
     def setup(self):
-        super(FunethPerformanceFcpSecureBase, self)._configure_fpg_mtu(self, FPG_MTU_DEFAULT+66)  # 20(IP) + 8(UDP) + 38(FCP) = 66
+        super(FunethPerformanceFcpSecureBase, self)._configure_fpg_mtu(FPG_MTU_DEFAULT+66)  # 20(IP) + 8(UDP) + 38(FCP) = 66
         self._configure_fcp_tunnel(secure=1)
 
     def cleanup(self):
-        super(FunethPerformanceFcpSecureBase, self).cleanup(self)
+        super(FunethPerformanceFcpSecureBase, self).cleanup()
         self._configure_fcp_tunnel(secure=0)
 
     def _run(self, flow_type='HU_HU_FCP_SEC', tool='netperf', protocol='tcp', parallel=1, duration=30, frame_size=800,
