@@ -333,6 +333,39 @@
     "ecn_bits": 10,
     "counter_id": 112
   },
+     "v6_nu_hnu_test": {
+    "source_ip": "2002::1",
+    "wrong_dip": "2001::52:1:1:1",
+    "source_port": 1234,
+    "dest_port": 797,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 132
+  },
+      "hnu_hnu_v6_drop": {
+    "source_ip": "3003::1",
+    "wrong_dip": "2001::52:1:1:1",
+    "source_port": 1214,
+    "dest_port": 812,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 135
+  },
+     "hnu_nu_v6_drop": {
+    "source_ip": "2300::1",
+    "wrong_dip": "2001::50:0:1:1",
+    "source_port": 1123,
+    "dest_port": 727,
+    "tcp_sync_bit": "1",
+    "tcp_reset_bit": "0",
+    "tcp_ack_bit": "0",
+    "ecn_bits": 10,
+    "counter_id": 99
+  },
     "qos_color":{
       "source_ip": "192.85.1.20",
       "dest_port_ing_nu": 671,
