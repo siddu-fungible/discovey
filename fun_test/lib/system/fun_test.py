@@ -1170,9 +1170,12 @@ class FunTestScript(object):
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
-            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id:
+            if False and fun_test.is_with_jenkins_build() and fun_test.suite_execution_id:
                 if not fun_test.is_bootup_done():
                     fun_test.test_assert(fun_test.build(), "Jenkins build")
+                    suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
+                    suite_execution.bootup_done = True
+                    suite_execution.save()
                 else:
                     fun_test.log("Skipping Jenkins build as it is not the first script")
             self.setup()
