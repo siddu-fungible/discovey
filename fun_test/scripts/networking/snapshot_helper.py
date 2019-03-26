@@ -44,6 +44,7 @@ class SnapshotHelper():
             fun_test.log("Exception: %s" % str(ex))
             fun_test.log("Installing nmtf....")
             fun_test.simple_assert(setup_nmtf(), "Setup nmtf")
+            result = True
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
