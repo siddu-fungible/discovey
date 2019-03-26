@@ -243,6 +243,12 @@ class FunTest:
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
 
+        user_supplied_build_parameters = self.get_job_environment_variable("build_parameters")
+        if user_supplied_build_parameters:
+            if "disable_assertions" in user_supplied_build_parameters:
+                self.build_parameters["disable_assertions"] = user_supplied_build_parameters["disable_assertions"]
+
+
     def get_build_parameters(self):
         return self.build_parameters
 
@@ -407,10 +413,12 @@ class FunTest:
         if job_fun_os_make_flags:
             fun_os_make_flags = job_fun_os_make_flags
 
+        disable_assertions = build_parameters["disable_assertions"] if "disable_assertions" in build_parameters else None
+
         tftp_image_path = build_parameters["tftp_image_path"] if "tftp_image_path" is build_parameters else None
         fun_test.test_assert(not tftp_image_path, "TFTP-image path cannot be set if with_jenkins_build was enabled")
 
-        bh = BuildHelper(boot_args=boot_args, fun_os_make_flags=fun_os_make_flags)
+        bh = BuildHelper(boot_args=boot_args, fun_os_make_flags=fun_os_make_flags, disable_assertions=disable_assertions)
         emulation_image = bh.build_emulation_image()
         fun_test.test_assert(emulation_image, "Build emulation image")
         self.build_parameters["tftp_image_path"] = emulation_image
