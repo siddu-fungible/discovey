@@ -8,7 +8,7 @@ class BuildHelper():
     def __init__(self,
                  boot_args=None,
                  fun_os_make_flags=None,
-                 max_build_time=60 * 20,
+                 max_build_time=60 * 25,
                  job_name="emulation/fun_on_demand",
                  disable_assertions=None):
         self.boot_args = boot_args
