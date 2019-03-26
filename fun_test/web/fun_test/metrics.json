@@ -1441,7 +1441,7 @@
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
                 "name": "Zip",
-                "label": "Zip - (work in progress)",
+                "label": "Zip",
                 "weight": 1,
                 "children": [
                   {
