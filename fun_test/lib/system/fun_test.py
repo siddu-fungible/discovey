@@ -248,7 +248,6 @@ class FunTest:
             if "disable_assertions" in user_supplied_build_parameters:
                 self.build_parameters["disable_assertions"] = user_supplied_build_parameters["disable_assertions"]
 
-
     def get_build_parameters(self):
         return self.build_parameters
 
@@ -257,6 +256,12 @@ class FunTest:
         build_parameters = self.get_build_parameters()
         if parameter in build_parameters:
             result = build_parameters[parameter]
+        return result
+
+    def is_first_script(self):
+        result = True
+        if self.log_prefix is not None:
+            result = self.log_prefix == 1
         return result
 
     def abort(self):
@@ -1167,7 +1172,10 @@ class FunTestScript(object):
                     test_case.execution_id = te.execution_id
 
             if fun_test.is_with_jenkins_build():
-                fun_test.test_assert(fun_test.build(), "Jenkins build")
+                if fun_test.is_first_script():
+                    fun_test.test_assert(fun_test.build(), "Jenkins build")
+                else:
+                    fun_test.log("Skipping Jenkins build as it is not the first script")
             self.setup()
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,

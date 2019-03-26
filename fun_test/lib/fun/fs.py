@@ -333,6 +333,9 @@ class ComE(Linux):
         self.dpc_ready = True
         return True
 
+    def is_dpc_running(self):
+        pass
+
     def detect_pfs(self):
         devices = self.lspci(grep_filter="dad")
         fun_test.test_assert(devices, "PCI devices detected")
@@ -343,6 +346,17 @@ class ComE(Linux):
                                       expected=self.EXPECTED_FUNQ_DEVICE_ID,
                                       message="funq bind device found")
         return True
+
+    def ensure_dpc_running(self):
+        result = None
+        for f1_index in range(1):  #TODO: Disabling F1_1
+            process_id = self.get_process_id_by_pattern("dpc")
+            fun_test.log("Dpc process id: {}".format(process_id))
+            if not process_id:
+                self.setup_dpc(f1_index=f1_index)
+        self.dpc_ready = True
+        result = True
+        return result
 
     def is_dpc_ready(self):
         return self.dpc_ready
@@ -397,7 +411,6 @@ class Fs(object, ToDictMixin):
                     "come_mgmt_ip",
                     "come_mgmt_ssh_username",
                     "come_mgmt_ssh_password"]
-
 
     def __init__(self,
                  bmc_mgmt_ip,
@@ -489,12 +502,6 @@ class Fs(object, ToDictMixin):
             fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
             self.bmc.start_uart_log_listener(f1_index=f1_index)
 
-        #for f1_index, f1 in self.f1s.iteritems():
-        #    self.kill_f1_uart_log_listener(f1_index=f1_index)
-
-        #for f1_index, f1 in self.f1s.iteritems():
-        #    self.setup_f1_uart_log_listener(f1_index=f1_index)
-
         fun_test.test_assert(self.come_reset(), "ComE rebooted successfully")
         fun_test.test_assert(self.come_initialize(), "ComE initialized")
         fun_test.test_assert(self.come.detect_pfs(), "Fungible PFs detected")
@@ -510,7 +517,14 @@ class Fs(object, ToDictMixin):
         return self.bmc.come_reset(self.get_come())
 
 
-
+    def re_initialize(self):
+        self.get_bmc()
+        self.get_fpga()
+        self.get_come()
+        self.set_f1s()
+        self.come.detect_pfs()
+        fun_test.test_assert(self.come.ensure_dpc_running(), "Ensure dpc is running")
+        return True
 
 
     def get_bmc(self):
