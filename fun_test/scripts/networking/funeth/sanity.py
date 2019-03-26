@@ -80,6 +80,8 @@ class FunethSanity(FunTestScript):
             fun_test.shared_variables["fs"] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
             # TODO: get dpc proxy ip/port
+            global DPC_PROXY_IP
+            global DPC_PROXY_PORT
             DPC_PROXY_IP = '10.1.20.129'
             DPC_PROXY_PORT = 40220
 
@@ -98,7 +100,7 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
 
     def cleanup(self):
-        if fun_test.get_job_environment_variable('test_bed_type').lower() == 'fs-7':
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fun_test.shared_variables["fs"].cleanup()
         fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 
