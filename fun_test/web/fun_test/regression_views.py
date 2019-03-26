@@ -26,13 +26,9 @@ from datetime import datetime, timedelta
 from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
-<<<<<<< HEAD
-
 from web.fun_test.models import SuiteReRunInfo, JobQueue, JobSpec
-=======
 from web.fun_test.models import SuiteReRunInfo
 from web.fun_test.models import TestBed
->>>>>>> c54c37ca278beab3be54ffe8335772158fc01778
 import logging
 import subprocess
 import dateutil.parser
@@ -1011,7 +1007,6 @@ def git(request):
     return result
 
 
-<<<<<<< HEAD
 def _get_job_spec(job_id):
     result = {}
     job_spec = JobSpec.objects.get(job_id=job_id)
@@ -1062,7 +1057,6 @@ def scheduler_queue_priorities(request):
         return SchedulerJobPriority.__dict__
     elif request.method == 'POST':
         request_json = json.loads(request.body)
-=======
 @csrf_exempt
 @api_safe_json_response
 def testbeds(request):
@@ -1071,4 +1065,3 @@ def testbeds(request):
     for testbed in testbeds:
         result[testbed.name] = {"name": testbed.name, "description": testbed.description}
     return result
->>>>>>> c54c37ca278beab3be54ffe8335772158fc01778

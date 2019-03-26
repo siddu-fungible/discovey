@@ -11,7 +11,7 @@ from web.fun_test.jira_models import *
 from web.fun_test.demo1_models import *
 from rest_framework import serializers
 from datetime import datetime, timedelta
-from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulerJobPriority
+from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulerJobPriority, JobStatusType
 import json
 from rest_framework.serializers import ModelSerializer
 
@@ -335,7 +335,7 @@ class JobSpec(models.Model):
     Job id
     """
     job_id = models.IntegerField()   # job id, this matches suite execution id
-    state = models.TextField(default=RESULTS["SUBMITTED"])
+    state = models.TextField(default=JobStatusType.SUBMITTED)
     suite_container_execution_id = models.IntegerField(null=True)
     is_scheduled_job = models.BooleanField(default=False)
 

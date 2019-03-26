@@ -37,4 +37,7 @@ class QueueOperations:
     MOVE_TO_TOP = "move_to_top"
     MOVE_TO_NEXT_QUEUE = "move_to_next_queue"
     DELETE = "delete"
-    
+
+class JobStatusType:
+    SUBMITTED = "SUBMITTED"
+    QUEUED = "QUEUED"
