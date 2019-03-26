@@ -77,6 +77,7 @@ class FunethSanity(FunTestScript):
         # Boot up FS1600
         if fun_test.get_job_environment_variable('test_bed_type').lower() == 'fs-7':
             fs = Fs.get()
+            fun_test.shared_variables["fs"] = fs
             fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
 
         tb_config_obj = tb_configs.TBConfigs(TB)
@@ -94,6 +95,8 @@ class FunethSanity(FunTestScript):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
 
     def cleanup(self):
+        if fun_test.get_job_environment_variable('test_bed_type').lower() == 'fs-7':
+            fun_test.shared_variables["fs"].cleanup()
         fun_test.shared_variables['funeth_obj'].cleanup_workspace()
 
 

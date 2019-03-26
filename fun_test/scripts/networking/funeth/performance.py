@@ -927,6 +927,14 @@ if __name__ == "__main__":
             FunethPerformance_HU_NU_64B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
 
+            # NU -> HU Non-FCP
+            # FunethPerformance_NU_HU_800B_UDP_NETPERF,
+            # FunethPerformance_NU_HU_64B_UDP_NETPERF,
+            # FunethPerformance_NU_HU_1500B_UDP_NETPERF,
+            FunethPerformance_NU_HU_800B_TCP_NETPERF,
+            FunethPerformance_NU_HU_64B_TCP_NETPERF,
+            FunethPerformance_NU_HU_1500B_TCP_NETPERF,
+
             # HU -> HU Non-FCP
             #FunethPerformance_HU_HU_800B_UDP_NETPERF,
             #FunethPerformance_HU_HU_64B_UDP_NETPERF,
@@ -950,14 +958,6 @@ if __name__ == "__main__":
             FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF,
             FunethPerformance_HU_HU_FCP_SEC_64B_TCP_NETPERF,
             FunethPerformance_HU_HU_FCP_SEC_1500B_TCP_NETPERF,
-
-            # NU -> HU Non-FCP
-            #FunethPerformance_NU_HU_800B_UDP_NETPERF,
-            #FunethPerformance_NU_HU_64B_UDP_NETPERF,
-            #FunethPerformance_NU_HU_1500B_UDP_NETPERF,
-            FunethPerformance_NU_HU_800B_TCP_NETPERF,
-            FunethPerformance_NU_HU_64B_TCP_NETPERF,
-            FunethPerformance_NU_HU_1500B_TCP_NETPERF,
     ):
         ts.add_test_case(tc())
     ts.run()

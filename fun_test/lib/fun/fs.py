@@ -3,7 +3,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from fun_settings import TFTP_SERVER, FUN_TEST_DIR, INTEGRATION_DIR
+from fun_settings import TFTP_SERVER_IP, FUN_TEST_DIR, INTEGRATION_DIR
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 
@@ -156,15 +156,15 @@ class Bmc(Linux):
         self.uart_log_threads[f1_index] = t
         t.start()
 
-    def _get_boot_args_for_index(self, bootargs, f1_index):
-        return "sku=SKU_FS1600_{} ".format(f1_index) + bootargs
+    def _get_boot_args_for_index(self, boot_args, f1_index):
+        return "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
 
 
     def u_boot_load_image(self,
                           index,
-                          bootargs,
+                          boot_args,
                           tftp_load_address="0xa800000080000000",
-                          tftp_server=TFTP_SERVER,
+                          tftp_server=TFTP_SERVER_IP,
                           tftp_image_path="funos-f1.stripped.gz"):
         result = None
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_INIT)
@@ -175,7 +175,7 @@ class Bmc(Linux):
 
         self.u_boot_command(
             command="setenv bootargs {}".format(
-                self._get_boot_args_for_index(bootargs=bootargs, f1_index=index)), timeout=5, f1_index=index)
+                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
 
         self.u_boot_command(command="dhcp", timeout=15, expected="our IP address is", f1_index=index)
@@ -333,6 +333,9 @@ class ComE(Linux):
         self.dpc_ready = True
         return True
 
+    def is_dpc_running(self):
+        pass
+
     def detect_pfs(self):
         devices = self.lspci(grep_filter="dad")
         fun_test.test_assert(devices, "PCI devices detected")
@@ -343,6 +346,17 @@ class ComE(Linux):
                                       expected=self.EXPECTED_FUNQ_DEVICE_ID,
                                       message="funq bind device found")
         return True
+
+    def ensure_dpc_running(self):
+        result = None
+        for f1_index in range(1):  #TODO: Disabling F1_1
+            process_id = self.get_process_id_by_pattern("dpc")
+            fun_test.log("Dpc process id: {}".format(process_id))
+            if not process_id:
+                self.setup_dpc(f1_index=f1_index)
+        self.dpc_ready = True
+        result = True
+        return result
 
     def is_dpc_ready(self):
         return self.dpc_ready
@@ -398,7 +412,6 @@ class Fs(object, ToDictMixin):
                     "come_mgmt_ssh_username",
                     "come_mgmt_ssh_password"]
 
-
     def __init__(self,
                  bmc_mgmt_ip,
                  bmc_mgmt_ssh_username,
@@ -410,7 +423,7 @@ class Fs(object, ToDictMixin):
                  come_mgmt_ssh_username,
                  come_mgmt_ssh_password,
                  tftp_image_path="funos-f1.stripped.gz",
-                 bootargs=DEFAULT_BOOT_ARGS):
+                 boot_args=DEFAULT_BOOT_ARGS):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -426,7 +439,7 @@ class Fs(object, ToDictMixin):
         self.tftp_image_path = tftp_image_path
         self.f1s = {}
         self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
-        self.bootargs = bootargs
+        self.boot_args = boot_args
 
     def reachability_check(self):
         # TODO
@@ -447,7 +460,7 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(test_bed_spec=None, tftp_image_path=None, bootargs=None):
+    def get(test_bed_spec=None, tftp_image_path=None, boot_args=None):
         if not test_bed_spec:
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
             fun_test.log("Testbed-type: {}".format(test_bed_type))
@@ -455,11 +468,13 @@ class Fs(object, ToDictMixin):
             fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_type))
 
         if not tftp_image_path:
-            tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
+            tftp_image_path = fun_test.get_build_parameter("tftp_image_path")
         fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path))
 
-        if not bootargs:
-            bootargs = Fs.DEFAULT_BOOT_ARGS
+        if not boot_args:
+            boot_args = fun_test.get_build_parameter("boot_args")
+            if not boot_args:
+                boot_args = Fs.DEFAULT_BOOT_ARGS
         fun_test.simple_assert(test_bed_spec, "Testbed spec available")
         bmc_spec = test_bed_spec["bmc"]
         fpga_spec = test_bed_spec["fpga"]
@@ -474,7 +489,7 @@ class Fs(object, ToDictMixin):
                   come_mgmt_ssh_username=come_spec["mgmt_ssh_username"],
                   come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
                   tftp_image_path=tftp_image_path,
-                  bootargs=bootargs)
+                  boot_args=boot_args)
 
     def bootup(self, reboot_bmc=False):
         if reboot_bmc:
@@ -484,14 +499,8 @@ class Fs(object, ToDictMixin):
         fun_test.test_assert(self.fpga_initialize(), "FPGA initiaize")
 
         for f1_index, f1 in self.f1s.iteritems():
-            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, bootargs=self.bootargs), "U-Bootup f1: {} complete".format(f1_index))
+            fun_test.test_assert(self.bmc.u_boot_load_image(index=f1_index, tftp_image_path=self.tftp_image_path, boot_args=self.boot_args), "U-Bootup f1: {} complete".format(f1_index))
             self.bmc.start_uart_log_listener(f1_index=f1_index)
-
-        #for f1_index, f1 in self.f1s.iteritems():
-        #    self.kill_f1_uart_log_listener(f1_index=f1_index)
-
-        #for f1_index, f1 in self.f1s.iteritems():
-        #    self.setup_f1_uart_log_listener(f1_index=f1_index)
 
         fun_test.test_assert(self.come_reset(), "ComE rebooted successfully")
         fun_test.test_assert(self.come_initialize(), "ComE initialized")
@@ -508,7 +517,14 @@ class Fs(object, ToDictMixin):
         return self.bmc.come_reset(self.get_come())
 
 
-
+    def re_initialize(self):
+        self.get_bmc()
+        self.get_fpga()
+        self.get_come()
+        self.set_f1s()
+        self.come.detect_pfs()
+        fun_test.test_assert(self.come.ensure_dpc_running(), "Ensure dpc is running")
+        return True
 
 
     def get_bmc(self):
