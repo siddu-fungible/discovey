@@ -258,7 +258,7 @@ class FunTest:
             result = build_parameters[parameter]
         return result
 
-    def is_bootup_done(self):
+    def is_build_done(self):
         suite_execution_id = self.get_suite_execution_id()
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         return suite_execution.bootup_done
@@ -1170,8 +1170,8 @@ class FunTestScript(object):
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
-            if False and fun_test.is_with_jenkins_build() and fun_test.suite_execution_id:
-                if not fun_test.is_bootup_done():
+            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id:
+                if not fun_test.is_build_done():
                     fun_test.test_assert(fun_test.build(), "Jenkins build")
                     suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
                     suite_execution.bootup_done = True
