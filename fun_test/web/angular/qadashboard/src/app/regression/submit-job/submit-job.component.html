@@ -28,9 +28,13 @@
                 <label for="tftp-path">TFTP path (F1 stripped image)</label>
               </td>
               <td>
-                <input id="tftp-path" name="tftp-path" [(ngModel)]="tftpImagePath" type="text"/>
+                <input [ngClass]="{disabled: withJenkinsBuild}" id="tftp-path" name="tftp-path" [(ngModel)]="tftpImagePath" type="text"/>
+                &nbsp;&nbsp;<input (click)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With Jenkins build
               </td>
-
+            </tr>
+            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
+              <td><label for="boot-args">Boot-args</label></td>
+              <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
             </tr>
             <tr>
               <td><input (click)="suiteSelectionMode = 'BY_SUITE'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite</td>

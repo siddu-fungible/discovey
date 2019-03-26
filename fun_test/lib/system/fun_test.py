@@ -52,6 +52,8 @@ class FunTimer:
         current_time = time.time()
         return current_time - self.start_time
 
+    def remaining_time(self):
+        return (self.start_time + self.max_time) - time.time()
 
 class FunTestThread(Thread):
     def __init__(self, func, **kwargs):
@@ -158,6 +160,8 @@ class FunTest:
         self.local_settings_file = args.local_settings_file
         self.abort_requested = False
         self.environment = args.environment
+        if self.environment:
+            self.environment = self.environment.decode('utf-8','ignore').encode("utf-8")
         self.inputs = args.inputs
         self.re_run_info = args.re_run_info
         self.local_settings = {}
@@ -224,8 +228,30 @@ class FunTest:
         self.version = "1"
         self.determine_version()
         self.asset_manager = None
+        self.build_parameters = {}
+        self._prepare_build_parameters()
         self.closed = False
 
+    def _prepare_build_parameters(self):
+        boot_args = self.get_job_environment_variable("boot_args")
+        if boot_args:
+            boot_args = boot_args.replace(":", " ")
+        if boot_args:
+            self.build_parameters["boot_args"] = boot_args
+
+        tftp_image_path = self.get_job_environment_variable("tftp_image_path")
+        if tftp_image_path:
+            self.build_parameters["tftp_image_path"] = tftp_image_path
+
+    def get_build_parameters(self):
+        return self.build_parameters
+
+    def get_build_parameter(self, parameter):
+        result = None
+        build_parameters = self.get_build_parameters()
+        if parameter in build_parameters:
+            result = build_parameters[parameter]
+        return result
 
     def abort(self):
         self.abort_requested = True
@@ -245,6 +271,10 @@ class FunTest:
         if variable in job_environment:
             result = job_environment[variable]
         return result
+
+    def is_with_jenkins_build(self):
+        with_jenkins_build = self.get_job_environment_variable(variable="with_jenkins_build")
+        return with_jenkins_build
 
     def is_simulation(self):
         result = True
@@ -358,6 +388,34 @@ class FunTest:
 
         fun_test.log("Join complete for Thread-id: {}".format(fun_test_thread_id))
         return True
+
+    def build(self):
+        from lib.system.build_helper import BuildHelper
+        result = False
+        boot_args = ""
+        # boot_args = "app=jpeg_perf_test --disable-wu-watchdog --test-exit-fast"
+        build_parameters = self.get_build_parameters()
+
+        boot_args = build_parameters["boot_args"] if "boot_args" in build_parameters else None
+        fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
+
+        test_bed_type = self.get_job_environment_variable("test_bed_type")
+        fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
+
+        fun_os_make_flags = None
+        job_fun_os_make_flags = build_parameters["fun_os_make_flags"] if "fun_os_make_flags" in build_parameters else None
+        if job_fun_os_make_flags:
+            fun_os_make_flags = job_fun_os_make_flags
+
+        tftp_image_path = build_parameters["tftp_image_path"] if "tftp_image_path" is build_parameters else None
+        fun_test.test_assert(not tftp_image_path, "TFTP-image path cannot be set if with_jenkins_build was enabled")
+
+        bh = BuildHelper(boot_args=boot_args, fun_os_make_flags=fun_os_make_flags)
+        emulation_image = bh.build_emulation_image()
+        fun_test.test_assert(emulation_image, "Build emulation image")
+        self.build_parameters["tftp_image_path"] = emulation_image
+        result = True
+        return result
 
     def get_asset_manager(self):
         from asset.asset_manager import AssetManager
@@ -811,12 +869,12 @@ class FunTest:
         self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint, result=result, expected=expected, actual=actual)
 
     def exit_gracefully(self, sig, _):
-        fun_test.critical("Unexpected Exit")
+        self.critical("Unexpected Exit")
 
         if fun_test.suite_execution_id:
-            models_helper.update_test_case_execution(test_case_execution_id=fun_test.current_test_case_execution_id,
-                                                     suite_execution_id=fun_test.suite_execution_id,
-                                                     result=fun_test.FAILED)
+            models_helper.update_test_case_execution(test_case_execution_id=self.current_test_case_execution_id,
+                                                     suite_execution_id=self.suite_execution_id,
+                                                     result=self.FAILED)
             signal.signal(signal.SIGINT, self.original_sig_int_handler)
         sys.exit(-1)
 
@@ -1100,6 +1158,8 @@ class FunTestScript(object):
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
+            if fun_test.is_with_jenkins_build():
+                fun_test.test_assert(fun_test.build(), "Jenkins build")
             self.setup()
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
