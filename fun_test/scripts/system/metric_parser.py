@@ -73,7 +73,7 @@ class MetricParser():
                     result["data"].append(d)
                     match = None
 
-        result["match"] = match_found
+        result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]
 
         return result

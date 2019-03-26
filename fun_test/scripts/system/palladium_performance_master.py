@@ -1447,7 +1447,7 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
                                              auto_add_to_db=True, date_time=self.dt)
 
             fun_test.test_assert(result["status"], "Checking if flow test passed")
-            fun_test.test_assert(result["match"], "Found atleast one entry")
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
