@@ -101,6 +101,7 @@ class SuiteExecution(models.Model):
     suite_container_execution_id = models.IntegerField(default=-1)
     suite_type = models.TextField(default=SuiteType.STATIC)
     test_bed_type = models.TextField(default="")
+    bootup_done = models.BooleanField(default=False)
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
