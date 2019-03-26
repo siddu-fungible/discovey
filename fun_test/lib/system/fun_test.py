@@ -248,7 +248,6 @@ class FunTest:
             if "disable_assertions" in user_supplied_build_parameters:
                 self.build_parameters["disable_assertions"] = user_supplied_build_parameters["disable_assertions"]
 
-
     def get_build_parameters(self):
         return self.build_parameters
 
@@ -258,6 +257,11 @@ class FunTest:
         if parameter in build_parameters:
             result = build_parameters[parameter]
         return result
+
+    def is_build_done(self):
+        suite_execution_id = self.get_suite_execution_id()
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
+        return suite_execution.bootup_done
 
     def abort(self):
         self.abort_requested = True
@@ -1166,8 +1170,14 @@ class FunTestScript(object):
                                                                inputs=fun_test.get_job_inputs())
                     test_case.execution_id = te.execution_id
 
-            if fun_test.is_with_jenkins_build():
-                fun_test.test_assert(fun_test.build(), "Jenkins build")
+            if fun_test.is_with_jenkins_build() and fun_test.suite_execution_id:
+                if not fun_test.is_build_done():
+                    fun_test.test_assert(fun_test.build(), "Jenkins build")
+                    suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
+                    suite_execution.bootup_done = True
+                    suite_execution.save()
+                else:
+                    fun_test.log("Skipping Jenkins build as it is not the first script")
             self.setup()
             if setup_te:
                 models_helper.update_test_case_execution(test_case_execution_id=setup_te.execution_id,
