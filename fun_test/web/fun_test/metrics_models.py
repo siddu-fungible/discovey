@@ -600,7 +600,7 @@ class MetricChart(models.Model):
                 if d == "input_date_time":
                     continue
                 d[input_name] = input_value
-            d["input_date_time__range"] = [earlier_day, yesterday]
+            d["input_date_time__range"] = [earlier_day, today]
             order_by = "-input_date_time"
             if not chronologically_recent:
                 order_by = "input_date_time"
@@ -1603,6 +1603,23 @@ class TeraMarkJpegPerformance(models.Model):
         return s
 
 class FlowTestPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_app = models.CharField(max_length=30, default="hw_hsu_test", choices=[(0, "hw_hsu_test")])
+    input_iterations = models.IntegerField(default=-1)
+    output_time = models.IntegerField(verbose_name="seconds", default=-1)
+    output_time_unit = models.TextField(default="secs")
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class F1FlowTestPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
