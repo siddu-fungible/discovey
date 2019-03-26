@@ -48,9 +48,10 @@ class JenkinsManager():
     JENKINS_BASE_URL = "http://jenkins-sw-master:8080/"
     SERVICE_PASSWORD = '117071d3cb2cae6c964099664b271e4011'
     SERVICE_USERNAME = 'jenkins.service'
-    def __init__(self):
+    def __init__(self, job_name):
         self.jenkins_server = jenkins.Jenkins(self.JENKINS_BASE_URL, username=self.SERVICE_USERNAME,
                                      password=self.SERVICE_PASSWORD)
+        self.job_name = job_name
 
     def _apply_params(self, user_params):
         params = dict(DEFAULT_BUILD_PARAMS)
@@ -63,7 +64,7 @@ class JenkinsManager():
 
     def build(self, params):
         # self.jenkins_server.get_job_info('emulation/fun_on_demand', build_number)
-        queue_item = self.jenkins_server.build_job('emulation/fun_on_demand', self._apply_params(user_params=params))
+        queue_item = self.jenkins_server.build_job(self.job_name, self._apply_params(user_params=params))
         return queue_item
 
     def get_build_number(self, queue_item):
@@ -75,13 +76,13 @@ class JenkinsManager():
         return build_number
 
     def get_job_info(self, build_number):
-        info = self.jenkins_server.get_build_info('emulation/fun_on_demand', build_number)
+        info = self.jenkins_server.get_build_info(self.job_name, build_number)
         return info
 
     def get_node_number(self, build_number):
         result = None
         url = "{}/job/emulation/job/fun_on_demand/{}/ws/".format(self.JENKINS_BASE_URL, build_number)
-        r = requests.get(url, auth=HTTPBasicAuth(jenkins_manager.SERVICE_USERNAME, jenkins_manager.SERVICE_PASSWORD))
+        r = requests.get(url, auth=HTTPBasicAuth(self.SERVICE_USERNAME, self.SERVICE_PASSWORD))
         if r.status_code == 200:
             m = re.findall(r'/job/emulation/job/fun_on_demand/{}/execution/node/(\d+)/ws/'.format(build_number), r.content)
             if len(m) > 0:
@@ -93,8 +94,8 @@ class JenkinsManager():
         return s
 
     def download_file(self, source_path, target_path):
-        url = "{}{}".format(base_url, source_path)
-        r = requests.get(url, auth=HTTPBasicAuth(jenkins_manager.SERVICE_USERNAME, jenkins_manager.SERVICE_PASSWORD))
+        url = "{}{}".format(self.JENKINS_BASE_URL, source_path)
+        r = requests.get(url, auth=HTTPBasicAuth(self.SERVICE_USERNAME, self.SERVICE_PASSWORD))
         open(target_path, 'wb').write(r.content)
 
 if __name__ == "__main__":

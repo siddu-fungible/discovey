@@ -1,0 +1,3 @@
+[
+{"path": "networking/fwd/test_forwarding.py", "inputs": {"speed": "SPEED_25G"}}
+]
