@@ -82,7 +82,8 @@ class Funeth:
         if self.funos_branch:
             local_checkout(self.ws, 'FunOS', branch=self.funos_branch)
 
-        output =  self.linux_obj_dict['hu'].command('cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws))
+        output = self.linux_obj_dict['hu'].command(
+            'cd {0}; scripts/bob --sdkup -C {1}/FunSDK-cache'.format(sdkdir, self.ws), timeout=300)
         return re.search(r'Updating working projectdb.*Updating current build number', output, re.DOTALL) is not None
 
     def build(self):
@@ -93,7 +94,7 @@ class Funeth:
         if self.funos_branch:
             self.linux_obj_dict['hu'].command('cd {}; scripts/bob --build hci'.format(funsdkdir))
 
-        output = self.linux_obj_dict['hu'].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=300)
+        output = self.linux_obj_dict['hu'].command('cd {}; make clean; make PALLADIUM=yes'.format(drvdir), timeout=600)
         return re.search(r'fail|error|abort|assert', output, re.IGNORECASE) is None
 
     def load(self, sriov=0, cc=False, debug=False):
@@ -107,7 +108,8 @@ class Funeth:
         if sriov > 0:
             _modparams.append('sriov_test=yes')
 
-        self.linux_obj_dict['hu'].command('cd {0}; sudo insmod funeth.ko {1}'.format(drvdir, " ".join(_modparams)), timeout=300)
+        self.linux_obj_dict['hu'].command('cd {0}; sudo insmod funeth.ko {1}'.format(drvdir, " ".join(_modparams)),
+                                          timeout=300)
 
         fun_test.sleep('Sleep for a while to wait for funeth driver loaded', 5)
 
@@ -116,7 +118,8 @@ class Funeth:
 
         if sriov > 0:
             sriov_en = '/sys/class/net/{0}/device'.format(self.pf_intf)
-            self.linux_obj_dict['hu'].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en), timeout=300)
+            self.linux_obj_dict['hu'].command('echo "{0}" | sudo tee {1}/sriov_numvfs'.format(sriov, sriov_en),
+                                              timeout=300)
             fun_test.sleep('Sleep for a while to wait for sriov enabled', 5)
             self.linux_obj_dict['hu'].command('ifconfig -a')
 
