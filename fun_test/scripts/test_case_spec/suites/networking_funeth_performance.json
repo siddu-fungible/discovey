@@ -1,5 +1,5 @@
 [
   {"info": {"tags": ["networking-funeth-performance"]}},
   {"path": "networking/funeth/sanity.py", "test_case_ids": [1]},
-  {"path": "networking/funeth/performance.py", "test_case_ids": [114, 115, 116, 124, 125, 126, 104, 105, 106, 134, 135, 136, 144, 145, 146]}
+  {"path": "networking/funeth/performance.py", "test_case_ids": [114, 115, 116, 104, 105, 106, 134, 135, 136, 144, 145, 146, 124, 125, 126]}
 ]
