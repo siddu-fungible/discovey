@@ -49,7 +49,7 @@ BUILD_PARAMS = {
     "CSR_FILE": "",
     "WAVEFORM_CMD": "",
     "HBM_DUMP": "",
-    "FUNOS_MAKEFLAGS": "",
+    "FUNOS_MAKEFLAGS": "XDATA_LISTS=/project/users/ashaikh/qa_test_inputs/jpeg_perf_inputs/perf_input.list",
     "BRANCH_FunJenkins": "",
     "BRANCH_FunDevelopment": "",
     "BRANCH_FunTools": "",

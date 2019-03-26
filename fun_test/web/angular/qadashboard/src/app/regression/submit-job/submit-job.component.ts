@@ -41,6 +41,9 @@ export class SubmitJobComponent implements OnInit {
   testBedNames: string[] = [];
   submitting: string = null;
   tftpImagePath: string = "funos-f1.stripped.gz";
+  bootArgs: string = "app=hw_hsu_test --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit";
+  withJenkinsBuild: boolean = false;
+  disableAssertions: boolean = true;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -210,12 +213,27 @@ export class SubmitJobComponent implements OnInit {
       }
     }
     payload["environment"] = {};
-    if (this.tftpImagePath && this.tftpImagePath !== "") {
-      payload["environment"] = {tftp_image_path: this.tftpImagePath};
-    }
+
 
     if (this.selectedTestBedType) {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
+    }
+    if (this.bootArgs && this.bootArgs !== "") {
+      payload["environment"]["boot_args"] = this.bootArgs.replace(/\s+/s, ':');
+
+    }
+
+    if (!this.withJenkinsBuild) {
+      if (this.tftpImagePath && this.tftpImagePath !== "") {
+        payload["environment"]["tftp_image_path"] = this.tftpImagePath;
+      }
+    } else {
+      payload["environment"]["with_jenkins_build"] = true;
+    }
+
+    if (payload["environment"]["with_jenkins_build"]) {
+      payload["environment"]["build_parameters"] = {};
+      payload["environment"]["build_parameters"]["disable_assertions"] = this.disableAssertions;
     }
 
     this.submitting = "Submitting job";
@@ -237,6 +255,10 @@ export class SubmitJobComponent implements OnInit {
     this.selectedSuite = "";
     this.selectedInfo = null;
     this.selectedScriptPk = pk;
+  }
+
+  toggleWithJenkins() {
+    this.withJenkinsBuild = !this.withJenkinsBuild;
   }
 
   /*

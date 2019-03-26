@@ -11,7 +11,7 @@ from web.fun_test.metrics_models import WuLatencyAllocStack, WuLatencyUngated, B
 from web.fun_test.metrics_models import TeraMarkPkeEcdh256Performance, TeraMarkPkeEcdh25519Performance
 from web.fun_test.metrics_models import TeraMarkPkeRsa4kPerformance, TeraMarkPkeRsaPerformance, \
     TeraMarkCryptoPerformance, SoakDmaMemcpyCoherentPerformance, SoakDmaMemcpyNonCoherentPerformance, \
-    SoakDmaMemsetPerformance, MetricChart
+    SoakDmaMemsetPerformance, MetricChart, F1FlowTestPerformance
 from web.fun_test.metrics_models import TeraMarkLookupEnginePerformance, FlowTestPerformance, \
     TeraMarkZipDeflatePerformance, TeraMarkZipLzmaPerformance, TeraMarkDfaPerformance, TeraMarkJpegPerformance
 from web.fun_test.analytics_models_helper import MetricHelper, invalidate_goodness_cache, MetricChartHelper
@@ -20,6 +20,7 @@ from web.fun_test.models import TimeKeeper
 import re
 from datetime import datetime
 from dateutil.parser import parse
+from scripts.system.metric_parser import MetricParser
 
 ALLOC_SPEED_TEST_TAG = "alloc_speed_test"
 BOOT_TIMING_TEST_TAG = "boot_timing_test"
@@ -28,6 +29,7 @@ TERAMARK_PKE = "pke_teramark"
 TERAMARK_CRYPTO = "crypto_teramark"
 TERAMARK_LOOKUP = "le_teramark"
 FLOW_TEST_TAG = "qa_storage2_endpoint"
+F1_FLOW_TEST_TAG = "qa_f1_flowtest"
 TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
 TERAMARK_EC = "ec_teramark"
@@ -112,7 +114,8 @@ class MyScript(FunTestScript):
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
-                FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG, SOAK_DMA_MEMCPY_COH,
+                FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG,
+                SOAK_DMA_MEMCPY_COH,
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
@@ -1430,6 +1433,7 @@ class TeraMarkLookupEnginePerformanceTC(PalladiumPerformanceTc):
 
 class FlowTestPerformanceTC(PalladiumPerformanceTc):
     tag = FLOW_TEST_TAG
+    model = "FlowTestPerformance"
 
     def describe(self):
         self.set_test_details(id=20,
@@ -1437,42 +1441,20 @@ class FlowTestPerformanceTC(PalladiumPerformanceTc):
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
         try:
             fun_test.test_assert(self.validate_job(), "validating job")
-            flow_test_passed = False
-            match = None
-            for line in self.lines:
-                if "PASS libfunq testflow_test" in line:
-                    flow_test_passed = True
-                m = re.search(
-                    r'Testflow:\s+(?P<iterations>\d+)\s+iterations\s+took\s+(?P<seconds>\d+)\s+seconds',
-                    line)
-                if m:
-                    match = m
-                    input_iterations = int(m.group("iterations"))
-                    input_app = "hw_hsu_test"
-                    output_time = int(m.group("seconds"))
-                    fun_test.log("iterations: {}, time taken: {}".format(input_iterations, output_time))
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt)
 
-                if flow_test_passed:
-                    self.result = fun_test.PASSED
-                    if match:
-                        metrics["input_iterations"] = input_iterations
-                        metrics["output_time"] = output_time
-                        metrics["output_time_unit"] = "secs"
-                        metrics["input_app"] = input_app
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        MetricHelper(model=FlowTestPerformance).add_entry(**d)
-
-            fun_test.test_assert(flow_test_passed, "Checking if flow test passed")
-
+            fun_test.test_assert(result["status"], "Checking if flow test passed")
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
+            self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="FlowTestPerformance")
+                                     git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
 
 
@@ -1510,7 +1492,8 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
                         output_latency_unit = latency_json["unit"]
 
                         fun_test.log("type: {}, operation: {}, effort: {}, stats {}".format(input_type, input_operation,
-                                                                                            input_effort, bandwidth_json))
+                                                                                            input_effort,
+                                                                                            bandwidth_json))
                         metrics["input_type"] = input_type
                         metrics["input_operation"] = input_operation
                         metrics["input_effort"] = input_effort
@@ -1696,11 +1679,11 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         metrics["input_frame_size"] = line["frame_size"]
                         date_time = get_time_from_timestamp(line["timestamp"])
                         metrics["output_throughput"] = (float(
-                                line["throughput"]) / 1000) if "throughput" in line and line[
-                                "throughput"] != -1 else -1
+                            line["throughput"]) / 1000) if "throughput" in line and line[
+                            "throughput"] != -1 else -1
                         metrics["output_pps"] = (float(
-                                line["pps"]) / 1000000) if "pps" in line and line[
-                                "pps"] != -1 else -1
+                            line["pps"]) / 1000000) if "pps" in line and line[
+                            "pps"] != -1 else -1
                         metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
                         metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
                         metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
@@ -1928,6 +1911,16 @@ class TeraMarkMultiClusterCryptoPerformanceTC(TeraMarkCryptoPerformanceTC):
                               steps="Steps 1")
 
 
+class F1FlowTestPerformanceTC(FlowTestPerformanceTC):
+    tag = F1_FLOW_TEST_TAG
+    model = "F1FlowTestPerformance"
+
+    def describe(self):
+        self.set_test_details(id=31,
+                              summary="Flow Test Performance on F1",
+                              steps="Steps 1")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -1978,6 +1971,7 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
     myscript.add_test_case(SoakDmaMemsetPerformanceTC())
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
+    myscript.add_test_case(F1FlowTestPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
