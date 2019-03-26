@@ -2764,7 +2764,7 @@ class SampleACLtoFPG(FunTestCase):
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         checkpoint = "Add TCP header"
-        tcp_header_obj = TCP(destination_port=961, source_port=1234)
+        tcp_header_obj = TCP(destination_port=967, source_port=1234)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=tcp_header_obj, update=False)
         fun_test.simple_assert(result, checkpoint)
@@ -4216,7 +4216,7 @@ class SampleEgressDropACL(FunTestCase):
     load = 10
     load_type = StreamBlock.LOAD_UNIT_FRAMES_PER_SECOND
     stream_obj = None
-    sample_id = 61
+    sample_id = 56
     header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
     captured_results = None
     routes_config = None
@@ -4275,7 +4275,7 @@ class SampleEgressDropACL(FunTestCase):
         fun_test.simple_assert(result, checkpoint)
 
         checkpoint = "Add TCP Header"
-        tcp_obj = TCP(destination_port=960, source_port=1234)
+        tcp_obj = TCP(destination_port=960)
         result = template_obj.stc_manager.configure_frame_stack(stream_block_handle=self.stream_obj.spirent_handle,
                                                                 header_obj=tcp_obj, update=False)
         fun_test.simple_assert(result, checkpoint)
