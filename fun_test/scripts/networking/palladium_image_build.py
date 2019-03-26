@@ -12,7 +12,7 @@ class FunCPContainerInit(FunTestScript):
         """)
 
     def setup(self):
-        self.docker_host = AssetManager().get_any_docker_host()
+        self.docker_host = fun_test.get_asset_manager().get_any_docker_host()
         user = REGRESSION_USER
         user_passwd = REGRESSION_USER_PASSWORD
         workspace = dirname(abspath(dirname(abspath(FUN_TEST_DIR))))

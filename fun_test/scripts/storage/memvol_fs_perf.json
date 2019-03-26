@@ -1,0 +1,224 @@
+{
+  "BLTFioSeqWriteSeqReadOnly": {
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 134217728, "block_size": 4096,
+                       "name": "thin-block1"},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 8, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"size": "4m", "direct": 1, "timeout": 300},
+    "fio_modes": ["write", "read"],
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    "fio_pass_threshold": 0.1,
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"write": {"write": {"bw": 430, "iops": 108409, "latency": 75}},
+                 "read": {"read": {"bw": 467, "iops": 117335, "latency": 68}}},
+      "(8, 8)": {"write": {"write": {"bw": 515, "iops": 64880, "latency": 124}},
+                 "read": {"read": {"bw": 570, "iops": 71515, "latency": 112}}},
+      "(16, 8)": {"write": {"write": {"bw": 488, "iops": 30751, "latency": 260}},
+                  "read": {"read": {"bw": 503, "iops": 31692, "latency": 252}}},
+      "(32, 8)": {"write": {"write": {"bw": 512, "iops": 16069, "latency": 496}},
+                  "read": {"read": {"bw": 530, "iops": 16661, "latency": 479}}}
+    },
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    // The first element is the expected value and the second element is the maximum threshold in absolute value
+    "expected_stats": {
+      "write": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472384)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "read": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472384)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "BLTFioRandWriteRandReadOnly": {
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 134217728, "block_size": 4096,
+                       "name": "thin-block1"},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"size": "4m", "direct": 1, "timeout": 300},
+    "fio_modes": ["randwrite", "randread"],
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    "fio_pass_threshold": 0.1,
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"randwrite": {"write": {"bw": 450, "iops": 113011, "latency": 72}},
+                 "randread": {"read": {"bw": 447, "iops": 111906, "latency": 71}}},
+      "(8, 8)": {"randwrite": {"write": {"bw": 530, "iops": 66656, "latency": 120}},
+                 "randread": {"read": {"bw": 622, "iops": 78096, "latency": 103}}},
+      "(16, 8)": {"randwrite": {"write": {"bw": 527, "iops": 33111, "latency": 241}},
+                  "randread": {"read": {"bw": 545, "iops": 34104, "latency": 234}}},
+      "(32, 8)": {"randwrite": {"write": {"bw": 548, "iops": 17170, "latency": 465}},
+                  "randread": {"read": {"bw": 568, "iops": 17823, "latency": 449}}}
+    },
+    "expected_volume_stats": {
+      "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "randwrite": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472448)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "randread": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472448)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "BLTFioSeqReadWriteMix": {
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 134217728, "block_size": 4096,
+                       "name": "thin-block1"},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"size": "4m", "rwmixread": 25, "direct": 1, "timeout": 120},
+    "fio_modes": ["rw"],
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    "fio_pass_threshold": 0.1,
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"rw": {"write": {"bw": 317, "iops": 79897, "latency": 77},
+                        "read": {"bw": 98, "iops": 25263, "latency": 74}}},
+      "(8, 8)": {"rw": {"write": {"bw": 417, "iops": 52389, "latency": 117},
+                        "read": {"bw": 137, "iops": 17463, "latency": 110}}},
+      "(16, 8)": {"rw": {"write": {"bw": 397, "iops": 24901, "latency": 241},
+                         "read": {"bw": 147, "iops": 9371, "latency": 218}}},
+      "(32, 8)": {"rw": {"write": {"bw": 387, "iops": 12109, "latency": 466},
+                         "read": {"bw": 162, "iops": 5113, "latency": 460}}}
+    },
+    "expected_volume_stats": {
+      "(4, 8)": {"rw": {"fault_injection": 0, "num_reads": 246, "num_writes": 778}},
+      "(8, 8)": {"rw": {"fault_injection": 0, "num_reads": 256, "num_writes": 768}},
+      "(16, 8)": {"rw": {"fault_injection": 0, "num_reads": 280, "num_writes": 744}},
+      "(32, 8)": {"rw": {"fault_injection": 0, "num_reads": 304, "num_writes": 720}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "rw": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472448)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "BLTFioRandReadWriteMix": {
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 134217728, "block_size": 4096,
+                       "name": "thin-block1"},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"size": "4m", "rwmixread": 25, "direct": 1, "timeout": 120},
+    "fio_modes": ["randrw"],
+    "fio_bs_iodepth": ["(4, 8)", "(8, 8)", "(16, 8)", "(32, 8)"],
+    "fio_pass_threshold": 0.1,
+    "volume_pass_threshold": 10,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 8)": {"randrw": {"write": {"bw": 340, "iops": 85424, "latency": 73},
+                            "read": {"bw": 105, "iops": 27011, "latency": 70}}},
+      "(8, 8)": {"randrw": {"write": {"bw": 420, "iops": 52599, "latency": 116},
+                            "read": {"bw": 138, "iops": 17533, "latency": 110}}},
+      "(16, 8)": {"randrw": {"write": {"bw": 377, "iops": 23794, "latency": 245},
+                             "read": {"bw": 140, "iops": 8955, "latency": 243}}},
+      "(32, 8)": {"randrw": {"write": {"bw": 408, "iops": 12856, "latency": 438},
+                             "read": {"bw": 170, "iops": 5428, "latency": 432}}}
+    },
+    "expected_volume_stats": {
+      "(4, 8)": {"randrw": {"fault_injection": 0, "num_reads": 246, "num_writes": 778}},
+      "(8, 8)": {"randrw": {"fault_injection": 0, "num_reads": 256, "num_writes": 768}},
+      "(16, 8)": {"randrw": {"fault_injection": 0, "num_reads": 280, "num_writes": 744}},
+      "(32, 8)": {"randrw": {"fault_injection": 0, "num_reads": 304, "num_writes": 720}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "randrw": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472448)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "BLTFioLargeWriteReadOnly": {
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_MEMORY", "capacity": 134217728, "block_size": 4096,
+                       "name": "thin-block1"},
+    "command_timeout": 30,
+    "iter_interval": 120,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "1m", "rw": "write", "direct": 1, "timeout": 120},
+    "fio_cmd_args": {"direct": 1, "timeout": 660},
+    "fio_modes": ["write", "read", "randwrite", "randread"],
+    "fio_bs_iodepth": "(32, 8)",
+    "fio_sizes": ["256m", "512m", "896m"],
+    "fio_pass_threshold": 0.1,
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "256m": {"write": {"write": {"bw": 426, "iops": 13, "latency": 1000}},
+              "read": {"read": {"bw": 706, "iops": 22, "latency": 45276}},
+              "randwrite": {"write": {"bw": 1640, "iops": 50, "latency": 1000}},
+              "randread": {"read": {"bw": 708, "iops": 22, "latency": 45149}}},
+      "512m": {"write": {"write": {"bw": 1602, "iops": 49, "latency": 1000}},
+              "read": {"read": {"bw": 3253, "iops": 101, "latency": 1000}},
+              "randwrite": {"write": {"bw": 1640, "iops": 50, "latency": 1000}},
+              "randread": {"read": {"bw": 3260, "iops": 101, "latency": 1000}}},
+      "896m": {"write": {"write": {"bw": 1602, "iops": 49, "latency": 1000}},
+              "read": {"read": {"bw": 3253, "iops": 101, "latency": 1000}},
+              "randwrite": {"write": {"bw": 1640, "iops": 50, "latency": 1000}},
+              "randread": {"read": {"bw": 3260, "iops": 101, "latency": 1000}}}
+    },
+    "expected_volume_stats": {
+      "256m": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              // actaully the num_reads should be 65536, but if we run the read before the write, then its value is
+              // getting doubled. Might be bug, have to debug and file the bug
+              "read": {"fault_injection": 0, "num_reads": 65536, "num_writes": 0},
+              "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "randread": {"fault_injection": 0, "num_reads": 65536, "num_writes": 0}},
+      "512m": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "read": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0},
+              "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "randread": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0}},
+      "896m": {"write": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "read": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0},
+              "randwrite": {"fault_injection": 0, "num_reads": 0, "num_writes": 65536},
+              "randread": {"fault_injection": 0, "num_reads": 131072, "num_writes": 0}}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    "expected_stats": {
+      "256m": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 2684354)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "512m": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 5368710)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      },
+      "896m": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 9395240)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  }
+}

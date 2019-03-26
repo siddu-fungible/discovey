@@ -1,0 +1,423 @@
+<div *ngIf="showForm" class="card card-primary component">
+  <div class="card-header min-padding"><b>Submit info</b></div>
+  <table class="table table-borderless" style="width: 50%">
+    <!--<tr>-->
+    <!--<td>-->
+    <!--From Date:-->
+    <!--<form class="form-inline">-->
+    <!--<div class="form-group">-->
+    <!--<div class="input-group">-->
+    <!--<input class="form-control" placeholder="yyyy-mm-dd"-->
+    <!--name="dp1" [(ngModel)]="fromDate" ngbDatepicker #d="ngbDatepicker">-->
+    <!--<div class="input-group-append">-->
+    <!--<button class="btn btn-outline-secondary" (click)="d.toggle()" type="button"><i class="fa fa-calendar"></i></button>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</form>-->
+    <!--</td>-->
+    <!--<td>-->
+    <!--To Date: <form class="form-inline">-->
+    <!--<div class="form-group">-->
+    <!--<div class="input-group">-->
+    <!--<input class="form-control" placeholder="yyyy-mm-dd"-->
+    <!--name="dp2" [(ngModel)]="toDate" ngbDatepicker #e="ngbDatepicker">-->
+    <!--<div class="input-group-append">-->
+    <!--<button class="btn btn-outline-secondary" (click)="e.toggle()" type="button"><i class="fa fa-calendar"></i></button>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</form>-->
+    <!--</td>-->
+    <!--</tr>-->
+    <tr>
+      <td>
+        From commit:
+      </td>
+      <td><input type="text" [(ngModel)]="fromCommit"/>
+      </td>
+      <td>
+        To commit:
+      </td>
+      <td><input type="text" [(ngModel)]="toCommit"/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Boot args:
+      </td>
+      <td><input type="text" [(ngModel)]="bootArgs"/>
+      </td>
+      <td>
+        Type:
+      </td>
+      <td>
+        <select [(ngModel)]="selectedOption">
+          <option [value]="x" *ngFor="let x of triagingOptions">{{x}}</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        <button class="btn btn-sm no-margin btn-success" (click)="getInfoFromCommits()">Submit</button>
+      </td>
+    </tr>
+  </table>
+
+</div>
+<div id="changed-files" class="component">
+  <fun-spinner [status]="status"></fun-spinner>
+  <div *ngIf="status===null">
+    <div class="row">
+      <div *ngIf="showCommits" class="col">
+        <div class="card card-primary" style="margin: 4px;">
+          <div class="card-header min-padding"><b>Commit history</b></div>
+          <div class="card-body min-padding">
+            <div class="min-padding">
+              <span>
+                <a [routerLink]="" (click)="showTotalFilesCHanged()" style="float: right">All files that changed</a>
+                <button *ngIf="startButton" type="button" class="btn btn-primary" (click)="startTriaging()">Start triaging</button>
+                <a *ngIf="!startButton" [routerLink]="" (click)="showTriaging()">Show triaging status</a>
+              </span>
+              <br><br>
+              <br>
+              <p class="no-margin"><b>Git info for from commit:</b>
+                <span>Sha:</span><span style="color: red"> {{ faultyCommit }}</span><br>
+                <span>
+                  Message:
+                </span>
+                <span style="color: red">
+                {{ faultyMessage }}</span>
+              </p><br>
+              <p class="no-margin"><b>Git info for to commit:</b>
+                <span>
+                  Sha:</span> <span style="color: green"> {{ successCommit }}</span><br>
+                <span>
+                  Message:
+                </span>
+                <span style="color: green">
+                {{ successMessage }}</span>
+              </p><br>
+              <table class="table table-bordered">
+                <tr>
+                  <th class="align msg-width">
+                    <b>FunOS Git commit message</b>
+                  </th>
+                  <th class="align fc-width">
+                    Files changed
+                  </th>
+                  <th class="align committer-width">
+                    Committer
+                  </th>
+                  <th class="align">
+                    <b>Committed date time</b>
+                  </th>
+                </tr>
+                <tr class="no-margin" *ngFor="let commit of commits">
+                  <td class="table-padding">
+                    <span *ngIf="commit.hexsha==faultyCommit" class="text-color-red">{{ commit.message }}</span>
+                    <span *ngIf="commit.hexsha==successCommit" class="text-color-green">{{ commit.message }}</span>
+                    <span
+                      *ngIf="commit.hexsha!=faultyCommit && commit.hexsha!=successCommit">{{ commit.message }}</span>
+                  </td>
+                  <td class="table-padding align">
+                    <a [routerLink]="" (click)="showFilesChanged(commit)">{{ commit["changed_files"].length > 0 ?
+                      commit["changed_files"].length: 'NA' }}</a>
+                  </td>
+                  <td class="table-padding align">
+                    {{ commit.author }}
+                  </td>
+                  <td class="table-padding align">
+                    {{ commit.date }}
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="showTriagingStatus" class="col">
+        <button type="button" class="btn btn-outline-dark back-button" (click)="goBack()"><i
+          class="fa fa-arrow-left"></i></button>
+        <button type="button" class="btn btn-outline-dark back-button" (click)="refreshStatus()"><i
+          class="fa fa-refresh"></i></button>
+        <br>
+        <div class="card card-primary" style="margin: 4px;">
+          <div class="card-header min-padding"><b>Triaging status:</b></div>
+          <div class="card-body min-padding">
+            <div class="min-padding">
+              <table class="table table-borderless triage-status" style="width: 40%">
+                <tr>
+                  <th>
+                    From git commit
+                  </th>
+                  <td>
+                    <a [routerLink]="" (click)="openGitUrl(faultyCommit)">{{ faultyCommit.substr(faultyCommit.length -
+                      7) }}</a>
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    To git commit
+                  </th>
+                  <td>
+                    <a [routerLink]="" (click)="openGitUrl(successCommit)">{{ successCommit.substr(successCommit.length
+                      - 7) }}</a>
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    Boot args
+                  </th>
+                  <td>
+                    {{ bootArgs }}
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    Triage id
+                  </th>
+                  <td>
+                    {{ triageDetails.triage_id }}
+                  </td>
+                </tr>
+                <!--<tr>-->
+                <!--<th>-->
+                <!--Metric id-->
+                <!--</th>-->
+                <!--<td>-->
+                <!--{{ triageDetails.metric_id }}-->
+                <!--</td>-->
+                <!--</tr>-->
+                <tr>
+                  <th>
+                    Triaging type
+                  </th>
+                  <td>
+                    {{ triageDetails.metric_type }}
+                  </td>
+                </tr>
+                <tr>
+                  <th style="vertical-align: middle">
+                    Status
+                  </th>
+                  <td>
+                    <span [ngClass]="{'table-danger': triageStatus === 'Failed'}">
+                      <span style="font-weight: 600" [ngClass]="'text-'+
+                          resultToClass(triageStatus)">{{ triageStatus }}</span>&nbsp;
+                      <span class="badge badge-danger" style="cursor: pointer" (click)="kill(triageDetails.triage_id)">Kill</span>
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    Trials completed
+                  </th>
+                  <td>
+                    {{ maxTries }}
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    Time elapsed
+                  </th>
+                  <td>
+                    {{ timePercentage }}
+                  </td>
+                </tr>
+              </table>
+              <br>
+              <!--<div *ngIf="continueTriaging">Do you want to continue triaging?-->
+              <!--<button type="button" class="btn btn-sm btn-outline-success" (click)="moreTriaging()">Yes</button>&nbsp;-->
+              <!--<button type="button" class="btn btn-sm btn-outline-danger" (click)="stopTriaging()">No</button></div>-->
+              <div *ngIf="!continueTriaging">
+                <span class="text-color-green">Triaging complete</span><br>
+                Potential faulty Commit: <a [routerLink]="" (click)="openFaultyCommitDetails(fault)"
+                                            class="text-color-red">{{ fault.substr(fault.length - 7) }}</a><br>
+                <br>
+              </div>
+              <ng-template #content let-c="close('Close click')" let-d="dismiss('Cross click')"
+                           let-o="close('OK click')">
+                <div class="modal-header">
+                  <h4 class="modal-title">Triaging done</h4>
+                  <button type="button" class="close" aria-label="Close" (click)="d">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>A potential commit with degrade is found.<br>
+                    <b>Do you want to continue triaging?</b></p>
+                </div>
+                <div class="modal-footer" style="align-items: center;">
+                  <button type="button" class="btn btn-danger" (click)="o">Yes</button>
+                  <button type="button" ngbAutofocus class="btn btn-outline-secondary" (click)="c">No</button>
+                </div>
+              </ng-template>
+              <p id="horizontal-line" style="margin-top: 10px; margin-bottom: 10px;"><span
+                style="font-size: medium;"><b>Trials:</b>&nbsp;</span></p>
+              <a *ngIf="!advancedInfo" [routerLink]="" (click)="advancedInfo = true">Show more info</a>
+              <a *ngIf="advancedInfo" [routerLink]="" (click)="advancedInfo = false">Hide more info</a>
+              <table class="table table-bordered" style="width: 50%">
+                <tr>
+                  <th *ngIf="advancedInfo" class="align">
+                    Flow id
+                  </th>
+                  <th class="align">
+                    Git commit
+                  </th>
+                  <th class="align">
+                    Committer
+                  </th>
+                  <th *ngIf="advancedInfo" class="align">
+                    Jenkins #
+                  </th>
+                  <th *ngIf="advancedInfo" class="align">
+                    Lsf #
+                  </th>
+                  <th *ngIf="advancedInfo" class="align">
+                    Score
+                  </th>
+                  <th class="align">
+                    Status
+                  </th>
+                  <th class="align">
+                    Result
+                  </th>
+                  <th class="align">
+                    Action
+                  </th>
+                </tr>
+                <tr class="no-margin">
+                  <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    <a [routerLink]="" class="text-color-red" (click)="openGitUrl(faultyCommit)">{{ faultyCommit.substr(faultyCommit.length -
+                      7) }}</a>
+                  </td>
+                  <td class="table-padding align">
+                    {{ faultyAuthor }}
+                  </td>
+                  <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                </tr>
+                <ng-container *ngFor="let commit of triageFlows">
+                  <tr [ngClass]="{'grey-highlight': commit.status === 'Suspended'}" class="no-margin">
+                    <td *ngIf="advancedInfo" class="table-padding align">
+                      {{ commit.flow_id }}
+                    </td>
+                    <td class="table-padding align">
+                      <a [routerLink]="" (click)="openGitUrl(commit.git_commit)">{{
+                        commit.git_commit.substr(commit.git_commit.length - 7) }}</a>
+                    </td>
+                    <td class="table-padding align">
+                      {{ commit.committer }}
+                    </td>
+                    <td *ngIf="advancedInfo" class="table-padding align">
+                      <a [routerLink]="" *ngIf="commit.jenkins !== -1" (click)="openJenkinsUrl(commit.jenkins)">{{ commit.jenkins }}</a>
+                    </td>
+                    <td *ngIf="advancedInfo" class="table-padding align">
+                      <a [routerLink]="" *ngIf="commit.lsf !== -1" (click)="openLsfUrl(commit.lsf)">{{ commit.lsf }}</a>
+                    </td>
+                    <td *ngIf="advancedInfo" class="table-padding align">
+                      <span *ngIf="commit.score != -1">{{ commit.score }}</span>
+                    </td>
+                    <td class="table-padding align">
+                    <span [ngClass]="{'badge badge-danger': commit.status === 'Failed'}">
+                      <span *ngIf="commit.status !== 'Failed'" [ngClass]="'text-'+ resultToClass(commit.status)">{{ commit.status }}</span>
+                      <span *ngIf="commit.status === 'Failed'">{{ commit.status }}</span>
+                    </span>
+                      <!--<div *ngIf="(commit.status !== 'SUSPENDED' || commit.status === 'FAILED') && commit.score === -1"-->
+                      <!--class="progress">-->
+                      <!--<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"-->
+                      <!--aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>-->
+                      <!--</div>-->
+                    </td>
+                    <td class="table-padding align">
+                      <span *ngIf="commit.status === 'Failed'">
+                        <span [ngClass]="'text-'+
+                          resultToClass(commit.status)">{{ commit.status }}
+                        </span>
+                      </span>
+                      <span *ngIf="commit.status === 'Success' || commit.status === 'Completed'">
+                      <span [ngClass]="'text-'+
+                          resultToClass(commit.status)">Passed
+                      </span>
+                    </span>
+                    </td>
+                    <td class="table-padding align">
+                      <button *ngIf="commit.status === 'Failed' || commit.status === 'Completed'" class="btn btn-sm btn-outline-warning re-run" (click)="reRun(commit)"><i
+                        class="fa fa-refresh"></i></button>
+                    </td>
+                  </tr>
+                </ng-container>
+                <tr class="no-margin">
+                  <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    <a [routerLink]="" class="text-color-green" (click)="openGitUrl(successCommit)">{{ successCommit.substr(successCommit.length
+                      - 7) }}</a>
+                  </td>
+                  <td class="table-padding align">
+                    {{ successAuthor }}
+                  </td>
+                  <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td *ngIf="advancedInfo" class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                  <td class="table-padding align">
+                    NA
+                  </td>
+                </tr>
+              </table>
+              <!--<button *ngIf="continueTriaging" type="button" (click)="testEntry()">Test</button>-->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="showChanged" class="col">
+        <div class="card card-primary" style="margin: 4px;">
+          <div class="card-header min-padding"><b>Files changed:</b><a [routerLink]="" style="float: right"
+                                                                       (click)="showChanged=false">close</a></div>
+          <div class="card-body min-padding">
+            <div class="min-padding">
+              <p *ngIf="!totalShow"><b>Git commit:</b> {{ gitCommit }}<br>
+                <b>User:</b> {{ gitUser }}</p>
+              <p class="no-margin" *ngFor="let fileNames of changedFiles">
+                {{ fileNames }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

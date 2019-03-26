@@ -269,7 +269,8 @@ class AclIngressDropNUtoNU(FunTestCase):
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 4)
         # Getting Spirent results - only when analyzer/generator is subscribed
-
+        psw_stats = network_controller_obj.peek_psw_global_stats()
+        fun_test.log(psw_stats)
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
         rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
@@ -577,7 +578,8 @@ class AclIPv6DropNUtoNU(FunTestCase):
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
-
+        psw_stats = network_controller_obj.peek_psw_global_stats(hnu=False)
+        fun_test.log(psw_stats)
         checkpoint = "Fetch Rx Port Results for %s" % rx_port
         rx_port_result = template_obj.stc_manager.get_rx_port_analyzer_results(
             port_handle=rx_port, subscribe_handle=subscribed_results['analyzer_subscribe'])
@@ -638,6 +640,25 @@ class AclIPv6DropNUtoNU(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+
+            dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+            fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+            fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+            checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                         tx=False)
+            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+                dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+
+            fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -828,7 +849,8 @@ class AclQosTCNuNu(FunTestCase):
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
-
+        psw_stats = network_controller_obj.peek_psw_global_stats(hnu=False)
+        fun_test.log(psw_stats)
         stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                             [self.stream_obj.spirent_handle],
                                                                             tx_result=True, rx_result=True)
@@ -1000,7 +1022,7 @@ class AclEgressDropNUtoHNU(FunTestCase):
         result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
         fun_test.simple_assert(expression=result, message=checkpoint)
 
-        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION+3)
+        fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION+4)
         # Getting Spirent results - only when analyzer/generator is subscribed
 
         checkpoint = "Fetch Tx Port Results for %s" % tx_port
@@ -1074,7 +1096,27 @@ class AclEgressDropNUtoHNU(FunTestCase):
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 3)
+            psw_stats = network_controller_obj.peek_psw_global_stats(hnu=True)
+            fun_test.log(psw_stats)
+            dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
+            fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
+
+            dut_tx_port_results = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
+            fun_test.simple_assert(dut_tx_port_results, "Fetch DUT Tx port results. FPG%d" % dut_tx_port)
+
+            fun_test.log("DUT Rx Port %d Results: %s" % (dut_rx_port, dut_rx_port_results))
+            fun_test.log("DUT Tx Port %d Results: %s" % (dut_tx_port, dut_tx_port_results))
+
+            checkpoint = "Validate FPG ports stats ensure Tx frame count must be equal to Rx frame count"
+            frames_received = get_dut_output_stats_value(result_stats=dut_rx_port_results, stat_type=FRAMES_RECEIVED_OK,
+                                                         tx=False)
+            frames_transmitted = get_dut_output_stats_value(result_stats=dut_tx_port_results,
+                                                            stat_type=FRAMES_TRANSMITTED_OK)
+            fun_test.log("Frames Received on FPG%s: %s and Frames Transmitted on FPG%s: %s" % (
+                dut_rx_port, frames_received, dut_tx_port, frames_transmitted))
+
+            fun_test.test_assert_expected(expected=frames_received, actual=frames_transmitted, message=checkpoint)
             stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                                 [self.stream_obj_dport.spirent_handle],
                                                                                 tx_result=True, rx_result=True)
@@ -1127,11 +1169,6 @@ class AclEgressDropNUtoHNU(FunTestCase):
                                           actual=rx_stream_result_framecount_tcpflag,
                                           message="Comparing tx and rx frame count on Spirent for stream tcpflag")
 
-            acl_stats_tx_before = network_controller_obj.peek_fpg_port_stats(dut_tx_port, hnu=True)
-            acl_stats_rx_before = network_controller_obj.peek_fpg_port_stats(dut_rx_port)
-            fun_test.log("Port DPC results : ")
-            fun_test.log(acl_stats_tx_before)
-            fun_test.log(acl_stats_rx_before)
             # Send drop traffic which matches all the fields below
             obj_list.append(self.stream_obj_sport)
             template_obj.deactivate_stream_blocks(stream_obj_list=obj_list)
@@ -1241,7 +1278,7 @@ class AclIngressDropHNUtoHNU(FunTestCase):
 
         self.stream_obj_sip = create_streams(tx_port=hnu_ing_port,
                                              dmac=self.routes_config['routermac'],
-                                             dip=self.l3_config['hnu_destination_ip2'], sip="192.168.2.10",
+                                             dip=self.l3_config['hnu_destination_ip2'], sip="192.168.8.10",
                                              s_port=self.acl_fields_dict_sanity_ing_hnu_hnu['source_port'],
                                              d_port=self.acl_fields_dict_sanity_ing_hnu_hnu['dest_port'],
                                              sync_bit=self.acl_fields_dict_sanity_ing_hnu_hnu['tcp_sync_bit'],
@@ -1371,6 +1408,8 @@ class AclIngressDropHNUtoHNU(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+            psw_stats = network_controller_obj.peek_psw_global_stats(hnu=True)
+            fun_test.log(psw_stats)
             dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
@@ -1688,7 +1727,8 @@ class AclEgressDropHNUtoNU(FunTestCase):
             fun_test.simple_assert(expression=result, message=checkpoint)
 
             fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
-
+            psw_stats = network_controller_obj.peek_psw_global_stats(hnu=True)
+            fun_test.log(psw_stats)
             dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=hnu)
             fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
@@ -2002,6 +2042,8 @@ class AclIPv6DropNUtoHNU(FunTestCase):
         fun_test.simple_assert(expression=result, message=checkpoint)
 
         fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 2)
+        psw_stats = network_controller_obj.peek_psw_global_stats(hnu=True)
+        fun_test.log(psw_stats)
         stream_results = template_obj.stc_manager.fetch_streamblock_results(subscribed_results,
                                                                             [self.stream_obj_dport.spirent_handle],
                                                                             tx_result=True, rx_result=True)
@@ -2299,7 +2341,9 @@ class AclIPv6DropHNUtoHNU(FunTestCase):
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 7)
+            psw_stats = network_controller_obj.peek_psw_global_stats(hnu=True)
+            fun_test.log(psw_stats)
             dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
@@ -2614,7 +2658,9 @@ class AclIPv6DropHNUtoNU(FunTestCase):
             result = template_obj.enable_generator_configs(generator_configs=[generator_port_obj_dict[tx_port]])
             fun_test.simple_assert(expression=result, message=checkpoint)
 
-            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 5)
+            fun_test.sleep("Traffic to complete", seconds=TRAFFIC_DURATION + 7)
+            psw_stats = network_controller_obj.peek_psw_global_stats(hnu=True)
+            fun_test.log(psw_stats)
             dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(dut_rx_port, hnu=True)
             fun_test.simple_assert(dut_rx_port_results, "Fetch DUT Rx port results. FPG%d" % dut_rx_port)
 
@@ -2951,7 +2997,7 @@ if __name__ == '__main__':
     ts.add_test_case(AclEgressDropNUtoHNU())
     ts.add_test_case(AclIngressDropHNUtoHNU())
     ts.add_test_case(AclEgressDropHNUtoNU())
-    # ts.add_test_case(AclIPv6DropNUtoHNU())
+    ts.add_test_case(AclIPv6DropNUtoHNU())
     ts.add_test_case(AclIPv6DropHNUtoHNU())
     ts.add_test_case(AclIPv6DropHNUtoNU())
     ts.add_test_case(AclRangeDropNUtoNU())

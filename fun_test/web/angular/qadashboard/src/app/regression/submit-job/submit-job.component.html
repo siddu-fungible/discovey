@@ -14,8 +14,31 @@
               </td>
             </tr>
             <tr>
-              <td><input (click)="suiteSelectionMode = 'BY_SUITE'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SUITE'">By suite</td>
-              <td><input (click)="suiteSelectionMode = 'BY_SCRIPT'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SCRIPT'">By script</td>
+              <td class="no-wrap">
+                <label for="testbed-type">Testbed type</label>
+              </td>
+              <td>
+                  <select id="testbed-type" [(ngModel)]="selectedTestBedType">
+                    <option *ngFor="let tb of testBedNames" [ngValue]="tb">{{ tb }}</option>
+                  </select>
+              </td>
+            </tr>
+            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
+              <td class="no-wrap">
+                <label for="tftp-path">TFTP path (F1 stripped image)</label>
+              </td>
+              <td>
+                <input [ngClass]="{disabled: withJenkinsBuild}" id="tftp-path" name="tftp-path" [(ngModel)]="tftpImagePath" type="text"/>
+                &nbsp;&nbsp;<input (click)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With Jenkins build
+              </td>
+            </tr>
+            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
+              <td><label for="boot-args">Boot-args</label></td>
+              <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
+            </tr>
+            <tr>
+              <td><input (click)="suiteSelectionMode = 'BY_SUITE'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite</td>
+              <td><input (click)="suiteSelectionMode = 'BY_SCRIPT'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SCRIPT'"> By script</td>
             </tr>
             <tr *ngIf="suiteSelectionMode === 'BY_SUITE'">
               <td class="no-wrap">

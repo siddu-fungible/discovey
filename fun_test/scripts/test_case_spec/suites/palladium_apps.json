@@ -8,5 +8,7 @@
   {"path": "accelerators/regex/palladium_dfa_teramark.py"},
   {"path": "accelerators/zip/palladium_zip_sanity.py"},
   {"path": "accelerators/zip/palladium_zip_teramark.py"},
-  {"path": "accelerators/erasure_coding/palladium_ec_teramark.py"}
+  {"path": "accelerators/erasure_coding/palladium_ec_teramark.py"},
+  {"path": "storage/palladium_flowtest.py"},
+  {"path": "storage/f1_vf_sanity.py"}
 ]

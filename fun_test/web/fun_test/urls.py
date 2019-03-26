@@ -22,6 +22,7 @@ from . import metrics_views
 from . import tests_views
 from . import upgrade_views
 from . import demo_views
+from . import triaging
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
@@ -80,6 +81,7 @@ regression_urls = [
     url(r'^scheduler/.*$', views.angular_home),
     url(r'^test_case_execution_info/(\d+)$', regression_views.test_case_execution_info),
     url(r'^git$', regression_views.git),
+    url(r'^testbeds$', regression_views.testbeds),
     url(r'^(?:\S+)$', views.angular_home)
 
 ]
@@ -132,6 +134,7 @@ metric_urls = [
     url(r'^chart_info$', metrics_views.chart_info),
     url(r'^data$', metrics_views.data),
     url(r'^past_status$', metrics_views.get_past_build_status),
+    url(r'^first_degrade$', metrics_views.get_first_degrade),
     url(r'^data_by_model$', metrics_views.get_data_by_model),
     url(r'^metric_by_id$', metrics_views.metric_by_id),
     url(r'^git_commits$', metrics_views.get_git_commits),
@@ -153,6 +156,8 @@ metric_urls = [
     url(r'^test$', metrics_views.test),
     url(r'^scores', metrics_views.scores),
     url(r'^dag$', metrics_views.dag),
+    url(r'^get_triage_info$', metrics_views.get_triage_info),
+    url(r'^get_triage_info_from_commits$', metrics_views.get_triage_info_from_commits),
     url(r'^global_settings', metrics_views.global_settings),
     url(r'^jiras/(\d+)/?(.*)?$', metrics_views.jiras)
 ]
@@ -166,6 +171,16 @@ test_urls = [
 
 upgrade_urls = [
     url(r'^.*$', upgrade_views.home)
+]
+
+triage_urls = [
+    url(r'^insert_db$', triaging.insert_triage_db),
+    url(r'^fetch_flows$', triaging.fetch_triage_flow),
+    url(r'^test$', triaging.update_triage_flow),
+    url(r'^update_db$', triaging.update_triage),
+    url(r'^kill_db$', triaging.kill_triage),
+    url(r'^rerun_flow$', triaging.rerun_triage_flow),
+    url(r'^check_db$', triaging.check_triage)
 ]
 
 demo_urls = [
@@ -187,6 +202,8 @@ urlpatterns = [
     url(r'^regression/', include(regression_urls)),
     url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
     url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics
+    url(r'^triage/', include(triage_urls)),
+    url(r'^triaging/', views.angular_home),
     url(r'^common/', include(common_urls)),
     url(r'^$', views.angular_home),
     url(r'^initialize$', metrics_views.initialize),

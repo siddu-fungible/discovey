@@ -1184,6 +1184,43 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
+    def create_fcp_tunnel(self, src_queue, dst_queue, dst_ftep, num_queues=8, secure_tunnel=0, remote_key_index=0,
+                          local_key_index=0):
+        result = False
+        try:
+            input_dict = {"create" : 1,
+                          "src_queue": src_queue,
+                          "dst_queue": dst_queue,
+                          "dst_ftep": dst_ftep,
+                          "num_queues": num_queues,
+                          "sec_tunnel": secure_tunnel,
+                          "remote_key_index": remote_key_index,
+                          "local_key_index": local_key_index,
+                          }
+            fcp_tunnel_cmd = "config/fcp/tunnel [%s]" % input_dict
+            fun_test.debug("Create FCP tunnel")
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_POKE, data=fcp_tunnel_cmd,
+                                                command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=json_cmd_result['status'], message="Create FCP tunnel")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def delete_fcp_tunnel(self, src_queue, num_queues=8):
+        result = False
+        try:
+            input_dict = {"delete" : 1, "src_queue": src_queue, "num_queues": num_queues}
+            fcp_tunnel_cmd = "config/fcp/tunnel [%s]" % input_dict
+            fun_test.debug("Delete FCP tunnel")
+            json_cmd_result = self.json_execute(verb=self.VERB_TYPE_POKE, data=fcp_tunnel_cmd,
+                                                command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=json_cmd_result['status'], message="Delete FCP tunnel")
+            result = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
     def configure_fcp_tunnel(self, q_id, secure_tunnel=None, remote_key_index=None, local_key_index=None, profile=None,
                              spray=None):
         result = False
@@ -1521,4 +1558,9 @@ class NetworkController(DpcshClient):
             result = self.json_execute(verb='req', data=args[0])
         except Exception as ex:
             fun_test.critical(str(ex))
+        return result
+
+    def sample_vp_pkts(self):
+        vp_pkts = self.peek_vp_packets()
+        result = vp_pkts['VP Packets Sample']
         return result

@@ -52,6 +52,7 @@ class FlatNode {
   hide: boolean;
   indent: number;
   showJiraInfo: boolean = false;
+  showGitInfo: boolean = false;
   jiraList: any = {};
   context: any = new Set();
   children: FlatNode[] = [];
@@ -473,6 +474,7 @@ export class PerformanceComponent implements OnInit {
     newFlatNode.collapsed = true;
     newFlatNode.indent = indent;
     newFlatNode.showJiraInfo = false;
+    newFlatNode.showGitInfo = false;
     return newFlatNode;
   }
 
@@ -891,6 +893,9 @@ export class PerformanceComponent implements OnInit {
     if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
       this.currentFlatNode.showJiraInfo = false;
     }
+    if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
+      this.currentFlatNode.showGitInfo = false;
+    }
     this.showBugPanel = false;
     this.currentNode = flatNode.node;
     this.currentFlatNode = flatNode;
@@ -903,6 +908,7 @@ export class PerformanceComponent implements OnInit {
 
   };
 
+
   showNonAtomicMetric = (flatNode) => {
     if (flatNode.node.metricModelName && flatNode.node.chartName !== "All metrics") {
       this.chartReady = false;
@@ -912,6 +918,9 @@ export class PerformanceComponent implements OnInit {
       if (this.currentFlatNode && this.currentFlatNode.showJiraInfo) {
         this.currentFlatNode.showJiraInfo = false;
       }
+      if (this.currentFlatNode && this.currentFlatNode.showGitInfo) {
+      this.currentFlatNode.showGitInfo = false;
+    }
       this.showBugPanel = false;
       this.currentNode = flatNode.node;
       this.currentFlatNode = flatNode;

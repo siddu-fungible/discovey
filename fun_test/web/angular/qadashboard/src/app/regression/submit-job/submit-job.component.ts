@@ -36,7 +36,13 @@ export class SubmitJobComponent implements OnInit {
   schedulingTimeTimezone = "IST";
   daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   selectedDays: string[] = [];
+  selectedTestBedType: string = null;
+  testBedTypes: any = null;
+  testBedNames: string[] = [];
   submitting: string = null;
+  tftpImagePath: string = "funos-f1.stripped.gz";
+  bootArgs: string = "app=hw_hsu_test --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit";
+  withJenkinsBuild: boolean = false;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -83,6 +89,7 @@ export class SubmitJobComponent implements OnInit {
     this.selectedTags = [];
     this.tags = [];
     this.fetchTags();
+    this.fetchTestBeds();
     this.emailOnFailOnly = false;
   }
 
@@ -91,6 +98,18 @@ export class SubmitJobComponent implements OnInit {
   }
   onSelectAll (items: any): void {
     console.log(items);
+  }
+
+  fetchTestBeds(): void {
+    this.apiService.get('/regression/testbeds').subscribe(response => {
+      this.testBedTypes = response.data;
+      Object.keys(this.testBedTypes).map(key => {
+        this.testBedNames.push(key);
+        this.testBedNames.sort();
+        this.selectedTestBedType = "simulation";
+      })
+
+    })
   }
 
   fetchTags(): void {
@@ -180,6 +199,7 @@ export class SubmitJobComponent implements OnInit {
     payload["build_url"] = this.buildUrl;
     payload["tags"] = this._getSelectedtags();
     payload["email_on_fail_only"] = this.emailOnFailOnly;
+    payload["test_bed_type"] = this.selectedTestBedType;
     if (this.emails) {
       this.emails = this.emails.split(",");
       payload["email_list"] = this.emails
@@ -190,6 +210,24 @@ export class SubmitJobComponent implements OnInit {
       if (!payload) {
         return;
       }
+    }
+    payload["environment"] = {};
+
+
+    if (this.selectedTestBedType) {
+      payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
+    }
+    if (this.bootArgs && this.bootArgs !== "") {
+      payload["environment"]["boot_args"] = this.bootArgs.replace(/\s+/s, ':');
+
+    }
+
+    if (!this.withJenkinsBuild) {
+      if (this.tftpImagePath && this.tftpImagePath !== "") {
+        payload["environment"]["tftp_image_path"] = this.tftpImagePath;
+      }
+    } else {
+      payload["environment"]["with_jenkins_build"] = true;
     }
 
     this.submitting = "Submitting job";
@@ -212,6 +250,20 @@ export class SubmitJobComponent implements OnInit {
     this.selectedInfo = null;
     this.selectedScriptPk = pk;
   }
+
+  toggleWithJenkins() {
+    this.withJenkinsBuild = !this.withJenkinsBuild;
+  }
+
+  /*
+
+  isTestBedFs(): boolean {
+    let result = null;
+    if (this.selectedTestBedType) {
+      result = this.selectedTestBedType.indexOf('fs') > 0;
+    }
+    return result;
+  }*/
 
 
 

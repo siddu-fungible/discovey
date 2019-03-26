@@ -5,6 +5,7 @@ from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1
 from lib.orchestration.simulation_orchestrator import SimulationOrchestrator, DockerContainerOrchestrator
 from lib.orchestration.simulation_orchestrator import DockerHostOrchestrator
+from lib.orchestration.real_orchestrator import RealOrchestrator
 from lib.system.fun_test import fun_test
 from lib.orchestration.orchestrator import OrchestratorType
 from fun_global import *
@@ -58,6 +59,9 @@ class AssetManager:
                     fun_test.log("Destroying container: {}".format(container_name))
                     self.docker_host.destroy_container(container_name=container_name)
 
+            elif orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_REAL:
+                orchestrator.get_dut_instance().cleanup()
+
 
     def describe(self):
         fun_test.log_section("Printing assets")
@@ -106,6 +110,9 @@ class AssetManager:
     def get_orchestrator(self, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER, index=0, dut_obj=None):
         fun_test.debug("Getting orchestrator")
         orchestrator = None
+        if not fun_test.is_simulation():
+            type = OrchestratorType.ORCHESTRATOR_TYPE_REAL
+
         try:
             if type == OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION:
                 orchestrator = SimulationOrchestrator.get(self.get_any_simple_host())
@@ -147,13 +154,21 @@ class AssetManager:
                 orchestrator = self.docker_host
                 orchestrator.__class__ = DockerHostOrchestrator
 
+            elif type == OrchestratorType.ORCHESTRATOR_TYPE_REAL:
+                return RealOrchestrator.get()
         except Exception as ex:
             fun_test.critical(str(ex))
         self.orchestrators.append(orchestrator)
         return orchestrator
 
-
-
-
+    @fun_test.safe
+    def get_fs_by_name(self, name):
+        result = None
+        fs_json = ASSET_DIR + "/fs.json"
+        json_spec = parse_file_to_json(file_name=fs_json)
+        for fs in json_spec:
+            if fs["name"] == name:
+                result = fs
+        return result
 
 asset_manager = AssetManager()

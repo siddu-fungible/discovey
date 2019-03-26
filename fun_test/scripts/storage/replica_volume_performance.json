@@ -125,19 +125,19 @@
       "randwrite": {
         "blt": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 552896)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 558976)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 552896)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 558976)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "replica": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 552896)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 558976)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
@@ -226,19 +226,19 @@
       "randread": {
         "blt": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 553536)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 560000)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 553536)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 560000)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "replica": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 553536)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 560000)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
@@ -352,19 +352,19 @@
       "randrw": {
         "blt": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 1306432)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 1312128)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           },
           "1": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 1306432)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 1312128)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
         },
         "replica": {
           "0": {
-            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 1306432)"},
+            "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 1312128)"},
             "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
             "wustacks": {"in_use": "(0, 1)"}
           }
