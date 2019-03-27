@@ -1557,11 +1557,27 @@ class TeraMarkDfaPerformance(models.Model):
     interpolated = models.BooleanField(default=False)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
-    input_graph_index = models.IntegerField(default=-1, choices=[(0, "0")])
-    output_processed = models.IntegerField(verbose_name="Bytes", default=-1)
-    output_matches = models.IntegerField(verbose_name="Bytes", default=-1)
-    output_latency = models.IntegerField(verbose_name="ns", default=-1)
-    output_bandwidth = models.IntegerField(verbose_name="Gbps", default=-1)
+    output_latency = models.IntegerField(verbose_name="nsecs", default=-1)
+    output_latency_unit = models.TextField(default="nsecs")
+    output_bandwidth = models.FloatField(verbose_name="Gbps", default=-1)
+    output_bandwidth_unit = models.TextField(default="Gbps")
+    tag = "analytics"
+
+    def __str__(self):
+        s = ""
+        for key, value in self.__dict__.iteritems():
+            s += "{}:{} ".format(key, value)
+        return s
+
+class TeraMarkNfaPerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    output_latency = models.IntegerField(verbose_name="nsecs", default=-1)
+    output_latency_unit = models.TextField(default="nsecs")
+    output_bandwidth = models.FloatField(verbose_name="Gbps", default=-1)
+    output_bandwidth_unit = models.TextField(default="Gbps")
     tag = "analytics"
 
     def __str__(self):

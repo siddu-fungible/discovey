@@ -2,6 +2,7 @@ from django.apps import apps
 from web.fun_test.metrics_models import MetricChart
 from web.fun_test.analytics_models_helper import MetricHelper
 import re
+import json
 import collections
 from fun_global import RESULTS
 
@@ -28,7 +29,9 @@ class MetricParser():
 
     def regex_by_model(self, model_name, logs, date_time):
         if "FlowTest" in model_name:
-            return self.flow_test(logs=logs, date_time=date_time, model_name=model_name)
+            return self.flow_test(logs=logs, date_time=date_time)
+        elif "Dfa" in model_name or "Nfa" in model_name:
+            return self.dfa_nfa(logs=logs, date_time=date_time)
         else:
             return {}
 
@@ -40,7 +43,7 @@ class MetricParser():
             d[key] = value
         return d
 
-    def flow_test(self, logs, date_time, model_name):
+    def flow_test(self, logs, date_time):
         match_found = False
         result = {}
         result["data"] = []
@@ -75,5 +78,41 @@ class MetricParser():
 
         result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]
+        return result
 
+    def dfa_nfa(self, logs, date_time):
+        metrics = collections.OrderedDict()
+        teramark_begin = False
+        match_found = False
+        result = {}
+        result["data"] = []
+        d = {}
+        self.status = RESULTS["FAILED"]
+        for line in logs:
+            if "TeraMark Begin" in line:
+                teramark_begin = True
+                continue
+            if "TeraMark End" in line:
+                teramark_begin = False
+            if teramark_begin:
+                m = re.search(r'({.*})', line)
+                if m:
+                    match_found = True
+                    j = m.group(1)
+                    d = json.loads(j)
+                    latency_json = d["Duration"]
+                    output_latency = int(latency_json["value"])
+                    output_latency_unit = latency_json["unit"]
+                    bandwidth_json = d["Throughput"]
+                    output_bandwidth = float(bandwidth_json["value"])
+                    output_bandwidth_unit = bandwidth_json["unit"]
+                    metrics["output_latency"] = output_latency
+                    metrics["output_bandwidth"] = output_bandwidth
+                    metrics["output_latency_unit"] = output_latency_unit
+                    metrics["output_bandwidth_unit"] = output_bandwidth_unit
+                    self.status = RESULTS["PASSED"]
+                    d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
+                    result["data"].append(d)
+        result["match_found"] = match_found
+        result["status"] = self.status == RESULTS["PASSED"]
         return result

@@ -1092,7 +1092,7 @@ if __name__ == "__main_unit_change__":
             entry.save()
     print "setting y1axis title, score and viz unit complete"
 
-if __name__ == "__main__":
+if __name__ == "__main_flowtest__":
     chart_name = "Flowtest on F1"
     internal_chart_name = "flow_test_f1"
     model_name = "F1FlowTestPerformance"
@@ -1124,4 +1124,44 @@ if __name__ == "__main__":
                            milestone_date=datetime(year=2018, month=9, day=16),
                            milestone_name="Tape-out")
     mmt.save()
+
+if __name__ == "__main__":
+    chart_names = ["DFA Throughput", "NFA Throughput"]
+
+    for chart_name in chart_names:
+        if "DFA" in chart_name:
+            model_name = "TeraMarkDfaPerformance"
+            internal_chart_name = "dfa_teramark_output_bandwidth"
+            name = "dfa"
+        else:
+            model_name = "TeraMarkNfaPerformance"
+            internal_chart_name = "nfa_teramark_output_bandwidth"
+            name = "nfa"
+        data_sets = []
+        one_data_set = {}
+        one_data_set["inputs"] = {}
+        one_data_set["name"] = name
+        one_data_set["output"] = {"name": "output_bandwidth", 'min': 0, "max": -1, "expected": -1, "reference": -1}
+        data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = True
+        y1_axis_title = "Gbps"
+        base_line_date = datetime(year=2019, month=3, day=25, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Lakshmi Billa (lakshmi.billa@fungible.com), Mahesh Kumar (mahesh.kumar@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "created charts for DFA and NFA"
 

@@ -1697,6 +1697,32 @@
                 ]
               }
             ]
+          },
+          {
+            "info": "Regex",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Regex",
+            "weight": 1,
+            "label": "Regex",
+            "children": [
+              {
+                "info": "dfa_teramark_output_bandwidth",
+                "metric_model_name": "TeraMarkDfaPerformance",
+                "leaf": true,
+                "name": "dfa_teramark_output_bandwidth",
+                "weight": 1,
+                "label": "DFA Throughput"
+              },
+              {
+                "info": "nfa_teramark_output_bandwidth",
+                "metric_model_name": "TeraMarkNfaPerformance",
+                "leaf": true,
+                "name": "nfa_teramark_output_bandwidth",
+                "weight": 1,
+                "label": "NFA Throughput"
+              }
+            ]
           }
         ]
       }
