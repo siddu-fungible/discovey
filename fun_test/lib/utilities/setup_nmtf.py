@@ -55,7 +55,7 @@ def setup_funsdk_repo():
 def funsdk_up():
     result = True
     try:
-        exit_val = os.system("%s/%s/scripts/sudo bob --sdkup" % (SYSTEM_TMP_DIR, FUNSDK))
+        exit_val = os.system("sudo %s/%s/scripts/bob --sdkup" % (SYSTEM_TMP_DIR, FUNSDK))
         if exit_val != 0:
             result = False
     except Exception as ex:
