@@ -805,7 +805,7 @@ if __name__ == "__main_crypto_charts__":
             mmt.save()
     print "Creating charts and setting baseline is done programatically"
 
-if __name__ == "__main__":
+if __name__ == "__main_delete_nw__":
     model = NuTransitPerformance
     entries = model.objects.all()
     entries.delete()
@@ -1091,3 +1091,37 @@ if __name__ == "__main_unit_change__":
             entry.visualization_unit = entry.y1_axis_title
             entry.save()
     print "setting y1axis title, score and viz unit complete"
+
+if __name__ == "__main__":
+    chart_name = "Flowtest on F1"
+    internal_chart_name = "flow_test_f1"
+    model_name = "F1FlowTestPerformance"
+    data_sets = []
+    one_data_set = {}
+    one_data_set["inputs"] = {}
+    one_data_set["inputs"]["input_app"] = "hw_hsu_test"
+    one_data_set["inputs"]["input_iterations"] = 100000000
+    one_data_set["name"] = "100M iterations"
+    one_data_set["output"] = {"name": "output_time", 'min': 0, "max": -1, "expected": -1, "reference": None}
+    data_sets.append(one_data_set)
+    metric_id = LastMetricId.get_next_id()
+    positive = False
+    y1_axis_title = "secs"
+    base_line_date = datetime(year=2019, month=3, day=24, minute=0, hour=0, second=0)
+    MetricChart(chart_name=chart_name,
+                metric_id=metric_id,
+                internal_chart_name=internal_chart_name,
+                data_sets=json.dumps(data_sets),
+                leaf=True,
+                description="TBD",
+                owner_info="Divya Krishnankutty (divya.krishnankutty@fungible.com)",
+                positive=positive,
+                y1_axis_title=y1_axis_title,
+                visualization_unit=y1_axis_title,
+                metric_model_name=model_name,
+                base_line_date=base_line_date).save()
+    mmt = MileStoneMarkers(metric_id=metric_id,
+                           milestone_date=datetime(year=2018, month=9, day=16),
+                           milestone_name="Tape-out")
+    mmt.save()
+

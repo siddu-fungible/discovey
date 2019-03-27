@@ -314,6 +314,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.baseLineDate = String(this.chartInfo.base_line_date);
         this.visualizationUnit = this.chartInfo.visualization_unit;
         this.changingVizUnit = this.visualizationUnit;
+        this.chart1YaxisTitle = this.chartInfo.y1_axis_title;
 
         if (this.latency_category.includes(this.visualizationUnit)) {
           this.category = [...this.latency_category];

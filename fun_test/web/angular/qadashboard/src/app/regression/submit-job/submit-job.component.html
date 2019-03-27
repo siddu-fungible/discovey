@@ -36,6 +36,20 @@
               <td><label for="boot-args">Boot-args</label></td>
               <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
             </tr>
+            <tr *ngIf="withJenkinsBuild">
+              <td colspan="2">
+                <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
+              </td>
+            </tr>
+            <tr *ngIf="withJenkinsBuild">
+                <td><input (click)="disableAssertions = !disableAssertions" type="checkbox" [checked]="disableAssertions === true"> Disable assertions </td>
+            </tr>
+            <tr *ngIf="withJenkinsBuild">
+              <td colspan="2">
+                <app-section-horizontal-line></app-section-horizontal-line>
+              </td>
+            </tr>
+
             <tr>
               <td><input (click)="suiteSelectionMode = 'BY_SUITE'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite</td>
               <td><input (click)="suiteSelectionMode = 'BY_SCRIPT'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SCRIPT'"> By script</td>
