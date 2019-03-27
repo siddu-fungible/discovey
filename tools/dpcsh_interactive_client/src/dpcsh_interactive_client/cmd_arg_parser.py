@@ -1104,6 +1104,25 @@ peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", 
 peek_eqm_stats_parser = peek_stats_parsers.add_parser('eqm', help="EQM stats")
 peek_eqm_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# funtop stats
+peek_funtop_stats_parser = peek_stats_parsers.add_parser('funtop', help="Funtop stats")
+
+# wustacks stats
+peek_wustacks_stats_parser = peek_stats_parsers.add_parser('wustacks', help="Peke wustacks stats")
+
+# HU stats
+peek_hu_stats_parser = peek_stats_parsers.add_parser('hu', help="Peek HU stats")
+peek_hu_stats_parser.add_argument('-grep', help="Grep regex pattern (Grep for HU Slice)", default=None)
+
+# malloc agent stats
+peek_malloc_agent_stats_parser = peek_stats_parsers.add_parser('malloc_agent', help="Peek Malloc Agent Stats")
+peek_malloc_agent_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# malloc agent non coh stats
+peek_malloc_agent_non_coh_stats_parser = peek_stats_parsers.add_parser('malloc_agent_non_coh',
+                                                                       help="Peek Malloc Agent Non coh Stats")
+peek_malloc_agent_non_coh_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 
