@@ -78,7 +78,6 @@ class MetricParser():
 
         result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]
-
         return result
 
     def dfa_nfa(self, logs, date_time):
@@ -92,6 +91,7 @@ class MetricParser():
         for line in logs:
             if "TeraMark Begin" in line:
                 teramark_begin = True
+                continue
             if "TeraMark End" in line:
                 teramark_begin = False
             if teramark_begin:
@@ -115,5 +115,4 @@ class MetricParser():
                     result["data"].append(d)
         result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]
-
         return result
