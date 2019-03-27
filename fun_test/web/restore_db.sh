@@ -1,12 +1,19 @@
 set -e
-tar -xvzf perf_db_backup.json.bkp.tgz
-echo "SELECT pg_terminate_backend(pg_stat_activity.pid)
-FROM pg_stat_activity
-WHERE pg_stat_activity.datname = 'fun_test'
-  AND pid <> pg_backend_pid();
+read -n "This will delete old migration files" user_choice
 
-CREATE DATABASE fun_test;" > /tmp/restore.sql
-# psql -U fun_test_user -c "DROP DATABASE fun_test";
+if [ "$user_choice" = "y" ]
+then
+    echo "Removing old migrations"
+    `find . -path "*/migrations/*.py" -not -name "__init__.py" -delete`
+    `find . -path "*/migrations/*.pyc"  -delete`
+else
+    echo "Exiting now."
+fi
+
+
+tar -xvzf perf_db_backup.json.bkp.tgz
+
+
 dropdb fun_test
 echo "Dropped fun_test"
 createdb fun_test
