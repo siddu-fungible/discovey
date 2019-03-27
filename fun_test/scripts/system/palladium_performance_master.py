@@ -32,6 +32,7 @@ FLOW_TEST_TAG = "qa_storage2_endpoint"
 F1_FLOW_TEST_TAG = "qa_f1_flowtest"
 TERAMARK_ZIP = "zip_teramark"
 TERAMARK_DFA = "dfa_teramark"
+TERAMARK_NFA = "nfa_teramark"
 TERAMARK_EC = "ec_teramark"
 TERAMARK_JPEG = "jpeg_teramark"
 SOAK_DMA_MEMCPY_COH = "soak_funos_memcpy_coh"
@@ -114,7 +115,7 @@ class MyScript(FunTestScript):
     def setup(self):
         self.lsf_status_server = LsfStatusServer()
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
-                FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_EC, TERAMARK_JPEG,
+                FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
                 SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET]
         self.lsf_status_server.workaround(tags=tags)
@@ -1523,44 +1524,20 @@ class TeraMarkZipPerformanceTC(PalladiumPerformanceTc):
 
 class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
     tag = TERAMARK_DFA
+    model = "TeraMarkDfaPerformance"
 
     def describe(self):
         self.set_test_details(id=22,
-                              summary="TeraMark DFA Performance Test",
+                              summary="TeraMark DFA Performance Test on F1",
                               steps="Steps 1")
 
     def run(self):
-        metrics = collections.OrderedDict()
         try:
-            fun_test.test_assert(self.validate_job(validation_required=False), "validating job")
-            teramark_begin = False
-            for line in self.lines:
-                if "TeraMark Begin" in line:
-                    teramark_begin = True
-                if "TeraMark End" in line:
-                    teramark_begin = False
-                if teramark_begin:
-                    m = re.search(
-                        r'{"Graph\s+Index":\s+(?P<index>\S+),\s+"Processed\s+\(Bytes\)":\s+(?P<processed>\S+),\s+"Matches\s+\(Bytes\)":\s+(?P<matches>\S+),\s+"Duration\s+\(ns\)":\s+(?P<latency>\S+),\s+"Throughput\s+\(Gbps\)":\s+(?P<bandwidth>\S+)}',
-                        line)
-                    if m:
-                        input_graph_index = int(m.group("index"))
-                        output_processed = int(m.group("processed"))
-                        output_matches = int(m.group("matches"))
-                        output_latency = int(m.group("latency"))
-                        output_bandwidth = int(m.group("bandwidth"))
+            fun_test.test_assert(self.validate_job(), "validating job")
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt)
 
-                        fun_test.log(
-                            "graph index: {}, latency: {}, bandwidth: {}".format(input_graph_index, output_latency,
-                                                                                 output_bandwidth))
-                        metrics["input_graph_index"] = input_graph_index
-                        metrics["output_processed"] = output_processed
-                        metrics["output_matches"] = output_matches
-                        metrics["output_latency"] = output_latency
-                        metrics["output_bandwidth"] = output_bandwidth
-                        d = self.metrics_to_dict(metrics, fun_test.PASSED)
-                        MetricHelper(model=TeraMarkDfaPerformance).add_entry(**d)
-
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
 
         except Exception as ex:
@@ -1568,8 +1545,9 @@ class TeraMarkDfaPerformanceTC(PalladiumPerformanceTc):
 
         set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
                                      test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
-                                     git_commit=self.git_commit, model_name="TeraMarkDfaPerformance")
+                                     git_commit=self.git_commit, model_name=self.model)
         fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
 
 
 class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
@@ -1921,6 +1899,16 @@ class F1FlowTestPerformanceTC(FlowTestPerformanceTC):
                               steps="Steps 1")
 
 
+class TeraMarkNfaPerformanceTC(TeraMarkDfaPerformanceTC):
+    tag = TERAMARK_NFA
+    model = "TeraMarkNfaPerformance"
+
+    def describe(self):
+        self.set_test_details(id=32,
+                              summary="TeraMark NFA Performance Test on F1",
+                              steps="Steps 1")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -1972,6 +1960,7 @@ if __name__ == "__main__":
     myscript.add_test_case(SoakDmaMemsetPerformanceTC())
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
     myscript.add_test_case(F1FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkNfaPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
