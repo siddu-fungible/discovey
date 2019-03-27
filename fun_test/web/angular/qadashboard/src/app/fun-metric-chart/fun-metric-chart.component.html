@@ -121,10 +121,10 @@
             <td>
               <i>{{ output.name }}:</i>&nbsp;
             </td>
-            <td *ngIf="output.value !== -1">
+            <td *ngIf="output.value && output.value !== -1">
               {{ output.value }} {{ output.unit }}
             </td>
-            <td *ngIf="output.value === -1">
+            <td *ngIf="output.value === null || output.value === -1">
               Not set
             </td>
           </tr>
