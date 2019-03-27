@@ -86,21 +86,58 @@ class SuiteContainerExecution(models.Model):
 
 
 class SuiteExecution(models.Model):
-    execution_id = models.IntegerField(unique=True, db_index=True)
+    """
+    Suite selection
+    """
     suite_path = models.CharField(max_length=100)
+    suite_type = models.TextField(default=SuiteType.STATIC)
+    dynamic_suite_spec = models.TextField(default="{}", null=True)
+
+    """
+    Job inputs related
+    """
+    test_bed_type = models.TextField(default="")
+    environment = models.TextField(default="{}", null=True)  # extra environment dictionary (only networking uses this)
+    inputs = models.TextField(default="{}", null=True)  # inputs dictionary
+    build_url = models.TextField(default="")
+    version = models.CharField(max_length=50, default="UNKNOWN")
+    requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
+    tags = models.TextField(default="[]")
+
+    """
+    Scheduling
+    """
+    scheduling_type = models.TextField(default="")
     submitted_time = models.DateTimeField()
     scheduled_time = models.DateTimeField()
+    queued_time = models.DateTimeField()
     completed_time = models.DateTimeField()
-    test_case_execution_ids = models.CharField(max_length=10000, default="[]")
+    requested_days = models.TextField(default="[]")  # Days of the week as an array with Monday being 0
+    requested_hour = models.IntegerField(null=True)  # Hour of the day
+    requested_minute = models.IntegerField(null=True)  # minute in the hour
+    timezone_string = models.TextField(default="PST")  # timezone string PST or IST
+    repeat_in_minutes = models.IntegerField(null=True)  # Repeat the job in some minutes
+
+    """
+    Job result related
+    """
     result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
-    tags = models.TextField(default="[]")
-    version = models.CharField(max_length=50, default="UNKNOWN")
-    catalog_reference = models.TextField(null=True, blank=True, default=None)
+    emails = models.TextField(default="[]", null=True)  # email addresses to send reports to
+    email_on_failure_only = models.BooleanField(default=False)
+
+    """
+    Execution
+    """
+    state = models.TextField(default=JobStatusType.SUBMITTED)
+    suite_container_execution_id = models.IntegerField(default=-1)
+    is_scheduled_job = models.BooleanField(default=False)
     finalized = models.BooleanField(default=False)
     banner = models.TextField(default="")
-    suite_container_execution_id = models.IntegerField(default=-1)
-    suite_type = models.TextField(default=SuiteType.STATIC)
-    test_bed_type = models.TextField(default="")
+    execution_id = models.IntegerField(unique=True, db_index=True)
+    test_case_execution_ids = models.CharField(max_length=10000, default="[]")
+
+    # catalog_reference = models.TextField(null=True, blank=True, default=None)
+
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)
@@ -110,6 +147,11 @@ class SuiteExecution(models.Model):
         indexes = [
             models.Index(fields=['execution_id'])
         ]
+
+    def set_state(self, state):
+        self.state = state
+        self.save()
+
 
 class SuiteExecutionSerializer(serializers.Serializer):
     version = serializers.CharField(max_length=50)
@@ -343,6 +385,10 @@ class JobSpec(models.Model):
     Re-run related
     """
     dynamic_suite_spec = models.TextField(default="{}", null=True)
+
+    def set_state(self, state):
+        self.state = state
+        self.save()
 
 
 class JobQueue(models.Model):

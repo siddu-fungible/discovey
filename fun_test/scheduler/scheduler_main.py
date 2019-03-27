@@ -5,6 +5,8 @@ import re
 import subprocess
 from threading import Thread, Timer, RLock
 import threading
+
+from scheduler.scheduler_global import JobStatusType
 from scheduler_helper import *
 import signal
 import psutil
@@ -26,6 +28,7 @@ def queue_job(job_spec):
     next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
     new_job = JobQueue(priority=next_priority_value, job_id=job_spec.job_id, test_bed_type=job_spec.test_bed_type)
     new_job.save()
+    job_spec.set_state(JobStatusType.QUEUED)
     queue_lock.release()
 
 
@@ -432,7 +435,7 @@ def process_submissions():
     now = get_current_time()
     yesterday = now - timedelta(days=1)
     job_specs = JobSpec.objects.filter(submission_time__gte=yesterday,
-                                       state=RESULTS["SUBMITTED"]).order_by("-submission_time")
+                                       state=JobStatusType.SUBMITTED).order_by("-submission_time")
 
     for job_spec in job_specs:
         try:
@@ -453,6 +456,8 @@ def process_submissions():
 
                 if job_spec.scheduling_type in SchedulingType.get_deferred_types():
                     copy_to_scheduled_job(job_spec)
+
+                job_spec.set_state(JobStatusType.SCHEDULED)
                 t.start()
             if scheduling_time < 0:
                 scheduler_logger.critical("Unable to process job submission. Job-id: {}".format(job_spec.job_id))

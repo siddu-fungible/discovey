@@ -41,3 +41,4 @@ class QueueOperations:
 class JobStatusType:
     SUBMITTED = "SUBMITTED"
     QUEUED = "QUEUED"
+    SCHEDULED = "SCHEDULED"
