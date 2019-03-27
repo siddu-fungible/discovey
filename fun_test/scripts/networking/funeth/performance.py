@@ -8,6 +8,7 @@ from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity
 import json
 import math
+import pprint
 
 
 TB = sanity.TB
@@ -61,6 +62,23 @@ class FunethPerformance(FunTestScript):
     def cleanup(self):
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
+
+
+def collect_stats():
+    try:
+        network_controller_obj = fun_test.shared_variables['network_controller_obj']
+        network_controller_obj.peek_fpg_port_stats(port_num=0)
+        network_controller_obj.peek_fpg_port_stats(port_num=1)
+        network_controller_obj.peek_psw_global_stats()
+        network_controller_obj.peek_fcp_global_stats()
+        network_controller_obj.peek_vp_packets()
+        network_controller_obj.peek_per_vp_stats()
+        network_controller_obj.peek_resource_bam_stats()
+        network_controller_obj.peek_eqm_stats()
+        network_controller_obj.flow_list()
+        network_controller_obj.flow_list(blocked_only=True)
+    except:
+        pass
 
 
 class FunethPerformanceBase(FunTestCase):
@@ -129,7 +147,11 @@ class FunethPerformanceBase(FunTestCase):
         if tool == 'netperf':
             for arg_dict in arg_dicts:
                 arg_dict.pop('bw')  # 'bw' is n/a in NetperfManager
+
+        # Collect stats before and after test run
+        collect_stats()
         result = perf_manager_obj.run(*arg_dicts)
+        collect_stats()
 
         # check for 'nan'
         passed = True
@@ -145,6 +167,7 @@ class FunethPerformanceBase(FunTestCase):
              'version': fun_test.get_version(),
              }
         )
+        fun_test.log('Results:\n{}'.format(pprint.pformat(result)))
 
         # Update file with result
         #if tool != 'netperf':  # TODO: Remove the check
@@ -962,4 +985,6 @@ if __name__ == "__main__":
         ts.add_test_case(tc())
     ts.run()
 
-    fun_test.log('Performance results:\n{}'.format(RESULT_FILE))
+    with open(RESULT_FILE) as f:
+        r = json.load(f)
+        fun_test.log('Performance results:\n{}'.format(pprint.pformat(r)))
