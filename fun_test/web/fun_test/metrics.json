@@ -1704,7 +1704,7 @@
             "leaf": false,
             "name": "Regex",
             "weight": 1,
-            "label": "Regex",
+            "label": "Regex - (work in progress)",
             "children": [
               {
                 "info": "dfa_teramark_output_bandwidth",
