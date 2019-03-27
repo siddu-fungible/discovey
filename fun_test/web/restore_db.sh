@@ -1,5 +1,5 @@
 set -e
-read -n "This will delete old migration files" user_choice
+read -p "This will delete old migration files. Continue y/n? " user_choice
 
 if [ "$user_choice" = "y" ]
 then
