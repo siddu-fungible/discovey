@@ -261,7 +261,7 @@ class FunTest:
     def is_build_done(self):
         suite_execution_id = self.get_suite_execution_id()
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
-        return suite_execution.bootup_done
+        return suite_execution.build_done
 
     def abort(self):
         self.abort_requested = True
@@ -1174,7 +1174,7 @@ class FunTestScript(object):
                 if not fun_test.is_build_done():
                     fun_test.test_assert(fun_test.build(), "Jenkins build")
                     suite_execution = models_helper.get_suite_execution(suite_execution_id=fun_test.suite_execution_id)
-                    suite_execution.bootup_done = True
+                    suite_execution.build_done = True
                     suite_execution.save()
                 else:
                     fun_test.log("Skipping Jenkins build as it is not the first script")
