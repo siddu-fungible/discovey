@@ -265,7 +265,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                     score = -1
                     this_days_record = None
                     if len(entries):
-                        this_days_record = entries.last()
+                        this_days_record = entries.first()
                         output_name = data_set["output"]["name"]  # TODO
                         output_unit = output_name + "_unit"
                         if "reference" in data_set["output"]:
