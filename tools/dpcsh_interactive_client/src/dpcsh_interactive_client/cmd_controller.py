@@ -810,6 +810,24 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_eqm_stats(grep_regex=grep_regex)
 
+    def peek_malloc_agent_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_malloc_agent_stats(grep_regex=grep_regex)
+
+    def peek_malloc_agent_non_coh_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_malloc_agent_non_coh_stats(grep_regex=grep_regex)
+
+    def peek_funtop_stats(self, args):
+        self._peek_cmd_obj.peek_funtop_stats()
+
+    def peek_wustacks_stats(self, args):
+        self._peek_cmd_obj.peek_stats_wustacks()
+
+    def peek_hu_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_stats_hu(grep_regex=grep_regex)
+
     def clear_nu_port_stats(self, args):
         self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
 
@@ -1018,7 +1036,6 @@ class CmdController(Cmd):
     set_hnu_qos_xoff_status_parser.set_defaults(func=set_hnu_qos_xoff_status)
     get_hnu_qos_xoff_status_parser.set_defaults(func=get_hnu_qos_xoff_status)
 
-
     # -------------- Peek Command Handlers ----------------
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
     peek_hnu_fpg_stats_parser.set_defaults(func=peek_hnu_fpg_stats)
@@ -1065,6 +1082,11 @@ class CmdController(Cmd):
     peek_etp_hnu_stats_parser.set_defaults(func=peek_etp_hnu_stats)
     peek_etp_nu_stats_parser.set_defaults(func=peek_etp_nu_stats)
     peek_eqm_stats_parser.set_defaults(func=peek_eqm_stats)
+    peek_funtop_stats_parser.set_defaults(func=peek_funtop_stats)
+    peek_malloc_agent_stats_parser.set_defaults(func=peek_malloc_agent_stats)
+    peek_malloc_agent_non_coh_stats_parser.set_defaults(func=peek_malloc_agent_non_coh_stats)
+    peek_wustacks_stats_parser.set_defaults(func=peek_wustacks_stats)
+    peek_hu_stats_parser.set_defaults(func=peek_hu_stats)
 
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
@@ -1129,7 +1151,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40222, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.129", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

@@ -5,10 +5,16 @@ from lib.host.linux import Linux
 
 
 class BuildHelper():
-    def __init__(self, boot_args=None, fun_os_make_flags=None, max_build_time=60 * 15, job_name="emulation/fun_on_demand"):
+    def __init__(self,
+                 boot_args=None,
+                 fun_os_make_flags=None,
+                 max_build_time=60 * 25,
+                 job_name="emulation/fun_on_demand",
+                 disable_assertions=None):
         self.boot_args = boot_args
         self.fun_os_make_flags = fun_os_make_flags
         self.max_build_time = max_build_time
+        self.disable_assertions = disable_assertions
         self.jenkins_manager = JenkinsManager(job_name=job_name)
 
     def build_emulation_image(self):
@@ -16,6 +22,9 @@ class BuildHelper():
         params = {"BOOTARGS": self.boot_args}
         if self.fun_os_make_flags:
             params["FUNOS_MAKEFLAGS"] = self.fun_os_make_flags
+
+        if self.disable_assertions is not None:
+            params["DISABLE_ASSERTIONS"] = self.disable_assertions
 
         queue_item = self.jenkins_manager.build(params=params)
         build_number = None

@@ -43,6 +43,7 @@ export class SubmitJobComponent implements OnInit {
   tftpImagePath: string = "funos-f1.stripped.gz";
   bootArgs: string = "app=hw_hsu_test --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit";
   withJenkinsBuild: boolean = false;
+  disableAssertions: boolean = true;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -228,6 +229,11 @@ export class SubmitJobComponent implements OnInit {
       }
     } else {
       payload["environment"]["with_jenkins_build"] = true;
+    }
+
+    if (payload["environment"]["with_jenkins_build"]) {
+      payload["environment"]["build_parameters"] = {};
+      payload["environment"]["build_parameters"]["disable_assertions"] = this.disableAssertions;
     }
 
     this.submitting = "Submitting job";

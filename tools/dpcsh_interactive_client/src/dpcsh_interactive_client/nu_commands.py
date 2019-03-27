@@ -852,6 +852,8 @@ class PeekCommands(object):
                             diff_result[key][_key] = diff_value
                     else:
                         diff_result[key][_key] = 0
+            elif type(result[key]) == str:
+                diff_result[key] = result[key]
             else:
                 if key in prev_result:
                     if type(result[key]) == list:
@@ -2261,6 +2263,271 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
+    def peek_funtop_stats(self):
+        try:
+            prev_result = None
+            while True:
+                master_table_obj = PrettyTable()
+                master_table_obj.align = 'l'
+                master_table_obj.header = False
+                try:
+                    cmd = "stats/funtop"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        result = result['funtop']
+                        if prev_result:
+                            diff_result = self._get_difference(result=result,
+                                                               prev_result=prev_result)
+                            for key in sorted(result):
+                                if type(result[key]) == dict:
+                                    if key == 'cluster_usage':
+                                        table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    else:
+                                        table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                    table_obj.align = 'l'
+                                    table_obj.sortby = 'Field Name'
+                                    for _key in sorted(result[key]):
+                                        if type(result[key][_key]) == dict:
+                                            inner_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                            inner_table_obj.align = 'l'
+                                            inner_table_obj.sortby = 'Field Name'
+                                            for inner_key in sorted(result[key][_key]):
+                                                inner_table_obj.add_row([inner_key, result[key][_key][inner_key],
+                                                                         diff_result[key][_key][inner_key]])
+                                            table_obj.add_row([_key, inner_table_obj])
+                                        else:
+                                            table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                    master_table_obj.add_row([key, table_obj])
+                                else:
+                                    master_table_obj.add_row([key, result[key]])
+                        else:
+                            for key in sorted(result):
+                                if type(result[key]) == dict:
+                                    table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    table_obj.align = 'l'
+                                    table_obj.sortby = 'Field Name'
+                                    for _key in sorted(result[key]):
+                                        if type(result[key][_key]) == dict:
+                                            inner_table_obj = PrettyTable(['Field Name', 'Counter'])
+                                            inner_table_obj.align = 'l'
+                                            inner_table_obj.sortby = 'Field Name'
+                                            for inner_key in sorted(result[key][_key]):
+                                                inner_table_obj.add_row([inner_key, result[key][_key][inner_key]])
+                                            table_obj.add_row([_key, inner_table_obj])
+                                        else:
+                                            table_obj.add_row([_key, result[key][_key]])
+                                    master_table_obj.add_row([key, table_obj])
+                                else:
+                                    master_table_obj.add_row([key, result[key]])
+                        print master_table_obj
+                        prev_result = result
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print 'Empty Result'
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def peek_malloc_agent_stats(self, grep_regex=None):
+        cmd = "stats/malloc_agent"
+        self._print_malloc_agent_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def peek_malloc_agent_non_coh_stats(self, grep_regex=None):
+        cmd = "stats/malloc_agent_non_coh"
+        self._print_malloc_agent_stats(cmd=cmd, grep_regex=grep_regex)
+
+    def _print_malloc_agent_stats(self, cmd, grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                master_table_obj = PrettyTable()
+                master_table_obj.align = 'l'
+                master_table_obj.header = False
+                try:
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            for key in sorted(result):
+                                if type(result[key]) == dict:
+                                    diff_result = self._get_difference(result=result[key],
+                                                                       prev_result=prev_result[key])
+                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                    table_obj.align = 'l'
+                                    table_obj.sortby = 'Field Name'
+                                    for _key in sorted(result[key]):
+                                        table_obj.add_row([_key, result[key][_key], diff_result[_key]])
+                                elif type(result[key]) == list:
+                                    table_obj = PrettyTable()
+                                    table_obj.align = 'l'
+                                    table_obj.border = False
+                                    table_obj.header = False
+                                    index = 0
+                                    for record in result[key]:
+                                        diff_result = self._get_difference(result=record,
+                                                                           prev_result=prev_result[key][index])
+                                        in_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                        in_table_obj.align = 'l'
+                                        in_table_obj.sortby = 'Field Name'
+                                        for in_key in record:
+                                            in_table_obj.add_row([in_key, record[in_key], diff_result[in_key]])
+                                        table_obj.add_row([in_table_obj])
+                                        index += 1
+                                else:
+                                    diff_result = self._get_difference(result=result,
+                                                                       prev_result=prev_result)
+                                    table_obj = PrettyTable(['Counter', 'Counter Diff'])
+                                    table_obj.align = 'l'
+                                    table_obj.add_row([result[key], diff_result[key]])
+
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        master_table_obj.add_row([key, table_obj])
+                                else:
+                                    master_table_obj.add_row([key, table_obj])
+                        else:
+                            for key in sorted(result):
+                                if type(result[key]) == dict:
+                                    table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    table_obj.align = 'l'
+                                    table_obj.sortby = 'Field Name'
+                                    for _key in sorted(result[key]):
+                                        table_obj.add_row([_key, result[key][_key]])
+                                elif type(result[key]) == list:
+                                    table_obj = PrettyTable()
+                                    table_obj.align = 'l'
+                                    table_obj.border = False
+                                    table_obj.header = False
+                                    for record in result[key]:
+                                        in_table_obj = PrettyTable(['Field Name', 'Counter'])
+                                        in_table_obj.align = 'l'
+                                        in_table_obj.sortby = 'Field Name'
+                                        for in_key in record:
+                                            in_table_obj.add_row([in_key, record[in_key]])
+                                        table_obj.add_row([in_table_obj])
+                                else:
+                                    table_obj = PrettyTable(['Counter'])
+                                    table_obj.align = 'l'
+                                    table_obj.add_row([result[key]])
+
+                                if grep_regex:
+                                    if re.search(grep_regex, key, re.IGNORECASE):
+                                        master_table_obj.add_row([key, table_obj])
+                                else:
+                                    master_table_obj.add_row([key, table_obj])
+                        print master_table_obj
+                        prev_result = result
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print 'Empty Result'
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def peek_stats_wustacks(self):
+        try:
+            prev_result = None
+            while True:
+                try:
+                    cmd = "stats/wustacks"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            for key in result:
+                                table_obj.add_row([key, result[key], diff_result[key]])
+                        else:
+                            table_obj = PrettyTable(['Field Name', 'Counter'])
+                            table_obj.align = 'l'
+                            table_obj.sortby = 'Field Name'
+                            for key in result:
+                                table_obj.add_row([key, result[key]])
+                        print table_obj
+                        prev_result = result
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
+    def peek_stats_hu(self, grep_regex=None):
+        try:
+            prev_result = None
+            while True:
+                master_table_obj = PrettyTable()
+                master_table_obj.align = 'l'
+                master_table_obj.header = False
+                try:
+                    cmd = "stats/hu"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            for key in sorted(result):
+                                table_obj = PrettyTable()
+                                table_obj.align = 'l'
+                                table_obj.border = False
+                                table_obj.header = False
+                                for _key in sorted(result[key]):
+                                    inner_table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                    inner_table_obj.align = 'l'
+                                    inner_table_obj.sortby = 'Field Name'
+                                    for in_key in sorted(result[key][_key]):
+                                        if grep_regex:
+                                            if re.search(grep_regex, _key, re.IGNORECASE):
+                                                inner_table_obj.add_row([in_key, result[key][_key][in_key],
+                                                                         diff_result[key][_key][in_key]])
+                                        else:
+                                            inner_table_obj.add_row([in_key, result[key][_key][in_key],
+                                                                     diff_result[key][_key][in_key]])
+                                    table_obj.add_row([_key, inner_table_obj])
+                                master_table_obj.add_row([key, table_obj])
+                        else:
+                            for key in sorted(result):
+                                table_obj = PrettyTable()
+                                table_obj.align = 'l'
+                                table_obj.border = False
+                                table_obj.header = False
+                                for _key in sorted(result[key]):
+                                    inner_table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    inner_table_obj.align = 'l'
+                                    inner_table_obj.sortby = 'Field Name'
+                                    for in_key in sorted(result[key][_key]):
+                                        if grep_regex:
+                                            if re.search(grep_regex, _key, re.IGNORECASE):
+                                                inner_table_obj.add_row([in_key, result[key][_key][in_key]])
+                                        else:
+                                            inner_table_obj.add_row([in_key, result[key][_key][in_key]])
+                                    table_obj.add_row([_key, inner_table_obj])
+                                master_table_obj.add_row([key, table_obj])
+                        print master_table_obj
+                        prev_result = result
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
 
 class SampleCommands(object):
 
@@ -2408,6 +2675,7 @@ class ShowCommands(PeekCommands):
             if filepath:
                 self.delete_filepath(filepath)
             self.dpc_client.disconnect()
+
 
 class MeterCommands(object):
 

@@ -135,9 +135,8 @@ class SuiteExecution(models.Model):
     banner = models.TextField(default="")
     execution_id = models.IntegerField(unique=True, db_index=True)
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")
-
     # catalog_reference = models.TextField(null=True, blank=True, default=None)
-
+    build_done = models.BooleanField(default=False)
 
     def __str__(self):
         s = "Suite: {} {}".format(self.execution_id, self.suite_path)

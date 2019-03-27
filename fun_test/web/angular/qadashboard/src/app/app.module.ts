@@ -51,6 +51,7 @@ import { LogViewerComponent } from './log-viewer/log-viewer.component';
 import { SmartLabelComponent } from './smart-label/smart-label.component';
 import {QueueViewerComponent} from "./regression/queue-viewer/queue-viewer.component";
 import { TriageComponent } from './triage/triage.component';
+import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-line/section-horizontal-line.component";
 
 @NgModule({
   declarations: [
@@ -88,6 +89,7 @@ import { TriageComponent } from './triage/triage.component';
     LogViewerComponent,
     SmartLabelComponent,
     QueueViewerComponent
+    SectionHorizontalLineComponent
   ],
   imports: [
     BsDropdownModule,
@@ -99,7 +101,7 @@ import { TriageComponent } from './triage/triage.component';
     ChartModule,
     AngularFontAwesomeModule,
     FormsModule,
-    Angular2FontawesomeModule,  // Add this line
+    Angular2FontawesomeModule,
     AngularCollapseModule,
     NgMultiSelectDropDownModule,
     NgbModule,

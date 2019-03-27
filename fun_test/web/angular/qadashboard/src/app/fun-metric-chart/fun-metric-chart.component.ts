@@ -314,6 +314,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         this.baseLineDate = String(this.chartInfo.base_line_date);
         this.visualizationUnit = this.chartInfo.visualization_unit;
         this.changingVizUnit = this.visualizationUnit;
+        this.chart1YaxisTitle = this.chartInfo.y1_axis_title;
 
         if (this.latency_category.includes(this.visualizationUnit)) {
           this.category = [...this.latency_category];
@@ -626,15 +627,18 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let currentDate = firstDate;
       let datesIndex = 0;
       while (currentDate <= yesterday) {
-
+        let latestDate = null;
         //console.log(currentDate);
         if ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
-          finalDates.push(dates[datesIndex]);
+          latestDate = dates[datesIndex];
+          //finalDates.push(dates[datesIndex]);
           datesIndex++;
           while ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
             //finalDates.push(dates[datesIndex]);
+            latestDate = dates[datesIndex];
             datesIndex++;
           }
+          finalDates.push(latestDate);
         } else {
           //currentDate.setHours(currentDate.getHours() - currentDate.getTimezoneOffset() / 60);
           let tempDate = currentDate;

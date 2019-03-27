@@ -354,6 +354,15 @@
             "weight": 1
           },
           {
+            "info": "flow_test_f1",
+            "metric_model_name": "F1FlowTestPerformance",
+            "leaf": true,
+            "name": "flow_test_f1",
+            "label": "Flowtest on F1",
+            "children": [],
+            "weight": 1
+          },
+          {
             "info": "Volume Type",
             "metric_model_name": "MetricContainer",
             "leaf": false,
@@ -1432,7 +1441,7 @@
                 "metric_model_name": "MetricContainer",
                 "leaf": false,
                 "name": "Zip",
-                "label": "Zip - (work in progress)",
+                "label": "Zip",
                 "weight": 1,
                 "children": [
                   {
@@ -1686,6 +1695,32 @@
                     "label": "Packets per sec"
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "info": "Regex",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Regex",
+            "weight": 1,
+            "label": "Regex - (work in progress)",
+            "children": [
+              {
+                "info": "dfa_teramark_output_bandwidth",
+                "metric_model_name": "TeraMarkDfaPerformance",
+                "leaf": true,
+                "name": "dfa_teramark_output_bandwidth",
+                "weight": 1,
+                "label": "DFA Throughput"
+              },
+              {
+                "info": "nfa_teramark_output_bandwidth",
+                "metric_model_name": "TeraMarkNfaPerformance",
+                "leaf": true,
+                "name": "nfa_teramark_output_bandwidth",
+                "weight": 1,
+                "label": "NFA Throughput"
               }
             ]
           }

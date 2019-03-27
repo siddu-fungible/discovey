@@ -7,7 +7,7 @@ from requests.auth import HTTPBasicAuth
 
 DEFAULT_BUILD_PARAMS = {
     "RUN_TARGET": "F1",
-    "HW_MODEL": "F1DevBoard",
+    "HW_MODEL": "F1",
     "HW_VERSION": "Ignored",
     "RUN_MODE": "Build only",
     "PRIORITY": "high_priority",
