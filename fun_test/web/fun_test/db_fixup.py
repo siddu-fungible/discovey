@@ -138,7 +138,8 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
 
     if not chart.score_cache_valid:
         if not chart.leaf:
-            calculate_container_scores(cache_valid=cache_valid, chart=chart, purge_old_status=purge_old_status, result=result)
+            calculate_container_scores(cache_valid=cache_valid, chart=chart, purge_old_status=purge_old_status,
+                                       result=result)
         else:
             calculate_leaf_scores(cache_valid=cache_valid, chart=chart, result=result, from_log=False)
 
@@ -161,6 +162,7 @@ def prepare_status(chart, cache_valid, purge_old_status=False):
 
     return result
 
+
 def set_result_dict(result):
     result["num_build_failed"] = 0
     result["num_degrades"] = 0
@@ -171,6 +173,7 @@ def set_result_dict(result):
     result["penultimate_good_score"] = -1
     result["copied_score"] = False
     result["copied_score_disposition"] = 0
+
 
 def set_from_to_dates(chart):
     dates = {}
@@ -185,6 +188,7 @@ def set_from_to_dates(chart):
     dates["from_date"] = from_date
     dates["to_date"] = to_date
     return dates
+
 
 def set_chart_status_details(chart, result):
     # chart.last_build_status = result["last_build_status"]
@@ -212,9 +216,12 @@ def set_chart_status_details(chart, result):
     chart.copied_score_disposition = result["copied_score_disposition"]
     chart.save()
 
+
 def set_local_timezone(current_date):
-    date_time_obj = datetime.datetime(year=current_date.year, month=current_date.month, day=current_date.day, hour=current_date.hour, second=current_date.second, minute=current_date.minute)
+    date_time_obj = datetime.datetime(year=current_date.year, month=current_date.month, day=current_date.day,
+                                      hour=current_date.hour, second=current_date.second, minute=current_date.minute)
     return get_localized_time(date_time_obj)
+
 
 def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
     # print "Reached leaf: {}".format(chart.chart_name)
@@ -257,58 +264,65 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
 
             if len(data_sets):
                 data_set_combined_goodness = 0
+                num_data_sets_with_expected = 0
+                for data in data_sets:
+                    if "expected" in data["output"]:
+                        if data["output"]["expected"] and data["output"]["expected"] >= 0:
+                            num_data_sets_with_expected += 1
+                            num_data_sets_with_expected = len(data_sets) if num_data_sets_with_expected == 0 else num_data_sets_with_expected
                 for data_set in data_sets:
-                    if current_date > get_localized_time(datetime.datetime(year=2018, month=8, day=10)):
-                        j = 0
-                    # print "Processing data-set: {}".format(json.dumps(data_set))
-                    entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
-                    score = -1
-                    this_days_record = None
-                    if len(entries):
-                        this_days_record = entries.first()
-                        output_name = data_set["output"]["name"]  # TODO
-                        output_unit = output_name + "_unit"
-                        if "reference" in data_set["output"]:
-                            reference_value = data_set["output"]["reference"]
-                            if reference_value <= 0:
+                    expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
+                    if num_data_sets_with_expected == len(data_sets) or (expected_value and expected_value != -1):
+                        if current_date > get_localized_time(datetime.datetime(year=2018, month=8, day=10)):
+                            j = 0
+                        # print "Processing data-set: {}".format(json.dumps(data_set))
+                        entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
+                        score = -1
+                        this_days_record = None
+                        if len(entries):
+                            this_days_record = entries.first()
+                            output_name = data_set["output"]["name"]  # TODO
+                            output_unit = output_name + "_unit"
+                            if "reference" in data_set["output"]:
+                                reference_value = data_set["output"]["reference"]
+                                if reference_value <= 0:
+                                    data_set_mofified = data_set_mofified or chart.fixup_reference_values(
+                                        data_set=data_set)
+                                    reference_value = data_set["output"]["reference"]
+                            else:
+                                # let's fix it up
+                                print ("Fixing reference values")
                                 data_set_mofified = data_set_mofified or chart.fixup_reference_values(
                                     data_set=data_set)
-                                reference_value = data_set["output"]["reference"]
-                        else:
-                            # let's fix it up
-                            print ("Fixing reference values")
-                            data_set_mofified = data_set_mofified or chart.fixup_reference_values(
-                                data_set=data_set)
-                            reference_value = data_set["output"]["reference"] if "reference" in data_set[
-                                "output"] else None  # reference is set in fixup_reference_values
-                        get_first_record(model=model, data_set=data_set)
-                        output_value = getattr(this_days_record, output_name)
-                        if hasattr(this_days_record, output_unit):
-                            output_unit = getattr(this_days_record, output_unit)
-                        else:
-                            output_unit = None
-                        if output_value and output_value != -1:
-                            output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
-                        expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
-
-                        # data_set_statuses.append(leaf_status)
-                        if reference_value is not None:
-                            if expected_value and expected_value != -1:
-                                reference_value = expected_value
-                            if output_unit:
-                                reference_value = convert_to_base_unit(output_value=reference_value,
-                                                                    output_unit=chart.visualization_unit)
-                            if chart.positive:
-                                data_set_combined_goodness += (float(
-                                    output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
+                                reference_value = data_set["output"]["reference"] if "reference" in data_set[
+                                    "output"] else None  # reference is set in fixup_reference_values
+                            get_first_record(model=model, data_set=data_set)
+                            output_value = getattr(this_days_record, output_name)
+                            if hasattr(this_days_record, output_unit):
+                                output_unit = getattr(this_days_record, output_unit)
                             else:
-                                if output_value:
+                                output_unit = None
+                            if output_value and output_value != -1:
+                                output_value = convert_to_base_unit(output_value=output_value, output_unit=output_unit)
+
+                            # data_set_statuses.append(leaf_status)
+                            if reference_value is not None:
+                                if expected_value and expected_value != -1:
+                                    reference_value = expected_value
+                                if output_unit:
+                                    reference_value = convert_to_base_unit(output_value=reference_value,
+                                                                           output_unit=chart.visualization_unit)
+                                if chart.positive:
                                     data_set_combined_goodness += (float(
-                                        reference_value) / output_value) * 100 if output_value >= 0 else 0
+                                        output_value) / reference_value) * 100 if output_value >= 0 and reference_value > 0 else 0
                                 else:
-                                    print "ERROR: {}, {}".format(chart.chart_name,
-                                                                 chart.metric_model_name)
-                current_score = round(data_set_combined_goodness / len(data_sets), 1)
+                                    if output_value:
+                                        data_set_combined_goodness += (float(
+                                            reference_value) / output_value) * 100 if output_value >= 0 else 0
+                                    else:
+                                        print "ERROR: {}, {}".format(chart.chart_name,
+                                                                     chart.metric_model_name)
+                current_score = round(data_set_combined_goodness / num_data_sets_with_expected, 1)
 
                 # is_leaf_degrade = current_score < last_good_score
                 replacement = False
@@ -391,6 +405,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                                                                                       chart.penultimate_good_score,
                                                                                                       chart.last_build_date)
         set_chart_status_details(chart=chart, result=result)
+
 
 def calculate_container_scores(chart, purge_old_status, cache_valid, result):
     set_result_dict(result)
@@ -477,6 +492,7 @@ def calculate_container_scores(chart, purge_old_status, cache_valid, result):
                                                                                   result["num_leaves"])
     set_chart_status_details(chart=chart, result=result)
 
+
 def convert_to_base_unit(output_value, output_unit):
     if output_unit:
         if output_unit in latency_category:
@@ -535,7 +551,7 @@ def convert_to_base_unit(output_value, output_unit):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="NU->NU NFCP")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Crypto API Throughput")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
