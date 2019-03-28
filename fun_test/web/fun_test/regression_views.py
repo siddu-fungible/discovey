@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 from web.fun_test.models import RegresssionScripts, RegresssionScriptsSerializer, SuiteExecutionSerializer
 from web.fun_test.models import ScriptInfo
 from web.fun_test.models import TestCaseExecutionSerializer
-from web.fun_test.models import SuiteReRunInfo, JobQueue, JobSpec
+from web.fun_test.models import SuiteReRunInfo, JobQueue
 from web.fun_test.models import SuiteReRunInfo
 from web.fun_test.models import TestBed
 import logging

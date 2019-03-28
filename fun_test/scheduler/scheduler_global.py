@@ -38,7 +38,12 @@ class QueueOperations:
     MOVE_TO_NEXT_QUEUE = "move_to_next_queue"
     DELETE = "delete"
 
+
 class JobStatusType:
     SUBMITTED = "SUBMITTED"
     QUEUED = "QUEUED"
     SCHEDULED = "SCHEDULED"
+    IN_PROGRESS = "IN_PROGRESS"
+    KILLED = "KILLED"
+    ABORTED = "ABORTED"
+    COMPLETED = "COMPLETED"

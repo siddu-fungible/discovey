@@ -12,6 +12,9 @@
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.All}" (click)="onStateFilterClick('ALL')">All</span> &nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.Completed}" (click)="onStateFilterClick('COMPLETED')">Completed</span> &nbsp;
         <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.Pending}" (click)="onStateFilterClick('PENDING')">Pending</span>&nbsp;
+        <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.Queued}" (click)="onStateFilterClick('QUEUED')">Queued</span>&nbsp;
+        <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.Scheduled}" (click)="onStateFilterClick('SCHEDULED')">Scheduled</span>&nbsp;
+        <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.Submitted}" (click)="onStateFilterClick('SUBMITTED')">Submitted</span>&nbsp;
       </div>
 
       <div class="text-center">

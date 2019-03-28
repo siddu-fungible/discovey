@@ -11,7 +11,7 @@ import dateutil.parser
 from django.db.models import Q
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-from scheduler.scheduler_global import SuiteType
+from scheduler.scheduler_global import SuiteType, JobStatusType
 from threading import Lock
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fun_test.settings")
 django.setup()
@@ -34,7 +34,10 @@ from web.fun_test.models import (
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
                            "COMPLETED": "COMPLETED",
-                           "ALL": "ALL"}
+                           "ALL": "ALL",
+                           "SCHEDULED": "SCHEDULED",
+                           "SUBMITTED": "SUBMITTED",
+                           "QUEUED": "QUEUED"}
 
 pending_states = [RESULTS["UNKNOWN"], RESULTS["SCHEDULED"], RESULTS["QUEUED"]]
 
@@ -349,21 +352,21 @@ def _get_suite_executions(execution_id=None,
                           records_per_page=10,
                           save_test_case_info=False,
                           save_suite_info=True,
-                          filter_string="ALL",
+                          state_filter_string="ALL",
                           get_count=False,
                           tags=None,
                           finalize=None):
     all_objects = None
     q = Q(result=RESULTS["UNKNOWN"])
 
-    if filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
-        q = Q(result=RESULTS["UNKNOWN"]) | Q(result=RESULTS["IN_PROGRESS"]) | Q(result=RESULTS["QUEUED"]) | Q(result=RESULTS["SCHEDULED"])
-    elif filter_string == SUITE_EXECUTION_FILTERS["COMPLETED"]:
-        q = Q(result=RESULTS["PASSED"]) | Q(result=RESULTS["FAILED"]) | Q(result=RESULTS["KILLED"]) | Q(result=RESULTS["ABORTED"])
+    if state_filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
+        q = Q(state=JobStatusType.IN_PROGRESS) | Q(state=JobStatusType.QUEUED) | Q(state=JobStatusType.SCHEDULED)
+    elif state_filter_string == SUITE_EXECUTION_FILTERS["COMPLETED"]:
+        q = Q(state=JobStatusType.COMPLETED) | Q(state=JobStatusType.KILLED) | Q(state=JobStatusType.ABORTED)
     if execution_id:
         q = Q(execution_id=execution_id) & q
 
-    if filter_string == "ALL":
+    if state_filter_string == "ALL":
         if execution_id:
             q = Q(execution_id=execution_id)
         else:

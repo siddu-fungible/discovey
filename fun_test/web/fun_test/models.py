@@ -108,9 +108,9 @@ class SuiteExecution(models.Model):
     Scheduling
     """
     scheduling_type = models.TextField(default="")
-    submitted_time = models.DateTimeField()
-    scheduled_time = models.DateTimeField()
-    queued_time = models.DateTimeField()
+    submitted_time = models.DateTimeField(null=True)
+    scheduled_time = models.DateTimeField(null=True)
+    queued_time = models.DateTimeField(null=True)
     completed_time = models.DateTimeField()
     requested_days = models.TextField(default="[]")  # Days of the week as an array with Monday being 0
     requested_hour = models.IntegerField(null=True)  # Hour of the day
@@ -330,64 +330,7 @@ class SuiteReRunInfo(models.Model):
 
 
 
-class JobSpec(models.Model):
-    """
-    Scheduler job spec
-    """
 
-    """
-    Suite selection related
-    """
-    submission_time = models.DateTimeField(default=datetime.now)
-    suite_path = models.TextField(default="", null=True)  # Standard suite file method
-    script_path = models.TextField(default="", null=True)  # Schedule by script path
-    suite_type = models.TextField(default=SuiteType.STATIC)
-    scheduling_type = models.TextField(default="")
-
-
-    """
-    Time related
-    """
-    requested_days = models.TextField(default="[]")  # Days of the week as an array with Monday being 0
-    requested_hour = models.IntegerField(null=True)  # Hour of the day
-    requested_minute = models.IntegerField(null=True)  # minute in the hour
-    timezone_string = models.TextField(default="PST")  # timezone string PST or IST
-    repeat_in_minutes = models.IntegerField(null=True)  # Repeat the job in some minutes
-
-    """
-    Job result related
-    """
-
-    tags = models.TextField(default="[]", null=True)  # search jobs by tag
-    emails = models.TextField(default="[]", null=True)  # email addresses to send reports to
-    email_on_failure_only = models.BooleanField(default=False)
-
-    """
-    job inputs related
-    """
-    environment = models.TextField(default="{}", null=True)  # extra environment dictionary (only networking uses this)
-    inputs = models.TextField(default="{}", null=True)  # inputs dictionary
-    build_url = models.TextField(default="")
-    version = models.TextField(default="", null=True)  # Can be based on build_url
-    test_bed_type = models.TextField(default="", null=True)
-    requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
-
-    """
-    Job id
-    """
-    job_id = models.IntegerField()   # job id, this matches suite execution id
-    state = models.TextField(default=JobStatusType.SUBMITTED)
-    suite_container_execution_id = models.IntegerField(null=True)
-    is_scheduled_job = models.BooleanField(default=False)
-
-    """
-    Re-run related
-    """
-    dynamic_suite_spec = models.TextField(default="{}", null=True)
-
-    def set_state(self, state):
-        self.state = state
-        self.save()
 
 
 class JobQueue(models.Model):

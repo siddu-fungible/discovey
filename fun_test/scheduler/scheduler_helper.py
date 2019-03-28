@@ -16,7 +16,7 @@ from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType
-from web.fun_test.models import JobSpec, SchedulerJobPriority, JobQueue
+from web.fun_test.models import SchedulerJobPriority, JobQueue
 from django.db import transaction
 from pytz import timezone
 from datetime import timedelta
