@@ -69,6 +69,7 @@ def collect_stats():
         network_controller_obj = fun_test.shared_variables['network_controller_obj']
         network_controller_obj.peek_fpg_port_stats(port_num=0)
         network_controller_obj.peek_fpg_port_stats(port_num=1)
+        network_controller_obj.peek_fpg_port_stats(port_num=2)
         network_controller_obj.peek_psw_global_stats()
         network_controller_obj.peek_fcp_global_stats()
         network_controller_obj.peek_vp_packets()
