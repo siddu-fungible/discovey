@@ -1110,6 +1110,9 @@ peek_funtop_stats_parser = peek_stats_parsers.add_parser('funtop', help="Funtop 
 # wustacks stats
 peek_wustacks_stats_parser = peek_stats_parsers.add_parser('wustacks', help="Peke wustacks stats")
 
+# wustacks stats
+peek_wus_stats_parser = peek_stats_parsers.add_parser('wus', help="Peke wus stats")
+
 # HU stats
 peek_hu_stats_parser = peek_stats_parsers.add_parser('hu', help="Peek HU stats")
 peek_hu_stats_parser.add_argument('-grep', help="Grep regex pattern (Grep for HU Slice)", default=None)

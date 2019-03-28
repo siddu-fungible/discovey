@@ -82,7 +82,7 @@
                 "leaf": true,
                 "name": "NU_HNU_output_throughput",
                 "weight": 1,
-                "label": "Extrapolated Throughput"
+                "label": "Throughput"
               },
               {
                 "info": "NU_HNU_output_pps",
@@ -90,7 +90,7 @@
                 "leaf": true,
                 "name": "NU_HNU_output_pps",
                 "weight": 1,
-                "label": "Extrapolated Packets per sec"
+                "label": "Packets per sec"
               }
             ]
           },
@@ -108,7 +108,7 @@
                 "leaf": true,
                 "name": "HNU_HNU_FCP_output_throughput",
                 "weight": 1,
-                "label": "Extrapolated Throughput"
+                "label": "Throughput"
               },
               {
                 "info": "HNU_HNU_FCP_output_pps",
@@ -116,7 +116,7 @@
                 "leaf": true,
                 "name": "HNU_HNU_FCP_output_pps",
                 "weight": 1,
-                "label": "Extrapolated Packets per sec"
+                "label": "Packets per sec"
               }
             ]
           },
@@ -134,7 +134,7 @@
                 "leaf": true,
                 "name": "HNU_HNU_output_throughput",
                 "weight": 1,
-                "label": "Extrapolated Throughput"
+                "label": "Throughput"
               },
               {
                 "info": "HNU_HNU_output_pps",
@@ -142,7 +142,7 @@
                 "leaf": true,
                 "name": "HNU_HNU_output_pps",
                 "weight": 1,
-                "label": "Extrapolated Packets per sec"
+                "label": "Packets per sec"
               }
             ]
           },
@@ -160,7 +160,7 @@
                 "leaf": true,
                 "name": "NU_NU_output_throughput",
                 "weight": 1,
-                "label": "Extrapolated Throughput"
+                "label": "Throughput"
               },
               {
                 "info": "NU_NU_output_pps",
@@ -168,7 +168,7 @@
                 "leaf": true,
                 "name": "NU_NU_output_pps",
                 "weight": 1,
-                "label": "Extrapolated Packets per sec"
+                "label": "Packets per sec"
               }
             ]
           },
@@ -186,7 +186,7 @@
                 "leaf": true,
                 "name": "HNU_NU_output_throughput",
                 "weight": 1,
-                "label": "Extrapolated Throughput"
+                "label": "Throughput"
               },
               {
                 "info": "HNU_NU_output_pps",
@@ -194,7 +194,7 @@
                 "leaf": true,
                 "name": "HNU_NU_output_pps",
                 "weight": 1,
-                "label": "Extrapolated Packets per sec"
+                "label": "Packets per sec"
               }
             ]
           },

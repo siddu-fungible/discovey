@@ -6,23 +6,31 @@
   <div class="card card-primary">
     <div class="card-header"><b>Suite Executions</b></div>
     <div class="card-body">
+
+
+      <div id="filter-div" style="padding: 10px;">
+        <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.All}" (click)="onStateFilterClick('ALL')">All</span> &nbsp;
+        <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.Completed}" (click)="onStateFilterClick('COMPLETED')">Completed</span> &nbsp;
+        <span class="pseudo-anchor" [ngClass]="{'filter-selected': stateFilter === filter.Pending}" (click)="onStateFilterClick('PENDING')">Pending</span>&nbsp;
+      </div>
+
       <div class="text-center">
         <!-- pager -->
         <div id="page-div" *ngIf="pager.pages && pager.pages.length">
           <span *ngIf="pager.currentPage > 1" [ngClass]="{'disabled': pager.currentPage === 1}">
-          <a [routerLink]="" (click)="setPage(1)"><< </a>
+          <a [routerLink]="" (click)="setPage(1)">First </a>
           </span>
           <span *ngIf="pager.currentPage > 1" [ngClass]="{'disabled': pager.currentPage === 1}">
-          <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">< </a>
+          <a [routerLink]="" (click)="setPage(pager.currentPage - 1)">Previous </a>
           </span>
-          <span *ngFor="let page of pager.pages" [ngClass]="{active:pager.currentPage === page}">
-          <a [routerLink]="" (click)="setPage(page)">{{page}} </a>
+          <ng-container *ngFor="let page of pager.pages" >
+            <span class="pseudo-anchor" (click)="setPage(page)" [ngClass]="{active:pager.currentPage === page}">{{page}}</span>&nbsp;
+          </ng-container>
+          <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
+          <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">Next </a>
           </span>
           <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
-          <a [routerLink]="" (click)="setPage(pager.currentPage + 1)">> </a>
-          </span>
-          <span *ngIf="pager.currentPage < pager.totalPages" [ngClass]="{'disabled': pager.currentPage === pager.totalPages}">
-          <a [routerLink]="" (click)="setPage(pager.totalPages)">>> </a>
+          <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
           </span>
         </div>
       </div>

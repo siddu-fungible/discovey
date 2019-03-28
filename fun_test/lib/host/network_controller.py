@@ -1272,6 +1272,48 @@ class NetworkController(DpcshClient):
             fun_test.critical(str(ex))
         return stats
 
+    def peek_resource_bam_stats(self):
+        stats = None
+        try:
+            cmd = "stats/resource/bam"
+            fun_test.debug("Getting resource bam stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get resource bam stats")
+            fun_test.debug("Resource BAM stats: %s" % result['data'])
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def peek_eqm_stats(self):
+        stats = None
+        try:
+            cmd = "stats/eqm"
+            fun_test.debug("Getting eqm stats")
+            result = self.json_execute(verb=self.VERB_TYPE_PEEK, data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get eqm stats")
+            fun_test.debug("EQM stats: %s" % result['data'])
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
+    def flow_list(self, blocked_only=False):
+        stats = None
+        try:
+            if blocked_only:
+                cmd = "list"
+            else:
+                cmd = "blocked"
+            fun_test.debug("Getting flow list")
+            result = self.json_execute(verb="flow", data=cmd, command_duration=self.COMMAND_DURATION)
+            fun_test.simple_assert(expression=result['status'], message="Get flow %s" % cmd)
+            fun_test.debug("flow %s: %s" % (cmd, result['data']))
+            stats = result['data']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return stats
+
     def peek_parser_stats(self, hnu=False):
         stats = None
         try:

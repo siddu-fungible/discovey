@@ -1,11 +1,13 @@
 import {Component, OnInit, Input} from '@angular/core';
 import {PagerService} from "../services/pager/pager.service";
 import {ApiService} from "../services/api/api.service";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {Title} from "@angular/platform-browser";
 import {ReRunService} from "./re-run.service";
 import {LoggerService} from '../services/logger/logger.service';
 import {RegressionService} from "./regression.service";
+import {Observable, of} from "rxjs";
+import {switchMap} from "rxjs/operators";
 
 enum Filter {
     All = "ALL",
@@ -28,6 +30,8 @@ export class RegressionComponent implements OnInit {
   items: any;
   logDir: any;
   status: string = "Fetching Data";
+  stateFilter: string = Filter.All;
+  filter = Filter;
 
   constructor(private pagerService: PagerService,
               private apiService: ApiService,
@@ -35,7 +39,8 @@ export class RegressionComponent implements OnInit {
               private title: Title,
               private reRunService: ReRunService,
               private logger: LoggerService,
-              private regressionService: RegressionService) {
+              private regressionService: RegressionService,
+              private router: Router) {
   }
 
   ngOnInit() {
@@ -43,6 +48,7 @@ export class RegressionComponent implements OnInit {
     if (this.route.snapshot.data["tags"]) {
       this.tags = this.route.snapshot.data["tags"];
     }
+    /*
     this.route.params.subscribe(params => {
       if (params['filterString']) {
         let urlString = params['filterString'];
@@ -57,8 +63,8 @@ export class RegressionComponent implements OnInit {
       if (params['tags']) {
         this.tags = '["' + params["tags"] + '"]';
       }
-    });
-    this.recordsPerPage = 20;
+    });*/
+    this.recordsPerPage = 50;
     this.logDir = null;
     this.suiteExecutionsCount = 0;
     let payload = {};
@@ -66,10 +72,34 @@ export class RegressionComponent implements OnInit {
       payload["tags"] = this.tags;
     }
     let self = this;
-    this.apiService.post("/regression/suite_executions_count/" + this.filterString, payload).subscribe((result) => {
-      this.suiteExecutionsCount = (parseInt(result.data));
-      this.setPage(1);
+    new Observable(observer => {
+      observer.next(true);
+      //observer.complete();
+
+      return () => {
+
+      }
+    }).pipe(switchMap(() => {
+        return this.getQueryParam().pipe(switchMap((response) => {
+          if (response["state_filter"]) {
+            this.stateFilter = response["state_filter"];
+          }
+
+          return of(true);
+        }))
+      }),switchMap((response) => {
+      return this.apiService.post("/regression/suite_executions_count/" + this.stateFilter, payload).pipe(switchMap((result) => {
+        this.suiteExecutionsCount = (parseInt(result.data));
+        this.setPage(1);
+        return of(true);
+      }))
+    })
+    ).subscribe(() => {
+
+    }, error => {
+      this.logger.error(error);
     });
+
     if (!this.logDir) {
       this.apiService.get("/regression/log_path").subscribe(function (result) {
         self.logDir = result.data;
@@ -78,6 +108,28 @@ export class RegressionComponent implements OnInit {
       });
     }
     this.status = null;
+  }
+
+  onStateFilterClick(state) {
+    this.stateFilter = state;
+    this.navigateByQuery(state);
+  }
+
+  navigateByQuery(state) {
+    let queryPath = "/regression?state_filter=" + state;
+    this.router.navigateByUrl(queryPath);
+  }
+
+  getQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('state_filter')) {
+        this.stateFilter = params["state_filter"];
+      }
+      if (params.hasOwnProperty('tag')) {
+        this.tags = '["' + params["tag"] + '"]';
+      }
+      return of(params);
+    }))
   }
 
   setPage(page) {
@@ -92,14 +144,14 @@ export class RegressionComponent implements OnInit {
       payload["tags"] = this.tags;
     }
     this.status = "Fetching Data";
-    this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + this.filterString, payload).subscribe(result => {
+    this.apiService.post("/regression/suite_executions/" + this.recordsPerPage + "/" + page + "/" + this.stateFilter, payload).subscribe(result => {
       this.items = result.data;
       this.items.map(item => this.applyAdditionalAttributes(item));
       this.items
         .map(item => this.getReRunInfo(item));
       this.status = null;
     });
-    
+
   }
 
   applyAdditionalAttributes(item) {

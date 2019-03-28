@@ -824,6 +824,9 @@ class CmdController(Cmd):
     def peek_wustacks_stats(self, args):
         self._peek_cmd_obj.peek_stats_wustacks()
 
+    def peek_wus_stats(self, args):
+        self._peek_cmd_obj.peek_stats_wus()
+
     def peek_hu_stats(self, args):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_stats_hu(grep_regex=grep_regex)
@@ -1087,6 +1090,7 @@ class CmdController(Cmd):
     peek_malloc_agent_non_coh_stats_parser.set_defaults(func=peek_malloc_agent_non_coh_stats)
     peek_wustacks_stats_parser.set_defaults(func=peek_wustacks_stats)
     peek_hu_stats_parser.set_defaults(func=peek_hu_stats)
+    peek_wus_stats_parser.set_defaults(func=peek_wus_stats)
 
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
