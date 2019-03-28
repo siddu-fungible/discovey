@@ -269,7 +269,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                     if "expected" in data["output"]:
                         if data["output"]["expected"] and data["output"]["expected"] >= 0:
                             num_data_sets_with_expected += 1
-                            num_data_sets_with_expected = len(data_sets) if num_data_sets_with_expected == 0 else num_data_sets_with_expected
+                num_data_sets_with_expected = len(data_sets) if num_data_sets_with_expected == 0 else num_data_sets_with_expected
                 for data_set in data_sets:
                     expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
                     if num_data_sets_with_expected == len(data_sets) or (expected_value and expected_value != -1):
@@ -551,9 +551,9 @@ def convert_to_base_unit(output_value, output_unit):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Crypto API Throughput")
-    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
-    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="FunOS")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
-    all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
-    prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
+    # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
+    # all_metrics_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="All metrics")
+    # prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=False)
