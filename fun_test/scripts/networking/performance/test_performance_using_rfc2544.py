@@ -241,12 +241,47 @@ class TestTransitPerformance(FunTestCase):
         result = self.template_obj.create_performance_table(result_dict=result_dict['summary_result'],
                                                             table_name=table_name)
         fun_test.simple_assert(result, checkpoint)
-        checkpoint = "Ensure output JSON populated for performance dashboard"
         if self.spray or self.flow_direction == FLOW_TYPE_NU_NU_NFCP:
             result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
                                                                       timestamp=TIMESTAMP,
                                                                       flow_direction=self.flow_direction)
-            fun_test.simple_assert(result, checkpoint)
+            if not result:
+                fun_test.log("===================== Trying another trial for failed flow with extra debug logs %s "
+                             "=====================" % self.flow_direction)
+                checkpoint = "Clear FPG stats"
+                for port in [13, 15, 18, 1, 2]:
+                    shape = 0
+                    if port == 1 or port == 2:
+                        shape = 1
+                    network_controller_obj.clear_port_stats(port, shape)
+                fun_test.add_checkpoint(checkpoint)
+
+                checkpoint = "Start Sequencer"
+                result = self.template_obj.start_sequencer()
+                fun_test.test_assert(result, checkpoint)
+
+                fun_test.sleep("Waiting for sequencer to run", seconds=60)
+
+                checkpoint = "Stop Sequencer"
+                result = self.template_obj.stc_manager.stop_sequencer()
+                fun_test.test_assert(result, checkpoint)
+
+                fun_test.log("============== Mac stats for FPG13 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=13)
+                fun_test.log("============== Mac stats for FPG15 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=15)
+                fun_test.log("============== Mac stats for FPG18 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=18)
+                fun_test.log("============== Mac stats for HNU FPG1 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=1, hnu=True)
+                fun_test.log("============== Mac stats for HNU FPG2 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=2, hnu=True)
+
+                fun_test.log("Fetching PSW Global stats before test")
+                network_controller_obj.peek_psw_global_stats()
+
+                fun_test.simple_assert(False, '%s Flow Failed as all iterations in RFC2544 run failed. '
+                                              'Added -1 in JSON output for this flow' % self.flow_direction)
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 

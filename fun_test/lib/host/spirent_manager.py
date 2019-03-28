@@ -1137,6 +1137,17 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return is_started
 
+    def stop_sequencer(self):
+        is_stopped = False
+        try:
+            fun_test.debug("Stopping Sequencer...")
+            result = self.stc.perform("SequencerStop")
+            if result['State'] == 'COMPLETED':
+                is_stopped = True
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return is_stopped
+
     def wait_until_complete(self):
         return self.stc.waitUntilComplete()
 
