@@ -259,19 +259,19 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
         data_set_mofified = False
         data_sets = json.loads(chart.data_sets)
         num_data_sets_with_expected = 0
-        for set in data_sets:
-            if "reference" in set["output"]:
-                reference_value = set["output"]["reference"]
+        for data_set in data_sets:
+            if "reference" in data_set["output"]:
+                reference_value = data_set["output"]["reference"]
                 if not reference_value or reference_value <= 0:
                     data_set_mofified = chart.fixup_reference_values(
-                        data_set=set)
+                        data_set=data_set)
             else:
                 # let's fix it up
                 print ("Fixing reference values")
                 data_set_mofified = chart.fixup_reference_values(
-                    data_set=set)
-            if "expected" in set["output"]:
-                if set["output"]["expected"] and set["output"]["expected"] >= 0:
+                    data_set=data_set)
+            if "expected" in data_set["output"]:
+                if data_set["output"]["expected"] and data_set["output"]["expected"] >= 0:
                     num_data_sets_with_expected += 1
         if data_set_mofified:
             chart.data_sets = json.dumps(data_sets)
