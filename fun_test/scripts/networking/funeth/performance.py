@@ -149,8 +149,10 @@ class FunethPerformanceBase(FunTestCase):
                 arg_dict.pop('bw')  # 'bw' is n/a in NetperfManager
 
         # Collect stats before and after test run
+        fun_test.log('Collect stats before test')
         collect_stats()
         result = perf_manager_obj.run(*arg_dicts)
+        fun_test.log('Collect stats after test')
         collect_stats()
 
         # check for 'nan'
