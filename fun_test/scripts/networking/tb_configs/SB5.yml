@@ -76,21 +76,21 @@ hu:
           nexthop: 29.1.1.1
         - prefix: 60.1.1.0/24
           nexthop: 29.1.1.1
-    n1:
-      interfaces:
-        - hu0-f1:
-            mac_addr: 00:de:ad:be:ef:21
-            ipv4_addr: 29.1.2.2
-            ipv4_netmask: 255.255.255.0
-      routes:
-        - prefix: 29.1.1.0/24
-          nexthop: 29.1.2.1
-        - prefix: 19.1.1.0/24
-          nexthop: 29.1.2.1
-        - prefix: 21.1.1.0/24
-          nexthop: 29.1.2.1
-        - prefix: 60.1.1.0/24
-          nexthop: 29.1.2.1
+#    n1:
+#      interfaces:
+#        - hu0-f1:
+#            mac_addr: 00:de:ad:be:ef:21
+#            ipv4_addr: 29.1.2.2
+#            ipv4_netmask: 255.255.255.0
+#      routes:
+#        - prefix: 29.1.1.0/24
+#          nexthop: 29.1.2.1
+#        - prefix: 19.1.1.0/24
+#          nexthop: 29.1.2.1
+#        - prefix: 21.1.1.0/24
+#          nexthop: 29.1.2.1
+#        - prefix: 60.1.1.0/24
+#          nexthop: 29.1.2.1
     n8:
       interfaces:
         - hu0-f8:
