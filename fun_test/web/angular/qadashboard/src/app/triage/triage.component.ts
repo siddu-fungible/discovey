@@ -51,6 +51,7 @@ export class TriageComponent implements OnInit {
   fromDate: any;
   toDate: any;
   bootArgs: string = null;
+  funOSMakeFlags: string = null;
   fromCommit: string = null;
   toCommit: string = null;
   advancedInfo: boolean = false;
@@ -65,11 +66,12 @@ export class TriageComponent implements OnInit {
 
   ngOnInit() {
     this.status = "Fetching Commits";
-    this.triagingOptions.push("SCORES");
+    // this.triagingOptions.push("SCORES");
     this.triagingOptions.push("PASS/FAIL");
     this.fromDate = null;
     this.toDate = null;
     this.bootArgs = null;
+    this.funOSMakeFlags = null;
     this.selectedOption = null;
     this.route.params.subscribe(params => {
       if (params['id']) {
@@ -295,7 +297,8 @@ export class TriageComponent implements OnInit {
       "metric_type": this.selectedOption,
       "from_date": this.fromDate,
       "to_date": this.toDate,
-      "boot_args": this.bootArgs
+      "boot_args": this.bootArgs,
+      "funOS_make_flags": this.funOSMakeFlags
     };
     this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
       let result = data.data;
@@ -333,7 +336,8 @@ export class TriageComponent implements OnInit {
       "metric_type": this.selectedOption,
       "from_commit": this.fromCommit,
       "to_commit": this.toCommit,
-      "boot_args": this.bootArgs
+      "boot_args": this.bootArgs,
+      "funOS_make_flags": this.funOSMakeFlags
     };
     this.apiService.post('/metrics/get_triage_info_from_commits', payload).subscribe((data) => {
       let result = data.data;
@@ -353,6 +357,7 @@ export class TriageComponent implements OnInit {
       if (result["metric_type"]) {
         this.selectedOption = result["metric_type"];
         this.bootArgs = result["boot_args"];
+        this.funOSMakeFlags = result["funOS_make_flags"];
         this.faultyCommit = result["from_commit"];
         this.successCommit = result["to_commit"];
         this.showForm = false;

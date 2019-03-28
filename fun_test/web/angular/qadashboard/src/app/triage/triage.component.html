@@ -32,12 +32,12 @@
     <!--</tr>-->
     <tr>
       <td>
-        From commit:
+        Failure commit:
       </td>
       <td><input type="text" [(ngModel)]="fromCommit"/>
       </td>
       <td>
-        To commit:
+        Working commit:
       </td>
       <td><input type="text" [(ngModel)]="toCommit"/>
       </td>
@@ -55,6 +55,14 @@
         <select [(ngModel)]="selectedOption">
           <option [value]="x" *ngFor="let x of triagingOptions">{{x}}</option>
         </select>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        FunOS makeflags:
+      </td>
+      <td>
+        <input type="text" [(ngModel)]="funOSMakeFlags"/>
       </td>
     </tr>
     <tr>
