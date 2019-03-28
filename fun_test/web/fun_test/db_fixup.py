@@ -322,7 +322,7 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                     else:
                                         print "ERROR: {}, {}".format(chart.chart_name,
                                                                      chart.metric_model_name)
-                current_score = round(data_set_combined_goodness / num_data_sets_with_expected, 1)
+                current_score = round(data_set_combined_goodness / num_data_sets_with_expected, 1) if num_data_sets_with_expected != 0 else 0
 
                 # is_leaf_degrade = current_score < last_good_score
                 replacement = False
