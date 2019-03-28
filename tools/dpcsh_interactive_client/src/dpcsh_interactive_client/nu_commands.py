@@ -2528,6 +2528,49 @@ class PeekCommands(object):
             print "ERROR: %s" % str(ex)
             self.dpc_client.disconnect()
 
+    def peek_stats_wus(self):
+        try:
+            prev_result = None
+            while True:
+                master_table_obj = PrettyTable()
+                master_table_obj.align = 'l'
+                master_table_obj.header = False
+                try:
+                    cmd = "stats/wus"
+                    result = self.dpc_client.execute(verb='peek', arg_list=[cmd])
+                    if result:
+                        if prev_result:
+                            diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            for key in result:
+                                if type(result[key]) == dict:
+                                    table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
+                                    table_obj.align = 'l'
+                                    table_obj.sortby = 'Field Name'
+                                    for _key in result[key]:
+                                        table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
+                                    master_table_obj.add_row([key, table_obj])
+                        else:
+                            for key in result:
+                                if type(result[key]) == dict:
+                                    table_obj = PrettyTable(['Field Name', 'Counter'])
+                                    table_obj.align = 'l'
+                                    table_obj.sortby = 'Field Name'
+                                    for _key in result[key]:
+                                        table_obj.add_row([_key, result[key][_key]])
+                                    master_table_obj.add_row([key, table_obj])
+                        print master_table_obj
+                        prev_result = result
+                        print "\n########################  %s ########################\n" % str(self._get_timestamp())
+                        time.sleep(TIME_INTERVAL)
+                    else:
+                        print "Empty Result"
+                except KeyboardInterrupt:
+                    self.dpc_client.disconnect()
+                    break
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+            self.dpc_client.disconnect()
+
 
 class SampleCommands(object):
 
