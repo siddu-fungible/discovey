@@ -2,7 +2,9 @@ from __future__ import print_function
 import json
 from ydk.models.openconfig import openconfig_bgp
 from ydk.models.openconfig import openconfig_bgp_types
-from ydk.models.openconfig.openconfig_routing_policy import RoutingPolicy
+from ydk.models.openconfig import openconfig_routing_policy as oc_routing_policy 
+from ydk.models.openconfig import openconfig_policy_types as oc_policy_types
+from ydk.types import Empty
 from ydk.providers import CodecServiceProvider
 from ydk.services import CodecService
 from api_config import SDKClient
@@ -16,26 +18,34 @@ class BGPConfig(CodecService , CodecServiceProvider):
         self.provider = CodecServiceProvider(type='json')
         self.codec_service = CodecService()
 
-    def read_bgp_config(self, config_json):
-
-        # Create routing policy for nexthop self 
-        routing_policy = RoutingPolicy()
-        next_hop_self_defn = RoutingPolicy.PolicyDefinitions.PolicyDefinition()
+    def read_routing_policy(self):
+       
+        routing_policy = oc_routing_policy.RoutingPolicy() 
+        # Create routing policy for nexthop self
+        next_hop_self_defn = routing_policy.PolicyDefinitions.PolicyDefinition()
         next_hop_self_defn.name = 'Next-Hop-Self'
         statement=next_hop_self_defn.statements.Statement()
-        statement.name="next-hop-self" 
+        statement.name="next-hop-self"
         statement.actions.BgpActions().config.set_next_hop = "SELF"
         next_hop_self_defn.statements.statement.append(statement)
         routing_policy.policy_definitions.policy_definition.append(next_hop_self_defn)
-        next_hop_self_defn.parent = routing_policy.policy_definitions
-        
+        next_hop_self_defn.parent = routing_policy.policy_definitions     
+        return routing_policy
+
+    def read_multiple_bgp(self, config_json):
+        bgp_cfg = self.read_bgp_config(config_json=config_json)
+        policy_cfg = self.read_routing_policy()
+        return {"bgp":bgp_cfg, "routing-policy":policy_cfg}
+  
+
+    def read_bgp_config(self, config_json):
+ 
         bgp_cfg = openconfig_bgp.Bgp()
         # Config Local AS
         bgp_cfg.global_.config.as_ = config_json["as"]
+        
         # Config Router ID
         bgp_cfg.global_.config.router_id = config_json["router_id"]
-        # Config Network 
-        #bgp_cfg.global_.config._prefix = config_json["network"]
 
         # Config Neighbour 
         for item in config_json["neighbors"]:
@@ -47,18 +57,6 @@ class BGPConfig(CodecService , CodecServiceProvider):
             # Configure allow own as 
             nbr_ipv4.as_path_options.config.allow_own_as=1
 
-            
-            # Append nexthop-self policy
-            #nbr_ipv4_afsf = nbr_ipv4.afi_safis.AfiSafi()
-            #nbr_ipv4_afsf.afi_safi_name = openconfig_bgp_types.IPV4UNICAST()
-            #nbr_ipv4_afsf.config.afi_safi_name = openconfig_bgp_types.IPV4UNICAST()
-            #nbr_ipv4_afsf.config.enabled = True
-
-            # Create afi-safi policy instances
-            #nbr_ipv4_afsf.apply_policy.config.import_policy.append('Next-Hop-Self')
-            #nbr_ipv4_afsf.apply_policy.config.export_policy.append('Next-Hop-Self')
-            #nbr_ipv4.afi_safis.afi_safi.append(nbr_ipv4_afsf)
-
             bgp_cfg.neighbors.neighbor.append(nbr_ipv4)
             nbr_ipv4.parent = bgp_cfg.neighbors
         return bgp_cfg
@@ -68,3 +66,9 @@ class BGPConfig(CodecService , CodecServiceProvider):
         bgp_payload = self.codec_service.encode(self.provider, bgp_cfg)
         url = "http://%s:%s/v1/update/openconfig-bgp:bgp" %(self.target_ip, self.target_port)
         self.sdk_client.patchall(url=url, data=bgp_payload)
+
+    def create_oc_routing_policy(self):
+        policy_cfg = self.read_routing_policy()
+        policy_payload = self.codec_service.encode(self.provider, policy_cfg)
+        url = "http://%s:%s/v1/update/openconfig-routing-policy:routing-policy" %(self.target_ip, self.target_port)
+        self.sdk_client.patchall(url=url, data=policy_payload)

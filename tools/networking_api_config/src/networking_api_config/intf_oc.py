@@ -2,12 +2,14 @@ from __future__ import print_function
 import json
 from ydk.models.openconfig import openconfig_bgp
 from ydk.models.openconfig import openconfig_bgp_types
+from ydk.models.openconfig import iana_if_type
 from ydk.models.openconfig.openconfig_routing_policy import RoutingPolicy
 from ydk.providers import CodecServiceProvider
 from ydk.services import CodecService
 from api_config import SDKClient
 from ydk.services import CRUDService
 from ydk.models.openconfig.openconfig_interfaces import Interfaces
+from ydk.models.openconfig.ietf_interfaces import InterfaceType
 from ydk.errors import YError
 
 class IntfOCConfig(CodecService , CodecServiceProvider):
@@ -23,13 +25,17 @@ class IntfOCConfig(CodecService , CodecServiceProvider):
         # Configure Interface 
         interfaces=Interfaces()
         interface = interfaces.Interface()
-        interface.config.name = intf_config["id"]
         if loopback:
-            interface.config.loopback_mode = True
+            interface.config.type = iana_if_type.SoftwareLoopback()
+            interface.config.loopback_mode = False
+            loopback_name= intf_config["id"] + ":0"
+            interface.config.name = loopback_name
         elif irb:
-            pass 
+            interface.config.name = intf_config["id"] 
         else:
+            interface.config.name = intf_config["id"] 
             interface.config.description = intf_config["description"]
+
         interface.name = interface.config.name
         interface.config.enabled = True
 
@@ -38,20 +44,23 @@ class IntfOCConfig(CodecService , CodecServiceProvider):
             subinterface = interface.subinterfaces.Subinterface()        
             subinterface.index = 1
             subinterface.config.index = 1
-            subinterface.ipv4  =  subinterface.Ipv4()      
+            subinterface.config.enabled = True
+            subinterface.ipv4  =  subinterface.Ipv4()     
+            subinterface.ipv4.config.enabled=True
+            subinterface.ipv4.config.dhcp_client=False 
             addresses=subinterface.ipv4.Addresses() 
-            address = addresses.Address()    
+            address = addresses.Address()   
             if loopback:
-                address.ip =  intf_config["ip"]
-                address.config.ip  =  intf_config["ip"]
-                address.config.prefix_length  =  int(intf_config["netmask"])
+                address.ip =  intf_config["ip"]["address"]
+                address.config.ip  =  intf_config["ip"]["address"]
+                address.config.prefix_length  =  int(intf_config["ip"]["netmask"])
             elif irb:
-                address.ip =  intf_config["ip"]
-                address.config.ip  =  intf_config["ip"]
-                address.config.prefix_length  =  int(intf_config["netmask"])
+                address.ip =  intf_config["ip"]["address"]
+                address.config.ip  =  intf_config["ip"]["address"]
+                address.config.prefix_length  =  int(intf_config["ip"]["netmask"])
             else:    
-                address.ip =  intf_config["ip"]["my_ip"]
-                address.config.ip  =  intf_config["ip"]["my_ip"]
+                address.ip =  intf_config["ip"]["address"]
+                address.config.ip  =  intf_config["ip"]["address"]
                 address.config.prefix_length  =  int(intf_config["ip"]["netmask"])    
 
             subinterface.ipv4.addresses.address.append(address)     

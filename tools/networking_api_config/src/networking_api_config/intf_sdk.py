@@ -5,6 +5,24 @@ import json
 from api_config import SDKClient
 from collections import OrderedDict
 
+
+# Default field and mandatory 
+
+##- Mandatory 
+# id
+# type
+
+# Below will go away when control plane is up 
+# gph_index
+# spine_index 
+# remote_f1_id 
+
+##-Default value
+#vrf = 1 
+#speed = 100
+
+
+
 class IntfConfig(object):
     def __init__(self, target_ip='127.0.0.1', target_port='8000'):
         self.target_ip = target_ip
@@ -16,7 +34,8 @@ class IntfConfig(object):
         intf_config = intf_json
         data_dict={}
 
-        link_speed = str('BW_'+ str(intf_config['bandwidth']) + 'G')
+        speed = intf_config.get("bandwidth", 100) 
+        link_speed = str('BW_'+ str(speed) + 'G')
         intf_gphs_list=[]
         for item in intf_config["gph_index"]:
             intf_dict={}
@@ -25,8 +44,9 @@ class IntfConfig(object):
             intf_gphs_list.append(intf_dict)
 
         if intf_config['type'] == 'fabric_facing':
+
             data_dict["status"] = True
-            data_dict["vrfid"] = 1
+            data_dict["vrfid"] = intf_config.get("vrf", 1)
             data_dict["remote_f1_id"] = intf_config['remote_f1_id']
             data_dict["name"] = intf_json["id"]
             data_dict["Interface_type"] = 'Fabric_Facing'
