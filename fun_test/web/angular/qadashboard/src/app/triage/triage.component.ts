@@ -52,10 +52,13 @@ export class TriageComponent implements OnInit {
   toDate: any;
   bootArgs: string = null;
   funOSMakeFlags: string = null;
+  email: string = null;
   fromCommit: string = null;
   toCommit: string = null;
   advancedInfo: boolean = false;
   location: Location;
+  emulationUrl = "https://github.com/fungible-inc/FunDevelopment/tree/master/emulation_schedule";
+  validated: boolean = false;
 
   @ViewChild("content") modalContent: TemplateRef<any>;
 
@@ -72,6 +75,7 @@ export class TriageComponent implements OnInit {
     this.toDate = null;
     this.bootArgs = null;
     this.funOSMakeFlags = null;
+    this.email = null;
     this.selectedOption = null;
     this.route.params.subscribe(params => {
       if (params['id']) {
@@ -271,7 +275,7 @@ export class TriageComponent implements OnInit {
       this.fetchGitCommits();
     }
   }
-  
+
   openGitUrl(sha): void {
     let url = "https://github.com/fungible-inc/FunOS/commit/" + sha;
     window.open(url, '_blank');
@@ -298,7 +302,8 @@ export class TriageComponent implements OnInit {
       "from_date": this.fromDate,
       "to_date": this.toDate,
       "boot_args": this.bootArgs,
-      "funOS_make_flags": this.funOSMakeFlags
+      "funOS_make_flags": this.funOSMakeFlags,
+      "email": this.email
     };
     this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
       let result = data.data;
@@ -330,24 +335,37 @@ export class TriageComponent implements OnInit {
 
   }
 
+  validateFields(): void {
+    if (this.fromCommit && this.toCommit && this.bootArgs && this.email && this.selectedOption) {
+      this.validated = true;
+    } else {
+      this.validated = false;
+      alert("Please fill all the required fields");
+    }
+  }
+
   getInfoFromCommits(): void {
-    this.status = "Triaging commits";
-    let payload = {
-      "metric_type": this.selectedOption,
-      "from_commit": this.fromCommit,
-      "to_commit": this.toCommit,
-      "boot_args": this.bootArgs,
-      "funOS_make_flags": this.funOSMakeFlags
-    };
-    this.apiService.post('/metrics/get_triage_info_from_commits', payload).subscribe((data) => {
-      let result = data.data;
-      this.triageInfo = result;
-      this.successCommit = this.toCommit;
-      this.faultyCommit = this.fromCommit;
-      this.fetchGitCommits();
-    }, error => {
-      this.logger.error("Traiging info fetch failed");
-    });
+    this.validateFields();
+    if (this.validated) {
+      this.status = "Triaging commits";
+      let payload = {
+        "metric_type": this.selectedOption,
+        "from_commit": this.fromCommit,
+        "to_commit": this.toCommit,
+        "boot_args": this.bootArgs,
+        "funOS_make_flags": this.funOSMakeFlags,
+        "email": this.email
+      };
+      this.apiService.post('/metrics/get_triage_info_from_commits', payload).subscribe((data) => {
+        let result = data.data;
+        this.triageInfo = result;
+        this.successCommit = this.toCommit;
+        this.faultyCommit = this.fromCommit;
+        this.fetchGitCommits();
+      }, error => {
+        this.logger.error("Traiging info fetch failed");
+      });
+    }
   }
 
   checkTriageDb(): void {
@@ -358,6 +376,7 @@ export class TriageComponent implements OnInit {
         this.selectedOption = result["metric_type"];
         this.bootArgs = result["boot_args"];
         this.funOSMakeFlags = result["funOS_make_flags"];
+        this.email = result["email"];
         this.faultyCommit = result["from_commit"];
         this.successCommit = result["to_commit"];
         this.showForm = false;
@@ -372,6 +391,10 @@ export class TriageComponent implements OnInit {
     }, error => {
       this.logger.error("checking DB Failed");
     });
+  }
+
+  openParams(): void {
+    window.open(this.emulationUrl, '_blank');
   }
 
   fetchGitCommits(): void {
