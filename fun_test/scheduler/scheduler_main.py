@@ -545,11 +545,28 @@ def revive_scheduled_jobs(job_ids=None):
         os.remove(job_file)
 
 
+class QueueWorker(Thread):
+    def __init__(self):
+        super(QueueWorker, self).__init__()
+
+    def run(self):
+        while True:
+            low, high = SchedulerJobPriority.RANGES[SchedulerJobPriority.NORMAL]
+            normal_priority_jobs = JobQueue.objects.filter(priority__lte=high, priority__gte=low).order_by('priority')
+            for normal_priority_job in normal_priority_jobs:
+                print ("Testbed-type: {}".format(normal_priority_job.test_bed_type))
+
+            print("Queue Worker")
+            time.sleep(5)
+
 if __name__ == "__main__":
     queue_lock = RLock()
     # ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
+
+    queue_worker = QueueWorker()
+    queue_worker.start()
 
     revive_scheduled_jobs()
     run = True
@@ -581,3 +598,4 @@ if __name__ == "__main__":
         except Exception as ex:
             scheduler_logger.exception(str(ex))
         # wait
+    queue_worker.join()
