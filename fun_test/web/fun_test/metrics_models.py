@@ -327,7 +327,8 @@ class MetricChart(models.Model):
         #    j = 0
         first_record = self.get_first_record(data_set=data_set, number_of_records=100)
         if not first_record:
-            i = 0
+            data_set["output"]["reference"] = 0
+            modified = 1
         else:
             output_name = data_set["output"]["name"]
             for first in first_record[::-1]:
@@ -338,6 +339,7 @@ class MetricChart(models.Model):
                         break
             if modified == 0:
                 data_set["output"]["reference"] = 0
+                modified = 1
             # data_set["expected"] = first_rec
         # self.data_sets = json.dumps(data_set)
         # self.save()
@@ -594,6 +596,8 @@ class MetricChart(models.Model):
 
             earlier_day = today - timedelta(days=number_of_records - 1)
             earlier_day = earlier_day.replace(hour=0, minute=0, second=1)
+            if earlier_day <= self.base_line_date:
+                earlier_day = self.base_line_date
 
             d = {}
             for input_name, input_value in inputs.iteritems():

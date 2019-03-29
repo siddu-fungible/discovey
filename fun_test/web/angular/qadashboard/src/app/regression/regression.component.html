@@ -110,7 +110,7 @@
           </td>
           <td>
             <label *ngFor="let tag of getTagList(suiteExecution.fields.tags)" class="badge badge-primary">
-              <a class="tag-link" target="_blank" href="/regression/jobs_by_tag/{{ tag }}">{{ tag}}</a></label>
+              <a class="tag-link" target="_blank" href="/regression?tag={{ tag }}">{{ tag}}</a></label>
           </td>
         </tr>
           <tr *ngIf="suiteExecution.showingDetails">
