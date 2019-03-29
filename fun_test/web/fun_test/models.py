@@ -100,7 +100,7 @@ class SuiteExecution(models.Model):
     environment = models.TextField(default="{}", null=True)  # extra environment dictionary (only networking uses this)
     inputs = models.TextField(default="{}", null=True)  # inputs dictionary
     build_url = models.TextField(default="")
-    version = models.CharField(max_length=50, default="UNKNOWN")
+    version = models.CharField(max_length=50, null=True)
     requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
     tags = models.TextField(default="[]")
 
@@ -139,7 +139,7 @@ class SuiteExecution(models.Model):
     build_done = models.BooleanField(default=False)
 
     def __str__(self):
-        s = "Suite: {} {}".format(self.execution_id, self.suite_path)
+        s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
         return s
 
     class Meta:

@@ -15,7 +15,7 @@ from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
-from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType
+from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
 from web.fun_test.models import SchedulerJobPriority, JobQueue
 from django.db import transaction
 from pytz import timezone
@@ -318,6 +318,7 @@ def queue_job3(suite_path=None,
                                                         completed_time=get_current_time(),
                                                         suite_path=final_suite_path,
                                                         tags=tags,
+                                                        state=JobStatusType.SUBMITTED,
                                                         suite_container_execution_id=suite_container_execution_id,
                                                         test_bed_type=test_bed_type)
     if suite_type == SuiteType.DYNAMIC:
@@ -327,40 +328,36 @@ def queue_job3(suite_path=None,
         else:
             scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
 
-    job_id = suite_execution.execution_id
     try:
-        job_spec_entry = JobSpec()
-        job_spec_entry.job_id = job_id
-        job_spec_entry.suite_path = suite_path
-        job_spec_entry.dynamic_suite_spec = dynamic_suite_spec
-        job_spec_entry.script_path = script_path
-        job_spec_entry.suite_type = suite_type
-        job_spec_entry.scheduling_type = scheduling_type
+        suite_execution.suite_path = suite_path
+        suite_execution.dynamic_suite_spec = dynamic_suite_spec
+        suite_execution.suite_type = suite_type
+        suite_execution.scheduling_type = scheduling_type
 
-        job_spec_entry.requested_days = requested_days
-        job_spec_entry.requested_hour = requested_hour
-        job_spec_entry.requested_minute = requested_minute
-        job_spec_entry.timezone_string = timezone_string
-        job_spec_entry.repeat_in_minutes = repeat_in_minutes
+        suite_execution.requested_days = requested_days
+        suite_execution.requested_hour = requested_hour
+        suite_execution.requested_minute = requested_minute
+        suite_execution.timezone_string = timezone_string
+        suite_execution.repeat_in_minutes = repeat_in_minutes
 
-        job_spec_entry.tags = tags
-        job_spec_entry.emails = json.dumps(emails)
-        job_spec_entry.email_on_failure_only = email_on_fail_only
+        suite_execution.tags = tags
+        suite_execution.emails = json.dumps(emails)
+        suite_execution.email_on_failure_only = email_on_fail_only
 
-        job_spec_entry.environment = environment
-        job_spec_entry.inputs = inputs
-        job_spec_entry.build_url = build_url
-        job_spec_entry.version = version
-        job_spec_entry.requested_priority_category = requested_priority_category
-        job_spec_valid, error_message = validate_spec(spec=job_spec_entry)
+        suite_execution.environment = environment
+        suite_execution.inputs = inputs
+        suite_execution.build_url = build_url
+        suite_execution.version = version
+        suite_execution.requested_priority_category = requested_priority_category
+        job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:
-            raise SchedulerException("Invalid job spec: {}, Error message: {}".format(job_spec_entry, error_message))
-        job_spec_entry.save()
-        result = job_id
+            raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
+        suite_execution.save()
+        result = suite_execution.execution_id
     except Exception as ex:
         raise SchedulerException("Unable to schedule job due to: " + str(ex))
         # TODO: Remove suite execution entry
-    print("Job Id: {} suite: {} Submitted".format(job_id, suite_path))
+    print("Job Id: {} suite: {} Submitted".format(suite_execution.execution_id, suite_path))
     return result
 
 

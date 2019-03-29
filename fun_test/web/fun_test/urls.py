@@ -37,7 +37,6 @@ regression_urls = [
     url(r'^suite_detail/(\d+)$', regression_views.suite_detail),
     url(r'^suite_execution/(\d+)$', regression_views.suite_execution),
     url(r'^suite_execution_attributes/(\d+)$', regression_views.suite_execution_attributes),
-    url(r'^last_jenkins_hourly_execution_status', regression_views.last_jenkins_hourly_execution_status),
     url(r'^suite_executions_count/(.*)$', regression_views.suite_executions_count),
     url(r'^test_case_execution/(\d+)/(\d+)$', regression_views.test_case_execution),
     url(r'^suite_re_run/(\d+)$', regression_views.suite_re_run),

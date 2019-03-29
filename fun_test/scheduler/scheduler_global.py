@@ -47,3 +47,4 @@ class JobStatusType:
     KILLED = "KILLED"
     ABORTED = "ABORTED"
     COMPLETED = "COMPLETED"
+    ERROR = "ERROR"

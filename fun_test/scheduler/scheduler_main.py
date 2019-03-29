@@ -26,7 +26,7 @@ queue_lock = None
 def queue_job(job_spec):
     queue_lock.acquire()
     next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
-    new_job = JobQueue(priority=next_priority_value, job_id=job_spec.job_id, test_bed_type=job_spec.test_bed_type)
+    new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id, test_bed_type=job_spec.test_bed_type)
     new_job.save()
     job_spec.set_state(JobStatusType.QUEUED)
     queue_lock.release()
@@ -434,13 +434,14 @@ def process_submissions():
     # Process only from yesterday
     now = get_current_time()
     yesterday = now - timedelta(days=1)
-    job_specs = JobSpec.objects.filter(submission_time__gte=yesterday,
-                                       state=JobStatusType.SUBMITTED).order_by("-submission_time")
+    # job_specs = JobSpec.objects.filter().order_by("-submission_time")
 
+    job_specs = models_helper.get_suite_executions_by_filter(submitted_time__gte=yesterday,
+                                       state=JobStatusType.SUBMITTED).order_by("-submitted_time")
     for job_spec in job_specs:
         try:
             # Execute
-            job_id = job_spec.job_id
+            job_id = job_spec.execution_id
             scheduler_logger.info("Process queue: {}".format(job_id))
 
             schedule_it = True
@@ -448,11 +449,10 @@ def process_submissions():
             scheduler_logger.info("Job Id: {} Schedule it: {} Time: {}".format(job_id, schedule_it, scheduling_time))
             if job_spec and schedule_it and (scheduling_time >= 0):
                 t = threading.Timer(scheduling_time, timer_dispatch, (job_spec,))
-                job_id_timers[job_spec.job_id] = t
-                models_helper.update_suite_execution(suite_execution_id=job_spec.job_id,
+                job_id_timers[job_id] = t
+                models_helper.update_suite_execution(suite_execution_id=job_id,
                                                      scheduled_time=get_current_time() + datetime.timedelta(
-                                                         seconds=scheduling_time),
-                                                     result=RESULTS["SCHEDULED"])
+                                                         seconds=scheduling_time))
 
                 if job_spec.scheduling_type in SchedulingType.get_deferred_types():
                     copy_to_scheduled_job(job_spec)
@@ -464,7 +464,6 @@ def process_submissions():
         except Exception as ex:
             scheduler_logger.exception(str(ex))
 
-        set_processed_job(job_spec)
 
 
 def copy_to_scheduled_job(job_spec):

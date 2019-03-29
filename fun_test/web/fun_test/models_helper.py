@@ -193,8 +193,8 @@ def add_suite_execution(submitted_time,
                         scheduled_time,
                         completed_time,
                         suite_path="unknown",
+                        state=JobStatusType.SCHEDULED,
                         tags=None,
-                        catalog_reference="",
                         suite_container_execution_id=-1,
                         test_bed_type=None,
                         suite_type=SuiteType.STATIC):
@@ -213,11 +213,10 @@ def add_suite_execution(submitted_time,
                                submitted_time=submitted_time,
                                scheduled_time=scheduled_time,
                                completed_time=completed_time,
-                               result="QUEUED",
                                tags=tags,
-                               catalog_reference=catalog_reference,
                                suite_container_execution_id=suite_container_execution_id,
                                test_bed_type=test_bed_type,
+                               state=state,
                                suite_type=suite_type)
             s.save()
 
@@ -386,7 +385,6 @@ def _get_suite_executions(execution_id=None,
 
     all_objects = SuiteExecution.objects.filter(q).order_by('-id')
 
-
     if get_count:
         return all_objects.count()
 
@@ -511,3 +509,7 @@ def _get_suite_execution_attributes(suite_execution):
 def set_suite_re_run_info(original_suite_execution_id, re_run_suite_execution_id):
     re_run = SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id, re_run_suite_execution_id=re_run_suite_execution_id)
     re_run.save()
+
+def get_suite_executions_by_filter(**kwargs):
+    suite_executions = SuiteExecution.objects.filter(**kwargs)
+    return suite_executions

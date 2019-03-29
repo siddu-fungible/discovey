@@ -32,11 +32,6 @@ const routes: Routes = [
   {path: 'regression/summary', component: RegressionSummaryComponent},
   {path: 'regression/admin', component: RegressionAdminComponent},
   {path: 'regression', component: RegressionComponent},
-  {
-    path: 'regression/jenkins_jobs',
-    component: RegressionComponent,
-    data: {tags: '["jenkins-hourly", "jenkins-nightly"]'}
-  },
   {path: 'regression/jobs_by_tag/:tags', component: RegressionComponent},
   {path: 'regression/submit_job_page', component: SubmitJobComponent},
   {path: 'regression/suite_detail/:suiteId', component: SuiteDetailComponent},

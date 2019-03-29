@@ -307,7 +307,7 @@ def suites(request):
 
 @csrf_exempt
 @api_safe_json_response
-def suite_executions_count(request, filter_string):
+def suite_executions_count(request, state_filter_string):
     tags = None
     if request.method == 'POST':
         if request.body:
@@ -315,13 +315,13 @@ def suite_executions_count(request, filter_string):
             if "tags" in request_json:
                 tags = request_json["tags"]
                 tags = json.loads(tags)
-    count = _get_suite_executions(get_count=True, filter_string=filter_string, tags=tags)
+    count = _get_suite_executions(get_count=True, state_filter_string=state_filter_string, tags=tags)
     return count
 
 
 @csrf_exempt
 @api_safe_json_response
-def suite_executions(request, records_per_page=10, page=None, filter_string="ALL"):
+def suite_executions(request, records_per_page=10, page=None, state_filter_string="ALL"):
     tags = None
     if request.method == 'POST':
         if request.body:
@@ -332,7 +332,7 @@ def suite_executions(request, records_per_page=10, page=None, filter_string="ALL
     all_objects_dict = _get_suite_executions(execution_id=None,
                                              page=page,
                                              records_per_page=records_per_page,
-                                             filter_string=filter_string,
+                                             state_filter_string=state_filter_string,
                                              tags=tags)
     return all_objects_dict
     # return all_objects_dict
@@ -344,18 +344,6 @@ def suite_execution(request, execution_id):
     all_objects_dict = _get_suite_executions(execution_id=int(execution_id))
     # return json.dumps(all_objects_dict[0]) #TODO: Validate
     return all_objects_dict[0]
-
-
-@csrf_exempt
-@api_safe_json_response
-def last_jenkins_hourly_execution_status(request):
-    result = RESULTS["UNKNOWN"]
-    suite_executions = _get_suite_executions(tags=["jenkins-hourly"],
-                                             filter_string=SUITE_EXECUTION_FILTERS["COMPLETED"],
-                                             page=1, records_per_page=10)
-    if suite_executions:
-        result = suite_executions[0]["suite_result"]
-    return result
 
 
 def suite_detail(request, execution_id):
@@ -1009,10 +997,9 @@ def git(request):
 
 def _get_job_spec(job_id):
     result = {}
-    job_spec = JobSpec.objects.get(job_id=job_id)
-    result["job_id"] = job_spec.job_id
+    job_spec = SuiteExecution.objects.get(execution_id=job_id)
+    result["execution_id"] = job_spec.execution_id
     result["suite_type"] = job_spec.suite_type
-    result["script_path"] = job_spec.script_path
     result["suite_path"] = job_spec.suite_path
     result["emails"] = json.loads(job_spec.emails) if job_spec.emails else []
     return result

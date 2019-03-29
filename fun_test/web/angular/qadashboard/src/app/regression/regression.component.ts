@@ -137,6 +137,7 @@ export class RegressionComponent implements OnInit {
 
   setPage(page) {
 
+    this.items = null;
     this.pager = this.pagerService.getPager(this.suiteExecutionsCount, page, this.recordsPerPage);
     if (page === 0 || (page > this.pager.endPage)) {
 
