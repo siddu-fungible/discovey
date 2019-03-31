@@ -101,9 +101,13 @@ class FunethPerformanceBase(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
 
         linux_objs = []
+        linux_objs_dst = []
+        ns_dst_list = []
         if flow_type.startswith('NU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['nu']
+            linux_obj_dst = funeth_obj.linux_obj_dict['hu']
             ns = None
+            ns_dst = None
             if 'VF' in flow_type:
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
                 sip = None
@@ -112,12 +116,16 @@ class FunethPerformanceBase(FunTestCase):
                 sip = None
         elif flow_type.startswith('HU_NU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
+            linux_obj_dst = funeth_obj.linux_obj_dict['nu']
             ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
+            ns_dst = None
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
             sip = None
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
+            linux_obj_dst = funeth_obj.linux_obj_dict['hu']
             ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
+            ns_dst = funeth_obj.tb_config_obj.get_hu_vf_namespace()
             if flow_type == 'HU_HU_NFCP':
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
                 sip = None
@@ -127,6 +135,20 @@ class FunethPerformanceBase(FunTestCase):
                 sip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
                                                                     funeth_obj.tb_config_obj.get_hu_pf_interface_fcp())
         linux_objs.append(linux_obj)
+        linux_objs_dst.append(linux_obj_dst)
+        ns_dst_list.append(ns_dst)
+
+        # configure MSS by add iptable rule
+        for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
+            cmds = (
+                'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+                    frame_size-18-20-20),
+                'iptables -t mangle -L',
+            )
+            for cmd in cmds:
+                if ns_dst:
+                    cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+                linux_obj_dst.sudo_command(cmd)
 
         if tool == 'netperf':
             perf_manager_obj = NetperfManager(linux_objs)
@@ -155,6 +177,18 @@ class FunethPerformanceBase(FunTestCase):
         result = perf_manager_obj.run(*arg_dicts)
         fun_test.log('Collect stats after test')
         collect_stats()
+
+        # Delete iptable rule
+        for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
+            cmds = (
+                'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+                    frame_size-18-20-20),
+                'iptables -t mangle -L',
+            )
+            for cmd in cmds:
+                if ns_dst:
+                    cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+                linux_obj_dst.sudo_command(cmd)
 
         # check for 'nan'
         passed = True
