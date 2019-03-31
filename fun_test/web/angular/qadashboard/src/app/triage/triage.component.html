@@ -412,3 +412,15 @@
     </div>
   </div>
 </div>
+<div>
+  <table>
+    <tr *ngFor="let info of triageInfo">
+      <td>
+        {{ info.email }}
+      </td>
+      <td>
+        {{ info.boot_args }}
+      </td>
+    </tr>
+  </table>
+</div>
