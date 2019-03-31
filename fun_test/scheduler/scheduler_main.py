@@ -11,6 +11,7 @@ import dateutil.parser
 import signal
 import psutil
 import shutil
+from asset.asset_manager import AssetManager
 
 job_id_threads = {}
 job_id_timers = {}

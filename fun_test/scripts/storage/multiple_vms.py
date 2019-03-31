@@ -41,7 +41,8 @@ class MyScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topology" in fun_test.shared_variables:
+            fun_test.shared_variables["topology"].cleanup()
 
 
 class FunTestCase1(FunTestCase):

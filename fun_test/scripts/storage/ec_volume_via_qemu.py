@@ -62,7 +62,8 @@ class ECinQemuScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topolgy" in fun_test["shared_variables"]:
+            fun_test.shared_variables["topology"].cleanup()
         # pass
 
 

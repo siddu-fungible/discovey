@@ -52,7 +52,8 @@ class LSVVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topology" in fun_test.shared_variables:
+            fun_test.shared_variables["topology"].cleanup()
         self.storage_controller.disconnect()
 
 class LSVVolumeLevelTestcase(FunTestCase):
