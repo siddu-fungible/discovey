@@ -16,7 +16,8 @@ if TB == 'SN2':
     BW_LIMIT = '7M'
 else:
     BW_LIMIT = '25G'
-RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
+#RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
+RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
 TIMESTAMP = get_current_time()
 PARALLEL = 2  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
