@@ -18,7 +18,7 @@ else:
     BW_LIMIT = '25G'
 RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 TIMESTAMP = get_current_time()
-PARALLEL = 6
+PARALLEL = 2  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
 
 
@@ -516,7 +516,7 @@ class FunethPerformance_HU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
 # TCP
 
 
-class FunethPerformance_HU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
+class FunethPerformance_HU_HU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=104,
                               summary="Do throughput and latency test of HU -> HU Non-FCP with 64B frames of TCP",
@@ -526,7 +526,7 @@ class FunethPerformance_HU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
 
     def run(self):
         FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
-                                   frame_size=64)
+                                   frame_size=128)
 
 
 class FunethPerformance_HU_HU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -597,7 +597,7 @@ class FunethPerformance_HU_NU_1500B_UDP_NETPERF(FunethPerformanceBase):
 # TCP
 
 
-class FunethPerformance_HU_NU_64B_TCP_NETPERF(FunethPerformanceBase):
+class FunethPerformance_HU_NU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=114,
                               summary="Do throughput and latency test of HU -> NU Non-FCP with 64B frames of TCP",
@@ -607,7 +607,7 @@ class FunethPerformance_HU_NU_64B_TCP_NETPERF(FunethPerformanceBase):
 
     def run(self):
         FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
-                                   frame_size=64)
+                                   frame_size=128)
 
 
 class FunethPerformance_HU_NU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -678,7 +678,7 @@ class FunethPerformance_NU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
 # TCP
 
 
-class FunethPerformance_NU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
+class FunethPerformance_NU_HU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=124,
                               summary="Do throughput and latency test of NU -> HU Non-FCP with 64B frames of TCP",
@@ -688,7 +688,7 @@ class FunethPerformance_NU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
 
     def run(self):
         FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
-                                   frame_size=64)
+                                   frame_size=128)
 
 
 class FunethPerformance_NU_HU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -783,7 +783,7 @@ class FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF(FunethPerformanceFcpBase):
 # TCP
 
 
-class FunethPerformance_HU_HU_FCP_64B_TCP_NETPERF(FunethPerformanceFcpBase):
+class FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF(FunethPerformanceFcpBase):
     def describe(self):
         self.set_test_details(id=134,
                               summary="Do throughput and latency test of HU -> HU FCP with 64B frames of TCP",
@@ -792,7 +792,7 @@ class FunethPerformance_HU_HU_FCP_64B_TCP_NETPERF(FunethPerformanceFcpBase):
         """)
 
     def run(self):
-        FunethPerformanceFcpBase._run(self, tool='netperf', protocol='tcp', parallel=PARALLEL, frame_size=64)
+        FunethPerformanceFcpBase._run(self, tool='netperf', protocol='tcp', parallel=PARALLEL, frame_size=128)
 
 
 class FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF(FunethPerformanceFcpBase):
@@ -909,7 +909,7 @@ class FunethPerformance_HU_HU_FCP_SEC_1500B_UDP_NETPERF(FunethPerformanceFcpSecu
 # TCP
 
 
-class FunethPerformance_HU_HU_FCP_SEC_64B_TCP_NETPERF(FunethPerformanceFcpSecureBase):
+class FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF(FunethPerformanceFcpSecureBase):
     def describe(self):
         self.set_test_details(id=144,
                               summary="Do throughput and latency test of HU -> HU FCP secure tunnel with 64B frames of TCP",
@@ -918,7 +918,7 @@ class FunethPerformance_HU_HU_FCP_SEC_64B_TCP_NETPERF(FunethPerformanceFcpSecure
         """)
 
     def run(self):
-        FunethPerformanceFcpSecureBase._run(self, tool='netperf', protocol='tcp', parallel=PARALLEL, frame_size=64)
+        FunethPerformanceFcpSecureBase._run(self, tool='netperf', protocol='tcp', parallel=PARALLEL, frame_size=128)
 
 
 class FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF(FunethPerformanceFcpSecureBase):
@@ -984,7 +984,7 @@ if __name__ == "__main__":
             #FunethPerformance_HU_NU_64B_UDP_NETPERF,
             #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
             FunethPerformance_HU_NU_800B_TCP_NETPERF,
-            FunethPerformance_HU_NU_64B_TCP_NETPERF,
+            FunethPerformance_HU_NU_128B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
 
             # NU -> HU Non-FCP
@@ -992,7 +992,7 @@ if __name__ == "__main__":
             # FunethPerformance_NU_HU_64B_UDP_NETPERF,
             # FunethPerformance_NU_HU_1500B_UDP_NETPERF,
             FunethPerformance_NU_HU_800B_TCP_NETPERF,
-            FunethPerformance_NU_HU_64B_TCP_NETPERF,
+            FunethPerformance_NU_HU_128B_TCP_NETPERF,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF,
 
             # HU -> HU Non-FCP
@@ -1000,7 +1000,7 @@ if __name__ == "__main__":
             #FunethPerformance_HU_HU_64B_UDP_NETPERF,
             #FunethPerformance_HU_HU_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_64B_TCP_NETPERF,
+            FunethPerformance_HU_HU_128B_TCP_NETPERF,
             FunethPerformance_HU_HU_1500B_TCP_NETPERF,
 
             # HU -> HU FCP non-secure
@@ -1008,7 +1008,7 @@ if __name__ == "__main__":
             #FunethPerformance_HU_HU_FCP_64B_UDP_NETPERF,
             #FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_64B_TCP_NETPERF,
+            FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF,
             FunethPerformance_HU_HU_FCP_1500B_TCP_NETPERF,
 
             # HU -> HU FCP secure
@@ -1016,7 +1016,7 @@ if __name__ == "__main__":
             # FunethPerformance_HU_HU_FCP_SEC_64B_UDP_NETPERF,
             # FunethPerformance_HU_HU_FCP_SEC_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_SEC_64B_TCP_NETPERF,
+            FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF,
             FunethPerformance_HU_HU_FCP_SEC_1500B_TCP_NETPERF,
     ):
         ts.add_test_case(tc())
