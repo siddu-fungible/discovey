@@ -91,7 +91,8 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topology" in fun_test.shared_variables["topology"]:
+            fun_test.shared_variables["topology"].cleanup()
         # pass
 
 

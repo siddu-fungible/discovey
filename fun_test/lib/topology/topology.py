@@ -2,10 +2,15 @@ import dill
 from lib.system.utils import ToDictMixin
 
 class ExpandedTopology(ToDictMixin):
-    TO_DICT_VARS = ["duts"]
+    TO_DICT_VARS = ["duts", "tgs"]
+
     def __init__(self):
         self.duts = {}
         self.tgs = {}
+        self.active_orchestrators = []
+
+    def add_active_orchestrator(self, orchestrator):
+        self.active_orchestrators.append(orchestrator)
 
     def get_dut(self, index):
         result = None
@@ -33,4 +38,8 @@ class ExpandedTopology(ToDictMixin):
     def get_tg_instance(self, tg_index):
         tg = self.get_tg(index=tg_index)
         return tg.get_instance()
+
+    def cleanup(self):
+        for active_orchestrator in self.active_orchestrators:
+            active_orchestrator.cleanup()
 
