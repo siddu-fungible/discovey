@@ -35,6 +35,23 @@ class NetperfManager:
             for cmd in cmds:
                 linux_obj.sudo_command(cmd)
 
+            # Clean up iptables
+            cmds = (
+                'sudo ufw disable',
+                'iptables -X',
+                'iptables -t nat -F',
+                'iptables -t nat -X',
+                'iptables -t mangle -F',
+                'iptables -t mangle -X',
+                'iptables -P INPUT ACCEPT',
+                'iptables -P OUTPUT ACCEPT',
+                'iptables -P FORWARD ACCEPT',
+                'iptables -F',
+                'iptables -L',
+            )
+            for cmd in cmds:
+                linux_obj.sudo_command(cmd)
+
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
             #    result &= linux_obj.install_package(pkg)
