@@ -43,7 +43,7 @@ class CryptoAcceleratorScript(FunTestScript):
 
     def cleanup(self):
         if self.topology:
-            TopologyHelper(spec=self.topology).cleanup()
+            self.topology.cleanup()
         return True
 
 class Sha3TestCase1(FunTestCase):

@@ -218,7 +218,17 @@ class Bmc(Linux):
         result = True
         return result
 
+    def _reset_microcom(self):
+        fun_test.log("Resetting microcom and minicom")
+        process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
+        for process_id in process_ids:
+            self.kill_process(signal=9, process_id=process_id)
+        process_ids = self.get_process_id_by_pattern("minicom", multiple=True)
+        for process_id in process_ids:
+            self.kill_process(signal=9, process_id=process_id)
+
     def position_support_scripts(self):
+        self._reset_microcom()
         pyserial_filename = "pyserial-install.tar"
         pyserial_dir = INTEGRATION_DIR + "/tools/platform/bmc/{}".format(pyserial_filename)
         fun_test.scp(source_file_path=pyserial_dir, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=self.BMC_INSTALL_DIRECTORY)
@@ -302,10 +312,10 @@ class ComE(Linux):
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
         self.command(
-            "wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
+            "wget http://10.1.20.99/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
         files = self.list_files("functrlp_palladium.tgz")
         fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
-        self.command("wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
+        self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
         fun_test.test_assert(self.list_files("dpcsh.tgz"), "functrlp_palladium.tgz downloaded")
         self.command("mkdir -p FunControlPlane FunSDK")
         self.command("tar -zxvf functrlp_palladium.tgz -C ../workspace/FunControlPlane")

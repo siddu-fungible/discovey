@@ -67,7 +67,7 @@ class DockerHost(Linux, ToDictMixin):
     SSH_USERNAME = "root"
     SSH_PASSWORD = "fun123"
 
-    TYPE_DESKTOP = "TYPE_DESKTOP"
+    TYPE_DESKTOP = "TYPE_DESKTOP" # No longer supported
     TYPE_BARE_METAL = "TYPE_BARE_METAL"
 
     STORAGE_IMAGE_NAME = "integration_jenkins_fetch"

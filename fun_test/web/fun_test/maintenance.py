@@ -51,16 +51,6 @@ class MetricHelper(object):
         self.model.objects.all().delete()
 
 
-"""
-if __name__ == "__main__":
-    h = MetricHelper(AllocSpeedPerformance)
-    h.delete(key="2202")
-    h.delete(key="2184")
-    h.delete(key="2194")
-
-"""
-
-
 def get_rounded_time(dt):
     rounded_d = datetime(year=dt.year, month=dt.month, day=dt.day, hour=23, minute=59, second=59)
     rounded_d = get_localized_time(rounded_d)
@@ -1125,7 +1115,7 @@ if __name__ == "__main_flowtest__":
                            milestone_name="Tape-out")
     mmt.save()
 
-if __name__ == "__main__":
+if __name__ == "__main_DFA__":
     chart_names = ["DFA Throughput", "NFA Throughput"]
 
     for chart_name in chart_names:
@@ -1165,3 +1155,13 @@ if __name__ == "__main__":
         mmt.save()
     print "created charts for DFA and NFA"
 
+if __name__ == "__main__":
+    print "started unit removal for containers"
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if not entry.leaf:
+            print entry.chart_name
+            entry.y1_axis_title = ""
+            entry.visualization_unit = ""
+            entry.save()
+    print "finished removing units from containers"
