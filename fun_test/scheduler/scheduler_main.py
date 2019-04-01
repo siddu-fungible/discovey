@@ -31,14 +31,13 @@ class QueueWorker(Thread):
         asset_manager = AssetManager()
         while True:
             de_queued_jobs = []
-            low, high = SchedulerJobPriority.RANGES[SchedulerJobPriority.NORMAL]
-            normal_priority_jobs = JobQueue.objects.filter(priority__lte=high, priority__gte=low).order_by('priority')
-            for normal_priority_job in normal_priority_jobs:
-                print ("Testbed-type: {}".format(normal_priority_job.test_bed_type))
-                availability = asset_manager.get_test_bed_availability(test_bed_type=normal_priority_job.test_bed_type)
+            queued_jobs = JobQueue.objects.all().order_by('priority')
+            for queued_job in queued_jobs:
+                print ("Testbed-type: {}".format(queued_job.test_bed_type))
+                availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type)
                 if availability["status"]:
-                    de_queued_jobs.append(normal_priority_job)
-                    self.de_queue_job(normal_priority_job)
+                    de_queued_jobs.append(queued_job)
+                    self.de_queue_job(queued_job)
                 else:
                     print("Not available: {}".format(availability["message"]))
             print("Queue Worker")
