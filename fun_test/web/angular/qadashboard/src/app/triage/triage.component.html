@@ -1,52 +1,23 @@
 <div *ngIf="showForm" class="card card-primary component">
   <div class="card-header min-padding"><b>Submit info</b></div>
-  <table class="table table-borderless" style="width: 50%">
-    <!--<tr>-->
-    <!--<td>-->
-    <!--From Date:-->
-    <!--<form class="form-inline">-->
-    <!--<div class="form-group">-->
-    <!--<div class="input-group">-->
-    <!--<input class="form-control" placeholder="yyyy-mm-dd"-->
-    <!--name="dp1" [(ngModel)]="fromDate" ngbDatepicker #d="ngbDatepicker">-->
-    <!--<div class="input-group-append">-->
-    <!--<button class="btn btn-outline-secondary" (click)="d.toggle()" type="button"><i class="fa fa-calendar"></i></button>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</form>-->
-    <!--</td>-->
-    <!--<td>-->
-    <!--To Date: <form class="form-inline">-->
-    <!--<div class="form-group">-->
-    <!--<div class="input-group">-->
-    <!--<input class="form-control" placeholder="yyyy-mm-dd"-->
-    <!--name="dp2" [(ngModel)]="toDate" ngbDatepicker #e="ngbDatepicker">-->
-    <!--<div class="input-group-append">-->
-    <!--<button class="btn btn-outline-secondary" (click)="e.toggle()" type="button"><i class="fa fa-calendar"></i></button>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</div>-->
-    <!--</form>-->
-    <!--</td>-->
-    <!--</tr>-->
+  <table class="table table-borderless" style="width: 60%">
     <tr>
       <td>
-        From commit:
+        Failure commit:
       </td>
-      <td><input type="text" [(ngModel)]="fromCommit"/>
+      <td><input type="text" [(ngModel)]="fromCommit" placeholder="ex: c96265fb35f20b1fa787aece49006282c87fde49"/>
       </td>
       <td>
-        To commit:
+        Working commit:
       </td>
-      <td><input type="text" [(ngModel)]="toCommit"/>
+      <td><input type="text" [(ngModel)]="toCommit" placeholder="ex: 32693467b74f8ed0df10709ba95e9e2a6eceed8d"/>
       </td>
     </tr>
     <tr>
       <td>
         Boot args:
       </td>
-      <td><input type="text" [(ngModel)]="bootArgs"/>
+      <td><input type="text" [(ngModel)]="bootArgs" placeholder="ex: app=crypto_api_perf"/>
       </td>
       <td>
         Type:
@@ -58,8 +29,28 @@
       </td>
     </tr>
     <tr>
+      <td>
+        FunOS makeflags:<sup>*</sup>
+      </td>
+      <td>
+        <input type="text" [(ngModel)]="funOSMakeFlags" placeholder="ex:XDATA_LISTS=/project/users/QA/jpeg_perf_inputs/perf_input.list"/>
+      </td>
+      <td>
+        Email:
+      </td>
+      <td>
+        <input type="text" [(ngModel)]="email" placeholder="ex: example@fungible.com"/>
+      </td>
+    </tr>
+    <tr>
       <td colspan="4">
         <button class="btn btn-sm no-margin btn-success" (click)="getInfoFromCommits()">Submit</button>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        * optional<br>
+        Refer to params here: <a [routerLink]="" (click)="openParams()">{{ emulationUrl }}</a>
       </td>
     </tr>
   </table>
@@ -420,4 +411,16 @@
       </div>
     </div>
   </div>
+</div>
+<div>
+  <table>
+    <tr *ngFor="let info of triageInfo">
+      <td>
+        {{ info.email }}
+      </td>
+      <td>
+        {{ info.boot_args }}
+      </td>
+    </tr>
+  </table>
 </div>
