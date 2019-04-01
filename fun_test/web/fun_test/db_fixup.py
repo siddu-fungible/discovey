@@ -256,46 +256,43 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                     scores[entry.date_time] = entry.score
                 current_date = last_date + timedelta(days=1)
                 current_date = set_local_timezone(current_date)
+        data_set_mofified = False
+        data_sets = json.loads(chart.data_sets)
+        num_data_sets_with_expected = 0
+        for data_set in data_sets:
+            if "reference" in data_set["output"]:
+                reference_value = data_set["output"]["reference"]
+                if not reference_value or reference_value <= 0:
+                    data_set_mofified = chart.fixup_reference_values(
+                        data_set=data_set)
+            else:
+                # let's fix it up
+                print ("Fixing reference values")
+                data_set_mofified = chart.fixup_reference_values(
+                    data_set=data_set)
+            if "expected" in data_set["output"]:
+                if data_set["output"]["expected"] and data_set["output"]["expected"] >= 0:
+                    num_data_sets_with_expected += 1
+        if data_set_mofified:
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+        num_data_sets_with_expected = len(
+            data_sets) if num_data_sets_with_expected == 0 else num_data_sets_with_expected
+        data_sets = json.loads(chart.data_sets)
         while current_date <= to_date:
             result["num_degrades"] = 0
             valid_dates.append(current_date)
-            data_set_mofified = False
-            data_sets = json.loads(chart.data_sets)
-
             if len(data_sets):
                 data_set_combined_goodness = 0
-                num_data_sets_with_expected = 0
-                for data in data_sets:
-                    if "expected" in data["output"]:
-                        if data["output"]["expected"] and data["output"]["expected"] >= 0:
-                            num_data_sets_with_expected += 1
-                num_data_sets_with_expected = len(data_sets) if num_data_sets_with_expected == 0 else num_data_sets_with_expected
                 for data_set in data_sets:
                     expected_value = data_set["output"]["expected"] if "expected" in data_set["output"] else -1
                     if num_data_sets_with_expected == len(data_sets) or (expected_value and expected_value != -1):
-                        if current_date > get_localized_time(datetime.datetime(year=2018, month=8, day=10)):
-                            j = 0
-                        # print "Processing data-set: {}".format(json.dumps(data_set))
                         entries = get_entries_for_day(model=model, day=current_date, data_set=data_set)
-                        score = -1
-                        this_days_record = None
                         if len(entries):
                             this_days_record = entries.first()
                             output_name = data_set["output"]["name"]  # TODO
                             output_unit = output_name + "_unit"
-                            if "reference" in data_set["output"]:
-                                reference_value = data_set["output"]["reference"]
-                                if reference_value <= 0:
-                                    data_set_mofified = data_set_mofified or chart.fixup_reference_values(
-                                        data_set=data_set)
-                                    reference_value = data_set["output"]["reference"]
-                            else:
-                                # let's fix it up
-                                print ("Fixing reference values")
-                                data_set_mofified = data_set_mofified or chart.fixup_reference_values(
-                                    data_set=data_set)
-                                reference_value = data_set["output"]["reference"] if "reference" in data_set[
-                                    "output"] else None  # reference is set in fixup_reference_values
+                            reference_value = data_set["output"]["reference"]
                             get_first_record(model=model, data_set=data_set)
                             output_value = getattr(this_days_record, output_name)
                             if hasattr(this_days_record, output_unit):
@@ -322,7 +319,8 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                                     else:
                                         print "ERROR: {}, {}".format(chart.chart_name,
                                                                      chart.metric_model_name)
-                current_score = round(data_set_combined_goodness / num_data_sets_with_expected, 1) if num_data_sets_with_expected != 0 else 0
+                current_score = round(data_set_combined_goodness / num_data_sets_with_expected,
+                                      1) if num_data_sets_with_expected != 0 else 0
 
                 # is_leaf_degrade = current_score < last_good_score
                 replacement = False
@@ -340,10 +338,6 @@ def calculate_leaf_scores(cache_valid, chart, result, from_log=False):
                     is_leaf_degrade = current_score < (penultimate_good_score * (1 - get_tolerance()))
 
                 scores[current_date] = current_score
-
-            if data_set_mofified:
-                chart.data_sets = json.dumps(data_sets)
-                chart.save()
 
             chart_status = MetricChartStatus.objects.filter(date_time=current_date, metric_id=chart.metric_id)
             if not chart_status:
@@ -551,7 +545,7 @@ def convert_to_base_unit(output_value, output_unit):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="FunOS")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="HU_HU_FCP_non_teramark")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)

@@ -56,7 +56,8 @@ class ECCryptoVolumeScript(FunTestScript):
 
     def cleanup(self):
         self.storage_controller.disconnect()
-        TopologyHelper(spec=self.topology).cleanup()
+        if self.topology:
+            self.topology.cleanup()
         # pass
 
 

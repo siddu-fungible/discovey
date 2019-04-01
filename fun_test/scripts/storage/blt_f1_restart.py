@@ -52,7 +52,8 @@ class BltF1RestartScript(FunTestScript):
 
     def cleanup(self):
         self.storage_controller.disconnect()
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topology" in fun_test.shared_variables:
+            fun_test.shared_variables["topology"].cleanup()
 
 
 class BLTF1RestartTestCase(FunTestCase):

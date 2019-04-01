@@ -35,6 +35,23 @@ class NetperfManager:
             for cmd in cmds:
                 linux_obj.sudo_command(cmd)
 
+            # Clean up iptables
+            cmds = (
+                'sudo ufw disable',
+                'iptables -X',
+                'iptables -t nat -F',
+                'iptables -t nat -X',
+                'iptables -t mangle -F',
+                'iptables -t mangle -X',
+                'iptables -P INPUT ACCEPT',
+                'iptables -P OUTPUT ACCEPT',
+                'iptables -P FORWARD ACCEPT',
+                'iptables -F',
+                'iptables -L',
+            )
+            for cmd in cmds:
+                linux_obj.sudo_command(cmd)
+
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
             #    result &= linux_obj.install_package(pkg)
@@ -205,10 +222,12 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
             t = 'TCP_STREAM'
     send_size = get_send_size(protocol, frame_size)
     if not measure_latency:
-        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+        #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "THROUGHPUT"'.format(t, dip, duration)
         pat = r'THROUGHPUT=(\d+)'
     else:
-        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+        #cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT" -m {}'.format(t, dip, duration, send_size)
+        cmd = 'netperf -t {} -H {} -v 2 -l {} -f m -j -- -k "MIN_LATENCY,MEAN_LATENCY,P50_LATENCY,P90_LATENCY,P99_LATENCY,MAX_LATENCY,THROUGHPUT"'.format(t, dip, duration)
         pat = r'MIN_LATENCY=(\d+).*?MEAN_LATENCY=(\d+).*?P50_LATENCY=(\d+).*?P90_LATENCY=(\d+).*?P99_LATENCY=(\d+).*?MAX_LATENCY=(\d+).*?THROUGHPUT=(\d+)'
     if sip:
         cmd = '{} -L {}'.format(cmd, sip)

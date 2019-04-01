@@ -33,9 +33,10 @@ MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
+    linux_obj = funeth_obj.linux_obj_dict['nu']
+    fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
     fun_test.test_assert(funeth_obj.configure_interfaces('nu'), 'Configure NU host interface')
     fun_test.test_assert(funeth_obj.configure_ipv4_routes('nu'), 'Configure NU host IPv4 routes')
-    linux_obj = funeth_obj.linux_obj_dict['nu']
     cmds = [
         'echo 1 > /proc/sys/net/ipv4/ip_forward',
         'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter',
@@ -92,7 +93,7 @@ class FunethSanity(FunTestScript):
         setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj)
+        setup_hu_host(funeth_obj, update_driver=False)
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,

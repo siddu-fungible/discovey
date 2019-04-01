@@ -220,7 +220,7 @@ def validate_spec(spec):
 def parse_suite(suite_name=None, dynamic_suite_file=None):
     suite_file_name = None
     if not dynamic_suite_file:
-        suite_file_name = SUITES_DIR + "/" + suite_name + JSON_EXTENSION
+        suite_file_name = SUITES_DIR + "/" + suite_name
     else:
         suite_file_name = dynamic_suite_file
     suite_spec = parse_file_to_json(file_name=suite_file_name)
@@ -344,7 +344,7 @@ def queue_job3(suite_path=None,
         suite_execution.emails = json.dumps(emails)
         suite_execution.email_on_failure_only = email_on_fail_only
 
-        suite_execution.environment = environment
+        suite_execution.environment = json.dumps(environment)
         suite_execution.inputs = inputs
         suite_execution.build_url = build_url
         suite_execution.version = version

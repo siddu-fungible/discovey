@@ -16,9 +16,10 @@ if TB == 'SN2':
     BW_LIMIT = '7M'
 else:
     BW_LIMIT = '25G'
-RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
+#RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
+RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
 TIMESTAMP = get_current_time()
-PARALLEL = 6
+PARALLEL = 2  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
 
 
@@ -101,9 +102,13 @@ class FunethPerformanceBase(FunTestCase):
         funeth_obj = fun_test.shared_variables['funeth_obj']
 
         linux_objs = []
+        linux_objs_dst = []
+        ns_dst_list = []
         if flow_type.startswith('NU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['nu']
+            linux_obj_dst = funeth_obj.linux_obj_dict['hu']
             ns = None
+            ns_dst = None
             if 'VF' in flow_type:
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
                 sip = None
@@ -112,12 +117,16 @@ class FunethPerformanceBase(FunTestCase):
                 sip = None
         elif flow_type.startswith('HU_NU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
+            linux_obj_dst = funeth_obj.linux_obj_dict['nu']
             ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
+            ns_dst = None
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
             sip = None
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
+            linux_obj_dst = funeth_obj.linux_obj_dict['hu']
             ns = funeth_obj.tb_config_obj.get_hu_pf_namespace()
+            ns_dst = funeth_obj.tb_config_obj.get_hu_vf_namespace()
             if flow_type == 'HU_HU_NFCP':
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.vf_intf)
                 sip = None
@@ -127,6 +136,20 @@ class FunethPerformanceBase(FunTestCase):
                 sip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
                                                                     funeth_obj.tb_config_obj.get_hu_pf_interface_fcp())
         linux_objs.append(linux_obj)
+        linux_objs_dst.append(linux_obj_dst)
+        ns_dst_list.append(ns_dst)
+
+        # configure MSS by add iptable rule
+        for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
+            cmds = (
+                'iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+                    frame_size-18-20-20),
+                'iptables -t mangle -L',
+            )
+            for cmd in cmds:
+                if ns_dst:
+                    cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+                linux_obj_dst.sudo_command(cmd)
 
         if tool == 'netperf':
             perf_manager_obj = NetperfManager(linux_objs)
@@ -155,6 +178,18 @@ class FunethPerformanceBase(FunTestCase):
         result = perf_manager_obj.run(*arg_dicts)
         fun_test.log('Collect stats after test')
         collect_stats()
+
+        # Delete iptable rule
+        for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
+            cmds = (
+                'iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss {}'.format(
+                    frame_size-18-20-20),
+                'iptables -t mangle -L',
+            )
+            for cmd in cmds:
+                if ns_dst:
+                    cmd = 'ip netns exec {} {}'.format(ns_dst, cmd)
+                linux_obj_dst.sudo_command(cmd)
 
         # check for 'nan'
         passed = True
@@ -482,7 +517,7 @@ class FunethPerformance_HU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
 # TCP
 
 
-class FunethPerformance_HU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
+class FunethPerformance_HU_HU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=104,
                               summary="Do throughput and latency test of HU -> HU Non-FCP with 64B frames of TCP",
@@ -492,7 +527,7 @@ class FunethPerformance_HU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
 
     def run(self):
         FunethPerformanceBase._run(self, flow_type='HU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
-                                   frame_size=64)
+                                   frame_size=128)
 
 
 class FunethPerformance_HU_HU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -563,7 +598,7 @@ class FunethPerformance_HU_NU_1500B_UDP_NETPERF(FunethPerformanceBase):
 # TCP
 
 
-class FunethPerformance_HU_NU_64B_TCP_NETPERF(FunethPerformanceBase):
+class FunethPerformance_HU_NU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=114,
                               summary="Do throughput and latency test of HU -> NU Non-FCP with 64B frames of TCP",
@@ -573,7 +608,7 @@ class FunethPerformance_HU_NU_64B_TCP_NETPERF(FunethPerformanceBase):
 
     def run(self):
         FunethPerformanceBase._run(self, flow_type='HU_NU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
-                                   frame_size=64)
+                                   frame_size=128)
 
 
 class FunethPerformance_HU_NU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -644,7 +679,7 @@ class FunethPerformance_NU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
 # TCP
 
 
-class FunethPerformance_NU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
+class FunethPerformance_NU_HU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=124,
                               summary="Do throughput and latency test of NU -> HU Non-FCP with 64B frames of TCP",
@@ -654,7 +689,7 @@ class FunethPerformance_NU_HU_64B_TCP_NETPERF(FunethPerformanceBase):
 
     def run(self):
         FunethPerformanceBase._run(self, flow_type='NU_HU_NFCP', tool='netperf', protocol='tcp', parallel=PARALLEL,
-                                   frame_size=64)
+                                   frame_size=128)
 
 
 class FunethPerformance_NU_HU_800B_TCP_NETPERF(FunethPerformanceBase):
@@ -749,7 +784,7 @@ class FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF(FunethPerformanceFcpBase):
 # TCP
 
 
-class FunethPerformance_HU_HU_FCP_64B_TCP_NETPERF(FunethPerformanceFcpBase):
+class FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF(FunethPerformanceFcpBase):
     def describe(self):
         self.set_test_details(id=134,
                               summary="Do throughput and latency test of HU -> HU FCP with 64B frames of TCP",
@@ -758,7 +793,7 @@ class FunethPerformance_HU_HU_FCP_64B_TCP_NETPERF(FunethPerformanceFcpBase):
         """)
 
     def run(self):
-        FunethPerformanceFcpBase._run(self, tool='netperf', protocol='tcp', parallel=PARALLEL, frame_size=64)
+        FunethPerformanceFcpBase._run(self, tool='netperf', protocol='tcp', parallel=PARALLEL, frame_size=128)
 
 
 class FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF(FunethPerformanceFcpBase):
@@ -875,7 +910,7 @@ class FunethPerformance_HU_HU_FCP_SEC_1500B_UDP_NETPERF(FunethPerformanceFcpSecu
 # TCP
 
 
-class FunethPerformance_HU_HU_FCP_SEC_64B_TCP_NETPERF(FunethPerformanceFcpSecureBase):
+class FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF(FunethPerformanceFcpSecureBase):
     def describe(self):
         self.set_test_details(id=144,
                               summary="Do throughput and latency test of HU -> HU FCP secure tunnel with 64B frames of TCP",
@@ -884,7 +919,7 @@ class FunethPerformance_HU_HU_FCP_SEC_64B_TCP_NETPERF(FunethPerformanceFcpSecure
         """)
 
     def run(self):
-        FunethPerformanceFcpSecureBase._run(self, tool='netperf', protocol='tcp', parallel=PARALLEL, frame_size=64)
+        FunethPerformanceFcpSecureBase._run(self, tool='netperf', protocol='tcp', parallel=PARALLEL, frame_size=128)
 
 
 class FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF(FunethPerformanceFcpSecureBase):
@@ -950,7 +985,7 @@ if __name__ == "__main__":
             #FunethPerformance_HU_NU_64B_UDP_NETPERF,
             #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
             FunethPerformance_HU_NU_800B_TCP_NETPERF,
-            FunethPerformance_HU_NU_64B_TCP_NETPERF,
+            FunethPerformance_HU_NU_128B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
 
             # NU -> HU Non-FCP
@@ -958,7 +993,7 @@ if __name__ == "__main__":
             # FunethPerformance_NU_HU_64B_UDP_NETPERF,
             # FunethPerformance_NU_HU_1500B_UDP_NETPERF,
             FunethPerformance_NU_HU_800B_TCP_NETPERF,
-            FunethPerformance_NU_HU_64B_TCP_NETPERF,
+            FunethPerformance_NU_HU_128B_TCP_NETPERF,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF,
 
             # HU -> HU Non-FCP
@@ -966,7 +1001,7 @@ if __name__ == "__main__":
             #FunethPerformance_HU_HU_64B_UDP_NETPERF,
             #FunethPerformance_HU_HU_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_64B_TCP_NETPERF,
+            FunethPerformance_HU_HU_128B_TCP_NETPERF,
             FunethPerformance_HU_HU_1500B_TCP_NETPERF,
 
             # HU -> HU FCP non-secure
@@ -974,7 +1009,7 @@ if __name__ == "__main__":
             #FunethPerformance_HU_HU_FCP_64B_UDP_NETPERF,
             #FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_64B_TCP_NETPERF,
+            FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF,
             FunethPerformance_HU_HU_FCP_1500B_TCP_NETPERF,
 
             # HU -> HU FCP secure
@@ -982,7 +1017,7 @@ if __name__ == "__main__":
             # FunethPerformance_HU_HU_FCP_SEC_64B_UDP_NETPERF,
             # FunethPerformance_HU_HU_FCP_SEC_1500B_UDP_NETPERF,
             FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_SEC_64B_TCP_NETPERF,
+            FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF,
             FunethPerformance_HU_HU_FCP_SEC_1500B_TCP_NETPERF,
     ):
         ts.add_test_case(tc())

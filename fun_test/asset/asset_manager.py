@@ -1,12 +1,11 @@
 from fun_settings import *
-from lib.system.fun_test import FunTestSystemException
+from lib.system.fun_test import fun_test
 from lib.system.utils import parse_file_to_json
 from lib.host.docker_host import DockerHost
 from lib.fun.f1 import F1
-from lib.orchestration.simulation_orchestrator import SimulationOrchestrator, DockerContainerOrchestrator
+from lib.orchestration.simulation_orchestrator import DockerContainerOrchestrator
 from lib.orchestration.simulation_orchestrator import DockerHostOrchestrator
 from lib.orchestration.real_orchestrator import RealOrchestrator
-from lib.system.fun_test import fun_test
 from lib.orchestration.orchestrator import OrchestratorType
 from fun_global import *
 
@@ -16,52 +15,19 @@ class AssetManager:
     DOCKER_HOSTS_ASSET_SPEC = ASSET_DIR + "/docker_hosts.json"
     DOCKER_HOSTS_DEVELOPMENT_ASSET_SPEC = ASSET_DIR + "/docker_hosts_development.json"
 
-
     def __init__(self):
-        self.docker_host = None  #TODO
+        self.docker_host = None  # TODO
         self.orchestrators = []
+        self.real_orchestrator = None
+        self.docker_host_orchestrator = None
 
     @fun_test.safe
     def cleanup(self):
         for orchestrator_index, orchestrator in enumerate(self.orchestrators):
-            if orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
-                # TODO: We need to map container to the container type
-                # if it is an F1 container we should retrieve F1 logs,
-                # if it is a Tg container we should retrieve tg logs
-
-                artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="{}_f1.log.txt".format(orchestrator_index))
-                container_asset = self.docker_host.get_container_asset(name=orchestrator.container_name)
-                if container_asset:
-                    fun_test.scp(source_ip=container_asset["host_ip"],
-                                 source_file_path=F1.F1_LOG,
-                                 source_username=container_asset["mgmt_ssh_username"],
-                                 source_password=container_asset["mgmt_ssh_password"],
-                                 source_port=container_asset["mgmt_ssh_port"],
-                                 target_file_path=artifact_file_name)
-                    fun_test.add_auxillary_file(description="F1 Log {}".format(orchestrator_index), filename=artifact_file_name)
-                    if hasattr(orchestrator, "QEMU_LOG"):
-                        artifact_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="{}_qemu.log.txt".format(orchestrator_index))
-                        fun_test.scp(source_ip=container_asset["host_ip"],
-                                     source_file_path=orchestrator.QEMU_LOG,
-                                     source_username=container_asset["mgmt_ssh_username"],
-                                     source_password=container_asset["mgmt_ssh_password"],
-                                     source_port=container_asset["mgmt_ssh_port"],
-                                     target_file_path=artifact_file_name)
-                        fun_test.add_auxillary_file(description="QEMU Log {}".format(orchestrator_index), filename=artifact_file_name)
-
-                self.docker_host.stop_container(orchestrator.container_name)
-                fun_test.sleep("Stopping container: {}".format(orchestrator.container_name))
-                self.docker_host.remove_container(orchestrator.container_name)
-
-            elif orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST:
-                container_assets = orchestrator.container_assets
-                for container_name in container_assets:
-                    fun_test.log("Destroying container: {}".format(container_name))
-                    self.docker_host.destroy_container(container_name=container_name)
-
-            elif orchestrator.ORCHESTRATOR_TYPE == OrchestratorType.ORCHESTRATOR_TYPE_REAL:
-                orchestrator.get_dut_instance().cleanup()
-
+            orchestrator.cleanup()
+            # TODO: We need to map container to the container type
+            # if it is an F1 container we should retrieve F1 logs,
+            # if it is a Tg container we should retrieve tg logs
 
     def describe(self):
         fun_test.log_section("Printing assets")
@@ -85,7 +51,7 @@ class AssetManager:
 
 
     @fun_test.safe
-    def get_any_docker_host(self):
+    def get_any_docker_host(self, spec_only=False):
         docker_hosts_spec_file = self.DOCKER_HOSTS_ASSET_SPEC
         if is_lite_mode():
             docker_hosts_spec_file = fun_test.get_environment_variable("DOCKER_HOSTS_SPEC_FILE")
@@ -103,63 +69,35 @@ class AssetManager:
         index = 0
         if (is_production_mode()):
             index = 1  #TODO: this should go away when we have asset management
-        asset = DockerHost.get(docker_hosts[index])
+        if spec_only:
+            asset = docker_hosts[index]
+        else:
+            asset = DockerHost.get(docker_hosts[index])
         return asset
 
     @fun_test.safe
-    def get_orchestrator(self, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER, index=0, dut_obj=None):
-        fun_test.debug("Getting orchestrator")
+    def get_orchestrator(self, is_simulation, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER, dut_index=0):
         orchestrator = None
-        if not fun_test.is_simulation():
+        if not is_simulation:
             type = OrchestratorType.ORCHESTRATOR_TYPE_REAL
-
         try:
-            if type == OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION:
-                orchestrator = SimulationOrchestrator.get(self.get_any_simple_host())
-            elif type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
-                # Ensure a docker container is running
-                if not self.docker_host:
-                    self.docker_host = self.get_any_docker_host()
-                fun_test.simple_assert(self.docker_host, "Docker host available")
-                if not fun_test.get_environment_variable("DOCKER_URL"):
-                    fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
-                fun_test.log("Setting up the integration container for index: {}".format(index))
-                container_name = "{}_{}_{}".format("integration_basic", fun_test.get_suite_execution_id(), index)
-
-                vm_host_os = None   # TODO: Hack needed until asset_manager is implemented
-                if dut_obj.interfaces:
-                    peer_info = dut_obj.interfaces[0].peer_info
-                    if hasattr(peer_info, "vm_host_os"):
-                        vm_host_os = peer_info.vm_host_os
-
-                container_asset = self.docker_host.setup_storage_container(container_name=container_name,
-                                                                           ssh_internal_ports=[22],
-                                                                           qemu_internal_ports=[50001, 50002,
-                                                                                                50003, 50004],
-                                                                           dpcsh_internal_ports=[
-                                                                               F1.INTERNAL_DPCSH_PORT],
-                                                                           vm_host_os=vm_host_os)
-                fun_test.simple_assert(self.docker_host.wait_for_handoff(container_name=container_name,
-                                                                         handoff_string="Idling"), message="Container handoff")
-
-                container_asset["host_type"] = self.docker_host.type # DESKTOP, BARE_METAL
-
-                fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(container_name))
-                orchestrator = DockerContainerOrchestrator.get(container_asset)
+            if type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER:
+                self.docker_host = self.get_any_docker_host()
+                orchestrator = DockerContainerOrchestrator(docker_host=self.docker_host, id=dut_index)
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST:
-                if not self.docker_host:
-                    self.docker_host = self.get_any_docker_host()
-                    fun_test.simple_assert(self.docker_host, "Docker host available")
-                    fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
-                orchestrator = self.docker_host
-                orchestrator.__class__ = DockerHostOrchestrator
-
+                if not self.docker_host_orchestrator:
+                    docker_host_spec = self.get_any_docker_host(spec_only=True)
+                    self.docker_host_orchestrator = DockerHostOrchestrator(id=dut_index, spec=docker_host_spec)
+                orchestrator = self.docker_host_orchestrator
             elif type == OrchestratorType.ORCHESTRATOR_TYPE_REAL:
-                return RealOrchestrator.get()
+                if not self.real_orchestrator:
+                    self.real_orchestrator = RealOrchestrator.get()
+                orchestrator = self.real_orchestrator
         except Exception as ex:
             fun_test.critical(str(ex))
         self.orchestrators.append(orchestrator)
         return orchestrator
+
 
     @fun_test.safe
     def get_fs_by_name(self, name):
@@ -170,5 +108,30 @@ class AssetManager:
             if fs["name"] == name:
                 result = fs
         return result
+
+    @fun_test.safe
+    def get_test_bed(self, test_bed_type):
+        from web.fun_test.models_helper import get_suite_executions_by_filter
+        from scheduler.scheduler_global import JobStatusType
+        result = {}
+        result["test_bed"] = test_bed_type
+        result["status"] = False
+        result["message"] = None
+        in_progress_suites = get_suite_executions_by_filter(test_bed_type=test_bed_type, state=JobStatusType.IN_PROGRESS)
+
+        credits = 0
+        if test_bed_type.lower().startswith("fs-"):
+            credits = 1
+        if test_bed_type.lower().startswith("simulation"):
+            credits = 3
+        in_progress_count = in_progress_suites.count()
+        if in_progress_count >= credits:
+            result["status"] = False
+            result["message"] = "Test-bed: {} In-progress count: {}, Credit: {}".format(test_bed_type, in_progress_count, credits)
+        else:
+            result["status"] = True
+        return result
+
+
 
 asset_manager = AssetManager()

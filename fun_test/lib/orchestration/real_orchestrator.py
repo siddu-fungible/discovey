@@ -5,8 +5,8 @@ from lib.fun.fs import Fs
 
 
 class RealOrchestrator(Orchestrator, ToDictMixin):
-    def __init__(self):
-        super(RealOrchestrator, self).__init__()
+    def __init__(self, id):
+        super(RealOrchestrator, self).__init__(id=id)
         self.dut_instance = None
 
     @staticmethod
@@ -15,7 +15,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
         s.TO_DICT_VARS.append("ORCHESTRATOR_TYPE")
         return s
 
-    def launch_dut_instance(self, spec):
+    def launch_dut_instance(self, dut_index, spec):
         fs_obj = Fs.get()
 
         # Start Fs
@@ -35,3 +35,9 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
 
     def get_dut_instance(self):
         return self.dut_instance
+
+    def cleanup(self):
+        dut_instance = self.get_dut_instance()
+        if dut_instance:
+            self.dut_instance.cleanup()
+        return True

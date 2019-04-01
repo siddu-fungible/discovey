@@ -152,7 +152,7 @@ def update_suite_container_execution(suite_container_execution_id, version=None)
             s.version = version
     s.save()
 
-def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None, tags=None):
+def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None, tags=None, state=None):
     # print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
@@ -163,6 +163,8 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
         te.version = version
     if tags:
         te.tags = json.dumps(tags)
+    if state:
+        te.state = state
     with transaction.atomic():
         te.save()
     # print te.version
@@ -356,7 +358,7 @@ def _get_suite_executions(execution_id=None,
                           tags=None,
                           finalize=None):
     all_objects = None
-    q = Q(result=RESULTS["UNKNOWN"])
+    q = Q()
 
     if state_filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
         q = Q(state=JobStatusType.IN_PROGRESS) | Q(state=JobStatusType.QUEUED) | Q(state=JobStatusType.SCHEDULED)
