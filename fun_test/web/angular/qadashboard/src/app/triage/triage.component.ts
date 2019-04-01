@@ -302,7 +302,7 @@ export class TriageComponent implements OnInit {
       "from_date": this.fromDate,
       "to_date": this.toDate,
       "boot_args": this.bootArgs,
-      "funOS_make_flags": this.funOSMakeFlags,
+      "fun_os_make_flags": this.funOSMakeFlags,
       "email": this.email
     };
     this.apiService.post('/metrics/get_triage_info', payload).subscribe((data) => {
@@ -353,7 +353,7 @@ export class TriageComponent implements OnInit {
         "from_commit": this.fromCommit,
         "to_commit": this.toCommit,
         "boot_args": this.bootArgs,
-        "funOS_make_flags": this.funOSMakeFlags,
+        "fun_os_make_flags": this.funOSMakeFlags,
         "email": this.email
       };
       this.apiService.post('/metrics/get_triage_info_from_commits', payload).subscribe((data) => {
@@ -375,7 +375,7 @@ export class TriageComponent implements OnInit {
       if (result["metric_type"]) {
         this.selectedOption = result["metric_type"];
         this.bootArgs = result["boot_args"];
-        this.funOSMakeFlags = result["funOS_make_flags"];
+        this.funOSMakeFlags = result["fun_os_make_flags"];
         this.email = result["email"];
         this.faultyCommit = result["from_commit"];
         this.successCommit = result["to_commit"];

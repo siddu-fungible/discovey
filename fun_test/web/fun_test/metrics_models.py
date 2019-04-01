@@ -107,7 +107,7 @@ class Triage(models.Model):
     max_tries = models.IntegerField(default=-1)
     faulty_commit = models.TextField(default="")
     boot_args = models.TextField(default="")
-    funOS_make_flags = models.TextField(default="")
+    fun_os_make_flags = models.TextField(default="")
     email = models.TextField(default="")
 
     def __str__(self):
@@ -129,7 +129,7 @@ class TriageFlow(models.Model):
     committer = models.TextField(default="")
     build_properties = models.TextField(default="")
     boot_args = models.TextField(default="")
-    funOS_make_flags = models.TextField(default="")
+    fun_os_make_flags = models.TextField(default="")
     email = models.TextField(default="")
 
     def __str__(self):

@@ -133,7 +133,7 @@ def insert_triage_db(request):
     degraded_score = triage_info["degraded_score"]
     metric_type = triage_info["metric_type"]
     boot_args = triage_info["boot_args"]
-    funOS_make_flags = triage_info["funOS_make_flags"]
+    fun_os_make_flags = triage_info["fun_os_make_flags"]
     email = triage_info["email"]
     triage = Triage.objects.filter(degraded_git_commit=degraded_git_commit,
                                    stable_git_commit=passed_git_commit)
@@ -147,14 +147,14 @@ def insert_triage_db(request):
                         stable_suite_execution_id=passed_suite_id, stable_jenkins_job_id=passed_jenkins_job_id,
                         stable_lsf_job_id=passed_lsf_job_id, stable_git_commit=passed_git_commit,
                         stable_build_properties=passed_build_properties, last_good_score=passed_score, max_tries=5,
-                        metric_type=metric_type, boot_args=boot_args, funOS_make_flags=funOS_make_flags, email=email)
+                        metric_type=metric_type, boot_args=boot_args, fun_os_make_flags=fun_os_make_flags, email=email)
         triage.save()
         for commit in commits[1:-1]:
             triage_flow = TriageFlow(triage_id=triage_id,
                                      triage_flow_id=LastTriageFlowId.get_next_id(),
                                      git_commit=commit["hexsha"], committer=commit["author"],
                                      build_properties=passed_build_properties, metric_type=metric_type,
-                                     date_time=commit["date"], boot_args=boot_args, funOS_make_flags=funOS_make_flags, email=email)
+                                     date_time=commit["date"], boot_args=boot_args, fun_os_make_flags=fun_os_make_flags, email=email)
             triage_flow.save()
         return triage_id
 
@@ -227,7 +227,7 @@ def check_triage(request):
         result["from_commit"] = triage[0].degraded_git_commit
         result["to_commit"] = triage[0].stable_git_commit
         result["boot_args"] = triage[0].boot_args
-        result["funOS_make_flags"] = triage[0].funOS_make_flags
+        result["fun_os_make_flags"] = triage[0].fun_os_make_flags
         result["email"] = triage[0].email
     return result
 
@@ -255,18 +255,18 @@ def update_triage_flow(triage_id, triage_details):
     entries = TriageFlow.objects.filter(triage_id=triage_id).order_by("-date_time")
     metric_type = triage_details.metric_type
     boot_args = triage_details.boot_args
-    funOS_make_flags = triage_details.funOS_make_flags
+    fun_os_make_flags = triage_details.fun_os_make_flags
     email = triage_details.email
     if metric_type == "PASS/FAIL":
         if len(entries):
-            result = start_flow(entries, 0, len(entries) - 1, boot_args, funOS_make_flags, email)
+            result = start_flow(entries, 0, len(entries) - 1, boot_args, fun_os_make_flags, email)
         if result:
             print "all flows completed"
             return result
     print "one try finished"
 
 
-def start_flow(entries, l, r, boot_args, funOS_make_flags, email):
+def start_flow(entries, l, r, boot_args, fun_os_make_flags, email):
     if r >= l:
         mid = l + (r - l) / 2
         entry = entries[mid]
@@ -275,7 +275,7 @@ def start_flow(entries, l, r, boot_args, funOS_make_flags, email):
             BUILD_PARAMS["TAGS"] = tags
             BUILD_PARAMS["BOOTARGS"] = boot_args
             BUILD_PARAMS["BRANCH_FunOS"] = entry.git_commit
-            BUILD_PARAMS["FUNOS_MAKEFLAGS"] = funOS_make_flags
+            BUILD_PARAMS["FUNOS_MAKEFLAGS"] = fun_os_make_flags
             BUILD_PARAMS["EXTRA_EMAIL"] = email
             try:
                 entry.status = SchedulingStates.SELECTED_FOR_TRIAL
@@ -287,7 +287,7 @@ def start_flow(entries, l, r, boot_args, funOS_make_flags, email):
                 entry.status = SchedulingStates.BUILDING_ON_JENKINS
                 entry.jenkins_job_id = build_info["number"]
                 entry.boot_args = boot_args
-                entry.funOS_make_flags = funOS_make_flags
+                entry.fun_os_make_flags = fun_os_make_flags
                 entry.email = email
                 entry.save()
                 print "Added a flow"
@@ -297,11 +297,11 @@ def start_flow(entries, l, r, boot_args, funOS_make_flags, email):
         elif entry.status == SchedulingStates.COMPLETED:
             suspend_flows(entry, entries, mid, l, r)
             print "suspended flows"
-            return start_flow(entries, l, mid - 1, boot_args, funOS_make_flags, email)
+            return start_flow(entries, l, mid - 1, boot_args, fun_os_make_flags, email)
         elif entry.status == SchedulingStates.FAILED:
             suspend_flows(entry, entries, mid, l, r)
             print "suspended flows"
-            return start_flow(entries, mid + 1, r, boot_args, funOS_make_flags, email)
+            return start_flow(entries, mid + 1, r, boot_args, fun_os_make_flags, email)
         elif entry.status == SchedulingStates.BUILDING_ON_JENKINS:
             try:
                 build_number = entry.jenkins_job_id
