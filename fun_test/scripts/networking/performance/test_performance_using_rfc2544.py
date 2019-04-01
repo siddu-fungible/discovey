@@ -4,6 +4,7 @@ from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
 from scripts.networking.helper import *
 from lib.host.linux import *
+from lib.fun.fs import *
 
 
 network_controller_obj = None
@@ -65,6 +66,11 @@ class ScriptSetup(FunTestScript):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
         nu_config_obj = NuConfigManager()
+
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
+            fs = Fs.get()
+            fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+            
         dut_type = nu_config_obj.DUT_TYPE
         fun_test.shared_variables['dut_type'] = dut_type
         spirent_config = nu_config_obj.read_traffic_generator_config()
