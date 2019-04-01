@@ -10,6 +10,7 @@
         <th>Priority</th>
         <th>Suite</th>
         <th>Email</th>
+        <th>Message</th>
       </tr>
       <tr *ngFor="let queueEntry of queueOccupancy[category]; let i = index">
         <td>
@@ -22,16 +23,17 @@
             &nbsp;
           </ng-container>
           <ng-container  *ngIf="i > 0 && queueOccupancy[category].length > 1">
-            <span class="pseudo-anchor" (click)="moveToTop(queueEntry.job_id, false)">T</span
-            >&nbsp;
+            <span class="pseudo-anchor" (click)="moveToTop(queueEntry.job_id, false)">T</span>&nbsp;
           </ng-container>
           <span *ngIf="category === 'normal' || category === 'low' " class="pseudo-anchor" (click)="moveToNextQueue(queueEntry.job_id)">N</span>
+
 
         </td>
         <td>{{ queueEntry.job_id }}</td>
         <td>{{ queueEntry.priority }}</td>
         <td>{{ queueEntry.job_spec.suite_path }}</td>
         <td>{{ queueEntry.job_spec.emails }}</td>
+        <td>{{ queueEntry.message }}</td>
 
       </tr>
     </table>

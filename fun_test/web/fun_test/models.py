@@ -340,7 +340,7 @@ class JobQueue(models.Model):
     priority = models.IntegerField()
     job_id = models.IntegerField(unique=True)
     test_bed_type = models.TextField(default="", null=True)
-
+    message = models.TextField(default="", null=True)
 
 if not is_lite_mode():
     from web.fun_test.metrics_models import *

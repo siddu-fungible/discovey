@@ -1016,7 +1016,8 @@ def scheduler_queue(request):
             one_element = {"job_id": queue_element.job_id,
                            "priority": queue_element.priority,
                            "test_bed_type": queue_element.test_bed_type,
-                           "job_spec": _get_job_spec(job_id=queue_element.job_id)}
+                           "job_spec": _get_job_spec(job_id=queue_element.job_id),
+                           "message": queue_element.message}
             result.append(one_element)
     elif request.method == 'POST':
         result = None

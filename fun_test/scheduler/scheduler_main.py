@@ -40,6 +40,8 @@ class QueueWorker(Thread):
                     self.de_queue_job(queued_job)
                 else:
                     print("Not available: {}".format(availability["message"]))
+                    queued_job.message = availability["message"]
+                    queued_job.save()
             print("Queue Worker")
             time.sleep(5)
 

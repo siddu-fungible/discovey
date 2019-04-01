@@ -42,6 +42,7 @@
         <tr style="text-align: center">
           <th>Id</th>
           <th>Result</th>
+          <th>State</th>
           <th><label data-placement="top" data-toggle="tooltip" title="Passed"
                      class="badge badge-success">Passed</label></th>
           <th><label data-placement="top" data-toggle="tooltip" title="Failed"
@@ -76,6 +77,7 @@
               <app-smart-label [simulateLink]="true" [value]="suiteExecution.suite_result" [type]="suiteExecution.suite_result"></app-smart-label>
             </a>
           </td>
+            <td>{{ suiteExecution.fields.state }}</td>
           <td>{{ suiteExecution.num_passed }}</td>
           <td>{{ suiteExecution.num_failed }}</td>
           <td>{{ suiteExecution.num_not_run }}</td>
