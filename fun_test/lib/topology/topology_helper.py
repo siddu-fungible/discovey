@@ -11,11 +11,11 @@ from lib.system.utils import parse_file_to_json
 
 
 class TopologyHelper:
-    def __init__(self, spec=None, spec_file=None):
+    def __init__(self, expanded_topology=None, spec=None, spec_file=None):
         self.spec = spec
         if spec_file:
             self.spec = parse_file_to_json(file_name=spec_file)
-        self.expanded_topology = None
+        self.expanded_topology = expanded_topology
 
     def get_resource_requirements(self):
         pass
@@ -45,12 +45,14 @@ class TopologyHelper:
             for dut_index, dut_info in duts.items():
                 dut_index = int(dut_index)
                 dut_type = dut_info["type"]
+
                 start_mode = F1.START_MODE_NORMAL
                 if "start_mode" in dut_info:
                     start_mode = dut_info["start_mode"]
 
                 # Create DUT object
-                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info)
+                dut_obj = Dut(type=dut_type, index=dut_index, spec=dut_info, start_mode=start_mode)
+
                 interfaces = dut_info["interface_info"]
 
                 # Assign endpoints on interfaces
@@ -107,14 +109,14 @@ class TopologyHelper:
             # Fetch storage container orchestrator
 
             for dut_index, dut_obj in duts.items():
-                dut_type = dut_obj.type
                 fun_test.debug("Setting up DUT {}".format(dut_index))
 
-                storage_container_orchestrator = asset_manager.get_orchestrator(index=dut_index, dut_obj=dut_obj)
-                fun_test.simple_assert(storage_container_orchestrator, "Topology retrieved container orchestrator")
+                orchestrator = asset_manager.get_orchestrator(is_simulation=fun_test.is_simulation(), dut_index=dut_index)
+                topology.add_active_orchestrator(orchestrator)
+                fun_test.simple_assert(orchestrator, "Topology retrieved container orchestrator")
 
                 fun_test.debug("Allocating the DUT")
-                self.allocate_dut(dut_obj=dut_obj, orchestrator_obj=storage_container_orchestrator)
+                self.allocate_dut(dut_index=dut_index, dut_obj=dut_obj, orchestrator_obj=orchestrator)
 
                 fun_test.debug("Setting up peers on the interfaces")
 
@@ -126,13 +128,13 @@ class TopologyHelper:
 
                         if peer_info.type == peer_info.END_POINT_TYPE_BARE_METAL:
                             self.allocate_bare_metal(bare_metal_end_point=peer_info,
-                                                     orchestrator_obj=storage_container_orchestrator)
+                                                     orchestrator_obj=orchestrator)
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
-                                                     orchestrator_obj=storage_container_orchestrator)
+                                                     orchestrator_obj=orchestrator)
                         elif peer_info.type == peer_info.END_POINT_TYPE_HYPERVISOR_QEMU_COLOCATED:
                             self.allocate_hypervisor(hypervisor_end_point=peer_info,
-                                                     orchestrator_obj=storage_container_orchestrator)
+                                                     orchestrator_obj=orchestrator)
 
             tgs = topology.tgs
 
@@ -158,19 +160,11 @@ class TopologyHelper:
         raise Exception("Not Implemented")
 
     @fun_test.safe
-    def allocate_dut(self, dut_obj, orchestrator_obj=None):
-        #if dut_obj.mode == dut_obj.MODE_SIMULATION:
+    def allocate_dut(self, dut_index, dut_obj, orchestrator_obj=None):
         fun_test.simple_assert(orchestrator_obj, "orchestrator")
-        dut_instance = None
-        if fun_test.is_simulation():
-            dut_instance = orchestrator_obj.launch_dut_instance(spec=dut_obj.spec,
-                                                                external_dpcsh_port=orchestrator_obj.dpcsh_port)
-        else:
-            dut_instance = orchestrator_obj.launch_dut_instance(spec=dut_obj.spec)
+        dut_instance = orchestrator_obj.launch_dut_instance(dut_index=dut_index, dut_obj=dut_obj)
         fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
         dut_obj.set_instance(dut_instance)
-
-
 
     @fun_test.safe
     def allocate_hypervisor(self, hypervisor_end_point, orchestrator_obj=None):  # TODO
@@ -180,32 +174,24 @@ class TopologyHelper:
             fun_test.simple_assert(orchestrator_obj, "orchestrator")
 
             if hypervisor_end_point.num_vms:
-                qemu_ssh_ports = orchestrator_obj.qemu_ssh_ports
-                for i in range(hypervisor_end_point.num_vms):
-                    internal_ssh_port = qemu_ssh_ports[i]["internal"]
-                    external_ssh_port = qemu_ssh_ports[i]["external"]
-                    vm_start_mode = None
+                host_ssh_ports = orchestrator_obj.get_host_ssh_ports()
+                for host_index in range(hypervisor_end_point.num_vms):
+                    internal_ssh_port = host_ssh_ports[host_index]["internal"]
+                    external_ssh_port = host_ssh_ports[host_index]["external"]
                     vm_host_os = getattr(hypervisor_end_point, "vm_host_os", None)
 
-
-                    if hasattr(hypervisor_end_point, "vm_start_mode"):
-                        if hypervisor_end_point.vm_start_mode == "VM_START_MODE_NORMAL":
-                            vm_start_mode = "VM_START_MODE_NORMAL"
-
                     instance = orchestrator_obj.launch_host_instance(
-                        instance_type=SimulationOrchestrator.INSTANCE_TYPE_QEMU,
                         external_ssh_port=external_ssh_port,
                         internal_ssh_port=internal_ssh_port,
-                        vm_start_mode=vm_start_mode,
                         vm_host_os=vm_host_os,
                     )
-                    fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(i))
+                    fun_test.test_assert(instance, "allocate_hypervisor: Launched host instance {}".format(host_index))
                     hypervisor_end_point.add_instance(instance=instance)
-                    fun_test.counter += 1
 
     @fun_test.safe
     def allocate_traffic_generator(self, index, end_point):
-        orchestrator_obj = asset_manager.get_orchestrator(OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST)
+        orchestrator_obj = asset_manager.get_orchestrator(is_simulation=fun_test.is_simulation(), type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST)
+        self.expanded_topology.add_active_orchestrator(orchestrator_obj)
         if end_point.end_point_type == EndPoint.END_POINT_TYPE_FIO:
             instance = orchestrator_obj.launch_fio_instance(index)
             fun_test.test_assert(instance, "allocate_traffic_generator: Launched fio instance")
@@ -217,7 +203,7 @@ class TopologyHelper:
 
     @fun_test.safe
     def cleanup(self):
-        asset_manager.cleanup()
+        return self.expanded_topology.cleanup()
 
     def quick_docker_deploy(self,
                             num_f1=0,

@@ -8,10 +8,16 @@ from lib.fun.f1 import F1, DockerF1
 from orchestrator import OrchestratorType, Orchestrator
 
 
-class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
+class DockerContainerOrchestrator(Linux, Orchestrator):
+    INSTANCE_TYPE_QEMU = "INSTANCE_TYPE_QEMU"
+    INSTANCE_TYPE_FSU = "INSTANCE_TYPE_FSU"
+    # An orchestrator (which happens to be a container) that is capable of spinning an F1 and multiple Qemu instances, all within one container
+
     QEMU_BASE_DIRECTORY = "/qemu"
-    QEMU_DIRECTORY = "/home/jabraham/qemu/x86_64-softmmu"
+    QEMU_DIRECTORY = "/qemu/qemu-Linux/bin"
     QEMU_PROCESS = "qemu-system-x86_64"
+    docker_host = None
+    QEMU_INTERNAL_PORTS = [50001, 50002, 50003, 50004]
     QEMU_INSTANCE_PORT = 2220
 
     QEMU_FS = "{}/fun-image-x86-64-qemux86-64.ext4".format(QEMU_BASE_DIRECTORY)
@@ -26,10 +32,8 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
 
     FUNCP_EXTRACT_LIST = ["build/posix/lib/libfunq.so", "build/posix/bin/funq-setup", "build/posix/bin/dpc"]
 
-    INSTANCE_TYPE_QEMU = "INSTANCE_TYPE_QEMU"
-    INSTANCE_TYPE_FSU = "INSTANCE_TYPE_FSU"
 
-    ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_SIMULATION
+
     HOST_OS_DEFAULT = "fungible_yocto"
     HOST_OS_FUNGIBLE_YOCTO = {"name": "fungible_yocto", "username": "root", "password": "fun123", "connect_retry_timeout": 30}
     HOST_OS_FUNGIBLE_UBUNTU = {"name": "fungible_ubuntu", "username": "stack", "password": "stack", "connect_retry_timeout": 60}
@@ -39,23 +43,82 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
     HOST_PASSWORD_DEFAULT = "fun123"
     VM_HOST_OS_DEFAULT = "fungible_yocto"
 
-    @staticmethod
-    def get(asset_properties):
-        s = SimulationOrchestrator(host_ip=asset_properties["host_ip"],
-                                   ssh_username=asset_properties["mgmt_ssh_username"],
-                                   ssh_password=asset_properties["mgmt_ssh_password"],
-                                   ssh_port=asset_properties["mgmt_ssh_port"])
-        s.TO_DICT_VARS.append("ORCHESTRATOR_TYPE")
-        return s
+
+
+    ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER
+
+    def __init__(self, **kwargs):
+        # a = super(DockerContainerOrchestrator, self)
+        Linux.__init__(self, host_ip=None, ssh_port=None, ssh_username=None, ssh_password=None)
+        Orchestrator.__init__(self, id=kwargs["id"])
+
+        self.container_asset = None
+        self.docker_host = kwargs["docker_host"]
+        self.dut_instance = None
+        self.host_instances = []
+
+    def describe(self):
+        self.docker_host.describe()
+
+    def setup_storage_container(self, dut_index, dut_obj):
+        fun_test.simple_assert(self.docker_host, "Docker host available")
+        if not fun_test.get_environment_variable("DOCKER_URL"):
+            fun_test.simple_assert(self.docker_host.health()["result"], "Health of the docker host")
+
+        vm_host_os = None  # TODO: Hack needed until asset_manager is implemented
+        if dut_obj.interfaces:
+            peer_info = dut_obj.interfaces[0].peer_info
+            if hasattr(peer_info, "vm_host_os"):
+                vm_host_os = peer_info.vm_host_os
+
+        fun_test.log("Setting up the integration container for index: {}".format(dut_index))
+        container_name = "{}_{}_{}".format("integration_basic", fun_test.get_suite_execution_id(), dut_index)
+
+        container_asset = self.docker_host.setup_storage_container(container_name=container_name,
+                                                                   ssh_internal_ports=[22],
+                                                                   qemu_internal_ports=self.QEMU_INTERNAL_PORTS,
+                                                                   dpcsh_internal_ports=[F1.INTERNAL_DPCSH_PORT],
+                                                                   vm_host_os=vm_host_os)
+        fun_test.simple_assert(self.docker_host.wait_for_handoff(container_name=container_name,
+                                                                 handoff_string="Idling"), message="Container handoff")
+
+        container_asset["host_type"] = self.docker_host.type  # DESKTOP, BARE_METAL
+
+        fun_test.test_assert(container_asset, "Setup storage basic container: {}".format(container_name))
+        self.ssh_username = container_asset["mgmt_ssh_username"]
+        self.ssh_port = container_asset["mgmt_ssh_port"]
+        self.ssh_password = container_asset["mgmt_ssh_password"]
+        self.host_ip = container_asset["host_ip"]
+        return container_asset
+
+    def get_host_ssh_ports(self):  # Qemu ssh ports
+        return self.container_asset["pool1_ports"]
+
+    @fun_test.safe
+    def launch_dut_instance(self, dut_index, dut_obj):
+        if not self.container_asset:
+            self.container_asset = self.setup_storage_container(dut_index=dut_index, dut_obj=dut_obj)
+        external_dpcsh_port = self.container_asset["pool2_ports"][0]["external"]
+        f1_obj = DockerF1(host_ip=self.container_asset["host_ip"],
+                          ssh_username=self.container_asset["mgmt_ssh_username"],
+                          ssh_password=self.container_asset["mgmt_ssh_password"],
+                          ssh_port=self.container_asset["mgmt_ssh_port"],
+                          external_dpcsh_port=external_dpcsh_port)
+        f1_obj.set_data_plane_ip(data_plane_ip=self.container_asset["internal_ip"])
+
+        # Start FunOS
+        fun_test.test_assert(f1_obj.start(start_mode=dut_obj.start_mode),
+                             "DockerContainerOrchestrator: Start FunOS")
+        self.dut_container_asset = self.container_asset
+        return f1_obj
+
 
     @fun_test.safe
     def launch_host_instance(self,
-                             instance_type=INSTANCE_TYPE_QEMU,
                              internal_ssh_port=None,
                              external_ssh_port=None,
                              qemu_num_cpus=2,
                              qemu_memory=256,
-                             vm_start_mode=None,
                              vm_host_os=VM_HOST_OS_DEFAULT):
         host_username = self.HOST_USERNAME_DEFAULT
         host_password = self.HOST_PASSWORD_DEFAULT
@@ -109,23 +172,6 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                      ssh_port=external_ssh_port,
                      connect_retry_timeout_max=60)  # TODO
 
-            '''
-            self.command("cd {}".format(self.QEMU_DIRECTORY))
-            # Copying the moudles.tgz into qemu host
-            self.command("scp -P {} /{} root@127.0.0.1:".format(internal_ssh_port, self.QEMU_MODULES_TGZ),
-                         custom_prompts={"(yes/no)\?*": "yes"})
-            # Copying the functrlp.tgz containing the FunCP pre-compiled libs and bins into qemu host
-            self.command("scp -P {} /{} root@127.0.0.1:".format(internal_ssh_port, self.QEMU_FUNCP_TGZ),
-                         custom_prompts={"(yes/no)\?*": "yes"})
-            '''
-
-            '''
-            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
-                         custom_prompts={"(yes/no)\?*": "yes"})  # TODO: Why is this here?
-            self.command("scp -P {}  nvme*.ko root@127.0.0.1:/".format(internal_ssh_port),
-                         custom_prompts={"(yes/no)\?*": "yes"})
-            '''
-
             if vm_host_os == self.HOST_OS_FUNGIBLE_YOCTO["name"]:
                 self.scp(source_file_path="/" + self.QEMU_MODULES_TGZ,
                          target_ip="127.0.0.1",
@@ -140,7 +186,6 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                          target_password=host_username,
                          target_file_path="",
                          target_port=internal_ssh_port)
-
 
             # Untaring the functrlp.tgz and copying the libs & bins needed to start the dpc-server inside the qemu host
             i.enter_sudo()
@@ -157,114 +202,54 @@ class SimulationOrchestrator(Linux, Orchestrator, ToDictMixin):
                 i.command("rm -rf /lib/modules")
                 i.command("tar -xf {} -C /".format(self.QEMU_MODULES_TGZ))
                 i.command("depmod -a")
-            # i.command("modprobe -r nvme")
-            # fun_test.sleep("modprobe -r nvme")
-            # i.command("modprobe nvme")
             i.exit_sudo()
             # Don't need to reload the nvme driver while bringing up the setup. If driver reload is required it has to
             # be taken care inside the test cases. Avoiding this reload will avoid the bug #SWOS-3822
             # i.nvme_restart()
             instance = i
+            self.host_instances.append(instance)
         except Exception as ex:
             fun_test.critical(str(ex))
             self.command("cat {}".format(self.QEMU_LOG))
         return instance
 
-    @fun_test.safe
-    def launch_dut_instance(self,
-                            dpcsh_only,
-                            external_dpcsh_port):
-        """
-        f1_obj = F1(host_ip=self.host_ip,
-                    ssh_username=self.ssh_username,
-                    ssh_password=self.ssh_password,
-                    ssh_port=self.ssh_port)
-
-        # Start FunOS
-        fun_test.test_assert(f1_obj.start(dpcsh=True,
-                                          dpcsh_only=dpcsh_only),
-                             "SimulationOrchestrator: Start FunOS")
-        return f1_obj
-        """
-        fun_test.test_assert(False, "Not implemented")
-
-    @fun_test.safe
-    def launch_docker_instances(self,
-                                type,
-                                ):
-        if type == "quagga-router":
-            pass
-
-
-class DockerContainerOrchestrator(SimulationOrchestrator):
-    # An orchestrator (which happens to be a container) that is capable of spinning an F1 and multiple Qemu instances, all within one container
-    QEMU_DIRECTORY = "/qemu/qemu-Linux/bin"
-    QEMU_PROCESS = "qemu-system-x86_64"
-    docker_host = None
-
-    ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_CONTAINER
-
-    def __init__(self,
-                 host_ip,
-                 ssh_username,
-                 ssh_password,
-                 ssh_port,
-                 dpcsh_port,
-                 qemu_ssh_ports,
-                 container_name,
-                 internal_ip,
-                 host_type=DockerHost.TYPE_BARE_METAL):
-        connect_retry_timeout = 20
-        if host_type == DockerHost.TYPE_DESKTOP:
-            connect_retry_timeout = 60
-        super(SimulationOrchestrator, self).__init__(host_ip=host_ip,
-                                                     ssh_username=ssh_username,
-                                                     ssh_password=ssh_password,
-                                                     ssh_port=ssh_port,
-                                                     connect_retry_timeout_max=connect_retry_timeout)
-        self.dpcsh_port = dpcsh_port
-        self.qemu_ssh_ports = qemu_ssh_ports
-        self.container_name = container_name
-        self.internal_ip = internal_ip
-        self.host_type = host_type
-
-    def describe(self):
-        self.docker_host.describe()
-
-    @fun_test.safe
-    def launch_dut_instance(self, spec, external_dpcsh_port):
-        f1_obj = DockerF1(host_ip=self.host_ip,
-                          ssh_username=self.ssh_username,
-                          ssh_password=self.ssh_password,
-                          ssh_port=self.ssh_port,
-                          external_dpcsh_port=external_dpcsh_port,
-                          spec=spec)
-        f1_obj.set_data_plane_ip(data_plane_ip=self.internal_ip)
-
-        # Start FunOS
-        fun_test.test_assert(f1_obj.start(start_mode=spec["start_mode"]),
-                             "DockerContainerOrchestrator: Start FunOS")
-        return f1_obj
-
-    @staticmethod
-    def get(asset_properties):
-        obj = DockerContainerOrchestrator(host_ip=asset_properties["host_ip"],
-                                          ssh_username=asset_properties["mgmt_ssh_username"],
-                                          ssh_password=asset_properties["mgmt_ssh_password"],
-                                          ssh_port=asset_properties["mgmt_ssh_port"],
-                                          dpcsh_port=asset_properties["pool2_ports"][0]["external"],
-                                          qemu_ssh_ports=asset_properties["pool1_ports"],
-                                          container_name=asset_properties["name"],
-                                          internal_ip=asset_properties["internal_ip"],
-                                          host_type=asset_properties["host_type"])
-        return obj
-
     def post_init(self):
-        # self.ip_route_add(network="10.1.0.0/16", gateway="172.17.0.1",
-        #                  outbound_interface="eth0")  # Required to hack around automatic tap interface installation
-        # self.ip_route_add(network="10.2.0.0/16", gateway="172.17.0.1", outbound_interface="eth0")
         self.port_redirections = []
         self.TO_DICT_VARS.extend(["port_redirections", "ORCHESTRATOR_TYPE", "docker_host"])
+
+    def cleanup(self):
+        fun_test.add_checkpoint("Removing dut_instance")
+
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="{}_f1.log.txt".format(self.id))
+        container_asset = self.docker_host.get_container_asset(name=self.container_asset["name"])
+        if container_asset:
+            fun_test.scp(source_ip=container_asset["host_ip"],
+                         source_file_path=F1.F1_LOG,
+                         source_username=container_asset["mgmt_ssh_username"],
+                         source_password=container_asset["mgmt_ssh_password"],
+                         source_port=container_asset["mgmt_ssh_port"],
+                         target_file_path=artifact_file_name)
+            fun_test.add_auxillary_file(description="F1 Log {}".format(self.id), filename=artifact_file_name)
+
+        # Removing host_instance
+
+        for index, host_instance in enumerate(self.host_instances):
+            fun_test.add_checkpoint("Removing host_instance {}".format(index))
+            if hasattr(self, "QEMU_LOG"):
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    post_fix_name="{}_{}_qemu.log.txt".format(self.id, index))
+                fun_test.scp(source_ip=container_asset["host_ip"],
+                             source_file_path=self.QEMU_LOG,
+                             source_username=container_asset["mgmt_ssh_username"],
+                             source_password=container_asset["mgmt_ssh_password"],
+                             source_port=container_asset["mgmt_ssh_port"],
+                             target_file_path=artifact_file_name)
+                fun_test.add_auxillary_file(description="QEMU Log {}".format(self.id),
+                                            filename=artifact_file_name)
+
+        fun_test.sleep("Destroying container: {}".format(self.container_asset["name"]))
+        self.docker_host.destroy_container(self.container_asset["name"])
 
 
 class DockerHostOrchestrator(Orchestrator, DockerHost):
@@ -272,9 +257,14 @@ class DockerHostOrchestrator(Orchestrator, DockerHost):
     ORCHESTRATOR_TYPE = OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST
     container_assets = {}
 
+    def __init__(self, **kwargs):
+        Orchestrator.__init__(self, **kwargs)
+        DockerHost.__init__(self, properties=kwargs["spec"])
+
     def launch_fio_instance(self, index):
         container_name = "{}_{}_{}".format("integration_fio", fun_test.get_suite_execution_id(), index)
         container_asset = self.setup_fio_container(container_name=container_name, ssh_internal_ports=[22])
+        self.container_assets[container_asset["name"]] = container_asset
         return Fio.get(asset_properties=container_asset)
 
     def launch_linux_instance(self, index):
@@ -284,3 +274,9 @@ class DockerHostOrchestrator(Orchestrator, DockerHost):
         linux = Linux.get(asset_properties=container_asset)
         linux.internal_ip = container_asset["internal_ip"]
         return linux
+
+    def cleanup(self):
+        container_assets = self.container_assets
+        for container_name in container_assets:
+            fun_test.log("Destroying container: {}".format(container_name))
+            self.destroy_container(container_name=container_name)
