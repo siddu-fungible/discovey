@@ -27,14 +27,20 @@ class QueueWorker(Thread):
         self.job_threads = {}
 
     def run(self):
+        from asset.asset_manager import AssetManager
+        asset_manager = AssetManager()
         while True:
             de_queued_jobs = []
             low, high = SchedulerJobPriority.RANGES[SchedulerJobPriority.NORMAL]
             normal_priority_jobs = JobQueue.objects.filter(priority__lte=high, priority__gte=low).order_by('priority')
             for normal_priority_job in normal_priority_jobs:
                 print ("Testbed-type: {}".format(normal_priority_job.test_bed_type))
-                de_queued_jobs.append(normal_priority_job)
-                self.de_queue_job(normal_priority_job)
+                availability = asset_manager.get_test_bed_availability(test_bed_type=normal_priority_job.test_bed_type)
+                if availability["status"]:
+                    de_queued_jobs.append(normal_priority_job)
+                    self.de_queue_job(normal_priority_job)
+                else:
+                    print("Not available: {}".format(availability["message"]))
             print("Queue Worker")
             time.sleep(5)
 
@@ -43,10 +49,11 @@ class QueueWorker(Thread):
                 d.delete()
 
     def de_queue_job(self, job):
+        print("De-queueing Job: {}".format(job.job_id))
         suite_execution = models_helper.get_suite_execution(suite_execution_id=job.job_id)
         t = SuiteWorker(job_spec=suite_execution)
         self.job_threads[job.job_id] = t
-        t.run()
+        t.start()
 
     def thread_complete(self, job_id):
         del self.job_threads[job_id]

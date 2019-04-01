@@ -110,7 +110,7 @@ class AssetManager:
         return result
 
     @fun_test.safe
-    def get_test_bed(self, test_bed_type):
+    def get_test_bed_availability(self, test_bed_type):
         from web.fun_test.models_helper import get_suite_executions_by_filter
         from scheduler.scheduler_global import JobStatusType
         result = {}
