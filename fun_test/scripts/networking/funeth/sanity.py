@@ -93,7 +93,7 @@ class FunethSanity(FunTestScript):
         setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj)
+        setup_hu_host(funeth_obj, update_driver=False)
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
