@@ -415,7 +415,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                               "Read Latency 90 Percentile in uSecs", "Read Latency 95 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "writelatency90", "writelatency95", "writelatency9999", "readlatency",
+                           "writelatency", "writelatency90", "writelatency95", "writelatency9999", "readclatency",
                            "readlatency90", "readlatency95", "readlatency9999", "fio_job_name"]
         table_data_rows = []
 
@@ -507,8 +507,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                             fio_output[combo][mode][op][field] = int(round(value * multiplier / 1000))
                         if field == "latency":
                             fio_output[combo][mode][op][field] = int(round(value / multiplier))
-                        if field == "clatency":
-                            fio_output[combo][mode][op][field] = int(round(value / multiplier))
+                        # if field == "clatency":
+                        #    fio_output[combo][mode][op][field] = int(round(value / multiplier))
                 fun_test.log("FIO Command Output after multiplication:")
                 fun_test.log(fio_output[combo][mode])
 
