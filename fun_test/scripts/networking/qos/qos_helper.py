@@ -217,6 +217,20 @@ def capture_wred_ecn_stats_n_times(network_controller_obj, port_num, queue_num, 
 def get_ecn_qos_binary(qos_binary, ecn_bits=CONGESTION_BITS):
     return qos_binary + str(ecn_bits) + 'b'
 
+def get_filtered_hex_from_binary(qos_binary):
+    result = None
+    try:
+        output = '00 '
+        qos_bits = filter(lambda  x: x.isdigit(), qos_binary)
+        start_bits = qos_bits[:4:]
+        output += str(int(start_bits, 2))
+        end_bits = qos_bits[4:]
+        output += str(int(end_bits, 2))
+        output += " "
+        result = output
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
 
 def get_load_pps_for_each_queue(max_egress_load_mbps, packet_size, total_queues=None):
     max_load_bits = max_egress_load_mbps * 1000000
