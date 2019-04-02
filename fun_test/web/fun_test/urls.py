@@ -177,7 +177,8 @@ triage_urls = [
     url(r'^update_db$', triaging.update_triage),
     url(r'^kill_db$', triaging.kill_triage),
     url(r'^rerun_flow$', triaging.rerun_triage_flow),
-    url(r'^check_db$', triaging.check_triage)
+    url(r'^check_db$', triaging.check_triage),
+    url(r'^triages$', triaging.triages)
 ]
 
 demo_urls = [

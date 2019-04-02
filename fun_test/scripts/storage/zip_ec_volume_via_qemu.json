@@ -71,7 +71,7 @@
       "vol_encrypt_filter_added":0,
       "fun_crypto_aes_setkey":0,
       "cryptofilter_xform_flow_alloc_done":0,
-      "hw_crypto_passthrough_done":0,
+      "hw_crypto_passthrough_done":80,
       "hw_crypto_aes_keyx_hw_done":0,
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
@@ -136,7 +136,7 @@
       "vol_encrypt_filter_added":0,
       "fun_crypto_aes_setkey":0,
       "cryptofilter_xform_flow_alloc_done":0,
-      "hw_crypto_passthrough_done":0,
+      "hw_crypto_passthrough_done":80,
       "hw_crypto_aes_keyx_hw_done":0,
       "cryptofilter_create":0,
       "fun_crypto_setkey":0
