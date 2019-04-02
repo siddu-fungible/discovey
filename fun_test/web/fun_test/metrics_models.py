@@ -791,7 +791,13 @@ class VolumePerformanceEmulation(models.Model):
     output_write_bw = models.IntegerField(verbose_name="Write bandwidth KiB/s")
     output_read_bw = models.IntegerField(verbose_name="Read bandwidth KiB/s")
     output_write_latency = models.IntegerField(verbose_name="Write latency uSecs")
+    output_write_90_latency = models.IntegerField(verbose_name="Write 90% latency uSecs", default=-1)
+    output_write_95_latency = models.IntegerField(verbose_name="Write 95% latency uSecs", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="Write 99% latency uSecs", default=-1)
     output_read_latency = models.IntegerField(verbose_name="Read latency uSecs")
+    output_read_90_latency = models.IntegerField(verbose_name="Read 90% latency uSecs", default=-1)
+    output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency uSecs", default=-1)
+    output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency uSecs", default=-1)
     tag = "analytics"
 
     def __str__(self):
