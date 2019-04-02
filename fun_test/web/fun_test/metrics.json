@@ -1763,6 +1763,108 @@
                 "label": "NFA Throughput"
               }
             ]
+          },
+          {
+            "info": "TeraMarks Storage",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "Storage_Teramarks",
+            "weight": 1,
+            "label": "Storage - (work in progress)",
+            "children": [
+              {
+                "info": "Raw Block",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "raw_block_teramarks",
+                "weight": 1,
+                "label": "Raw Block",
+                "children": [
+                  {
+                    "info": "One SSD",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "one_ssd_raw_block",
+                    "weight": 1,
+                    "label": "One SSD",
+                    "children": [
+                      {
+                        "info": "One Volume",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "one_volume_one_ssd_raw_block",
+                        "weight": 1,
+                        "label": "One Volume",
+                        "children": [
+                          {
+                            "info": "4KB",
+                            "metric_model_name": "MetricContainer",
+                            "leaf": false,
+                            "name": "4kb_one_volume_one_ssd_raw_block",
+                            "weight": 1,
+                            "label": "4KB",
+                            "children": [
+                              {
+                                "info": "Read",
+                                "metric_model_name": "MetricContainer",
+                                "leaf": false,
+                                "name": "read_4kb_one_volume_one_ssd_raw_block",
+                                "weight": 1,
+                                "label": "Read",
+                                "children": [
+                                  {
+                                    "info": "read_4kb1vol1ssd_output_bandwidth",
+                                    "metric_model_name": "VolumePerformanceEmulation",
+                                    "leaf": true,
+                                    "name": "read_4kb1vol1ssd_output_bandwidth",
+                                    "weight": 1,
+                                    "label": "Throughput"
+                                  },
+                                  {
+                                    "info": "read_4kb1vol1ssd_output_latency",
+                                    "metric_model_name": "VolumePerformanceEmulation",
+                                    "leaf": true,
+                                    "name": "read_4kb1vol1ssd_output_latency",
+                                    "weight": 1,
+                                    "label": "Latency"
+                                  }
+                                ]
+                              },
+                              {
+                                "info": "Write",
+                                "metric_model_name": "MetricContainer",
+                                "leaf": false,
+                                "name": "write_4kb_one_volume_one_ssd_raw_block",
+                                "weight": 1,
+                                "label": "Write",
+                                "children": [
+                                  {
+                                    "info": "write_4kb1vol1ssd_output_bandwidth",
+                                    "metric_model_name": "VolumePerformanceEmulation",
+                                    "leaf": true,
+                                    "name": "write_4kb1vol1ssd_output_bandwidth",
+                                    "weight": 1,
+                                    "label": "Throughput"
+                                  },
+                                  {
+                                    "info": "write_4kb1vol1ssd_output_latency",
+                                    "metric_model_name": "VolumePerformanceEmulation",
+                                    "leaf": true,
+                                    "name": "write_4kb1vol1ssd_output_latency",
+                                    "weight": 1,
+                                    "label": "Latency"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
           }
         ]
       }
