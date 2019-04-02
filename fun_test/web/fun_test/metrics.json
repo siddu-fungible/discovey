@@ -1781,114 +1781,94 @@
                 "label": "Raw Block",
                 "children": [
                   {
-                    "info": "One SSD",
+                    "info": "4kb_one_volume_one_ssd_raw_block",
                     "metric_model_name": "MetricContainer",
                     "leaf": false,
-                    "name": "one_ssd_raw_block",
+                    "name": "4kb_one_volume_one_ssd_raw_block",
                     "weight": 1,
-                    "label": "One SSD",
+                    "label": "SSD(s)=1, Vol(s)=1, Block Size=4KB",
                     "children": [
                       {
-                        "info": "One Volume",
+                        "info": "Read",
                         "metric_model_name": "MetricContainer",
                         "leaf": false,
-                        "name": "one_volume_one_ssd_raw_block",
+                        "name": "read_4kb_one_volume_one_ssd_raw_block",
                         "weight": 1,
-                        "label": "One Volume",
+                        "label": "Read",
                         "children": [
                           {
-                            "info": "4KB",
-                            "metric_model_name": "MetricContainer",
-                            "leaf": false,
-                            "name": "4kb_one_volume_one_ssd_raw_block",
+                            "info": "read_4kb1vol1ssd_output_bandwidth",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb1vol1ssd_output_bandwidth",
                             "weight": 1,
-                            "label": "4KB",
-                            "children": [
-                              {
-                                "info": "Read",
-                                "metric_model_name": "MetricContainer",
-                                "leaf": false,
-                                "name": "read_4kb_one_volume_one_ssd_raw_block",
-                                "weight": 1,
-                                "label": "Read",
-                                "children": [
-                                  {
-                                    "info": "read_4kb1vol1ssd_output_bandwidth",
-                                    "metric_model_name": "BltVolumePerformance",
-                                    "leaf": true,
-                                    "name": "read_4kb1vol1ssd_output_bandwidth",
-                                    "weight": 1,
-                                    "label": "Throughput"
-                                  },
-                                  {
-                                    "info": "read_4kb1vol1ssd_4_output_latency",
-                                    "metric_model_name": "BltVolumePerformance",
-                                    "leaf": true,
-                                    "name": "read_4kb1vol1ssd_4_output_latency",
-                                    "weight": 1,
-                                    "label": "Latency - 4Gbps"
-                                  },
-                                  {
-                                    "info": "read_4kb1vol1ssd_8_output_latency",
-                                    "metric_model_name": "BltVolumePerformance",
-                                    "leaf": true,
-                                    "name": "read_4kb1vol1ssd_8_output_latency",
-                                    "weight": 1,
-                                    "label": "Latency - 8Gbps"
-                                  },
-                                  {
-                                    "info": "read_4kb1vol1ssd_output_iops",
-                                    "metric_model_name": "BltVolumePerformance",
-                                    "leaf": true,
-                                    "name": "read_4kb1vol1ssd_output_iops",
-                                    "weight": 1,
-                                    "label": "IOPS"
-                                  }
-                                ]
-                              },
-                              {
-                                "info": "Write",
-                                "metric_model_name": "MetricContainer",
-                                "leaf": false,
-                                "name": "write_4kb_one_volume_one_ssd_raw_block",
-                                "weight": 1,
-                                "label": "Write",
-                                "children": [
-                                  {
-                                    "info": "write_4kb1vol1ssd_output_bandwidth",
-                                    "metric_model_name": "BltVolumePerformance",
-                                    "leaf": true,
-                                    "name": "write_4kb1vol1ssd_output_bandwidth",
-                                    "weight": 1,
-                                    "label": "Throughput"
-                                  },
-                                  {
-                                    "info": "write_4kb1vol1ssd_4_output_latency",
-                                    "metric_model_name": "BltVolumePerformance",
-                                    "leaf": true,
-                                    "name": "write_4kb1vol1ssd_4_output_latency",
-                                    "weight": 1,
-                                    "label": "Latency - 4Gbps"
-                                  },
-                                  {
-                                    "info": "write_4kb1vol1ssd_8_output_latency",
-                                    "metric_model_name": "BltVolumePerformance",
-                                    "leaf": true,
-                                    "name": "write_4kb1vol1ssd_8_output_latency",
-                                    "weight": 1,
-                                    "label": "Latency - 8Gbps"
-                                  },
-                                  {
-                                    "info": "write_4kb1vol1ssd_output_iops",
-                                    "metric_model_name": "BltVolumePerformance",
-                                    "leaf": true,
-                                    "name": "write_4kb1vol1ssd_output_iops",
-                                    "weight": 1,
-                                    "label": "IOPS"
-                                  }
-                                ]
-                              }
-                            ]
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "read_4kb1vol1ssd_4_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb1vol1ssd_4_output_latency",
+                            "weight": 1,
+                            "label": "Latency - 4Gbps"
+                          },
+                          {
+                            "info": "read_4kb1vol1ssd_8_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb1vol1ssd_8_output_latency",
+                            "weight": 1,
+                            "label": "Latency - 8Gbps"
+                          },
+                          {
+                            "info": "read_4kb1vol1ssd_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "read_4kb1vol1ssd_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
+                      },
+                      {
+                        "info": "Write",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "write_4kb_one_volume_one_ssd_raw_block",
+                        "weight": 1,
+                        "label": "Write",
+                        "children": [
+                          {
+                            "info": "write_4kb1vol1ssd_output_bandwidth",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "write_4kb1vol1ssd_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "write_4kb1vol1ssd_4_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "write_4kb1vol1ssd_4_output_latency",
+                            "weight": 1,
+                            "label": "Latency - 4Gbps"
+                          },
+                          {
+                            "info": "write_4kb1vol1ssd_8_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "write_4kb1vol1ssd_8_output_latency",
+                            "weight": 1,
+                            "label": "Latency - 8Gbps"
+                          },
+                          {
+                            "info": "write_4kb1vol1ssd_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "write_4kb1vol1ssd_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
                           }
                         ]
                       }
