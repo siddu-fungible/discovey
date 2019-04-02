@@ -4,7 +4,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
-from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper  #, BltVolumePerformanceHelper
+from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper, BltVolumePerformanceHelper
 from lib.host.linux import Linux
 from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
@@ -12,6 +12,7 @@ from lib.fun.f1 import F1
 from lib.fun.fs import Fs
 from lib.fun.fs import F1InFs
 import uuid
+from datetime import datetime
 
 '''
 Script to track the performance of various read write combination of local thin block volume using FIO
@@ -68,12 +69,15 @@ tb_config = {
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
                  write_latency, write_90_latency, write_95_latency, write_99_latency, read_latency, read_90_latency,
                  read_95_latency, read_99_latency, fio_job_name):
+
+    db_log_time = fun_test.shared_variables["db_log_time"]
+
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "read_latency", "read_90_latency", "read_95_latency", "read_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    VolumePerformanceEmulationHelper().add_entry(date_time=fun_test.get_start_time(),
+    '''VolumePerformanceEmulationHelper().add_entry(date_time=fun_test.get_start_time(),
                                                  volume=volume,
                                                  test=test,
                                                  block_size=block_size,
@@ -92,20 +96,19 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
                                                  read_90_latency=read_90_latency,
                                                  read_95_latency=read_95_latency,
                                                  read_99_latency=read_99_latency,
-                                                 fio_job_name=fio_job_name)
+                                                 fio_job_name=fio_job_name)'''
 
-    '''blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=datetime.now(), volume="BLT", test="FioSeqWriteSeqReadOnly", block_size="4k", io_depth=20,
-                  size="20g", operation="read", num_ssd=1, num_volume=1, fio_job_name="job_name", write_iops=1678,
-                  read_iops=1780,
-                  write_throughput=237, read_throughput=279, write_avg_latency=1789, read_avg_latency=1890,
-                  write_90_latency=-1,
-                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
-                  write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
-                  read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
-                  write_90_latency_unit="usecs", write_95_latency_unit="usecs",
-                  write_99_latency_unit="usecs", read_90_latency_unit="usecs", read_95_latency_unit="usecs",
-                  read_99_latency_unit="usecs")'''
+    blt = BltVolumePerformanceHelper()
+    blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
+                  size=size, operation=operation, num_ssd=1, num_volume=1, fio_job_name=fio_job_name,
+                  write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
+                  write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
+                  write_95_latency=write_95_latency, write_99_latency=write_99_latency, read_90_latency=read_90_latency,
+                  read_95_latency=read_95_latency, read_99_latency=read_99_latency, write_iops_unit="ops",
+                  read_iops_unit="ops", write_throughput_unit="Mbps", read_throughput_unit="Mbps",
+                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
+                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", read_90_latency_unit="usecs",
+                  read_95_latency_unit="usecs", read_99_latency_unit="usecs")
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
@@ -143,6 +146,8 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
         f1 = fs.get_f1(index=0)
         fun_test.shared_variables["f1"] = f1"""
+        self.db_log_time = datetime.now()
+        fun_test.shared_variables["db_log_time"] = self.db_log_time
 
         # f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
 
