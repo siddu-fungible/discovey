@@ -170,7 +170,7 @@ class VolumePerformanceEmulationHelper(MetricHelper):
         super(VolumePerformanceEmulationHelper, self).__init__(model=self.model)
 
     def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw,
-                  read_bw, write_latency, read_latency, write_90_latency=-1, write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1):
+                  read_bw, write_latency, read_latency, write_90_latency=-1, write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1, fio_job_name=""):
         try:
             entry = VolumePerformanceEmulation.objects.get(input_date_time=date_time,
                                                            input_volume=volume,
@@ -191,6 +191,7 @@ class VolumePerformanceEmulationHelper(MetricHelper):
             entry.output_read_90_latency = read_90_latency
             entry.output_read_95_latency = read_95_latency
             entry.output_read_99_latency = read_99_latency
+            entry.input_fio_job_name = fio_job_name
             entry.save()
         except ObjectDoesNotExist:
             pass
@@ -212,7 +213,8 @@ class VolumePerformanceEmulationHelper(MetricHelper):
                                                    output_write_99_latency=write_99_latency,
                                                    output_read_90_latency=read_90_latency,
                                                    output_read_95_latency=read_95_latency,
-                                                   output_read_99_latency=read_99_latency)
+                                                   output_read_99_latency=read_99_latency,
+                                                   input_fio_job_name=fio_job_name)
             one_entry.save()
 
 
