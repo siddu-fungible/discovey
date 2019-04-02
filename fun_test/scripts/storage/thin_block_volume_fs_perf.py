@@ -4,7 +4,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.topology.dut import Dut, DutInterface
 from lib.host.traffic_generator import TrafficGenerator
 from lib.host.storage_controller import StorageController
-from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper
+from web.fun_test.analytics_models_helper import VolumePerformanceEmulationHelper  #, BltVolumePerformanceHelper
 from lib.host.linux import Linux
 from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
@@ -66,8 +66,10 @@ tb_config = {
 
 
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, read_latency):
-    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "read_latency"]:
+                 write_latency, write_90_latency, write_95_latency, write_99_latency, read_latency, read_90_latency,
+                 read_95_latency, read_99_latency, fio_job_name):
+    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
+              "write_99_latency", "read_latency", "read_90_latency", "read_95_latency", "read_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
@@ -83,7 +85,27 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
                                                  write_bw=write_bw,
                                                  read_bw=read_bw,
                                                  write_latency=write_latency,
-                                                 read_latency=read_latency)
+                                                 read_latency=read_latency,
+                                                 write_90_latency=write_90_latency,
+                                                 write_95_latency=write_95_latency,
+                                                 write_99_latency=write_99_latency,
+                                                 read_90_latency=read_90_latency,
+                                                 read_95_latency=read_95_latency,
+                                                 read_99_latency=read_99_latency,
+                                                 fio_job_name=fio_job_name)
+
+    '''blt = BltVolumePerformanceHelper()
+    blt.add_entry(date_time=datetime.now(), volume="BLT", test="FioSeqWriteSeqReadOnly", block_size="4k", io_depth=20,
+                  size="20g", operation="read", num_ssd=1, num_volume=1, fio_job_name="job_name", write_iops=1678,
+                  read_iops=1780,
+                  write_throughput=237, read_throughput=279, write_avg_latency=1789, read_avg_latency=1890,
+                  write_90_latency=-1,
+                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
+                  write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
+                  read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
+                  write_90_latency_unit="usecs", write_95_latency_unit="usecs",
+                  write_99_latency_unit="usecs", read_90_latency_unit="usecs", read_95_latency_unit="usecs",
+                  read_99_latency_unit="usecs")'''
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
@@ -115,12 +137,12 @@ class BLTVolumePerformanceScript(FunTestScript):
                                      user=tb_config["dpcsh_proxy"]["user"],
                                      password=tb_config["dpcsh_proxy"]["passwd"])'''
 
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"])
+        """fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"])
         fun_test.shared_variables["fs"] = fs
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
         f1 = fs.get_f1(index=0)
-        fun_test.shared_variables["f1"] = f1
+        fun_test.shared_variables["f1"] = f1"""
 
         # f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
 
@@ -129,7 +151,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
         # f1fs = F1InFs(index=0, fs=fs, serial_device_path="/dev/ttyS0", serial_sbp_device_path="/dev/ttyS1")
         # self.storage_controller = f1fs.get_dpc_storage_controller()
-        self.storage_controller = f1.get_dpc_storage_controller()
+        # self.storage_controller = f1.get_dpc_storage_controller()
 
         ''''# Start the dpcsh proxy and ensure that the funos & dpcsh proxy is started to ready to accept inputs
         status = self.dpcsh_host.start_dpcsh_proxy(dpcsh_proxy_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
@@ -141,19 +163,19 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.test_assert(status, "dpcsh proxy ready")
         self.dpcsh_host.network_controller_obj.disconnect()'''
 
-        status = f1.get_dpc_client().json_execute(verb="peek", data="storage", command_duration=5)
+        # status = f1.get_dpc_client().json_execute(verb="peek", data="storage", command_duration=5)
 
         # Setting the syslog level to 2
         # status = self.storage_controller.poke("params/syslog/level 2")
         # fun_test.test_assert(status, "Setting syslog level to 2")
 
         # fun_test.shared_variables["dpcsh_host"] = self.dpcsh_host
-        fun_test.shared_variables["storage_controller"] = self.storage_controller
+        # fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # Detach the volume
-        self.volume_details = fun_test.shared_variables["volume_details"]
+        # self.volume_details = fun_test.shared_variables["volume_details"]
         '''command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
                                                                     uuid=fun_test.shared_variables["thin_uuid"],
                                                                     huid=tb_config['dut_info'][0]['huid'],
@@ -173,8 +195,9 @@ class BLTVolumePerformanceScript(FunTestScript):
                                                   dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
         fun_test.test_assert(status, "Stopped dpcsh with {} in tcp proxy mode".
                              format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))'''
-        fun_test.log("FS cleanup")
-        fun_test.shared_variables["fs"].cleanup()
+        '''fun_test.log("FS cleanup")
+        fun_test.shared_variables["fs"].cleanup()'''
+        fun_test.log("Cleanup block..")
 
 
 class BLTVolumePerformanceTestcase(FunTestCase):
@@ -246,13 +269,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
         self.nvme_block_device = self.nvme_device + "n" + str(self.volume_details["ns_id"])
         # self.dpcsh_host = fun_test.shared_variables["dpcsh_host"]
-        self.storage_controller = fun_test.shared_variables["storage_controller"]
+        # self.storage_controller = fun_test.shared_variables["storage_controller"]
 
-        '''self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
+        self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
                                   ssh_username=tb_config["tg_info"][0]["user"],
-                                  ssh_password=tb_config["tg_info"][0]["passwd"])'''
+                                  ssh_password=tb_config["tg_info"][0]["passwd"])
 
-        fs = fun_test.shared_variables["fs"]
+        """fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
 
         f1 = fun_test.shared_variables["f1"]
@@ -274,9 +297,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.sleep("wait after modprob is reloaded", 2)
 
             vol_size = self.volume_details["capacity"] / self.volume_details["block_size"]
-            create_ns = self.end_host.nvme_create_namespace(size=vol_size, capacity=vol_size,
+            '''create_ns = self.end_host.nvme_create_namespace(size=vol_size, capacity=vol_size,
                                                             block_size=self.volume_details["block_size"],
-                                                            device=self.device)
+                                                            device=self.device)'''
+            create_ns = self.end_host.sudo_command(
+                "nvme create-ns --nsze={} --ncap={} --block-size={} {}".format(vol_size, vol_size,
+                                                                               self.volume_details["block_size"],
+                                                                               self.device))
             fun_test.test_assert("Success" in create_ns, "Namespace is created")
 
             attach_ns = self.end_host.nvme_attach_namespace(namespace_id=self.volume_details["ns_id"],
@@ -352,7 +379,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output)
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
+                               self.iter_interval)"""
 
     def run(self):
 
@@ -360,9 +387,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         test_method = testcase[3:]
 
         # self.storage_controller = fun_test.shared_variables["blt"]["storage_controller"]
-        self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
-        storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid,
-                                                     "stats")
+        # self.thin_uuid = fun_test.shared_variables["blt"]["thin_uuid"]
+        # storage_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", self.volume_details["type"], self.thin_uuid,
+        #                                             "stats")
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_bs_iodepth in both write only
         # & read only modes
@@ -377,10 +404,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         diff_stats = {}
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KiB/s", "Read Throughput in KiB/s", "Write Latency in uSecs",
-                              "Read Latency in uSecs"]
+                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
+                              "Write Latency 99.99 Percentile in uSecs", "Read Latency in uSecs",
+                              "Read Latency 90 Percentile in uSecs", "Read Latency 95 Percentile in uSecs",
+                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "readlatency"]
+                           "writelatency", "writelatency90", "writelatency95", "writelatency9999", "readlatency",
+                           "readlatency90", "readlatency95", "readlatency9999", "fio_job_name"]
         table_data_rows = []
 
         for combo in self.fio_bs_iodepth:
@@ -452,10 +483,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                     fun_test.log(initial_stats[combo][mode][key])'''
 
                 fun_test.log("Running FIO...")
+                fio_job_name = "fio_" + mode + "_" + self.fio_job_name[mode]
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
-                                                                 bs=fio_block_size, iodepth=fio_iodepth,
+                                                                 bs=fio_block_size, iodepth=fio_iodepth, name=fio_job_name,
                                                                  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
@@ -541,9 +573,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 # Comparing the FIO results with the expected value for the current block size and IO depth combo
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
+                        fun_test.log("op is: {} and field is: {} ".format(op, field))
                         actual = fio_output[combo][mode][op][field]
                         row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
                                                      int((value * (1 + self.fio_pass_threshold))))
+                        fun_test.log("raw_data[op + field] is: {}".format(row_data_dict[op + field]))
                         if field == "latency":
                             ifop = "greater"
                             elseop = "lesser"
@@ -568,6 +602,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                     .format(op, field, mode, combo), "PASSED", value, actual)'''
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
+
+                row_data_dict["fio_job_name"] = fio_job_name
 
                 # Comparing the internal volume stats with the expected value
                 '''for ekey, evalue in expected_volume_stats[mode].items():
@@ -646,12 +682,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(0)
                     else:
                         row_data_list.append(row_data_dict[i])
+                fun_test.log("table_data_cols are: {}".format(table_data_cols))
+                fun_test.log("Row data list is: {}".format(row_data_list))
 
                 table_data_rows.append(row_data_list)
-                post_results("BLT_EMU", test_method, *row_data_list)
+                post_results("BLT_FS", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Performance Table", table_name=self.summary, table_data=table_data)
+        fun_test.add_table(panel_header="BLT Performance Table", table_name=self.summary, table_data=table_data)
 
         # Posting the final status of the test result
         test_result = True
@@ -662,11 +700,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 if not fio_result[combo][mode] or not internal_result[combo][mode]:
                     test_result = False
 
-        fun_test.test_assert(test_result, self.summary)
+        # fun_test.test_assert(test_result, self.summary)
+        fun_test.log("Test Result: {}".format(test_result))
 
     def cleanup(self):
 
-        self.storage_controller.disconnect()
+        # self.storage_controller.disconnect()
+        pass
 
 
 class BLTFioSeqReadRandRead(BLTVolumePerformanceTestcase):
