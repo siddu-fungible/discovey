@@ -58,7 +58,7 @@ class QueueWorker(Thread):
 
     def thread_complete(self, job_id):
         del self.job_threads[job_id]
-        self.repeat_job(job_id=job_id)
+        # self.repeat_job(job_id=job_id)
 
     def repeat_job(self, job_id):
         suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
