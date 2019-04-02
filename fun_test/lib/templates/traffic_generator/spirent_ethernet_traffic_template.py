@@ -520,6 +520,27 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result_handle
 
+    def subscribe_filtered_stream_results(self, parent, result_parent, config_type="Analyzer", result_type="FilteredStreamResults"):
+        result_handle = None
+        try:
+            analyzer_handle = self.stc_manager.stc.get(result_parent, "children-Analyzer")
+
+            bit_analyzer = self.stc_manager.stc.create("Analyzer16BitFilter", under=analyzer_handle)
+
+            # Track Tos bits
+            self.stc_manager.stc.config(bit_analyzer, FilterName="HEX", Offset=14, Mask="0x00FF")
+            self.stc_manager.stc.apply()
+
+            fun_test.log("Subscribing to filtered stream results on %s" % parent)
+            op_handle = self.stc_manager.subscribe_results(parent=parent, config_type=config_type,
+                                                           result_type=result_type,
+                                                           result_parent=result_parent)
+            fun_test.simple_assert(op_handle, "Getting filtered stream subscribe handle")
+            result_handle = op_handle
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result_handle
+
 
     def subscribe_generator_results(self,  parent, config_type="Generator", result_type="GeneratorPortResults",
                                     view_attribute_list=None):
@@ -611,7 +632,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def subscribe_to_all_results(self, parent, diff_serv=False, pfc=False, port=None):
+    def subscribe_to_all_results(self, parent, diff_serv=False, pfc=False, filtered_stream=False, port=None):
         result = {'result': False}
         try:
             fun_test.debug("Subscribing to tx results")
@@ -656,6 +677,13 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 pfc_subscribe = self.subscribe_pfc_results(parent=parent)
                 fun_test.simple_assert(pfc_subscribe, "Check pfc subscribe")
                 result['pfc_subscribe'] = pfc_subscribe
+
+            if filtered_stream:
+                fun_test.simple_assert(port, "Port handle must be provided for filtered stream results")
+                fun_test.debug("Subscribing to filtered stream results")
+                filter_subscribe =self.subscribe_filtered_stream_results(parent=parent, result_parent=port)
+                fun_test.simple_assert(filter_subscribe, "Check filter subscribe")
+                result['filtered_stream_subscribe'] = filter_subscribe
 
             result['result'] = True
         except Exception as ex:
