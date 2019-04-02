@@ -175,7 +175,7 @@ def get_scheduling_time(spec):
     elif spec.scheduling_type == SchedulingType.TODAY:
         result = get_todays_scheduling_time_in_seconds(requested_hour=spec.requested_hour,
                                                        requested_minute=spec.requested_minute,
-                                                       tz_string=spec["tz"])
+                                                       tz_string=spec.timezone_string)
     elif spec.scheduling_type == SchedulingType.ASAP:
         result = 1
 
@@ -349,10 +349,25 @@ def queue_job3(suite_path=None,
         suite_execution.build_url = build_url
         suite_execution.version = version
         suite_execution.requested_priority_category = requested_priority_category
+
         job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
         suite_execution.save()
+
+        is_auto_scheduled_job = False
+        if (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type in [SchedulingType.PERIODIC, SchedulingType.REPEAT]):
+            # clone job
+            cloned_job = suite_execution
+            cloned_job.pk = None
+            cloned_job.execution_id = models_helper.get_new_suite_execution_id().last_suite_execution_id
+            cloned_job.state = JobStatusType.AUTO_SCHEDULED
+            cloned_job.save()
+            is_auto_scheduled_job = True
+        suite_execution.is_scheduled_job = is_auto_scheduled_job
+        suite_execution.save()
+
+
         result = suite_execution.execution_id
     except Exception as ex:
         raise SchedulerException("Unable to schedule job due to: " + str(ex))
