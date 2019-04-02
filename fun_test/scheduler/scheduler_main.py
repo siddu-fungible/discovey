@@ -591,7 +591,6 @@ def ensure_singleton():
             pid = os.getpid()
             f.write(str(pid))
 
-
 def run_to_completion(max_wait_time=ONE_HOUR):
     num_active_threads = len(job_id_threads.keys())
     retry_interval = 60
