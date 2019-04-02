@@ -1235,7 +1235,7 @@ class FunTestScript(object):
     def run(self):
         self.describe()
         try:
-            if super(self.__class__, self).setup():
+            if FunTestScript.setup(self):
                 for test_case in self.test_cases:
                     if fun_test.abort_requested:
                         break
@@ -1291,12 +1291,12 @@ class FunTestScript(object):
                     if test_result == FunTest.FAILED:
                         self.at_least_one_failed = True
 
-            super(self.__class__, self).cleanup()
+            FunTestScript.cleanup(self)
 
         except Exception as ex:
             fun_test.critical(str(ex))
             try:
-                super(self.__class__, self).cleanup()
+                FunTestScript.cleanup(self)
             except Exception as ex:
                 fun_test.critical(str(ex))
         self._close()
@@ -1336,3 +1336,4 @@ class FunTestCase:
     @abc.abstractmethod
     def run(self):
         pass
+

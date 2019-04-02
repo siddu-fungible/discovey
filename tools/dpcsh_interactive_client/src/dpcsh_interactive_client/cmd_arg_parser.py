@@ -1154,3 +1154,20 @@ show_tech_all_parser.add_argument('-filename', help="Specify a filename to save/
                                                    "provided on console once commands run successfully", default=None,
                                      type=str)
 show_tech_all_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+
+
+# ---------------------------------------------------------------------------------------------------
+# flow commands
+
+# flow sub commands
+
+base_flow_parser = ArgumentParser(prog="flow")
+base_flow_subparsers = base_flow_parser.add_subparsers(title="subcommands", help="")
+
+# Flow list
+flow_list_parser = base_flow_subparsers.add_parser('list', help='List flows')
+flow_list_parser.add_argument('-grep', help="Grep for specific flow", default=None)
+
+# Flow blocked
+flow_blocked_parser = base_flow_subparsers.add_parser('blocked', help='blocked flows')
+flow_blocked_parser.add_argument('-grep', help="Grep for specific flow", default=None)

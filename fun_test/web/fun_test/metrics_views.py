@@ -399,6 +399,8 @@ def get_triage_info(request):
     to_date = datetime(year=to_dict["year"], month=to_dict["month"], day=to_dict["day"])
     boot_args = request_json["boot_args"]
     metric_type= request_json["metric_type"]
+    fun_os_make_flags = request_json["fun_os_make_flags"]
+    email = request_json["email"]
     chart_status_entries = MetricChartStatus.objects.filter(metric_id=metric_id).order_by('-date_time')
     for entry in chart_status_entries:
         if same_day(from_date, entry.date_time):
@@ -425,7 +427,9 @@ def get_triage_info(request):
                       "degraded_git_commit": previous_entry.git_commit,
                       "degraded_score": previous_entry.score,
               "boot_args": boot_args,
-              "metric_type": metric_type}
+              "metric_type": metric_type,
+              "fun_os_make_flags": fun_os_make_flags,
+              "email": email}
     return result
 
 @csrf_exempt
@@ -437,6 +441,8 @@ def get_triage_info_from_commits(request):
     to_commit = request_json["to_commit"]
     boot_args = request_json["boot_args"]
     metric_type= request_json["metric_type"]
+    fun_os_make_flags = request_json["fun_os_make_flags"]
+    email = request_json["email"]
     result = {"passed_jenkins_job_id": -1,
                       "passed_suite_execution_id": -1,
                       "passed_lsf_job_id": -1,
@@ -450,7 +456,9 @@ def get_triage_info_from_commits(request):
                       "degraded_git_commit": from_commit,
                       "degraded_score": -1,
               "boot_args": boot_args,
-              "metric_type": metric_type}
+              "metric_type": metric_type,
+              "fun_os_make_flags": fun_os_make_flags,
+              "email": email}
     return result
 
 def same_day(from_to_date, current_date):

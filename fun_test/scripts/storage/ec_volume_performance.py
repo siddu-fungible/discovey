@@ -91,7 +91,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        if "topology" in fun_test.shared_variables["topology"]:
+        if "topology" in fun_test.shared_variables:
             fun_test.shared_variables["topology"].cleanup()
         # pass
 
@@ -189,8 +189,12 @@ class ECVolumeLevelTestcase(FunTestCase):
                 tmp = self.volume_capacity[type] * (1 + self.lsv_pct)
                 self.volume_capacity[type] = int(tmp + (eight_mb - (tmp % eight_mb)))
 
-            # Setting the EC volume capacity also to same as the one of ndata volume capacity
-            self.volume_capacity["ec"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]
+        # Setting the EC volume capacity to ndata times of ndata volume capacity
+        self.volume_capacity["ec"] = self.volume_capacity["ndata"] * self.ec_coding["ndata"]
+
+        # Adding one more block to the plex volume size to add room for super block
+        for type in sorted(self.ec_coding):
+            self.volume_capacity[type] = self.volume_capacity[type] + self.volume_block[type]
 
         if self.ec_ratio not in fun_test.shared_variables or \
                 not fun_test.shared_variables[self.ec_ratio]["setup_created"]:

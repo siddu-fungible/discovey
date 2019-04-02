@@ -529,11 +529,14 @@ class Fs(object, ToDictMixin):
 
     def re_initialize(self):
         self.get_bmc()
+        self.bmc.position_support_scripts()
         self.get_fpga()
         self.get_come()
         self.set_f1s()
         self.come.detect_pfs()
         fun_test.test_assert(self.come.ensure_dpc_running(), "Ensure dpc is running")
+        for f1_index, f1 in self.f1s.iteritems():
+            self.bmc.start_uart_log_listener(f1_index=f1_index)
         return True
 
 

@@ -62,7 +62,7 @@ class ECinQemuScript(FunTestScript):
         fun_test.shared_variables["topology"] = topology
 
     def cleanup(self):
-        if "topolgy" in fun_test["shared_variables"]:
+        if "topolgy" in fun_test.shared_variables:
             fun_test.shared_variables["topology"].cleanup()
         # pass
 
@@ -117,11 +117,15 @@ class ECinQemuTestcase(FunTestCase):
             for vtype in ["ndata", "nparity"]:
                 tmp = self.volume_capacity[vtype] * (1 + self.lsv_pct)
                 self.calc_volume_capacity[vtype] = int(tmp + (eight_mb - (tmp % eight_mb)))
-
-            # Setting the EC volume capacity also to same as the one of ndata volume capacity
-            self.calc_volume_capacity["ec"] = self.calc_volume_capacity["ndata"] * self.num_volumes["ndata"]
         else:
             self.calc_volume_capacity.update(self.volume_capacity)
+
+        # Setting the EC volume capacity to ndata times of ndata volume capacity
+        self.calc_volume_capacity["ec"] = self.calc_volume_capacity["ndata"] * self.num_volumes["ndata"]
+
+        # Adding one more block to the plex volume size to add room for super block
+        for vtype in ["ndata", "nparity"]:
+            self.calc_volume_capacity[vtype] = self.calc_volume_capacity[vtype] + self.volume_block[vtype]
 
         # Configuring ndata and nparity number of BLT volumes
         for vtype in ["ndata", "nparity"]:

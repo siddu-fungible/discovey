@@ -16,14 +16,14 @@ if TB == 'SN2':
     BW_LIMIT = '7M'
 else:
     BW_LIMIT = '25G'
-#RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
-RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
+RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
+#RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data2.json'
 TIMESTAMP = get_current_time()
 PARALLEL = 2  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
 
 
-class FunethPerformance(FunTestScript):
+class FunethPerformance(sanity.FunethSanity):
     def describe(self):
         self.set_test_details(steps=
                               """
@@ -32,6 +32,7 @@ class FunethPerformance(FunTestScript):
         """)
 
     def setup(self):
+        super(FunethPerformance, self).setup()
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
@@ -61,6 +62,7 @@ class FunethPerformance(FunTestScript):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
 
     def cleanup(self):
+        super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
 
@@ -520,7 +522,7 @@ class FunethPerformance_HU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
 class FunethPerformance_HU_HU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=104,
-                              summary="Do throughput and latency test of HU -> HU Non-FCP with 64B frames of TCP",
+                              summary="Do throughput and latency test of HU -> HU Non-FCP with 128B frames of TCP",
                               steps="""
         1. From HU host PF, run netperf to HU host VF interface as destination via NU loopback
         """)
@@ -601,7 +603,7 @@ class FunethPerformance_HU_NU_1500B_UDP_NETPERF(FunethPerformanceBase):
 class FunethPerformance_HU_NU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=114,
-                              summary="Do throughput and latency test of HU -> NU Non-FCP with 64B frames of TCP",
+                              summary="Do throughput and latency test of HU -> NU Non-FCP with 128B frames of TCP",
                               steps="""
         1. From HU host, run netperf to NU host interface as destination
         """)
@@ -682,7 +684,7 @@ class FunethPerformance_NU_HU_1500B_UDP_NETPERF(FunethPerformanceBase):
 class FunethPerformance_NU_HU_128B_TCP_NETPERF(FunethPerformanceBase):
     def describe(self):
         self.set_test_details(id=124,
-                              summary="Do throughput and latency test of NU -> HU Non-FCP with 64B frames of TCP",
+                              summary="Do throughput and latency test of NU -> HU Non-FCP with 128B frames of TCP",
                               steps="""
         1. From NU host, run netperf to HU host PF interface as destination
         """)
@@ -787,7 +789,7 @@ class FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF(FunethPerformanceFcpBase):
 class FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF(FunethPerformanceFcpBase):
     def describe(self):
         self.set_test_details(id=134,
-                              summary="Do throughput and latency test of HU -> HU FCP with 64B frames of TCP",
+                              summary="Do throughput and latency test of HU -> HU FCP with 128B frames of TCP",
                               steps="""
         1. From HU host PF, run netperf to HU host VF interface as destination via FCP tunnel loopback
         """)
@@ -913,7 +915,7 @@ class FunethPerformance_HU_HU_FCP_SEC_1500B_UDP_NETPERF(FunethPerformanceFcpSecu
 class FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF(FunethPerformanceFcpSecureBase):
     def describe(self):
         self.set_test_details(id=144,
-                              summary="Do throughput and latency test of HU -> HU FCP secure tunnel with 64B frames of TCP",
+                              summary="Do throughput and latency test of HU -> HU FCP secure tunnel with 128B frames of TCP",
                               steps="""
         1. From HU host PF, run netperf to HU host VF interface as destination via FCP tunnel loopback
         """)
