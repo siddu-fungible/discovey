@@ -1169,8 +1169,11 @@ if __name__ == "__main_container_units_removal__":
 if __name__ == "__main__":
     print "started adding entry into blt performance"
     blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=datetime.now(), volume="BLT", test="FioSeqWriteSeqReadOnly", block_size="4k", io_depth=20, size="20g", operation="read", num_ssd=1, num_volume=1, write_iops=1678, read_iops=1780,
-                  write_throughput=237, read_throughput=279, write_avg_latency=1789, read_avg_latency=1890, write_90_latency=-1,
+    blt.add_entry(date_time=datetime.now(), volume="BLT", test="FioSeqWriteSeqReadOnly", block_size="4k", io_depth=20,
+                  size="20g", operation="read", num_ssd=1, num_volume=1, fio_job_name="job_name", write_iops=1678,
+                  read_iops=1780,
+                  write_throughput=237, read_throughput=279, write_avg_latency=1789, read_avg_latency=1890,
+                  write_90_latency=-1,
                   write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
                   write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
                   read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",

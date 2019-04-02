@@ -827,6 +827,7 @@ class BltVolumePerformance(models.Model):
     input_operation = models.TextField(verbose_name="Operation type")
     input_num_ssd = models.IntegerField(verbose_name="Number of SSD(s)")
     input_num_volume = models.IntegerField(verbose_name="Number of volume(s)")
+    input_fio_job_name = models.TextField(verbose_name="Input FIO job name", default="")
     output_write_iops = models.IntegerField(verbose_name="Write IOPS")
     output_read_iops = models.IntegerField(verbose_name="Read IOPS")
     output_write_throughput = models.FloatField(verbose_name="Write throughput")
