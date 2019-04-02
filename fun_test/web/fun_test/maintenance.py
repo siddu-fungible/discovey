@@ -29,7 +29,7 @@ from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import VoltestPerformance
 from web.fun_test.set_base_line import SetBaseLine
 
-from web.fun_test.analytics_models_helper import MetricChartHelper
+from web.fun_test.analytics_models_helper import MetricChartHelper, BltVolumePerformanceHelper
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
 from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
 
@@ -1155,7 +1155,7 @@ if __name__ == "__main_DFA__":
         mmt.save()
     print "created charts for DFA and NFA"
 
-if __name__ == "__main__":
+if __name__ == "__main_container_unit_removal__":
     print "started unit removal for containers"
     entries = MetricChart.objects.all()
     for entry in entries:
@@ -1165,3 +1165,19 @@ if __name__ == "__main__":
             entry.visualization_unit = ""
             entry.save()
     print "finished removing units from containers"
+
+if __name__ == "__main__":
+    print "started adding entry into blt performance"
+    blt = BltVolumePerformanceHelper()
+    blt.add_entry(date_time=datetime.now(), volume="BLT", test="FioSeqWriteSeqReadOnly", block_size="4k", io_depth=20,
+                  size="20g", operation="read", num_ssd=1, num_volume=1, fio_job_name="job_name", write_iops=1678,
+                  read_iops=1780,
+                  write_throughput=237, read_throughput=279, write_avg_latency=1789, read_avg_latency=1890,
+                  write_90_latency=-1,
+                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
+                  write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
+                  read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
+                  write_90_latency_unit="usecs", write_95_latency_unit="usecs",
+                  write_99_latency_unit="usecs", read_90_latency_unit="usecs", read_95_latency_unit="usecs",
+                  read_99_latency_unit="usecs")
+    print "added an entry into the DB"
