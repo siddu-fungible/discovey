@@ -1819,14 +1819,6 @@
                                     "name": "read_4kb1vol1ssd_output_bandwidth",
                                     "weight": 1,
                                     "label": "Throughput"
-                                  },
-                                  {
-                                    "info": "read_4kb1vol1ssd_output_latency",
-                                    "metric_model_name": "VolumePerformanceEmulation",
-                                    "leaf": true,
-                                    "name": "read_4kb1vol1ssd_output_latency",
-                                    "weight": 1,
-                                    "label": "Latency"
                                   }
                                 ]
                               },
@@ -1845,14 +1837,6 @@
                                     "name": "write_4kb1vol1ssd_output_bandwidth",
                                     "weight": 1,
                                     "label": "Throughput"
-                                  },
-                                  {
-                                    "info": "write_4kb1vol1ssd_output_latency",
-                                    "metric_model_name": "VolumePerformanceEmulation",
-                                    "leaf": true,
-                                    "name": "write_4kb1vol1ssd_output_latency",
-                                    "weight": 1,
-                                    "label": "Latency"
                                   }
                                 ]
                               }

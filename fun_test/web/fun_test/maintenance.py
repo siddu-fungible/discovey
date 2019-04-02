@@ -1167,15 +1167,11 @@ if __name__ == "__main_container_unit_removal__":
     print "finished removing units from containers"
 
 if __name__ == "__main__":
-    chart_names = ["Throughput", "Latency"]
-    internal_chart_names = ["read_4kb1vol1ssd_output_bandwidth", "read_4kb1vol1ssd_output_latency", "write_4kb1vol1ssd_output_bandwidth", "write_4kb1vol1ssd_output_latency"]
+    internal_chart_names = ["read_4kb1vol1ssd_output_bandwidth", "write_4kb1vol1ssd_output_bandwidth"]
+    chart_name = "Throughput"
     model_name = "VolumePerformanceEmulation"
 
     for internal_chart_name in internal_chart_names:
-        if "bandwidth" in internal_chart_name:
-            chart_name = "Throughput"
-        else:
-            chart_name = "Latency"
         data_sets = []
         one_data_set = {}
         one_data_set["inputs"] = {}
@@ -1184,15 +1180,15 @@ if __name__ == "__main__":
         data_sets.append(one_data_set)
         metric_id = LastMetricId.get_next_id()
         positive = True
-        y1_axis_title = "Gbps"
-        base_line_date = datetime(year=2019, month=3, day=25, minute=0, hour=0, second=0)
+        y1_axis_title = "Mbps"
+        base_line_date = datetime(year=2019, month=3, day=31, minute=0, hour=0, second=0)
         MetricChart(chart_name=chart_name,
                     metric_id=metric_id,
                     internal_chart_name=internal_chart_name,
                     data_sets=json.dumps(data_sets),
                     leaf=True,
                     description="TBD",
-                    owner_info="Lakshmi Billa (lakshmi.billa@fungible.com), Mahesh Kumar (mahesh.kumar@fungible.com)",
+                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
                     positive=positive,
                     y1_axis_title=y1_axis_title,
                     visualization_unit=y1_axis_title,
@@ -1202,4 +1198,4 @@ if __name__ == "__main__":
                                milestone_date=datetime(year=2018, month=9, day=16),
                                milestone_name="Tape-out")
         mmt.save()
-    print "created charts for DFA and NFA"
+    print "created throughput charts for storage"
