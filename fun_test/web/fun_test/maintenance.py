@@ -1167,22 +1167,26 @@ if __name__ == "__main_container_unit_removal__":
     print "finished removing units from containers"
 
 if __name__ == "__main__":
-    internal_chart_names = ["read_4kb1vol1ssd_output_bandwidth", "write_4kb1vol1ssd_output_bandwidth"]
-    chart_name = "Throughput"
+    internal_chart_names = ["read_4kb1vol1ssd_output_bandwidth", "write_4kb1vol1ssd_output_bandwidth", "read_4kb1vol1ssd_output_iops", "write_4kb1vol1ssd_output_iops"]
     model_name = "BltVolumePerformance"
 
     for internal_chart_name in internal_chart_names:
+        if "bandwidth" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "Mbps"
+        else:
+            chart_name = "IOPS"
+            y1_axis_title = "ops"
         data_sets = []
         one_data_set = {}
         one_data_set["inputs"] = {}
-        one_data_set["inputs"]["input_operation"]
+        one_data_set["inputs"]["input_fio_job_name"] = "job_name"
         one_data_set["name"] = name
         one_data_set["output"] = {"name": "output_bandwidth", 'min': 0, "max": -1, "expected": -1, "reference": -1}
         data_sets.append(one_data_set)
         metric_id = LastMetricId.get_next_id()
         positive = True
-        y1_axis_title = "Mbps"
-        base_line_date = datetime(year=2019, month=3, day=31, minute=0, hour=0, second=0)
+        base_line_date = datetime(year=2019, month=4, day=1, minute=0, hour=0, second=0)
         MetricChart(chart_name=chart_name,
                     metric_id=metric_id,
                     internal_chart_name=internal_chart_name,
