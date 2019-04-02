@@ -360,10 +360,17 @@ def _get_suite_executions(execution_id=None,
     all_objects = None
     q = Q()
 
-    if state_filter_string == SUITE_EXECUTION_FILTERS["PENDING"]:
-        q = Q(state=JobStatusType.IN_PROGRESS) | Q(state=JobStatusType.QUEUED) | Q(state=JobStatusType.SCHEDULED)
-    elif state_filter_string == SUITE_EXECUTION_FILTERS["COMPLETED"]:
+    if state_filter_string == JobStatusType.IN_PROGRESS:
+        q = Q(state=JobStatusType.IN_PROGRESS)
+    elif state_filter_string == JobStatusType.QUEUED:
+        q = Q(state=JobStatusType.QUEUED)
+    elif state_filter_string == JobStatusType.COMPLETED:
         q = Q(state=JobStatusType.COMPLETED) | Q(state=JobStatusType.KILLED) | Q(state=JobStatusType.ABORTED)
+    elif state_filter_string == JobStatusType.SUBMITTED:
+        q = Q(state=JobStatusType.SUBMITTED)
+    elif state_filter_string == JobStatusType.SCHEDULED:
+        q = Q(state=JobStatusType.SCHEDULED)
+
     if execution_id:
         q = Q(execution_id=execution_id) & q
 

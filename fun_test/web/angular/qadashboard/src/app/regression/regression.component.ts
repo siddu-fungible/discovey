@@ -10,12 +10,12 @@ import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 
 enum Filter {
-  All = "ALL",
-  Completed = "COMPLETED",
-  Pending = "PENDING",
-  Queued = "QUEUED",
-  Scheduled = "SCHEDULED",
-  Submitted = "SUBMITTED"
+  ALL = "ALL",
+  COMPLETED = "COMPLETED",
+  IN_PROGRESS = "IN_PROGRESS",
+  QUEUED = "QUEUED",
+  SCHEDULED = "SCHEDULED",
+  SUBMITTED = "SUBMITTED"
 }
 
 @Component({
