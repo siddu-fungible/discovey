@@ -225,7 +225,7 @@ class BltVolumePerformanceHelper(MetricHelper):
     def __init__(self):
         super(BltVolumePerformanceHelper, self).__init__(model=self.model)
 
-    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, write_iops, read_iops,
+    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume, write_iops, read_iops,
                   write_throughput, read_throughput, write_avg_latency, read_avg_latency, write_90_latency=-1,
                   write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
                   write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
@@ -235,12 +235,14 @@ class BltVolumePerformanceHelper(MetricHelper):
                   read_99_latency_unit="usecs"):
         try:
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
-                                                     input_volume=volume,
+                                                     input_volume_type=volume,
                                                      input_test=test,
                                                      input_block_size=block_size,
                                                      input_io_depth=io_depth,
-                                                     input_size=size,
-                                                     input_operation=operation)
+                                                     input_io_size=size,
+                                                     input_operation=operation,
+                                                     input_num_ssd=num_ssd,
+                                                     input_num_volume=num_volume)
             entry.output_write_iops = write_iops
             entry.output_read_iops = read_iops
             entry.output_write_throughput = write_throughput
@@ -269,12 +271,14 @@ class BltVolumePerformanceHelper(MetricHelper):
         except ObjectDoesNotExist:
             pass
             one_entry = BltVolumePerformance(input_date_time=date_time,
-                                             input_volume=volume,
+                                             input_volume_type=volume,
                                              input_test=test,
                                              input_block_size=block_size,
                                              input_io_depth=io_depth,
-                                             input_size=size,
+                                             input_io_size=size,
                                              input_operation=operation,
+                                             input_num_ssd=num_ssd,
+                                             input_num_volume=num_volume,
                                              output_write_iops=write_iops,
                                              output_read_iops=read_iops,
                                              output_write_throughput=write_throughput,
