@@ -58,6 +58,31 @@ class QueueWorker(Thread):
 
     def thread_complete(self, job_id):
         del self.job_threads[job_id]
+        self.repeat_job(job_id=job_id)
+
+    def repeat_job(self, job_id):
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+        cloned_job = None
+
+        if suite_execution.scheduling_type == SchedulingType.PERIODIC:
+            cloned_job = self.clone_job_spec(job_id=job_id)
+            cloned_job.state = JobStatusType.SUBMITTED
+        if suite_execution.scheduling_type in [SchedulingType.TODAY, SchedulingType.REPEAT]:
+            cloned_job = self.clone_job_spec(job_id=job_id)
+            if suite_execution.repeat_in_minutes >= 0:
+                cloned_job.state = JobStatusType.SUBMITTED
+                cloned_job.scheduling_type = SchedulingType.REPEAT
+
+        if cloned_job:
+            scheduler_logger.info("Repeating job: {}".format(suite_execution.execution_id))
+            cloned_job.save()
+
+    def clone_job_spec(self, job_id):
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+        new_suite_execution_id = models_helper.get_new_suite_execution_id()
+        suite_execution.execution_id = new_suite_execution_id
+        suite_execution.pk = None
+        return suite_execution
 
 queue_worker = QueueWorker()
 
@@ -137,6 +162,7 @@ class SuiteWorker(Thread):
         self.suite_shutdown = False
         self.abort_on_failure_requested = False
         self.summary_extra_message = ""
+
 
     def shutdown_suite(self):
         job_id = self.job_id
@@ -434,17 +460,8 @@ class SuiteWorker(Thread):
 
             queue_worker.thread_complete(job_id=self.job_id)
 
-            '''
-            if self.job_scheduling_type == SchedulingType.PERIODIC:
-                remove_scheduled_job(self.job_id)
-                queue_job3(job_spec=self.job_spec)
-            if self.job_scheduling_type in [SchedulingType.TODAY, SchedulingType.REPEAT]:
-                remove_scheduled_job(self.job_id)
-                if "repeat_in_minutes" in self.job_spec and self.job_spec["repeat_in_minutes"] >= 0:
-                    new_spec = dict(self.job_spec)
-                    new_spec["scheduling_type"] = SchedulingType.REPEAT
-                    queue_job2(job_spec=new_spec)
-            '''
+
+
         except Exception as ex:
             scheduler_logger.exception(str(ex))
             local_scheduler_logger.exception(str(ex))
