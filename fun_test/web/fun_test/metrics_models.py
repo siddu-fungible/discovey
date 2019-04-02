@@ -815,6 +815,55 @@ class VolumePerformanceEmulation(models.Model):
                                                 self.output_read_latency)
 
 
+class BltVolumePerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_volume = models.TextField(verbose_name="Volume type")
+    input_test = models.TextField(verbose_name="Test type")
+    input_block_size = models.TextField(verbose_name="Block size")
+    input_io_depth = models.IntegerField(verbose_name="IO depth")
+    input_size = models.TextField(verbose_name="Data size")
+    input_operation = models.TextField(verbose_name="Operation type")
+    output_write_iops = models.IntegerField(verbose_name="Write IOPS")
+    output_read_iops = models.IntegerField(verbose_name="Read IOPS")
+    output_write_throughput = models.FloatField(verbose_name="Write throughput")
+    output_read_throughput = models.FloatField(verbose_name="Read throughput")
+    output_write_avg_latency = models.IntegerField(verbose_name="Write avg latency")
+    output_write_90_latency = models.IntegerField(verbose_name="Write 90% latency", default=-1)
+    output_write_95_latency = models.IntegerField(verbose_name="Write 95% latency", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="Write 99.99% latency", default=-1)
+    output_read_avg_latency = models.IntegerField(verbose_name="Read avg latency")
+    output_read_90_latency = models.IntegerField(verbose_name="Read 90% latency", default=-1)
+    output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency", default=-1)
+    output_read_99_latency = models.IntegerField(verbose_name="Read 99.99% latency", default=-1)
+    output_write_iops_unit = models.TextField(default="ops")
+    output_read_iops_unit = models.TextField(default="ops")
+    output_write_throughput_unit = models.TextField(default="Mbps")
+    output_read_throughput_unit = models.TextField(default="Mbps")
+    output_write_avg_latency_unit = models.TextField(default="usecs")
+    output_write_90_latency_unit = models.TextField(default="usecs")
+    output_write_95_latency_unit = models.TextField(default="usecs")
+    output_write_99_latency_unit = models.TextField(default="usecs")
+    output_read_avg_latency_unit = models.TextField(default="usecs")
+    output_read_90_latency_unit = models.TextField(default="usecs")
+    output_read_95_latency_unit = models.TextField(default="usecs")
+    output_read_99_latency_unit = models.TextField(default="usecs")
+    tag = "analytics"
+
+    def __str__(self):
+        return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
+                                                self.input_volume,
+                                                self.input_test,
+                                                self.input_block_size,
+                                                self.input_size,
+                                                self.input_operation,
+                                                self.output_write_iops,
+                                                self.output_read_iops,
+                                                self.output_write_throughput,
+                                                self.output_write_avg_latency,
+                                                self.output_read_avg_latency)
+
 class AllocSpeedPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
     interpolated = models.BooleanField(default=False)
