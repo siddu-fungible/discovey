@@ -225,8 +225,8 @@ class BltVolumePerformanceHelper(MetricHelper):
     def __init__(self):
         super(BltVolumePerformanceHelper, self).__init__(model=self.model)
 
-    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume, fio_job_name, write_iops, read_iops,
-                  write_throughput, read_throughput, write_avg_latency, read_avg_latency, write_90_latency=-1,
+    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume, fio_job_name, write_iops=-1, read_iops=-1,
+                  write_throughput=-1, read_throughput=-1, write_avg_latency=-1, read_avg_latency=-1, write_90_latency=-1,
                   write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
                   write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
                   read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",

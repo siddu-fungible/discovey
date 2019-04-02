@@ -1155,7 +1155,7 @@ if __name__ == "__main_DFA__":
         mmt.save()
     print "created charts for DFA and NFA"
 
-if __name__ == "__main_container_units_removal__":
+if __name__ == "__main_container_unit_removal__":
     print "started unit removal for containers"
     entries = MetricChart.objects.all()
     for entry in entries:
