@@ -1169,12 +1169,13 @@ if __name__ == "__main_container_unit_removal__":
 if __name__ == "__main__":
     internal_chart_names = ["read_4kb1vol1ssd_output_bandwidth", "write_4kb1vol1ssd_output_bandwidth"]
     chart_name = "Throughput"
-    model_name = "VolumePerformanceEmulation"
+    model_name = "BltVolumePerformance"
 
     for internal_chart_name in internal_chart_names:
         data_sets = []
         one_data_set = {}
         one_data_set["inputs"] = {}
+        one_data_set["inputs"]["input_operation"]
         one_data_set["name"] = name
         one_data_set["output"] = {"name": "output_bandwidth", 'min': 0, "max": -1, "expected": -1, "reference": -1}
         data_sets.append(one_data_set)
