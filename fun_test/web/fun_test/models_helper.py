@@ -370,6 +370,8 @@ def _get_suite_executions(execution_id=None,
         q = Q(state=JobStatusType.SUBMITTED)
     elif state_filter_string == JobStatusType.SCHEDULED:
         q = Q(state=JobStatusType.SCHEDULED)
+    elif state_filter_string == JobStatusType.AUTO_SCHEDULED:
+        q = Q(state=JobStatusType.AUTO_SCHEDULED)
 
     if execution_id:
         q = Q(execution_id=execution_id) & q

@@ -137,6 +137,7 @@ class SuiteExecution(models.Model):
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")
     # catalog_reference = models.TextField(null=True, blank=True, default=None)
     build_done = models.BooleanField(default=False)
+    auto_scheduled_execution_id = models.IntegerField(default=-1)
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
