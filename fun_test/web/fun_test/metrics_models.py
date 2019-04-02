@@ -786,6 +786,7 @@ class VolumePerformanceEmulation(models.Model):
     input_io_depth = models.IntegerField(verbose_name="IO depth", choices=[(0, 1)])
     input_size = models.TextField(verbose_name="Data size", choices=[(0, "4m")])
     input_operation = models.TextField(verbose_name="Operation type", choices=[(0, "read"), (1, "write"), (2, "randread"), (3, "randwrite"), (4, "randrw")])
+    input_fio_job_name = models.TextField(verbose_name="Input FIO job name", default="")
     output_write_iops = models.IntegerField(verbose_name="Write IOPS")
     output_read_iops = models.IntegerField(verbose_name="Read IOPS")
     output_write_bw = models.IntegerField(verbose_name="Write bandwidth KiB/s")
