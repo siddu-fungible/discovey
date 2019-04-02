@@ -65,6 +65,14 @@ QA_TRIAGE = "qa_triage_"
 
 @csrf_exempt
 @api_safe_json_response
+def triages(request):
+    result = None
+    if request.method == 'GET':
+        pass
+    return result
+
+@csrf_exempt
+@api_safe_json_response
 def fetch_triage_flow(request):
     request_json = json.loads(request.body)
     triage_id = request_json["triage_id"]
@@ -230,6 +238,7 @@ def check_triage(request):
         result["fun_os_make_flags"] = triage[0].fun_os_make_flags
         result["email"] = triage[0].email
     return result
+
 
 
 def update_triaging():

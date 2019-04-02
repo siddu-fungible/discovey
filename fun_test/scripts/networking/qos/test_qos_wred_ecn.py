@@ -181,7 +181,7 @@ class SpirentSetup(FunTestScript):
 
         # Subscribe to results
         project = template_obj.stc_manager.get_project_handle()
-        subscribe_results = template_obj.subscribe_to_all_results(parent=project, diff_serv=True, port=port_2)
+        subscribe_results = template_obj.subscribe_to_all_results(parent=project, filtered_stream=True, port=port_2)
         fun_test.test_assert(subscribe_results['result'], "Subscribing to results")
         del subscribe_results['result']
 
@@ -539,16 +539,24 @@ class ECN_10(Wred_Q0):
             output_avg_dict[str(current_pps)][DUT_ECN_COUNT] = dut_ecn_count
 
             # Get spirent count of ecn11
-            out = template_obj.stc_manager.get_port_diffserv_results(port_handle=port_2,
+            out = template_obj.stc_manager.get_port_filtered_results(port_handle=port_2,
                                                                      subscribe_handle=subscribe_results[
-                                                                         'diff_serv_subscribe'])
+                                                                         'filtered_stream_subscribe'])
 
             ecn_qos_val = template_obj.get_diff_serv_dscp_value_from_decimal_value(decimal_value_list=[self.test_queue],
                                                                                    dscp_value=True)
             qos_binary_value = get_ecn_qos_binary(qos_binary=ecn_qos_val[self.test_queue]['dscp_value'])
+            hex_val = get_filtered_hex_from_binary(qos_binary=qos_binary_value)
+            fun_test.simple_assert(hex_val, "Ensure hex value is calculated for %s " % qos_binary_value)
+            '''
             for key in out.keys():
                 if key == str(qos_binary_value):
                     output_avg_dict[str(current_pps)][SPIRENT_ECN_COUNT] = int(out[key]['Ipv4FrameCount'])
+            '''
+            output_avg_dict[str(current_pps)][SPIRENT_ECN_COUNT] = 0
+            for stream_result in out:
+                if stream_result["FilteredValue_1"] == hex_val:
+                    output_avg_dict[str(current_pps)][SPIRENT_ECN_COUNT] += int(stream_result["FrameCount"])
         '''
         pps_key_list = output_avg_dict.keys()
         for i in range(0, len(pps_key_list) - 1):
@@ -695,19 +703,32 @@ class ECN_10_00(FunTestCase):
             stream_blocks_list=streamblock_handles_list)
         fun_test.test_assert(start_streams, "Start running traffic")
 
-        fun_test.sleep("Letting traffic to be run", seconds=self.timer)
+        fun_test.sleep("Letting traffic to be run", seconds=10)
 
     def run(self):
         result = {}
-        out = template_obj.stc_manager.get_port_diffserv_results(port_handle=port_2,
+        out = template_obj.stc_manager.get_port_filtered_results(port_handle=port_2,
                                                                  subscribe_handle=subscribe_results[
-                                                                     'diff_serv_subscribe'])
+                                                                     'filtered_stream_subscribe'])
 
         for queue in self.stream_dscps:
             result[str(queue)] = False
             ecn_qos_val = template_obj.get_diff_serv_dscp_value_from_decimal_value(decimal_value_list=[queue],
                                                                                    dscp_value=True)
             qos_binary_value = get_ecn_qos_binary(qos_binary=ecn_qos_val[queue]['dscp_value'])
+            hex_val = get_filtered_hex_from_binary(qos_binary=qos_binary_value)
+            fun_test.simple_assert(hex_val, "Ensure hex value is calculated for %s " % qos_binary_value)
+            for stream_result in out:
+                if stream_result["FilteredValue_1"] == hex_val:
+                    if int(stream_result["FrameCount"]) > 0:
+                        result[str(queue)] = True
+                        fun_test.add_checkpoint("Diff serv count having ECN bits set to 11 for queue %s is %s" % (
+                            queue, int(stream_result["FrameCount"])))
+                    else:
+                        fun_test.add_checkpoint("Diff serv count having ECN bits set to 11 for queue %s is %s" % (
+                            queue, 0))
+
+            '''
             for key in out.keys():
                 if key == str(qos_binary_value):
                     if int(out[key]['Ipv4FrameCount']) > 0:
@@ -717,6 +738,7 @@ class ECN_10_00(FunTestCase):
                     else:
                         fun_test.add_checkpoint("Diff serv count having ECN bits set to 11 for queue %s is %s" % (
                         queue, 0))
+            '''
 
         # Display ecn stats
         network_controller_obj.get_qos_wred_ecn_stats(dut_port_2, self.port_1_stream_dscp)

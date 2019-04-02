@@ -7,7 +7,7 @@ from web.web_global import PRIMARY_SETTINGS_FILE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", PRIMARY_SETTINGS_FILE)
 django.setup()
 from web.fun_test.metrics_models import Performance1, PerformanceIkv, PerformanceBlt, VolumePerformance
-from web.fun_test.metrics_models import VolumePerformanceEmulation
+from web.fun_test.metrics_models import VolumePerformanceEmulation, BltVolumePerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance, WuLatencyAllocStack
 from web.fun_test.site_state import *
 from web.fun_test.metrics_models import MetricChart
@@ -170,7 +170,8 @@ class VolumePerformanceEmulationHelper(MetricHelper):
         super(VolumePerformanceEmulationHelper, self).__init__(model=self.model)
 
     def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw,
-                  read_bw, write_latency, read_latency, write_90_latency=-1, write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1, fio_job_name=""):
+                  read_bw, write_latency, read_latency, write_90_latency=-1, write_95_latency=-1, write_99_latency=-1,
+                  read_90_latency=-1, read_95_latency=-1, read_99_latency=-1, fio_job_name=""):
         try:
             entry = VolumePerformanceEmulation.objects.get(input_date_time=date_time,
                                                            input_volume=volume,
@@ -215,6 +216,95 @@ class VolumePerformanceEmulationHelper(MetricHelper):
                                                    output_read_95_latency=read_95_latency,
                                                    output_read_99_latency=read_99_latency,
                                                    input_fio_job_name=fio_job_name)
+            one_entry.save()
+
+
+class BltVolumePerformanceHelper(MetricHelper):
+    model = BltVolumePerformance
+
+    def __init__(self):
+        super(BltVolumePerformanceHelper, self).__init__(model=self.model)
+
+    def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume, fio_job_name, write_iops=-1, read_iops=-1,
+                  write_throughput=-1, read_throughput=-1, write_avg_latency=-1, read_avg_latency=-1, write_90_latency=-1,
+                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
+                  write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
+                  read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
+                  write_90_latency_unit="usecs", write_95_latency_unit="usecs",
+                  write_99_latency_unit="usecs", read_90_latency_unit="usecs", read_95_latency_unit="usecs",
+                  read_99_latency_unit="usecs"):
+        try:
+            entry = BltVolumePerformance.objects.get(input_date_time=date_time,
+                                                     input_volume_type=volume,
+                                                     input_test=test,
+                                                     input_block_size=block_size,
+                                                     input_io_depth=io_depth,
+                                                     input_io_size=size,
+                                                     input_operation=operation,
+                                                     input_num_ssd=num_ssd,
+                                                     input_num_volume=num_volume,
+                                                     input_fio_job_name=fio_job_name)
+            entry.output_write_iops = write_iops
+            entry.output_read_iops = read_iops
+            entry.output_write_throughput = write_throughput
+            entry.output_read_throughput = read_throughput
+            entry.output_write_avg_latency = write_avg_latency
+            entry.output_read_avg_latency = read_avg_latency
+            entry.output_write_90_latency = write_90_latency
+            entry.output_write_95_latency = write_95_latency
+            entry.output_write_99_latency = write_99_latency
+            entry.output_read_90_latency = read_90_latency
+            entry.output_read_95_latency = read_95_latency
+            entry.output_read_99_latency = read_99_latency
+            entry.output_write_iops_unit = write_iops
+            entry.output_read_iops_unit = read_iops
+            entry.output_write_throughput_unit = write_throughput_unit
+            entry.output_read_throughput_unit = read_throughput_unit
+            entry.output_write_avg_latency_unit = write_avg_latency_unit
+            entry.output_read_avg_latency_unit = read_avg_latency_unit
+            entry.output_write_90_latency_unit = write_90_latency_unit
+            entry.output_write_95_latency_unit = write_95_latency_unit
+            entry.output_write_99_latency_unit = write_99_latency_unit
+            entry.output_read_90_latency_unit = read_90_latency_unit
+            entry.output_read_95_latency_unit = read_95_latency_unit
+            entry.output_read_99_latency_unit = read_99_latency_unit
+            entry.save()
+        except ObjectDoesNotExist:
+            pass
+            one_entry = BltVolumePerformance(input_date_time=date_time,
+                                             input_volume_type=volume,
+                                             input_test=test,
+                                             input_block_size=block_size,
+                                             input_io_depth=io_depth,
+                                             input_io_size=size,
+                                             input_operation=operation,
+                                             input_num_ssd=num_ssd,
+                                             input_num_volume=num_volume,
+                                             input_fio_job_name=fio_job_name,
+                                             output_write_iops=write_iops,
+                                             output_read_iops=read_iops,
+                                             output_write_throughput=write_throughput,
+                                             output_read_throughput=read_throughput,
+                                             output_write_avg_latency=write_avg_latency,
+                                             output_read_avg_latency=read_avg_latency,
+                                             output_write_90_latency=write_90_latency,
+                                             output_write_95_latency=write_95_latency,
+                                             output_write_99_latency=write_99_latency,
+                                             output_read_90_latency=read_90_latency,
+                                             output_read_95_latency=read_95_latency,
+                                             output_read_99_latency=read_99_latency,
+                                             output_write_iops_unit=write_iops_unit,
+                                             output_read_iops_unit=read_iops_unit,
+                                             output_write_throughput_unit=write_throughput_unit,
+                                             output_read_throughput_unit=read_throughput_unit,
+                                             output_write_avg_latency_unit=write_avg_latency_unit,
+                                             output_read_avg_latency_unit=read_avg_latency_unit,
+                                             output_write_90_latency_unit=write_90_latency_unit,
+                                             output_write_95_latency_unit=write_95_latency_unit,
+                                             output_write_99_latency_unit=write_99_latency_unit,
+                                             output_read_90_latency_unit=read_90_latency_unit,
+                                             output_read_95_latency_unit=read_95_latency_unit,
+                                             output_read_99_latency_unit=read_99_latency_unit)
             one_entry.save()
 
 
@@ -267,6 +357,7 @@ def prepare_status_db():
     prepare_status(chart=all_metrics_chart, purge_old_status=False, cache_valid=cache_valid)
     global_setting.cache_valid = True
     global_setting.save()
+
 
 if __name__ == "__main2__":
     AllocSpeedPerformanceHelper().clear()

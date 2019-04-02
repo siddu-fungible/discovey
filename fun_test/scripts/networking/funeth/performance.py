@@ -23,7 +23,7 @@ PARALLEL = 2  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
 
 
-class FunethPerformance(FunTestScript):
+class FunethPerformance(sanity.FunethSanity):
     def describe(self):
         self.set_test_details(steps=
                               """
@@ -32,6 +32,7 @@ class FunethPerformance(FunTestScript):
         """)
 
     def setup(self):
+        super(FunethPerformance, self).setup()
 
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = funeth.Funeth(tb_config_obj)
@@ -61,6 +62,7 @@ class FunethPerformance(FunTestScript):
         fun_test.shared_variables['network_controller_obj'] = network_controller_obj
 
     def cleanup(self):
+        super(FunethPerformance, self).cleanup()
         #fun_test.test_assert(self.iperf_manager_obj.cleanup(), 'Clean up')
         fun_test.test_assert(self.netperf_manager_obj.cleanup(), 'Clean up')
 
