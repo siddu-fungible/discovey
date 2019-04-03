@@ -1786,7 +1786,7 @@
                     "leaf": false,
                     "name": "4kb_one_volume_one_ssd_raw_block",
                     "weight": 1,
-                    "label": "SSD(s)=1, Vol(s)=1, Block Size=4KB",
+                    "label": "SSD(s)=1, Vol(s)=1, Block-size=4KB",
                     "children": [
                       {
                         "info": "Read",
@@ -1794,7 +1794,7 @@
                         "leaf": false,
                         "name": "read_4kb_one_volume_one_ssd_raw_block",
                         "weight": 1,
-                        "label": "Read",
+                        "label": "Sequential Read",
                         "children": [
                           {
                             "info": "read_4kb1vol1ssd_output_bandwidth",
