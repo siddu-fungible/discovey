@@ -105,7 +105,7 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
                   write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
                   write_95_latency=write_95_latency, write_99_latency=write_99_latency, read_90_latency=read_90_latency,
                   read_95_latency=read_95_latency, read_99_latency=read_99_latency, write_iops_unit="ops",
-                  read_iops_unit="ops", write_throughput_unit="Mbps", read_throughput_unit="Mbps",
+                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
                   write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
                   write_95_latency_unit="usecs", write_99_latency_unit="usecs", read_90_latency_unit="usecs",
                   read_95_latency_unit="usecs", read_99_latency_unit="usecs")
@@ -379,7 +379,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             # Writing 20GB data on volume (one time task)
             if self.warm_up_traffic:
-                fun_test.log("Executing the FIO command to warm up the system")
+                fun_test.log("Executing the FIO command to warm up the system. This might take time depending on --size provided")
                 fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output)
@@ -507,8 +507,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                             fio_output[combo][mode][op][field] = int(round(value * multiplier / 1000))
                         if field == "latency":
                             fio_output[combo][mode][op][field] = int(round(value / multiplier))
-                        # if field == "clatency":
-                        #    fio_output[combo][mode][op][field] = int(round(value / multiplier))
                 fun_test.log("FIO Command Output after multiplication:")
                 fun_test.log(fio_output[combo][mode])
 
