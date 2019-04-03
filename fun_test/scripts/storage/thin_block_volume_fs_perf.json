@@ -1,5 +1,7 @@
 {
-  "BLTFioSeqReadRandRead": {
+  "BLTFioSeqRead": {
+    "num_ssd": 1,
+    "num_volume": 1,
     "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 25769803776, "block_size": 4096,
                        "name": "thin-block1"},
     "device": "/dev/nvme0",
@@ -7,19 +9,50 @@
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "20G", "rw": "write", "direct": 1, "prio": 0,"timeout": 600},
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "20G", "rw": "write", "direct": 1, "prio": 0,"timeout": 680},
     "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "cpumask": 2,"runtime": 20, "timeout": 120},
-    "fio_modes": ["read", "randread"],
+    "fio_modes": ["read"],
     "fio_bs_iodepth": ["(4, 16)"],
     "fio_pass_threshold": 0.1,
     "fio_job_name": {"read": "4gbps", "randread": "4gbps"},
     "volume_pass_threshold": 0,
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(4, 16)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency9999": 370}},
-                 "randread": {"read": {"bw": 522, "iops": 127, "clatency": 93, "latency90": 187, "latency95": 207, "latency9999": 370}}}
-      //"(4, 15)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112}},
-      //           "randread": {"read": {"bw": 522, "iops": 127, "clatency": 93}}}
+      "(4, 16)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency9999": 370}}}
+    },
+    "expected_volume_stats": {
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    // The first element is the expected value and the second element is the maximum threshold in absolute value
+    "expected_stats": {
+      "read": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472384)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "BLTFioRandRead": {
+    "num_ssd": 1,
+    "num_volume": 1,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 25769803776, "block_size": 4096,
+                       "name": "thin-block1"},
+    "device": "/dev/nvme0",
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "4k", "iodepth": 1, "size": "20G", "rw": "write", "direct": 1, "prio": 0,"timeout": 680},
+    "fio_cmd_args": {"size": "20G", "direct": 1, "prio":  0, "cpumask": 2,"runtime": 20, "timeout": 120},
+    "fio_modes": ["randread"],
+    "fio_bs_iodepth": ["(4, 17)"],
+    "fio_pass_threshold": 0.1,
+    "fio_job_name": {"read": "4gbps", "randread": "4gbps"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 17)": {"randread": {"read": {"bw": 522, "iops": 127, "clatency": 93, "latency90": 187, "latency95": 207, "latency9999": 370}}}
     },
     "expected_volume_stats": {
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}

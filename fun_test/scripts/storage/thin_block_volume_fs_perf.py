@@ -70,37 +70,19 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
                  write_latency, write_90_latency, write_95_latency, write_99_latency, read_latency, read_90_latency,
                  read_95_latency, read_99_latency, fio_job_name):
 
-    db_log_time = fun_test.shared_variables["db_log_time"]
-
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
-              "write_99_latency", "read_latency", "read_90_latency", "read_95_latency", "read_99_latency", "fio_job_name"]:
+              "write_99_latency", "read_latency", "read_90_latency", "read_95_latency", "read_99_latency",
+              "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    '''VolumePerformanceEmulationHelper().add_entry(date_time=fun_test.get_start_time(),
-                                                 volume=volume,
-                                                 test=test,
-                                                 block_size=block_size,
-                                                 io_depth=int(io_depth),
-                                                 size=size,
-                                                 operation=operation,
-                                                 write_iops=write_iops,
-                                                 read_iops=read_iops,
-                                                 write_bw=write_bw,
-                                                 read_bw=read_bw,
-                                                 write_latency=write_latency,
-                                                 read_latency=read_latency,
-                                                 write_90_latency=write_90_latency,
-                                                 write_95_latency=write_95_latency,
-                                                 write_99_latency=write_99_latency,
-                                                 read_90_latency=read_90_latency,
-                                                 read_95_latency=read_95_latency,
-                                                 read_99_latency=read_99_latency,
-                                                 fio_job_name=fio_job_name)'''
+    db_log_time = fun_test.shared_variables["db_log_time"]
+    num_ssd = fun_test.shared_variables["num_volume"]
+    num_volume = fun_test.shared_variables["num_volume"]
 
     blt = BltVolumePerformanceHelper()
     blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
-                  size=size, operation=operation, num_ssd=1, num_volume=1, fio_job_name=fio_job_name,
+                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
                   write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
                   write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
                   write_95_latency=write_95_latency, write_99_latency=write_99_latency, read_90_latency=read_90_latency,
@@ -271,6 +253,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Expected internal volume stats for this {} testcase: \n{}".
                      format(testcase, self.expected_volume_stats))
         # End of benchmarking json file parsing
+
+        num_ssd = self.num_ssd
+        fun_test.shared_variables["num_ssd"] = num_ssd
+        num_volume = self.num_volume
+        fun_test.shared_variables["num_volume"] = num_volume
 
         self.nvme_block_device = self.nvme_device + "n" + str(self.volume_details["ns_id"])
         # self.dpcsh_host = fun_test.shared_variables["dpcsh_host"]
@@ -712,31 +699,53 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         pass
 
 
-class BLTFioSeqReadRandRead(BLTVolumePerformanceTestcase):
+class BLTFioSeqRead(BLTVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Sequential Read & Random Read performance of BLT volume",
+                              summary="Sequential Read performance of BLT volume",
                               steps='''
         1. Create a BLT volume on FS attached with SSD.
         2. Export (Attach) this BLT volume to the Internal COMe host connected via the PCIe interface. 
-        3. Run the FIO sequential read and Random Read test(without verify) for various block size and IO depth from the 
+        3. Run the FIO sequential read test(without verify) for various block size and IO depth from the 
         COMe host and check the performance are inline with the expected threshold. 
         ''')
 
     def setup(self):
-        super(BLTFioSeqReadRandRead, self).setup()
+        super(BLTFioSeqRead, self).setup()
 
     def run(self):
-        super(BLTFioSeqReadRandRead, self).run()
+        super(BLTFioSeqRead, self).run()
 
     def cleanup(self):
-        super(BLTFioSeqReadRandRead, self).cleanup()
+        super(BLTFioSeqRead, self).cleanup()
+
+
+class BLTFioRandRead(BLTVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Sequential Random Read performance of BLT volume",
+                              steps='''
+        1. Create a BLT volume on FS attached with SSD.
+        2. Export (Attach) this BLT volume to the Internal COMe host connected via the PCIe interface. 
+        3. Run the FIO Random Read test(without verify) for various block size and IO depth from the 
+        COMe host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(BLTFioRandRead, self).setup()
+
+    def run(self):
+        super(BLTFioRandRead, self).run()
+
+    def cleanup(self):
+        super(BLTFioRandRead, self).cleanup()
 
 
 class BLTFioRandWriteRandReadOnly(BLTVolumePerformanceTestcase):
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=3,
                               summary='Random Write & Read only performance of Thin Provisioned local block volume over'
                                       ' RDS',
                               steps='''
@@ -758,7 +767,7 @@ class BLTFioRandWriteRandReadOnly(BLTVolumePerformanceTestcase):
 
 class BLTFioSeqReadWriteMix(BLTVolumePerformanceTestcase):
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=4,
                               summary='Sequential 75% Write & 25% Read performance of Thin Provisioned local block '
                                       'volume over RDS',
                               steps='''
@@ -780,7 +789,7 @@ class BLTFioSeqReadWriteMix(BLTVolumePerformanceTestcase):
 
 class BLTFioRandReadWriteMix(BLTVolumePerformanceTestcase):
     def describe(self):
-        self.set_test_details(id=4,
+        self.set_test_details(id=5,
                               summary='Random 75% Write & 25% Read performance of Thin Provisioned local block '
                                       'volume over RDS',
                               steps='''
@@ -803,7 +812,8 @@ class BLTFioRandReadWriteMix(BLTVolumePerformanceTestcase):
 if __name__ == "__main__":
 
     bltscript = BLTVolumePerformanceScript()
-    bltscript.add_test_case(BLTFioSeqReadRandRead())
+    bltscript.add_test_case(BLTFioSeqRead())
+    bltscript.add_test_case(BLTFioRandRead())
     # bltscript.add_test_case(BLTFioRandWriteRandReadOnly())
     # bltscript.add_test_case(BLTFioSeqReadWriteMix())
     # bltscript.add_test_case(BLTFioRandReadWriteMix())
