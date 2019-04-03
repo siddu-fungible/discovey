@@ -442,7 +442,7 @@ class Linux(object, ToDictMixin):
             if not include_last_line:
                 buf = '\n'.join(buf_lines[start_line:-1])
         except Exception as ex:
-            critical_str = str(ex)
+            critical_str = str(ex) + "Command: {}".format(command)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
             raise ex
@@ -1806,6 +1806,7 @@ class Linux(object, ToDictMixin):
         for i in range(retries):
             command_output = ""
             try:
+                self.ping(dst="127.0.0.1")
                 command_output = self.command(command="pwd", timeout=timeout)
                 if command_output:
                     break
