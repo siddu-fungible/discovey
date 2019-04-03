@@ -1186,14 +1186,14 @@ if __name__ == "__main__":
     internal_chart_names = ["read_4kb1vol1ssd_output_bandwidth", "write_4kb1vol1ssd_output_bandwidth",
                             "read_4kb1vol1ssd_output_iops", "write_4kb1vol1ssd_output_iops"]
     model_name = "BltVolumePerformance"
-    fio_read_job_names = ["fio_read_4gbps", "fio_read_8gbps"]
-    fio_write_job_names = ["fio_write_4gbps", "fio_write_8gbps"]
+    fio_read_job_names = ["fio_read_4gbps"]
+    fio_write_job_names = ["fio_write_4gbps"]
 
     for internal_chart_name in internal_chart_names:
         fio_job_names = []
         if "bandwidth" in internal_chart_name:
             chart_name = "Throughput"
-            y1_axis_title = "Mbps"
+            y1_axis_title = "MBps"
         else:
             chart_name = "IOPS"
             y1_axis_title = "ops"
@@ -1213,16 +1213,13 @@ if __name__ == "__main__":
             operation = "write"
 
         data_sets = []
+        name = "Samsung PM1725b (MZWLL1T6HAJQ)"
         for job_name in fio_job_names:
-            if "4gbps" in job_name:
-                input_rate = "4Gbps"
-            else:
-                input_rate = "8Gbps"
             one_data_set = {}
             one_data_set["inputs"] = {}
             one_data_set["inputs"]["input_fio_job_name"] = job_name
             one_data_set["inputs"]["input_operation"] = operation
-            one_data_set["name"] = operation + "-" + input_rate
+            one_data_set["name"] = name
             one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
             data_sets.append(one_data_set)
         metric_id = LastMetricId.get_next_id()
