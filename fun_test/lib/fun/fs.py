@@ -121,9 +121,12 @@ class Bmc(Linux):
     def come_reset(self, come, max_wait_time=180):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
         fun_test.test_assert(self.ping(come.host_ip), "ComE reachable before reset")
-        self.command("./come-power.sh")
-        fun_test.sleep("ComE powering down", seconds=15)
-        fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
+        # self.command("./come-power.sh")
+        # fun_test.sleep("ComE powering down", seconds=15)
+        # fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
+        # Temporary woraround for COMe
+        fun_test.log(("Rebooting COMe"))
+        come.reboot(retries=15)
 
         # Ensure come restarted
         come_restart_timer = FunTimer(max_time=max_wait_time)

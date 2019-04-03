@@ -117,17 +117,14 @@ class BLTVolumePerformanceScript(FunTestScript):
     def setup(self):
         # topology_obj_helper = TopologyHelper(spec=topology_dict)
         # topology = topology_obj_helper.deploy()
-        '''self.dpcsh_host = DpcshProxy(ip=tb_config["dpcsh_proxy"]["ip"],
-                                     dpcsh_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
-                                     user=tb_config["dpcsh_proxy"]["user"],
-                                     password=tb_config["dpcsh_proxy"]["passwd"])'''
 
-        """fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"])
+        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"])
         fun_test.shared_variables["fs"] = fs
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
         f1 = fs.get_f1(index=0)
-        fun_test.shared_variables["f1"] = f1"""
+        fun_test.shared_variables["f1"] = f1
+
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
@@ -139,22 +136,6 @@ class BLTVolumePerformanceScript(FunTestScript):
         # f1fs = F1InFs(index=0, fs=fs, serial_device_path="/dev/ttyS0", serial_sbp_device_path="/dev/ttyS1")
         # self.storage_controller = f1fs.get_dpc_storage_controller()
         # self.storage_controller = f1.get_dpc_storage_controller()
-
-        ''''# Start the dpcsh proxy and ensure that the funos & dpcsh proxy is started to ready to accept inputs
-        status = self.dpcsh_host.start_dpcsh_proxy(dpcsh_proxy_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
-                                                   dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
-        fun_test.test_assert(status, "Start dpcsh with {} in tcp proxy mode".
-                             format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))
-        status = ""
-        status = self.dpcsh_host.ensure_started(max_time=900, interval=10)
-        fun_test.test_assert(status, "dpcsh proxy ready")
-        self.dpcsh_host.network_controller_obj.disconnect()'''
-
-        # status = f1.get_dpc_client().json_execute(verb="peek", data="storage", command_duration=5)
-
-        # Setting the syslog level to 2
-        # status = self.storage_controller.poke("params/syslog/level 2")
-        # fun_test.test_assert(status, "Setting syslog level to 2")
 
         # fun_test.shared_variables["dpcsh_host"] = self.dpcsh_host
         # fun_test.shared_variables["storage_controller"] = self.storage_controller
@@ -182,9 +163,8 @@ class BLTVolumePerformanceScript(FunTestScript):
                                                   dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
         fun_test.test_assert(status, "Stopped dpcsh with {} in tcp proxy mode".
                              format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))'''
-        '''fun_test.log("FS cleanup")
-        fun_test.shared_variables["fs"].cleanup()'''
-        fun_test.log("Cleanup block..")
+        fun_test.log("FS cleanup")
+        fun_test.shared_variables["fs"].cleanup()
 
 
 class BLTVolumePerformanceTestcase(FunTestCase):
@@ -245,6 +225,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.log("Setting passing threshold to {} for this {} testcase, because its not set in the {} file".
                          format(self.fio_pass_threshold, testcase, benchmark_file))
 
+        if not hasattr(self, "num_ssd"):
+            self.num_ssd = 1
+        if not hasattr(self, "num_volume"):
+            self.num_volume = 1
+
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
                      format(testcase, self.fio_bs_iodepth))
@@ -263,11 +248,11 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         # self.dpcsh_host = fun_test.shared_variables["dpcsh_host"]
         # self.storage_controller = fun_test.shared_variables["storage_controller"]
 
-        self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
+        '''self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
                                   ssh_username=tb_config["tg_info"][0]["user"],
-                                  ssh_password=tb_config["tg_info"][0]["passwd"])
+                                  ssh_password=tb_config["tg_info"][0]["passwd"])'''
 
-        """fs = fun_test.shared_variables["fs"]
+        fs = fun_test.shared_variables["fs"]
         self.end_host = fs.get_come()
 
         f1 = fun_test.shared_variables["f1"]
@@ -333,7 +318,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             attach_vol = f1.get_dpc_client().json_execute(verb="storage", data=attach_dict, command_duration=4)
             fun_test.log("Attach volume op is: {}".format(attach_vol))'''
 
-            fun_test.shared_variables["blt"]["setup_created"] = True
+            # fun_test.shared_variables["blt"]["setup_created"] = True # Moved after warm up traffic
             # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
 
@@ -366,12 +351,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             # Writing 20GB data on volume (one time task)
             if self.warm_up_traffic:
-                fun_test.log("Executing the FIO command to warm up the system. This might take time depending on --size provided")
+                fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
                 fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output)
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)"""
+                               self.iter_interval)
+            fun_test.shared_variables["blt"]["setup_created"] = True
 
     def run(self):
 
@@ -443,6 +429,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
                              format(mode, fio_block_size, fio_iodepth))
 
+                # TODO: SWOS-4554 - As dpcsh is not working we are unable to pull internal stats, hence commenting
                 ''''# Pulling the initial volume stats in dictionary format
                 command_result = {}
                 initial_volume_status[combo][mode] = {}
@@ -479,8 +466,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
-                                                                 bs=fio_block_size, iodepth=fio_iodepth, name=fio_job_name,
-                                                                 **self.fio_cmd_args)
+                                                                 bs=fio_block_size, iodepth=fio_iodepth,
+                                                                 name=fio_job_name, **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
                 # Boosting the fio output with the testbed performance multiplier
@@ -500,6 +487,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
+                # TODO: SWOS-4554 - As dpcsh is not working we are unable to pull internal stats, hence commenting
                 # Getting the volume stats after the FIO test
                 '''command_result = {}
                 final_volume_status[combo][mode] = {}
@@ -595,6 +583,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
                 row_data_dict["fio_job_name"] = fio_job_name
 
+                # TODO: SWOS-4554 - As dpcsh is not working we are unable to pull internal stats, hence commenting
                 # Comparing the internal volume stats with the expected value
                 '''for ekey, evalue in expected_volume_stats[mode].items():
                     if ekey in diff_volume_stats[combo][mode]:
@@ -694,7 +683,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Test Result: {}".format(test_result))
 
     def cleanup(self):
-
         # self.storage_controller.disconnect()
         pass
 
