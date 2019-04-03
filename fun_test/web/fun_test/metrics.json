@@ -1821,6 +1821,40 @@
                             "label": "IOPS"
                           }
                         ]
+                      },
+                      {
+                        "info": "Random Read",
+                        "metric_model_name": "MetricContainer",
+                        "leaf": false,
+                        "name": "rand_read_4kb_one_volume_one_ssd_raw_block",
+                        "weight": 1,
+                        "label": "Random Read",
+                        "children": [
+                          {
+                            "info": "rand_read_4kb1vol1ssd_output_bandwidth",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb1vol1ssd_output_bandwidth",
+                            "weight": 1,
+                            "label": "Throughput"
+                          },
+                          {
+                            "info": "rand_read_4kb1vol1ssd_4_output_latency",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb1vol1ssd_4_output_latency",
+                            "weight": 1,
+                            "label": "Latency"
+                          },
+                          {
+                            "info": "rand_read_4kb1vol1ssd_output_iops",
+                            "metric_model_name": "BltVolumePerformance",
+                            "leaf": true,
+                            "name": "rand_read_4kb1vol1ssd_output_iops",
+                            "weight": 1,
+                            "label": "IOPS"
+                          }
+                        ]
                       }
                     ]
                   }
