@@ -463,6 +463,50 @@
     },
     {
         "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "latency_P50": 634.0,
+        "latency_P90": 708.0,
+        "latency_P99": 763.0,
+        "latency_avg": 632.0,
+        "latency_max": 1405.0,
+        "latency_min": 48.0,
+        "pps": 979455.62,
+        "throughput": 11753.467,
+        "timestamp": "2019-03-26 14:39:10.402596-07:00",
+        "version": 5656
+    },
+
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "latency_P50": 586.0,
+        "latency_P90": 697.0,
+        "latency_P99": 798.0,
+        "latency_avg": 586.0,
+        "latency_max": 1910.0,
+        "latency_min": 40.0,
+        "pps": 978935.51,
+        "throughput": 11747.226,
+        "timestamp": "2019-03-27 19:01:26.035718-07:00",
+        "version": 5678
+    },
+
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "latency_P50": 587.0,
+        "latency_P90": 696.0,
+        "latency_P99": 790.0,
+        "latency_avg": 601.0,
+        "latency_max": 207745.0,
+        "latency_min": 43.0,
+        "pps": 979715.67,
+        "throughput": 11756.588,
+        "timestamp": "2019-03-28 18:16:22.771198-07:00",
+        "version": 5690
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
         "frame_size": 800,
         "latency_P50": 49.0,
         "latency_P90": 1014.0,
