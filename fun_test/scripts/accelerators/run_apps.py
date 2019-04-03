@@ -104,7 +104,7 @@ class ExecuteLe(RunAppBase):
         """)
 
     def run(self):
-        RunAppBase._run(self, app='le_perf', arg='{per_vp:20000, repeat=100}')
+        RunAppBase._run(self, app='le_perf', arg='{per_vp:20000, repeat=50}')
 
 
 class AsyncCrypto(RunAppBase):
@@ -156,7 +156,7 @@ class AsyncLe(RunAppBase):
         """)
 
     def run(self):
-        RunAppBase._run(self, app='le_perf', arg='{per_vp:20000, repeat=100}', run='async')
+        RunAppBase._run(self, app='le_perf', arg='{per_vp:20000, repeat=50}', run='async')
 
 
 if __name__ == "__main__":
