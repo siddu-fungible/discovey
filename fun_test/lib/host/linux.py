@@ -1821,7 +1821,8 @@ class Linux(object, ToDictMixin):
         else:
             fun_test.critical("Host didn't came up from reboot even after {} seconds".format(retries * timeout))
             result = False
-
+        if result:
+            fun_test.sleep("Post-reboot", seconds=15)
         return result
 
     @fun_test.safe
