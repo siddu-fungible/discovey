@@ -128,7 +128,7 @@ class SuiteExecution(models.Model):
     """
     Execution
     """
-    state = models.TextField(default=JobStatusType.SUBMITTED)
+    state = models.IntegerField(default=JobStatusType.UNKNOWN)
     suite_container_execution_id = models.IntegerField(default=-1)
     is_scheduled_job = models.BooleanField(default=False)
     finalized = models.BooleanField(default=False)
