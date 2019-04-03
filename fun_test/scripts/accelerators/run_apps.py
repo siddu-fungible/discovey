@@ -8,7 +8,11 @@ try:
     DPC_PROXY_PORT = int(job_environment['UART_TCP_PORT_0'])
     emulation_target = str(job_environment['EMULATION_TARGET']).lower()
 except (KeyError, ValueError):
-    sys.exit(1)
+    #DPC_PROXY_IP = '10.1.40.24'
+    #DPC_PROXY_PORT = 40221
+    # DPC_PROXY_IP = '10.1.20.129'
+    # DPC_PROXY_PORT = 40220
+    pass
 
 
 class AppRun(FunTestScript):
@@ -112,7 +116,7 @@ class AsyncCrypto(RunAppBase):
         self.set_test_details(id=11,
                               summary="Execute run crypto_raw_speed",
                               steps="""
-        1. Execute run crypto_raw_speed
+        1. Async run crypto_raw_speed
         """)
 
     def run(self):
@@ -125,7 +129,7 @@ class AsyncEc(RunAppBase):
         self.set_test_details(id=12,
                               summary="Execute run qa_ec_stress",
                               steps="""
-        1. Execute run qa_ec_stress
+        1. Async run qa_ec_stress
         """)
 
     def run(self):
@@ -140,7 +144,7 @@ class AsyncSoakJpgZip(RunAppBase):
         self.set_test_details(id=13,
                               summary="Execute run soak_jpg_zip",
                               steps="""
-        1. Execute run crypto_raw_speed
+        1. Async run crypto_raw_speed
         """)
 
     def run(self):
@@ -152,7 +156,7 @@ class AsyncLe(RunAppBase):
         self.set_test_details(id=14,
                               summary="Execute run le_perf",
                               steps="""
-        1. Execute run le_perf
+        1. Async run le_perf
         """)
 
     def run(self):
