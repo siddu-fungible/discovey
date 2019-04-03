@@ -442,7 +442,7 @@ class Linux(object, ToDictMixin):
             if not include_last_line:
                 buf = '\n'.join(buf_lines[start_line:-1])
         except Exception as ex:
-            critical_str = str(ex) + "Command: {}".format(command)
+            critical_str = str(ex) + " Command: {}".format(command)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
             raise ex
@@ -1800,8 +1800,11 @@ class Linux(object, ToDictMixin):
 
         fun_test.sleep("Waiting for the host to go down", timeout)
         if disconnect:
-            self.disconnect()
-            self._set_defaults()
+            try:
+                self.disconnect()
+                self._set_defaults()
+            except:
+                pass
 
         for i in range(retries):
             command_output = ""
