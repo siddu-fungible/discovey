@@ -552,7 +552,9 @@ def process_submissions():
                 job_spec.set_state(JobStatusType.SCHEDULED)
                 t.start()
             if scheduling_time < 0:
-                scheduler_logger.critical("Unable to process job submission. Job-id: {}".format(job_spec.job_id))
+                scheduler_logger.critical("Unable to process job submission. Job-id: {}".format(job_spec.execution_id))
+                job_spec.delete()
+
         except Exception as ex:
             scheduler_logger.exception(str(ex))
 
@@ -636,6 +638,11 @@ def revive_scheduled_jobs(job_ids=None):
         os.remove(job_file)
 
 
+def process_auto_scheduled_jobs():
+    # Get auto_scheduled_jobs
+    # use the job id for each above
+    # ensure that the job id for the above exists anywhere in the run as
+    pass
 
 
 if __name__ == "__main__":
@@ -643,8 +650,6 @@ if __name__ == "__main__":
     # ensure_singleton()
     scheduler_logger.debug("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
-
-
     queue_worker.start()
 
     revive_scheduled_jobs()

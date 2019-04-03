@@ -313,12 +313,16 @@ def queue_job3(suite_path=None,
         suite_path = "dynamic"
     final_suite_path = suite_path if suite_path else script_path
 
+    job_state = JobStatusType.SUBMITTED
+    if scheduling_type != SchedulingType.ASAP:
+        job_state = JobStatusType.AUTO_SCHEDULED
+
     suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                         scheduled_time=get_current_time(),
                                                         completed_time=get_current_time(),
                                                         suite_path=final_suite_path,
                                                         tags=tags,
-                                                        state=JobStatusType.SUBMITTED,
+                                                        state=job_state,
                                                         suite_container_execution_id=suite_container_execution_id,
                                                         test_bed_type=test_bed_type)
     if suite_type == SuiteType.DYNAMIC:
