@@ -880,14 +880,15 @@ class PeekCommands(object):
                     usage_dict[key] = int(filter(str.isdigit, str(pool_word)))
                 else:
                     new_color_dict[key] = result[key]
-                    pool_word = key.split(" ")[0]
-                    color_dict[key] = int(filter(str.isdigit, str(pool_word)))
+                    # pool_word = key.split(" ")[0]
+                    # color_dict[key] = int(filter(str.isdigit, str(pool_word)))
             sorted_usage_keys = sorted(new_usage_dict, key=usage_dict.__getitem__)
-            sorted_color_keys = sorted(new_color_dict, key=color_dict.__getitem__)
+            # sorted_color_keys = sorted(new_color_dict, key=color_dict.__getitem__)
             for key in sorted_usage_keys:
                 sorted_dict[key] = result[key]
-            for key in sorted_color_keys:
-                sorted_dict[key] = result[key]
+            for index in range(0, len(sorted(new_color_dict['pool_colors']))):
+                key = 'pool%d color' % index
+                sorted_dict[key] = new_color_dict['pool_colors'][index]
         else:
             pool_map = {}
             for key in result:
@@ -2802,28 +2803,25 @@ class FlowCommands(object):
             for key in sorted(result):
                 if key == 'cookie':
                     table_obj.add_row([key, result[key], diff_result[key]])
-                elif key == 'dpc_cmd_handler':
+                elif type(result[key]) == list:
                     for record in sorted(result[key]):
                         if type(record) == dict:
                             inner_table = PrettyTable()
                             inner_table.align = 'l'
                             for _key, val in record.iteritems():
-                                inner_table.add_row([_key, val])
+                                if type(val) == dict:
+                                    if 'packets' in val or 'bytes' in val:
+                                        _table_obj = PrettyTable(['Field Name', 'Counter'])
+                                        _table_obj.sortby = 'Field Name'
+                                    else:
+                                        _table_obj = PrettyTable()
+                                    _table_obj.align = 'l'
+                                    for inner_key in val:
+                                        _table_obj.add_row([inner_key, val[inner_key]])
+                                    inner_table.add_row([_key, _table_obj])
+                                else:
+                                    inner_table.add_row([_key, val])
                             table_obj.add_row([key, inner_table, None])
-                elif key == 'epsq' or key == 'epcq':
-                    for record in sorted(result[key]):
-                        inner_table = PrettyTable()
-                        inner_table.align = 'l'
-                        for _key, val in record.iteritems():
-                            inner_table.add_row([_key, val])
-                        table_obj.add_row([key, inner_table, None])
-                elif key == 'nss':
-                    for record in sorted(result[key]):
-                        inner_table = PrettyTable()
-                        inner_table.align = 'l'
-                        for _key, val in record.iteritems():
-                            inner_table.add_row([_key, val])
-                        table_obj.add_row([key, inner_table, None])
         else:
             table_obj = PrettyTable(['Field Name', 'Counter'])
             table_obj.align = 'l'
@@ -2831,28 +2829,26 @@ class FlowCommands(object):
             for key in sorted(result):
                 if key == 'cookie':
                     table_obj.add_row([key, result[key]])
-                elif key == 'dpc_cmd_handler':
+                elif type(result[key]) == list:
                     for record in sorted(result[key]):
                         if type(record) == dict:
                             inner_table = PrettyTable()
                             inner_table.align = 'l'
                             for _key, val in record.iteritems():
-                                inner_table.add_row([_key, val])
+                                if type(val) == dict:
+                                    if 'packets' in val or 'bytes' in val:
+                                        _table_obj = PrettyTable(['Field Name', 'Counter'])
+                                        _table_obj.sortby = 'Field Name'
+                                    else:
+                                        _table_obj = PrettyTable()
+                                    _table_obj.align = 'l'
+                                    for inner_key in val:
+                                        _table_obj.add_row([inner_key, val[inner_key]])
+                                    inner_table.add_row([_key, _table_obj])
+                                else:
+                                    inner_table.add_row([_key, val])
                             table_obj.add_row([key, inner_table])
-                elif key == 'epsq' or key == 'epcq':
-                    for record in sorted(result[key]):
-                        inner_table = PrettyTable()
-                        inner_table.align = 'l'
-                        for _key, val in record.iteritems():
-                            inner_table.add_row([_key, val])
-                        table_obj.add_row([key, inner_table])
-                elif key == 'nss':
-                    for record in sorted(result[key]):
-                        inner_table = PrettyTable()
-                        inner_table.align = 'l'
-                        for _key, val in record.iteritems():
-                            inner_table.add_row([_key, val])
-                        table_obj.add_row([key, inner_table])
+
         return table_obj
 
     def get_flow_list(self, grep_regex=None):
@@ -2908,28 +2904,22 @@ class FlowCommands(object):
                     result = self.dpc_client.execute(verb='flow', arg_list=[cmd])
                     if result:
                         if prev_result:
-                            for key in result:
-                                table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
-                                table_obj.align = 'l'
-                                table_obj.sortby = 'Field Name'
-                                diff_result = self._get_difference(result=result, prev_result=prev_result)
+                            for key in sorted(result):
+                                table_obj = self._inner_table_obj(result=result[key],
+                                                                  prev_result=prev_result[key])
                                 if grep_regex:
                                     if re.search(grep_regex, key, re.IGNORECASE):
-                                        table_obj.add_row([key, result[key], diff_result[key]])
+                                        master_table_obj.add_row([key, table_obj])
                                 else:
-                                    table_obj.add_row([key, result[key], diff_result[key]])
-                                master_table_obj.add_row([key, table_obj])
+                                    master_table_obj.add_row([key, table_obj])
                         else:
-                            for key in result:
-                                table_obj = PrettyTable(['Field Name', 'Counter'])
-                                table_obj.align = 'l'
-                                table_obj.sortby = 'Field Name'
+                            for key in sorted(result):
+                                table_obj = self._inner_table_obj(result=result[key])
                                 if grep_regex:
                                     if re.search(grep_regex, key, re.IGNORECASE):
-                                        table_obj.add_row([key, result[key]])
+                                        master_table_obj.add_row([key, table_obj])
                                 else:
-                                    table_obj.add_row([key, result[key]])
-                                master_table_obj.add_row([key, table_obj])
+                                    master_table_obj.add_row([key, table_obj])
                         print master_table_obj
                         prev_result = result
                         print "\n########################  %s ########################\n" % str(self._get_timestamp())
