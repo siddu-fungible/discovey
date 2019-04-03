@@ -1770,7 +1770,7 @@
             "leaf": false,
             "name": "Storage_Teramarks",
             "weight": 1,
-            "label": "Storage - (work in progress)",
+            "label": "Storage",
             "children": [
               {
                 "info": "Raw Block",
