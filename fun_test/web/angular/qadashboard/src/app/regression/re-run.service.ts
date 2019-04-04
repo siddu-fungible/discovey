@@ -132,7 +132,7 @@ export class ReRunService {
     let payload = {dynamic_suite_spec: scriptItems,
       version: this.reRunVersion,
       original_suite_execution_id: suiteExecutionId,
-      email_list: this.archivedJobSpec["email_list"],
+      emails: this.archivedJobSpec["emails"],
     environment: this.archivedJobSpec["environment"]};
     if (this.archivedJobSpec.hasOwnProperty('test_bed_type')) {
       payload["test_bed_type"] = this.archivedJobSpec["test_bed_type"];
