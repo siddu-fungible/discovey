@@ -32,6 +32,7 @@ from web.fun_test.set_base_line import SetBaseLine
 from web.fun_test.analytics_models_helper import MetricChartHelper, BltVolumePerformanceHelper
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
 from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
+from web.fun_test.metrics_lib import MetricLib
 
 
 class MetricHelper(object):
@@ -1314,7 +1315,7 @@ if __name__ == "__main_read_latency__":
         mmt.save()
     print "created latency charts for storage"
 
-if __name__ == "__main__":
+if __name__ == "__main__rand_read_throughput__":
     internal_chart_names = ["rand_read_4kb1vol1ssd_output_bandwidth",
                             "rand_read_4kb1vol1ssd_output_iops"]
     model_name = "BltVolumePerformance"
@@ -1366,7 +1367,7 @@ if __name__ == "__main__":
         mmt.save()
     print "created throughput charts for random read storage"
 
-if __name__ == "__main__":
+if __name__ == "__main__random_read_latency__":
     internal_chart_names_dict = {"rand_read_4kb1vol1ssd_4_output_latency": "Latency"}
     model_name = "BltVolumePerformance"
     fio_read_job_names = ["fio_randread_4gbps"]
@@ -1418,3 +1419,40 @@ if __name__ == "__main__":
                                milestone_name="Tape-out")
         mmt.save()
     print "created latency charts for random read storage"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    ml = MetricLib()
+    for entry in entries:
+        d = {}
+        if entry.metric_model_name == "SoakDmaMemsetPerformance":
+            d["input_coherent"] = True
+            status = ml.add_attributes_to_data_sets(metric_id=entry.metric_id, **d)
+            if not status:
+                print "not successful - error"
+            print "added attribute for {}".format(entry.chart_name)
+    print "successfully added attribute to the memset data sets"
+    for entry in entries:
+        if entry.metric_model_name == "SoakDmaMemsetPerformance":
+            d = {}
+            data_sets = ml.get_data_sets(metric_id=entry.metric_id)
+            for data_set in data_sets:
+                data_set["inputs"]["input_coherent"] = False
+            chart_name = entry.chart_name.replace("memset", "memset non coherent")
+            internal_chart_name = entry.internal_chart_name.replace("memset", "memset_non_coherent")
+            base_line_date = datetime(year=2019, month=4, day=3, minute=0, hour=0, second=0)
+            d["chart_name"] = chart_name
+            d["internal_chart_name"] = internal_chart_name
+            d["data_sets"] = data_sets
+            d["leaf"] = True
+            d["description"] = "TBD"
+            d["owner_info"] = entry.owner_info
+            d["source"] = entry.source
+            d["positive"] = entry.positive
+            d["y1_axis_title"] = entry.y1_axis_title
+            d["visualization_unit"] = entry.y1_axis_title
+            d["metric_model_name"] = entry.metric_model_name
+            d["base_line_date"] = base_line_date
+            ml.create_chart(**d)
+            print "created chart for {}".format(chart_name)
+    print "created charts for memset non coherent"
