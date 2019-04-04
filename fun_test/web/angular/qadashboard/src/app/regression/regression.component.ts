@@ -124,9 +124,22 @@ export class RegressionComponent implements OnInit {
     this.status = null;
   }
 
+  stateFilterStringToNumber(s) {
+    let match = "ALL";
+    for (let key in this.stateStringMap) {
+      let value = this.stateStringMap[key];
+      if (value === s) {
+        match = key;
+        break;
+      }
+    }
+    return match;
+  }
+
+
   onStateFilterClick(state) {
     this.stateFilter = state;
-    this.navigateByQuery(state);
+    this.navigateByQuery(this.stateFilterStringToNumber(state));
   }
 
   navigateByQuery(state) {
