@@ -202,8 +202,12 @@ class TestTransitPerformance(FunTestCase):
         fun_test.log("Fetching per VP stats before traffic")
         network_controller_obj.peek_per_vp_stats()
 
-        fun_test.log("Fetching PSW Global stats before test")
+        fun_test.log("Fetching PSW NU Global stats before test")
         network_controller_obj.peek_psw_global_stats()
+
+        if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
+            fun_test.log("Fetching PSW HNU Global stats before test")
+            network_controller_obj.peek_psw_global_stats(hnu=True)
 
         fun_test.log("Fetching VP packets before test")
         network_controller_obj.peek_vp_packets()
@@ -219,16 +223,20 @@ class TestTransitPerformance(FunTestCase):
         result = self.template_obj.wait_until_complete()
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.log("Fetching PSW Global stats before test")
+        fun_test.log("Fetching PSW NU Global stats after test")
         network_controller_obj.peek_psw_global_stats()
+
+        if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
+            fun_test.log("Fetching PSW HNU Global stats after test")
+            network_controller_obj.peek_psw_global_stats(hnu=True)
 
         fun_test.log("Fetching VP packets after test")
         network_controller_obj.peek_vp_packets()
 
-        fun_test.log("Fetching BAM stats before test")
+        fun_test.log("Fetching BAM stats after test")
         network_controller_obj.peek_bam_stats()
 
-        fun_test.log("Fetching per VP stats After traffic")
+        fun_test.log("Fetching per VP stats after traffic")
         network_controller_obj.peek_per_vp_stats()
 
         checkpoint = "Fetch summary result for latency and throughput for all frames and all iterations"
@@ -283,8 +291,12 @@ class TestTransitPerformance(FunTestCase):
                 fun_test.log("============== Mac stats for HNU FPG2 ==============")
                 network_controller_obj.peek_fpg_port_stats(port_num=2, hnu=True)
 
-                fun_test.log("Fetching PSW Global stats before test")
+                fun_test.log("Fetching PSW Global stats re-run test")
                 network_controller_obj.peek_psw_global_stats()
+
+                if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
+                    fun_test.log("Fetching PSW HNU Global stats re-run test")
+                    network_controller_obj.peek_psw_global_stats(hnu=True)
 
                 fun_test.simple_assert(False, '%s Flow Failed as all iterations in RFC2544 run failed. '
                                               'Added -1 in JSON output for this flow' % self.flow_direction)

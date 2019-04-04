@@ -492,6 +492,8 @@ get_port_runt_filter_parser = get_port_runt_sunbparsers.add_parser('filter', hel
 get_port_runt_filter_parser.add_argument('port_num', type=int, help="port_num")
 get_port_runt_filter_parser.add_argument('shape', type=int, help="shape")
 
+# Get Port Linkstatus
+get_port_link_status_parser = get_nu_port_parsers.add_parser('linkstatus', help="Get Port Link Status")
 # -----------------------------------------------------------------------------------------------
 # Get NU QoS sub commands
 get_nu_qos_parsers = get_nu_qos_parser.add_subparsers(title="subcommands", help="")
