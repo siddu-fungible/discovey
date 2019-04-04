@@ -1475,6 +1475,7 @@ class SoakDmaMemsetPerformance(models.Model):
     input_size = models.TextField(verbose_name="Size")
     input_operation = models.TextField(verbose_name="Operation")
     input_log_size = models.TextField(verbose_name="Log Size")
+    input_coherent = models.BooleanField(default=True)
     output_bandwidth_unit = models.TextField(default="GBps")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)
