@@ -32,6 +32,39 @@ class QueueWorker(Thread):
         super(QueueWorker, self).__init__()
         self.job_threads = {}
 
+    def submit_container_suite(self, container_suite_execution):
+        container_suite_path = container_suite_execution.suite_path
+        try:
+            container_spec = parse_suite(suite_name=container_suite_path)
+            container_suite_level_tags = json.loads(container_suite_execution.tags)
+        except Exception as ex:
+            scheduler_logger.exception("{} Unable to parse spec".format(get_job_string_from_spec(job_spec=container_suite_execution)))
+            return
+
+        for item in container_spec:
+            item_suite = parse_suite(suite_name=item)
+            item_suite_level_tags = get_suite_level_tags(suite_spec=item_suite)
+            item_suite_level_tags.extend(container_suite_level_tags)
+
+            common_build_url = container_suite_execution.build_url
+            if not common_build_url:
+                common_build_url = DEFAULT_BUILD_URL
+            version = determine_version(build_url=common_build_url)
+            if not version:
+                scheduler_logger.exception("{} Unable to determine version".format(get_job_string_from_spec(job_spec=container_suite_execution)))
+
+            queue_job3(suite_path=item,
+                       build_url=common_build_url,
+                       scheduling_type=SchedulingType.ASAP,
+                       tags=item_suite_level_tags,
+                       emails=json.loads(container_suite_execution.emails),
+                       email_on_fail_only=container_suite_execution.email_on_failure_only,
+                       suite_container_execution_id=container_suite_execution.execution_id,
+                       test_bed_type=container_suite_execution.test_bed_type,
+                       requested_priority_category=SchedulerJobPriority.NORMAL)
+
+        container_suite_execution.set_state(JobStatusType.COMPLETED)
+
     def run(self):
         from asset.asset_manager import AssetManager
         asset_manager = AssetManager()
@@ -44,7 +77,14 @@ class QueueWorker(Thread):
 
                 for queued_job in valid_jobs:
 
-                    print ("Testbed-type: {}".format(queued_job.test_bed_type))
+                    """
+                    schedule a container if needed
+                    """
+                    suite_execution = models_helper.get_suite_execution(suite_execution_id=queued_job.job_id)
+                    if suite_execution.suite_type == SuiteType.CONTAINER:
+                        self.submit_container_suite(container_suite_execution=suite_execution)
+                        continue
+
                     if queued_job.test_bed_type not in not_available:
                         availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type)
                         if availability["status"]:
@@ -238,20 +278,10 @@ class SuiteWorker(Thread):
         all_tags = []
         items = []
         if suite_file:
-            if suite_file.endswith("container"):
-                container_spec = parse_suite(suite_name=suite_file)
-                suite_level_tags = get_suite_level_tags(suite_spec=container_spec)
-                all_tags.extend(suite_level_tags)
-                for item in container_spec:
-                    item_suite = parse_suite(suite_name=item)
-                    item_suite_level_tags = get_suite_level_tags(suite_spec=item_suite)
-                    all_tags.extend(item_suite_level_tags)
-                    items.extend(item_suite)
-            else:
-                suite_spec = parse_suite(suite_name=suite_file)
-                suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
-                all_tags.extend(suite_level_tags)
-                items = suite_spec
+            suite_spec = parse_suite(suite_name=suite_file)
+            suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
+            all_tags.extend(suite_level_tags)
+            items = suite_spec
         else:
             suite_spec = json.loads(dynamic_suite_spec)
             suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
@@ -260,7 +290,6 @@ class SuiteWorker(Thread):
 
         all_tags = list(set(all_tags))
         self.apply_tags_to_items(items=items, tags=all_tags)
-        # use job submission tags as well
         suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
         if suite_execution:
             suite_execution_tags = json.loads(suite_execution.tags)
@@ -294,30 +323,21 @@ class SuiteWorker(Thread):
             build_url = self.job_build_url
             if not build_url:
                 build_url = DEFAULT_BUILD_URL
-            if build_url:
-                version = determine_version(build_url=build_url)
 
-                if not version:
-                    models_helper.update_suite_execution(suite_execution_id=self.job_id,
-                                                         result=RESULTS["ABORTED"],
-                                                         state=JobStatusType.ABORTED)
-                    error_message = "Unable to determine version from build url: {}".format(build_url)
-                    scheduler_logger.exception(error_message)
-                    local_scheduler_logger.exception(error_message)
-                    self.suite_shutdown = True
-                else:
-                    if suite_execution and suite_execution.suite_container_execution_id > 0:
-                        container_execution = models_helper.get_suite_container_execution(suite_execution.suite_container_execution_id)
-                        if int(container_execution.version) <= 0:
-                            models_helper.update_suite_container_execution(suite_container_execution_id=container_execution.execution_id, version=version)
-                            container_execution = models_helper.get_suite_container_execution(
-                                suite_execution.suite_container_execution_id)
-                        version = int(container_execution.version)
-                    build_url = build_url.replace("latest", str(version))
-                    self.job_build_url = build_url
-                    # print "Job: {} Updating to Version1".format(self.job_id)
-                    models_helper.update_suite_execution(suite_execution_id=self.job_id, version=version)
-                    # print "Job: {} Updating to Version2".format(self.job_id)
+            version = determine_version(build_url=build_url)
+            if not version:
+                models_helper.update_suite_execution(suite_execution_id=self.job_id,
+                                                     result=RESULTS["ABORTED"],
+                                                     state=JobStatusType.ABORTED)
+                error_message = "Unable to determine version from build url: {}".format(build_url)
+                scheduler_logger.exception(error_message)
+                local_scheduler_logger.exception(error_message)
+                self.suite_shutdown = True
+            else:
+                build_url = build_url.replace("latest", str(version))
+                self.job_build_url = build_url
+                models_helper.update_suite_execution(suite_execution_id=self.job_id, version=version)
+                # print "Job: {} Updating to Version2".format(self.job_id)
 
             suite_summary = {}
             script_items = []
@@ -560,7 +580,7 @@ def process_submissions():
                 job_spec.set_state(JobStatusType.SCHEDULED)
                 t.start()
             if scheduling_time < 0:
-                scheduler_logger.critical("Unable to process job submission. Job-id: {}".format(job_spec.execution_id))
+                scheduler_logger.critical("{} Unable to process job submission. Scheduling time in the past".format(get_job_string_from_spec(job_spec=job_spec)))
                 job_spec.delete()
 
         except Exception as ex:

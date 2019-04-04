@@ -224,6 +224,8 @@ def parse_suite(suite_name=None, dynamic_suite_file=None):
         suite_file_name = SUITES_DIR + "/" + suite_name
     else:
         suite_file_name = dynamic_suite_file
+    if not suite_file_name.endswith(".json"):
+        suite_file_name += ".json"
     suite_spec = parse_file_to_json(file_name=suite_file_name)
     if not suite_spec:
         raise SchedulerException("Unable to parse suite-spec: {}".format(suite_file_name))
@@ -238,28 +240,6 @@ def get_suite_level_tags(suite_spec):
                 tags = info["tags"]
             break
     return tags
-
-def queue_suite_container(suite_path,
-                          build_url=None,
-                          tags=None, **kwargs):
-    job_id = -1
-    container_execution = models_helper.add_suite_container_execution(suite_path=suite_path, tags=tags)
-    if container_execution:
-        job_id = container_execution.execution_id
-        container_spec = parse_suite(suite_name=suite_path.replace(".json", ""))
-        container_tags = get_suite_level_tags(suite_spec=container_spec)
-        container_tags.extend(tags)
-
-        for item_suite_path in container_spec:
-            item_spec = parse_suite(suite_name=item_suite_path.replace(".json", ""))
-            suite_level_tags = get_suite_level_tags(suite_spec=item_spec)
-            suite_level_tags.extend(container_tags)
-            time.sleep(random.uniform(0.1, 0.3))
-            queue_job3(suite_path=item_suite_path,
-                       tags=suite_level_tags,
-                       build_url=build_url,
-                       suite_container_execution_id=container_execution.execution_id, **kwargs)
-    return job_id
 
 
 def queue_dynamic_suite(dynamic_suite_spec,
@@ -304,10 +284,14 @@ def queue_job3(suite_path=None,
     time.sleep(0.1)
     result = -1
     if not tags:
-        tags = "[]"
+        tags = []
     if suite_type == SuiteType.DYNAMIC:
         original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
         suite_path = "Re({})".format(original_suite_execution.suite_path)
+
+    if suite_path and suite_path.replace(".json", "").endswith("_container"):
+        suite_type = SuiteType.CONTAINER
+
     final_suite_path = suite_path if suite_path else script_path
 
     is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
@@ -340,7 +324,7 @@ def queue_job3(suite_path=None,
         suite_execution.timezone_string = timezone_string
         suite_execution.repeat_in_minutes = repeat_in_minutes
 
-        suite_execution.tags = tags
+        suite_execution.tags = json.dumps(tags)
         suite_execution.emails = json.dumps(emails)
         suite_execution.email_on_failure_only = email_on_fail_only
 

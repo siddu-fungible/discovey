@@ -7,8 +7,7 @@ from django.core import serializers, paginator
 from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_from_datetime
 from fun_global import is_production_mode, is_triaging_mode
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
-from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job3, queue_suite_container
-from scheduler.scheduler_helper import queue_dynamic_suite
+from scheduler.scheduler_helper import queue_dynamic_suite, queue_job3, LOG_DIR_PREFIX
 from scheduler.scheduler_helper import move_to_higher_queue, move_to_queue_head, increase_decrease_priority, delete_queued_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, \
@@ -178,34 +177,19 @@ def submit_job(request):
             repeat_in_minutes = request_json["repeat_in_minutes"]
 
         if suite_path:
-            if suite_path.replace(".json", "").endswith("_container"):
-                job_id = queue_suite_container(suite_path=suite_path,
-                                               build_url=build_url,
-                                               tags=tags,
-                                               email_list=emails,
-                                               email_on_fail_only=email_on_fail_only,
-                                               environment=environment,
-                                               test_bed_type=test_bed_type,
-                                               scheduling_type=scheduling_type,
-                                               tz_string=tz,
-                                               requested_hour=requested_hour,
-                                               requested_minute=requested_minute,
-                                               requested_days=requested_days,
-                                               repeat_in_minutes=repeat_in_minutes)
-            else:
-                job_id = queue_job3(suite_path=suite_path,
-                                    build_url=build_url,
-                                    tags=tags,
-                                    emails=emails,
-                                    test_bed_type=test_bed_type,
-                                    email_on_fail_only=email_on_fail_only,
-                                    environment=environment,
-                                    scheduling_type=scheduling_type,
-                                    timezone_string=tz,
-                                    requested_hour=requested_hour,
-                                    requested_minute=requested_minute,
-                                    requested_days=requested_days,
-                                    repeat_in_minutes=repeat_in_minutes)
+            job_id = queue_job3(suite_path=suite_path,
+                                build_url=build_url,
+                                tags=tags,
+                                emails=emails,
+                                test_bed_type=test_bed_type,
+                                email_on_fail_only=email_on_fail_only,
+                                environment=environment,
+                                scheduling_type=scheduling_type,
+                                timezone_string=tz,
+                                requested_hour=requested_hour,
+                                requested_minute=requested_minute,
+                                requested_days=requested_days,
+                                repeat_in_minutes=repeat_in_minutes)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
