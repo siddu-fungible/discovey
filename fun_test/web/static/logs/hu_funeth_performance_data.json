@@ -475,7 +475,6 @@
         "timestamp": "2019-03-26 14:39:10.402596-07:00",
         "version": 5656
     },
-
     {
         "flow_type": "NU_HU_NFCP",
         "frame_size": 1500,
@@ -490,7 +489,6 @@
         "timestamp": "2019-03-27 19:01:26.035718-07:00",
         "version": 5678
     },
-
     {
         "flow_type": "NU_HU_NFCP",
         "frame_size": 1500,
@@ -700,5 +698,89 @@
         "throughput": 10902.566,
         "timestamp": "2019-04-02 18:27:08.987847-07:00",
         "version": 5752
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 800,
+        "latency_P50": 128.0,
+        "latency_P90": 167.0,
+        "latency_P99": 242.0,
+        "latency_avg": 130.0,
+        "latency_max": 4604.0,
+        "latency_min": 33.0,
+        "pps": 1035377.36,
+        "throughput": 6626.415,
+        "timestamp": "2019-04-03 20:28:11.929054-07:00",
+        "version": 5771
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 128,
+        "latency_P50": 263.0,
+        "latency_P90": 468.0,
+        "latency_P99": 654.0,
+        "latency_avg": 291.0,
+        "latency_max": 1082.0,
+        "latency_min": 34.0,
+        "pps": 637500.0,
+        "throughput": 652.8,
+        "timestamp": "2019-04-03 20:28:11.929054-07:00",
+        "version": 5771
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 1500,
+        "latency_P50": 89.0,
+        "latency_P90": 119.0,
+        "latency_P99": 160.0,
+        "latency_avg": 91.0,
+        "latency_max": 603.0,
+        "latency_min": 34.0,
+        "pps": 916435.51,
+        "throughput": 10997.226,
+        "timestamp": "2019-04-03 20:28:11.929054-07:00",
+        "version": 5771
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 800,
+        "latency_P50": 1036.0,
+        "latency_P90": 1265.0,
+        "latency_P99": 1369.0,
+        "latency_avg": 1041.0,
+        "latency_max": 1412.0,
+        "latency_min": 35.0,
+        "pps": 959737.2,
+        "throughput": 6142.318,
+        "timestamp": "2019-04-03 20:28:11.929054-07:00",
+        "version": 5771
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 128,
+        "latency_P50": 50.0,
+        "latency_P90": 108.0,
+        "latency_P99": 147.0,
+        "latency_avg": 62.0,
+        "latency_max": 250.0,
+        "latency_min": 35.0,
+        "pps": 605357.14,
+        "throughput": 619.886,
+        "timestamp": "2019-04-03 20:28:11.929054-07:00",
+        "version": 5771
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "latency_P50": 52.0,
+        "latency_P90": 104.0,
+        "latency_P99": 125.0,
+        "latency_avg": 66.0,
+        "latency_max": 7866.0,
+        "latency_min": 36.0,
+        "pps": 851074.9,
+        "throughput": 10212.899,
+        "timestamp": "2019-04-03 20:28:11.929054-07:00",
+        "version": 5771
     }
 ]

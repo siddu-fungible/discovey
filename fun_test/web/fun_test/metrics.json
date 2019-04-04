@@ -1084,7 +1084,7 @@
                 "metric_model_name": "SoakDmaMemsetPerformance",
                 "leaf": true,
                 "name": "memset_output_bandwidth_64B_256B",
-                "label": "DMA soak memset (64B-256B)",
+                "label": "DMA soak memset coherent (64B-256B)",
                 "children": [],
                 "weight": 1
               },
@@ -1093,7 +1093,7 @@
                 "metric_model_name": "SoakDmaMemsetPerformance",
                 "leaf": true,
                 "name": "memset_output_bandwidth_1024B_16KB",
-                "label": "DMA soak memset (1024B-16KB)",
+                "label": "DMA soak memset coherent (1024B-16KB)",
                 "children": [],
                 "weight": 1
               },
@@ -1102,7 +1102,34 @@
                 "metric_model_name": "SoakDmaMemsetPerformance",
                 "leaf": true,
                 "name": "memset_output_bandwidth_64KB_256KB",
-                "label": "DMA soak memset (64KB-256KB)",
+                "label": "DMA soak memset coherent (64KB-256KB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_non_coherent_output_bandwidth_64B_256B",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_non_coherent_output_bandwidth_64B_256B",
+                "label": "DMA soak memset non coherent (64B-256B)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_non_coherent_output_bandwidth_1024B_16KB",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_non_coherent_output_bandwidth_1024B_16KB",
+                "label": "DMA soak memset non coherent (1024B-16KB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_non_coherent_output_bandwidth_64KB_256KB",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_non_coherent_output_bandwidth_64KB_256KB",
+                "label": "DMA soak memset non coherent (64KB-256KB)",
                 "children": [],
                 "weight": 1
               },
