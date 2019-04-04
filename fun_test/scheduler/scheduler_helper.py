@@ -168,7 +168,7 @@ def get_todays_scheduling_time_in_seconds(requested_hour, requested_minute, tz_s
 def get_scheduling_time(spec):
     result = -1
     if spec.scheduling_type == SchedulingType.PERIODIC:
-        result = get_periodic_scheduling_time_in_seconds(days=spec.requested_days,
+        result = get_periodic_scheduling_time_in_seconds(days=json.loads(spec.requested_days),
                                                          requested_hour=spec.requested_hour,
                                                          requested_minute=spec.requested_minute,
                                                          tz_string=spec.timezone_string)
@@ -340,7 +340,7 @@ def queue_job3(suite_path=None,
         suite_execution.suite_type = suite_type
         suite_execution.scheduling_type = scheduling_type
 
-        suite_execution.requested_days = requested_days
+        suite_execution.requested_days = json.dumps(requested_days)
         suite_execution.requested_hour = requested_hour
         suite_execution.requested_minute = requested_minute
         suite_execution.timezone_string = timezone_string
@@ -364,6 +364,8 @@ def queue_job3(suite_path=None,
 
         result = suite_execution.execution_id
     except Exception as ex:
+        if suite_execution:
+            suite_execution.delete()
         raise SchedulerException("Unable to schedule job due to: " + str(ex))
         # TODO: Remove suite execution entry
     print("Job Id: {} suite: {} Submitted".format(suite_execution.execution_id, suite_path))
