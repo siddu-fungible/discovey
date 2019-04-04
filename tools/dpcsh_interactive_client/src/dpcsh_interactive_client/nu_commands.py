@@ -88,6 +88,31 @@ class PortCommands(object):
         except Exception as ex:
             print "ERROR: %s" % str(ex)
 
+    def _sort_key_by_int(self, result):
+        sorted_keys = []
+        for key in result:
+            if key == 'LINK STATUS':
+                continue
+            sorted_keys.append(int(key.split('-')[1]))
+        return sorted(sorted_keys)
+
+    def port_link_status(self):
+        try:
+            arg_list = ["linkstatus"]
+            result = self.dpc_client.execute(verb="port", arg_list=arg_list)
+            if result:
+                table_obj = PrettyTable(['Port', 'Status'])
+                table_obj.align = 'l'
+                o = self._sort_key_by_int(result=result)
+                for key_int in self._sort_key_by_int(result=result):
+                    key = 'lport-%d'% key_int
+                    table_obj.add_row([key, result[key]])
+                print table_obj
+            else:
+                print "Unable to get linkstatus: %s" % result
+        except Exception as ex:
+            print "ERROR: %s" % str(ex)
+
     def enable_disable_pfc(self, port_num, shape, enable=True):
         try:
             cmd_arg_dict = {"portnum": port_num, "shape": shape}
