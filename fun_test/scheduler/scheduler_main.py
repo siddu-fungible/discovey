@@ -234,7 +234,7 @@ class SuiteWorker(Thread):
             else:
                 item["tags"] = tags
 
-    def get_scripts(self, suite_execution_id, suite_file=None, dynamic_suite_file=None):
+    def get_scripts(self, suite_execution_id, suite_file=None, dynamic_suite_spec=None):
         all_tags = []
         items = []
         if suite_file:
@@ -253,7 +253,7 @@ class SuiteWorker(Thread):
                 all_tags.extend(suite_level_tags)
                 items = suite_spec
         else:
-            suite_spec = parse_suite(dynamic_suite_file=dynamic_suite_file)
+            suite_spec = json.loads(dynamic_suite_spec)
             suite_level_tags = get_suite_level_tags(suite_spec=suite_spec)
             all_tags.extend(suite_level_tags)
             items = suite_spec
@@ -327,7 +327,7 @@ class SuiteWorker(Thread):
             elif self.job_script_path:
                 script_items.append({"path": self.job_script_path})
             elif self.job_suite_type == SuiteType.DYNAMIC:
-                script_items, all_tags = self.get_scripts(suite_execution_id=suite_execution_id, dynamic_suite_file=self.job_dynamic_suite_spec)
+                script_items, all_tags = self.get_scripts(suite_execution_id=suite_execution_id, dynamic_suite_spec=self.job_dynamic_suite_spec)
                 models_helper.update_suite_execution(suite_execution_id=suite_execution_id, tags=all_tags)
 
             script_paths = map(lambda f: SCRIPTS_DIR + "/" + f["path"], filter(lambda f: "info" not in f, script_items))

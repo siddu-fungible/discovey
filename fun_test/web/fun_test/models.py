@@ -102,7 +102,7 @@ class SuiteExecution(models.Model):
     build_url = models.TextField(default="", null=True)
     version = models.CharField(max_length=50, null=True)
     requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
-    tags = models.TextField(default="[]")
+    tags = models.TextField(default="[]", null=True)
 
     """
     Scheduling

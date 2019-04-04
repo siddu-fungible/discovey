@@ -261,27 +261,18 @@ def queue_suite_container(suite_path,
                        suite_container_execution_id=container_execution.execution_id, **kwargs)
     return job_id
 
-def queue_dynamic_job(suite_path, scheduling_type, build_url, tags, email_list, email_on_fail_only=None):
-    # jobs that don't have a suite file. we create a suite dynamically
-    return queue_job2(suite_path=suite_path,
-                      build_url=build_url,
-                      tags=tags,
-                      email_list=email_list,
-                      email_on_fail_only=email_on_fail_only,
-                      suite_type=SuiteType.DYNAMIC,
-                      scheduling_type=scheduling_type)
-
 
 def queue_dynamic_suite(dynamic_suite_spec,
                         original_suite_execution_id,
-                        email_list=None,
+                        emails=None,
                         environment=None,
                         test_bed_type=None,
                         build_url=None):
-    return queue_job2(dynamic_suite_spec=dynamic_suite_spec,
-                      suite_type=SuiteType.DYNAMIC,
+
+    return queue_job3(dynamic_suite_spec=dynamic_suite_spec,
                       original_suite_execution_id=original_suite_execution_id,
-                      email_list=email_list,
+                      suite_type=SuiteType.DYNAMIC,
+                      emails=emails,
                       test_bed_type=test_bed_type,
                       environment=environment,
                       build_url=build_url)
@@ -301,7 +292,7 @@ def queue_job3(suite_path=None,
                timezone_string="PST",
                tags=None,
                emails=None,
-               email_on_fail_only=None,
+               email_on_fail_only=False,
                environment=None,
                inputs=None,
                repeat_in_minutes=None,
@@ -312,9 +303,11 @@ def queue_job3(suite_path=None,
                requested_priority_category=SchedulerJobPriority.NORMAL):
     time.sleep(0.1)
     result = -1
-
+    if not tags:
+        tags = "[]"
     if suite_type == SuiteType.DYNAMIC:
-        suite_path = "dynamic"
+        original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
+        suite_path = "Re({})".format(original_suite_execution.suite_path)
     final_suite_path = suite_path if suite_path else script_path
 
     is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
@@ -337,7 +330,7 @@ def queue_job3(suite_path=None,
 
     try:
         suite_execution.suite_path = suite_path
-        suite_execution.dynamic_suite_spec = dynamic_suite_spec
+        suite_execution.dynamic_suite_spec = json.dumps(dynamic_suite_spec)
         suite_execution.suite_type = suite_type
         suite_execution.scheduling_type = scheduling_type
 
@@ -380,11 +373,6 @@ def get_archived_file_name(suite_execution_id):
     files = glob.glob(glob_str)
     return files[0]
 
-
-def get_archived_job_spec(job_id):
-    archive_file_name = get_archived_file_name(suite_execution_id=job_id)
-    result = parse_file_to_json(file_name=archive_file_name)
-    return result
 
 
 def re_queue_job(suite_execution_id,

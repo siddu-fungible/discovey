@@ -8,7 +8,7 @@ from fun_global import RESULTS, get_datetime_from_epoch_time, get_epoch_time_fro
 from fun_global import is_production_mode, is_triaging_mode
 from fun_settings import LOGS_RELATIVE_DIR, SUITES_DIR, LOGS_DIR, MAIN_WEB_APP, DEFAULT_BUILD_URL
 from scheduler.scheduler_helper import LOG_DIR_PREFIX, re_queue_job, queue_job3, queue_suite_container
-from scheduler.scheduler_helper import queue_dynamic_suite, get_archived_job_spec
+from scheduler.scheduler_helper import queue_dynamic_suite
 from scheduler.scheduler_helper import move_to_higher_queue, move_to_queue_head, increase_decrease_priority, delete_queued_job
 import scheduler.scheduler_helper
 from models_helper import _get_suite_executions, _get_suite_execution_attributes, SUITE_EXECUTION_FILTERS, \
@@ -146,13 +146,13 @@ def submit_job(request):
         tags = None
         if "tags" in request_json:
             tags = request_json["tags"]
-        email_list = None
+        emails = None
         email_on_fail_only = None
         environment = None
         if "environment" in request_json:
             environment = request_json["environment"]
-        if "email_list" in request_json:
-            email_list = request_json["email_list"]
+        if "emails" in request_json:
+            emails = request_json["emails"]
         if "email_on_fail_only" in request_json:
             email_on_fail_only = request_json["email_on_fail_only"]
 
@@ -182,7 +182,7 @@ def submit_job(request):
                 job_id = queue_suite_container(suite_path=suite_path,
                                                build_url=build_url,
                                                tags=tags,
-                                               email_list=email_list,
+                                               email_list=emails,
                                                email_on_fail_only=email_on_fail_only,
                                                environment=environment,
                                                test_bed_type=test_bed_type,
@@ -196,7 +196,7 @@ def submit_job(request):
                 job_id = queue_job3(suite_path=suite_path,
                                     build_url=build_url,
                                     tags=tags,
-                                    emails=email_list,
+                                    emails=emails,
                                     test_bed_type=test_bed_type,
                                     email_on_fail_only=email_on_fail_only,
                                     environment=environment,
@@ -211,7 +211,7 @@ def submit_job(request):
             job_id = queue_job3(script_path=script_path,
                                 build_url=build_url,
                                 tags=tags,
-                                emails=email_list,
+                                emails=emails,
                                 test_bed_type=test_bed_type,
                                 email_on_fail_only=email_on_fail_only,
                                 environment=environment,
@@ -223,7 +223,7 @@ def submit_job(request):
                                 repeat_in_minutes=repeat_in_minutes)
         elif dynamic_suite_spec:
             queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
-                                email_list=email_list,
+                                emails=emails,
                                 environment=environment,
                                 test_bed_type=test_bed_type,
                                 original_suite_execution_id=original_suite_execution_id,
@@ -932,8 +932,12 @@ def script_execution(request, pk):
 @csrf_exempt
 @api_safe_json_response
 def job_spec(request, job_id):
-    archived_job_spec = get_archived_job_spec(job_id=job_id)
-    return archived_job_spec
+    result = {}
+    suite_execution = SuiteExecution.objects.get(execution_id=job_id)
+    result["emails"] = json.loads(suite_execution.emails)
+    result["test_bed_type"] = suite_execution.test_bed_type
+    result["environment"] = json.loads(suite_execution.environment)
+    return result
 
 
 def _get_attributes(suite_execution):
