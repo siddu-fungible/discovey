@@ -285,6 +285,9 @@ def queue_dynamic_suite(dynamic_suite_spec,
                       environment=environment,
                       build_url=build_url)
 
+def is_auto_scheduled(scheduling_type, repeat_in_minutes):
+    return (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type == SchedulingType.PERIODIC)
+
 def queue_job3(suite_path=None,
                original_suite_execution_id=None,
                dynamic_suite_spec=None,
@@ -313,9 +316,8 @@ def queue_job3(suite_path=None,
         suite_path = "dynamic"
     final_suite_path = suite_path if suite_path else script_path
 
-    job_state = JobStatusType.SUBMITTED
-    if scheduling_type != SchedulingType.ASAP:
-        job_state = JobStatusType.AUTO_SCHEDULED
+    is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
+    job_state = JobStatusType.AUTO_SCHEDULED if is_auto_scheduled_job else JobStatusType.SUBMITTED
 
     suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                         scheduled_time=get_current_time(),
@@ -357,20 +359,8 @@ def queue_job3(suite_path=None,
         job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
+        suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
         suite_execution.save()
-
-        is_auto_scheduled_job = False
-        if (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type in [SchedulingType.PERIODIC, SchedulingType.REPEAT]):
-            # clone job
-            cloned_job = suite_execution
-            cloned_job.pk = None
-            cloned_job.execution_id = models_helper.get_new_suite_execution_id().last_suite_execution_id
-            cloned_job.state = JobStatusType.AUTO_SCHEDULED
-            cloned_job.save()
-            is_auto_scheduled_job = True
-        suite_execution.is_scheduled_job = is_auto_scheduled_job
-        suite_execution.save()
-
 
         result = suite_execution.execution_id
     except Exception as ex:

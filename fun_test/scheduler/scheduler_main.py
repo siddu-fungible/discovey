@@ -21,6 +21,14 @@ ONE_HOUR = 60 * 60
 
 queue_lock = None
 
+
+def clone_job(job_id):
+    suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+    new_suite_execution_id = models_helper.get_new_suite_execution_id()
+    suite_execution.execution_id = new_suite_execution_id.last_suite_execution_id
+    suite_execution.pk = None
+    return suite_execution
+
 class QueueWorker(Thread):
     def __init__(self):
         super(QueueWorker, self).__init__()
@@ -58,31 +66,7 @@ class QueueWorker(Thread):
 
     def thread_complete(self, job_id):
         del self.job_threads[job_id]
-        # self.repeat_job(job_id=job_id)
 
-    def repeat_job(self, job_id):
-        suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
-        cloned_job = None
-
-        if suite_execution.scheduling_type == SchedulingType.PERIODIC:
-            cloned_job = self.clone_job_spec(job_id=job_id)
-            cloned_job.state = JobStatusType.SUBMITTED
-        if suite_execution.scheduling_type in [SchedulingType.TODAY, SchedulingType.REPEAT]:
-            cloned_job = self.clone_job_spec(job_id=job_id)
-            if suite_execution.repeat_in_minutes >= 0:
-                cloned_job.state = JobStatusType.SUBMITTED
-                cloned_job.scheduling_type = SchedulingType.REPEAT
-
-        if cloned_job:
-            scheduler_logger.info("Repeating job: {}".format(suite_execution.execution_id))
-            cloned_job.save()
-
-    def clone_job_spec(self, job_id):
-        suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
-        new_suite_execution_id = models_helper.get_new_suite_execution_id()
-        suite_execution.execution_id = new_suite_execution_id
-        suite_execution.pk = None
-        return suite_execution
 
 queue_worker = QueueWorker()
 
@@ -546,9 +530,6 @@ def process_submissions():
                                                      scheduled_time=get_current_time() + datetime.timedelta(
                                                          seconds=scheduling_time))
 
-                if job_spec.scheduling_type in SchedulingType.get_deferred_types():
-                    copy_to_scheduled_job(job_spec)
-
                 job_spec.set_state(JobStatusType.SCHEDULED)
                 t.start()
             if scheduling_time < 0:
@@ -559,15 +540,9 @@ def process_submissions():
             scheduler_logger.exception(str(ex))
 
 
-
-def copy_to_scheduled_job(job_spec):
-    job_spec.is_scheduled_job = True
-    job_spec.save()
-
-
 def remove_scheduled_job(job_id):
     job_spec = JobSpec.objects.get(job_id=job_id)
-    job_spec.is_scheduled_job = False
+    job_spec.is_auto_scheduled_job = False
     job_spec.save()
     # TODO handle exception
 
@@ -640,8 +615,25 @@ def revive_scheduled_jobs(job_ids=None):
 
 def process_auto_scheduled_jobs():
     # Get auto_scheduled_jobs
-    # use the job id for each above
-    # ensure that the job id for the above exists anywhere in the run as
+    auto_scheduled_jobs = models_helper.get_suite_executions_by_filter(is_auto_scheduled_job=True)
+    auto_scheduled_jobs = auto_scheduled_jobs.order_by('submitted_time')
+
+    for auto_scheduled_job in auto_scheduled_jobs:
+        auto_schedule_job_id = auto_scheduled_job.execution_id
+        in_progress_suites = models_helper.get_suite_executions_by_filter(state__gt=JobStatusType.AUTO_SCHEDULED, auto_scheduled_execution_id=auto_schedule_job_id)
+        if not in_progress_suites.count():
+            # if job_id not in progress, clone and submit
+            cloned_job = clone_job(job_id=auto_schedule_job_id)
+            cloned_job.state = JobStatusType.SUBMITTED
+            cloned_job.is_auto_scheduled_job = False
+            cloned_job.auto_scheduled_execution_id = auto_schedule_job_id
+            if auto_scheduled_job.scheduling_type == SchedulingType.TODAY and auto_scheduled_job.repeat_in_minutes > 0:
+                auto_scheduled_job.scheduling_type = SchedulingType.REPEAT
+                auto_scheduled_job.save()
+            cloned_job.save()
+
+        else:
+            print("Already scheduled")
     pass
 
 
@@ -670,7 +662,9 @@ if __name__ == "__main__":
             request = process_external_requests()
             if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \
                     (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPED):
+                process_auto_scheduled_jobs()
                 process_submissions()
+
             if scheduler_info.state == SchedulerStates.SCHEDULER_STATE_STOPPING:
                 max_wait_time = ONE_HOUR
                 if request and "max_wait_time" in request:

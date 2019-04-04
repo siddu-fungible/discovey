@@ -44,12 +44,13 @@ class JobStatusType:
     ERROR = -10
     KILLED = -2
     ABORTED = -1
-    AUTO_SCHEDULED = 0
-    SUBMITTED = 1
-    QUEUED = 2
-    SCHEDULED = 3
-    IN_PROGRESS = 4
-    COMPLETED = 7
+    COMPLETED = 1
+    AUTO_SCHEDULED = 2
+    SUBMITTED = 3
+    SCHEDULED = 4
+    QUEUED = 5
+    IN_PROGRESS = 6
+
 
     def is_idle_state(self, state):
         return (state == self.AUTO_SCHEDULED) or (state == self.KILLED) or (state == self.ABORTED) or (state == self.COMPLETED) or (state == self.ERROR)
