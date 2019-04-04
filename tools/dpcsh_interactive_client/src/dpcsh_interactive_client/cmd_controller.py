@@ -87,6 +87,9 @@ class CmdController(Cmd):
     def get_port_pause_quanta(self, args):
         self._port_cmd_obj.port_pause_quanta(port_num=args.port_num, shape=args.shape)
 
+    def get_port_link_status(self, args):
+        self._port_cmd_obj.port_link_status()
+
     def set_port_pause_threshold(self, args):
         self._port_cmd_obj.port_pause_threshold(port_num=args.port_num, shape=args.shape, threshold=args.threshold)
 
@@ -954,6 +957,7 @@ class CmdController(Cmd):
     get_port_runt_filter_parser.set_defaults(func=dump_port_runt_filter)
     set_port_speed_parser.set_defaults(func=set_port_speed)
     get_port_speed_parser.set_defaults(func=get_port_speed)
+    get_port_link_status_parser.set_defaults(func=get_port_link_status)
 
     # -------------- System Command Handlers ----------------
     set_system_params_syslog_parser.set_defaults(func=set_system_syslog_level)
