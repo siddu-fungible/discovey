@@ -26,6 +26,7 @@ def clone_job(job_id):
     suite_execution.pk = None
     return suite_execution
 
+
 class QueueWorker(Thread):
     def __init__(self):
         super(QueueWorker, self).__init__()
@@ -35,24 +36,37 @@ class QueueWorker(Thread):
         from asset.asset_manager import AssetManager
         asset_manager = AssetManager()
         while True:
-            de_queued_jobs = []
-            valid_jobs = self.get_valid_jobs()
-            for queued_job in valid_jobs:
-                print ("Testbed-type: {}".format(queued_job.test_bed_type))
-                availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type)
-                if availability["status"]:
-                    de_queued_jobs.append(queued_job)
-                    self.execute_job(queued_job.job_id)
-                else:
-                    print("Not available: {}".format(availability["message"]))
-                    queued_job.message = availability["message"]
-                    queued_job.save()
-            print("Queue Worker")
-            time.sleep(5)
+            queue_lock.acquire()
+            try:
+                de_queued_jobs = []
+                valid_jobs = self.get_valid_jobs()
+                not_available = {}
 
-            for de_queued_job in de_queued_jobs:
-                d = JobQueue.objects.get(job_id=de_queued_job.job_id)
-                d.delete()
+                for queued_job in valid_jobs:
+
+                    print ("Testbed-type: {}".format(queued_job.test_bed_type))
+                    if queued_job.test_bed_type not in not_available:
+                        availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type)
+                        if availability["status"]:
+                            de_queued_jobs.append(queued_job)
+                            t = self.execute_job(queued_job.job_id)
+                        else:
+                            not_available[queued_job.test_bed_type] = availability["message"]
+                            print("Not available: {}".format(availability["message"]))
+                            queued_job.message = availability["message"]
+                            queued_job.save()
+                    else:
+                        queued_job.message = not_available[queued_job.test_bed_type]
+                        queued_job.save()
+
+                time.sleep(5)
+
+                for de_queued_job in de_queued_jobs:
+                    d = JobQueue.objects.get(job_id=de_queued_job.job_id)
+                    d.delete()
+            except Exception as ex:
+                scheduler_logger.exception(str(ex))
+            queue_lock.release()
 
     def get_valid_jobs(self):
         valid_jobs = []
@@ -74,9 +88,13 @@ class QueueWorker(Thread):
         scheduler_logger.info("{} Executing".format(get_job_string_from_spec(job_spec=suite_execution)))
         t = SuiteWorker(job_spec=suite_execution)
         self.job_threads[suite_execution.execution_id] = t
+        suite_execution.state = JobStatusType.IN_PROGRESS
+        suite_execution.save()
         t.start()
 
+
     def thread_complete(self, job_id):
+        scheduler_logger.info("Job :{} thread_complete".format(job_id))
         del self.job_threads[job_id]
 
 
@@ -86,9 +104,14 @@ def get_job_string_from_spec(job_spec):
     return "Job: {} st={}".format(job_spec.execution_id, job_spec.state)
 
 def queue_job(job_spec):
+    scheduler_logger.info("{} queue_job".format(get_job_string_from_spec(job_spec=job_spec)))
     job_spec = models_helper.get_suite_execution(suite_execution_id=job_spec.execution_id)
     if job_spec.state == JobStatusType.SCHEDULED:
+        scheduler_logger.info("{} queue_job before acquiring lock".format(get_job_string_from_spec(job_spec=job_spec)))
+
         queue_lock.acquire()
+        scheduler_logger.info("{} queue_job after acquiring lock".format(get_job_string_from_spec(job_spec=job_spec)))
+
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
         new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id, test_bed_type=job_spec.test_bed_type)
         new_job.save()
@@ -442,12 +465,14 @@ class SuiteWorker(Thread):
                 scheduler_logger.debug("{:50} {} {}".format(script_path,
                                                             str(script_metrics["result"]),
                                                             str(script_metrics["crashed"])))
-            handler.close()
             models_helper.update_suite_execution(suite_execution_id=self.job_id, state=JobStatusType.COMPLETED)
+            scheduler_logger.info("{} before finalize".format(get_job_string_from_spec(job_spec=suite_execution)))
             models_helper.finalize_suite_execution(suite_execution_id=self.job_id)
+            scheduler_logger.info("{} after finalize".format(get_job_string_from_spec(job_spec=suite_execution)))
 
             to_addresses = self.job_emails
             email_on_fail_only = self.job_email_on_failure_only
+            handler.close()
 
             suite_executions = models_helper._get_suite_executions(execution_id=self.job_id, save_test_case_info=True)
             suite_execution = suite_executions[0]
@@ -515,7 +540,7 @@ def process_submissions():
     # job_specs = JobSpec.objects.filter().order_by("-submission_time")
 
     job_specs = models_helper.get_suite_executions_by_filter(submitted_time__gte=yesterday,
-                                                             state=JobStatusType.SUBMITTED).order_by("-submitted_time")
+                                                             state=JobStatusType.SUBMITTED).order_by("submitted_time")
     for job_spec in job_specs:
         try:
             # Execute
