@@ -1420,7 +1420,7 @@ if __name__ == "__main__random_read_latency__":
         mmt.save()
     print "created latency charts for random read storage"
 
-if __name__ == "__main__":
+if __name__ == "__main_memset_non_coh__":
     entries = MetricChart.objects.all()
     ml = MetricLib()
     for entry in entries:
@@ -1456,3 +1456,5 @@ if __name__ == "__main__":
             ml.create_chart(**d)
             print "created chart for {}".format(chart_name)
     print "created charts for memset non coherent"
+
+if __name__ == "__main__":
