@@ -227,12 +227,12 @@ class BltVolumePerformanceHelper(MetricHelper):
 
     def add_entry(self, date_time, volume, test, block_size, io_depth, size, operation, num_ssd, num_volume, fio_job_name, write_iops=-1, read_iops=-1,
                   write_throughput=-1, read_throughput=-1, write_avg_latency=-1, read_avg_latency=-1, write_90_latency=-1,
-                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
+                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1, read_99_99_latency=-1, write_99_99_latency=-1,
                   write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
                   read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
                   write_90_latency_unit="usecs", write_95_latency_unit="usecs",
                   write_99_latency_unit="usecs", read_90_latency_unit="usecs", read_95_latency_unit="usecs",
-                  read_99_latency_unit="usecs"):
+                  read_99_latency_unit="usecs", read_99_99_latency_unit="usecs", write_99_99_latency_unit="usecs"):
         try:
             entry = BltVolumePerformance.objects.get(input_date_time=date_time,
                                                      input_volume_type=volume,
@@ -256,6 +256,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_read_90_latency = read_90_latency
             entry.output_read_95_latency = read_95_latency
             entry.output_read_99_latency = read_99_latency
+            entry.output_read_99_99_latency = read_99_99_latency
             entry.output_write_iops_unit = write_iops
             entry.output_read_iops_unit = read_iops
             entry.output_write_throughput_unit = write_throughput_unit
@@ -265,9 +266,11 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_write_90_latency_unit = write_90_latency_unit
             entry.output_write_95_latency_unit = write_95_latency_unit
             entry.output_write_99_latency_unit = write_99_latency_unit
+            entry.output_write_99_latency_unit = write_99_99_latency_unit
             entry.output_read_90_latency_unit = read_90_latency_unit
             entry.output_read_95_latency_unit = read_95_latency_unit
             entry.output_read_99_latency_unit = read_99_latency_unit
+            entry.output_read_99_99_latency_unit = read_99_99_latency_unit
             entry.save()
         except ObjectDoesNotExist:
             pass
@@ -290,9 +293,11 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_write_90_latency=write_90_latency,
                                              output_write_95_latency=write_95_latency,
                                              output_write_99_latency=write_99_latency,
+                                             output_write_99_99_latency=write_99_99_latency,
                                              output_read_90_latency=read_90_latency,
                                              output_read_95_latency=read_95_latency,
                                              output_read_99_latency=read_99_latency,
+                                             output_read_99_99_latency=read_99_99_latency,
                                              output_write_iops_unit=write_iops_unit,
                                              output_read_iops_unit=read_iops_unit,
                                              output_write_throughput_unit=write_throughput_unit,
@@ -302,9 +307,11 @@ class BltVolumePerformanceHelper(MetricHelper):
                                              output_write_90_latency_unit=write_90_latency_unit,
                                              output_write_95_latency_unit=write_95_latency_unit,
                                              output_write_99_latency_unit=write_99_latency_unit,
+                                             output_write_99_99_latency_unit=write_99_99_latency_unit,
                                              output_read_90_latency_unit=read_90_latency_unit,
                                              output_read_95_latency_unit=read_95_latency_unit,
-                                             output_read_99_latency_unit=read_99_latency_unit)
+                                             output_read_99_latency_unit=read_99_latency_unit,
+                                             output_read_99_99_latency_unit=read_99_99_latency_unit)
             one_entry.save()
 
 
