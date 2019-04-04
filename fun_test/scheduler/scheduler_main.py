@@ -1,18 +1,15 @@
 #!/usr/bin/env python
 from fun_settings import *
-from fun_global import get_current_time, RESULTS, determine_version
+from fun_global import determine_version
 import re
 import subprocess
-from threading import Thread, Timer, RLock
+from threading import Thread, RLock
 import threading
 
-from scheduler.scheduler_global import JobStatusType
 from scheduler_helper import *
 import signal
 import psutil
 import shutil
-from django.db import transaction
-from asset.asset_manager import AssetManager
 
 job_id_threads = {}
 job_id_timers = {}
@@ -39,13 +36,13 @@ class QueueWorker(Thread):
         asset_manager = AssetManager()
         while True:
             de_queued_jobs = []
-            queued_jobs = JobQueue.objects.all().order_by('priority')
-            for queued_job in queued_jobs:
+            valid_jobs = self.get_valid_jobs()
+            for queued_job in valid_jobs:
                 print ("Testbed-type: {}".format(queued_job.test_bed_type))
                 availability = asset_manager.get_test_bed_availability(test_bed_type=queued_job.test_bed_type)
                 if availability["status"]:
                     de_queued_jobs.append(queued_job)
-                    self.de_queue_job(queued_job)
+                    self.execute_job(queued_job.job_id)
                 else:
                     print("Not available: {}".format(availability["message"]))
                     queued_job.message = availability["message"]
@@ -57,11 +54,26 @@ class QueueWorker(Thread):
                 d = JobQueue.objects.get(job_id=de_queued_job.job_id)
                 d.delete()
 
-    def de_queue_job(self, job):
-        print("De-queueing Job: {}".format(job.job_id))
-        suite_execution = models_helper.get_suite_execution(suite_execution_id=job.job_id)
+    def get_valid_jobs(self):
+        valid_jobs = []
+        invalid_jobs = []
+        queued_jobs = JobQueue.objects.all().order_by('priority')
+        for queued_job in queued_jobs:
+            job_spec = models_helper.get_suite_execution(suite_execution_id=queued_job.job_id)
+            if job_spec.state == JobStatusType.QUEUED:
+                valid_jobs.append(queued_job)
+            else:
+                scheduler_logger.error("{} will be removed from queue".format(get_job_string_from_spec(job_spec=job_spec)))
+                invalid_jobs.append(queued_job)
+        for invalid_job in invalid_jobs:
+            invalid_job.delete()
+        return valid_jobs
+
+    def execute_job(self, job_id):
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+        scheduler_logger.info("{} Executing".format(get_job_string_from_spec(job_spec=suite_execution)))
         t = SuiteWorker(job_spec=suite_execution)
-        self.job_threads[job.job_id] = t
+        self.job_threads[suite_execution.execution_id] = t
         t.start()
 
     def thread_complete(self, job_id):
@@ -70,15 +82,20 @@ class QueueWorker(Thread):
 
 queue_worker = QueueWorker()
 
-
+def get_job_string_from_spec(job_spec):
+    return "Job: {} st={}".format(job_spec.execution_id, job_spec.state)
 
 def queue_job(job_spec):
-    queue_lock.acquire()
-    next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
-    new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id, test_bed_type=job_spec.test_bed_type)
-    new_job.save()
-    job_spec.set_state(JobStatusType.QUEUED)
-    queue_lock.release()
+    job_spec = models_helper.get_suite_execution(suite_execution_id=job_spec.execution_id)
+    if job_spec.state == JobStatusType.SCHEDULED:
+        queue_lock.acquire()
+        next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
+        new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id, test_bed_type=job_spec.test_bed_type)
+        new_job.save()
+        job_spec.set_state(JobStatusType.QUEUED)
+        queue_lock.release()
+    else:
+        scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
 
 
 def timer_dispatch(job_spec):
@@ -147,10 +164,8 @@ class SuiteWorker(Thread):
         self.abort_on_failure_requested = False
         self.summary_extra_message = ""
 
-
     def shutdown_suite(self):
-        job_id = self.job_id
-        scheduler_logger.info("Job Id: {} Shutdown_suite".format(job_id))
+        scheduler_logger.info("{} Shutdown_suite".format(get_job_string_from_spec(job_spec=self.job_spec)))
         self.suite_shutdown = True
         if self.current_script_process:
             try:
@@ -167,6 +182,9 @@ class SuiteWorker(Thread):
                         os.kill(self.current_script_process.pid, signal.SIGKILL)
                 except Exception as ex:
                     scheduler_logger.error(str(ex))
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=self.job_id)
+        suite_execution.completed_time = datetime.datetime.now()
+        suite_execution.save()
 
     def prepare_job_directory(self):
         self.job_dir = LOGS_DIR + "/" + LOG_DIR_PREFIX + str(self.job_id)
@@ -240,7 +258,6 @@ class SuiteWorker(Thread):
         local_scheduler_logger.addHandler(hdlr=handler)
         self.local_scheduler_logger = local_scheduler_logger
 
-
         try:
             scheduler_logger.debug("Running Job: {}".format(self.job_id))
             # print "Updating to IN_PROGRESS"
@@ -250,8 +267,6 @@ class SuiteWorker(Thread):
             suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
             if not suite_execution:
                 raise SchedulerException("Unable to retrieve suite execution id: {}".format(suite_execution_id))
-
-
 
             build_url = self.job_build_url
             if not build_url:
@@ -451,51 +466,38 @@ class SuiteWorker(Thread):
             local_scheduler_logger.exception(str(ex))
             models_helper.update_suite_execution(suite_execution_id=self.job_id, result=RESULTS["ABORTED"], state=JobStatusType.ABORTED)
 
+
 def process_killed_jobs():
-    job_files = glob.glob("{}/*{}".format(KILLED_JOBS_DIR, KILLED_JOB_EXTENSION))
-    job_files.sort(key=os.path.getmtime)
-
-    for job_file in job_files:
-        suite_execution_status = None
-        with open(job_file, "r") as f:
-            contents = f.read()
-            job_id = int(contents)
-            if job_id in job_id_threads:
-                t = job_id_threads[job_id]
-                scheduler_logger.info("Killing Job: {}".format(job_id))
+    killed_jobs = KilledJob.objects.order_by('killed_time')
+    for killed_job in killed_jobs:
+        killed_job_id = killed_job.job_id
+        if killed_job_id in job_id_threads:
+            t = job_id_threads[killed_job_id]
+            scheduler_logger.info("Job: {} Killing".format(killed_job_id))
+            try:
+                t.shutdown_suite()
+            except Exception as ex:
+                scheduler_logger.error(str(ex))
+            finally:
                 try:
-                    t.shutdown_suite()
-                except Exception as ex:
-                    scheduler_logger.error(str(ex))
-                finally:
-                    try:
-                        del job_id_threads[job_id]
-                    except:
-                        pass
+                    del job_id_threads[killed_job_id]
+                except:
+                    pass
 
-            if job_id in job_id_timers:
+            if killed_job_id in job_id_timers:
                 try:
-                    if job_id in job_id_timers:
-                        t = job_id_timers[job_id]
+                    if killed_job_id in job_id_timers:
+                        t = job_id_timers[killed_job_id]
                         t.cancel()
                 except Exception as ex:
                     scheduler_logger.error(str(ex))
                 finally:
                     try:
-                        del job_id_timers[job_id]
+                        del job_id_timers[killed_job_id]
                     except:
                         pass
-            suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
-            if suite_execution:
-                suite_execution_status = suite_execution.result
-                suite_execution.completed_time = get_current_time()
-                suite_execution.result = RESULTS["KILLED"]
-                suite_execution.save()
-            if suite_execution_status and suite_execution_status not in [RESULTS["ABORTED"], RESULTS["SCHEDULED"], RESULTS["KILLED"]]:
-                revive_scheduled_jobs(job_ids=[job_id])
-            remove_scheduled_job(job_id=job_id)
-        os.remove(job_file)
 
+        killed_job.delete()
 
 def process_submissions():
     """
@@ -513,7 +515,7 @@ def process_submissions():
     # job_specs = JobSpec.objects.filter().order_by("-submission_time")
 
     job_specs = models_helper.get_suite_executions_by_filter(submitted_time__gte=yesterday,
-                                       state=JobStatusType.SUBMITTED).order_by("-submitted_time")
+                                                             state=JobStatusType.SUBMITTED).order_by("-submitted_time")
     for job_spec in job_specs:
         try:
             # Execute
@@ -545,11 +547,6 @@ def remove_scheduled_job(job_id):
     job_spec.is_auto_scheduled_job = False
     job_spec.save()
     # TODO handle exception
-
-
-def set_processed_job(job_spec):
-    job_spec.state = RESULTS["PROCESSED"]
-    job_spec.save()
 
 
 def process_external_requests():
@@ -590,27 +587,11 @@ def remove_pid():
 
 
 def graceful_shutdown(max_wait_time=ONE_HOUR):
-    print "Trying graceful shutdown"
+    scheduler_logger.info("Trying graceful shutdown")
     run_to_completion(max_wait_time=max_wait_time)
     remove_pid()
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_STOPPED)
-    print "Exiting graceful shutdown"
-
-
-def revive_scheduled_jobs(job_ids=None):
-    job_files = glob.glob("{}/*{}".format(SCHEDULED_JOBS_DIR, SCHEDULED_JOB_EXTENSION))
-
-    for job_file in job_files:
-        job_spec = parse_file_to_json(file_name=job_file)
-        job_spec["suite_type"] = SuiteType.STATIC
-        if job_ids:
-            job_id = job_spec["job_id"]
-            if job_id not in job_ids:
-                continue
-        kill_job(job_id=job_spec["job_id"])
-        scheduler_logger.info("Reviving Job file: {}".format(job_file))
-        queue_job2(job_spec=job_spec)
-        os.remove(job_file)
+    scheduler_logger.info("Exiting graceful shutdown")
 
 
 def process_auto_scheduled_jobs():
@@ -644,7 +625,8 @@ if __name__ == "__main__":
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
     queue_worker.start()
 
-    revive_scheduled_jobs()
+    # TODO: Remove zombie jobs
+
     run = True
     while run:
         time.sleep(1)
@@ -656,8 +638,8 @@ if __name__ == "__main__":
             os.kill(os.getpid(), 9)
             break
 
-        process_killed_jobs()
         try:
+            process_killed_jobs()
             scheduler_info = get_scheduler_info()
             request = process_external_requests()
             if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \

@@ -42,15 +42,14 @@ class QueueOperations:
 class JobStatusType:
     UNKNOWN = -20
     ERROR = -10
-    KILLED = -2
-    ABORTED = -1
-    COMPLETED = 1
-    AUTO_SCHEDULED = 2
-    SUBMITTED = 3
-    SCHEDULED = 4
-    QUEUED = 5
-    IN_PROGRESS = 6
-
+    KILLED = -20
+    ABORTED = -10
+    COMPLETED = 10
+    AUTO_SCHEDULED = 20
+    SUBMITTED = 30
+    SCHEDULED = 40
+    QUEUED = 50
+    IN_PROGRESS = 60
 
     def is_idle_state(self, state):
         return (state == self.AUTO_SCHEDULED) or (state == self.KILLED) or (state == self.ABORTED) or (state == self.COMPLETED) or (state == self.ERROR)

@@ -163,7 +163,7 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
         te.version = version
     if tags:
         te.tags = json.dumps(tags)
-    if state:
+    if state is not None:
         te.state = state
     with transaction.atomic():
         te.save()

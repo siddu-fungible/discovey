@@ -79,7 +79,7 @@
               <app-smart-label [simulateLink]="true" [value]="suiteExecution.suite_result" [type]="suiteExecution.suite_result"></app-smart-label>
             </a>
           </td>
-            <td>{{ suiteExecution.fields.state }}</td>
+            <td>{{ stateStringMap[suiteExecution.fields.state] }}</td>
           <td>{{ suiteExecution.num_passed }}</td>
           <td>{{ suiteExecution.num_failed }}</td>
           <td>{{ suiteExecution.num_not_run }}</td>

@@ -30,12 +30,22 @@ export class RegressionComponent implements OnInit {
   suiteExecutionsCount: number;
   recordsPerPage: number;
   @Input() tags: string;
-  @Input() filterString: string = Filter.All;
+  @Input() filterString: string = Filter.ALL;
   items: any;
   logDir: any;
   status: string = "Fetching Data";
-  stateFilter: string = Filter.All;
+  stateFilter: string = Filter.ALL;
   filter = Filter;
+  stateStringMap = { "-200": "UNKNOWN",
+                     "-100": "ERROR",
+                     "-20": "KILLED",
+                     "-10": "ABORTED",
+                     "10": "COMPLETED",
+                     "20": "AUTO_SCHEDULED",
+                     "30": "SUBMITTED",
+                     "40": "SCHEDULED",
+                     "50": "QUEUED",
+                     "60": "IN_PROGRESS"};
 
   constructor(private pagerService: PagerService,
               private apiService: ApiService,

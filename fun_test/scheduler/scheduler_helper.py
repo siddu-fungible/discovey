@@ -16,7 +16,7 @@ from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
-from web.fun_test.models import SchedulerJobPriority, JobQueue
+from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob
 from django.db import transaction
 from pytz import timezone
 from datetime import timedelta
@@ -97,9 +97,10 @@ def get_flat_html_log_file_name(path, script_index):
 
 
 def kill_job(job_id):
-    filename = "{}/{}_{}".format(KILLED_JOBS_DIR, job_id, KILLED_JOB_EXTENSION)
-    with open(filename, "w") as f:
-        f.write(str(job_id))
+    suite_execution = models_helper.get_suite_execution(suite_execution_id=int(job_id))
+    suite_execution.state = JobStatusType.KILLED
+    KilledJob(job_id=job_id).save()
+    suite_execution.save()
 
 
 def get_timezone_by_string(tz_string):

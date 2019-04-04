@@ -242,9 +242,6 @@ def static_serve_log_directory(request, suite_execution_id):
 @api_safe_json_response
 def kill_job(request, suite_execution_id):
     scheduler.scheduler_helper.kill_job(job_id=suite_execution_id)
-    suite_execution = SuiteExecution.objects.get(execution_id=suite_execution_id)
-    suite_execution.result = RESULTS["KILLED"]
-    suite_execution.save()
     return "OK"
 
 

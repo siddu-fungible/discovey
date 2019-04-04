@@ -99,7 +99,7 @@ class SuiteExecution(models.Model):
     test_bed_type = models.TextField(default="")
     environment = models.TextField(default="{}", null=True)  # extra environment dictionary (only networking uses this)
     inputs = models.TextField(default="{}", null=True)  # inputs dictionary
-    build_url = models.TextField(default="")
+    build_url = models.TextField(default="", null=True)
     version = models.CharField(max_length=50, null=True)
     requested_priority_category = models.TextField(default=SchedulerJobPriority.NORMAL)
     tags = models.TextField(default="[]")
@@ -130,14 +130,14 @@ class SuiteExecution(models.Model):
     """
     state = models.IntegerField(default=JobStatusType.UNKNOWN)
     suite_container_execution_id = models.IntegerField(default=-1)
-    is_scheduled_job = models.BooleanField(default=False)
+    is_auto_scheduled_job = models.BooleanField(default=False)
     finalized = models.BooleanField(default=False)
     banner = models.TextField(default="")
     execution_id = models.IntegerField(unique=True, db_index=True)
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")
-    # catalog_reference = models.TextField(null=True, blank=True, default=None)
     build_done = models.BooleanField(default=False)
     auto_scheduled_execution_id = models.IntegerField(default=-1)
+    disable_schedule = models.BooleanField(default=False)
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
@@ -330,10 +330,6 @@ class SuiteReRunInfo(models.Model):
     re_run_suite_execution_id = models.IntegerField()
 
 
-
-
-
-
 class JobQueue(models.Model):
     """
     Scheduler's job queue
@@ -342,6 +338,11 @@ class JobQueue(models.Model):
     job_id = models.IntegerField(unique=True)
     test_bed_type = models.TextField(default="", null=True)
     message = models.TextField(default="", null=True)
+
+
+class KilledJob(models.Model):
+    job_id = models.IntegerField(unique=True)
+    killed_time = models.DateTimeField(default=datetime.now)
 
 if not is_lite_mode():
     from web.fun_test.metrics_models import *
