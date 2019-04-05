@@ -31,7 +31,7 @@ from web.fun_test.set_base_line import SetBaseLine
 
 from web.fun_test.analytics_models_helper import MetricChartHelper, BltVolumePerformanceHelper
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
-from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
+from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers, BltVolumePerformance
 from web.fun_test.metrics_lib import MetricLib
 
 
@@ -1420,7 +1420,7 @@ if __name__ == "__main__random_read_latency__":
         mmt.save()
     print "created latency charts for random read storage"
 
-if __name__ == "__main__":
+if __name__ == "__main_memset_non_coh__":
     entries = MetricChart.objects.all()
     ml = MetricLib()
     for entry in entries:
@@ -1456,3 +1456,29 @@ if __name__ == "__main__":
             ml.create_chart(**d)
             print "created chart for {}".format(chart_name)
     print "created charts for memset non coherent"
+
+if __name__ == "__main__":
+    model_name = "BltVolumePerformance"
+    model = BltVolumePerformance
+    data = model.objects.all()
+    for d in data:
+        if d.output_read_99_latency:
+            d.output_read_99_99_latency = d.output_read_99_latency
+            d.save()
+            d.output_read_99_latency = -1
+            d.save()
+    entries = MetricChart.objects.all()
+    ml = MetricLib()
+    for entry in entries:
+        if entry.metric_model_name == model_name:
+            if entry.chart_name == "Latency":
+                data_sets = json.loads(entry.data_sets)
+                print json.dumps(data_sets)
+                for data_set in data_sets:
+                    if "99_latency" in data_set["output"]["name"]:
+                        data_set["output"]["name"] = data_set["output"]["name"].replace("99", "99_99")
+                print json.dumps(data_sets)
+                ml.save_data_sets(data_sets=data_sets, chart=entry)
+
+
+

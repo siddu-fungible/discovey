@@ -835,11 +835,13 @@ class BltVolumePerformance(models.Model):
     output_write_avg_latency = models.IntegerField(verbose_name="Write avg latency", default=-1)
     output_write_90_latency = models.IntegerField(verbose_name="Write 90% latency", default=-1)
     output_write_95_latency = models.IntegerField(verbose_name="Write 95% latency", default=-1)
-    output_write_99_latency = models.IntegerField(verbose_name="Write 99.99% latency", default=-1)
+    output_write_99_99_latency = models.IntegerField(verbose_name="Write 99.99% latency", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="Write 99% latency", default=-1)
     output_read_avg_latency = models.IntegerField(verbose_name="Read avg latency", default=-1)
     output_read_90_latency = models.IntegerField(verbose_name="Read 90% latency", default=-1)
     output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency", default=-1)
-    output_read_99_latency = models.IntegerField(verbose_name="Read 99.99% latency", default=-1)
+    output_read_99_99_latency = models.IntegerField(verbose_name="Read 99.99% latency", default=-1)
+    output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency", default=-1)
     output_write_iops_unit = models.TextField(default="ops")
     output_read_iops_unit = models.TextField(default="ops")
     output_write_throughput_unit = models.TextField(default="Mbps")
@@ -847,19 +849,21 @@ class BltVolumePerformance(models.Model):
     output_write_avg_latency_unit = models.TextField(default="usecs")
     output_write_90_latency_unit = models.TextField(default="usecs")
     output_write_95_latency_unit = models.TextField(default="usecs")
+    output_write_99_99_latency_unit = models.TextField(default="usecs")
     output_write_99_latency_unit = models.TextField(default="usecs")
     output_read_avg_latency_unit = models.TextField(default="usecs")
     output_read_90_latency_unit = models.TextField(default="usecs")
     output_read_95_latency_unit = models.TextField(default="usecs")
+    output_read_99_99_latency_unit = models.TextField(default="usecs")
     output_read_99_latency_unit = models.TextField(default="usecs")
     tag = "analytics"
 
     def __str__(self):
         return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
-                                                self.input_volume,
+                                                self.input_volume_type,
                                                 self.input_test,
                                                 self.input_block_size,
-                                                self.input_size,
+                                                self.input_io_size,
                                                 self.input_operation,
                                                 self.output_write_iops,
                                                 self.output_read_iops,
