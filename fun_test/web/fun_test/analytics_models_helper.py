@@ -253,6 +253,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_write_90_latency = write_90_latency
             entry.output_write_95_latency = write_95_latency
             entry.output_write_99_latency = write_99_latency
+            entry.output_write_99_99_latency = write_99_99_latency
             entry.output_read_90_latency = read_90_latency
             entry.output_read_95_latency = read_95_latency
             entry.output_read_99_latency = read_99_latency
@@ -266,7 +267,7 @@ class BltVolumePerformanceHelper(MetricHelper):
             entry.output_write_90_latency_unit = write_90_latency_unit
             entry.output_write_95_latency_unit = write_95_latency_unit
             entry.output_write_99_latency_unit = write_99_latency_unit
-            entry.output_write_99_latency_unit = write_99_99_latency_unit
+            entry.output_write_99_99_latency_unit = write_99_99_latency_unit
             entry.output_read_90_latency_unit = read_90_latency_unit
             entry.output_read_95_latency_unit = read_95_latency_unit
             entry.output_read_99_latency_unit = read_99_latency_unit
