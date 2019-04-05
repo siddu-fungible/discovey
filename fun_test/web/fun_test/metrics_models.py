@@ -860,10 +860,10 @@ class BltVolumePerformance(models.Model):
 
     def __str__(self):
         return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
-                                                self.input_volume,
+                                                self.input_volume_type,
                                                 self.input_test,
                                                 self.input_block_size,
-                                                self.input_size,
+                                                self.input_io_size,
                                                 self.input_operation,
                                                 self.output_write_iops,
                                                 self.output_read_iops,
