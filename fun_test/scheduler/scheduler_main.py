@@ -413,7 +413,6 @@ class SuiteWorker(Thread):
                           email_on_fail_only=email_on_fail_only,
                           extra_message=self.summary_extra_message)
 
-
     def cleanup(self):
         queue_worker.thread_complete(job_id=self.job_id)
 
@@ -442,7 +441,6 @@ class SuiteWorker(Thread):
                 build_url = build_url.replace("latest", str(version))
                 self.job_build_url = build_url
                 self.debug("Build url: {}".format(self.job_build_url))
-
 
             script_items = []
 
