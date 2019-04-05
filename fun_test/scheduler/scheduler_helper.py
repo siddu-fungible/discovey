@@ -9,18 +9,19 @@ import logging.handlers
 import sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
-from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, KILLED_JOBS_DIR, WEB_STATIC_DIR, MEDIA_DIR, SUITES_DIR
+from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR
 from fun_global import RESULTS, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
 from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
-from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob
+from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution
 from django.db import transaction
 from pytz import timezone
 from datetime import timedelta
 import random
+import collections
 
 
 activate(TIME_ZONE)
@@ -596,21 +597,84 @@ def increase_decrease_priority(job_id, increase=True):
     else:
         pass # You are already the highest
 
-def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_only=None, extra_message=""):
-    scheduler_logger.info("Suite Execution: {}".format(str(suite_execution)))
-    if email_on_fail_only and suite_execution["suite_result"] == RESULTS["PASSED"]:
+
+class DatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        try:
+            return super(DatetimeEncoder, obj).default(obj)
+        except TypeError:
+            return str(obj)
+
+
+
+def parse_it(test_case_info, execution):
+    if execution.script_path not in test_case_info:
+        test_case_info[execution.script_path] = {"num_passed": 0, "num_failed": 0, "num_not_run": 0, "test_cases": {}}
+    entry = test_case_info[execution.script_path]
+    if execution.result == "PASSED":
+        entry["num_passed"] += 1
+    elif execution.result == "FAILED":
+        entry["num_failed"] += 1
+    else:
+        entry["num_not_run"] += 1
+    entry["test_cases"][execution.test_case_id] = execution
+
+
+def send_summary_mail(job_id, extra_message=""):
+    suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+    if suite_execution.email_on_failure_only and suite_execution.result == RESULTS["PASSED"]:
         return True
 
-    # if "jenkins-hourly" in suite_execution["fields"]["tags"]:
-    #    set_jenkins_hourly_execution_status(status=suite_execution["suite_result"])
+    test_case_info = collections.OrderedDict()
+    test_case_executions = TestCaseExecution.objects.filter(suite_execution_id=job_id).order_by('started_time')
+    for test_case_execution in test_case_executions:
+        parse_it(test_case_info=test_case_info, execution=test_case_execution)
+
+    scheduler_logger.info("Job {}: Suite Execution: {}".format(str(suite_execution.execution_id), suite_execution))
+
     suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
-    header_list = ["TC-ID", "Summary", "Inputs", "Path", "Result"]
-    list_of_rows = [[x["test_case_id"],
-                     models_helper.get_test_case_details(x["script_path"], x["test_case_id"])['summary'], x["inputs"], x["script_path"], x["result"]] for x in
-                    suite_execution["test_case_info"]]
-    table2 = _get_table(header_list=header_list, list_of_rows=list_of_rows)
+
+    all_tables = ""
+
+    for script_path, script_info in test_case_info.iteritems():
+        s = ""
+        s += "<table class='table table-nonfluid'>"
+        s += "<tr><td class='card-header' colspan='4'>{}</td></tr>".format(script_path)
+        s += "<tr>"
+        s += "<th>Id</th>"
+        s += "<th>Result</th>"
+        s += "<th>Summary</th>"
+        s += "<th>Inputs</th>"
+        s += "</tr>"
+        test_cases = script_info["test_cases"]
+        for test_case_id, test_case_entry in test_cases.iteritems():
+            s += "<tr>"
+
+            # Test-case Id
+            s += "<td>{}</td>".format(test_case_id)
+
+            # Results
+            result_class = "{}"
+            if test_case_entry.result == "PASSED":
+                result_class = " class='passed' "
+            elif test_case_entry.result == "FAILED":
+                result_class = " class='failed'"
+            s += "<td{}>{}</td>".format(result_class, test_case_entry.result)
+
+            # Summary
+            test_case_details = models_helper.get_test_case_details(script_path=script_path, test_case_id=test_case_id)
+            summary = test_case_details['summary']
+            s += "<td>{}</td>".format(summary)
+
+            # Inputs
+            inputs = json.loads(test_case_entry.inputs)
+            if inputs:
+                s += "<td>{}</td>".format(json.dumps(inputs))
+
+        s += "</table>"
+        all_tables += s + "<br>"
 
     banner = ""
     if suite_execution["fields"]["banner"]:
@@ -641,7 +705,7 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
         <br>
         <br>
         %s
-        """ % (css, banner, extra_message, suite_detail_url, table1, table2)
+        """ % (css, banner, extra_message, suite_detail_url, table1, all_tables)
 
         # print html
 
@@ -651,7 +715,7 @@ def send_summary_mail(job_id, suite_execution, to_addresses=None, email_on_fail_
                                                         suite_execution["num_failed"])
 
         try:
-            result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
+            result = send_mail(subject=subject, content=html, to_addresses=json.loads(suite_execution.emails))
             # print html
             scheduler_logger.info("Sent mail")
             if not result["status"]:

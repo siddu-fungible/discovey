@@ -245,6 +245,7 @@ class SuiteWorker(Thread):
         self.summary_extra_message = ""
         self.local_scheduler_logger = None
         self.job_state = JobStatusType.IN_PROGRESS
+        self.log_handler = None
 
         self.shutdown_reason = None
         self.initialized = False
@@ -256,11 +257,12 @@ class SuiteWorker(Thread):
         self.prepare_job_directory()
         local_scheduler_logger = logging.getLogger("scheduler_log_{}.txt".format(self.job_id))
         local_scheduler_logger.setLevel(logging.INFO)
-        handler = logging.handlers.RotatingFileHandler(self.job_dir + "/scheduler.log.txt", maxBytes=TEN_MB,
-                                                       backupCount=5)
-        handler.setFormatter(
+        self.log_handler = logging.handlers.RotatingFileHandler(self.job_dir + "/scheduler.log.txt",
+                                                                maxBytes=TEN_MB,
+                                                                backupCount=5)
+        self.log_handler.setFormatter(
             logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-        local_scheduler_logger.addHandler(hdlr=handler)
+        local_scheduler_logger.addHandler(hdlr=self.log_handler)
         self.local_scheduler_logger = local_scheduler_logger
         self.initialized = True
 
@@ -352,7 +354,7 @@ class SuiteWorker(Thread):
         return script_string
 
     def debug(self, message, script_path=None):
-        self.local_scheduler_logger("{} {}{}".format(get_job_string_from_spec(job_spec=self.job_spec), self.get_script_string(script_path=script_path), message))
+        self.local_scheduler_logger.debug("{} {}{}".format(get_job_string_from_spec(job_spec=self.job_spec), self.get_script_string(script_path=script_path), message))
 
     def error(self, message, script_path=None):
         scheduler_logger.exception("{} {}{}".format(get_job_string_from_spec(job_spec=self.job_spec), self.get_script_string(script_path=script_path), message))
@@ -403,18 +405,15 @@ class SuiteWorker(Thread):
 
         to_addresses = self.job_emails
         email_on_fail_only = self.job_email_on_failure_only
-        handler.close()
 
         suite_executions = models_helper._get_suite_executions(execution_id=self.job_id, save_test_case_info=True)
         suite_execution = suite_executions[0]
         send_summary_mail(job_id=self.job_id,
-                          suite_execution=suite_execution,
-                          to_addresses=to_addresses,
-                          email_on_fail_only=email_on_fail_only,
                           extra_message=self.summary_extra_message)
 
     def cleanup(self):
         queue_worker.thread_complete(job_id=self.job_id)
+        self.log_handler.close()
 
     def run(self):
         if not self.initialized:
@@ -461,7 +460,7 @@ class SuiteWorker(Thread):
                 self.abort_suite(error_message=error_message)
 
             self.debug("Scripts to be executed")
-            map(lambda f: self.local_scheduler_logger.info("{}: {}".format(f[0], f[1])), enumerate(script_paths))
+            map(lambda f: self.local_scheduler_logger.debug("{}: {}".format(f[0], f[1])), enumerate(script_paths))
             self.debug("Starting executing scripts")
 
             suite_path = self.job_suite_path if self.job_suite_path else self.job_script_path
@@ -472,7 +471,6 @@ class SuiteWorker(Thread):
                                                  suite_path=suite_path)
 
             self.abort_on_failure_requested = False
-
             script_index = 0
 
             #TODO: What if there are no scripts
@@ -611,7 +609,7 @@ def process_submissions():
         try:
             # Execute
             job_id = job_spec.execution_id
-            scheduler_logger.info("Process queue: {}".format(job_id))
+            scheduler_logger.info("{} Process queue".format(get_job_string(job_id=job_id)))
 
             schedule_it = True
             scheduling_time = get_scheduling_time(spec=job_spec)
