@@ -572,11 +572,7 @@ def process_submissions():
             if job_spec and schedule_it and (scheduling_time >= 0):
                 t = threading.Timer(scheduling_time, timer_dispatch, (job_spec,))
                 job_id_timers[job_id] = t
-                models_helper.update_suite_execution(suite_execution_id=job_id,
-                                                     scheduled_time=get_current_time() + datetime.timedelta(
-                                                         seconds=scheduling_time))
-
-                job_spec.set_state(JobStatusType.SCHEDULED)
+                job_spec.set_properties(scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time), state=JobStatusType.SCHEDULED)
                 t.start()
             if scheduling_time < 0:
                 scheduler_logger.critical("{} Unable to process job submission. Scheduling time in the past".format(get_job_string_from_spec(job_spec=job_spec)))

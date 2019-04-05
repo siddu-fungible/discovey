@@ -152,6 +152,11 @@ class SuiteExecution(models.Model):
         self.state = state
         self.save()
 
+    def set_properties(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+            self.save()
+
 
 class SuiteExecutionSerializer(serializers.Serializer):
     version = serializers.CharField(max_length=50)

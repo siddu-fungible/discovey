@@ -302,7 +302,7 @@ def queue_job3(suite_path=None,
                                                         completed_time=get_current_time(),
                                                         suite_path=final_suite_path,
                                                         tags=tags,
-                                                        state=job_state,
+                                                        state=JobStatusType.UNKNOWN,
                                                         suite_container_execution_id=suite_container_execution_id,
                                                         test_bed_type=test_bed_type)
     if suite_type == SuiteType.DYNAMIC:
@@ -338,6 +338,7 @@ def queue_job3(suite_path=None,
         if not job_spec_valid:
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
         suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
+        suite_execution.state = JobStatusType.SUBMITTED
         suite_execution.save()
 
         result = suite_execution.execution_id
