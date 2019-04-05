@@ -63,7 +63,7 @@ class QueueWorker(Thread):
                        test_bed_type=container_suite_execution.test_bed_type,
                        requested_priority_category=SchedulerJobPriority.NORMAL)
 
-        container_suite_execution.set_state(JobStatusType.COMPLETED)
+        container_suite_execution.set_state(JobStatusType.IN_PROGRESS)
 
     def run(self):
         from asset.asset_manager import AssetManager
@@ -360,7 +360,6 @@ class SuiteWorker(Thread):
             map(lambda f: self.local_scheduler_logger.debug("{}: {}".format(f[0], f[1])), enumerate(script_paths))
             self.local_scheduler_logger.info("Starting Job-id: {}".format(self.job_id))
             suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
-            suite_execution.scheduled_time = get_current_time()
             if self.job_suite_path:
                 suite_execution.suite_path = self.job_suite_path
             else:
@@ -662,6 +661,23 @@ def process_auto_scheduled_jobs():
             print("Already scheduled")
     pass
 
+def process_container_suites():
+    container_executions = models_helper.get_suite_executions_by_filter(suite_type=SuiteType.CONTAINER, state=JobStatusType.IN_PROGRESS)
+
+    for container_execution in container_executions:
+        container_execution_id = container_execution.execution_id
+        all_jobs_completed = True
+
+        item_executions = models_helper.get_suite_executions_by_filter(suite_container_execution_id=container_execution_id)
+        for item_execution in item_executions:
+            if item_execution.state > JobStatusType.AUTO_SCHEDULED:
+                all_jobs_completed = False
+                break
+
+        if all_jobs_completed:
+            container_execution.set_state(JobStatusType.COMPLETED)
+
+
 
 if __name__ == "__main__":
     queue_lock = RLock()
@@ -685,6 +701,7 @@ if __name__ == "__main__":
 
         try:
             process_killed_jobs()
+            process_container_suites()
             scheduler_info = get_scheduler_info()
             request = process_external_requests()
             if (scheduler_info.state != SchedulerStates.SCHEDULER_STATE_STOPPING) and \
