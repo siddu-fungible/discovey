@@ -152,7 +152,15 @@ def update_suite_container_execution(suite_container_execution_id, version=None)
             s.version = version
     s.save()
 
-def update_suite_execution(suite_execution_id, result=None, scheduled_time=None, version=None, tags=None, state=None):
+def update_suite_execution(suite_execution_id,
+                           result=None,
+                           scheduled_time=None,
+                           version=None,
+                           build_url=None,
+                           tags=None,
+                           state=None,
+                           suite_path=None,
+                           completed_time=None):
     # print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
@@ -161,16 +169,23 @@ def update_suite_execution(suite_execution_id, result=None, scheduled_time=None,
         te.scheduled_time = scheduled_time
     if version:
         te.version = version
+    if build_url:
+        te.build_url = build_url
     if tags:
         te.tags = json.dumps(tags)
+    if suite_path:
+        te.suite_path = suite_path
     if state is not None:
         te.state = state
+    if completed_time:
+        te.completed_time = completed_time
     with transaction.atomic():
         te.save()
     # print te.version
     return te
 
 def finalize_suite_execution(suite_execution_id):
+
     _get_suite_executions(execution_id=suite_execution_id, save_suite_info=True, finalize=True)
 
 def get_new_suite_execution_id():
@@ -357,6 +372,7 @@ def _get_suite_executions(execution_id=None,
                           get_count=False,
                           tags=None,
                           finalize=None):
+
     all_objects = None
     q = Q()
 

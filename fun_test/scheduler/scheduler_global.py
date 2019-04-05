@@ -53,3 +53,4 @@ class JobStatusType:
 
     def is_idle_state(self, state):
         return (state == self.AUTO_SCHEDULED) or (state == self.KILLED) or (state == self.ABORTED) or (state == self.COMPLETED) or (state == self.ERROR)
+
