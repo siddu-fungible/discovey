@@ -51,6 +51,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 result['port_list'].append(port_handle)
 
                 interface_obj = self.create_physical_interface(port_handle=port_handle)
+                self.stc_manager.stc.config(child="")
                 fun_test.simple_assert(interface_obj, "Create Physical Interface: %s" % str(interface_obj))
                 result['interface_obj_list'].append(interface_obj)
 
@@ -59,8 +60,8 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
             # Attach ports method take care of applying configuration
             fun_test.test_assert(self.stc_manager.attach_ports(port_list=result['port_list']), message="Attach Ports")
 
-            fec_disable = self._ensure_fec_disabled(port_list=result['port_list'])
-            fun_test.test_assert(fec_disable, "Ensure FEC disable on interfaces")
+            # fec_disable = self._ensure_fec_disabled(port_list=result['port_list'])
+            # fun_test.test_assert(fec_disable, "Ensure FEC disable on interfaces")
 
             # Update Spirent handle for each interface
             count = 0
@@ -94,6 +95,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
         result = None
         try:
             interface_obj = None
+            fec_obj = None
             if self.chassis_type == SpirentManager.PHYSICAL_CHASSIS_TYPE:
                 job_inputs = fun_test.get_job_inputs()
                 fun_test.simple_assert(job_inputs, "Job inputs are not found")
@@ -104,12 +106,22 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 elif job_inputs['speed'] == SpirentManager.SPEED_25G:
                     interface_obj = Ethernet25GigFiberInterface(auto_negotiation=False,
                                                                 line_speed=Ethernet25GigFiberInterface.SPEED_25G)
+                    fec_obj = FecModeObject(fectype="CLAUSE_108_RS")
+
                 attributes = interface_obj.get_attributes_dict()
                 spirent_handle = self.stc_manager.create_physical_interface(port_handle=port_handle,
                                                                             interface_type=str(interface_obj),
                                                                             attributes=attributes)
+
                 fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
                 interface_obj.spirent_handle = spirent_handle
+
+                if job_inputs['speed'] == SpirentManager.SPEED_25G:
+                    spirent_handle = self.stc_manager.applyfec(port_handle=port_handle, fec_obj=fec_obj,
+                                                               attributes=attributes)
+                    fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
+                    fec_obj.spirent_handle = spirent_handle
+
             else:
                 interface_obj = EthernetCopperInterface()
                 attributes = interface_obj.get_attributes_dict()
