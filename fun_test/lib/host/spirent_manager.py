@@ -1336,6 +1336,17 @@ class SpirentManager(object):
             fun_test.critical(str(ex))
         return result
 
+    def applyfec(self, port_handle, fec_obj, attributes):
+        result = None
+        try:
+            fun_test.debug("Adding %s FEC on %s port" % (fec_obj, port_handle))
+            result = self.stc.create(fec_obj, under=port_handle, **attributes)
+            fun_test.simple_assert(result, "Applying FEC settings")
+            self.apply_configuration()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
 
 if __name__ == "__main__":
     stc_manager = SpirentManager()
