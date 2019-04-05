@@ -727,7 +727,11 @@ class SpirentManager(object):
                     result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type,
                                                        viewAttributeList=attributes)
             else:
-                result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type)
+                if result_parent:
+                    result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type,
+                                                       ResultParent=result_parent)
+                else:
+                    result_handle = self.stc.subscribe(Parent=parent, ConfigType=config_type, resulttype=result_type)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result_handle
@@ -842,6 +846,22 @@ class SpirentManager(object):
                     if parent == analyzer_handle:
                         qos_val = self.stc.get(output)['QosBinary']
                         result[qos_val] = self.stc.get(output)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def get_port_filtered_results(self, port_handle, subscribe_handle):
+        result = []
+        try:
+            analyzer_handle = self.stc.get(port_handle, "children-Analyzer")
+            self.stc.perform("RefreshResultView", ResultDataSet=subscribe_handle)
+            res_handle_list = self.stc.get(subscribe_handle, "ResultHandleList").split()
+            for output in res_handle_list:
+                regex = re.compile("filteredstreamresults.")
+                if re.match(regex, output):
+                    parent = self.stc.get(output, "parent")
+                    if parent == analyzer_handle:
+                        result.append(self.stc.get(output))
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

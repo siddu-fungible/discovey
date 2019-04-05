@@ -29,7 +29,7 @@ class Funeth:
     def lspci(self):
         """Do lspci to check funeth controller."""
         output = self.linux_obj_dict['hu'].command('lspci -d 1dad:')
-        return re.search(r'Ethernet controller: (?:Device 1dad:1000|Fungible Device 1000)', output) is not None
+        return re.search(r'Ethernet controller: (?:Device 1dad:00f1|Fungible Device 00f1)', output) is not None
 
     def setup_workspace(self):
         """Set env WORKSPACE, which is used in fungible-host-driver compilation."""

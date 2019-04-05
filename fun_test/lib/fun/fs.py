@@ -121,9 +121,12 @@ class Bmc(Linux):
     def come_reset(self, come, max_wait_time=180):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
         fun_test.test_assert(self.ping(come.host_ip), "ComE reachable before reset")
-        self.command("./come-power.sh")
-        fun_test.sleep("ComE powering down", seconds=15)
-        fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
+        # self.command("./come-power.sh")
+        # fun_test.sleep("ComE powering down", seconds=15)
+        # fun_test.test_assert(not self.ping(come.host_ip), "ComE should be unreachable")
+        # Temporary woraround for COMe
+        fun_test.log(("Rebooting COMe"))
+        come.reboot(retries=15)
 
         # Ensure come restarted
         come_restart_timer = FunTimer(max_time=max_wait_time)
@@ -218,7 +221,17 @@ class Bmc(Linux):
         result = True
         return result
 
+    def _reset_microcom(self):
+        fun_test.log("Resetting microcom and minicom")
+        process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
+        for process_id in process_ids:
+            self.kill_process(signal=9, process_id=process_id)
+        process_ids = self.get_process_id_by_pattern("minicom", multiple=True)
+        for process_id in process_ids:
+            self.kill_process(signal=9, process_id=process_id)
+
     def position_support_scripts(self):
+        self._reset_microcom()
         pyserial_filename = "pyserial-install.tar"
         pyserial_dir = INTEGRATION_DIR + "/tools/platform/bmc/{}".format(pyserial_filename)
         fun_test.scp(source_file_path=pyserial_dir, target_ip=self.host_ip, target_username=self.ssh_username, target_password=self.ssh_password, target_file_path=self.BMC_INSTALL_DIRECTORY)
@@ -302,10 +315,10 @@ class ComE(Linux):
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
         self.command(
-            "wget http://dochub.fungible.local/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
+            "wget http://10.1.20.99/doc/jenkins/funcontrolplane/latest/functrlp_palladium.tgz")
         files = self.list_files("functrlp_palladium.tgz")
         fun_test.test_assert(len(files), "functrlp_palladium.tgz downloaded")
-        self.command("wget http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
+        self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
         fun_test.test_assert(self.list_files("dpcsh.tgz"), "functrlp_palladium.tgz downloaded")
         self.command("mkdir -p FunControlPlane FunSDK")
         self.command("tar -zxvf functrlp_palladium.tgz -C ../workspace/FunControlPlane")
@@ -519,11 +532,14 @@ class Fs(object, ToDictMixin):
 
     def re_initialize(self):
         self.get_bmc()
+        self.bmc.position_support_scripts()
         self.get_fpga()
         self.get_come()
         self.set_f1s()
         self.come.detect_pfs()
         fun_test.test_assert(self.come.ensure_dpc_running(), "Ensure dpc is running")
+        for f1_index, f1 in self.f1s.iteritems():
+            self.bmc.start_uart_log_listener(f1_index=f1_index)
         return True
 
 

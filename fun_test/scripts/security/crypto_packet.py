@@ -53,7 +53,7 @@ class CryptoCoreTest(FunTestScript):
         # pass
         if self.topology:
             self.storage_controller.disconnect()
-            TopologyHelper(spec=self.topology).cleanup()
+            self.topology.cleanup()
 
 
 class CryptoCore(FunTestCase):

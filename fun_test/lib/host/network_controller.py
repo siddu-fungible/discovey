@@ -1606,3 +1606,13 @@ class NetworkController(DpcshClient):
         vp_pkts = self.peek_vp_packets()
         result = vp_pkts['VP Packets Sample']
         return result
+
+    def set_nu_benchmark(self, main, nh_id, erp, clbp_idx, fpg):
+        result = None
+        try:
+            cmd_args = {"main": main, "nhid": nh_id, "erp": erp, "clbp_idx": clbp_idx, "fpg": fpg}
+            cmd = ['benchmark', cmd_args]
+            result = self.json_execute(verb='nu', data=cmd)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result

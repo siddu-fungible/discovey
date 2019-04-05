@@ -42,7 +42,7 @@ class MyScript(FunTestScript):
 
     def cleanup(self):
         if self.topology:
-            TopologyHelper(spec=self.topology).cleanup()
+            self.topology.cleanup()
         pass
 
 

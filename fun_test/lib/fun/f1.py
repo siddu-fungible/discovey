@@ -1,7 +1,9 @@
 from lib.system.fun_test import fun_test
 from lib.system.utils import ToDictMixin
 from lib.host.linux import Linux
-import re, json
+import re
+import json
+
 
 class F1(Linux, ToDictMixin):
     '''
@@ -31,17 +33,17 @@ class F1(Linux, ToDictMixin):
                  ssh_password,
                  ssh_port,
                  external_dpcsh_port,
-                 spec=None):
+                 boot_args=None):
         super(F1, self).__init__(host_ip=host_ip,
                                  ssh_username=ssh_username,
                                  ssh_password=ssh_password,
                                  ssh_port=ssh_port)
         self.external_dpcsh_port = external_dpcsh_port
-        self.spec = spec
         self.dpcsh_tcp_proxy_process_id = None
         self.fun_os_process_id = None
         self.last_start_parameters = {}
         self.connect_retry_timeout_max = self.CONNECT_RETRY_TIMEOUT_DEFAULT
+        self.boot_args = boot_args
 
     @staticmethod
     def get(asset_properties):
@@ -58,17 +60,16 @@ class F1(Linux, ToDictMixin):
         self.external_dpcsh_port = None
         self.TO_DICT_VARS.extend(["fun_os_process_id", "external_dpcsh_port"])
 
-    def run_app(self, app="", args="", foreground=False, timeout=20, run_to_completion=False):
+    def run_app(self, boot_args, foreground=False, timeout=20, run_to_completion=False):
         return self.start(start_mode=self.START_MODE_CUSTOM_APP,
-                          app=app,
+                          boot_args=boot_args,
                           foreground=foreground,
                           timeout=timeout,
                           get_output=True,
                           run_to_completion=run_to_completion)
 
     def start(self, start_mode=None,
-              app="",
-              args="",
+              boot_args=None,
               foreground=False,
               timeout=20,
               get_output=False,
@@ -76,8 +77,7 @@ class F1(Linux, ToDictMixin):
               mdt_rebuild=True):
         result = None
         self.last_start_parameters = {
-            "app": app,
-            "args": args,
+            "boot_args": boot_args,
             "foreground": foreground,
             "timeout": timeout,
             "get_output": get_output,
@@ -87,15 +87,7 @@ class F1(Linux, ToDictMixin):
         # Detect if it is in Simulation mode #TODO
         simulation_mode = True  # for now
         if not start_mode:
-            if "start_mode" in self.spec:
-                start_mode = self.spec["start_mode"]
-            else:
-                start_mode = self.START_MODE_NORMAL
-
-        if not app:
-            app = "prem_test"
-            if "app" in self.spec:
-                app = self.spec["app"]
+            start_mode = self.START_MODE_NORMAL
 
         if simulation_mode:
             if start_mode == self.START_MODE_NORMAL:
@@ -107,9 +99,6 @@ class F1(Linux, ToDictMixin):
                     self.command("cd {}".format(self.SIMULATION_FUNOS_BUILD_PATH))
                     self.command("ulimit -Sc unlimited")
                     self.command(r'export ASAN_OPTIONS="disable_coredump=0:unmap_shadow_on_exit=1:abort_on_error=true"')
-                    # self.command("./funos-posix app=mdt_test nvfile=nvfile")
-                    # self.interactive_command("./funos-posix app=prem_test sim_id=nvme_test nvfile=nvfile",
-                    #                          expected_prompt="Remote PCIe EP NVME Test")
                     self.command("./{} app=mdt_test nvfile=nvfile &> {}".format(self.FUN_OS_SIMULATION_PROCESS_NAME,
                                                                                 self.F1_LOG))
                     # adding --wustack-stale to find the root cause for the bug SWOS-4219 and SWOS-4423
@@ -119,13 +108,14 @@ class F1(Linux, ToDictMixin):
                     fun_test.sleep("Ensure FunOS is started", seconds=10)
                     fun_test.test_assert(new_process_id, "Started FunOs")
                     result = True
-                except:
-                    pass  #TODO
+                except Exception as ex:
+                    fun_test.critical(str(ex))
             if start_mode == self.START_MODE_QEMU_PLUS_DPCSH:
                 try:
+                    self.command("ps -ef")
                     process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
                     if process_id:
-                        self.kill_process(process_id=process_id[0], signal=9)
+                        self.kill_process(process_id=process_id, signal=9)
 
                     self.command("cd {}".format(self.SIMULATION_FUNOS_BUILD_PATH))
                     # Creating the metadata file needed for the funos-posix
@@ -156,8 +146,8 @@ class F1(Linux, ToDictMixin):
                                                                             output_file=self.DPCSH_PROXY_LOG)
                     fun_test.test_assert(self.dpcsh_tcp_proxy_process_id, "Start dpcsh tcp proxy")
                     result = True
-                except:
-                    pass  #TODO
+                except Exception as ex:
+                    fun_test.critical(str(ex))
             elif start_mode == self.START_MODE_DPCSH_ONLY:
                 try:
                     process_id = self.get_process_id(process_name=self.FUN_OS_SIMULATION_PROCESS_NAME)
@@ -198,14 +188,11 @@ class F1(Linux, ToDictMixin):
                 # new_process_id = self.start_bg_process(command="{}/{} app=prem_test sim_id=nvme_test nvfile=nvfile --dpc-server".format(self.SIMULATION_FUNOS_BUILD_PATH,
                 #                                                                           self.FUN_OS_SIMULATION_PROCESS_NAME))
 
-                if not args:
-                    if "args" in self.spec:
-                        args = self.spec["args"]
 
-                command = "{}/{} app={} {}".format(
+                command = "{}/{} {}".format(
                         self.SIMULATION_FUNOS_BUILD_PATH,
                         self.FUN_OS_SIMULATION_PROCESS_NAME,
-                        app, args)
+                        self.boot_args)
                 if not foreground:
                     new_process_id = self.start_bg_process(command=command,
                                                            output_file=self.F1_LOG)
@@ -256,8 +243,7 @@ class F1(Linux, ToDictMixin):
     def restart(self, mdt_rebuild=True):
         self.stop()
         if self.last_start_parameters:
-            result = self.start(app=self.last_start_parameters["app"],
-                                args=self.last_start_parameters["args"],
+            result = self.start(boot_args=self.boot_args,
                                 timeout=self.last_start_parameters["timeout"],
                                 get_output=self.last_start_parameters["get_output"],
                                 foreground=self.last_start_parameters["foreground"],
@@ -283,8 +269,7 @@ class DockerF1(F1, ToDictMixin):
                                        ssh_username=ssh_username,
                                        ssh_port=ssh_port,
                                        ssh_password=ssh_password,
-                                       external_dpcsh_port=external_dpcsh_port,
-                                       spec=spec)
+                                       external_dpcsh_port=external_dpcsh_port)
 
     def set_data_plane_ip(self, data_plane_ip):
         self.data_plane_ip = data_plane_ip

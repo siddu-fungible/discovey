@@ -86,7 +86,8 @@ class LibkcapiScript(FunTestScript):
         # fun_test.test_assert(libkcapi_template.setup(setup_path), "libkcapi Setup complete")
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topology" in fun_test.shared_variables:
+            fun_test.shared_variables["topology"].cleanup()
         pass
 
 

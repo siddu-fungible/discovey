@@ -442,7 +442,7 @@ class Linux(object, ToDictMixin):
             if not include_last_line:
                 buf = '\n'.join(buf_lines[start_line:-1])
         except Exception as ex:
-            critical_str = str(ex)
+            critical_str = str(ex) + " Command: {}".format(command)
             fun_test.critical(critical_str)
             self.logger.critical(critical_str)
             raise ex
@@ -1650,12 +1650,13 @@ class Linux(object, ToDictMixin):
         # Populating the resultant fio_dict dictionary
         for operation in ["write", "read"]:
             fio_dict[operation] = {}
-            for stat in ["bw", "iops", "latency"]:
-                if stat != "latency":
+            for stat in ["bw", "iops", "latency", "clatency", "latency90", "latency95", "latency99", "latency9999"]:
+                if stat not in ("latency", "clatency", "latency90", "latency95", "latency99", "latency9999"):
                     fio_dict[operation][stat] = fio_result_dict["jobs"][0][operation][stat]
-                else:
+                elif stat in ("latency", "clatency"):
                     for key in fio_result_dict["jobs"][0][operation].keys():
                         if key.startswith("lat"):
+                            stat = "latency"
                             # Extracting the latency unit
                             unit = key[-2:]
                             # Converting the units into microseconds
@@ -1669,6 +1670,43 @@ class Linux(object, ToDictMixin):
                                 value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
                                 value *= 1000
                                 fio_dict[operation][stat] = value
+                        if key.startswith("clat"):
+                            stat = "clatency"
+                            # Extracting the latency unit
+                            unit = key[-2:]
+                            # Converting the units into microseconds
+                            if unit == "ns":
+                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                value /= 1000
+                                fio_dict[operation][stat] = value
+                            elif unit == "us":
+                                fio_dict[operation][stat] = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                            else:
+                                value = int(round(fio_result_dict["jobs"][0][operation][key]["mean"]))
+                                value *= 1000
+                                fio_dict[operation][stat] = value
+                elif stat in ("latency90", "latency95", "latency99", "latency9999"):
+                    for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                        if key.startswith("90.00"):
+                            stat = "latency90"
+                            value = int(round(fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
+                            value /= 1000
+                            fio_dict[operation][stat] = value
+                        if key.startswith("95.00"):
+                            stat = "latency95"
+                            value = int(round(fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
+                            value /= 1000
+                            fio_dict[operation][stat] = value
+                        if key.startswith("99.00"):
+                            stat = "latency99"
+                            value = int(round(fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
+                            value /= 1000
+                            fio_dict[operation][stat] = value
+                        if key.startswith("99.99"):
+                            stat = "latency9999"
+                            value = int(round(fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
+                            value /= 1000
+                            fio_dict[operation][stat] = value
 
         fun_test.debug(fio_dict)
         return fio_dict
@@ -1767,12 +1805,16 @@ class Linux(object, ToDictMixin):
 
         fun_test.sleep("Waiting for the host to go down", timeout)
         if disconnect:
-            self.disconnect()
-            self._set_defaults()
+            try:
+                self.disconnect()
+                self._set_defaults()
+            except:
+                pass
 
         for i in range(retries):
             command_output = ""
             try:
+                self.ping(dst="127.0.0.1")
                 command_output = self.command(command="pwd", timeout=timeout)
                 if command_output:
                     break
@@ -1784,7 +1826,8 @@ class Linux(object, ToDictMixin):
         else:
             fun_test.critical("Host didn't came up from reboot even after {} seconds".format(retries * timeout))
             result = False
-
+        if result:
+            fun_test.sleep("Post-reboot", seconds=15)
         return result
 
     @fun_test.safe

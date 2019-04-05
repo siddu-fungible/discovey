@@ -63,7 +63,8 @@ class FSOnECScript(FunTestScript):
 
     def cleanup(self):
         self.storage_controller.disconnect()
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topology" in fun_test.shared_variables:
+            fun_test.shared_variables["topology"].cleanup()
 
 
 class FSOnECTestcase(FunTestCase):
@@ -90,7 +91,7 @@ class FSOnECTestcase(FunTestCase):
         ec_info["volume_capacity"]["lsv"] = ec_info["capacity"]
         ec_info["volume_capacity"]["ndata"] = int(round(float(ec_info["capacity"]) / ec_info["ndata"]))
         ec_info["volume_capacity"]["nparity"] = ec_info["volume_capacity"]["ndata"]
-        ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
+        # ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
 
         if "use_lsv" in ec_info and ec_info["use_lsv"]:
             fun_test.log("LS volume needs to be configured. So increasing the BLT volume's capacity by 30% and "
@@ -105,8 +106,12 @@ class FSOnECTestcase(FunTestCase):
                                                      ec_info["volume_block"][vtype]) * \
                                                     ec_info["volume_block"][vtype]
 
-            # Setting the EC volume capacity also to same as the one of ndata volume capacity
-            ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
+        # Setting the EC volume capacity to ndata times of ndata volume capacity
+        ec_info["volume_capacity"]["ec"] = ec_info["volume_capacity"]["ndata"] * ec_info["ndata"]
+
+        # Adding one more block to the plex volume size to add room for super block
+        for vtype in ["ndata", "nparity"]:
+            ec_info["volume_capacity"][vtype] = ec_info["volume_capacity"][vtype] + ec_info["volume_block"][vtype]
 
         # Configuring ndata and nparity number of BLT volumes
         for vtype in ["ndata", "nparity"]:

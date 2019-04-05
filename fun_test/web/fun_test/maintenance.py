@@ -29,9 +29,10 @@ from web.fun_test.models import JenkinsJobIdMap
 from web.fun_test.metrics_models import VoltestPerformance
 from web.fun_test.set_base_line import SetBaseLine
 
-from web.fun_test.analytics_models_helper import MetricChartHelper
+from web.fun_test.analytics_models_helper import MetricChartHelper, BltVolumePerformanceHelper
 from web.fun_test.metrics_models import MetricChartStatus, TeraMarkJpegPerformance
-from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers
+from web.fun_test.metrics_models import LastMetricId, MileStoneMarkers, BltVolumePerformance
+from web.fun_test.metrics_lib import MetricLib
 
 
 class MetricHelper(object):
@@ -49,16 +50,6 @@ class MetricHelper(object):
 
     def clear(self):
         self.model.objects.all().delete()
-
-
-"""
-if __name__ == "__main__":
-    h = MetricHelper(AllocSpeedPerformance)
-    h.delete(key="2202")
-    h.delete(key="2184")
-    h.delete(key="2194")
-
-"""
 
 
 def get_rounded_time(dt):
@@ -1125,7 +1116,7 @@ if __name__ == "__main_flowtest__":
                            milestone_name="Tape-out")
     mmt.save()
 
-if __name__ == "__main__":
+if __name__ == "__main_DFA__":
     chart_names = ["DFA Throughput", "NFA Throughput"]
 
     for chart_name in chart_names:
@@ -1164,4 +1155,340 @@ if __name__ == "__main__":
                                milestone_name="Tape-out")
         mmt.save()
     print "created charts for DFA and NFA"
+
+if __name__ == "__main_container_unit_removal__":
+    print "started unit removal for containers"
+    entries = MetricChart.objects.all()
+    for entry in entries:
+        if not entry.leaf:
+            print entry.chart_name
+            entry.y1_axis_title = ""
+            entry.visualization_unit = ""
+            entry.save()
+    print "finished removing units from containers"
+
+if __name__ == "__main_adding_db_blt__":
+    print "started adding entry into blt performance"
+    blt = BltVolumePerformanceHelper()
+    blt.add_entry(date_time=datetime.now(), volume="BLT", test="FioSeqWriteSeqReadOnly", block_size="4k", io_depth=20,
+                  size="20g", operation="read", num_ssd=1, num_volume=1, fio_job_name="job_name", write_iops=1678,
+                  read_iops=1780,
+                  write_throughput=237, read_throughput=279, write_avg_latency=1789, read_avg_latency=1890,
+                  write_90_latency=-1,
+                  write_95_latency=-1, write_99_latency=-1, read_90_latency=-1, read_95_latency=-1, read_99_latency=-1,
+                  write_iops_unit="ops", read_iops_unit="ops", write_throughput_unit="Mbps",
+                  read_throughput_unit="Mbps", write_avg_latency_unit="usecs", read_avg_latency_unit="usecs",
+                  write_90_latency_unit="usecs", write_95_latency_unit="usecs",
+                  write_99_latency_unit="usecs", read_90_latency_unit="usecs", read_95_latency_unit="usecs",
+                  read_99_latency_unit="usecs")
+    print "added an entry into the DB"
+
+if __name__ == "__main_read_throughput__":
+    internal_chart_names = ["read_4kb1vol1ssd_output_bandwidth", "write_4kb1vol1ssd_output_bandwidth",
+                            "read_4kb1vol1ssd_output_iops", "write_4kb1vol1ssd_output_iops"]
+    model_name = "BltVolumePerformance"
+    fio_read_job_names = ["fio_read_4gbps"]
+    fio_write_job_names = ["fio_write_4gbps"]
+
+    for internal_chart_name in internal_chart_names:
+        fio_job_names = []
+        if "bandwidth" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "MBps"
+        else:
+            chart_name = "IOPS"
+            y1_axis_title = "ops"
+        if "read_" in internal_chart_name:
+            if chart_name == "Throughput":
+                output_name = "output_read_throughput"
+            else:
+                output_name = "output_read_iops"
+            fio_job_names = fio_read_job_names
+            operation = "read"
+        else:
+            if chart_name == "Throughput":
+                output_name = "output_write_throughput"
+            else:
+                output_name = "output_write_iops"
+            fio_job_names = fio_write_job_names
+            operation = "write"
+
+        data_sets = []
+        name = "Samsung PM1725b (MZWLL1T6HAJQ)"
+        for job_name in fio_job_names:
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = True
+        base_line_date = datetime(year=2019, month=4, day=1, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "created throughput charts for storage"
+
+if __name__ == "__main_read_latency__":
+    internal_chart_names_dict = {"read_4kb1vol1ssd_4_output_latency": "Latency - 4Gbps",
+                                 "read_4kb1vol1ssd_8_output_latency": "Latency - 8Gbps",
+                                 "write_4kb1vol1ssd_4_output_latency": "Latency - 4Gbps",
+                                 "write_4kb1vol1ssd_8_output_latency": "Latency - 8Gbps"}
+    model_name = "BltVolumePerformance"
+    fio_read_job_names = ["fio_read_4gbps", "fio_read_8gbps"]
+    fio_write_job_names = ["fio_write_4gbps", "fio_write_8gbps"]
+    y1_axis_title = "usecs"
+    output_write_names = ["output_write_avg_latency", "output_write_90_latency", "output_write_95_latency",
+                          "output_write_99_latency"]
+    output_read_names = ["output_read_avg_latency", "output_read_90_latency", "output_read_95_latency",
+                         "output_read_99_latency"]
+
+    for internal_chart_name in internal_chart_names_dict:
+        output_names = []
+        chart_name = internal_chart_names_dict[internal_chart_name]
+        if "read_" in internal_chart_name:
+            if "4Gbps" in chart_name:
+                fio_job_name = "fio_read_4gbps"
+            else:
+                fio_job_name = "fio_read_8gbps"
+            output_names = output_read_names
+            operation = "read"
+        else:
+            if "4Gbps" in chart_name:
+                fio_job_name = "fio_write_4gbps"
+            else:
+                fio_job_name = "fio_write_8gbps"
+            output_names = output_write_names
+            operation = "write"
+
+        data_sets = []
+        for output_name in output_names:
+            if "avg_" in output_name:
+                name = "avg"
+            elif "90_" in output_name:
+                name = "90%"
+            elif "95_" in output_name:
+                name = "95%"
+            else:
+                name = "99.99%"
+
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = False
+        base_line_date = datetime(year=2019, month=4, day=1, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "created latency charts for storage"
+
+if __name__ == "__main__rand_read_throughput__":
+    internal_chart_names = ["rand_read_4kb1vol1ssd_output_bandwidth",
+                            "rand_read_4kb1vol1ssd_output_iops"]
+    model_name = "BltVolumePerformance"
+    fio_read_job_names = ["fio_randread_4gbps"]
+
+    for internal_chart_name in internal_chart_names:
+        fio_job_names = []
+        if "bandwidth" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "MBps"
+        else:
+            chart_name = "IOPS"
+            y1_axis_title = "ops"
+        if chart_name == "Throughput":
+            output_name = "output_read_throughput"
+        else:
+            output_name = "output_read_iops"
+        fio_job_names = fio_read_job_names
+        operation = "randread"
+
+        data_sets = []
+        name = "Samsung PM1725b (MZWLL1T6HAJQ)"
+        for job_name in fio_job_names:
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = True
+        base_line_date = datetime(year=2019, month=4, day=1, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "created throughput charts for random read storage"
+
+if __name__ == "__main__random_read_latency__":
+    internal_chart_names_dict = {"rand_read_4kb1vol1ssd_4_output_latency": "Latency"}
+    model_name = "BltVolumePerformance"
+    fio_read_job_names = ["fio_randread_4gbps"]
+    y1_axis_title = "usecs"
+    output_read_names = ["output_read_avg_latency", "output_read_90_latency", "output_read_95_latency",
+                         "output_read_99_latency"]
+
+    for internal_chart_name in internal_chart_names_dict:
+        chart_name = internal_chart_names_dict[internal_chart_name]
+        fio_job_name = "fio_randread_4gbps"
+        output_names = output_read_names
+        operation = "randread"
+
+        data_sets = []
+        for output_name in output_names:
+            if "avg_" in output_name:
+                name = "avg"
+            elif "90_" in output_name:
+                name = "90%"
+            elif "95_" in output_name:
+                name = "95%"
+            else:
+                name = "99.99%"
+
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = False
+        base_line_date = datetime(year=2019, month=4, day=1, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "created latency charts for random read storage"
+
+if __name__ == "__main_memset_non_coh__":
+    entries = MetricChart.objects.all()
+    ml = MetricLib()
+    for entry in entries:
+        d = {}
+        if entry.metric_model_name == "SoakDmaMemsetPerformance":
+            d["input_coherent"] = True
+            status = ml.add_attributes_to_data_sets(metric_id=entry.metric_id, **d)
+            if not status:
+                print "not successful - error"
+            print "added attribute for {}".format(entry.chart_name)
+    print "successfully added attribute to the memset data sets"
+    for entry in entries:
+        if entry.metric_model_name == "SoakDmaMemsetPerformance":
+            d = {}
+            data_sets = ml.get_data_sets(metric_id=entry.metric_id)
+            for data_set in data_sets:
+                data_set["inputs"]["input_coherent"] = False
+            chart_name = entry.chart_name.replace("memset", "memset non coherent")
+            internal_chart_name = entry.internal_chart_name.replace("memset", "memset_non_coherent")
+            base_line_date = datetime(year=2019, month=4, day=3, minute=0, hour=0, second=0)
+            d["chart_name"] = chart_name
+            d["internal_chart_name"] = internal_chart_name
+            d["data_sets"] = data_sets
+            d["leaf"] = True
+            d["description"] = "TBD"
+            d["owner_info"] = entry.owner_info
+            d["source"] = entry.source
+            d["positive"] = entry.positive
+            d["y1_axis_title"] = entry.y1_axis_title
+            d["visualization_unit"] = entry.y1_axis_title
+            d["metric_model_name"] = entry.metric_model_name
+            d["base_line_date"] = base_line_date
+            ml.create_chart(**d)
+            print "created chart for {}".format(chart_name)
+    print "created charts for memset non coherent"
+
+if __name__ == "__main_blt_99__":
+    model_name = "BltVolumePerformance"
+    model = BltVolumePerformance
+    data = model.objects.all()
+    for d in data:
+        if d.output_read_99_latency:
+            d.output_read_99_99_latency = d.output_read_99_latency
+            d.save()
+            d.output_read_99_latency = -1
+            d.save()
+    entries = MetricChart.objects.all()
+    ml = MetricLib()
+    for entry in entries:
+        if entry.metric_model_name == model_name:
+            if entry.chart_name == "Latency":
+                data_sets = json.loads(entry.data_sets)
+                print json.dumps(data_sets)
+                for data_set in data_sets:
+                    if "99_latency" in data_set["output"]["name"]:
+                        data_set["output"]["name"] = data_set["output"]["name"].replace("99", "99_99")
+                print json.dumps(data_sets)
+                ml.save_data_sets(data_sets=data_sets, chart=entry)
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    new_base_line = datetime(year=2019, month=1, day=26, minute=0, hour=0, second=0)
+    new_base_line = get_localized_time(new_base_line)
+    for entry in entries:
+        if entry.base_line_date < new_base_line:
+            print entry.chart_name
+            entry.base_line_date = new_base_line
+            entry.save()
+
+
 

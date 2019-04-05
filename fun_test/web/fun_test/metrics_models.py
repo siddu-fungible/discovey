@@ -107,6 +107,8 @@ class Triage(models.Model):
     max_tries = models.IntegerField(default=-1)
     faulty_commit = models.TextField(default="")
     boot_args = models.TextField(default="")
+    fun_os_make_flags = models.TextField(default="")
+    email = models.TextField(default="")
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.last_good_score)
@@ -127,6 +129,8 @@ class TriageFlow(models.Model):
     committer = models.TextField(default="")
     build_properties = models.TextField(default="")
     boot_args = models.TextField(default="")
+    fun_os_make_flags = models.TextField(default="")
+    email = models.TextField(default="")
 
     def __str__(self):
         s = "{}:{} {} Score: {}".format(self.metric_id, self.triage_id, self.status, self.score)
@@ -327,7 +331,8 @@ class MetricChart(models.Model):
         #    j = 0
         first_record = self.get_first_record(data_set=data_set, number_of_records=100)
         if not first_record:
-            i = 0
+            data_set["output"]["reference"] = 0
+            modified = 1
         else:
             output_name = data_set["output"]["name"]
             for first in first_record[::-1]:
@@ -338,6 +343,7 @@ class MetricChart(models.Model):
                         break
             if modified == 0:
                 data_set["output"]["reference"] = 0
+                modified = 1
             # data_set["expected"] = first_rec
         # self.data_sets = json.dumps(data_set)
         # self.save()
@@ -594,6 +600,8 @@ class MetricChart(models.Model):
 
             earlier_day = today - timedelta(days=number_of_records - 1)
             earlier_day = earlier_day.replace(hour=0, minute=0, second=1)
+            if earlier_day <= self.base_line_date:
+                earlier_day = self.base_line_date
 
             d = {}
             for input_name, input_value in inputs.iteritems():
@@ -778,12 +786,19 @@ class VolumePerformanceEmulation(models.Model):
     input_io_depth = models.IntegerField(verbose_name="IO depth", choices=[(0, 1)])
     input_size = models.TextField(verbose_name="Data size", choices=[(0, "4m")])
     input_operation = models.TextField(verbose_name="Operation type", choices=[(0, "read"), (1, "write"), (2, "randread"), (3, "randwrite"), (4, "randrw")])
+    input_fio_job_name = models.TextField(verbose_name="Input FIO job name", default="")
     output_write_iops = models.IntegerField(verbose_name="Write IOPS")
     output_read_iops = models.IntegerField(verbose_name="Read IOPS")
     output_write_bw = models.IntegerField(verbose_name="Write bandwidth KiB/s")
     output_read_bw = models.IntegerField(verbose_name="Read bandwidth KiB/s")
     output_write_latency = models.IntegerField(verbose_name="Write latency uSecs")
+    output_write_90_latency = models.IntegerField(verbose_name="Write 90% latency uSecs", default=-1)
+    output_write_95_latency = models.IntegerField(verbose_name="Write 95% latency uSecs", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="Write 99% latency uSecs", default=-1)
     output_read_latency = models.IntegerField(verbose_name="Read latency uSecs")
+    output_read_90_latency = models.IntegerField(verbose_name="Read 90% latency uSecs", default=-1)
+    output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency uSecs", default=-1)
+    output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency uSecs", default=-1)
     tag = "analytics"
 
     def __str__(self):
@@ -799,6 +814,62 @@ class VolumePerformanceEmulation(models.Model):
                                                 self.output_write_latency,
                                                 self.output_read_latency)
 
+
+class BltVolumePerformance(models.Model):
+    interpolation_allowed = models.BooleanField(default=False)
+    interpolated = models.BooleanField(default=False)
+    input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
+    input_volume_type = models.TextField(verbose_name="Volume type")
+    input_test = models.TextField(verbose_name="Test type")
+    input_block_size = models.TextField(verbose_name="Block size")
+    input_io_depth = models.IntegerField(verbose_name="IO depth")
+    input_io_size = models.TextField(verbose_name="IO size")
+    input_operation = models.TextField(verbose_name="Operation type")
+    input_num_ssd = models.IntegerField(verbose_name="Number of SSD(s)")
+    input_num_volume = models.IntegerField(verbose_name="Number of volume(s)")
+    input_fio_job_name = models.TextField(verbose_name="Input FIO job name", default="")
+    output_write_iops = models.IntegerField(verbose_name="Write IOPS", default=-1)
+    output_read_iops = models.IntegerField(verbose_name="Read IOPS", default=-1)
+    output_write_throughput = models.FloatField(verbose_name="Write throughput", default=-1)
+    output_read_throughput = models.FloatField(verbose_name="Read throughput", default=-1)
+    output_write_avg_latency = models.IntegerField(verbose_name="Write avg latency", default=-1)
+    output_write_90_latency = models.IntegerField(verbose_name="Write 90% latency", default=-1)
+    output_write_95_latency = models.IntegerField(verbose_name="Write 95% latency", default=-1)
+    output_write_99_99_latency = models.IntegerField(verbose_name="Write 99.99% latency", default=-1)
+    output_write_99_latency = models.IntegerField(verbose_name="Write 99% latency", default=-1)
+    output_read_avg_latency = models.IntegerField(verbose_name="Read avg latency", default=-1)
+    output_read_90_latency = models.IntegerField(verbose_name="Read 90% latency", default=-1)
+    output_read_95_latency = models.IntegerField(verbose_name="Read 95% latency", default=-1)
+    output_read_99_99_latency = models.IntegerField(verbose_name="Read 99.99% latency", default=-1)
+    output_read_99_latency = models.IntegerField(verbose_name="Read 99% latency", default=-1)
+    output_write_iops_unit = models.TextField(default="ops")
+    output_read_iops_unit = models.TextField(default="ops")
+    output_write_throughput_unit = models.TextField(default="Mbps")
+    output_read_throughput_unit = models.TextField(default="Mbps")
+    output_write_avg_latency_unit = models.TextField(default="usecs")
+    output_write_90_latency_unit = models.TextField(default="usecs")
+    output_write_95_latency_unit = models.TextField(default="usecs")
+    output_write_99_99_latency_unit = models.TextField(default="usecs")
+    output_write_99_latency_unit = models.TextField(default="usecs")
+    output_read_avg_latency_unit = models.TextField(default="usecs")
+    output_read_90_latency_unit = models.TextField(default="usecs")
+    output_read_95_latency_unit = models.TextField(default="usecs")
+    output_read_99_99_latency_unit = models.TextField(default="usecs")
+    output_read_99_latency_unit = models.TextField(default="usecs")
+    tag = "analytics"
+
+    def __str__(self):
+        return "{}:{}:{}:{}:{}:{}:{}:{}".format(self.input_date_time,
+                                                self.input_volume_type,
+                                                self.input_test,
+                                                self.input_block_size,
+                                                self.input_io_size,
+                                                self.input_operation,
+                                                self.output_write_iops,
+                                                self.output_read_iops,
+                                                self.output_write_throughput,
+                                                self.output_write_avg_latency,
+                                                self.output_read_avg_latency)
 
 class AllocSpeedPerformance(models.Model):
     interpolation_allowed = models.BooleanField(default=False)
@@ -1408,6 +1479,7 @@ class SoakDmaMemsetPerformance(models.Model):
     input_size = models.TextField(verbose_name="Size")
     input_operation = models.TextField(verbose_name="Operation")
     input_log_size = models.TextField(verbose_name="Log Size")
+    input_coherent = models.BooleanField(default=True)
     output_bandwidth_unit = models.TextField(default="GBps")
     input_metric_name = models.TextField(verbose_name="Metric Name", default="")
     output_bandwidth = models.FloatField(verbose_name="Bandwidth", default=-1)

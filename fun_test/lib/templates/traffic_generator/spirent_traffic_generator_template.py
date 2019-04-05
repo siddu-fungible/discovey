@@ -120,7 +120,7 @@ class SpirentTrafficGeneratorTemplate(TrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return result
 
-    def get_diff_serv_dscp_value_from_decimal_value(self,  decimal_value_list, meaning=False, dscp_value=False, dscp_high=False, dscp_low=False):
+    def get_diff_serv_dscp_value_from_decimal_value(self, decimal_value_list, meaning=False, dscp_value=False, dscp_high=False, dscp_low=False):
         result = {}
         try:
             result = self.get_diff_serv_dscp_value(input_type='decimal_value', input_list=decimal_value_list, dscp_low=dscp_low,

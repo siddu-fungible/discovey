@@ -219,7 +219,7 @@ export class SubmitJobComponent implements OnInit {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
     }
     if (this.bootArgs && this.bootArgs !== "") {
-      payload["environment"]["boot_args"] = this.bootArgs.replace(/\s+/s, ':');
+      payload["environment"]["boot_args"] = this.bootArgs.replace(/\s+/g, ':');
 
     }
 

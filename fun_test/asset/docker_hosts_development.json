@@ -18,7 +18,7 @@
       },
       {
         "category":  "f1_colocated_qemu_fungible_ubuntu",
-        "name": "f1_colocated_qemu:latest"
+        "name": "f1_colocated_qemu:v04_01"
       },
       {
         "category": "fio_traffic_generator",
