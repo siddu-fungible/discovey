@@ -1457,7 +1457,7 @@ if __name__ == "__main_memset_non_coh__":
             print "created chart for {}".format(chart_name)
     print "created charts for memset non coherent"
 
-if __name__ == "__main__":
+if __name__ == "__main_blt_99__":
     model_name = "BltVolumePerformance"
     model = BltVolumePerformance
     data = model.objects.all()
@@ -1479,6 +1479,16 @@ if __name__ == "__main__":
                         data_set["output"]["name"] = data_set["output"]["name"].replace("99", "99_99")
                 print json.dumps(data_sets)
                 ml.save_data_sets(data_sets=data_sets, chart=entry)
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    new_base_line = datetime(year=2019, month=1, day=26, minute=0, hour=0, second=0)
+    new_base_line = get_localized_time(new_base_line)
+    for entry in entries:
+        if entry.base_line_date < new_base_line:
+            print entry.chart_name
+            entry.base_line_date = new_base_line
+            entry.save()
 
 
 
