@@ -256,6 +256,24 @@ class Bmc(Linux):
         self.position_support_scripts()
         return True
 
+    def host_power_cycle(self):
+        return self.ipmi_power_cycle(host=self.host_ip, user="admin", passwd="admin")
+
+    def is_host_pingable(self, host_ip, max_time):
+        result = False
+        # Ensure come restarted
+        max_timer = FunTimer(max_time=max_time)
+        ping_result = False
+        while not max_timer.is_expired():
+            ping_result = self.ping(host_ip)
+            if ping_result:
+                break
+            fun_test.sleep("host {}: power up".format(host_ip))
+        if not max_timer.is_expired() and ping_result:
+            result = True
+        return result
+
+
     def cleanup(self):
         for f1_index, uart_log_thread in self.uart_log_threads.iteritems():
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_uart_log.txt".format(f1_index))
@@ -436,7 +454,8 @@ class Fs(object, ToDictMixin):
                  come_mgmt_ssh_username,
                  come_mgmt_ssh_password,
                  tftp_image_path="funos-f1.stripped.gz",
-                 boot_args=DEFAULT_BOOT_ARGS):
+                 boot_args=DEFAULT_BOOT_ARGS,
+                 power_cycle_come=False):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -453,6 +472,7 @@ class Fs(object, ToDictMixin):
         self.f1s = {}
         self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
         self.boot_args = boot_args
+        self.power_cycle_come = power_cycle_come
 
     def reachability_check(self):
         # TODO
@@ -504,10 +524,16 @@ class Fs(object, ToDictMixin):
                   tftp_image_path=tftp_image_path,
                   boot_args=boot_args)
 
-    def bootup(self, reboot_bmc=False):
+    def bootup(self, reboot_bmc=False, power_cyle_come=None):
         if reboot_bmc:
             fun_test.test_assert(self.reboot_bmc(), "Reboot BMC")
         fun_test.test_assert(self.bmc_initialize(), "BMC initialize")
+
+        if self.power_cycle_come or power_cyle_come:
+            fun_test.test_assert(self.bmc.host_power_cycle(), "Power-cycle comE using ipmitool")
+            fun_test.sleep("Power cyling comE", seconds=10)
+            fun_test.test_assert(self.bmc.is_host_pingable(host_ip=self.get_come().host_ip, max_time=180), "comE reachable after power-cycle")
+
         fun_test.test_assert(self.set_f1s(), "Set F1s")
         fun_test.test_assert(self.fpga_initialize(), "FPGA initiaize")
 
