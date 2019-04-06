@@ -206,7 +206,7 @@ class Bmc(Linux):
 
         fun_test.sleep("Uncompress image")
 
-        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="start gpio poll")
+        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index, expected="CRIT hw_hsu_test \"this space intentionally left blank.\"")
         m = re.search(r'Version=(\S+), Branch=(\S+)', output)
         if m:
             version = m.group(1)
