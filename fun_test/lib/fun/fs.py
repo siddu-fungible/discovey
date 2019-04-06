@@ -150,7 +150,7 @@ class Bmc(Linux):
         output = nc.read_until(data=expected, timeout=timeout)
         fun_test.log(output)
         if expected:
-            fun_test.simple_assert(expected in output, "{} not in output: {}".format(expected, output))
+            fun_test.simple_assert(expected in output, "{} not in output".format(expected))
         nc.close()
         return output
 
@@ -206,7 +206,7 @@ class Bmc(Linux):
 
         fun_test.sleep("Uncompress image")
 
-        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=60, f1_index=index, expected="start gpio poll")
+        output = self.u_boot_command(command="bootelf -p {}".format(self.ELF_ADDRESS), timeout=120, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         m = re.search(r'Version=(\S+), Branch=(\S+)', output)
         if m:
             version = m.group(1)
