@@ -32,7 +32,12 @@ def get_timestamp_string():
 
 
 def get_xml_string(xml):
-    s = minidom.parseString(tostring(xml)).toprettyxml(indent=' ')
+    s = ""
+    try:
+        s = minidom.parseString(tostring(xml)).toprettyxml(indent=' ')
+    except Exception as ex:
+        print("ERROR: unable to xmlize: {}".format(xml))
+        s = "ERROR"
     return s
 
 class GenericTable:
