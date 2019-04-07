@@ -677,8 +677,8 @@ def send_summary_mail(job_id, extra_message=""):
         all_tables += s + "<br>"
 
     banner = ""
-    if suite_execution["fields"]["banner"]:
-        banner = suite_execution["fields"]["banner"]
+    if suite_execution.banner:
+        banner = suite_execution.banner
 
     if extra_message:
         extra_message = "<p><b>{}</b></p><br>".format(extra_message)
@@ -708,11 +708,11 @@ def send_summary_mail(job_id, extra_message=""):
         """ % (css, banner, extra_message, suite_detail_url, table1, all_tables)
 
         # print html
-
-        subject = "Automation: {}: {} P:{} F:{}".format(suite_execution["suite_result"],
-                                                        suite_execution["fields"]["suite_path"],
-                                                        suite_execution["num_passed"],
-                                                        suite_execution["num_failed"])
+        attributes_dict = {x["name"]: x["value"] for x in suite_execution_attributes}
+        subject = "Automation: {}: {} P:{} F:{}".format(attributes_dict["Result"],
+                                                        suite_execution.suite_path,
+                                                        attributes_dict["Passed"],
+                                                        attributes_dict["Failed"])
 
         try:
             result = send_mail(subject=subject, content=html, to_addresses=json.loads(suite_execution.emails))
