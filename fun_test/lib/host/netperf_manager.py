@@ -49,8 +49,14 @@ class NetperfManager:
                 'iptables -F',
                 'iptables -L',
             )
-            for cmd in cmds:
-                linux_obj.sudo_command(cmd, timeout=180)
+            try:
+                for cmd in cmds:
+                    linux_obj.sudo_command(cmd, timeout=180)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+                linux_obj = linux_obj.clone()
+
+
 
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
