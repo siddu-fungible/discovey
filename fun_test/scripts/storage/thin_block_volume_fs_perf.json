@@ -4,7 +4,6 @@
     "num_volume": 1,
     "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 25769803776, "block_size": 4096,
                        "name": "thin-block1"},
-    "device": "/dev/nvme0",
     "controllers": 1,
     "command_timeout": 30,
     "iter_interval": 2,
@@ -18,7 +17,7 @@
     "volume_pass_threshold": 0,
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(4, 16)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency9999": 370}}}
+      "(4, 16)": {"read": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
     },
     "expected_volume_stats": {
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
@@ -52,7 +51,7 @@
     "volume_pass_threshold": 0,
     "nvme_device": "/dev/nvme0",
     "expected_fio_result": {
-      "(4, 17)": {"randread": {"read": {"bw": 522, "iops": 127, "clatency": 93, "latency90": 187, "latency95": 207, "latency9999": 370}}}
+      "(4, 17)": {"randread": {"read": {"bw": 522, "iops": 127, "clatency": 93, "latency90": 187, "latency95": 207, "latency99": 228, "latency9999": 370}}}
     },
     "expected_volume_stats": {
       "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
@@ -68,7 +67,7 @@
     }
   },
   "BLTFioRandWriteRandReadOnly": {
-    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 1073741824, "block_size": 4096,
+    "volume_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 25769803776, "block_size": 4096,
                        "name": "thin-block1"},
     "command_timeout": 30,
     "iter_interval": 120,

@@ -10,7 +10,6 @@ from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
 from lib.fun.f1 import F1
 from lib.fun.fs import Fs
-from lib.fun.fs import F1InFs
 import uuid
 from datetime import datetime
 
@@ -31,7 +30,7 @@ tb_config = {
             "model": "StorageNetwork2",
             "run_mode": "build_only",
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit --syslog=2",
+            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit syslog=2",
             "huid": 3,
             "ctlid": 2,
             "interface_info": {
@@ -67,17 +66,17 @@ tb_config = {
 
 
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, write_90_latency, write_95_latency, write_99_latency, read_latency, read_90_latency,
-                 read_95_latency, read_99_latency, fio_job_name):
+                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
+                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
 
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
-              "write_99_latency", "read_latency", "read_90_latency", "read_95_latency", "read_99_latency",
-              "fio_job_name"]:
+              "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
+              "read_99_latency", "read_99_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
     db_log_time = fun_test.shared_variables["db_log_time"]
-    num_ssd = fun_test.shared_variables["num_volume"]
+    num_ssd = fun_test.shared_variables["num_ssd"]
     num_volume = fun_test.shared_variables["num_volume"]
 
     blt = BltVolumePerformanceHelper()
@@ -85,12 +84,15 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
                   size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
                   write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
                   write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
-                  write_95_latency=write_95_latency, write_99_latency=write_99_latency, read_90_latency=read_90_latency,
-                  read_95_latency=read_95_latency, read_99_latency=read_99_latency, write_iops_unit="ops",
+                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
                   read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
                   write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
-                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", read_90_latency_unit="usecs",
-                  read_95_latency_unit="usecs", read_99_latency_unit="usecs")
+                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
+                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
+                  read_99_99_latency_unit="usecs")
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
@@ -110,7 +112,7 @@ def compare(actual, expected, threshold, operation):
 class BLTVolumePerformanceScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy the topology. i.e Start POSIM and create a Linux instance
+        1. Deploy the topology. i.e Bring up FS
         2. Make the Linux instance available for the testcase
         """)
 
@@ -271,21 +273,21 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             self.end_host.enter_sudo()
             self.end_host.modprobe(module="nvme")
-            fun_test.sleep("wait after modprob is reloaded", 2)
+            fun_test.sleep("modprob is reloaded", 2)
 
             vol_size = self.volume_details["capacity"] / self.volume_details["block_size"]
             '''create_ns = self.end_host.nvme_create_namespace(size=vol_size, capacity=vol_size,
                                                             block_size=self.volume_details["block_size"],
-                                                            device=self.device)'''
+                                                            device=self.nvme_device)'''
             create_ns = self.end_host.sudo_command(
                 "nvme create-ns --nsze={} --ncap={} --block-size={} {}".format(vol_size, vol_size,
                                                                                self.volume_details["block_size"],
-                                                                               self.device))
+                                                                               self.nvme_device))
             fun_test.test_assert("Success" in create_ns, "Namespace is created")
 
             attach_ns = self.end_host.nvme_attach_namespace(namespace_id=self.volume_details["ns_id"],
                                                             controllers=self.controllers,
-                                                            device=self.device)
+                                                            device=self.nvme_device)
             fun_test.test_assert("Success" in attach_ns, "Namespace is attached")
             # self.end_host.exit_sudo()
 
@@ -305,19 +307,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")'''
 
-            '''create_dict = {"class": "volume",
-                          "opcode": "VOL_ADMIN_OPCODE_CREATE",
-                          "params": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 25769803776,
-                                     "block_size": 4096, "uuid": "0000000000003011", "name": "vol-demo-1"}}
-            create_vol = f1.get_dpc_client().json_execute(verb="storage", data= create_dict, command_duration=4)
-            fun_test.log("create volume op is: {}".format(create_vol))
-
-            attach_dict = {"class": "controller",
-                           "opcode": "ATTACH",
-                           "params": {"ctlid": 2, "huid": 3, "uuid": "0000000000003011", "nsid": 1, "fnid": 2}}
-            attach_vol = f1.get_dpc_client().json_execute(verb="storage", data=attach_dict, command_duration=4)
-            fun_test.log("Attach volume op is: {}".format(attach_vol))'''
-
             # fun_test.shared_variables["blt"]["setup_created"] = True # Moved after warm up traffic
             # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
             fun_test.shared_variables["blt"]["thin_uuid"] = self.thin_uuid
@@ -326,28 +315,12 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             # command_result = self.end_host.sudo_command("nvme ns-rescan /dev/nvme0")
             # fun_test.log("ns-rescan output is: {}".format(command_result))
 
-            ''''# Rebooting the host to make the above volume accessible
-            reboot_status = self.dpcsh_host.ipmi_power_cycle(host=tb_config["tg_info"][0]["ipmi_name"],
-                                                             interface=tb_config["tg_info"][0]["ipmi_iface"],
-                                                             user=tb_config["tg_info"][0]["ipmi_user"],
-                                                             passwd=tb_config["tg_info"][0]["ipmi_passwd"],
-                                                             interval=30)
-            fun_test.test_assert(reboot_status, "End Host {} Rebooted".format(tb_config["tg_info"][0]["ip"]))
-            host_up_status = self.end_host.is_host_up(timeout=self.command_timeout)
-            fun_test.test_assert(host_up_status, "End Host {} is up".format(tb_config["tg_info"][0]["ip"]))'''
-
             # Checking that the above created BLT volume is visible to the end host
             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.volume_details["ns_id"])
             lsblk_output = self.end_host.lsblk()
             fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
             fun_test.test_assert_expected(expected="disk", actual=lsblk_output[self.volume_name]["type"],
                                           message="{} device type check".format(self.volume_name))
-
-            ''''# Disable the udev daemon which will skew the read stats of the volume during the test
-            udev_services = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-            for service in udev_services:
-                service_status = self.end_host.systemctl(service_name=service, action="stop")
-                fun_test.test_assert(service_status, "Stopping {} service".format(service))'''
 
             # Writing 20GB data on volume (one time task)
             if self.warm_up_traffic:
@@ -384,12 +357,14 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
-                              "Write Latency 99.99 Percentile in uSecs", "Read Latency in uSecs",
-                              "Read Latency 90 Percentile in uSecs", "Read Latency 95 Percentile in uSecs",
+                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
+                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
+                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
                               "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "writelatency90", "writelatency95", "writelatency9999", "readclatency",
-                           "readlatency90", "readlatency95", "readlatency9999", "fio_job_name"]
+                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                           "fio_job_name"]
         table_data_rows = []
 
         for combo in self.fio_bs_iodepth:
@@ -658,11 +633,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 row_data_list = []
                 for i in table_data_cols:
                     if i not in row_data_dict:
-                        row_data_list.append(0)
+                        row_data_list.append(-1)
                     else:
                         row_data_list.append(row_data_dict[i])
-                fun_test.log("table_data_cols are: {}".format(table_data_cols))
-                fun_test.log("Row data list is: {}".format(row_data_list))
 
                 table_data_rows.append(row_data_list)
                 post_results("BLT_FS", test_method, *row_data_list)
