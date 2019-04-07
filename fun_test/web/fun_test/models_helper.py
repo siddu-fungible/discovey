@@ -325,12 +325,8 @@ def update_test_case_execution(test_case_execution_id, suite_execution_id, resul
     te.save()
     return te
 
-def report_test_case_execution_result(execution_id, result, re_run_info=None):
+def report_re_run_result(execution_id, re_run_info=None):
     test_execution = get_test_case_execution(execution_id=execution_id)
-    # fun_test.simple_assert(test_execution, "Test-execution") # TODO
-    test_execution.result = result
-    test_execution.end_time = get_current_time()#timezone.now()
-    test_execution.save()
     if re_run_info:
         if str(test_execution.test_case_id) in re_run_info.keys():
             info = re_run_info[str(test_execution.test_case_id)]

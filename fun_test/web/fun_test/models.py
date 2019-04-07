@@ -124,6 +124,7 @@ class SuiteExecution(models.Model):
     result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
     emails = models.TextField(default="[]", null=True)  # email addresses to send reports to
     email_on_failure_only = models.BooleanField(default=False)
+    finalized = models.BooleanField(default=False)
 
     """
     Execution
@@ -131,7 +132,6 @@ class SuiteExecution(models.Model):
     state = models.IntegerField(default=JobStatusType.UNKNOWN)
     suite_container_execution_id = models.IntegerField(default=-1)
     is_auto_scheduled_job = models.BooleanField(default=False)
-    finalized = models.BooleanField(default=False)
     banner = models.TextField(default="")
     execution_id = models.IntegerField(unique=True, db_index=True)
     test_case_execution_ids = models.CharField(max_length=10000, default="[]")

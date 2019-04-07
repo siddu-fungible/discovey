@@ -632,7 +632,7 @@ def send_summary_mail(job_id, extra_message=""):
 
     scheduler_logger.info("Job {}: Suite Execution: {}".format(str(suite_execution.execution_id), suite_execution))
 
-    suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=suite_execution)
+    suite_execution_attributes = models_helper._get_suite_execution_attributes(suite_execution=models_helper._get_suite_executions(execution_id=suite_execution.execution_id)[0])
     header_list = ["Metric", "Value"]
     table1 = _get_table(header_list=header_list, list_of_rows=suite_execution_attributes)
 
