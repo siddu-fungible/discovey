@@ -1812,9 +1812,7 @@ class Linux(object, ToDictMixin):
                 pass
 
         for i in range(retries):
-            command_output = ""
             try:
-                local_host = Linux(localhost=True)
                 self.ping(dst="127.0.0.1")
                 command_output = self.command(command="pwd", timeout=timeout)
                 if command_output:
