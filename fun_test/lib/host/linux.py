@@ -1259,10 +1259,11 @@ class Linux(object, ToDictMixin):
     def lsmod(self, module):
         result = {}
         lsmod_output = self.sudo_command("lsmod | grep {}".format(module))
-        re_output = re.search(r'%s+\s+(\d+)\s+(\d)' % module, lsmod_output)
+        re_output = re.search(r'(%s)\s+(\d+)\s+(\d)' % module, lsmod_output)
         if re_output:
-            result['size'] = int(re_output.group(1))
-            result['used_by'] = int(re_output.group(2))
+            result['name'] = re_output.group(1)
+            result['size'] = int(re_output.group(2))
+            result['used_by'] = int(re_output.group(3))
         return result
 
     @fun_test.safe
