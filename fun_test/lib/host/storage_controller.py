@@ -6,7 +6,7 @@ import os, sys
 
 
 class StorageController(DpcshClient):
-    TIMEOUT = 2
+    TIMEOUT = 10
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
         super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
 
@@ -128,13 +128,19 @@ class StorageController(DpcshClient):
                 volume_dict["params"][key] = kwargs[key]
         return self.json_execute(verb=self.mode, data=volume_dict, command_duration=command_duration)
 
-    def peek(self, props_tree, command_duration=TIMEOUT):
-        props_tree = "peek " + props_tree
-        return self.command(props_tree, legacy=True, command_duration=command_duration)
+    def peek(self, props_tree, legacy=True, command_duration=TIMEOUT):
+        if legacy:
+            props_tree = "peek " + props_tree
+            return self.command(props_tree, legacy=True, command_duration=command_duration)
+        else:
+            return self.json_execute(verb="peek", data=props_tree, command_duration=command_duration)
 
-    def poke(self, props_tree, command_duration=TIMEOUT):
-        props_tree = "poke " + props_tree
-        return self.command(props_tree, legacy=True, command_duration=command_duration)
+    def poke(self, props_tree, legacy=True, command_duration=TIMEOUT):
+        if legacy:
+            props_tree = "poke " + props_tree
+            return self.command(props_tree, legacy=True, command_duration=command_duration)
+        else:
+            return self.json_execute(verb="poke", data=props_tree, command_duration=command_duration)
 
     def fail_volume(self, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
