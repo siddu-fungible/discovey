@@ -138,7 +138,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
 
         command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
-                                                      command_duration=60)
+                                                      command_duration=5)
         fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
 
         fun_test.shared_variables["storage_controller"] = self.storage_controller
@@ -261,19 +261,18 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["volume_details"] = self.volume_details
 
-            # Configuring Local thin block volume
-            command_result = {}
-            command_result = self.storage_controller.json_execute(verb="enable_counters",
-                                                                  command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT Instance 0")
-
             # self.end_host.enter_sudo()
             self.end_host.modprobe(module="nvme")
             fun_test.sleep("Loading nvme module", 2)
             command_result = self.end_host.lsmod(module="nvme")
             fun_test.simple_assert(command_result, "Loading nvme module")
             fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
+
+            # Configuring Local thin block volume
+            command_result = self.storage_controller.json_execute(verb="enable_counters",
+                                                                  command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
 
             """
             vol_size = self.volume_details["capacity"] / self.volume_details["block_size"]
@@ -293,7 +292,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             # self.end_host.exit_sudo()
             """
 
-            command_result = {}
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_thin_block_volume(
@@ -302,7 +300,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
-            command_result = {}
             command_result = self.storage_controller.volume_attach_pcie(
                 ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, huid=tb_config['dut_info'][0]['huid'],
                 ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
@@ -318,6 +315,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             # fun_test.log("ns-rescan output is: {}".format(command_result))
 
             # Checking that the above created BLT volume is visible to the end host
+            fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.volume_details["ns_id"])
             lsblk_output = self.end_host.lsblk()
             fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
@@ -329,7 +327,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
                 fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                fun_test
+                fun_test.test_assert(fio_output, "Pre-populating the volume")
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
             fun_test.shared_variables["blt"]["setup_created"] = True
