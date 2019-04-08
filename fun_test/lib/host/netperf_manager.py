@@ -238,7 +238,8 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
     if ns:
         cmd = 'sudo ip netns exec {} {}'.format(ns, cmd)
     if cpu:
-        cmd = 'taskset -c {} {}'.format(cpu, cmd)
+        cmask = '0x{}'.format(1 << (cpu-1))
+        cmd = 'taskset -c {} {}'.format(cmask, cmd)
     # TODO: use numactl if necessary
     output = linux_obj.command(cmd, timeout=duration+30)
     match = re.search(pat, output, re.DOTALL)
