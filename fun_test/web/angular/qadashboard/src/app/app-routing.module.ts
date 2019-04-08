@@ -17,6 +17,7 @@ import {NotFoundComponent} from "./not-found/not-found.component";
 import {AlertsComponent} from "./alerts/alerts.component";
 import {SchedulerAdminComponent} from "./scheduler-admin/scheduler-admin.component";
 import {LogViewerComponent} from "./log-viewer/log-viewer.component";
+import {UserComponent} from "./user/user.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -26,6 +27,7 @@ export function regressionHome(url: UrlSegment[]) {
 const routes: Routes = [
   {path: '', component: DashboardComponent},
   {path: 'upgrade', component: DashboardComponent},
+  {path: 'users', component: UserComponent},
   {path: 'dashboard', component: DashboardComponent},
   {path: 'performance', component: PerformanceComponent},
   {path: 'performance/atomic/:id', component: FunMetricChartComponent},

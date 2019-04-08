@@ -52,6 +52,7 @@ import { SmartLabelComponent } from './smart-label/smart-label.component';
 import {QueueViewerComponent} from "./regression/queue-viewer/queue-viewer.component";
 import { TriageComponent } from './triage/triage.component';
 import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-line/section-horizontal-line.component";
+import { UserComponent } from './user/user.component';
 
 @NgModule({
   declarations: [
@@ -89,7 +90,8 @@ import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-
     LogViewerComponent,
     SmartLabelComponent,
     QueueViewerComponent
-    SectionHorizontalLineComponent
+    SectionHorizontalLineComponent,
+    UserComponent
   ],
   imports: [
     BsDropdownModule,

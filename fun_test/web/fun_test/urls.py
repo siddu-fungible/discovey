@@ -193,6 +193,10 @@ demo_urls = [
     url(r'^get_container_logs', demo_views.get_container_logs)
 ]
 
+users_urls = [
+    url(r'^$', views.angular_home)
+]
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^performance/', views.angular_home),
@@ -210,6 +214,7 @@ urlpatterns = [
     url(r'^test/', include(test_urls)),
     url(r'^upgrade/', include(upgrade_urls)),
     url(r'^demo/', include(demo_urls)),
+    url(r'^users', include(users_urls)),
     url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
 
 ]
