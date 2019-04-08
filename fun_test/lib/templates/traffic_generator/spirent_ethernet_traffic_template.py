@@ -51,7 +51,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 result['port_list'].append(port_handle)
 
                 interface_obj = self.create_physical_interface(port_handle=port_handle)
-                self.stc_manager.stc.config(child="")
+                # self.stc_manager.stc.config(child="")
                 fun_test.simple_assert(interface_obj, "Create Physical Interface: %s" % str(interface_obj))
                 result['interface_obj_list'].append(interface_obj)
 
@@ -117,8 +117,9 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                 interface_obj.spirent_handle = spirent_handle
 
                 if job_inputs['speed'] == SpirentManager.SPEED_25G:
-                    spirent_handle = self.stc_manager.applyfec(port_handle=port_handle, fec_obj=fec_obj,
-                                                               attributes=attributes)
+                    fec_attributes = fec_obj.get_attributes_dict()
+                    spirent_handle = self.stc_manager.applyfec(port_handle=port_handle, fec_obj=str(fec_obj),
+                                                               attributes=fec_attributes)
                     fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
                     fec_obj.spirent_handle = spirent_handle
 
