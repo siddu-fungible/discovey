@@ -396,7 +396,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             command_result = {}
             command_result = self.storage_controller.volume_attach_pcie(
                 ns_id=self.ns_id, uuid=attach_uuid, huid=tb_config['dut_info'][0]['huid'],
-                ctlid=tb_config['dut_info'][0]['huid'], command_duration=self.command_timeout)
+                ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Attaching EC/LS volume on DUT")
 
@@ -812,7 +812,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 row_data_list = []
                 for i in table_data_cols:
                     if i not in row_data_dict:
-                        row_data_list.append(0)
+                        row_data_list.append(-1)
                     else:
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
