@@ -1803,7 +1803,7 @@ class Linux(object, ToDictMixin):
             self._set_defaults()
             disconnect = False
 
-        fun_test.sleep("Waiting for the host to go down", timeout)
+        fun_test.sleep("Waiting for the host to go down", seconds=10)
         if disconnect:
             try:
                 self.disconnect()
@@ -1812,7 +1812,6 @@ class Linux(object, ToDictMixin):
                 pass
 
         for i in range(retries):
-            command_output = ""
             try:
                 self.ping(dst="127.0.0.1")
                 command_output = self.command(command="pwd", timeout=timeout)

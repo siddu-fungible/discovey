@@ -80,7 +80,7 @@ class FunethSanity(FunTestScript):
         if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
             fs = Fs.get()
             fun_test.shared_variables["fs"] = fs
-            fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
+            fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cyle_come=True), "FS bootup")
             # TODO: get dpc proxy ip/port
             global DPC_PROXY_IP
             global DPC_PROXY_PORT
