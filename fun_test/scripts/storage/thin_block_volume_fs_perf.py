@@ -269,7 +269,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
 
             # Configuring Local thin block volume
-            command_result = {}
             command_result = self.storage_controller.json_execute(verb="enable_counters",
                                                                   command_duration=self.command_timeout)
             fun_test.log(command_result)
@@ -293,7 +292,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             # self.end_host.exit_sudo()
             """
 
-            command_result = {}
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
             command_result = self.storage_controller.create_thin_block_volume(
@@ -302,7 +300,6 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
-            command_result = {}
             command_result = self.storage_controller.volume_attach_pcie(
                 ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, huid=tb_config['dut_info'][0]['huid'],
                 ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
