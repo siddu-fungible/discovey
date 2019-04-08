@@ -6,7 +6,7 @@ import os, sys
 
 
 class StorageController(DpcshClient):
-    TIMEOUT = 10
+    TIMEOUT = 2
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
         super(StorageController, self).__init__(mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
 
