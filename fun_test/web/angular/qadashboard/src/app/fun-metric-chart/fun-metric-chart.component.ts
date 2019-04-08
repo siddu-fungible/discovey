@@ -2,6 +2,7 @@ import {Component, OnInit, Input, OnChanges} from '@angular/core';
 import {ApiService} from "../services/api/api.service";
 import {LoggerService} from "../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
+import {CommonService} from "../services/common/common.service";
 
 enum TimeMode {
   ALL = "all",
@@ -103,7 +104,8 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   public tooltip: Function;
   public pointClickCallback: Function;
 
-  constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute) {
+  constructor(private apiService: ApiService, private loggerService: LoggerService, private route: ActivatedRoute,
+              private commonService: CommonService) {
   }
 
   ngOnInit() {
@@ -185,18 +187,21 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //formats the string displayed on xaxis of the chart
   xAxisFormatter(value): string {
+    // value = "3/19/2019, 4:49:31 PM"
     let s = "Error";
     const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    let r = /(\d{4})-(\d{2})-(\d{2})/g;
-    let match = r.exec(value);
-    if (this.timeMode === "month") {
-      if (match) {
-        let month = parseInt(match[2]);
-        s = monthNames[month];
-      }
-    } else {
-      if (match) {
-        s = match[2] + "/" + match[3];
+    if (value) { //check for null values
+      try {
+        let dateString = value.split(" "); // ex: dateString = (3) ["3/19/2019,", "4:49:31", "PM"]
+        let dateMonth = dateString[0].split("/"); //ex: dateMonth = (3) ["3", "19", "2019,"]
+        if (this.timeMode === "month") {
+          let month = parseInt(dateMonth[0]);
+          s = monthNames[month]; //ex: s = "Apr"
+        } else {
+          s = dateMonth[0] + "/" + dateMonth[1]; //ex: s = "3/19"
+        }
+      } catch (e) {
+        this.loggerService.error("xAxis Formatter");
       }
     }
     return s;
@@ -560,6 +565,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   //invoked when timeMode changes
   setTimeMode(mode): void {
     this.timeMode = mode;
+    this.showAllExpectedValues = false;
     if (this.chartInfo) {
       this.fetchMetricsData(this.modelName, this.chartName, this.chartInfo, this.previewDataSets); // TODO: Race condition on chartInfo
     } else {
@@ -585,11 +591,11 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     } else if (this.timeMode === "month") {
       let i = len - 1;
       let startIndex = len - 1;
-      let latestDate = new Date(dateList[i].replace(/\s+/g, 'T'));
-      let latestMonth = latestDate.getUTCMonth();
+      let latestDate = new Date(dateList[i]);
+      let latestMonth = latestDate.getMonth();
       while (i >= 0) {
-        let currentDate = new Date(dateList[i].replace(/\s+/g, 'T'));
-        let currentMonth = currentDate.getUTCMonth();
+        let currentDate = new Date(dateList[i]);
+        let currentMonth = currentDate.getMonth();
         if (currentMonth !== latestMonth) {
           filteredDate.push([startIndex, i + 1]);
           latestMonth = currentMonth;
@@ -614,13 +620,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   fixMissingDates(dates): any {
     let finalDates = [];
     if (dates.length !== 0) {
-      let firstString = dates[0].replace(/\s+/g, 'T');
-      //firstString = firstString.replace('+', 'Z');
-      //firstString = firstString.substring(0, firstString.indexOf('Z'));
+      let firstString = dates[0];
       let firstDate = new Date(firstString);
       let today = new Date();
       let yesterday = new Date(today);
-      // yesterday.setDate(yesterday.getDate() - 1);
       yesterday.setHours(23, 59, 59);
       let lastDate = yesterday;
 
@@ -628,13 +631,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
       let datesIndex = 0;
       while (currentDate <= yesterday) {
         let latestDate = null;
-        //console.log(currentDate);
-        if ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
+        if ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex]), currentDate)) {
           latestDate = dates[datesIndex];
-          //finalDates.push(dates[datesIndex]);
           datesIndex++;
-          while ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex].replace(/\s+/g, 'T')), currentDate)) {
-            //finalDates.push(dates[datesIndex]);
+          while ((datesIndex < dates.length) && this.sameDay(new Date(dates[datesIndex]), currentDate)) {
             latestDate = dates[datesIndex];
             datesIndex++;
           }
@@ -645,8 +645,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           tempDate.setHours(0);
           tempDate.setMinutes(0);
           tempDate.setSeconds(1);
-          tempDate = new Date(tempDate.getTime() - (tempDate.getTimezoneOffset() * 60000));
-          finalDates.push(tempDate.toISOString().replace('T', ' ')); //TODO: convert zone correctly
+          finalDates.push(tempDate.toLocaleString());
         }
         currentDate.setDate(currentDate.getDate() + 1);
       }
@@ -782,8 +781,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             trimEmptyStartValues = true;
           }
           if (trimEmptyStartValues) {
-            keyList.push(oneRecord.input_date_time.toString());
-            keyValue[dataSetIndex][oneRecord.input_date_time.toString()] = oneRecord;
+            let localDate = this.commonService.convertToLocalTimezone(oneRecord.input_date_time);
+            keyList.push(localDate.toLocaleString());
+            keyValue[dataSetIndex][localDate.toLocaleString()] = oneRecord;
           }
 
         }
