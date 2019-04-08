@@ -46,6 +46,7 @@ class BGPConfig(CodecService , CodecServiceProvider):
         
         # Config Router ID
         bgp_cfg.global_.config.router_id = config_json["router_id"]
+ 
 
         # Config Neighbour 
         for item in config_json["neighbors"]:
@@ -56,6 +57,20 @@ class BGPConfig(CodecService , CodecServiceProvider):
 
             # Configure allow own as 
             nbr_ipv4.as_path_options.config.allow_own_as=1
+
+
+
+            # Append nexthop-self policy
+            #nbr_ipv4_afsf = nbr_ipv4.afi_safis.AfiSafi()
+            #nbr_ipv4_afsf.afi_safi_name = openconfig_bgp_types.IPV4UNICAST()
+            #nbr_ipv4_afsf.config.afi_safi_name = openconfig_bgp_types.IPV4UNICAST()
+            #nbr_ipv4_afsf.config.enabled = True
+                                                              
+            # Create afi-safi policy instances
+            #nbr_ipv4_afsf.apply_policy.config.import_policy.append('Next-Hop-Self')
+            #nbr_ipv4_afsf.apply_policy.config.export_policy.append('Next-Hop-Self')
+            #nbr_ipv4.afi_safis.afi_safi.append(nbr_ipv4_afsf)
+
 
             bgp_cfg.neighbors.neighbor.append(nbr_ipv4)
             nbr_ipv4.parent = bgp_cfg.neighbors
