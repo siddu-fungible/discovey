@@ -30,7 +30,7 @@ tb_config = {
             "model": "StorageNetwork2",
             "run_mode": "build_only",
             "pci_mode": "all",
-            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay --serdesinit syslog=2",
+            "bootarg": "app=mdt_test,load_mods,hw_hsu_test --serial --dis-stats --dpc-server --dpc-uart --csr-replay",
             "huid": 3,
             "ctlid": 2,
             "interface_info": {
@@ -130,25 +130,27 @@ class BLTVolumePerformanceScript(FunTestScript):
         self.db_log_time = datetime.now()
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        # f1.get_dpc_client().json_execute(verb="peek", data="stats/vppkts", command_duration=4)
+        self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
+                                                    target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])
 
-        # self.storage_controller = StorageController(target_ip=tb_config["dpcsh_proxy"]["ip"],
-        #                                            target_port=tb_config["dpcsh_proxy"]["dpcsh_port"])
+        # Setting the syslog level to 2
+        command_result = self.storage_controller.poke(props_tree=["params/syslog/level", 2], legacy=False)
+        fun_test.test_assert(command_result["status"], "Setting syslog level to 2")
 
-        # f1fs = F1InFs(index=0, fs=fs, serial_device_path="/dev/ttyS0", serial_sbp_device_path="/dev/ttyS1")
-        # self.storage_controller = f1fs.get_dpc_storage_controller()
-        # self.storage_controller = f1.get_dpc_storage_controller()
+        command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                      command_duration=5)
+        fun_test.test_assert_expected(expected=2, actual=command_result["data"], message="Checking syslog level")
 
-        # fun_test.shared_variables["dpcsh_host"] = self.dpcsh_host
-        # fun_test.shared_variables["storage_controller"] = self.storage_controller
+        fun_test.shared_variables["storage_controller"] = self.storage_controller
 
     def cleanup(self):
         # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # Detach the volume
-        # self.volume_details = fun_test.shared_variables["volume_details"]
-        '''command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
+        self.volume_details = fun_test.shared_variables["volume_details"]
+        command_result = self.storage_controller.volume_detach_pcie(ns_id=self.volume_details["ns_id"],
                                                                     uuid=fun_test.shared_variables["thin_uuid"],
                                                                     huid=tb_config['dut_info'][0]['huid'],
+                                                                    ctlid=tb_config['dut_info'][0]['ctlid'],
                                                                     command_duration=30)
         fun_test.test_assert(command_result["status"], "Detaching BLT volume on DUT")
 
@@ -159,12 +161,8 @@ class BLTVolumePerformanceScript(FunTestScript):
                                                                name=self.volume_details["name"],
                                                                uuid=fun_test.shared_variables["thin_uuid"],
                                                                command_duration=10)
-        fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")'''
+        fun_test.test_assert(command_result["status"], "Deleting BLT volume on DUT")
 
-        '''status = self.dpcsh_host.stop_dpcsh_proxy(dpcsh_proxy_port=tb_config["dpcsh_proxy"]["dpcsh_port"],
-                                                  dpcsh_proxy_tty=tb_config["dpcsh_proxy"]["dpcsh_tty"])
-        fun_test.test_assert(status, "Stopped dpcsh with {} in tcp proxy mode".
-                             format(tb_config["dpcsh_proxy"]["dpcsh_tty"]))'''
         fun_test.log("FS cleanup")
         fun_test.shared_variables["fs"].cleanup()
 
@@ -247,8 +245,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
         fun_test.shared_variables["num_volume"] = num_volume
 
         self.nvme_block_device = self.nvme_device + "n" + str(self.volume_details["ns_id"])
-        # self.dpcsh_host = fun_test.shared_variables["dpcsh_host"]
-        # self.storage_controller = fun_test.shared_variables["storage_controller"]
+        self.storage_controller = fun_test.shared_variables["storage_controller"]
 
         '''self.end_host = Linux(host_ip=tb_config["tg_info"][0]["ip"],
                                   ssh_username=tb_config["tg_info"][0]["user"],
@@ -264,17 +261,20 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["volume_details"] = self.volume_details
 
-            # Configuring Local thin block volume
-            '''command_result = {}
-            command_result = self.storage_controller.command(command="enable_counters", legacy=True,
-                                                             command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Enabling counters on DUT Instance 0")'''
-
-            self.end_host.enter_sudo()
+            # self.end_host.enter_sudo()
             self.end_host.modprobe(module="nvme")
-            fun_test.sleep("modprob is reloaded", 2)
+            fun_test.sleep("Loading nvme module", 2)
+            command_result = self.end_host.lsmod(module="nvme")
+            fun_test.simple_assert(command_result, "Loading nvme module")
+            fun_test.test_assert_expected(expected="nvme", actual=command_result['name'], message="Loading nvme module")
 
+            # Configuring Local thin block volume
+            command_result = self.storage_controller.json_execute(verb="enable_counters",
+                                                                  command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+
+            """
             vol_size = self.volume_details["capacity"] / self.volume_details["block_size"]
             '''create_ns = self.end_host.nvme_create_namespace(size=vol_size, capacity=vol_size,
                                                             block_size=self.volume_details["block_size"],
@@ -290,22 +290,21 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                             device=self.nvme_device)
             fun_test.test_assert("Success" in attach_ns, "Namespace is attached")
             # self.end_host.exit_sudo()
+            """
 
-            command_result = {}
             self.thin_uuid = utils.generate_uuid()
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid
-            '''command_result = self.storage_controller.create_thin_block_volume(
+            command_result = self.storage_controller.create_thin_block_volume(
                 capacity=self.volume_details["capacity"], block_size=self.volume_details["block_size"],
                 name=self.volume_details["name"], uuid=self.thin_uuid, command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create BLT volume on Dut Instance 0")
 
-            command_result = {}
             command_result = self.storage_controller.volume_attach_pcie(
                 ns_id=self.volume_details["ns_id"], uuid=self.thin_uuid, huid=tb_config['dut_info'][0]['huid'],
-                command_duration=self.command_timeout)
+                ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
             fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")'''
+            fun_test.test_assert(command_result["status"], "Attaching BLT volume on Dut Instance 0")
 
             # fun_test.shared_variables["blt"]["setup_created"] = True # Moved after warm up traffic
             # fun_test.shared_variables["blt"]["storage_controller"] = self.storage_controller
@@ -316,6 +315,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             # fun_test.log("ns-rescan output is: {}".format(command_result))
 
             # Checking that the above created BLT volume is visible to the end host
+            fun_test.sleep("Sleeping for couple of seconds for the volume to accessible to the host", 5)
             self.volume_name = self.nvme_device.replace("/dev/", "") + "n" + str(self.volume_details["ns_id"])
             lsblk_output = self.end_host.lsblk()
             fun_test.test_assert(self.volume_name in lsblk_output, "{} device available".format(self.volume_name))
@@ -326,8 +326,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             if self.warm_up_traffic:
                 fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size provided")
                 fio_output = self.end_host.pcie_fio(filename=self.nvme_block_device, **self.warm_up_fio_cmd_args)
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fio_output)
+                fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                fun_test.test_assert(fio_output, "Pre-populating the volume")
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
             fun_test.shared_variables["blt"]["setup_created"] = True
