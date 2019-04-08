@@ -780,9 +780,6 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
             trimEmptyStartValues = true;
           }
           if (trimEmptyStartValues) {
-            // let localDate = new Date(oneRecord.input_date_time);
-            // let month = localDate.getMonth() + 1;
-            // let day = localDate.getDay() + 1;
             let localDate = this.commonService.convertToLocalTimezone(oneRecord.input_date_time);
             keyList.push(localDate.toLocaleString());
             keyValue[dataSetIndex][localDate.toLocaleString()] = oneRecord;
