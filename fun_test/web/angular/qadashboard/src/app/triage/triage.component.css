@@ -1,0 +1,45 @@
+.table-padding {
+  padding: 2px !important;
+}
+.align {
+  vertical-align: middle;
+  text-align: center;
+}
+.msg-width {
+  width: 60%;
+}
+.committer-width {
+  width: 10%;
+}
+.fc-width {
+  width: 5%;
+}
+.back-button {
+  border: solid 1px black;
+  margin: 3px;
+}
+.header-padding {
+  padding: 4px;
+}
+.grey-highlight {
+  background-color: lightgrey;
+}
+.triage-status td, .triage-status th {
+  padding: 0!important;
+}
+p#horizontal-line {
+   width: 100%;
+   text-align: left;
+   border-bottom: 1px solid lightgrey;
+   line-height: 0.1em;
+   margin: 10px 0 20px;
+}
+
+p#horizontal-line span {
+    background:#fff;
+    padding: 0;
+}
+
+.re-run {
+  color: black;
+}

@@ -3,6 +3,8 @@ from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
 from lib.host.network_controller import NetworkController
 from scripts.networking.nu_config_manager import *
 from scripts.networking.helper import *
+from scripts.networking.snapshot_helper import *
+
 
 dut_config = {}
 spirent_config = {}
@@ -172,6 +174,19 @@ class TestCcErrorTrapTtlError1(FunTestCase):
     def run(self):
         nu_config_obj = fun_test.shared_variables['nu_config_obj']
         dut_port1 = dut_config['ports'][0]
+
+        checkpoint = "Fetch meter ID using snapshot"
+        network_controller_obj.disconnect()
+        dpcsh_server_ip = dut_config["dpcsh_tcp_proxy_ip"]
+        dpcsh_server_port = dut_config['dpcsh_tcp_proxy_port']
+        snapshot_obj = SnapshotHelper(dpc_proxy_ip=dpcsh_server_ip, dpc_proxy_port=dpcsh_server_port)
+        snapshot_obj.setup_snapshot()
+
+        template_obj.enable_generator_configs([generator_handle])
+        fun_test.sleep("to fetch meter id using snapshot", seconds=2)
+        snapshot_dict = snapshot_obj.run_snapshot()
+        fun_test.simple_assert(snapshot_dict, "Fetch snapshot dict")
+        template_obj.disable_generator_configs([generator_handle])
 
         # TODO: Need to figure out better approach to determine if dut port is FPG or HNU
         checkpoint = "Clear FPG port stats on DUT"

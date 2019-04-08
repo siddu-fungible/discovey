@@ -21,7 +21,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
     USER_WORKING_DIR = "USER_WORKING_DIR"
     FRAME_SIZE_64 = "64.0"
     FRAME_SIZE_1500 = "1500.0"
-    FRAME_SIZE_IMIX = "361.8"
+    FRAME_SIZE_800 = "800.0"
+    FRAME_SIZE_IMIX = None
     FRAME_SIZE_1000 = "1000.0"
     FRAME_SIZE_9000 = "9000.0"
     FRAME_SIZE_8900 = "8900.0"
@@ -199,7 +200,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         result = OrderedDict()
         result[self.FRAME_SIZE_64] = []
         result[self.FRAME_SIZE_1500] = []
-        result[self.FRAME_SIZE_IMIX] = []
+        result[self.FRAME_SIZE_800] = []
+        result['IMIX'] = []
         result[self.FRAME_SIZE_1000] = []
         result[self.FRAME_SIZE_9000] = []
         try:
@@ -215,18 +217,16 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         result[self.FRAME_SIZE_64].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_1500 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_1500].append(data_dict)
-                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_IMIX == data_dict['AvgFrameSize']:
-                        result[self.FRAME_SIZE_IMIX].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_800 == data_dict['AvgFrameSize']:
+                        result[self.FRAME_SIZE_800].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_1000 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_1000].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_9000 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_9000].append(data_dict)
                     elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_8900 == data_dict['AvgFrameSize']:
                         result[self.FRAME_SIZE_9000].append(data_dict)
-                    elif 'AvgFrameSize' in data_dict and self.FRAME_SIZE_IMIX == str(round(float(
-                            data_dict['AvgFrameSize']), 1)) \
-                            and data_dict['iMIXDistribution'] == 'Default':
-                        result[self.FRAME_SIZE_IMIX].append(data_dict)
+                    elif 'AvgFrameSize' in data_dict and data_dict['iMIXDistribution'] == 'Default':
+                        result['IMIX'].append(data_dict)
             output['status'] = True
             output['summary_result'] = result
         except Exception as ex:
@@ -320,12 +320,18 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             forwarding_rates = []
             for record in records:
                 if float(record['AvgFrameSize']) == frame_size:
-                    forwarding_rates.append(float(record['ForwardingRate(fps)']))
-            max_rate = max(forwarding_rates)
-            for record in records:
-                if max_rate == float(record['ForwardingRate(fps)']):
-                    max_rate_record = record
-                    break
+                    if record['Result'] == self.PASSED:
+                        forwarding_rates.append(float(record['ForwardingRate(fps)']))
+            try:
+                max_rate = max(forwarding_rates)
+            except ValueError as ex:
+                fun_test.critical(str(ex))
+                max_rate = -1
+            if max_rate != -1:
+                for record in records:
+                    if max_rate == float(record['ForwardingRate(fps)']):
+                        max_rate_record = record
+                        break
         except Exception as ex:
             fun_test.critical(str(ex))
         return max_rate_record
@@ -342,6 +348,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
 
     def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G):
         results = []
+        output = True
+        failed_result_found = False
         try:
             for key in result_dict:
                 records = result_dict[key]
@@ -358,17 +366,29 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     data_dict['frame_size'] = frame_size
 
                     max_rate_record = self._get_max_forwarding_rate(records=records, frame_size=actual_frame_size)
-                    data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
-                    throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
-                                                                    frame_size=frame_size)
-                    data_dict['throughput'] = round(throughput, 2)
-                    data_dict['latency_min'] = round(float(max_rate_record['MinimumLatency(us)']), 2)
-                    data_dict['latency_max'] = round(float(max_rate_record['MaximumLatency(us)']), 2)
-                    data_dict['latency_avg'] = round(float(max_rate_record['AverageLatency(us)']), 2)
+                    if max_rate_record:
+                        data_dict['pps'] = float(max_rate_record['ForwardingRate(fps)'])
+                        throughput = self._calculate_throughput_in_mbps(forwarding_rate=data_dict['pps'],
+                                                                        frame_size=frame_size)
+                        data_dict['throughput'] = round(throughput, 2)
+                        data_dict['latency_min'] = round(float(max_rate_record['MinimumLatency(us)']), 2)
+                        data_dict['latency_max'] = round(float(max_rate_record['MaximumLatency(us)']), 2)
+                        data_dict['latency_avg'] = round(float(max_rate_record['AverageLatency(us)']), 2)
 
-                    data_dict['jitter_min'] = round(float(max_rate_record['MinimumJitter(us)']), 2)
-                    data_dict['jitter_max'] = round(float(max_rate_record['MaximumJitter(us)']), 2)
-                    data_dict['jitter_avg'] = round(float(max_rate_record['AverageJitter(us)']), 2)
+                        data_dict['jitter_min'] = round(float(max_rate_record['MinimumJitter(us)']), 2)
+                        data_dict['jitter_max'] = round(float(max_rate_record['MaximumJitter(us)']), 2)
+                        data_dict['jitter_avg'] = round(float(max_rate_record['AverageJitter(us)']), 2)
+                    else:
+                        data_dict['pps'] = -1
+                        data_dict['throughput'] = -1
+                        data_dict['latency_min'] = -1
+                        data_dict['latency_max'] = -1
+                        data_dict['latency_avg'] = -1
+
+                        data_dict['jitter_min'] = -1
+                        data_dict['jitter_max'] = -1
+                        data_dict['jitter_avg'] = -1
+                        failed_result_found = True
 
                     results.append(data_dict)
                     fun_test.debug(results)
@@ -384,9 +404,11 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                 file_created = self.create_counters_file(json_file_name=file_path,
                                                          counter_dict=results)
                 fun_test.simple_assert(file_created, "Create Performance JSON file")
+            if failed_result_found:
+                output = False
         except Exception as ex:
             fun_test.critical(str(ex))
-        return results
+        return output
 
     def get_throughput_config(self):
         configs = []

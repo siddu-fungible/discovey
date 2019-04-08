@@ -185,7 +185,7 @@ class SbpZynqSetupTemplate:
         self.host.create_file(contents=template, file_name=target_file_name)
 
     def setup_container(self, git_pull=True):
-        self.docker_host = AssetManager().get_any_docker_host()
+        self.docker_host = fun_test.get_asset_manager().get_any_docker_host()
         workspace = os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(FUN_TEST_DIR))))
         self.container_name = "this_container"
         image_name = "sbp_basic:latest"

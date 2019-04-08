@@ -61,4 +61,11 @@ export class RegressionService implements OnInit{
     }))
   }
 
+  fetchScriptInfoByScriptPath(scriptPath) {
+    let payload = {script_path: scriptPath};
+    return this.apiService.post('/regression/script', payload).pipe(switchMap((response) => {
+      return of(response.data);
+    }));
+  }
+
 }

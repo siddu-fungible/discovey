@@ -8,7 +8,7 @@
   width: 27em;
 }
 .field-width {
-  width: 27em;
+  width: 100%;
 }
 #emails-label {
   margin: 0;
@@ -21,4 +21,10 @@ table {
 }
 .side-table {
   padding: 4px;
+}
+
+input.disabled {
+  pointer-events:none;
+  color:#AAA;
+  background:#F5F5F5;
 }

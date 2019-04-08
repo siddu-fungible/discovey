@@ -4,6 +4,7 @@ from scripts.networking.nu_config_manager import *
 from lib.host.network_controller import *
 from scripts.networking.helper import *
 from lib.host.linux import *
+from lib.fun.fs import *
 
 
 network_controller_obj = None
@@ -65,6 +66,11 @@ class ScriptSetup(FunTestScript):
         global dut_config, network_controller_obj, spirent_config, TIMESTAMP
 
         nu_config_obj = NuConfigManager()
+
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
+            fs = Fs.get()
+            fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
+            
         dut_type = nu_config_obj.DUT_TYPE
         fun_test.shared_variables['dut_type'] = dut_type
         spirent_config = nu_config_obj.read_traffic_generator_config()
@@ -72,8 +78,8 @@ class ScriptSetup(FunTestScript):
         network_controller_obj = NetworkController(dpc_server_ip=dut_config['dpcsh_tcp_proxy_ip'],
                                                    dpc_server_port=dut_config['dpcsh_tcp_proxy_port'])
 
-        fun_test.simple_assert(ensure_dpcsh_ready(network_controller_obj=network_controller_obj),
-                               "Ensure DPCsh ready to process commands")
+        # fun_test.simple_assert(ensure_dpcsh_ready(network_controller_obj=network_controller_obj),
+        #                        "Ensure DPCsh ready to process commands")
 
         checkpoint = "Configure QoS settings"
         enable_pfc = network_controller_obj.enable_qos_pfc()
@@ -106,19 +112,19 @@ class ScriptSetup(FunTestScript):
                                                                             mode="hnu")
         fun_test.test_assert(buffer_pool_set, checkpoint)
 
-        port_list = [5, 13, 15, 18, 1, 2]
+        nu_port_list = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        hnu_port_list = [0, 1, 2, 3]
         shape = 0
-        for port in port_list:
-            if port == 1 or port == 2:
-                shape = 1
+        for port in nu_port_list:
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        for port in [0, 1, 2, 3, 17]:
-            mtu = network_controller_obj.set_port_mtu(port_num=port, shape=0, mtu_value=9000)
-            fun_test.test_assert(mtu, " Set mtu on DUT port %s" % port)
+        for port in hnu_port_list:
+            shape = 1
+            result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
+            fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        self._setup_fcp_external_routes()
+        # self._setup_fcp_external_routes()
 
         TIMESTAMP = get_current_time()
 
@@ -130,7 +136,7 @@ class TestTransitPerformance(FunTestCase):
     tc_id = 1
     template_obj = None
     flow_direction = FLOW_TYPE_NU_NU_NFCP
-    tcc_file_name = "transit_single_flow.tcc"  # Uni-directional
+    tcc_file_name = "transit_single_flow_rfc.tcc"  # Uni-directional
     spray = False
 
     def _get_tcc_config_file_path(self, flow_direction):
@@ -158,7 +164,7 @@ class TestTransitPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1000B, 9000B, IMIX(AvgFrameSize: 361 B)]" % (
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 800B, 1500B, 9000B, IMIX]" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -196,8 +202,12 @@ class TestTransitPerformance(FunTestCase):
         fun_test.log("Fetching per VP stats before traffic")
         network_controller_obj.peek_per_vp_stats()
 
-        fun_test.log("Fetching PSW Global stats before test")
+        fun_test.log("Fetching PSW NU Global stats before test")
         network_controller_obj.peek_psw_global_stats()
+
+        if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
+            fun_test.log("Fetching PSW HNU Global stats before test")
+            network_controller_obj.peek_psw_global_stats(hnu=True)
 
         fun_test.log("Fetching VP packets before test")
         network_controller_obj.peek_vp_packets()
@@ -213,16 +223,20 @@ class TestTransitPerformance(FunTestCase):
         result = self.template_obj.wait_until_complete()
         fun_test.test_assert(result, checkpoint)
 
-        fun_test.log("Fetching PSW Global stats before test")
+        fun_test.log("Fetching PSW NU Global stats after test")
         network_controller_obj.peek_psw_global_stats()
+
+        if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
+            fun_test.log("Fetching PSW HNU Global stats after test")
+            network_controller_obj.peek_psw_global_stats(hnu=True)
 
         fun_test.log("Fetching VP packets after test")
         network_controller_obj.peek_vp_packets()
 
-        fun_test.log("Fetching BAM stats before test")
+        fun_test.log("Fetching BAM stats after test")
         network_controller_obj.peek_bam_stats()
 
-        fun_test.log("Fetching per VP stats After traffic")
+        fun_test.log("Fetching per VP stats after traffic")
         network_controller_obj.peek_per_vp_stats()
 
         checkpoint = "Fetch summary result for latency and throughput for all frames and all iterations"
@@ -241,12 +255,51 @@ class TestTransitPerformance(FunTestCase):
         result = self.template_obj.create_performance_table(result_dict=result_dict['summary_result'],
                                                             table_name=table_name)
         fun_test.simple_assert(result, checkpoint)
-        checkpoint = "Ensure output JSON populated for performance dashboard"
         if self.spray or self.flow_direction == FLOW_TYPE_NU_NU_NFCP:
             result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
                                                                       timestamp=TIMESTAMP,
                                                                       flow_direction=self.flow_direction)
-            fun_test.simple_assert(result, checkpoint)
+            if not result:
+                fun_test.log("===================== Trying another trial for failed flow with extra debug logs %s "
+                             "=====================" % self.flow_direction)
+                checkpoint = "Clear FPG stats"
+                for port in [13, 15, 18, 1, 2]:
+                    shape = 0
+                    if port == 1 or port == 2:
+                        shape = 1
+                    network_controller_obj.clear_port_stats(port, shape)
+                fun_test.add_checkpoint(checkpoint)
+
+                checkpoint = "Start Sequencer"
+                result = self.template_obj.start_sequencer()
+                fun_test.test_assert(result, checkpoint)
+
+                fun_test.sleep("Waiting for sequencer to run", seconds=60)
+
+                checkpoint = "Stop Sequencer"
+                result = self.template_obj.stc_manager.stop_sequencer()
+                fun_test.test_assert(result, checkpoint)
+
+                fun_test.log("============== Mac stats for FPG13 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=13)
+                fun_test.log("============== Mac stats for FPG15 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=15)
+                fun_test.log("============== Mac stats for FPG18 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=18)
+                fun_test.log("============== Mac stats for HNU FPG1 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=1, hnu=True)
+                fun_test.log("============== Mac stats for HNU FPG2 ==============")
+                network_controller_obj.peek_fpg_port_stats(port_num=2, hnu=True)
+
+                fun_test.log("Fetching PSW Global stats re-run test")
+                network_controller_obj.peek_psw_global_stats()
+
+                if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
+                    fun_test.log("Fetching PSW HNU Global stats re-run test")
+                    network_controller_obj.peek_psw_global_stats(hnu=True)
+
+                fun_test.simple_assert(False, '%s Flow Failed as all iterations in RFC2544 run failed. '
+                                              'Added -1 in JSON output for this flow' % self.flow_direction)
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)
 
@@ -257,42 +310,42 @@ class TestTransitPerformance(FunTestCase):
 class TestNuHnuPerformance(TestTransitPerformance):
     tc_id = 2
     flow_direction = FLOW_TYPE_NU_HNU_NFCP
-    tcc_file_name = "nu_hnu_palladium_2ports.tcc"  # 2 Ports with Spray Enable
+    tcc_file_name = "nu_hnu_fs1600_2ports.tcc"  # 2 Ports with Spray Enable
     spray = True
 
 
 class TestHnuNuPerformance(TestTransitPerformance):
     tc_id = 3
     flow_direction = FLOW_TYPE_HNU_NU_NFCP
-    tcc_file_name = "hnu_nu_palladium_2ports.tcc"  # 2 Ports with Spray Enable
+    tcc_file_name = "hnu_nu_fs1600_2ports.tcc"  # 2 Ports with Spray Enable
     spray = True
 
 
 class TestHnuHnuNonFcpPerformance(TestTransitPerformance):
     tc_id = 4
     flow_direction = FLOW_TYPE_HNU_HNU_NFCP
-    tcc_file_name = "hnu_hnu_palladium_2ports.tcc"  # Bi-directional with Spray Enable
+    tcc_file_name = "hnu_hnu_fs1600_2ports_nfcp.tcc"  # Bi-directional with Spray Enable
     spray = True
 
 
 class TestNuHnuPerformanceSingleFlow(TestTransitPerformance):
     tc_id = 5
     flow_direction = FLOW_TYPE_NU_HNU_NFCP
-    tcc_file_name = "nu_hnu_palladium_single_flow.tcc"  # Single Port with Spray Disable
+    tcc_file_name = "nu_hnu_fs1600_single.tcc"  # Single Port with Spray Disable
     spray = False
 
 
 class TestHnuNuPerformanceSingleFlow(TestTransitPerformance):
     tc_id = 6
     flow_direction = FLOW_TYPE_HNU_NU_NFCP
-    tcc_file_name = "hnu_nu_palladium_single_flow.tcc"  # Single Port with Spray Disable
+    tcc_file_name = "hnu_nu_fs1600_single.tcc"  # Single Port with Spray Disable
     spray = False
 
 
 class TestHnuHnuNonFcpPerformanceSingleFlow(TestTransitPerformance):
     tc_id = 7
     flow_direction = FLOW_TYPE_HNU_HNU_NFCP
-    tcc_file_name = "hnu_hnu_palladium_single_flow.tcc"  # Single Port with Spray Disable
+    tcc_file_name = "hnu_hnu_fs1600_single_nfcp.tcc"  # Single Port with Spray Disable
     spray = False
 
 
@@ -325,6 +378,6 @@ if __name__ == '__main__':
     ts.add_test_case(TestHnuHnuNonFcpPerformanceSingleFlow())
 
     # FCP cases
-    ts.add_test_case(TestHnuHnuFcpPerformance())
-    ts.add_test_case(TestHnuHnuFcpPerformanceSingleFlow())
+    # ts.add_test_case(TestHnuHnuFcpPerformance())
+    # ts.add_test_case(TestHnuHnuFcpPerformanceSingleFlow())
     ts.run()

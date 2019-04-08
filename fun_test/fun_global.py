@@ -24,7 +24,6 @@ RESULTS = {"NOT_RUN": "NOT_RUN",
            "SCHEDULED": "SCHEDULED",
            "ABORTED": "ABORTED"}
 
-
 def get_current_time():
     utc = pytz.utc.localize(datetime.datetime.utcnow())
     return utc.astimezone(pytz.timezone(TIME_ZONE))

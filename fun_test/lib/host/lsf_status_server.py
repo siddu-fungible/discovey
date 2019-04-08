@@ -27,10 +27,13 @@ class LsfStatusServer:
                     response_dict = json.loads(past_jobs)
                     fun_test.log(json.dumps(response_dict, indent=4))
                     past_jobs = response_dict["past_jobs"]
-                for past_job in [past_jobs[0]]:
-                    job_id = past_job["job_id"]
-                    response = self.get_job_by_id(job_id=job_id)
-                    response = self.get_job_by_id(job_id=job_id)
+                past_job = past_jobs[0]
+                local_past_jobs_index = fun_test.get_local_setting("lsf_past_jobs_index")
+                if local_past_jobs_index:
+                    past_job = past_jobs[int(local_past_jobs_index)]
+                job_id = past_job["job_id"]
+                response = self.get_job_by_id(job_id=job_id)
+                response = self.get_job_by_id(job_id=job_id)
         except Exception as ex:
             fun_test.critical("Workaround failed:" + str(ex))
 
@@ -97,7 +100,11 @@ class LsfStatusServer:
             past_jobs = response_dict["past_jobs"]
 
         if add_info_to_db:
-            for past_job in [past_jobs[0]]:
+            last_job = past_jobs[0]
+            local_past_jobs_index = fun_test.get_local_setting("lsf_past_jobs_index")
+            if local_past_jobs_index:
+                last_job = past_jobs[int(local_past_jobs_index)]
+            for past_job in [last_job]:
                 job_info = past_job
                 if "completion_date" not in job_info:
                     fun_test.critical("Job: {} has no field named completion_date".format(job_info["job_id"]))
@@ -174,7 +181,7 @@ class LsfStatusServer:
             except Exception as ex:
                 fun_test.log("Actual response:" + response)
                 fun_test.critical(str(ex))
-        
+
             output_text = response_dict["output_text"]
             result["date_time"] = dt
             result["output_text"] = output_text

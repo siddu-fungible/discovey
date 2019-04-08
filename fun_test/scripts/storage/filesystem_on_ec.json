@@ -26,8 +26,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "ext2",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 8
   },
   "Ext2OnECDirectWriteDeleteFirst": {
@@ -57,8 +59,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "ext2",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 8
   },
   "Ext3OnECBufferedWriteDetachFirst": {
@@ -88,8 +92,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "ext3",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 8
   },
   "Ext3OnECDirectWriteDeleteFirst": {
@@ -119,8 +125,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "ext3",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 8
   },
   "Ext4OnECBufferedWriteDetachFirst": {
@@ -150,8 +158,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "ext4",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 8
   },
   "Ext4OnECDirectWriteDeleteFirst": {
@@ -181,8 +191,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "ext4",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 4
   },
   "XFSOnECBufferedWriteDetachFirst": {
@@ -212,8 +224,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "xfs",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 8
   },
   "XFSOnECDirectWriteDeleteFirst": {
@@ -243,8 +257,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "xfs",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096, "oflag": "sync"},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096, "iflag": "sync"},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 8
   },
   "ECVolumeCreateDeleteInBatch": {
@@ -275,8 +291,10 @@
     "mount_point": "/mnt/ssd",
     "fs_type": "ext2",
     "dataset_size_pct": 0.25,
+    "max_dataset_size": 83886080,
     "dd_write_args": {"input_file": "/dev/urandom", "output_file": "/mnt/ssd/input", "block_size": 4096},
     "dd_read_args": {"input_file": "/mnt/ssd/input", "output_file": "/tmp/output", "block_size": 4096},
+    "test_min_timeeout": 60,
     "test_timeout_ratio": 8
   }
 }

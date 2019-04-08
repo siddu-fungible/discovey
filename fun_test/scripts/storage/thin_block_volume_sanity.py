@@ -67,7 +67,8 @@ class BLTSanityScript(FunTestScript):
         fun_test.shared_variables["ctrl_created"] = False
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        if "topology" in fun_test.shared_variables:
+            fun_test.shared_variables["topology"].cleanup()
         # pass
 
 

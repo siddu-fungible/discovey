@@ -38,7 +38,6 @@ import { SiteConstructionComponent } from './site-construction/site-construction
 import { RegressionAdminComponent } from './regression/regression-admin/regression-admin.component';
 import { JiraInfoComponent } from './jira-info/jira-info.component';
 import { RegressionSummaryComponent } from './regression/regression-summary/regression-summary.component';
-import { GitHistoryComponent } from './git-history/git-history.component';
 import { RegressionSummaryChartComponent } from './regression/regression-summary/regression-summary-chart/regression-summary-chart.component';
 import { ScriptHistoryComponent } from './regression/script-history/script-history.component';
 import { SummaryJiraInfoComponent } from "./jira-info/summary-jira-info.component";
@@ -50,6 +49,8 @@ import { SchedulerAdminComponent } from './scheduler-admin/scheduler-admin.compo
 import { ToasterModule, ToasterService } from "angular2-toaster";
 import { LogViewerComponent } from './log-viewer/log-viewer.component';
 import { SmartLabelComponent } from './smart-label/smart-label.component';
+import { TriageComponent } from './triage/triage.component';
+import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-line/section-horizontal-line.component";
 
 @NgModule({
   declarations: [
@@ -75,7 +76,7 @@ import { SmartLabelComponent } from './smart-label/smart-label.component';
     RegressionAdminComponent,
     JiraInfoComponent,
     RegressionSummaryComponent,
-    GitHistoryComponent,
+    TriageComponent,
     RegressionSummaryChartComponent,
     ScriptHistoryComponent,
     SummaryJiraInfoComponent,
@@ -85,7 +86,8 @@ import { SmartLabelComponent } from './smart-label/smart-label.component';
     AlertsComponent,
     SchedulerAdminComponent,
     LogViewerComponent,
-    SmartLabelComponent
+    SmartLabelComponent,
+    SectionHorizontalLineComponent
   ],
   imports: [
     BsDropdownModule,
@@ -97,7 +99,7 @@ import { SmartLabelComponent } from './smart-label/smart-label.component';
     ChartModule,
     AngularFontAwesomeModule,
     FormsModule,
-    Angular2FontawesomeModule,  // Add this line
+    Angular2FontawesomeModule,
     AngularCollapseModule,
     NgMultiSelectDropDownModule,
     NgbModule,

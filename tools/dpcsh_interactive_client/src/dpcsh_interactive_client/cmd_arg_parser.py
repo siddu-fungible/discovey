@@ -492,6 +492,8 @@ get_port_runt_filter_parser = get_port_runt_sunbparsers.add_parser('filter', hel
 get_port_runt_filter_parser.add_argument('port_num', type=int, help="port_num")
 get_port_runt_filter_parser.add_argument('shape', type=int, help="shape")
 
+# Get Port Linkstatus
+get_port_link_status_parser = get_nu_port_parsers.add_parser('linkstatus', help="Get Port Link Status")
 # -----------------------------------------------------------------------------------------------
 # Get NU QoS sub commands
 get_nu_qos_parsers = get_nu_qos_parser.add_subparsers(title="subcommands", help="")
@@ -1104,6 +1106,28 @@ peek_bam_resource_stats_parser.add_argument('-grep', help="Grep regex pattern", 
 peek_eqm_stats_parser = peek_stats_parsers.add_parser('eqm', help="EQM stats")
 peek_eqm_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
 
+# funtop stats
+peek_funtop_stats_parser = peek_stats_parsers.add_parser('funtop', help="Funtop stats")
+
+# wustacks stats
+peek_wustacks_stats_parser = peek_stats_parsers.add_parser('wustacks', help="Peke wustacks stats")
+
+# wustacks stats
+peek_wus_stats_parser = peek_stats_parsers.add_parser('wus', help="Peke wus stats")
+
+# HU stats
+peek_hu_stats_parser = peek_stats_parsers.add_parser('hu', help="Peek HU stats")
+peek_hu_stats_parser.add_argument('-grep', help="Grep regex pattern (Grep for HU Slice)", default=None)
+
+# malloc agent stats
+peek_malloc_agent_stats_parser = peek_stats_parsers.add_parser('malloc_agent', help="Peek Malloc Agent Stats")
+peek_malloc_agent_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
+# malloc agent non coh stats
+peek_malloc_agent_non_coh_stats_parser = peek_stats_parsers.add_parser('malloc_agent_non_coh',
+                                                                       help="Peek Malloc Agent Non coh Stats")
+peek_malloc_agent_non_coh_stats_parser.add_argument('-grep', help="Grep regex pattern", default=None)
+
 # ---------------------------------------------------------------------------------------------------
 # show commands
 
@@ -1132,3 +1156,20 @@ show_tech_all_parser.add_argument('-filename', help="Specify a filename to save/
                                                    "provided on console once commands run successfully", default=None,
                                      type=str)
 show_tech_all_parser.add_argument('-portlist', help="List of port numbers. specify as follows: -portlist 6 7 8", default=[], nargs='+')
+
+
+# ---------------------------------------------------------------------------------------------------
+# flow commands
+
+# flow sub commands
+
+base_flow_parser = ArgumentParser(prog="flow")
+base_flow_subparsers = base_flow_parser.add_subparsers(title="subcommands", help="")
+
+# Flow list
+flow_list_parser = base_flow_subparsers.add_parser('list', help='List flows')
+flow_list_parser.add_argument('-grep', help="Grep for specific flow", default=None)
+
+# Flow blocked
+flow_blocked_parser = base_flow_subparsers.add_parser('blocked', help='blocked flows')
+flow_blocked_parser.add_argument('-grep', help="Grep for specific flow", default=None)

@@ -1,0 +1,13 @@
+p.section-horizontal-line {
+   width: 100%;
+   text-align: left;
+   border-bottom: 1px solid lightgrey;
+   line-height: 0.1em;
+   margin: 10px 0 20px;
+}
+
+
+span.section-horizontal-line-span {
+  background-color: white;
+  padding-right: 10px;
+}

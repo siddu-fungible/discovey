@@ -54,7 +54,7 @@ class NvmeSanityScript(FunTestScript):
     def cleanup(self):
         if self.topology:
             self.storage_controller.disconnect()
-            TopologyHelper(spec=self.topology).cleanup()
+            self.topology.cleanup()
 
 
 class NvmeSanityTestCase(FunTestCase):

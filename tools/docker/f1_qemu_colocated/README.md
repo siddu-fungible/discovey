@@ -14,7 +14,7 @@ Image to create a container with
 Build:
 ```
 Typically:
-docker build . -t f1_colocated_qemu --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99 --build-arg HOST_OS_TGZ=ubuntu_18.04_qcow2_v2.tgz
+docker build . -t f1_colocated_qemu:v04_01 --build-arg DOCKHUB_FUNGIBLE_LOCAL=10.1.20.99 --build-arg HOST_OS_TGZ=fungible_ubuntu.tgz
 
 ```
 

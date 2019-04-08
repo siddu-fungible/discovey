@@ -67,19 +67,19 @@ def post_results(volume, test, block_size, io_depth, size, operation, write_iops
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-        VolumePerformanceEmulationHelper().add_entry(date_time=fun_test.get_start_time(),
-                                                     volume=volume,
-                                                     test=test,
-                                                     block_size=block_size,
-                                                     io_depth=int(io_depth),
-                                                     size=size,
-                                                     operation=operation,
-                                                     write_iops=write_iops,
-                                                     read_iops=read_iops,
-                                                     write_bw=write_bw,
-                                                     read_bw=read_bw,
-                                                     write_latency=write_latency,
-                                                     read_latency=read_latency)
+    VolumePerformanceEmulationHelper().add_entry(date_time=fun_test.get_start_time(),
+                                                 volume=volume,
+                                                 test=test,
+                                                 block_size=block_size,
+                                                 io_depth=int(io_depth),
+                                                 size=size,
+                                                 operation=operation,
+                                                 write_iops=write_iops,
+                                                 read_iops=read_iops,
+                                                 write_bw=write_bw,
+                                                 read_bw=read_bw,
+                                                 write_latency=write_latency,
+                                                 read_latency=read_latency)
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]

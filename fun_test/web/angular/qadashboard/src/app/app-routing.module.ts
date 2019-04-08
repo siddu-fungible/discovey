@@ -11,6 +11,7 @@ import {SubmitJobComponent} from "./regression/submit-job/submit-job.component";
 import {SuiteDetailComponent} from "./regression/suite-detail/suite-detail.component";
 import {RegressionAdminComponent} from "./regression/regression-admin/regression-admin.component";
 import {RegressionSummaryComponent} from "./regression/regression-summary/regression-summary.component";
+import {TriageComponent} from "./triage/triage.component";
 import {ScriptHistoryComponent} from "./regression/script-history/script-history.component";
 import {NotFoundComponent} from "./not-found/not-found.component";
 import {AlertsComponent} from "./alerts/alerts.component";
@@ -46,7 +47,10 @@ const routes: Routes = [
   {path: 'common/logs', component: LogViewerComponent},
   {path: 'upgrade/test', component: TestComponent},
   /*{path: 'upgrade/demo1', component: Demo1Component},*/
-  {path: '*', component: NotFoundComponent}
+  {path: '*', component: NotFoundComponent},
+  { path: 'performance/atomic/:id/triage', component: TriageComponent},
+  { path: 'triaging/:id', component: TriageComponent},
+  { path: 'triaging', component: TriageComponent}
 ];
 
 @NgModule({

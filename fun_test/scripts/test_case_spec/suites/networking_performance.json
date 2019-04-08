@@ -1,4 +1,4 @@
 [
-  {"path": "networking/performance/test_performance_using_rfc2544.py"}
+  {"path": "networking/performance/test_performance_using_rfc2544.py", "inputs": {"speed": "SPEED_25G"}}
 
 ]

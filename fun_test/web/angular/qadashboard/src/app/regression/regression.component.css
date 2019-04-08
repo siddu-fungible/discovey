@@ -26,3 +26,13 @@ a {
 .tag-link {
   color: white;
 }
+
+.filter-selected {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.pseudo-anchor:hover {
+  cursor: pointer;
+  color: black;
+}

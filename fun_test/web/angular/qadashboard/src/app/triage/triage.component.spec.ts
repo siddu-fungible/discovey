@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { GitHistoryComponent } from './git-history.component';
+import { TriageComponent } from './triage.component';
 
-describe('GitHistoryComponent', () => {
-  let component: GitHistoryComponent;
-  let fixture: ComponentFixture<GitHistoryComponent>;
+describe('TriageComponent', () => {
+  let component: TriageComponent;
+  let fixture: ComponentFixture<TriageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ GitHistoryComponent ]
+      declarations: [ TriageComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(GitHistoryComponent);
+    fixture = TestBed.createComponent(TriageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -56,7 +56,8 @@ class ECCryptoVolumeScript(FunTestScript):
 
     def cleanup(self):
         self.storage_controller.disconnect()
-        TopologyHelper(spec=self.topology).cleanup()
+        if self.topology:
+            self.topology.cleanup()
         # pass
 
 
@@ -187,6 +188,7 @@ class ECCryptoVolumeTestCase(FunTestCase):
             fun_test.shared_variables["ctrl_created"] = True
 
         self.blt_count = self.ndata + self.nparity
+        self.blt_capacity_new = 0
         self.uuid = {}
         self.uuid["blt"] = []
         self.uuid["ec"] = []
@@ -201,13 +203,15 @@ class ECCryptoVolumeTestCase(FunTestCase):
             # Make sure the capacity is multiple of block size
             self.blt_capacity = ((self.blt_capacity + self.blt_details["block_size"] - 1) /
                                  self.blt_details["block_size"]) * self.blt_details["block_size"]
+            self.blt_capacity_new = self.blt_capacity + 4096
         else:
             self.blt_capacity = self.blt_details["capacity"]
+            self.blt_capacity_new = self.blt_capacity + 4096
         for x in range(1, self.blt_count + 1, 1):
             cur_uuid = utils.generate_uuid()
             self.uuid["blt"].append(cur_uuid)
             command_result = self.storage_controller.create_volume(type=self.vol_types["blt"],
-                                                                   capacity=self.blt_capacity,
+                                                                   capacity=self.blt_capacity_new,
                                                                    block_size=self.blt_details["block_size"],
                                                                    name="thin_block" + str(x),
                                                                    uuid=cur_uuid,
@@ -747,11 +751,10 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                                 "Final {} value {} for BLT volume {} is within the expected "
                                                 "range {}".format(ekey, actual, x, evalue))
                                         else:
-                                            fun_test.simple_assert(False,
-                                                                   message="Final {} value : {} for BLT  {} is not "
-                                                                           "within the expected range : {} for mode {}"
-                                                                           "  & combo {}".
-                                                                   format(ekey, actual, x, evalue, mode, combo))
+                                            fun_test.test_assert_expected(evalue, actual,
+                                                                          message="Final {} value for BLT {} "
+                                                                                  "for mode {} & combo {}".
+                                                                          format(ekey, x, mode, combo))
                                     else:
                                         fun_test.add_checkpoint(
                                             "{} check for BLT volume {} for {} test for the block size & IO "
@@ -787,10 +790,10 @@ class ECCryptoVolumeTestCase(FunTestCase):
                                             "Final {} value {} for {} volume is within the expected "
                                             "range {}".format(ekey, actual, vol_type, evalue))
                                     else:
-                                        fun_test.simple_assert(False,
-                                                               message="Final {} value : {} for {} is not within "
-                                                                       "the expected range : {} for mode {} & combo {}".
-                                                               format(ekey, actual, vol_type, evalue, mode, combo))
+                                        fun_test.test_assert_expected(evalue, actual,
+                                                                      message="Final {} value for {} "
+                                                                              "for mode {} & combo {}".
+                                                                      format(ekey, vol_type, mode, combo))
                                 else:
                                     fun_test.add_checkpoint(
                                         "{} check for {} volume for {} test for the block size & IO "

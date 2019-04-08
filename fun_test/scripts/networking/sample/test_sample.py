@@ -1158,6 +1158,7 @@ class SampleEgressFPGtoFPG(FunTestCase):
     sample_id = 57
     header_objs = {'eth_obj': None, 'ip_obj': None, 'tcp_obj': None}
     capture_results = None
+    custom_mac_list = ["fe:dc:ba:44:55:77", "fe:dc:ba:44:55:99"]
 
     def describe(self):
         self.set_test_details(id=5, summary="Test Egress Traffic Sampling FPG to FPG",
@@ -1222,10 +1223,6 @@ class SampleEgressFPGtoFPG(FunTestCase):
         fun_test.simple_assert(result, checkpoint)
 
         ethernet_obj.srcMac = self.routes_config['routermac']
-        if nu_config_obj.DUT_TYPE == NuConfigManager.DUT_TYPE_F1:
-            ethernet_obj.dstMac = "fe:dc:ba:44:55:77"
-        else:
-            ethernet_obj.dstMac = "fe:dc:ba:44:55:99"  # Destination mac of spirent port
         ip_header_obj.ttl = 254
 
         self.header_objs['eth_obj'] = ethernet_obj
@@ -1379,7 +1376,8 @@ class SampleEgressFPGtoFPG(FunTestCase):
         checkpoint = "Ensure all the fields in a packet is correct"
         parser_obj = PcapParser(filename=self.capture_results['pcap_file_path'])
         packets = parser_obj.get_captures_from_file()
-        result = parser_obj.validate_sample_packets_in_file(packets=packets, header_objs=self.header_objs)
+        result = parser_obj.validate_sample_packets_in_file(packets=packets, header_objs=self.header_objs,
+                                                            expected_custom_dmac=self.custom_mac_list)
         fun_test.test_assert(result, checkpoint)
 
     def cleanup(self):

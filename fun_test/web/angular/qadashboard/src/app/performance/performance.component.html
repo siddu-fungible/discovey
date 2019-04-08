@@ -128,10 +128,6 @@
             <td *ngIf="flatNode.special">
               &nbsp;
             </td>
-            <!--<td *ngIf="!flatNode.node.leaf">    </td>-->
-            <ng-template #GitCommitInfo>
-              <git-history [faultyCommit]="currentGitCommit" [successCommit]="passedGitCommit"></git-history>
-            </ng-template>
             <ng-template #TrendInfo>
               <div style="color: black">
                 <b><u>Trend Calculation:</u></b><br>
@@ -157,7 +153,6 @@
             <ng-template #FailedInfo>
               <div *ngIf="passedDateTime" style="color: black;">
                 <b>Last Passed:</b><br> {{ passedDateTime }}<br>
-                <!--Git Commit: {{ passedGitCommit }}<br>-->
                 <a *ngIf="passedLsfUrl" [routerLink]="" (click)='openUrl(passedLsfUrl)'>Lsf log<br></a>
                 <a *ngIf="passedJenkinsUrl" [routerLink]="" (click)='openUrl(passedJenkinsUrl)'>Jenkins log<br></a>
                 <a *ngIf="passedRegressionUrl" [routerLink]="" (click)='openUrl(passedRegressionUrl)'>Regression

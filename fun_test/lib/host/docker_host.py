@@ -58,7 +58,7 @@ class PortAllocator:
 
 
 class DockerHost(Linux, ToDictMixin):
-
+    SDA_WRITE_BPS = 100 * 1024 * 1024
     BASE_CONTAINER_SSH_PORT = 3219
     BASE_POOL1_PORT = 2219
     BASE_POOL2_PORT = 40219
@@ -67,7 +67,7 @@ class DockerHost(Linux, ToDictMixin):
     SSH_USERNAME = "root"
     SSH_PASSWORD = "fun123"
 
-    TYPE_DESKTOP = "TYPE_DESKTOP"
+    TYPE_DESKTOP = "TYPE_DESKTOP" # No longer supported
     TYPE_BARE_METAL = "TYPE_BARE_METAL"
 
     STORAGE_IMAGE_NAME = "integration_jenkins_fetch"
@@ -119,7 +119,7 @@ class DockerHost(Linux, ToDictMixin):
                 if re.search(handoff_string, output):
                     result = True
                     break
-            fun_test.sleep("Waiting for container handoff string", seconds=2)
+            fun_test.sleep("Waiting for container handoff string: {}".format(handoff_string), seconds=10)
         return result
 
     def logs(self, container_name):
@@ -435,7 +435,9 @@ class DockerHost(Linux, ToDictMixin):
                                                                      hostname=host_name,
                                                                      user=user,
                                                                      working_dir=working_dir,
-                                                                     auto_remove=auto_remove)
+                                                                     auto_remove=auto_remove,
+                                                                     cpu_shares=256,
+                                                                     device_write_bps=[{"Path": "/dev/sda", "Rate": self.SDA_WRITE_BPS}])
                 else:
                     allocated_container = self.client.containers.run(image_name,
                                                                      detach=True,
@@ -447,7 +449,10 @@ class DockerHost(Linux, ToDictMixin):
                                                                      hostname=host_name,
                                                                      user=user,
                                                                      working_dir=working_dir,
-                                                                     auto_remove=auto_remove)
+                                                                     auto_remove=auto_remove,
+                                                                     cpu_shares=256,
+                                                                     device_write_bps=[
+                                                                         {"Path": "/dev/sda", "Rate": self.SDA_WRITE_BPS}])
                 fun_test.simple_assert(self.ensure_container_running(container_name=container_name,
                                                                      max_wait_time=self.CONTAINER_START_UP_TIME_DEFAULT),
                                        "Ensure container is started")

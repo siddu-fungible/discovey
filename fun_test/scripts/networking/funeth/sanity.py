@@ -1,7 +1,8 @@
+from lib.system.fun_test import *
+from lib.fun.fs import Fs
+from lib.host.network_controller import NetworkController
 from scripts.networking.funeth.funeth import Funeth
 from scripts.networking.tb_configs import tb_configs
-from lib.system.fun_test import *
-from lib.host.network_controller import NetworkController
 import re
 
 
@@ -13,22 +14,46 @@ try:
     if emulation_target == 'palladium':
         TB = 'SN2'
     elif emulation_target == 'f1':
-        TB = 'SB5'
-except KeyError:
-    DPC_PROXY_IP = '10.1.21.120'
-    DPC_PROXY_PORT = 40221
-    TB = 'SN2'
+        if str(job_environment['HARDWARE_MODEL']) == 'F1Endpoint':
+            TB = 'FS5'
+        else:
+            TB = 'SB5'
+except (KeyError, ValueError):
+    #DPC_PROXY_IP = '10.1.21.120'
+    #DPC_PROXY_PORT = 40221
+    #TB = 'SN2'
+    #DPC_PROXY_IP = '10.1.40.24'
+    #DPC_PROXY_PORT = 40221
+    #TB = 'SB5'
+    DPC_PROXY_IP = '10.1.20.129'
+    DPC_PROXY_PORT = 40220
+    TB = 'FS7'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
 
 def setup_nu_host(funeth_obj):
+    linux_obj = funeth_obj.linux_obj_dict['nu']
+    if TB == 'FS7':
+        fun_test.test_assert(linux_obj.reboot(timeout=60, retries=5), 'Reboot NU host')
     fun_test.test_assert(funeth_obj.configure_interfaces('nu'), 'Configure NU host interface')
     fun_test.test_assert(funeth_obj.configure_ipv4_routes('nu'), 'Configure NU host IPv4 routes')
+    cmds = [
+        'echo 1 > /proc/sys/net/ipv4/ip_forward',
+        'echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter',
+        'echo 0 > /proc/sys/net/ipv4/conf/default/rp_filter',
+        'echo 0 > /proc/sys/net/ipv4/conf/fpg1/rp_filter',
+        'echo 0 > /proc/sys/net/ipv4/conf/fpg2/rp_filter',
+    ]
+    for intf in funeth_obj.tb_config_obj.get_all_interfaces('nu'):
+        cmds.append('echo 0 > /proc/sys/net/ipv4/conf/{}/rp_filter'.format(intf))
+    for cmd in cmds:
+        linux_obj.sudo_command(cmd)
 
 
 def setup_hu_host(funeth_obj, update_driver=True):
     if update_driver:
+        funeth_obj.setup_workspace()
         fun_test.test_assert(funeth_obj.lspci(), 'Fungible Ethernet controller is seen.')
         fun_test.test_assert(funeth_obj.update_src(), 'Update funeth driver source code.')
         fun_test.test_assert(funeth_obj.build(), 'Build funeth driver.')
@@ -51,9 +76,19 @@ class FunethSanity(FunTestScript):
 
     def setup(self):
 
+        # Boot up FS1600
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
+            fs = Fs.get()
+            fun_test.shared_variables["fs"] = fs
+            fun_test.test_assert(fs.bootup(reboot_bmc=False, power_cyle_come=True), "FS bootup")
+            # TODO: get dpc proxy ip/port
+            global DPC_PROXY_IP
+            global DPC_PROXY_PORT
+            DPC_PROXY_IP = '10.1.20.129'
+            DPC_PROXY_PORT = 40220
+
         tb_config_obj = tb_configs.TBConfigs(TB)
         funeth_obj = Funeth(tb_config_obj)
-        funeth_obj.setup_workspace()
 
         # NU host
         setup_nu_host(funeth_obj)
@@ -62,9 +97,25 @@ class FunethSanity(FunTestScript):
         setup_hu_host(funeth_obj)
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
+        network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
+                                                   verbose=True)
+        fun_test.shared_variables['network_controller_obj'] = network_controller_obj
 
     def cleanup(self):
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
+            fun_test.shared_variables["fs"].cleanup()
         fun_test.shared_variables['funeth_obj'].cleanup_workspace()
+
+
+def collect_stats():
+    try:
+        network_controller_obj = fun_test.shared_variables['network_controller_obj']
+        network_controller_obj.peek_fpg_port_stats(port_num=0)
+        network_controller_obj.peek_fpg_port_stats(port_num=1)
+        network_controller_obj.peek_psw_global_stats()
+        network_controller_obj.peek_vp_packets()
+    except:
+        pass
 
 
 def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces_excludes=[]):
@@ -74,15 +125,16 @@ def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces
     interfaces = [i for i in tb_config_obj.get_all_interfaces('hu') if i not in interfaces_excludes]
     ip_addrs = [tb_config_obj.get_interface_ipv4_addr('hu', intf) for intf in interfaces]
 
+    # Collect fpg, psw, vp stats before and after
+    collect_stats()
+
     for intf, ip_addr in zip(interfaces, ip_addrs):
+        result = linux_obj.ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
+                                size=packet_size-20-8,  # IP header 20B, ICMP header 8B
+                                sudo=True)
+        collect_stats()
         fun_test.test_assert(
-            linux_obj.ping(
-                ip_addr,
-                count=packet_count,
-                max_percentage_loss=0,
-                interval=0.1,
-                size=packet_size-20-8,  # IP header 20B, ICMP header 8B
-                sudo=True),
+            result,
             'NU ping HU interfaces {} with {} packets and packet size {}B'.format(intf, packet_count, packet_size))
 
 
@@ -136,8 +188,7 @@ class FunethTestPacketSweep(FunTestCase):
                                  'Set HU host {} interface {} MTU to {}'.format(hostname, interface, MAX_MTU))
 
         # FPG MTU
-        network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
-                                                   verbose=True)
+        network_controller_obj = fun_test.shared_variables['network_controller_obj']
         fpg_port_num = int(tb_config_obj.get_a_nu_interface().lstrip('fpg'))
         fpg_mtu = MAX_MTU + 14 + 4  # For Ethernet frame
         fun_test.test_assert(network_controller_obj.set_port_mtu(fpg_port_num, fpg_mtu),
@@ -168,11 +219,11 @@ class FunethTestPacketSweep(FunTestCase):
             return pkt_size - 20 - 8  # IP header 20B, ICMP header 8B
 
         for intf, ip_addr in zip(interfaces, ip_addrs):
-            cmd = 'for i in {%s..%s}; do ping -c %s -i %s -s $i %s; done' % (
+            cmd = 'for i in {%s..%s}; do sudo ping -c %s -i %s -s $i %s; done' % (
                 get_icmp_payload_size(min_pkt_size), get_icmp_payload_size(max_pkt_size), pkt_count, interval, ip_addr)
             output = linux_obj.command(cmd, timeout=3000)
             fun_test.test_assert(
-                re.search(r'[1-9]+% packet loss', output) is None,
+                re.search(r'[1-9]+% packet loss', output) is None and re.search(r'cannot', output) is None,
                 'NU ping HU interfaces {} with packet sizes {}-{}B'.format(intf, min_pkt_size, max_pkt_size))
 
 
@@ -235,14 +286,16 @@ class FunethTestScpBase(FunTestCase):
             password = tb_config_obj.get_password('hu')
             desc = 'Scp a file from HU to NU host.'
 
-        fun_test.test_assert(linux_obj.scp(source_file_path=self.file_name,
+        collect_stats()
+        result = linux_obj.scp(source_file_path=self.file_name,
                                            target_ip=ip_addr,
                                            target_file_path='{}{}'.format(
                                                self.file_name, '' if not pf_or_vf else pf_or_vf),
                                            target_username=username,
                                            target_password=password,
                                            timeout=300),
-                             desc)
+        collect_stats()
+        fun_test.test_assert(result, desc)
 
 
 class FunethTestScpNU2HUPF(FunethTestScpBase):
@@ -414,8 +467,8 @@ if __name__ == "__main__":
             FunethTestScpHU2NU,
             FunethTestInterfaceFlapPF,
             FunethTestInterfaceFlapVF,
-            FunethTestUnloadDriver,
-            #FunethTestReboot,  TODO: uncomment after SWTOOLS-877 is fixed
+            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            FunethTestReboot,
     ):
         ts.add_test_case(tc())
     ts.run()

@@ -11,7 +11,7 @@ from web.web_global import initialize_result, api_safe_json_response
 from django.http import HttpResponse
 from fun_global import RESULTS
 import json
-from lib.host.linux import Linux
+# from lib.host.linux import Linux
 from django.core.exceptions import ObjectDoesNotExist
 
 

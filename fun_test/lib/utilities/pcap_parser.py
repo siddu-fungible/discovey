@@ -198,7 +198,7 @@ class PcapParser(object):
         return result
 
     def _validate_sample_packet(self, packet, expected_l2_obj=None, expected_l3_obj=None, expected_l4_obj=None,
-                                ip_version=4, expected_packet_length=None):
+                                ip_version=4, expected_packet_length=None, expected_custom_dmac=[]):
         result = False
         try:
             fields = self.get_all_packet_fields(packet=packet)
@@ -209,9 +209,13 @@ class PcapParser(object):
             if expected_l2_obj:
                 fun_test.log("Verifying Ethernet Layer Fields")
                 eth_fields = fields['layer_eth']
-                fun_test.test_assert_expected(expected=expected_l2_obj.dstMac.lower(),
-                                              actual=eth_fields['eth_dst'],
-                                              message="Validate destination mac address", ignore_on_success=True)
+                if expected_custom_dmac:
+                    fun_test.test_assert(eth_fields['eth_dst'] in expected_custom_dmac,
+                                         "Validate destination mac address", ignore_on_success=True)
+                else:
+                    fun_test.test_assert_expected(expected=expected_l2_obj.dstMac.lower(),
+                                                  actual=eth_fields['eth_dst'],
+                                                  message="Validate destination mac address", ignore_on_success=True)
                 fun_test.test_assert_expected(expected=expected_l2_obj.srcMac.lower(),
                                               actual=eth_fields['eth_src'],
                                               message="Validate source mac address", ignore_on_success=True)
@@ -286,7 +290,7 @@ class PcapParser(object):
         return result
 
     def validate_sample_packets_in_file(self, packets, header_objs={}, packet_count=5, ip_version=4,
-                                        expected_packet_length=None):
+                                        expected_packet_length=None, expected_custom_dmac=[]):
         result = False
         try:
             count = 1
@@ -299,7 +303,8 @@ class PcapParser(object):
                                                           expected_l3_obj=header_objs['ip_obj'],
                                                           expected_l4_obj=header_objs['tcp_obj'],
                                                           ip_version=ip_version,
-                                                          expected_packet_length=expected_packet_length)
+                                                          expected_packet_length=expected_packet_length,
+                                                          expected_custom_dmac=expected_custom_dmac)
                 else:
                     result = self._validate_sample_packet(packet=packet, expected_l2_obj=header_objs['eth_obj'],
                                                           expected_l3_obj=header_objs['ip_obj'],

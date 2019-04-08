@@ -19,6 +19,7 @@ class CmdController(Cmd):
         self._sample_cmd_obj = SampleCommands(dpc_client=self.dpc_client)
         self._show_cmd_obj = ShowCommands(dpc_client=self.dpc_client)
         self._meter_cmd_obj = MeterCommands(dpc_client=self.dpc_client)
+        self._flow_cmd_obj = FlowCommands(dpc_client=self.dpc_client)
 
     def set_system_time_interval(self, args):
         time_interval = args.time
@@ -85,6 +86,9 @@ class CmdController(Cmd):
 
     def get_port_pause_quanta(self, args):
         self._port_cmd_obj.port_pause_quanta(port_num=args.port_num, shape=args.shape)
+
+    def get_port_link_status(self, args):
+        self._port_cmd_obj.port_link_status()
 
     def set_port_pause_threshold(self, args):
         self._port_cmd_obj.port_pause_threshold(port_num=args.port_num, shape=args.shape, threshold=args.threshold)
@@ -810,6 +814,27 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_eqm_stats(grep_regex=grep_regex)
 
+    def peek_malloc_agent_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_malloc_agent_stats(grep_regex=grep_regex)
+
+    def peek_malloc_agent_non_coh_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_malloc_agent_non_coh_stats(grep_regex=grep_regex)
+
+    def peek_funtop_stats(self, args):
+        self._peek_cmd_obj.peek_funtop_stats()
+
+    def peek_wustacks_stats(self, args):
+        self._peek_cmd_obj.peek_stats_wustacks()
+
+    def peek_wus_stats(self, args):
+        self._peek_cmd_obj.peek_stats_wus()
+
+    def peek_hu_stats(self, args):
+        grep_regex = args.grep
+        self._peek_cmd_obj.peek_stats_hu(grep_regex=grep_regex)
+
     def clear_nu_port_stats(self, args):
         self._clear_cmd_obj.clear_nu_port_stats(port_num=args.port_num, shape=args.shape)
 
@@ -890,6 +915,14 @@ class CmdController(Cmd):
         portlist = args.portlist
         self._show_cmd_obj.show_stats(filename=filename, mode='all', port_list=portlist)
 
+    def get_flow_list(self, args):
+        grep_regex = args.grep
+        self._flow_cmd_obj.get_flow_list(grep_regex=grep_regex)
+
+    def get_flow_blocked(self, args):
+        grep_regex = args.grep
+        self._flow_cmd_obj.get_flow_blocked(grep_regex=grep_regex)
+
     # Set handler functions for the sub commands
 
     # -------------- Port Command Handlers ----------------
@@ -924,6 +957,7 @@ class CmdController(Cmd):
     get_port_runt_filter_parser.set_defaults(func=dump_port_runt_filter)
     set_port_speed_parser.set_defaults(func=set_port_speed)
     get_port_speed_parser.set_defaults(func=get_port_speed)
+    get_port_link_status_parser.set_defaults(func=get_port_link_status)
 
     # -------------- System Command Handlers ----------------
     set_system_params_syslog_parser.set_defaults(func=set_system_syslog_level)
@@ -1018,7 +1052,6 @@ class CmdController(Cmd):
     set_hnu_qos_xoff_status_parser.set_defaults(func=set_hnu_qos_xoff_status)
     get_hnu_qos_xoff_status_parser.set_defaults(func=get_hnu_qos_xoff_status)
 
-
     # -------------- Peek Command Handlers ----------------
     peek_fpg_stats_parser.set_defaults(func=peek_fpg_stats)
     peek_hnu_fpg_stats_parser.set_defaults(func=peek_hnu_fpg_stats)
@@ -1065,6 +1098,12 @@ class CmdController(Cmd):
     peek_etp_hnu_stats_parser.set_defaults(func=peek_etp_hnu_stats)
     peek_etp_nu_stats_parser.set_defaults(func=peek_etp_nu_stats)
     peek_eqm_stats_parser.set_defaults(func=peek_eqm_stats)
+    peek_funtop_stats_parser.set_defaults(func=peek_funtop_stats)
+    peek_malloc_agent_stats_parser.set_defaults(func=peek_malloc_agent_stats)
+    peek_malloc_agent_non_coh_stats_parser.set_defaults(func=peek_malloc_agent_non_coh_stats)
+    peek_wustacks_stats_parser.set_defaults(func=peek_wustacks_stats)
+    peek_hu_stats_parser.set_defaults(func=peek_hu_stats)
+    peek_wus_stats_parser.set_defaults(func=peek_wus_stats)
 
     # -------------- Clear Command Handlers ----------------
     clear_nu_port_stats_parser.set_defaults(func=clear_nu_port_stats)
@@ -1079,6 +1118,10 @@ class CmdController(Cmd):
     show_tech_nu_parser.set_defaults(func=show_tech_nu_stats)
     show_tech_hnu_parser.set_defaults(func=show_tech_hnu_stats)
     show_tech_all_parser.set_defaults(func=show_tech_all_stats)
+
+    # -------------- Flow Command Handlers ----------------
+    flow_list_parser.set_defaults(func=get_flow_list)
+    flow_blocked_parser.set_defaults(func=get_flow_blocked)
 
     @with_argparser(base_set_parser)
     def do_set(self, args):
@@ -1120,6 +1163,14 @@ class CmdController(Cmd):
         else:
             self.do_help('show')
 
+    @with_argparser(base_flow_parser)
+    def do_flow(self, args):
+        func = getattr(args, 'func', None)
+        if func is not None:
+            func(self, args)
+        else:
+            self.do_help('flow')
+
     def __del__(self):
         self.dpc_client.disconnect()
 
@@ -1129,7 +1180,7 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.21.120", target_port=40222, verbose=False)
+    cmd_obj = CmdController(target_ip="10.1.20.129", target_port=40220, verbose=False)
     cmd_obj.cmdloop(intro="hello")
 
 

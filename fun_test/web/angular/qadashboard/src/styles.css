@@ -386,7 +386,7 @@ input:checked + .slider:before {
   padding: 0 !important;
 }
 .no-margin {
-  margin: 0;
+  margin: 0 !important;
 }
 
 .component {
@@ -410,6 +410,9 @@ input:checked + .slider:before {
 }
 .text-color-red {
   color: red;
+}
+.text-color-green {
+  color: green;
 }
 
 .text-color-green {

@@ -1,4 +1,5 @@
 [
+  {"path": "networking/test_snapshot_ready.py"},
   {"path": "networking/copp/test_cc_ethernet_sanity.py"},
   {"path": "networking/copp/test_cc_ipv4_sanity.py"},
   {"path": "networking/copp/test_cc_error_traps.py"},

@@ -1,10 +1,5 @@
 '''Author : Yajat N Singh'''
-from lib.system.fun_test import *
-from lib.templates.traffic_generator.spirent_traffic_generator_template import *
-from lib.templates.traffic_generator.spirent_ethernet_traffic_template import *
 from lib.host.network_controller import *
-from scripts.networking.nu_config_manager import *
-from scripts.networking.helper import *
 from scripts.networking.snapshot_helper import *
 
 
@@ -21,8 +16,6 @@ class Setup(FunTestScript):
         global network_controller_obj
         network_controller_obj = NetworkController(dpc_server_ip='10.1.21.120', dpc_server_port=40221)
         fun_test.log("Network done1")
-
-
 
     def cleanup(self):
         pass
@@ -44,21 +37,20 @@ class SnapshotTest(FunTestCase):
         fun_test.log("echo done 1")
 
         network_controller_obj.disconnect()
-
-        setup_snapshot(smac=None, psw_stream=None, stream=None, unit=None, dpc_tcp_proxy_ip='10.1.21.120',
-                       dpc_tcp_proxy_port=40221)
+        snapshot_obj = SnapshotHelper(dpc_proxy_ip="10.1.21.120", dpc_proxy_port=40221)
+        snapshot_obj.setup_snapshot()
         fun_test.sleep(message="wait for traffic", seconds=10)
-        ss = run_snapshot()
-        exit_snapshot()
+        ss = snapshot_obj.run_snapshot()
+        snapshot_obj.exit_snapshot()
         fun_test.log(ss)
 
-        print get_snapshot_main_sfg(ss)
+        print snapshot_obj.get_snapshot_main_sfg(ss)
         dut_rx_port_results = network_controller_obj.peek_fpg_port_stats(5)
         fun_test.log(dut_rx_port_results)
-        print get_snapshot_meter_id(snapshot_output=ss)
-        print get_snapshot_meter_id(snapshot_output=ss, erp=True)
-        print get_snapshot_acl_label(ss, erp=True)
-        print get_pkt_color_from_snapshot(ss, erp=True)
+        print snapshot_obj.get_snapshot_meter_id(snapshot_output=ss)
+        print snapshot_obj.get_snapshot_meter_id(snapshot_output=ss, erp=True)
+        print snapshot_obj.get_snapshot_acl_label(ss, erp=True)
+        print snapshot_obj.get_pkt_color_from_snapshot(ss, erp=True)
 
     def run(self):
         pass

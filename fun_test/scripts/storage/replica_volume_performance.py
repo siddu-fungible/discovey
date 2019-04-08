@@ -119,7 +119,7 @@ class ReplicaDPULevelScript(FunTestScript):
         fun_test.shared_variables["global_setup"] = global_setup
 
     def cleanup(self):
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        fun_test.shared_variables["topology"].cleanup()
         # pass
 
 
