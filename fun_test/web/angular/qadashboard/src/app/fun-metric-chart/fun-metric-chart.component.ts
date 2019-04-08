@@ -187,20 +187,21 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
 
   //formats the string displayed on xaxis of the chart
   xAxisFormatter(value): string {
+    // value = "3/19/2019, 4:49:31 PM"
     let s = "Error";
     const monthNames = ["null", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    if (value && value !== "" && value !== " ") {
-      let dateString = value.split(" ");
-      if (dateString.length) {
-        let dateMonth = dateString[0].split("/");
-        if (dateMonth.length >= 2) {
-          if (this.timeMode === "month") {
-            let month = parseInt(dateMonth[0]);
-            s = monthNames[month];
-          } else {
-            s = dateMonth[0] + "/" + dateMonth[1];
-          }
+    if (value) { //check for null values
+      try {
+        let dateString = value.split(" "); // ex: dateString = (3) ["3/19/2019,", "4:49:31", "PM"]
+        let dateMonth = dateString[0].split("/"); //ex: dateMonth = (3) ["3", "19", "2019,"]
+        if (this.timeMode === "month") {
+          let month = parseInt(dateMonth[0]);
+          s = monthNames[month]; //ex: s = "Apr"
+        } else {
+          s = dateMonth[0] + "/" + dateMonth[1]; //ex: s = "3/19"
         }
+      } catch (e) {
+        this.loggerService.error("xAxis Formatter");
       }
     }
     return s;
