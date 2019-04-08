@@ -107,7 +107,7 @@ class ConfigManager(BaseSetup):
 if __name__ == '__main__':
  
     # Input file dir  
-    input_dir= "/home/cmukherjee/fungible/Integration/tools/networking/networking_api_config/inputs/demo/"
+    input_dir= "/home/cmukherjee/fungible/Integration/tools/networking/networking_api_config/inputs/sample/"
  
     for filename in os.listdir(input_dir):  
         if filename.endswith(".json"):
