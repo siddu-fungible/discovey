@@ -1,0 +1,13 @@
+set routing-instances Cx4 instance-type virtual-router
+set routing-instanaces Cx4 routing-options router-id 194.0.0.4
+set routing-instances Cx4 routing-options autonomous-system 64513
+set routing-instances Cx4 protocols bgp group external-peers type external
+set routing-instances Cx4 protocols bgp group external-peers advertise-peer-as
+set routing-instances Cx4 protocols bgp group external-peers peer-as 64512
+set routing-instance Cx4 interface et-0/0/3
+set routing-instance Cx4 protocols bgp group external-peers neighbor 193.0.0.13
+set interfaces et-0/0/3 unit 0 family inet addess 193.0.0.14/30
+set routing-instance Cx4 interface et-0/0/7
+set routing-instance Cx4 protocols bgp group external-peers neighbor 193.0.0.29
+set interfaces et-0/0/7 unit 0 family inet addess 193.0.0.30/30
+commit
