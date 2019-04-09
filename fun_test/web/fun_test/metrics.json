@@ -11,7 +11,7 @@
         "metric_model_name": "MetricContainer",
         "leaf": false,
         "name": "Networking",
-        "label": "Networking - (work in progress)",
+        "label": "Networking",
         "children": [
           {
             "info": "Lookup-engine",
@@ -1771,7 +1771,7 @@
             "leaf": false,
             "name": "Regex",
             "weight": 1,
-            "label": "Regex - (work in progress)",
+            "label": "Regex",
             "children": [
               {
                 "info": "dfa_teramark_output_bandwidth",
@@ -1893,7 +1893,7 @@
                 "leaf": false,
                 "name": "durable_volume_ec",
                 "weight": 1,
-                "label": "Durable Volume - EC (work in progress)",
+                "label": "Durable Volume - EC",
                 "children": [
                   {
                     "info": "4kb_one_volume_one_ssd_durable_volume_ec",

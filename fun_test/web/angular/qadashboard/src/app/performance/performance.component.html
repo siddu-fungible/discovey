@@ -48,9 +48,9 @@
                         <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
                         </span>
               <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="flatNode.node.leaf" [routerLink]=""
-                 (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}<span *ngIf="flatNode.node.workInProgress"> (work in progress)</span></a>
+                 (click)="showAtomicMetric(flatNode)">{{ flatNode.node.chartName }}<span *ngIf="flatNode.node.workInProgress"> - (work in progress)</span></a>
               <a [ngClass]="{highlight:flatNode.node.showAddJira}" *ngIf="!flatNode.node.leaf" [routerLink]=""
-                 (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}<span *ngIf="flatNode.node.workInProgress"> (work in progress)</span></a>
+                 (click)="showNonAtomicMetric(flatNode)">{{ flatNode.node.chartName }}<span *ngIf="flatNode.node.workInProgress"> - (work in progress)</span></a>
               <span *ngIf="!flatNode.node.leaf">
               <span [innerHTML]="'&nbsp'"></span>
               <a [routerLink]="" *ngIf="!flatNode.collapsed" (click)="collapseNode(flatNode)">

@@ -116,7 +116,7 @@ def get_possible_output_values(model_name):
     return field_choices
 
 
-if __name__ == "__main__":
+if __name__ == "__main_memset_datasets__":
     entries = MetricChart.objects.all()
     ml = MetricLib()
     input = {}
@@ -163,3 +163,11 @@ if __name__ == "__main__":
             for data_set in data_sets:
                 if data_set["name"] == "2048KB" or data_set["name"] == "4096KB":
                     ml.delete_data_set(metric_id=entry.metric_id, data_set=data_set)
+
+if __name__ == "__main__":
+    internal_chart_names = ["durable_volume_ec", "Networking", "Regex"]
+    ml = MetricLib()
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        ml.set_work_in_progress(chart=chart, in_progress=True)
+
