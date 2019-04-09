@@ -150,7 +150,6 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
                     command_result["data"] = 0
                 initial_filter_values[filter_param] = command_result["data"]
 
-        # Configuring EC volume
         command_result = self.storage_controller.command(command="enable_counters", legacy=True)
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
@@ -170,11 +169,12 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
         self.volume_list = []
         self.detach_count = 0
 
+        self.blt_capacity = self.blt_details["capacity"] + 4096
         for i in range(1, self.blt_count + 1, 1):
             cur_uuid = utils.generate_uuid()
             self.uuid["blt"].append(cur_uuid)
             command_result = self.storage_controller.create_volume(type=self.vol_types["blt"],
-                                                                   capacity=self.blt_details["capacity"],
+                                                                   capacity=self.blt_capacity,
                                                                    block_size=self.blt_details["block_size"],
                                                                    name="thin_block" + str(i),
                                                                    uuid=cur_uuid,
@@ -182,7 +182,7 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
             if not command_result["status"]:
                 self.blt_creation_fail = True
                 fun_test.test_assert(command_result["status"], "BLT creation with uuid {} & capacity {}".
-                                     format(cur_uuid, self.blt_details["capacity"]))
+                                     format(cur_uuid, self.blt_capacity))
 
         self.volume_list.append("blt")
 
@@ -681,9 +681,7 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Detach replica with uuid {}".format(self.uuid["replica"]))
 
-            command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
-                                                                   block_size=self.blt_details["block_size"],
-                                                                   name="replica_vol",
+            command_result = self.storage_controller.delete_volume(name="replica_vol",
                                                                    uuid=self.uuid["replica"],
                                                                    type=self.vol_types["replica"])
             fun_test.test_assert(command_result["status"], "Deleting replica vol with uuid {}".
@@ -691,9 +689,7 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
 
         for x in range(1, self.blt_count + 1, 1):
             cur_uuid = self.uuid["blt"][x - 1]
-            command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
-                                                                   block_size=self.blt_details["block_size"],
-                                                                   name="thin_block" + str(x),
+            command_result = self.storage_controller.delete_volume(name="thin_block" + str(x),
                                                                    uuid=cur_uuid,
                                                                    type=self.vol_types["blt"])
             fun_test.log(command_result)
@@ -779,7 +775,7 @@ class ReplicaKey256RandRW70(ReplicaCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="6 way replica with 256 bit key and run FIO RandRW(70:30::R:W) pattern "
+                              summary="5 way replica with 256 bit key and run FIO RandRW(70:30::R:W) pattern "
                                       "with different block size & depth",
                               steps='''
                               1. Create a replica with encryption using 256 bit key on dut.
@@ -844,7 +840,7 @@ class ReplicaKey512RandRW70(ReplicaCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=10,
-                              summary="6 way replica with 512 bit key and run FIO RandRW(70:30::R:W) pattern with "
+                              summary="5 way replica with 512 bit key and run FIO RandRW(70:30::R:W) pattern with "
                                       "different block size & depth",
                               steps='''
                               1. Create a replica with encryption using random key on dut.

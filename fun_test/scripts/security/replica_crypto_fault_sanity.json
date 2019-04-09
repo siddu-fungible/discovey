@@ -11,7 +11,7 @@
     },
     "trigger_plex_failure": true,
     "plex_details": {
-      "indices": "random",
+      "indices": [1],
       "count": 1
     },
     "ns_id": 1,
