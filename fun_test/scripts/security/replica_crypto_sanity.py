@@ -170,11 +170,13 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
         self.volume_list = []
         self.detach_count = 0
 
+        # Add a 4k block to BLT capacity
+        self.blt_capacity = self.blt_details["capacity"] + 4096
         for i in range(1, self.blt_count + 1, 1):
             cur_uuid = utils.generate_uuid()
             self.uuid["blt"].append(cur_uuid)
             command_result = self.storage_controller.create_volume(type=self.vol_types["blt"],
-                                                                   capacity=self.blt_details["capacity"],
+                                                                   capacity=self.blt_capacity,
                                                                    block_size=self.blt_details["block_size"],
                                                                    name="thin_block" + str(i),
                                                                    uuid=cur_uuid,
@@ -182,7 +184,7 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
             if not command_result["status"]:
                 self.blt_creation_fail = True
                 fun_test.test_assert(command_result["status"], "BLT creation with uuid {} & capacity {}".
-                                     format(cur_uuid, self.blt_details["capacity"]))
+                                     format(cur_uuid, self.blt_capacity))
 
         self.volume_list.append("blt")
 
@@ -634,8 +636,7 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Detach replica with uuid {}".format(self.uuid["replica"]))
 
-            command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
-                                                                   block_size=self.blt_details["block_size"],
+            command_result = self.storage_controller.delete_volume(block_size=self.blt_details["block_size"],
                                                                    name="replica_vol",
                                                                    uuid=self.uuid["replica"],
                                                                    type=self.vol_types["replica"])
@@ -644,8 +645,7 @@ class ReplicaCryptoVolumeTestCase(FunTestCase):
 
         for x in range(1, self.blt_count + 1, 1):
             cur_uuid = self.uuid["blt"][x - 1]
-            command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
-                                                                   block_size=self.blt_details["block_size"],
+            command_result = self.storage_controller.delete_volume(block_size=self.blt_details["block_size"],
                                                                    name="thin_block" + str(x),
                                                                    uuid=cur_uuid,
                                                                    type=self.vol_types["blt"])
@@ -728,10 +728,23 @@ class ReplicaKey256RandRW50(ReplicaCryptoVolumeTestCase):
         ''')
 
 
-class ReplicaKey512(ReplicaCryptoVolumeTestCase):
+class ReplicaKey256RandRW70(ReplicaCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=5,
+                              summary="5 way replica with 256 bit key and run FIO RandRW(70:30::R:W) pattern "
+                                      "with different block size & depth",
+                              steps='''
+                              1. Create a replica with encryption using 256 bit key on dut.
+                              2. Attach it to external linux/container.
+                              3. Run FIO traffic.
+        ''')
+
+
+class ReplicaKey512(ReplicaCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=6,
                               summary="2 way replica with 512 bit key and run FIO with different RW pattern(write,read,"
                                       "randwrite,randread), with different block size & depth",
                               steps='''
@@ -744,7 +757,7 @@ class ReplicaKey512(ReplicaCryptoVolumeTestCase):
 class ReplicaKey512RW(ReplicaCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=6,
+        self.set_test_details(id=7,
                               summary="3 way replica with 512 bit key and run FIO RW pattern with different block size"
                                       " & depth",
                               steps='''
@@ -757,7 +770,7 @@ class ReplicaKey512RW(ReplicaCryptoVolumeTestCase):
 class ReplicaKey512RandRW(ReplicaCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=7,
+        self.set_test_details(id=8,
                               summary="4 way replica with 512 bit key and run FIO RandRW pattern with different block "
                                       "size & depth",
                               steps='''
@@ -770,9 +783,22 @@ class ReplicaKey512RandRW(ReplicaCryptoVolumeTestCase):
 class ReplicaKey512RandRW50(ReplicaCryptoVolumeTestCase):
 
     def describe(self):
-        self.set_test_details(id=8,
+        self.set_test_details(id=9,
                               summary="5 way replica with 512 bit key and run FIO RandRW(50%RW) pattern with different"
                                       " block size & depth",
+                              steps='''
+                              1. Create a replica with encryption using random key on dut.
+                              2. Attach it to external linux/container.
+                              3. Run FIO traffic.
+        ''')
+
+
+class ReplicaKey512RandRW70(ReplicaCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=10,
+                              summary="5 way replica with 512 bit key and run FIO RandRW(70:30::R:W) "
+                                      "pattern with different block size & depth",
                               steps='''
                               1. Create a replica with encryption using random key on dut.
                               2. Attach it to external linux/container.
@@ -783,12 +809,14 @@ class ReplicaKey512RandRW50(ReplicaCryptoVolumeTestCase):
 if __name__ == "__main__":
     replicascript = ReplicaCryptoVolumeScript()
     replicascript.add_test_case(ReplicaKey256())
-#    replicascript.add_test_case(ReplicaKey256RW())
-#    replicascript.add_test_case(ReplicaKey256RandRW())
-#    replicascript.add_test_case(ReplicaKey256RandRW50())
-#    replicascript.add_test_case(ReplicaKey512())
-#    replicascript.add_test_case(ReplicaKey512RW())
-#    replicascript.add_test_case(ReplicaKey512RandRW())
-#    replicascript.add_test_case(ReplicaKey512RandRW50())
+    replicascript.add_test_case(ReplicaKey256RW())
+    replicascript.add_test_case(ReplicaKey256RandRW())
+    replicascript.add_test_case(ReplicaKey256RandRW50())
+    replicascript.add_test_case(ReplicaKey256RandRW70())
+    replicascript.add_test_case(ReplicaKey512())
+    replicascript.add_test_case(ReplicaKey512RW())
+    replicascript.add_test_case(ReplicaKey512RandRW())
+    replicascript.add_test_case(ReplicaKey512RandRW50())
+    replicascript.add_test_case(ReplicaKey512RandRW70())
 
     replicascript.run()
