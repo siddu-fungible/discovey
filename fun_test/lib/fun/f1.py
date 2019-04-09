@@ -6,7 +6,7 @@ import json
 
 
 class F1(Linux, ToDictMixin):
-    '''
+    '''START_MODE_DPCSH_ONLY
     F1 class encapsulating ways to start the funos-posix simulator
     '''
     SIMULATION_FUNOS_BUILD_PATH = "/home/jabraham/FunOS/build"
@@ -81,7 +81,8 @@ class F1(Linux, ToDictMixin):
             "foreground": foreground,
             "timeout": timeout,
             "get_output": get_output,
-            "run_to_completion": run_to_completion
+            "run_to_completion": run_to_completion,
+            "start_mode": start_mode
         }
 
         # Detect if it is in Simulation mode #TODO
@@ -248,7 +249,8 @@ class F1(Linux, ToDictMixin):
                                 get_output=self.last_start_parameters["get_output"],
                                 foreground=self.last_start_parameters["foreground"],
                                 run_to_completion=self.last_start_parameters["run_to_completion"],
-                                mdt_rebuild=mdt_rebuild)
+                                mdt_rebuild=mdt_rebuild,
+                                start_mode=self.last_start_parameters["start_mode"])
         else:
             result = self.start()
         return result
