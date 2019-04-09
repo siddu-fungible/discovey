@@ -43,3 +43,4 @@ class BootFS(FunTestCase):
 if __name__ == '__main__':
     ts = ScriptSetup()
     ts.add_test_case(BootFS())
+    ts.run()
