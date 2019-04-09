@@ -233,20 +233,18 @@ class FunTest:
         self.closed = False
 
     def _prepare_build_parameters(self):
-        boot_args = self.get_job_environment_variable("boot_args")
-        if boot_args:
-            boot_args = boot_args.replace(":", " ")
-        if boot_args:
-            self.build_parameters["boot_args"] = boot_args
-
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
 
         user_supplied_build_parameters = self.get_job_environment_variable("build_parameters")
         if user_supplied_build_parameters:
-            if "disable_assertions" in user_supplied_build_parameters:
-                self.build_parameters["disable_assertions"] = user_supplied_build_parameters["disable_assertions"]
+            if "BOOTARGS" in user_supplied_build_parameters:
+                self.build_parameters["BOOTARGS"] = user_supplied_build_parameters["BOOTARGS"]
+            if "DISABLE_ASSERTIONS" in user_supplied_build_parameters:
+                self.build_parameters["DISABLE_ASSERTIONS"] = user_supplied_build_parameters["DISABLE_ASSERTIONS"]
+            if "FUNOS_MAKEFLAGS" in user_supplied_build_parameters:
+                self.build_parameters["FUNOS_MAKEFLAGS"] = user_supplied_build_parameters["FUNOS_MAKEFLAGS"]
 
     def get_build_parameters(self):
         return self.build_parameters
@@ -402,27 +400,20 @@ class FunTest:
     def build(self):
         from lib.system.build_helper import BuildHelper
         result = False
-        boot_args = ""
-        # boot_args = "app=jpeg_perf_test --disable-wu-watchdog --test-exit-fast"
-        build_parameters = self.get_build_parameters()
 
-        boot_args = build_parameters["boot_args"] if "boot_args" in build_parameters else None
+        build_parameters = self.get_build_parameters()
+        boot_args = ""
+        if "BOOTARGS" in build_parameters:
+            boot_args = build_parameters["BOOTARGS"]
         fun_test.test_assert(boot_args, "BOOTARGS: {}".format(boot_args))
 
         test_bed_type = self.get_job_environment_variable("test_bed_type")
         fun_test.test_assert(test_bed_type, "Test-bed type: {}".format(test_bed_type))
 
-        fun_os_make_flags = None
-        job_fun_os_make_flags = build_parameters["fun_os_make_flags"] if "fun_os_make_flags" in build_parameters else None
-        if job_fun_os_make_flags:
-            fun_os_make_flags = job_fun_os_make_flags
-
-        disable_assertions = build_parameters["disable_assertions"] if "disable_assertions" in build_parameters else None
-
         tftp_image_path = build_parameters["tftp_image_path"] if "tftp_image_path" is build_parameters else None
         fun_test.test_assert(not tftp_image_path, "TFTP-image path cannot be set if with_jenkins_build was enabled")
 
-        bh = BuildHelper(boot_args=boot_args, fun_os_make_flags=fun_os_make_flags, disable_assertions=disable_assertions)
+        bh = BuildHelper(parameters=build_parameters)
         emulation_image = bh.build_emulation_image()
         fun_test.test_assert(emulation_image, "Build emulation image")
         self.build_parameters["tftp_image_path"] = emulation_image
