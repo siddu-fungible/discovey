@@ -120,7 +120,7 @@ class SpirentEthernetTrafficTemplate(SpirentTrafficGeneratorTemplate):
                     fec_attributes = fec_obj.get_attributes_dict()
                     spirent_handle = self.stc_manager.applyfec(port_handle=port_handle, fec_obj=str(fec_obj),
                                                                attributes=fec_attributes)
-                    fun_test.test_assert(spirent_handle, "Create Physical Interface: %s" % spirent_handle)
+                    fun_test.test_assert(spirent_handle, "Apply FEC settings: %s" % spirent_handle)
                     fec_obj.spirent_handle = spirent_handle
 
             else:
