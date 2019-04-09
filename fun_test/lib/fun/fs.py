@@ -505,7 +505,7 @@ class Fs(object, ToDictMixin):
         fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path))
 
         if not boot_args:
-            boot_args = fun_test.get_build_parameter("boot_args")
+            boot_args = fun_test.get_build_parameter("BOOTARGS")
             if not boot_args:
                 boot_args = Fs.DEFAULT_BOOT_ARGS
         fun_test.simple_assert(test_bed_spec, "Testbed spec available")
