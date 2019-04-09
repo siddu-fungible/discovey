@@ -703,7 +703,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         actual = fio_output[combo][mode][op][field]
                         row_data_dict[op + field] = (actual, int(round((value * (1 - self.fio_pass_threshold)))),
                                                      int((value * (1 + self.fio_pass_threshold))))
-                        if field == "latency":
+                        if "latency" in field:
                             ifop = "greater"
                             elseop = "lesser"
                         else:

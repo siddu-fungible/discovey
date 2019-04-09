@@ -1436,10 +1436,8 @@ class PeekCommands(object):
         else:
             self._display_stats(cmd=cmd, grep_regex=grep_regex)
 
-    def peek_fcp_stats(self, mode='nu', tunnel_id=None, grep_regex=None, get_result_only=False):
-        cmd = "stats/fcp/%s/global" % mode
-        if tunnel_id:
-            cmd = "stats/fcp/%s/tunnel[%d]" % (mode,tunnel_id)
+    def peek_fcp_tunnel_stats(self, tunnel_id, grep_regex=None, get_result_only=False):
+        cmd = "stats/fcp/tunnel[%d]" % tunnel_id
         if get_result_only:
             return self._display_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:
@@ -2691,7 +2689,7 @@ class ShowCommands(PeekCommands):
                     command_dict['%s fpg %s stats' % (mode, port_num)] = self.peek_fpg_stats(port_num=int(port_num),
                                                                                              get_result_only=True,
                                                                                              mode=mode)
-            command_dict['%s fcp stats' % mode] = self.peek_fcp_stats(get_result_only=True, mode=mode)
+            command_dict['%s fcp stats' % mode] = self.peek_fcp_tunnel_stats(get_result_only=True, mode=mode)
             command_dict['%s psw stats' % mode] = self.peek_psw_stats(get_result_only=True, mode=mode)
             command_dict['%s wro stats' % mode] = self.peek_wro_stats(get_result_only=True, mode=mode)
             command_dict['%s erp stats' % mode] = self.peek_erp_stats(get_result_only=True, mode=mode)
