@@ -670,7 +670,7 @@ def data(request):
             # today = today.replace(hour=0, minute=0, second=1)
             # d["input_date_time__lt"] = today
             try:
-                result = model.objects.filter(input_date_time__range=date_range, **d)  # unpack, pack
+                result = model.objects.filter(input_date_time__range=date_range, **d).order_by("input_date_time")  # unpack, pack
                 data.append([model_to_dict(x) for x in result])
             except ObjectDoesNotExist:
                 logger.critical("No data found Model: {} Inputs: {}".format(metric_model_name, str(inputs)))

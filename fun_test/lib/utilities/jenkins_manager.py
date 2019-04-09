@@ -57,9 +57,10 @@ class JenkinsManager():
         params = dict(DEFAULT_BUILD_PARAMS)
         for key, value in user_params.iteritems():
             if key in params:
-                params[key] = value
+                if value:
+                    params[key] = value
             else:
-                raise Exception("Key: {} is not in the BUILD params".format(key))
+                print("Error Key: {} is not in the BUILD params".format(key))
         return params
 
     def build(self, params):

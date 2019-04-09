@@ -29,7 +29,7 @@
               </td>
               <td>
                 <input [ngClass]="{disabled: withJenkinsBuild}" id="tftp-path" name="tftp-path" [(ngModel)]="tftpImagePath" type="text"/>
-                &nbsp;&nbsp;<input (click)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With Jenkins build
+                &nbsp;&nbsp;<input (change)="toggleWithJenkins()" type="checkbox" [checked]="withJenkinsBuild"> With Jenkins build
               </td>
             </tr>
             <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
@@ -42,7 +42,11 @@
               </td>
             </tr>
             <tr *ngIf="withJenkinsBuild">
-                <td><input (click)="disableAssertions = !disableAssertions" type="checkbox" [checked]="disableAssertions === true"> Disable assertions </td>
+                <td><input (change)="disableAssertions = !disableAssertions" type="checkbox" name="disable-assertions" [checked]="disableAssertions"> Disable assertions </td>
+            </tr>
+            <tr *ngIf="withJenkinsBuild">
+              <td><label for="funos-makeflags">FUNOS_MAKEFLAGS</label></td>
+              <td><input style='width:100%' id="funos-makeflags" name="funos-makeflags" [(ngModel)]="funOsMakeFlags" type="text"/></td>
             </tr>
             <tr *ngIf="withJenkinsBuild">
               <td colspan="2">
@@ -51,8 +55,8 @@
             </tr>
 
             <tr>
-              <td><input (click)="suiteSelectionMode = 'BY_SUITE'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite</td>
-              <td><input (click)="suiteSelectionMode = 'BY_SCRIPT'" type="checkbox" [checked]="suiteSelectionMode === 'BY_SCRIPT'"> By script</td>
+              <td><input (change)="suiteSelectionMode = 'BY_SUITE'" type="radio" [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite</td>
+              <td><input (change)="suiteSelectionMode = 'BY_SCRIPT'" type="radio" [checked]="suiteSelectionMode === 'BY_SCRIPT'"> By script</td>
             </tr>
             <tr *ngIf="suiteSelectionMode === 'BY_SUITE'">
               <td class="no-wrap">

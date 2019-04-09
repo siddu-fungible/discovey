@@ -1480,7 +1480,7 @@ if __name__ == "__main_blt_99__":
                 print json.dumps(data_sets)
                 ml.save_data_sets(data_sets=data_sets, chart=entry)
 
-if __name__ == "__main__":
+if __name__ == "__main_new_base_line__":
     entries = MetricChart.objects.all()
     new_base_line = datetime(year=2019, month=1, day=26, minute=0, hour=0, second=0)
     new_base_line = get_localized_time(new_base_line)
@@ -1489,6 +1489,122 @@ if __name__ == "__main__":
             print entry.chart_name
             entry.base_line_date = new_base_line
             entry.save()
+
+if __name__ == "__main__":
+    internal_chart_names = ["rand_read_4kb1vol1ssd_durable_volume_ec_output_bandwidth",
+                            "rand_read_4kb1vol1ssd_durable_volume_ec_output_iops",
+                            "read_4kb1vol1ssd_durable_volume_ec_output_bandwidth",
+                            "read_4kb1vol1ssd_durable_volume_ec_output_iops"]
+    model_name = "BltVolumePerformance"
+    fio_read_job_names = ["fio_ec_read_4gbps"]
+    fio_rand_read_job_names = ["fio_ec_randread_4gbps"]
+
+    for internal_chart_name in internal_chart_names:
+        fio_job_names = []
+        if "bandwidth" in internal_chart_name:
+            chart_name = "Throughput"
+            y1_axis_title = "MBps"
+        else:
+            chart_name = "IOPS"
+            y1_axis_title = "ops"
+        if chart_name == "Throughput":
+            output_name = "output_read_throughput"
+        else:
+            output_name = "output_read_iops"
+        if "rand_read" in internal_chart_name:
+            fio_job_names = fio_rand_read_job_names
+            operation = "randread"
+        else:
+            fio_job_names = fio_read_job_names
+            operation = "read"
+
+        data_sets = []
+        name = "Samsung PM1725b (MZWLL1T6HAJQ)"
+        for job_name in fio_job_names:
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = True
+        base_line_date = datetime(year=2019, month=4, day=7, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "created throughput and iops charts for read and random read durable volume ec storage"
+
+if __name__ == "__main__":
+    internal_chart_names_dict = {"read_4kb1vol1ssd_durable_volume_ec_4_output_latency": "Latency",
+                                 "rand_read_4kb1vol1ssd_durable_volume_ec_4_output_latency": "Latency"}
+    model_name = "BltVolumePerformance"
+    fio_read_job_names = ["fio_ec_read_4gbps"]
+    fio_rand_read_job_names = ["fio_ec_randread_4gbps"]
+    y1_axis_title = "usecs"
+    output_read_names = ["output_read_avg_latency",
+                         "output_read_99_latency", "output_read_99_99_latency"]
+
+    for internal_chart_name in internal_chart_names_dict:
+        chart_name = internal_chart_names_dict[internal_chart_name]
+        if "rand_read" in internal_chart_name:
+            fio_job_name = "fio_ec_randread_4gbps"
+            operation = "randread"
+        else:
+            fio_job_name = "fio_ec_read_4gbps"
+            operation = "read"
+        output_names = output_read_names
+
+        data_sets = []
+        for output_name in output_names:
+            if "avg_" in output_name:
+                name = "avg"
+            elif "99_99" in output_name:
+                name = "99.99%"
+            else:
+                name = "99%"
+
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_fio_job_name"] = fio_job_name
+            one_data_set["inputs"]["input_operation"] = operation
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output_name, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        positive = False
+        base_line_date = datetime(year=2019, month=4, day=7, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "created latency charts for read and random read durable volume ec storage"
 
 
 

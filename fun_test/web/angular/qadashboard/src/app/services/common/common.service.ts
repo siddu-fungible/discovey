@@ -30,8 +30,18 @@ export class CommonService {
   monitorAlerts() {
     return new Observable(observer => {
       //observer.next(this.newAlert);
-      setInterval(() => observer.next(this.newAlert), 1000)
+      setInterval(() => observer.next(this.newAlert), 1000);
       return () => {};
     })
+  }
+
+  convertToLocalTimezone(t) {
+    let d = new Date(t.replace(/\s+/g, 'T'));
+    let epochValue = d.getTime();
+    return new Date(epochValue);
+  }
+
+  getPrettyLocalizeTime(t) {
+    return this.convertToLocalTimezone(t).toLocaleString().replace(/\..*$/, "");
   }
 }
