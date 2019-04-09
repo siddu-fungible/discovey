@@ -15,6 +15,7 @@ FLOW_TYPE_HNU_HNU_NFCP = "HNU_HNU_NFCP"
 FLOW_TYPE_HNU_HNU_FCP = "HNU_HNU_FCP"
 FLOW_TYPE_HNU_NU_NFCP = "HNU_NU_NFCP"
 FLOW_TYPE_NU_HNU_NFCP = "NU_HNU_NFCP"
+FLOW_TYPE_NU_VP_NU_FWD_NFCP = "NU_VP_NU_FWD_NFCP"
 
 
 class Rfc2544Template(SpirentTrafficGeneratorTemplate):
@@ -346,7 +347,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             scheduler_logger.critical(str(ex))
         return result
 
-    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G):
+    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
+                                       file_name=OUTPUT_JSON_FILE_NAME):
         results = []
         output = True
         failed_result_found = False
@@ -393,7 +395,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     results.append(data_dict)
                     fun_test.debug(results)
 
-            file_path = LOGS_DIR + "/%s" % self.OUTPUT_JSON_FILE_NAME
+            file_path = LOGS_DIR + "/%s" % file_name
             contents = self._parse_file_to_json_in_order(file_name=file_path)
             if contents:
                 append_new_results = contents + results
