@@ -34,6 +34,9 @@ class BootFS(FunTestCase):
         pass
 
     def run(self):
+        if fun_test.get_job_environment_variable('test_bed_type') == 'fs-7':
+            fs = Fs.get()
+        fun_test.simple_assert(fs, "Succesfully fetched image, credentials and bootargs")
         fun_test.test_assert(fs.bootup(reboot_bmc=False), 'FS bootup')
 
     def cleanup(self):
