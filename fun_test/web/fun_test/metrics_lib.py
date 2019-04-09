@@ -141,6 +141,10 @@ class MetricLib():
         except:
             return False
 
+    def set_work_in_progress(self, chart, in_progress):
+        chart.work_in_progress = in_progress
+        chart.save()
+
     def create_chart(self, **kwargs):
         metric_id = LastMetricId.get_next_id()
         MetricChart(chart_name=kwargs["chart_name"],
