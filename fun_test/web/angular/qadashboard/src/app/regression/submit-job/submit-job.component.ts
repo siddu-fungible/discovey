@@ -44,6 +44,7 @@ export class SubmitJobComponent implements OnInit {
   bootArgs: string = "app=hw_hsu_test --dis-stats --disable-wu-watchdog --dpc-server --dpc-uart --csr-replay --serdesinit";
   withJenkinsBuild: boolean = false;
   disableAssertions: boolean = true;
+  funOsMakeFlags: string = null;
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
@@ -218,10 +219,7 @@ export class SubmitJobComponent implements OnInit {
     if (this.selectedTestBedType) {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
     }
-    if (this.bootArgs && this.bootArgs !== "") {
-      payload["environment"]["boot_args"] = this.bootArgs.replace(/\s+/g, ':');
 
-    }
 
     if (!this.withJenkinsBuild) {
       if (this.tftpImagePath && this.tftpImagePath !== "") {
@@ -231,9 +229,15 @@ export class SubmitJobComponent implements OnInit {
       payload["environment"]["with_jenkins_build"] = true;
     }
 
-    if (payload["environment"]["with_jenkins_build"]) {
+    if (payload["environment"]["with_jenkins_build"])
+    {
       payload["environment"]["build_parameters"] = {};
-      payload["environment"]["build_parameters"]["disable_assertions"] = this.disableAssertions;
+      if (this.bootArgs && this.bootArgs !== "" && this.selectedTestBedType.indexOf('fs') > -1) {
+        payload["environment"]["build_parameters"]["BOOTARGS"] = this.bootArgs.replace(/\s+/g, ':');
+
+      }
+      payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
+      payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
     }
 
     this.submitting = "Submitting job";

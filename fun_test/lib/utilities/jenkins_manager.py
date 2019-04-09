@@ -59,7 +59,7 @@ class JenkinsManager():
             if key in params:
                 params[key] = value
             else:
-                raise Exception("Key: {} is not in the BUILD params".format(key))
+                print("Error Key: {} is not in the BUILD params".format(key))
         return params
 
     def build(self, params):
