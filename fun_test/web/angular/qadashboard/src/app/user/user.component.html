@@ -1,0 +1,28 @@
+<div class="component">
+  <div class="card">
+    <div class="card-header">
+      Add a user
+    </div>
+    <div class="card-body">
+      <form [formGroup]="profileForm" (submit)="onSubmit()">
+        <label for="firstName">First name</label>
+        <input style="width: 300px" class="form-control" formControlName="firstName" id="firstName"/>
+        <div [hidden]="firstName.valid">Required</div>
+
+        <label for="lastName">Last name</label>
+        <input style="width: 300px" class="form-control" formControlName="lastName" id="lastName"/>
+        <div [hidden]="lastName.valid">Required</div>
+
+        <label for="email">E-mail</label>
+        <input style="width: 300px" class="form-control" formControlName="email" id="email" type="email"/>
+        <div [hidden]="email.valid">Required</div>
+
+        <button type="submit" [disabled]="!profileForm.valid">Submit</button>
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
