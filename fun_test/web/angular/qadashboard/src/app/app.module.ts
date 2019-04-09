@@ -52,6 +52,7 @@ import { SmartLabelComponent } from './smart-label/smart-label.component';
 import {QueueViewerComponent} from "./regression/queue-viewer/queue-viewer.component";
 import { TriageComponent } from './triage/triage.component';
 import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-line/section-horizontal-line.component";
+import { ReactiveFormsModule } from '@angular/forms';
 import { UserComponent } from './user/user.component';
 
 @NgModule({
@@ -89,7 +90,7 @@ import { UserComponent } from './user/user.component';
     SchedulerAdminComponent,
     LogViewerComponent,
     SmartLabelComponent,
-    QueueViewerComponent
+    QueueViewerComponent,
     SectionHorizontalLineComponent,
     UserComponent
   ],
@@ -106,6 +107,7 @@ import { UserComponent } from './user/user.component';
     Angular2FontawesomeModule,
     AngularCollapseModule,
     NgMultiSelectDropDownModule,
+    ReactiveFormsModule,
     NgbModule,
     NgbTooltipModule,
     ToasterModule.forRoot()
