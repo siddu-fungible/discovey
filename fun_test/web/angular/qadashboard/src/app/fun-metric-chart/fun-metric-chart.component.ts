@@ -751,6 +751,14 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     }
   }
 
+  addLeadingZeroesToDate(localDate): string {
+    let localDateString = (localDate.getDate() < 10 ? '0' : '') + localDate.getDate();
+    let localMonthString = ((localDate.getMonth() + 1) < 10 ? '0' : '') + (localDate.getMonth() + 1);
+    let keySplitString = localDate.toLocaleString().split("/");
+    let keyString = localMonthString + "/" + localDateString + "/" + keySplitString[2];
+    return keyString;
+  }
+
   //fetching leaf data
   fetchLeafData(chartInfo, previewDataSets, tableInfo, payload): void {
     this.tableInfo = tableInfo;
@@ -782,8 +790,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
           }
           if (trimEmptyStartValues) {
             let localDate = this.commonService.convertToLocalTimezone(oneRecord.input_date_time);
-            keyList.push(localDate.toLocaleString());
-            keyValue[dataSetIndex][localDate.toLocaleString()] = oneRecord;
+            let keyString = this.addLeadingZeroesToDate(localDate);
+            keyList.push(keyString); //value = "3/19/2019, 4:49:31 PM"
+            keyValue[dataSetIndex][keyString] = oneRecord;
           }
 
         }
