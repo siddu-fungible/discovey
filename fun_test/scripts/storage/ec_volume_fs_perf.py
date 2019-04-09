@@ -5,7 +5,7 @@ from lib.topology.dut import Dut, DutInterface
 from lib.fun.f1 import F1
 from lib.host.storage_controller import StorageController
 from lib.host.traffic_generator import TrafficGenerator
-from web.fun_test.analytics_models_helper import VolumePerformanceHelper
+from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper
 from lib.host.linux import Linux
 from lib.host.palladium import DpcshProxy
 from fun_settings import REGRESSION_USER, REGRESSION_USER_PASSWORD
@@ -64,25 +64,36 @@ tb_config = {
     }
 }
 
+
 def post_results(volume, test, block_size, io_depth, size, operation, write_iops, read_iops, write_bw, read_bw,
-                 write_latency, read_latency):
-    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "read_latency"]:
+                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
+                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name):
+
+    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
+              "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
+              "read_99_latency", "read_99_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    VolumePerformanceHelper().add_entry(key=fun_test.get_version(),
-                                        volume=volume,
-                                        test=test,
-                                        block_size=block_size,
-                                        io_depth=int(io_depth),
-                                        size=size,
-                                        operation=operation,
-                                        write_iops=write_iops,
-                                        read_iops=read_iops,
-                                        write_bw=write_bw,
-                                        read_bw=read_bw,
-                                        write_latency=write_latency,
-                                        read_latency=read_latency)
+    db_log_time = fun_test.shared_variables["db_log_time"]
+    num_ssd = fun_test.shared_variables["num_ssd"]
+    num_volume = fun_test.shared_variables["num_volume"]
+
+    blt = BltVolumePerformanceHelper()
+    blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
+                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volume, fio_job_name=fio_job_name,
+                  write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
+                  write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
+                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
+                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
+                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
+                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
+                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
+                  read_99_99_latency_unit="usecs")
+
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
     for arg in arg_list:
@@ -494,10 +505,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                                               message="Ensuring fault_injection got enabled")
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in KiB/s", "Read Throughput in KiB/s", "Write Latency in uSecs",
-                              "Read Latency in uSecs"]
+                              "Write Throughput in KB/s", "Read Throughput in KB/s", "Write Latency in uSecs",
+                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
+                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
+                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
+                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
+                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writelatency", "readlatency"]
+                           "writelatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                           "fio_job_name"]
         table_data_rows = []
 
         for combo in self.fio_bs_iodepth:
@@ -579,10 +596,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {} for the EC "
                              "coding {}".format(mode, fio_block_size, fio_iodepth, self.ec_ratio))
+                fio_job_name = "fio_ec_" + mode + "_" + self.fio_job_name[mode]
                 fio_output[combo][mode] = {}
                 fio_output[combo][mode] = self.end_host.pcie_fio(filename=self.nvme_block_device, rw=mode,
                                                                  bs=fio_block_size, iodepth=fio_iodepth,
-                                                                 **self.fio_cmd_args)
+                                                                 name=fio_job_name, **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:\n{}".format(fio_output[combo][mode]))
                 fun_test.test_assert(fio_output[combo][mode], "FIO {} only test with the block size and IO depth set "
                                                               "to {} & {}".format(mode, fio_block_size, fio_iodepth))
@@ -709,6 +727,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                     .format(op, field, mode, combo), "PASSED", value, actual)
                             fun_test.log("{} {} {} is within the expected range {}".
                                          format(op, field, actual, row_data_dict[op + field][1:]))
+
+                row_data_dict["fio_job_name"] = fio_job_name
 
                 # Comparing the internal volume stats with the expected value
                 '''
@@ -865,7 +885,7 @@ class EC42FioSeqReadOnly(ECVolumeLevelTestcase):
         2. Create a 4:2 EC volume on top of the 6 BLT volumes.
         3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface. 
-        5. Run the FIO sequential write and read only test(without verify) for various block size and IO depth from the 
+        5. Run the FIO sequential read only test(without verify) for required block size and IO depth from the 
         EP host and check the performance are inline with the expected threshold.
         """)
 
@@ -888,7 +908,7 @@ class EC42FioRandReadOnly(ECVolumeLevelTestcase):
         2. Create a 4:2 EC volume on top of the 6 BLT volumes.
         3. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
         4. Export (Attach) the above EC or LS volume based on use_lsv config to the EP host connected via the PCIe interface.
-        5. Run the FIO random write and read only test(without verify) for various block size and IO depth from the 
+        5. Run the FIO random read only test(without verify) for required block size and IO depth from the 
         EP host and check the performance are inline with the expected threshold.
         """)
 
