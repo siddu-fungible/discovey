@@ -1,0 +1,122 @@
+{
+    "access": {
+        "ip": "10.1.23.63", 
+        "apisvr": "20006"
+    }, 
+    "Config": {
+        "bgp": {
+            "neighbors": [
+                {
+                    "ip": "192.168.0.2", 
+                    "as": 64512, 
+                    "allowas-in": true, 
+                    "next-hop-self": true
+                }, 
+                {
+                    "ip": "193.0.0.2", 
+                    "as": 64513, 
+                    "allowas-in": true, 
+                    "next-hop-self": true
+                }, 
+                {
+                    "ip": "193.0.0.6", 
+                    "as": 64513, 
+                    "allowas-in": true, 
+                    "next-hop-self": true
+                }
+            ], 
+            "router_id": "192.0.1.1", 
+            "as": 64512, 
+            "network": "10.0.1.0/28"
+        }, 
+        "global": {
+            "f1_num": 0, 
+            "f1_ftep": "192.0.1.1", 
+            "fcp_config": {
+                "fcp_req_dscp_ecn": 252, 
+                "fcp_data_dscp_ecn": 244, 
+                "fcp_hdr_ver": 0, 
+                "fcp_hdr_udp_dport": 7085, 
+                "fcp_blk_size_2power": "B256", 
+                "fcp_hdr_ipv4_id": 0, 
+                "fcp_nq_per_tunnel_2power": "EIGHT", 
+                "fcp_hdr_v4_etype": 2048, 
+                "fcp_gnt_dscp_ecn": 248, 
+                "fcp_hdr_udp_sport": "RANDOM"
+            }
+        }, 
+        "intfs": [
+            {
+                "bandwidth": "100", 
+                "description": "spine link from 1-1 to spine 0-1 ", 
+                "spine_index": 0, 
+                "vrf": 1, 
+                "ip": {
+                    "netmask": "30", 
+                    "address": "193.0.0.1"
+                }, 
+                "gph_index": [
+                    {
+                        "index": 0
+                    }
+                ], 
+                "type": "spine_facing", 
+                "id": "fpg1", 
+                "mtu": 9000
+            }, 
+            {
+                "bandwidth": "100", 
+                "description": "spine link from 1-1 to spine 0-2 ", 
+                "spine_index": 1, 
+                "vrf": 1, 
+                "ip": {
+                    "netmask": "30", 
+                    "address": "193.0.0.5"
+                }, 
+                "gph_index": [
+                    {
+                        "index": 1
+                    }
+                ], 
+                "type": "spine_facing", 
+                "id": "fpg2", 
+                "mtu": 9000
+            }, 
+            {
+                "bandwidth": 100, 
+                "remote_f1_id": 2, 
+                "description": "Fab facing link from 1-1 to leaf 1-2", 
+                "vrf": 1, 
+                "ip": {
+                    "netmask": "30", 
+                    "address": "192.168.0.1"
+                }, 
+                "gph_index": [
+                    {
+                        "index": 2
+                    }, 
+                    {
+                        "index": 3
+                    }
+                ], 
+                "type": "fabric_facing", 
+                "id": "fpg0", 
+                "mtu": 9000
+            }, 
+            {
+                "ip": {
+                    "netmask": "28", 
+                    "address": "10.0.1.14"
+                }, 
+                "id": "vlan2"
+            }, 
+            {
+                "ip": {
+                    "netmask": "32", 
+                    "address": "192.0.1.1"
+                }, 
+                "id": "lo"
+            }
+        ]
+    }
+}
