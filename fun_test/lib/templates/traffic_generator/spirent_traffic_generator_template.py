@@ -1947,7 +1947,44 @@ class Rfc2544ThroughputConfig(object):
         self._spirent_handle = handle
 
 
+class FecModeObject(object):
 
+    FEC_MODE_NONE = "NONE"
+    FEC_MODE_FORCE = "FORCE"
+    FEC_MODE_IEEE = "IEEE"
+    FEC_PHY_TYPE_NONE = "NONE"
+    FEC_TYPE_NONE = "NONE"
+    FEC_TYPE_CLAUSE108 = "CLAUSE_108_RS"
+    FEC_TYPE_CLAUSE74 = "CLAUSE_74_BASE_R"
+    FEC_TYPE_CLAUSE91 = "CLAUSE_91_RS"
+
+    def __init__(self, fecaction="DISABLE", fecmode=FEC_MODE_NONE, fecphytype=FEC_PHY_TYPE_NONE, fectype=FEC_TYPE_NONE):
+        self.FecAction = fecaction
+        self.FecMode = fecmode
+        self.FecPhyType = fecphytype
+        self.FecType = fectype
+
+    def get_attributes_dict(self):
+        attributes = {}
+        for key in vars(self):
+            if "_spirent" in key:
+                continue
+            attributes[key] = getattr(self, key)
+        return attributes
+
+    def update_stream_block_object(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    @property
+    def spirent_handle(self):
+        return self._spirent_handle
+
+    @spirent_handle.setter
+    def spirent_handle(self, handle):
+        self._spirent_handle = handle
+
+    def __str__(self):
+        return "FecModeObject"
 
 
 
