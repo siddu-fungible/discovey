@@ -1,0 +1,32 @@
+[
+    {
+        "mode": "100G", 
+        "version": 5862, 
+        "timestamp": "2019-04-09 11:16:26.834444-07:00", 
+        "flow_type": "NU_VP_NU_FWD_NFCP", 
+        "frame_size": 64.0, 
+        "pps": 133927213.72, 
+        "throughput": 77142.08, 
+        "latency_min": 1.64, 
+        "latency_max": 10.38, 
+        "latency_avg": 2.23, 
+        "jitter_min": 0.0, 
+        "jitter_max": 1.17, 
+        "jitter_avg": 0.05
+    }, 
+    {
+        "mode": "100G", 
+        "version": 5862, 
+        "timestamp": "2019-04-09 11:16:26.834444-07:00", 
+        "flow_type": "NU_VP_NU_FWD_NFCP", 
+        "frame_size": 1500.0, 
+        "pps": -1, 
+        "throughput": -1, 
+        "latency_min": -1, 
+        "latency_max": -1, 
+        "latency_avg": -1, 
+        "jitter_min": -1, 
+        "jitter_max": -1, 
+        "jitter_avg": -1
+    }
+]
