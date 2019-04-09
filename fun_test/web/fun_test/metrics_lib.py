@@ -55,7 +55,7 @@ class MetricLib():
         chart.data_sets = json.dumps(data_sets)
         chart.save()
 
-    def replace_data_Set(self, data_sets, metric_id):
+    def replace_data_sets(self, data_sets, metric_id):
         try:
             chart = MetricChart.objects.get(metric_id=metric_id)
             if chart:
@@ -163,3 +163,15 @@ class MetricLib():
         MileStoneMarkers(metric_id=metric_id,
                          milestone_date=datetime(year=2018, month=9, day=16),
                          milestone_name="Tape-out").save()
+
+    def set_inputs_data_sets(self, data_sets, **kwargs):
+        for data_set in data_sets:
+            for key, value in kwargs.iteritems():
+                data_set["inputs"][key] = value
+        return data_sets
+
+    def set_outputs_data_sets(self, data_sets, **kwargs):
+        for data_set in data_sets:
+            for key, value in kwargs.iteritems():
+                data_set["output"][key] = value
+        return data_sets
