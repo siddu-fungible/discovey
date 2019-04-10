@@ -1976,6 +1976,60 @@
                 ]
               }
             ]
+          },
+          {
+            "info": "Teramarks Customer",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "teramarks_customer",
+            "weight": 1,
+            "label": "Customer",
+            "children": [
+              {
+                "info": "Juniper",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "teramarks_customer_juniper",
+                "weight": 1,
+                "label": "Juniper",
+                "children": [
+                  {
+                    "info": "juniper_NU_VP_NU_FWD_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_NU_VP_NU_FWD_NFCP",
+                    "weight": 1,
+                    "label": "NU->VP->NU, FWD Benchmark",
+                    "children": [
+                      {
+                        "info": "NU_VP_NU_FWD_NFCP_output_throughput",
+                        "metric_model_name": "NuTransitPerformance",
+                        "leaf": true,
+                        "name": "NU_VP_NU_FWD_NFCP_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "NU_VP_NU_FWD_NFCP_output_pps",
+                        "metric_model_name": "NuTransitPerformance",
+                        "leaf": true,
+                        "name": "NU_VP_NU_FWD_NFCP_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "metric_model_name": "NuTransitPerformance",
+                        "leaf": true,
+                        "name": "NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
           }
         ]
       }
