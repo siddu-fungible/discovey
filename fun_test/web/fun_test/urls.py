@@ -199,7 +199,7 @@ users_urls = [
 ]
 
 api_v1_urls = [
-    url(r'^users', users.users)
+    url(r'^users/?(.*)?$', users.users)
 ]
 
 

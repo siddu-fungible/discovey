@@ -24,5 +24,25 @@
 
   </div>
 
+  <div class="card">
+    <div class="card-header">Current users</div>
+    <div class="card-body">
+      <table class="table table-nonfluid">
+        <tr>
+          <th>
+          </th>
+          <th>First name</th>
+          <th>Last name</th>
+          <th>E-mail</th>
+        </tr>
+        <tr *ngFor="let user of users">
+          <td><span (click)="onDelete(user)" class="pseudo-anchor">Delete</span></td>
+          <td>{{ user.first_name }}</td>
+          <td>{{ user.last_name }}</td>
+          <td>{{ user.email }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
 </div>
 
