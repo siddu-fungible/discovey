@@ -281,11 +281,14 @@ def queue_job3(suite_path=None,
                suite_type=SuiteType.STATIC,
                test_bed_type=None,
                version=None,
-               requested_priority_category=SchedulerJobPriority.NORMAL):
+               requested_priority_category=SchedulerJobPriority.NORMAL,
+               submitter_email=None):
     time.sleep(0.1)
     result = -1
     if not tags:
         tags = []
+    if not emails:
+        emails = []
     if suite_type == SuiteType.DYNAMIC:
         original_suite_execution = models_helper.get_suite_execution(suite_execution_id=original_suite_execution_id)
         suite_path = "Re({})".format(original_suite_execution.suite_path)
@@ -305,7 +308,8 @@ def queue_job3(suite_path=None,
                                                         tags=tags,
                                                         state=JobStatusType.UNKNOWN,
                                                         suite_container_execution_id=suite_container_execution_id,
-                                                        test_bed_type=test_bed_type)
+                                                        test_bed_type=test_bed_type,
+                                                        submitter_email=submitter_email)
     if suite_type == SuiteType.DYNAMIC:
         if original_suite_execution_id:  # Must be a re-run
             models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
@@ -715,7 +719,9 @@ def send_summary_mail(job_id, extra_message=""):
                                                         attributes_dict["Failed"])
 
         try:
-            result = send_mail(subject=subject, content=html, to_addresses=json.loads(suite_execution.emails))
+            to_addresses = [suite_execution.submitter_email] + json.loads(suite_execution.emails)
+
+            result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
             # print html
             scheduler_logger.info("Sent mail")
             if not result["status"]:

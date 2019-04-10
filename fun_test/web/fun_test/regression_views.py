@@ -117,6 +117,10 @@ def submit_job(request):
         if "suite_path" in request_json:
             suite_path = request_json["suite_path"]
 
+        submitter_email = "team-regression@fungible.com"
+        if "submitter_email" in request_json:
+            submitter_email = request_json["submitter_email"]
+
         # script path used for script only submission
         script_pk = None
         if "script_pk" in request_json:
@@ -189,7 +193,8 @@ def submit_job(request):
                                 requested_hour=requested_hour,
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
-                                repeat_in_minutes=repeat_in_minutes)
+                                repeat_in_minutes=repeat_in_minutes,
+                                submitter_email=submitter_email)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -204,7 +209,8 @@ def submit_job(request):
                                 requested_hour=requested_hour,
                                 requested_minute=requested_minute,
                                 requested_days=requested_days,
-                                repeat_in_minutes=repeat_in_minutes)
+                                repeat_in_minutes=repeat_in_minutes,
+                                submitter_email=submitter_email)
         elif dynamic_suite_spec:
             queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                 emails=emails,
