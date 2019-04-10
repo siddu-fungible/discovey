@@ -15,6 +15,7 @@ FLOW_TYPE_HNU_HNU_NFCP = "HNU_HNU_NFCP"
 FLOW_TYPE_HNU_HNU_FCP = "HNU_HNU_FCP"
 FLOW_TYPE_HNU_NU_NFCP = "HNU_NU_NFCP"
 FLOW_TYPE_NU_HNU_NFCP = "NU_HNU_NFCP"
+FLOW_TYPE_NU_VP_NU_FWD_NFCP = "NU_VP_NU_FWD_NFCP"
 
 
 class Rfc2544Template(SpirentTrafficGeneratorTemplate):
@@ -117,6 +118,22 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         except Exception as ex:
             fun_test.critical(str(ex))
         return True
+
+    def get_interface_mode_input_speed(self):
+        interface_mode = None
+        try:
+            inputs = fun_test.get_job_inputs()
+            if 'speed' in inputs:
+                speed = inputs['speed']
+            else:
+                speed = SpirentManager.SPEED_25G
+            if speed == SpirentManager.SPEED_100G:
+                interface_mode = self.DUT_MODE_100G
+            elif speed == SpirentManager.SPEED_25G:
+                interface_mode = self.DUT_MODE_25G
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return interface_mode
 
     def get_parameters_for_each_stream(self):
         streams_info = {}
@@ -346,7 +363,8 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             scheduler_logger.critical(str(ex))
         return result
 
-    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G):
+    def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
+                                       file_name=OUTPUT_JSON_FILE_NAME):
         results = []
         output = True
         failed_result_found = False
@@ -393,7 +411,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                     results.append(data_dict)
                     fun_test.debug(results)
 
-            file_path = LOGS_DIR + "/%s" % self.OUTPUT_JSON_FILE_NAME
+            file_path = LOGS_DIR + "/%s" % file_name
             contents = self._parse_file_to_json_in_order(file_name=file_path)
             if contents:
                 append_new_results = contents + results
