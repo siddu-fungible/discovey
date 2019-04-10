@@ -24,6 +24,7 @@ from . import upgrade_views
 from . import demo_views
 from . import triaging
 from web.fun_test.api import users
+from web.fun_test.api import regression
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
@@ -201,7 +202,8 @@ users_urls = [
 ]
 
 api_v1_urls = [
-    url(r'^users/?(.*)?$', users.users)
+    url(r'^users/?(.*)?$', users.users),
+    url(r'^regression/?(.*)?$', regression.test_beds)
 ]
 
 

@@ -68,4 +68,10 @@ export class RegressionService implements OnInit{
     }));
   }
 
+  fetchTestbeds() {
+    return this.apiService.get("/api/v1/regression/test_beds").pipe(switchMap(response => {
+      return of(response.data);
+    }))
+  }
+
 }

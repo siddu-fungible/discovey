@@ -22,6 +22,14 @@ RESULT_CHOICES = [(k, v)for k, v in RESULTS.items()]
 
 TAG_LENGTH = 50
 
+class FunModel(models.Model):
+    def to_dict(self):
+        result = {}
+        fields = self._meta.get_fields()
+        for field in fields:
+            result[field.name] = getattr(self, field.name)
+        return result
+
 class TimeKeeper(models.Model):
     time = models.DateTimeField(default=datetime.now)
     name = models.TextField(default="", unique=True)
@@ -52,7 +60,7 @@ class CatalogTestCase(models.Model):
     def __str__(self):
         return str(self.jira_id)
 
-class TestBed(models.Model):
+class TestBed(FunModel):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
 
@@ -353,13 +361,7 @@ class KilledJob(models.Model):
 
 
 
-class FunModel(models.Model):
-    def to_dict(self):
-        result = {}
-        fields = self._meta.fields
-        for field in fields:
-            result[field.name] = getattr(self, field.name)
-        return result
+
 
 class User(FunModel):
     first_name = models.CharField(max_length=30)
