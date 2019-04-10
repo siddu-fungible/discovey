@@ -1,0 +1,4 @@
+[
+  {"info": {"tags": ["storage-sanity"]}},
+  {"path": "security/replica_crypto_sanity.py"}
+]
