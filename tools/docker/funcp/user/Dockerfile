@@ -5,7 +5,7 @@ ARG  ARG_UID
 ARG  ARG_GID
 
 RUN  groupadd -g $ARG_GID $ARG_USER
-RUN  useradd  -g $ARG_GID -u $ARG_UID $ARG_USER -p 9UCUTMOhVIT9o
+RUN  useradd -l  -g $ARG_GID -u $ARG_UID $ARG_USER -p 9UCUTMOhVIT9o
 RUN  usermod -aG sudo $ARG_USER
 
 RUN  echo "$ARG_USER ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers.d/local
