@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Validators } from '@angular/forms';
+import {LoggerService} from "../services/logger/logger.service";
+import {ApiService} from "../services/api/api.service";
 
 
 @Component({
@@ -16,13 +18,22 @@ export class UserComponent implements OnInit {
     email: ['', Validators.required]
   });
 
-  constructor(private fb: FormBuilder) { }
+  constructor(private fb: FormBuilder, private loggerService: LoggerService, private  apiService: ApiService) { }
 
   ngOnInit() {
   }
 
   onSubmit() {
-
+    console.log(this.firstName.value);
+    let payload = {};
+    payload["first_name"] = this.firstName.value;
+    payload["last_name"] = this.lastName.value;
+    payload["email"] = this.email.value;
+    this.apiService.post("/api/v1/users", payload).subscribe((response) => {
+      this.loggerService.error("User added successfully");
+    }, error => {
+      this.loggerService.error(error.error_message);
+    });
   }
 
   get firstName() {
