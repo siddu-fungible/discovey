@@ -221,7 +221,7 @@ urlpatterns = [
     url(r'^upgrade/', include(upgrade_urls)),
     url(r'^demo/', include(demo_urls)),
     url(r'^users', include(users_urls)),
-    url(r'^api/v1', include(api_v1_urls)),
+    url(r'^api/v1/', include(api_v1_urls)),
     url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
 
 ]

@@ -30,9 +30,9 @@ export class UserComponent implements OnInit {
     payload["last_name"] = this.lastName.value;
     payload["email"] = this.email.value;
     this.apiService.post("/api/v1/users", payload).subscribe((response) => {
-      this.loggerService.error("User added successfully");
+      this.loggerService.success("User added successfully");
     }, error => {
-      this.loggerService.error(error.error_message);
+      this.loggerService.error(error.value.error_message);
     });
   }
 

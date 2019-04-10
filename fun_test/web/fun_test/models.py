@@ -350,15 +350,16 @@ class KilledJob(models.Model):
     killed_time = models.DateTimeField(default=datetime.now)
 
 
-class ToDictMixin:
+
+class FunModel(models.Model):
     def to_dict(self):
         result = {}
-        fields = self.__meta.fields
+        fields = self._meta.fields
         for field in fields:
-            result[field] = getattr(self, field)
+            result[field.name] = getattr(self, field.name)
         return result
 
-class User(models.Model, ToDictMixin):
+class User(FunModel):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     email = models.EmailField(max_length=30, unique=True)
