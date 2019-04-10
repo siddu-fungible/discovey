@@ -349,6 +349,23 @@ class KilledJob(models.Model):
     job_id = models.IntegerField(unique=True)
     killed_time = models.DateTimeField(default=datetime.now)
 
+
+class ToDictMixin:
+    def to_dict(self):
+        result = {}
+        fields = self.__meta.fields
+        for field in fields:
+            result[field] = getattr(self, field)
+        return result
+
+class User(models.Model, ToDictMixin):
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    email = models.EmailField(max_length=30, unique=True)
+
+    def __str__(self):
+        return "{} {} {}".format(self.first_name, self.last_name, self.email)
+
 if not is_lite_mode():
     from web.fun_test.metrics_models import *
 

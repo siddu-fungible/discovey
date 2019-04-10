@@ -23,6 +23,7 @@ from . import tests_views
 from . import upgrade_views
 from . import demo_views
 from . import triaging
+from web.fun_test.api import users
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
@@ -197,6 +198,11 @@ users_urls = [
     url(r'^$', views.angular_home)
 ]
 
+api_v1_urls = [
+    url(r'^users', users.users)
+]
+
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^performance/', views.angular_home),
@@ -215,6 +221,7 @@ urlpatterns = [
     url(r'^upgrade/', include(upgrade_urls)),
     url(r'^demo/', include(demo_urls)),
     url(r'^users', include(users_urls)),
+    url(r'^api/v1', include(api_v1_urls)),
     url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
 
 ]
