@@ -56,7 +56,7 @@ class ReplicaCryptoVolumeScript(FunTestScript):
 
     def cleanup(self):
         self.storage_controller.disconnect()
-        TopologyHelper(spec=self.topology).cleanup()
+        self.topology_obj_helper.cleanup()
         # pass
 
 
