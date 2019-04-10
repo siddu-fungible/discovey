@@ -528,6 +528,8 @@ def _get_suite_execution_attributes(suite_execution):
     suite_execution_attributes.append({"name": "Not Run", "value": suite_execution["num_not_run"]})
     suite_execution_attributes.append({"name": "In Progress", "value": suite_execution["num_in_progress"]})
     suite_execution_attributes.append({"name": "Skipped", "value": suite_execution["num_skipped"]})
+    suite_execution_attributes.append({"name": "Test-bed type", "value": suite_execution["fields"]["test_bed_type"]})
+    suite_execution_attributes.append({"name": "Submitter", "value": suite_execution["fields"]["submitter_email"]})
     return suite_execution_attributes
 
 

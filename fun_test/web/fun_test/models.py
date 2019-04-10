@@ -117,6 +117,8 @@ class SuiteExecution(models.Model):
     requested_minute = models.IntegerField(null=True)  # minute in the hour
     timezone_string = models.TextField(default="PST")  # timezone string PST or IST
     repeat_in_minutes = models.IntegerField(null=True)  # Repeat the job in some minutes
+    submitter_email = models.EmailField(default="john.abraham@fungible.com")
+    description = models.TextField(default="", null=True)
 
     """
     Job result related

@@ -58,6 +58,7 @@
           <th># TC</th>
           <th>Version</th>
           <th>Scheduled at</th>
+          <th>Submitter</th>
           <th>Path</th>
           <th>Action</th>
           <th>Re-runs</th>
@@ -88,6 +89,8 @@
           <td>{{ testCaseLength(suiteExecution.fields.test_case_execution_ids) }}</td>
           <td>{{ suiteExecution.fields.version === 'UNKNOWN'? '-': suiteExecution.fields.version }}</td>
           <td>{{ trimTime(suiteExecution.fields.scheduled_time) }}</td>
+            <td>{{ suiteExecution.fields.submitter_email }}</td>
+
           <td>{{ suiteExecution.fields.suite_path === 'dynamic'? 'Re(' + getReRunOriginalSuitePath(suiteExecution) + ')' : suiteExecution.fields.suite_path }}</td>
           <td>
             <ng-container *ngIf="suiteExecution.fields.suite_type ==='regular'">

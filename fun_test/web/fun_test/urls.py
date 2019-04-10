@@ -27,6 +27,8 @@ from web.fun_test.api import users
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
+from django.conf import settings
+
 
 regression_urls = [
     url(r'^$', views.angular_home),
@@ -227,3 +229,7 @@ urlpatterns = [
 ]
 
 urlpatterns += staticfiles_urlpatterns()
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [url(r'^__debug__/', include(debug_toolbar.urls)),]

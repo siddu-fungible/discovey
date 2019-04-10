@@ -54,6 +54,7 @@ import { TriageComponent } from './triage/triage.component';
 import { SectionHorizontalLineComponent} from "./ui-elements/section-horizontal-line/section-horizontal-line.component";
 import { ReactiveFormsModule } from '@angular/forms';
 import { UserComponent } from './user/user.component';
+import { TestBedComponent } from './regression/test-bed/test-bed.component';
 
 @NgModule({
   declarations: [
@@ -92,7 +93,8 @@ import { UserComponent } from './user/user.component';
     SmartLabelComponent,
     QueueViewerComponent,
     SectionHorizontalLineComponent,
-    UserComponent
+    UserComponent,
+    TestBedComponent
   ],
   imports: [
     BsDropdownModule,
