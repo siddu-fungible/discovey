@@ -119,6 +119,22 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return True
 
+    def get_interface_mode_input_speed(self):
+        interface_mode = None
+        try:
+            inputs = fun_test.get_job_inputs()
+            if 'speed' in inputs:
+                speed = inputs['speed']
+            else:
+                speed = SpirentManager.SPEED_25G
+            if speed == SpirentManager.SPEED_100G:
+                interface_mode = self.DUT_MODE_100G
+            elif speed == SpirentManager.SPEED_25G:
+                interface_mode = self.DUT_MODE_25G
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return interface_mode
+
     def get_parameters_for_each_stream(self):
         streams_info = {}
         try:

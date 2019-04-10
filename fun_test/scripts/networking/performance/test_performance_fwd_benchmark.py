@@ -154,12 +154,8 @@ class TestFwdPerformance(FunTestCase):
         fun_test.log("Fetching PSW NU Global stats before test")
         network_controller_obj.peek_psw_global_stats()
 
-        if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
-            fun_test.log("Fetching PSW HNU Global stats before test")
-            network_controller_obj.peek_psw_global_stats(hnu=True)
-
         fun_test.log("Fetching VP packets before test")
-        vp_stats_before = network_controller_obj.peek_vp_packets()
+        vp_stats_before = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
 
         fun_test.log("Fetching BAM stats before test")
         network_controller_obj.peek_bam_stats()
@@ -175,18 +171,14 @@ class TestFwdPerformance(FunTestCase):
         fun_test.log("Fetching PSW NU Global stats after test")
         network_controller_obj.peek_psw_global_stats()
 
-        if self.flow_direction != NuConfigManager.FLOW_DIRECTION_NU_NU:
-            fun_test.log("Fetching PSW HNU Global stats after test")
-            network_controller_obj.peek_psw_global_stats(hnu=True)
-
         fun_test.log("Fetching VP packets after test")
-        vp_stats_after = network_controller_obj.peek_vp_packets()
+        vp_stats_after = get_vp_pkts_stats_values(network_controller_obj=network_controller_obj)
 
         diff_vp_stats = get_diff_stats(old_stats=vp_stats_before, new_stats=vp_stats_after)
         fun_test.log("VP Diff stats: %s" % diff_vp_stats)
 
-        # fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_DIRECT]) > 0,
-        #                      "Ensure packets are going through VP NU direct")
+        fun_test.test_assert(int(diff_vp_stats[VP_PACKETS_FORWARDING_NU_DIRECT]) > 0,
+                             "Ensure packets are going through VP NU direct")
 
         fun_test.log("Fetching BAM stats after test")
         network_controller_obj.peek_bam_stats()
@@ -212,9 +204,10 @@ class TestFwdPerformance(FunTestCase):
         fun_test.simple_assert(result, checkpoint)
 
         if self.spray:
+            mode = self.template_obj.get_interface_mode_input_speed()
             result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
                                                                       timestamp=TIMESTAMP,
-                                                                      mode=Rfc2544Template.DUT_MODE_100G,
+                                                                      mode=mode,
                                                                       flow_direction=self.flow_direction,
                                                                       file_name=OUTPUT_JSON_FILE_NAME)
             fun_test.simple_assert(result, "Ensure JSON file created")
