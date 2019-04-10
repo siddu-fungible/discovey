@@ -596,7 +596,7 @@ class EcVolPerformanceTc(PalladiumPerformanceTc):
                     r'(?P<value>{.*})\s+\[\S+:(?P<metric_name>\S+)\]',
                     line)
                 if m:
-                    metric_type = m.group("metric_type")
+                    # metric_type = m.group("metric_type")
                     value = m.group("value")
                     j = json.loads(value)
                     metric_name = m.group("metric_name").lower()
