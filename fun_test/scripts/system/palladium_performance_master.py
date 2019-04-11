@@ -1662,12 +1662,14 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
                         metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
                         metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
-                        if "latency_P99" in line:
-                            metrics["output_latency_P99"] = line["latency_P99"]
+                        if self.model == "NuTransitPerformance":
+                            metrics["output_latency_P99"] = line["latency_P99"] if "latency_P99" in line else -1
+                            metrics["output_latency_P90"] = line["latency_P90"] if "latency_P90" in line else -1
+                            metrics["output_latency_P50"] = line["latency_P50"] if "latency_P50" in line else -1
                         else:
-                            metrics["output_latency_P99"] = -1
-                        metrics["output_latency_P90"] = line["latency_P90"] if "latency_P90" in line else -1
-                        metrics["output_latency_P50"] = line["latency_P50"] if "latency_P50" in line else -1
+                            metrics["input_number_flows"] = line["num_flows"] if "num_flows" in line else -1
+                            metrics["input_offloads"] = line["offloads"] if "offloads" in line else False
+                            metrics["input_protocol"] = line["protocol"] if "protocol" in line else "UDP"
                         metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
                         metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
                         metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
@@ -1680,48 +1682,43 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         if date_time.year >= 2019:
                             metric_model = app_config.get_metric_models()[self.model]
                             MetricHelper(model=metric_model).add_entry(**d)
-                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                        for names in chart_names:
-                            if "throughput" in names:
-                                if metrics["output_throughput"] == -1 and metrics["input_frame_size"] == 800:
-                                    set_chart_status(result=fun_test.FAILED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
-                                else:
-                                    set_chart_status(result=fun_test.PASSED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
+                        if metrics["input_flow_type"] in internal_chart_names_for_flows:
+                            chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
+                            for names in chart_names:
+                                if "throughput" in names:
+                                    if metrics["output_throughput"] == -1 and metrics["input_frame_size"] == 800:
+                                        set_chart_status(result=fun_test.FAILED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                    else:
+                                        set_chart_status(result=fun_test.PASSED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                if "pps" in names:
+                                    if metrics["output_pps"] == -1 and metrics["input_frame_size"] == 800:
+                                        set_chart_status(result=fun_test.FAILED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                    else:
+                                        set_chart_status(result=fun_test.PASSED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                if "latency" in names:
+                                    if metrics["output_latency_avg"] == -1 and metrics["input_frame_size"] == 800:
+                                        set_chart_status(result=fun_test.FAILED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                    else:
+                                        set_chart_status(result=fun_test.PASSED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
 
-                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                        for names in chart_names:
-                            if "pps" in names:
-                                if metrics["output_pps"] == -1 and metrics["input_frame_size"] == 800:
-                                    set_chart_status(result=fun_test.FAILED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
-                                else:
-                                    set_chart_status(result=fun_test.PASSED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
-                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                        for names in chart_names:
-                            if "latency" in names and metrics["input_frame_size"] == 800:
-                                if metrics["output_latency_avg"] == -1 or metrics["output_latency_min"] == -1 or \
-                                        metrics["output_latency_P90"] == -1 or \
-                                        metrics["output_latency_P50"] == -1 or metrics["output_latency_P99"] == -1:
-                                    set_chart_status(result=fun_test.FAILED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
-                                else:
-                                    set_chart_status(result=fun_test.PASSED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1943,39 +1940,39 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    # myscript.add_test_case(AllocSpeedPerformanceTc())
-    # myscript.add_test_case(BcopyPerformanceTc())
-    # myscript.add_test_case(BcopyFloodPerformanceTc())
-    # myscript.add_test_case(EcPerformanceTc())
-    # myscript.add_test_case(EcVolPerformanceTc())
-    # myscript.add_test_case(VoltestPerformanceTc())
-    # myscript.add_test_case(WuDispatchTestPerformanceTc())
-    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    # myscript.add_test_case(FunMagentPerformanceTestTc())
-    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    # myscript.add_test_case(SoakFunMallocPerformanceTc())
-    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    # myscript.add_test_case(BootTimingPerformanceTc())
-    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    # myscript.add_test_case(FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkZipPerformanceTC())
-    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJpegPerformanceTC())
-    # myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
-    # myscript.add_test_case(SoakDmaMemsetPerformanceTC())
-    # myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    # myscript.add_test_case(F1FlowTestPerformanceTC())
-    # myscript.add_test_case(TeraMarkNfaPerformanceTC())
-    # myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
-    # myscript.add_test_case(PrepareDbTc())
+    myscript.add_test_case(AllocSpeedPerformanceTc())
+    myscript.add_test_case(BcopyPerformanceTc())
+    myscript.add_test_case(BcopyFloodPerformanceTc())
+    myscript.add_test_case(EcPerformanceTc())
+    myscript.add_test_case(EcVolPerformanceTc())
+    myscript.add_test_case(VoltestPerformanceTc())
+    myscript.add_test_case(WuDispatchTestPerformanceTc())
+    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    myscript.add_test_case(FunMagentPerformanceTestTc())
+    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    myscript.add_test_case(SoakFunMallocPerformanceTc())
+    myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    myscript.add_test_case(BootTimingPerformanceTc())
+    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    myscript.add_test_case(FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkZipPerformanceTC())
+    myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
+    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
+    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
+    myscript.add_test_case(F1FlowTestPerformanceTC())
+    myscript.add_test_case(TeraMarkNfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
+    myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

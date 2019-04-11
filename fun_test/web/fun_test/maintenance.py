@@ -67,6 +67,7 @@ def software_date_to_datetime(software_date):
         s = "{}-{}-{} {}:{}".format(year, month, day, "00", "01")
         return datetime.strptime(s, "%Y-%m-%d %H:%M")
 
+
 def get_day_bounds(dt):
     d = get_rounded_time(dt)
     start = d.replace(hour=0, minute=0, second=0)
@@ -116,7 +117,7 @@ def get_possible_output_values(model_name):
     return field_choices
 
 
-if __name__ == "__main__":
+if __name__ == "__main_memset_datasets__":
     entries = MetricChart.objects.all()
     ml = MetricLib()
     input = {}
@@ -163,3 +164,105 @@ if __name__ == "__main__":
             for data_set in data_sets:
                 if data_set["name"] == "2048KB" or data_set["name"] == "4096KB":
                     ml.delete_data_set(metric_id=entry.metric_id, data_set=data_set)
+
+if __name__ == "__main__":
+    flow_types = ["NU_VP_NU_FWD_NFCP"]
+    model_name = "TeraMarkJuniperNetworkingPerformance"
+    frame_size_names = {
+        64: "64B",
+        1500: "1500B",
+        362.94: "IMIX"
+    }
+    outputs = ["output_throughput", "output_pps"]
+    chart_names = ["Throughput", "Packets per sec"]
+    for flow_type in flow_types:
+        for output in outputs:
+            data_sets = []
+            for frame_size in frame_size_names:
+                one_data_set = {}
+                one_data_set["inputs"] = {}
+                one_data_set["inputs"]["input_flow_type"] = flow_type
+                one_data_set["inputs"]["input_frame_size"] = frame_size
+                one_data_set["name"] = frame_size_names[frame_size]
+                one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+                data_sets.append(one_data_set)
+            metric_id = LastMetricId.get_next_id()
+            positive = True
+            internal_name = "juniper_" + flow_type + '_' + output
+            if "throughput" in output:
+                y1_axis_title = "Gbps"
+                chart_name = "Throughput"
+            else:
+                y1_axis_title = "Mpps"
+                chart_name = "Packets per sec"
+            base_line_date = datetime(year=2019, month=4, day=10, minute=0, hour=0, second=0)
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Amit Surana (amit.surana@fungible.com)",
+                        positive=positive,
+                        y1_axis_title=y1_axis_title,
+                        visualization_unit=y1_axis_title,
+                        source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/performance/test_performance_fwd_benchmark.py",
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date).save()
+            mmt = MileStoneMarkers(metric_id=metric_id,
+                                   milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+    print "chart creation for NU_VP_NU_FWD_NFCP throughput and pps is done"
+
+if __name__ == "__main__":
+    flow_types = ["NU_VP_NU_FWD_NFCP"]
+    model_name = "TeraMarkJuniperNetworkingPerformance"
+    frame_size_names = {
+        64: "64B",
+        1500: "1500B",
+        362.94: "IMIX"
+    }
+    outputs = ["output_latency_avg", "output_latency_min", "output_latency_max"]
+    chart_names = ["Latency"]
+    for flow_type in flow_types:
+        data_sets = []
+        for output in outputs:
+            if "avg" in output:
+                name = "avg"
+            elif "min" in output:
+                name = "min"
+            else:
+                name = "max"
+            for frame_size in frame_size_names:
+                one_data_set = {}
+                one_data_set["inputs"] = {}
+                one_data_set["inputs"]["input_flow_type"] = flow_type
+                one_data_set["inputs"]["input_frame_size"] = frame_size
+                one_data_set["name"] = frame_size_names[frame_size] + "-" + name
+                one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+                data_sets.append(one_data_set)
+        metric_id = LastMetricId.get_next_id()
+        y1_axis_title = "usecs"
+        chart_name = "Latency"
+        positive = False
+        internal_name = "juniper_" + flow_type + '_' + "output_latency_avg"
+        base_line_date = datetime(year=2019, month=4, day=10, minute=0, hour=0, second=0)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Amit Surana (amit.surana@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/networking/performance/test_performance_fwd_benchmark.py",
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "chart creation for NU_VP_NU_FWD_NFCP latency is done"
