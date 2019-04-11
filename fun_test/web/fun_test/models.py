@@ -60,12 +60,20 @@ class CatalogTestCase(models.Model):
     def __str__(self):
         return str(self.jira_id)
 
+
 class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+    manual_lock = models.BooleanField(default=False)
+    manual_lock_expiry_time = models.DateTimeField(default=datetime.now)
+    manual_lock_submitter = models.EmailField(null=True)
 
     def __str__(self):
-        return "{} {}".format(self.name, self.description)
+        return "{} {} {} {} {}".format(self.name,
+                                       self.description,
+                                       self.manual_lock,
+                                       self.manual_lock_expiry_time,
+                                       self.manual_lock_submitter)
 
 
 class CatalogSuite(models.Model):

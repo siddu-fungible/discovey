@@ -3,6 +3,11 @@ import {RegressionService} from "../regression.service";
 import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
 
+enum EditMode {
+  NONE = 0,
+  MANUAL_LOCK_INITIAL = "Set manual lock",
+  MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock"
+}
 
 @Component({
   selector: 'app-test-bed',
@@ -13,6 +18,8 @@ export class TestBedComponent implements OnInit {
 
   testBeds: any [] = null;
   automationStatus = {};
+  currentEditMode: EditMode = EditMode.NONE;
+  EditMode = EditMode;
   constructor(private regressionService: RegressionService) { }
 
   ngOnInit() {
@@ -44,14 +51,23 @@ export class TestBedComponent implements OnInit {
   fetchAutomationStatus() {
     return forkJoin(...this.testBeds.map((testBed) => {
       return this.regressionService.testBedInProgress(testBed.name).pipe(switchMap(response => {
-        this.automationStatus[testBed.name] = {numExecutions: 0, executionId: -1};
+        let numExecutions = -1;
+        let executionId = -1;
+        let manualLock = false;
+        this.automationStatus[testBed.name] = {numExecutions: numExecutions,
+          executionId: executionId,
+          manualLock: manualLock};
         if (response) {
           let numExecutions = response.length;
           let executionId = numExecutions;
           if (numExecutions > 0) {
-            executionId = response[0].execution_id
+            let thisResponse = response[0];
+            executionId = thisResponse.execution_id;
+            manualLock = thisResponse.manual_lock;
           }
-          this.automationStatus[testBed.name] = {numExecutions: numExecutions, executionId: executionId}
+          this.automationStatus[testBed.name] = {numExecutions: numExecutions,
+            executionId: executionId,
+          manualLock: manualLock}
         }
         this.automationStatus[testBed] = response;
           return of(null);
