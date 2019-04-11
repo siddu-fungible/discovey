@@ -37,22 +37,20 @@ pthread_mutex_t bitmap_mutex;
 #define NVMEOF_RDS_HDR_SIZE sizeof(struct fabrics_rds_msg_hdr)
 
 struct fun_fio_req_struct {
-	union {
-		struct io_u *io_u[FUN_MAX_Q_DEPTH];	
-		void *original_request[FUN_MAX_Q_DEPTH];	
-	};
+	struct io_u *io_u[FUN_MAX_Q_DEPTH];
+	struct rdsock_msg *sent_msg[FUN_MAX_Q_DEPTH];
 	BITMAP(cid_bm, FUN_MAX_Q_DEPTH);
 };
 
-struct fun_fio_req_struct fun_fio_req = {}; 
+static struct fun_fio_req_struct fun_fio_req[NVMEOF_MAX_QUEUES];
 extern struct fio_thread_struct fio_thread;
 struct rdsock *rdsock_client;
 
-static uint16_t get_cid(void)
+static uint16_t get_cid(uint16_t qid)
 {
 	uint16_t cid;
 	pthread_mutex_lock(&bitmap_mutex);
-	cid =  bitmap_bget(&fun_fio_req.cid_bm);
+	cid =  bitmap_bget(&fun_fio_req[qid].cid_bm);
 	assert(cid >= 0);
 	pthread_mutex_unlock(&bitmap_mutex);
 
@@ -94,11 +92,23 @@ fabrics_common(struct fabrics_cmd *fcmd, uint32_t fctype, uint32_t cid)
 	fcmd->cmn.fctype = fctype;
 }
 
-static bool
-handle_nvme_io_resp(struct fabrics_resp *resp, uint32_t *buf, uint16_t buf_size)
+static void
+nvmeof_test_free_msg(struct rdsock_msg *msg)
 {
+	if (msg->buf) {
+		free(msg->buf);
+	}
+	free(msg);
+}
+
+static bool
+handle_nvme_io_resp(struct fabrics_rds_msg_hdr *hdr, struct fabrics_resp *resp,
+		    uint32_t *buf, uint16_t buf_size)
+{
+	uint16_t qid = hdr->qid;
 	uint16_t resp_cid = le16toh(resp->cid);
-	struct io_u * io_u = (struct io_u *)fun_fio_req.io_u[resp_cid];
+	struct io_u *io_u = (struct io_u *)fun_fio_req[qid].io_u[resp_cid];
+	struct rdsock_msg *sent_msg = fun_fio_req[qid].sent_msg[resp_cid];
 
 	switch (io_u->ddir) {
 
@@ -130,23 +140,25 @@ handle_nvme_io_resp(struct fabrics_resp *resp, uint32_t *buf, uint16_t buf_size)
 	fio_thread.completed++;
 	pthread_mutex_unlock(&fun_mutex);
 
+	nvmeof_test_free_msg(sent_msg);
+
 	pthread_mutex_lock(&bitmap_mutex);
-	bitmap_bput(&fun_fio_req.cid_bm, resp_cid);
+	bitmap_bput(&fun_fio_req[qid].cid_bm, resp_cid);
 	pthread_mutex_unlock(&bitmap_mutex);
 	return true;
 }
 
-
 static void
-nvmeof_test_fabric_recv(struct rdsock *sock, struct rdsock_msg *msg)
+nvmeof_test_fabric_recv(struct rdsock *sock, struct fabrics_rds_msg_hdr *hdr,
+		        struct fabrics_resp *resp, struct rdsock_msg *msg)
 {
-	struct fabrics_resp *resp = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
+	uint16_t qid = hdr->qid;
 	uint16_t resp_cid = le16toh(resp->cid);
 	assert(resp);
 	assert(resp_cid < FUN_MAX_Q_DEPTH);
 	struct fun_nvme_status *status = &resp->status;
-	struct fabrics_cmd *cmd = (struct fabrics_cmd *)
-			fun_fio_req.original_request[resp_cid];
+	struct rdsock_msg *sent_msg = fun_fio_req[qid].sent_msg[resp_cid];
+	struct fabrics_cmd *cmd = (void *)sent_msg->msg + NVMEOF_RDS_HDR_SIZE;
 	uint16_t cmd_cid = le16toh(cmd->cmn.cid);
 	assert(cmd);
 	assert(resp_cid == cmd_cid);
@@ -173,22 +185,25 @@ nvmeof_test_fabric_recv(struct rdsock *sock, struct rdsock_msg *msg)
 	       	break;
 
        	default:
-	      	log_err("Response for unknown fabric command %d\n", cmd->cmn.fctype);
+		log_err("Response for unknown fabric command %d\n",
+			cmd->cmn.fctype);
        	}
 
-	bitmap_bput(&fun_fio_req.cid_bm, resp_cid);
+	nvmeof_test_free_msg(sent_msg);
+	bitmap_bput(&fun_fio_req[qid].cid_bm, resp_cid);
 }
 
 static void
-nvmeof_test_admin_recv( struct rdsock *sock, struct rdsock_msg *msg)
+nvmeof_test_admin_recv(struct rdsock *sock, struct fabrics_rds_msg_hdr *hdr,
+		       struct fabrics_resp *resp, struct rdsock_msg *msg)
 {
-	struct fabrics_resp *resp = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
+	uint16_t qid = hdr->qid;
 	uint16_t resp_cid = le16toh(resp->cid);
 	assert(resp);
 	assert(resp_cid < FUN_MAX_Q_DEPTH);
 	struct fun_nvme_status *status = &resp->status;
-	struct fabrics_cmd *cmd = (struct fabrics_cmd *)
-			fun_fio_req.original_request[resp_cid];
+	struct rdsock_msg *sent_msg = fun_fio_req[qid].sent_msg[resp_cid];
+	struct fabrics_cmd *cmd = (void *)sent_msg->msg + NVMEOF_RDS_HDR_SIZE;
 	uint16_t cmd_cid = le16toh(cmd->cmn.cid);
 	assert(cmd);
 	assert(resp_cid == cmd_cid);
@@ -214,52 +229,52 @@ nvmeof_test_admin_recv( struct rdsock *sock, struct rdsock_msg *msg)
 		break;
 	}
 
-	bitmap_bput(&fun_fio_req.cid_bm, resp_cid);
+	nvmeof_test_free_msg(sent_msg);
+	bitmap_bput(&fun_fio_req[qid].cid_bm, resp_cid);
 }
 
-
 void
-nvmeof_test_nvm_recv(struct rdsock *sock, struct rdsock_msg *msg)
+nvmeof_test_nvm_recv(struct rdsock *sock, struct fabrics_rds_msg_hdr *hdr,
+		     struct fabrics_resp *resp, struct rdsock_msg *msg)
 {
-	struct fabrics_resp *resp = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
 	uint16_t resp_cid = le16toh(resp->cid);
 	assert(resp);
 	assert(resp_cid < FUN_MAX_Q_DEPTH);
 	struct fun_nvme_status *status = &resp->status;
 	assert(status->sc == 0);
 
-	handle_nvme_io_resp(resp, msg->buf, msg->buf_size);
+	handle_nvme_io_resp(hdr, resp, msg->buf, msg->buf_size);
 }
 
 static void
 nvmeof_test_recv(struct rdsock *sock, struct rdsock_msg *msg)
 {
+	struct fabrics_resp *resp = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
 	struct fabrics_rds_msg_hdr *hdr =
 		(struct fabrics_rds_msg_hdr *)msg->msg;
 
 	switch (hdr->conn_type) {
 
 	case FABRICS_RDS_CONN:
-		nvmeof_test_fabric_recv(sock, msg);
+		assert(hdr->qid == 0);
+		nvmeof_test_fabric_recv(sock, hdr, resp, msg);
 		sem_post(&sem_fun1); 
 		break;
 
 	case FABRICS_RDS_ADM_CONN:
-		nvmeof_test_admin_recv(sock, msg);
+		assert(hdr->qid == 0);
+		nvmeof_test_admin_recv(sock, hdr, resp, msg);
 		sem_post(&sem_fun1); 
 		break;
 
 	case FABRICS_RDS_NVM_CONN:
-		nvmeof_test_nvm_recv(sock, msg);
+		assert(hdr->qid != 0);
+		nvmeof_test_nvm_recv(sock, hdr, resp, msg);
 		break;
 
 	default:
 		assert(0);
 		break;
-	}
-
-	if (msg->context) {
-		free(msg->context);
 	}
 }
 
@@ -267,11 +282,11 @@ int fun_client_start(uint32_t local_addr, uint32_t remote_addr)
 {
 	struct rdsock_params sock;
 
-	//initialize structure to receive and return io_u
-	memset(&fun_fio_req, 0, sizeof(struct fun_fio_req_struct));
-
-	//initializa bitmap for managing qid and IO depth 
-	bitmap_init(&fun_fio_req.cid_bm, FUN_MAX_Q_DEPTH);
+	//initialize bitmap for managing qid and IO depth
+	for (int qid = 0; qid < NVMEOF_MAX_QUEUES; qid++) {
+		//memset(&fun_fio_req[qid], 0, sizeof(struct fun_fio_req_struct));
+		bitmap_init(&fun_fio_req[qid].cid_bm, FUN_MAX_Q_DEPTH);
+	}
 
 	//start rdsock thread
 	rdsock_init(local_addr, htons(1099));
@@ -320,7 +335,7 @@ int fun_nvmf_ns_create()
 	struct fun_nvme_ns_mgmt *cmd;
 	struct fun_nvme_ns_data *ns_data;
 
-	log_info("Sending NS create command...");
+	log_info("Sending NS create command\n");
 
 	buf_size = FUN_NVME_PAGE_SIZE;
 	mb = calloc(1, buf_size);
@@ -333,8 +348,8 @@ int fun_nvmf_ns_create()
 	}
 	cmd = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
 
-	cid = get_cid();
-	fun_fio_req.original_request[cid] = cmd;
+	cid = get_cid(qid);
+	fun_fio_req[qid].sent_msg[cid] = msg;
 
 	memset(cmd, 0, NVME_CMD_SIZE);
 	cmd->cmn.opcode = FUN_NVME_NS_MGMT;
@@ -366,9 +381,10 @@ int fun_nvmf_ns_attach(uint32_t nsid)
 		free(mb);
 		return -1;
 	}
+
 	cmd = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
-	cid = get_cid();
-	fun_fio_req.original_request[cid] = cmd;
+	cid = get_cid(qid);
+	fun_fio_req[qid].sent_msg[cid] = msg;
 
 	memset(cmd, 0, NVME_CMD_SIZE);
 	cmd->cmn.opcode = FUN_NVME_NS_ATTACH;
@@ -382,9 +398,11 @@ int fun_nvmf_ns_attach(uint32_t nsid)
 	return 0;
 }
 
-
-int fun_admin_io_connect(uint16_t qid, uint8_t sqsize, uint32_t kato, uint16_t cntlid, char *nqn)
+int
+fun_admin_io_connect(uint16_t qid, uint8_t sqsize, uint32_t kato,
+		     uint16_t cntlid, char *nqn)
 {
+	uint16_t adm_qid = 0;
 	uint32_t buf_size, *mb, cid;
 	struct fabrics_connect_cmd *cmd = NULL;
 	struct fabrics_connect_data *data = NULL;
@@ -400,8 +418,8 @@ int fun_admin_io_connect(uint16_t qid, uint8_t sqsize, uint32_t kato, uint16_t c
 	}
 	cmd = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
 
-	cid = get_cid();
-	fun_fio_req.original_request[cid] = cmd;
+	cid = get_cid(adm_qid);
+	fun_fio_req[adm_qid].sent_msg[cid] = msg;
 
 	fabrics_common((struct fabrics_cmd *)cmd, FABRICS_CONNECT, cid); 
 
@@ -417,12 +435,15 @@ int fun_admin_io_connect(uint16_t qid, uint8_t sqsize, uint32_t kato, uint16_t c
 	strcpy((char *)data->subnqn, nqn);
 	strcpy((char *)data->hostnqn, hostnqn_g);
 
-	if (qid) log_info( "Initiating  I/O connection for queue %u\n", qid);
-	else log_info( "Initiating  ADMIN connection\n") ;
-	nvmeof_send_msg(msg, mb, FABRICS_RDS_CONN, 0, buf_size);
+	if (qid) {
+		log_info("Initiating  I/O connection for queue %u mb %p\n",
+			 qid, mb);
+	} else {
+		log_info( "Initiating  ADMIN connection\n") ;
+	}
+	nvmeof_send_msg(msg, mb, FABRICS_RDS_CONN, adm_qid, buf_size);
 	return 0;
 }
-
 
 int
 fun_read_write(struct io_u *io_u, uint32_t nsid, void *buf, uint64_t offset,
@@ -445,16 +466,16 @@ fun_read_write(struct io_u *io_u, uint32_t nsid, void *buf, uint64_t offset,
 	}
 	cmd = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
 
-	cid = get_cid();
-	fun_fio_req.io_u[cid] = io_u;
+	cid = get_cid(qid);
 
 	memset(cmd, 0, NVME_CMD_SIZE);	
 	cmd->cmn.opcode = (io_u->ddir == DDIR_READ) ? FUN_NVME_READ : FUN_NVME_WRITE;
 	cmd->cmn.cid = htole16(cid);
 	cmd->cmn.nsid = htole32(nsid);
 
-	if(io_u->ddir == DDIR_READ) cmd->cmn.opcode = FUN_NVME_READ;
-	else {
+	if(io_u->ddir == DDIR_READ) {
+		cmd->cmn.opcode = FUN_NVME_READ;
+	} else {
 		cmd->cmn.opcode = FUN_NVME_WRITE;
 		memcpy((uint8_t *)mb, (uint8_t *)buf, buf_size);
 	}
@@ -462,6 +483,8 @@ fun_read_write(struct io_u *io_u, uint32_t nsid, void *buf, uint64_t offset,
 	cmd->nlb = htole16(EPNVME_SIZE_TO_NLB(buf_size));
 	cmd->cmn.psdt = FUN_NVME_PSDT_SGL_MPTR_CONTIG;
 
+	fun_fio_req[qid].sent_msg[cid] = msg;
+	fun_fio_req[qid].io_u[cid] = io_u;
 	rc = nvmeof_send_msg(msg, mb, FABRICS_RDS_NVM_CONN, qid, buf_size);
 
 read_write_failed:
@@ -478,14 +501,14 @@ int fun_prop_set(uint32_t offset, uint8_t size, uint64_t value)
 	}
 	struct fabrics_prop_set_cmd *cmd = (void *)msg->msg + NVMEOF_RDS_HDR_SIZE;
 
-	cid = get_cid();
-	fun_fio_req.original_request[cid] = cmd;
+	cid = get_cid(qid);
+	fun_fio_req[qid].sent_msg[cid] = msg;
 	fabrics_common((struct fabrics_cmd *)cmd, FABRICS_PROPERTY_SET, cid);
 	cmd->attrib.size = size;
 	cmd->offset = htole32(offset);
 	cmd->val.low = htole32(value);
 
-	log_info( "Sending Fabric Property Set Command ...");
+	log_info( "Sending Fabric Property Set Command\n");
 	nvmeof_send_msg(msg, NULL, FABRICS_RDS_CONN, qid, 0);
 
 	return 0;
