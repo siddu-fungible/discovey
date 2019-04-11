@@ -50,7 +50,7 @@ def do_score_triage(commits, bootargs):
     num_commits = len(commits)
     step = num_commits/5
 
-    for i in range(0, 1): #len(commits), step):
+    for i in range(0, len(commits), step):
 
         sha = commits[i]["sha"]
         tag = "qa_triage_bcopy_{}".format(i)
