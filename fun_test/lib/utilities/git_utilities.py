@@ -31,7 +31,9 @@ class GitManager:
             r = requests.get(url=page_url, headers={'Authorization': 'token {}'.format(self.TOKEN)})
             if r.status_code == 200:
                 results = r.json()
-                results = [x for x in results if x["commit"]["message"].startswith("Merge pull")]
+                # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
+                # results = [x for x in results if x["commit"]["message"].startswith("Merge")]
+
                 all_commits.extend(results)
         return all_commits
 
@@ -58,8 +60,8 @@ class GitManager:
 
 if __name__ == "__main__":
     gm = GitManager()
-    to_sha = "0fbc230ace0e3a5f0af5c29ce29729f139ff0afa"
-    from_sha = "80f379fdfa4bca967da50fa74ac956201c76683a"
+    to_sha = "17ea45595c54f72e56b27659f16663579479d7eb"
+    from_sha = "5e6850064e31f39142c20741d45d697f5e7a53ed"
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))
     for commit in commits:
