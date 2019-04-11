@@ -29,11 +29,11 @@ def suite_executions(request, id):
         if state:
             q = q & Q(state=int(state))
 
-        results = []
+        records = []
         suite_executions = SuiteExecution.objects.filter(q).order_by('submitted_time')
         for suite_execution in suite_executions:
             one_record = {"execution_id": suite_execution.execution_id,
                           "state": suite_execution.state}
-            results.append(one_record)
-        result = results if len(results) else None
+            records.append(one_record)
+        result = records if len(records) else None
     return result
