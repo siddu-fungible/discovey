@@ -166,7 +166,7 @@ if __name__ == "__main_memset_datasets__":
                     ml.delete_data_set(metric_id=entry.metric_id, data_set=data_set)
 
 if __name__ == "__main__":
-    flow_types = ["NU_VP_NU_FWD_NFCP"]
+    flow_types = ["NU_VP_NU_FWD_NFCP", "NU_LE_VP_NU_FW"]
     model_name = "TeraMarkJuniperNetworkingPerformance"
     frame_size_names = {
         64: "64B",
@@ -182,6 +182,9 @@ if __name__ == "__main__":
                 one_data_set = {}
                 one_data_set["inputs"] = {}
                 one_data_set["inputs"]["input_flow_type"] = flow_type
+                one_data_set["inputs"]["input_number_flows"] = 128000000
+                one_data_set["inputs"]["input_offloads"] = False
+                one_data_set["inputs"]["input_protocol"] = "UDP"
                 one_data_set["inputs"]["input_frame_size"] = frame_size
                 one_data_set["name"] = frame_size_names[frame_size]
                 one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
@@ -216,7 +219,7 @@ if __name__ == "__main__":
     print "chart creation for NU_VP_NU_FWD_NFCP throughput and pps is done"
 
 if __name__ == "__main__":
-    flow_types = ["NU_VP_NU_FWD_NFCP"]
+    flow_types = ["NU_VP_NU_FWD_NFCP", "NU_LE_VP_NU_FW"]
     model_name = "TeraMarkJuniperNetworkingPerformance"
     frame_size_names = {
         64: "64B",
@@ -238,6 +241,9 @@ if __name__ == "__main__":
                 one_data_set = {}
                 one_data_set["inputs"] = {}
                 one_data_set["inputs"]["input_flow_type"] = flow_type
+                one_data_set["inputs"]["input_number_flows"] = 128000000
+                one_data_set["inputs"]["input_offloads"] = False
+                one_data_set["inputs"]["input_protocol"] = "UDP"
                 one_data_set["inputs"]["input_frame_size"] = frame_size
                 one_data_set["name"] = frame_size_names[frame_size] + "-" + name
                 one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}

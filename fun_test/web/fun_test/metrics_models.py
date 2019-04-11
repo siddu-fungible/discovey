@@ -1144,9 +1144,23 @@ class NuTransitPerformance(models.Model):
     output_jitter_max = models.FloatField(verbose_name="Jitter max in us", default=0)
     output_jitter_avg = models.FloatField(verbose_name="Jitter avg in us", default=0)
     output_pps = models.FloatField(verbose_name="Packets per sec", default=0)
+    output_throughput_unit = models.TextField(default="Gbps")
+    output_latency_avg_unit = models.TextField(default="usecs")
+    output_latency_max_unit = models.TextField(default="usecs")
+    output_latency_min_unit = models.TextField(default="usecs")
+    output_latency_P99_unit = models.TextField(default="usecs")
+    output_latency_P90_unit = models.TextField(default="usecs")
+    output_latency_P50_unit = models.TextField(default="usecs")
+    output_jitter_min_unit = models.TextField(default="usecs")
+    output_jitter_max_unit = models.TextField(default="usecs")
+    output_jitter_avg_unit = models.TextField(default="usecs")
+    output_pps_unit = models.TextField(default="Mpps")
     input_mode = models.CharField(verbose_name="Port modes (25, 50 or 100 G)", max_length=20, default="")
     input_version = models.CharField(verbose_name="Version", max_length=50)
     input_flow_type = models.CharField(verbose_name="Flow Type", max_length=50, default="")
+    input_number_flows = models.IntegerField(verbose_name="Number of flows", default=512000)
+    input_offloads = models.BooleanField(default=False)
+    input_protocol = models.TextField(default="UDP")
 
     def __str__(self):
         s = ""

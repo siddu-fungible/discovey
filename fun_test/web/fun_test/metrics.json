@@ -1991,7 +1991,7 @@
                 "leaf": false,
                 "name": "teramarks_customer_juniper",
                 "weight": 1,
-                "label": "Juniper",
+                "label": "Juniper - (work in progress)",
                 "children": [
                   {
                     "info": "juniper_NU_VP_NU_FWD_NFCP",
@@ -2022,6 +2022,40 @@
                         "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
                         "leaf": true,
                         "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "juniper_NU_LE_VP_NU_FW",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_NU_LE_VP_NU_FW",
+                    "weight": 1,
+                    "label": "NU->LE->VP->NU, Firewall Benchmark",
+                    "children": [
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_throughput",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_pps",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
                         "weight": 1,
                         "label": "Latency"
                       }
