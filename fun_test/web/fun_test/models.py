@@ -60,7 +60,7 @@ class CatalogTestCase(models.Model):
     def __str__(self):
         return str(self.jira_id)
 
-class TestBed(FunModel):
+class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
 
