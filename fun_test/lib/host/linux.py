@@ -2091,6 +2091,7 @@ class Linux(object, ToDictMixin):
         try:
             c.handle = None
             c.buffer = None
+            c.prompt_terminator = c.saved_prompt_terminator
         except:
             pass
         return c

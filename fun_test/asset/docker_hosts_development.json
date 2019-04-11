@@ -22,11 +22,11 @@
       },
       {
         "category": "fio_traffic_generator",
-        "name": "tgen:v4"
+        "name": "tgen:v04_11"
       },
       {
         "category": "linux_traffic_generator",
-        "name": "tgen:v4"
+        "name": "tgen:v04_11"
       }
     ]
   }

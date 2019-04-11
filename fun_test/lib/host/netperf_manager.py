@@ -55,7 +55,13 @@ class NetperfManager:
             except Exception as ex:
                 fun_test.critical(str(ex))
             linux_obj = linux_obj.clone()
-            linux_obj.connect_retry_timeout_max = 120
+            try:
+                linux_obj.disconnect()
+            except Exception as ex:
+                pass
+            linux_obj._connect()
+
+            # linux_obj.connect_retry_timeout_max = 120
 
             ## Install linuxptp package
             #for pkg in ('linuxptp',):

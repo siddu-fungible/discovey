@@ -1,3 +1,8 @@
+/**
+ * fun_nvmeof.h: header for fio plugin functions
+ */
+#pragma once
+
 int fun_nvmf_ns_create();
 int fun_nvmf_ns_attach();
 int fun_admin_connect(char *nqn);

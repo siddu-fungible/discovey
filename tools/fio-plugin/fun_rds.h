@@ -19,11 +19,14 @@ enum fabrics_rds_conn_type {
 	FABRICS_RDS_NVM_CONN = 2,
 };
 
-#define RDS_MSG_STR_LEN 8
-struct __attribute__ ((packed)) fabrics_rds_msg_hdr{
+#define RDS_MSG_HDR_RSVD_LEN (3)
 
-        uint16_t version;
-        uint16_t qid;
-        char msg_str[RDS_MSG_STR_LEN];
-        enum fabrics_rds_conn_type conn_type;
+struct __attribute__ ((packed)) fabrics_rds_msg_hdr{
+	uint16_t version;
+	uint16_t qid;
+	uint8_t conn_type; // enum fabrics_conn_type
+	uint8_t reserved[RDS_MSG_HDR_RSVD_LEN];
 };
+
+#define FABRICS_RDS_MSG_HDR_SIZE (sizeof(struct fabrics_rds_msg_hdr))
+
