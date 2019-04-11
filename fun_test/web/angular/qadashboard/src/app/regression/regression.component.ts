@@ -36,16 +36,7 @@ export class RegressionComponent implements OnInit {
   status: string = "Fetching Data";
   stateFilter: string = Filter.ALL;
   filter = Filter;
-  stateStringMap = { "-200": "UNKNOWN",
-                     "-100": "ERROR",
-                     "-20": "KILLED",
-                     "-10": "ABORTED",
-                     "10": "COMPLETED",
-                     "20": "AUTO_SCHEDULED",
-                     "30": "SUBMITTED",
-                     "40": "SCHEDULED",
-                     "50": "QUEUED",
-                     "60": "IN_PROGRESS"};
+  stateStringMap: any = null;
 
   constructor(private pagerService: PagerService,
               private apiService: ApiService,
@@ -55,6 +46,7 @@ export class RegressionComponent implements OnInit {
               private logger: LoggerService,
               private regressionService: RegressionService,
               private router: Router) {
+    this.stateStringMap = this.regressionService.stateStringMap;
   }
 
   ngOnInit() {

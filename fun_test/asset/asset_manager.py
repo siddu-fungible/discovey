@@ -122,8 +122,10 @@ class AssetManager:
         credits = 0
         if test_bed_type.lower().startswith("fs-"):
             credits = 1
-        if test_bed_type.lower().startswith("simulation"):
+        elif test_bed_type.lower().startswith("simulation"):
             credits = 3
+        else:
+            credits = 1
         in_progress_count = in_progress_suites.count()
         if in_progress_count >= credits:
             result["status"] = False
