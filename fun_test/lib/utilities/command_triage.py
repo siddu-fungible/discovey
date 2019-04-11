@@ -49,6 +49,8 @@ BUILD_PARAMS = {
 def do_score_triage(commits, bootargs):
     num_commits = len(commits)
     step = num_commits/5
+    if step == 0:
+        step = 1
 
     for i in range(0, len(commits), step):
 
@@ -83,13 +85,13 @@ def do_score_triage(commits, bootargs):
         f.write(json.dumps(d))
         f.write("\n")
         f.close()
-        time.sleep(300)
+        time.sleep(30)
         pass
 
 if __name__ == "__main__":
     gm = GitManager()
-    to_sha = "ee83df96a25137d333171d2841a277ecd0229a41"
-    from_sha = "8c69faf3cb40af0e3ae25ba221a78a1027e44bb4"
+    to_sha = "17ea45595c54f72e56b27659f16663579479d7eb"
+    from_sha = "5e6850064e31f39142c20741d45d697f5e7a53ed"
     commits = gm.get_commits_between(from_sha=from_sha, to_sha=to_sha)
     print("Num commits: {}".format(len(commits)))
     for commit in commits:
