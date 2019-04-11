@@ -1893,7 +1893,7 @@
                 "leaf": false,
                 "name": "durable_volume_ec",
                 "weight": 1,
-                "label": "Durable Volume - EC (work in progress)",
+                "label": "Durable Volume - EC",
                 "children": [
                   {
                     "info": "4kb_one_volume_one_ssd_durable_volume_ec",
