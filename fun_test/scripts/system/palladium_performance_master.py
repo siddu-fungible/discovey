@@ -55,7 +55,8 @@ internal_chart_names_for_flows = {
     "HU_NU_NFCP": ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "HU_NU_NFCP_output_latency_avg"],
     "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps", "HU_HU_NFCP_output_latency_avg"],
     "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps", "HU_HU_FCP_output_latency_avg"],
-    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"]
+    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"],
+    "NU_VP_NU_FWD_NFCP": ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps", "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"]
 }
 
 
@@ -165,22 +166,15 @@ class PalladiumPerformanceTc(FunTestCase):
             d[key] = value
         return d
 
-    def validate_json_file(self, validation_required=True):
-        data = {}
+    def validate_json_file(self, file_paths, validation_required=True):
         self.lines = []
-        file_path = LOGS_DIR + "/nu_rfc2544_performance.json"
-        fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
-        fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
-        with open(file_path) as fp:
-            data = json.loads(fp.read())
-            self.lines.append(data)
-
-        file_path = LOGS_DIR + "/hu_funeth_performance_data.json"
-        fun_test.test_assert(os.path.isfile(file_path), "Ensure Hu Funeth Performance Data Json exists")
-        fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
-        with open(file_path) as fp:
-            data = json.loads(fp.read())
-            self.lines.append(data)
+        for names in file_paths:
+            file_path = LOGS_DIR + "/" + names
+            fun_test.test_assert(os.path.isfile(file_path), "Ensure Json exists")
+            fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
+            with open(file_path) as fp:
+                data = json.loads(fp.read())
+                self.lines.append(data)
         return True
 
 
@@ -1637,6 +1631,9 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
 
 
 class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
+    model = "NuTransitPerformance"
+    file_paths = ["nu_rfc2544_performance.json", "hu_funeth_performance_data.json"]
+
     def describe(self):
         self.set_test_details(id=24,
                               summary="TeraMark NU Transit and HU Funeth Performance Test",
@@ -1645,9 +1642,9 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
     def run(self):
         metrics = collections.OrderedDict()
         try:
-            fun_test.test_assert(self.validate_json_file(), "validate json file and output")
-            for lines in self.lines:
-                for line in lines:
+            fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
+            for file in self.lines:
+                for line in file:
                     if "flow_type" in line:
                         if line["flow_type"] in nu_transit_flow_types:
                             line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
@@ -1681,7 +1678,8 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         d = self.metrics_to_dict(metrics, fun_test.PASSED)
                         d["input_date_time"] = date_time
                         if date_time.year >= 2019:
-                            MetricHelper(model=NuTransitPerformance).add_entry(**d)
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
                         chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
                         for names in chart_names:
                             if "throughput" in names:
@@ -1915,6 +1913,16 @@ class TeraMarkNfaPerformanceTC(TeraMarkDfaPerformanceTC):
                               steps="Steps 1")
 
 
+class TeraMarkJuniperNetworkingPerformanceTC(TeraMarkNuTransitPerformanceTC):
+    file_paths = ["nu_rfc2544_fwd_performance.json"]
+    model = "TeraMarkJuniperNetworkingPerformance"
+
+    def describe(self):
+        self.set_test_details(id=33,
+                              summary="TeraMark Juniper Networking Performance Test",
+                              steps="Steps 1")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -1935,38 +1943,39 @@ class PrepareDbTc(FunTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
 
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(EcVolPerformanceTc())
-    myscript.add_test_case(VoltestPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTC())
-    myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
-    myscript.add_test_case(FlowTestPerformanceTC())
-    myscript.add_test_case(TeraMarkZipPerformanceTC())
-    myscript.add_test_case(TeraMarkDfaPerformanceTC())
-    myscript.add_test_case(TeraMarkJpegPerformanceTC())
-    myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
-    myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
-    myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
-    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
-    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
-    myscript.add_test_case(SoakDmaMemsetPerformanceTC())
-    myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
-    myscript.add_test_case(F1FlowTestPerformanceTC())
-    myscript.add_test_case(TeraMarkNfaPerformanceTC())
-    myscript.add_test_case(PrepareDbTc())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(EcVolPerformanceTc())
+    # myscript.add_test_case(VoltestPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(BootTimingPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTC())
+    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTC())
+    # myscript.add_test_case(TeraMarkCryptoPerformanceTC())
+    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTC())
+    # myscript.add_test_case(FlowTestPerformanceTC())
+    # myscript.add_test_case(TeraMarkZipPerformanceTC())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTC())
+    # myscript.add_test_case(TeraMarkJpegPerformanceTC())
+    # myscript.add_test_case(TeraMarkNuTransitPerformanceTC())
+    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTC())
+    # myscript.add_test_case(PkeP256TlsSoakPerformanceTC())
+    # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTC())
+    # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTC())
+    # myscript.add_test_case(SoakDmaMemsetPerformanceTC())
+    # myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
+    # myscript.add_test_case(F1FlowTestPerformanceTC())
+    # myscript.add_test_case(TeraMarkNfaPerformanceTC())
+    # myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
+    # myscript.add_test_case(PrepareDbTc())
 
     myscript.run()
