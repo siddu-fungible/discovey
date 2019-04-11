@@ -364,7 +364,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         return result
 
     def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
-                                       file_name=OUTPUT_JSON_FILE_NAME):
+                                       file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None):
         results = []
         output = True
         failed_result_found = False
@@ -407,6 +407,11 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         data_dict['jitter_max'] = -1
                         data_dict['jitter_avg'] = -1
                         failed_result_found = True
+
+                    if num_flows:
+                        data_dict['num_flows'] = num_flows
+                        data_dict['offloads'] = offloads
+                        data_dict['protocol'] = protocol
 
                     results.append(data_dict)
                     fun_test.debug(results)

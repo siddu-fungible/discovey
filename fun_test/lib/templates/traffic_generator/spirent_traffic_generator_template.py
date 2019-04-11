@@ -917,7 +917,7 @@ class Ethernet25GigFiberInterface(object):
                  auto_negotiation=True, auto_negotiation_master_slave="MASTER",
                  auto_negotiation_master_slave_enable=True, cable_type_length="OPTICAL", cfp_interface="ACC_6068A",
                  collision_exponent=10, custom_fec_mode=CUSTOM_FEC_MODE_KR,
-                 data_path_mode=DATA_PATH_MODE_NORMAL, deficit_idle_count=False, detection_mode="AUTO_DETECT",
+                 data_path_mode=DATA_PATH_MODE_NORMAL, deficit_idle_count=True, detection_mode="AUTO_DETECT",
                  down_shift_enable=False, duplex=FULL_DUPLEX, flow_control=False,
                  forward_error_correction=True, ignore_link_status=False, internal_ppm_adjust=0,
                  is_pfc_negotiated=False, line_speed=SPEED_1G, priority_flow_control_array=False,
