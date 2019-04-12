@@ -4,6 +4,7 @@ import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {ApiService} from "../../services/api/api.service";
 import {LoggerService} from "../../services/logger/logger.service";
+import {CommonService} from "../../services/common/common.service";
 
 enum EditMode {
   NONE = 0,
@@ -17,14 +18,19 @@ enum EditMode {
   styleUrls: ['./test-bed.component.css']
 })
 export class TestBedComponent implements OnInit {
-  schedulingTime = {hour: 0, minute: 1};
+  schedulingTime = {hour: 1, minute: 1};
   testBeds: any [] = null;
   automationStatus = {};
+  manualStatus = {};
   currentEditMode: EditMode = EditMode.NONE;
+  currentTestBed: any = null;
   EditMode = EditMode;
   users: any = null;
   lockPanelHeader: string = null;
-  constructor(private regressionService: RegressionService, private apiService: ApiService, private loggerService: LoggerService) { }
+  selectedUser: any = null;
+
+  constructor(private regressionService: RegressionService, private apiService: ApiService, private loggerService: LoggerService, private commonService: CommonService
+  ) { }
 
   ngOnInit() {
     // fetchUsers
@@ -54,11 +60,15 @@ export class TestBedComponent implements OnInit {
       this.testBeds.map(testBed => {
         let numExecutions = -1;
         let executionId = -1;
-        let manualLock = false;
 
         this.automationStatus[testBed.name] = {numExecutions: numExecutions,
-          executionId: executionId,
-          manualLock: manualLock};
+          executionId: executionId};
+
+        this.manualStatus[testBed.name] = {manualLock: testBed.manual_lock,
+        manualLockExpiryTime: testBed.manual_lock_expiry_time,
+        manualLockSubmitter: testBed.manual_lock_submitter};
+
+
       });
 
 
@@ -99,8 +109,29 @@ export class TestBedComponent implements OnInit {
   }
 
   onLock(testBed) {
+    this.currentTestBed = testBed;
     this.currentEditMode = this.EditMode.MANUAL_LOCK_INITIAL;
     this.setLockPanelHeader(`for ${testBed.name}`);
+  }
+
+
+  onLockSubmit() {
+    if (!this.selectedUser) {
+      return this.loggerService.error("Please select a user");
+    }
+    console.log(this.selectedUser);
+    console.log(this.schedulingTime.hour);
+    console.log(this.schedulingTime.minute);
+    let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
+    let payload = {manual_lock_submitter_email: this.selectedUser.email,
+    manual_lock: true, manual_lock_extension_hour: this.schedulingTime.hour,
+    manual_lock_extension_minute: this.schedulingTime.minute};
+    this.apiService.put(url, payload).subscribe(response => {
+      this.loggerService.success("Lock request submitted");
+      this.fetchTestBeds();
+    }, error => {
+      this.loggerService.error("Unable submit lock");
+    })
   }
 
   onCloseLockPanel() {
@@ -114,4 +145,7 @@ export class TestBedComponent implements OnInit {
     }));
   }
 
+  getPrettyTime(t) {
+    return this.commonService.getPrettyLocalizeTime(t);
+  }
 }

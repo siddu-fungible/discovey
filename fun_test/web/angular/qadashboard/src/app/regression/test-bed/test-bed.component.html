@@ -7,19 +7,19 @@
             Testbeds
           </div>
           <div class="card-body">
-            <table class="table table-nonfluid">
+            <table class="table table-nonfluid table-bordered">
               <tr>
                 <th class="text-center" rowspan="2">Name</th>
-                <th rowspan="2">Description</th>
-                <th colspan="2">Regression lock</th>
-                <th colspan="3">Manual lock</th>
+                <th class="text-center" rowspan="2">Description</th>
+                <th class="text-center" colspan="2">Regression lock</th>
+                <th class="text-center" colspan="3">Manual lock</th>
               </tr>
               <tr>
-                <th>Status</th>
-                <th>Locked by</th>
-                <th>Status</th>
-                <th>Action</th>
-                <th>Locked by</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Locked by</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Expiration time</th>
+                <th class="text-center">Locked by</th>
               </tr>
 
               <tr *ngFor="let testBed of testBeds">
@@ -34,27 +34,37 @@
                 </td>
                 <td>
                   <a *ngIf="automationStatus[testBed.name].numExecutions > 0" target="_blank"
-                     href="/regression/suite_detail/{{ automationStatus[testBed.name].executionId}}">Suite:
+                     href="/regression/suite_detail/{{ automationStatus[testBed.name].executionId }}">Suite:
                     {{ automationStatus[testBed.name].executionId }}</a>
                 </td>
                 <td>
                   <span class="badge badge-danger"
-                        *ngIf="automationStatus[testBed.name].manualLock; else freeManualStatus">In use</span>
+                        *ngIf="manualStatus[testBed.name].manualLock; else freeManualStatus">In use</span>
+
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
+                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onUnLock(testBed)"> Un-lock</span>
+                  </ng-container>
+
                   <ng-template #freeManualStatus>
                     <span class="badge badge-success">Free</span>
+                    <ng-container *ngIf="!manualStatus[testBed.name].manualLock">&nbsp;
+                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onLock(testBed)">Lock</span>
+                    &nbsp;
+                  </ng-container>
                   </ng-template>
                 </td>
                 <td>
-                  <ng-container *ngIf="!automationStatus[testBed.name].manualLock">
-                    <span class="pseudo-anchor" (click)="onLock(testBed)">Lock</span>
-                    &nbsp;
-                  </ng-container>
-                  <ng-container *ngIf="automationStatus[testBed.name].manualLock">
-                    <span class="pseudo-anchor" (click)="onUnLock(testBed)">Un-lock</span>
-                    &nbsp;
-                    <span class="pseudo-anchor" (click)="onExtendTime(testBed)">Extend slot</span>
-                  </ng-container>
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
 
+                    &nbsp;
+                    <span>{{ getPrettyTime(manualStatus[testBed.name].manualLockExpiryTime) }}</span>
+                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
+                  </ng-container>
+                </td>
+                <td>
+                  <ng-container *ngIf="manualStatus[testBed.name].manualLock">
+                  {{ manualStatus[testBed.name].manualLockSubmitter }}
+                  </ng-container>
                 </td>
               </tr>
 
@@ -107,8 +117,7 @@
                  </td>
               </tr>
               <tr>
-                <button class="btn btn-sm btn-outline-success"> Submit
-</button>
+                <button class="btn btn-sm btn-outline-success" (click)="onLockSubmit()"> Submit</button>
               </tr>
             </table>
           </div>
