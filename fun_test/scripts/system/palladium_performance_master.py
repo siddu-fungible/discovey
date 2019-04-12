@@ -1833,11 +1833,12 @@ class SoakDmaMemcpyCohPerformanceTC(PalladiumPerformanceTc):
                     unit = bandwidth_json["unit"]
                     input_log_size = bandwidth_json["log_size"]
                     if self.model == "SoakDmaMemsetPerformance":
-                        input_non_coherent = bandwidth_json["non_coh"]
-                        if input_non_coherent == 1:
-                            metrics["input_coherent"] = False
-                        else:
-                            metrics["input_coherent"] = True
+                        if "non_coh" in bandwidth_json:
+                            input_non_coherent = bandwidth_json["non_coh"]
+                            metrics["input_coherent"] = False if input_non_coherent == 1 else True
+                        elif "bm" in bandwidth_json:
+                            input_bm = bandwidth_json["bm"]
+                            metrics["input_buffer_memory"] = True if input_bm == 1 else False
                     metric_name = m.group("metric_name")
                     metrics["input_size"] = input_size
                     metrics["input_operation"] = input_operation

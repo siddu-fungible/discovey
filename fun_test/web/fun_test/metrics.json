@@ -1134,6 +1134,33 @@
                 "weight": 1
               },
               {
+                "info": "memset_buffer_memory_output_bandwidth_64B_512B",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_buffer_memory_output_bandwidth_64B_512B",
+                "label": "DMA soak memset BM (Below 1KB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_buffer_memory_output_bandwidth_1024B_4KB",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_buffer_memory_output_bandwidth_1024B_4KB",
+                "label": "DMA soak memset BM (1KB-4KB)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_buffer_memory_output_bandwidth_8KB_16KB",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_buffer_memory_output_bandwidth_8KB_16KB",
+                "label": "DMA soak memset BM (Above 4KB)",
+                "children": [],
+                "weight": 1
+              },
+              {
                 "name": "Bcopy: Plain: Avg Bandwidth",
                 "label": "Bcopy: Plain: Avg Bandwidth",
                 "info": "Bcopy: Plain: Avg Bandwidth",
