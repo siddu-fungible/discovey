@@ -1,5 +1,5 @@
 <div class="component">
-  <div class="container">
+  <div class="container1">
     <div class="row">
       <div class="col">
         <div class="card">
@@ -58,7 +58,13 @@
 
                     &nbsp;
                     <span>{{ getPrettyTime(manualStatus[testBed.name].manualLockExpiryTime) }}</span>
-                    <span class="pseudo-anchor" (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
+                    <ng-container *ngIf="isLockExpired(testBed)">
+
+                      <span class="badge badge-danger" *ngIf="manualStatus[testBed.name].manualLock"> Expired</span>
+                      <span class="pseudo-anchor" (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
+
+                    </ng-container>
+
                   </ng-container>
                 </td>
                 <td>
@@ -85,7 +91,7 @@
 
             <table>
 
-              <tr>
+              <tr *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL">
                 <td class="no-wrap">
                   <label for="submitter">Submitter</label>
                 </td>
@@ -117,7 +123,8 @@
                  </td>
               </tr>
               <tr>
-                <button class="btn btn-sm btn-outline-success" (click)="onLockSubmit()"> Submit</button>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_INITIAL " class="btn btn-sm btn-outline-success" (click)="onLockSubmit()"> Submit</button>
+                <button *ngIf="currentEditMode === EditMode.MANUAL_LOCK_UPDATE_EXPIRATION " class="btn btn-sm btn-outline-success" (click)="onExtendTimeSubmit()"> Submit</button>
               </tr>
             </table>
           </div>

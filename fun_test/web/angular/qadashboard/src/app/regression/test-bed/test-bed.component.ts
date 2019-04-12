@@ -9,7 +9,7 @@ import {CommonService} from "../../services/common/common.service";
 enum EditMode {
   NONE = 0,
   MANUAL_LOCK_INITIAL = "Set manual lock",
-  MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock"
+  MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock expiration"
 }
 
 @Component({
@@ -54,6 +54,10 @@ export class TestBedComponent implements OnInit {
     o.subscribe();
   }
 
+  refreshTestBeds() {
+    this.fetchTestBeds().subscribe();
+  }
+
   fetchTestBeds() {
     return this.regressionService.fetchTestbeds().pipe(switchMap(response => {
       this.testBeds = response;
@@ -70,7 +74,7 @@ export class TestBedComponent implements OnInit {
 
 
       });
-
+      this.automationStatus = {...this.automationStatus};
 
       return of(this.testBeds);
     }))
@@ -91,11 +95,9 @@ export class TestBedComponent implements OnInit {
           if (numExecutions > 0) {
             let thisResponse = response[0];
             executionId = thisResponse.execution_id;
-            manualLock = thisResponse.manual_lock;
           }
           this.automationStatus[testBed.name] = {numExecutions: numExecutions,
-            executionId: executionId,
-          manualLock: manualLock}
+            executionId: executionId}
         }
         this.automationStatus[testBed] = response;
           return of(null);
@@ -109,9 +111,41 @@ export class TestBedComponent implements OnInit {
   }
 
   onLock(testBed) {
-    this.currentTestBed = testBed;
     this.currentEditMode = this.EditMode.MANUAL_LOCK_INITIAL;
     this.setLockPanelHeader(`for ${testBed.name}`);
+  }
+
+  onUnLock(testBed) {
+    if (confirm(`Are you sure, you want to unlock ${testBed.name}`)) {
+      let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
+      let payload = {manual_lock: false};
+      this.apiService.put(url, payload).subscribe(response => {
+        this.loggerService.success(`Unlock submitted for ${testBed.name}`);
+        this.refreshTestBeds();
+      }, error => {
+        this.loggerService.error(`Unlock ${testBed.name} failed`);
+      })
+
+    }
+  }
+
+  onExtendTime(testBed) {
+    this.currentEditMode = this.EditMode.MANUAL_LOCK_UPDATE_EXPIRATION;
+    this.setLockPanelHeader(`for ${testBed.name}`);
+
+  }
+
+  onExtendTimeSubmit() {
+    let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
+    let payload = {manual_lock_extension_hour: this.schedulingTime.hour,
+    manual_lock_extension_minute: this.schedulingTime.minute};
+    this.apiService.put(url, payload).subscribe(response => {
+      this.loggerService.success("Extension request submitted");
+      this.refreshTestBeds();
+      this.currentEditMode = EditMode.NONE;
+    }, error => {
+      this.loggerService.error("Unable to extend lock");
+    })
   }
 
 
@@ -128,9 +162,13 @@ export class TestBedComponent implements OnInit {
     manual_lock_extension_minute: this.schedulingTime.minute};
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Lock request submitted");
-      this.fetchTestBeds();
+      this.selectedUser = null;
+      this.schedulingTime.hour = 1;
+      this.schedulingTime.minute = 1;
+      this.refreshTestBeds();
+      this.currentEditMode = EditMode.NONE;
     }, error => {
-      this.loggerService.error("Unable submit lock");
+      this.loggerService.error("Unable to submit lock");
     })
   }
 
@@ -147,5 +185,16 @@ export class TestBedComponent implements OnInit {
 
   getPrettyTime(t) {
     return this.commonService.getPrettyLocalizeTime(t);
+  }
+
+  isLockExpired(testBed) {
+    let expired = false;
+    if (this.manualStatus[testBed.name].manualLock) {
+      let expiryTime = this.commonService.convertToLocalTimezone(this.manualStatus[testBed.name].manualLockExpiryTime);
+      if (expiryTime < new Date()) {
+        expired = true;
+      }
+    }
+    return expired;
   }
 }
