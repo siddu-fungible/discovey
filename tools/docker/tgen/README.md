@@ -6,4 +6,8 @@ To build linux traffic-generator container, do the following:
 
 To launch the container, do the following:
 
-    sudo docker run --privileged=true --rm -d --name <container_name> --hostname <host_name> -p <host_port>:22 <tgen_image_name> 
+   sudo docker run --privileged=true --rm -d --name <container_name> --hostname <host_name> -p <host_port>:22 <tgen_image_name> 
+
+Changelog:
+
+tgen:v04_11 https://github.com/fungible-inc/Integration/pull/335/files

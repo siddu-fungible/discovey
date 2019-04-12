@@ -78,7 +78,7 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_port_mtu(port_num=port, shape=shape, mtu_value=9000)
             fun_test.simple_assert(result, "Set MTU to 9000 on all interfaces")
 
-        fwd_benchmark_ports = [8, 12, 16]
+        fwd_benchmark_ports = [8, 12]
         for fpg in fwd_benchmark_ports:
             result = network_controller_obj.set_nu_benchmark(main=1, erp=1, nh_id=4097, clbp_idx=20, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
@@ -113,7 +113,7 @@ class TestFwdPerformance(FunTestCase):
 
     def describe(self):
         self.set_test_details(id=self.tc_id,
-                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B]" % (
+                              summary="%s RFC-2544 Spray: %s Frames: [64B, 1500B, IMIX]" % (
                                   self.flow_direction, self.spray),
                               steps="""
                               1. Dump PSW, BAM and vppkts stats before tests 
@@ -209,7 +209,8 @@ class TestFwdPerformance(FunTestCase):
                                                                       timestamp=TIMESTAMP,
                                                                       mode=mode,
                                                                       flow_direction=self.flow_direction,
-                                                                      file_name=OUTPUT_JSON_FILE_NAME)
+                                                                      file_name=OUTPUT_JSON_FILE_NAME,
+                                                                      num_flows=128000000)
             fun_test.simple_assert(result, "Ensure JSON file created")
 
         fun_test.log("----------------> End RFC-2544 test using %s  <----------------" % self.tcc_file_name)

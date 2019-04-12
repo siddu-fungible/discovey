@@ -194,7 +194,7 @@ static int fio_fun_init(struct thread_data *td)
 	}
 
 	if (!foptions->io_queues) io_queues = 1;
-	else io_queues = foptions->io_queues;
+	else io_queues = MIN(foptions->io_queues, NVMEOF_MAX_QUEUES);
 
 	if (!foptions->nsid) nsid = 1;
 	else nsid = foptions->nsid;

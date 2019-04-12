@@ -47,15 +47,17 @@ nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 internal_chart_names_for_flows = {
-    "NU_HNU_NFCP": ["NU_HNU_output_throughput", "NU_HNU_output_pps"],
-    "HNU_HNU_FCP": ["HNU_HNU_FCP_output_throughput", "HNU_HNU_FCP_output_pps"],
-    "HNU_HNU_NFCP": ["HNU_HNU_output_throughput", "HNU_HNU_output_pps"],
-    "NU_NU_NFCP": ["NU_NU_output_throughput", "NU_NU_output_pps"],
-    "HNU_NU_NFCP": ["HNU_NU_output_throughput", "HNU_NU_output_pps"],
+    "NU_HNU_NFCP": ["NU_HNU_output_throughput", "NU_HNU_output_pps", "NU_HNU_output_latency_avg"],
+    "HNU_HNU_FCP": ["HNU_HNU_FCP_output_throughput", "HNU_HNU_FCP_output_pps", "HNU_HNU_FCP_output_latency_avg"],
+    "HNU_HNU_NFCP": ["HNU_HNU_output_throughput", "HNU_HNU_output_pps", "HNU_HNU_output_latency_avg"],
+    "NU_NU_NFCP": ["NU_NU_output_throughput", "NU_NU_output_pps", "NU_NU_output_latency_avg"],
+    "HNU_NU_NFCP": ["HNU_NU_output_throughput", "HNU_NU_output_pps", "HNU_NU_output_latency_avg"],
     "HU_NU_NFCP": ["HU_NU_NFCP_output_throughput", "HU_NU_NFCP_output_pps", "HU_NU_NFCP_output_latency_avg"],
     "HU_HU_NFCP": ["HU_HU_NFCP_output_throughput", "HU_HU_NFCP_output_pps", "HU_HU_NFCP_output_latency_avg"],
     "HU_HU_FCP": ["HU_HU_FCP_output_throughput", "HU_HU_FCP_output_pps", "HU_HU_FCP_output_latency_avg"],
-    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"]
+    "NU_HU_NFCP": ["NU_HU_NFCP_output_throughput", "NU_HU_NFCP_output_pps", "NU_HU_NFCP_output_latency_avg"],
+    "NU_VP_NU_FWD_NFCP": ["juniper_NU_VP_NU_FWD_NFCP_output_throughput", "juniper_NU_VP_NU_FWD_NFCP_output_pps", "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg"],
+    "NU_LE_VP_NU_FW": ["juniper_NU_LE_VP_NU_FW_output_throughput", "juniper_NU_LE_VP_NU_FW_output_pps", "juniper_NU_LE_VP_NU_FW_output_latency_avg"]
 }
 
 
@@ -165,22 +167,15 @@ class PalladiumPerformanceTc(FunTestCase):
             d[key] = value
         return d
 
-    def validate_json_file(self, validation_required=True):
-        data = {}
+    def validate_json_file(self, file_paths, validation_required=True):
         self.lines = []
-        file_path = LOGS_DIR + "/nu_rfc2544_performance.json"
-        fun_test.test_assert(os.path.isfile(file_path), "Ensure Nu Transit Performance Data Json exists")
-        fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
-        with open(file_path) as fp:
-            data = json.loads(fp.read())
-            self.lines.append(data)
-
-        file_path = LOGS_DIR + "/hu_funeth_performance_data.json"
-        fun_test.test_assert(os.path.isfile(file_path), "Ensure Hu Funeth Performance Data Json exists")
-        fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
-        with open(file_path) as fp:
-            data = json.loads(fp.read())
-            self.lines.append(data)
+        for names in file_paths:
+            file_path = LOGS_DIR + "/" + names
+            fun_test.test_assert(os.path.isfile(file_path), "Ensure Json exists")
+            fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
+            with open(file_path) as fp:
+                data = json.loads(fp.read())
+                self.lines.append(data)
         return True
 
 
@@ -1637,6 +1632,9 @@ class TeraMarkJpegPerformanceTC(PalladiumPerformanceTc):
 
 
 class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
+    model = "NuTransitPerformance"
+    file_paths = ["nu_rfc2544_performance.json", "hu_funeth_performance_data.json"]
+
     def describe(self):
         self.set_test_details(id=24,
                               summary="TeraMark NU Transit and HU Funeth Performance Test",
@@ -1645,14 +1643,14 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
     def run(self):
         metrics = collections.OrderedDict()
         try:
-            fun_test.test_assert(self.validate_json_file(), "validate json file and output")
-            for lines in self.lines:
-                for line in lines:
+            fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths), "validate json file and output")
+            for file in self.lines:
+                for line in file:
                     if "flow_type" in line:
                         if line["flow_type"] in nu_transit_flow_types:
                             line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
                         metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                        metrics["input_mode"] = line["mode"] if "mode" in line else ""
+                        metrics["input_mode"] = line.get("mode", "")
                         metrics["input_version"] = line["version"]
                         metrics["input_frame_size"] = line["frame_size"]
                         date_time = get_time_from_timestamp(line["timestamp"])
@@ -1662,18 +1660,19 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         metrics["output_pps"] = (float(
                             line["pps"]) / 1000000) if "pps" in line and line[
                             "pps"] != -1 else -1
-                        metrics["output_latency_max"] = line["latency_max"] if "latency_max" in line else -1
-                        metrics["output_latency_min"] = line["latency_min"] if "latency_min" in line else -1
-                        metrics["output_latency_avg"] = line["latency_avg"] if "latency_avg" in line else -1
-                        if "latency_P99" in line:
-                            metrics["output_latency_P99"] = line["latency_P99"]
-                        else:
-                            metrics["output_latency_P99"] = -1
-                        metrics["output_latency_P90"] = line["latency_P90"] if "latency_P90" in line else -1
-                        metrics["output_latency_P50"] = line["latency_P50"] if "latency_P50" in line else -1
-                        metrics["output_jitter_max"] = line["jitter_max"] if "jitter_max" in line else -1
-                        metrics["output_jitter_min"] = line["jitter_min"] if "jitter_min" in line else -1
-                        metrics["output_jitter_avg"] = line["jitter_avg"] if "jitter_avg" in line else -1
+                        metrics["output_latency_max"] = line.get("latency_max", -1)
+                        metrics["output_latency_min"] = line.get("latency_min", -1)
+                        metrics["output_latency_avg"] = line.get("latency_avg", -1)
+                        if self.model == "NuTransitPerformance":
+                            metrics["output_latency_P99"] = line.get("latency_P99", -1)
+                            metrics["output_latency_P90"] = line.get("latency_P90", -1)
+                            metrics["output_latency_P50"] = line.get("latency_P50", -1)
+                        metrics["input_number_flows"] = line.get("num_flows", 512000)
+                        metrics["input_offloads"] = line.get("offloads", False)
+                        metrics["input_protocol"] = line.get("protocol", "UDP")
+                        metrics["output_jitter_max"] = line.get("jitter_max", -1)
+                        metrics["output_jitter_min"] = line.get("jitter_min", -1)
+                        metrics["output_jitter_avg"] = line.get("jitter_avg", -1)
                         fun_test.log(
                             "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
                                 metrics["input_flow_type"], metrics["output_latency_avg"], metrics["output_throughput"],
@@ -1681,49 +1680,45 @@ class TeraMarkNuTransitPerformanceTC(PalladiumPerformanceTc):
                         d = self.metrics_to_dict(metrics, fun_test.PASSED)
                         d["input_date_time"] = date_time
                         if date_time.year >= 2019:
-                            MetricHelper(model=NuTransitPerformance).add_entry(**d)
-                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                        for names in chart_names:
-                            if "throughput" in names:
-                                if metrics["output_throughput"] == -1 and metrics["input_frame_size"] == 800:
-                                    set_chart_status(result=fun_test.FAILED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
-                                else:
-                                    set_chart_status(result=fun_test.PASSED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
+                            metric_model = app_config.get_metric_models()[self.model]
+                            MetricHelper(model=metric_model).add_entry(**d)
+                        if metrics["input_flow_type"] in internal_chart_names_for_flows:
+                            chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
+                            for names in chart_names:
+                                if "throughput" in names:
+                                    if metrics["output_throughput"] == -1 and metrics["input_frame_size"] == 800:
+                                        set_chart_status(result=fun_test.FAILED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                    else:
+                                        set_chart_status(result=fun_test.PASSED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                if "pps" in names:
+                                    if metrics["output_pps"] == -1 and metrics["input_frame_size"] == 800:
+                                        set_chart_status(result=fun_test.FAILED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                    else:
+                                        set_chart_status(result=fun_test.PASSED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                if "latency" in names:
+                                    if metrics["output_latency_avg"] == -1 and metrics["input_frame_size"] == 800:
+                                        set_chart_status(result=fun_test.FAILED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
+                                    else:
+                                        set_chart_status(result=fun_test.PASSED,
+                                                         suite_execution_id=fun_test.get_suite_execution_id(),
+                                                         test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
+                                                         git_commit="", internal_chart_name=names)
 
-                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                        for names in chart_names:
-                            if "pps" in names:
-                                if metrics["output_pps"] == -1 and metrics["input_frame_size"] == 800:
-                                    set_chart_status(result=fun_test.FAILED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
-                                else:
-                                    set_chart_status(result=fun_test.PASSED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
-                        chart_names = internal_chart_names_for_flows[metrics["input_flow_type"]]
-                        for names in chart_names:
-                            if "latency" in names and metrics["input_frame_size"] == 800:
-                                if metrics["output_latency_avg"] == -1 or metrics["output_latency_min"] == -1 or \
-                                        metrics["output_latency_P90"] == -1 or \
-                                        metrics["output_latency_P50"] == -1 or metrics["output_latency_P99"] == -1:
-                                    set_chart_status(result=fun_test.FAILED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
-                                else:
-                                    set_chart_status(result=fun_test.PASSED,
-                                                     suite_execution_id=fun_test.get_suite_execution_id(),
-                                                     test_case_id=self.id, job_id=-1, jenkins_job_id=-1,
-                                                     git_commit="", internal_chart_name=names)
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -1915,6 +1910,16 @@ class TeraMarkNfaPerformanceTC(TeraMarkDfaPerformanceTC):
                               steps="Steps 1")
 
 
+class TeraMarkJuniperNetworkingPerformanceTC(TeraMarkNuTransitPerformanceTC):
+    file_paths = ["nu_rfc2544_fwd_performance.json"]
+    model = "TeraMarkJuniperNetworkingPerformance"
+
+    def describe(self):
+        self.set_test_details(id=33,
+                              summary="TeraMark Juniper Networking Performance Test",
+                              steps="Steps 1")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -1967,6 +1972,7 @@ if __name__ == "__main__":
     myscript.add_test_case(TeraMarkMultiClusterCryptoPerformanceTC())
     myscript.add_test_case(F1FlowTestPerformanceTC())
     myscript.add_test_case(TeraMarkNfaPerformanceTC())
+    myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

@@ -180,7 +180,7 @@ def set_from_to_dates(chart):
     # calculate the from date and to date for fetching the data
     today = datetime.datetime.now(pytz.timezone('US/Pacific'))
     from_date = chart.base_line_date
-    from_date = from_date.replace(tzinfo=pytz.timezone('US/Pacific'))
+    from_date = set_local_timezone(from_date)
     from_date = get_rounded_time(from_date)
     yesterday = today  # - timedelta(days=0) # Just use today
     yesterday = get_rounded_time(yesterday)
@@ -545,7 +545,7 @@ def convert_to_base_unit(output_value, output_unit):
 
 if __name__ == "__main__":
     # "Malloc agent rate : FunMagentPerformanceTest : 185"
-    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="HU_HU_FCP_non_teramark")
+    # total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", internal_chart_name="juniper_NU_VP_NU_FWD_NFCP")
     # prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
     total_chart = MetricChart.objects.get(metric_model_name="MetricContainer", chart_name="Total")
     prepare_status(chart=total_chart, purge_old_status=False, cache_valid=False)
