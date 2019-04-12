@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
+import {ApiService} from "../../services/api/api.service";
+import {LoggerService} from "../../services/logger/logger.service";
 
 enum EditMode {
   NONE = 0,
@@ -15,12 +17,14 @@ enum EditMode {
   styleUrls: ['./test-bed.component.css']
 })
 export class TestBedComponent implements OnInit {
-
+  schedulingTime = {hour: 0, minute: 1};
   testBeds: any [] = null;
   automationStatus = {};
   currentEditMode: EditMode = EditMode.NONE;
   EditMode = EditMode;
-  constructor(private regressionService: RegressionService) { }
+  users: any = null;
+  lockPanelHeader: string = null;
+  constructor(private regressionService: RegressionService, private apiService: ApiService, private loggerService: LoggerService) { }
 
   ngOnInit() {
     // fetchUsers
@@ -36,6 +40,9 @@ export class TestBedComponent implements OnInit {
       }),
       switchMap(response => {
         return this.fetchAutomationStatus();
+      }),
+      switchMap(response => {
+        return this.getUsers();
       }));
 
     o.subscribe();
@@ -44,6 +51,17 @@ export class TestBedComponent implements OnInit {
   fetchTestBeds() {
     return this.regressionService.fetchTestbeds().pipe(switchMap(response => {
       this.testBeds = response;
+      this.testBeds.map(testBed => {
+        let numExecutions = -1;
+        let executionId = -1;
+        let manualLock = false;
+
+        this.automationStatus[testBed.name] = {numExecutions: numExecutions,
+          executionId: executionId,
+          manualLock: manualLock};
+      });
+
+
       return of(this.testBeds);
     }))
   }
@@ -76,5 +94,24 @@ export class TestBedComponent implements OnInit {
     )
   }
 
+  setLockPanelHeader(string) {
+    this.lockPanelHeader = `${this.currentEditMode} ${string}`;
+  }
+
+  onLock(testBed) {
+    this.currentEditMode = this.EditMode.MANUAL_LOCK_INITIAL;
+    this.setLockPanelHeader(`for ${testBed.name}`);
+  }
+
+  onCloseLockPanel() {
+    this.currentEditMode = this.EditMode.NONE;
+  }
+
+  getUsers() {
+    return this.apiService.get("/api/v1/users").pipe(switchMap(response => {
+      this.users = response.data;
+      return of(null);
+    }));
+  }
 
 }
