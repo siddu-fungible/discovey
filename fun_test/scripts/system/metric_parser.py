@@ -32,6 +32,8 @@ class MetricParser():
             return self.flow_test(logs=logs, date_time=date_time)
         elif "Dfa" in model_name or "Nfa" in model_name:
             return self.dfa_nfa(logs=logs, date_time=date_time)
+        elif "Rcnvme" in model_name:
+            return self.rcnvme(logs=logs, date_time=date_time)
         else:
             return {}
 
@@ -75,6 +77,77 @@ class MetricParser():
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
                     result["data"].append(d)
                     match = None
+
+        result["match_found"] = match_found
+        result["status"] = self.status == RESULTS["PASSED"]
+        return result
+
+    def rcnvme(self, logs, date_time):
+        match_found = False
+        result = {}
+        result["data"] = []
+        d = {}
+        metrics = collections.OrderedDict()
+        start_rcnvme = False
+        match = None
+        self.status = RESULTS["FAILED"]
+        input_dev_access = ""
+        for line in logs:
+            if not start_rcnvme:
+                m = re.search(
+                    r'RC NVMe test:\s+(?P<value>{.*})',
+                    line)
+                if m:
+                    start_rcnvme = True
+                    json_value = json.loads(m.group("value"))
+                    metrics["input_io_type"] = json_value["io_type"]
+                    input_dev_access = json_value["dev_access"]
+                    metrics["input_dev_access"] = input_dev_access
+                    metrics["input_num_ctrlrs"] = json_value["num_ctrlrs"]
+                    metrics["input_num_threads"] = json_value["num_threads"]
+                    metrics["input_qdepth"] = json_value["qdepth"]
+                    metrics["input_total_numios"] = json_value["total_numios"]
+                    metrics["input_io_size"] = json_value["io_size"]
+            else:
+                n = re.search(
+                r'rcnvme\s+(?P<value>{.*})',
+                line)
+                if n:
+                    json_value = json.loads(n.group("value"))
+                    if "ctrlr_id" in json_value:
+                        metrics["input_ctrlr_id"] = json_value["ctrlr_id"]
+                        metrics["input_model"] = json_value["Model"]
+                        metrics["input_fw_rev"] = json_value["fw_rev"]
+                        metrics["input_serial"] = json_value["serial"]
+                    else:
+                        metrics["input_pci_vendor_id"] = json_value["pci_vendor_id"]
+                        metrics["input_pci_device_id"] = json_value["pci_device_id"]
+                o = re.search(
+                    r'rcnvme_total_(?P<operation>\S+)\s+(\S+\s+)?(?P<value>{.*})\s+\[(?P<metric_name>\S+)\]',
+                    line)
+                if o:
+                    match_found = True
+                    json_value = json.loads(o.group("value"))
+                    if "latency" in json_value:
+                        metrics["input_count"] = json_value["count"]
+                        metrics["output_latency_avg"] = json_value["latency"]["avg"]
+                        metrics["output_latency_min"] = json_value["latency"]["min"]
+                        metrics["output_latency_max"] = json_value["latency"]["max"]
+                        metrics["output_latency_avg_unit"] = json_value["latency"]["unit"]
+                        metrics["output_latency_min_unit"] = json_value["latency"]["unit"]
+                        metrics["output_latency_max_unit"] = json_value["latency"]["unit"]
+                    elif "IOPS" in line:
+                        metrics["output_iops"] = json_value["value"]
+                        metrics["output_iops_unit"] = json_value["unit"]
+                    elif "Bandwidth" in line:
+                        metrics["output_bandwidth"] = json_value["value"]
+                        metrics["output_bandwidth_unit"] = json_value["unit"]
+                    input_operation = str(o.group("operation"))
+                    metrics["input_operation"] = input_dev_access + "_" + input_operation
+                    metrics["input_metric_name"] = "rcnvme_total_" + input_dev_access + "_" + input_operation
+                    d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
+                    result["data"].append(d)
+                    self.status = RESULTS["PASSED"]
 
         result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]

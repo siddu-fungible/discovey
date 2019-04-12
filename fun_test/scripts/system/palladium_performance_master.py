@@ -38,6 +38,11 @@ TERAMARK_JPEG = "jpeg_teramark"
 SOAK_DMA_MEMCPY_COH = "soak_funos_memcpy_coh"
 SOAK_DMA_MEMCPY_NON_COH = "soak_funos_memcpy_non_coh"
 SOAK_DMA_MEMSET = "soak_funos_memset"
+RCNVME_READ = "qa_rcnvme_read"
+RCNVME_RANDOM_READ = "qa_rcnvme_random_read"
+RCNVME_WRITE = "qa_rcnvme_write"
+RCNVME_RANDOM_WRITE = "qa_rcnvme_random_write"
+
 jpeg_operations = {"Compression throughput": "Compression throughput with Driver",
                    "Decompression throughput": "JPEG Decompress",
                    "Accelerator Compression throughput": "Compression Accelerator throughput",
@@ -119,7 +124,7 @@ class MyScript(FunTestScript):
         tags = [ALLOC_SPEED_TEST_TAG, VOLTEST_TAG, BOOT_TIMING_TEST_TAG, TERAMARK_PKE, TERAMARK_CRYPTO, TERAMARK_LOOKUP,
                 FLOW_TEST_TAG, F1_FLOW_TEST_TAG, TERAMARK_ZIP, TERAMARK_DFA, TERAMARK_NFA, TERAMARK_EC, TERAMARK_JPEG,
                 SOAK_DMA_MEMCPY_COH,
-                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET]
+                SOAK_DMA_MEMCPY_NON_COH, SOAK_DMA_MEMSET, RCNVME_READ, RCNVME_RANDOM_READ, RCNVME_WRITE, RCNVME_RANDOM_WRITE]
         self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
@@ -1920,6 +1925,62 @@ class TeraMarkJuniperNetworkingPerformanceTC(TeraMarkNuTransitPerformanceTC):
                               steps="Steps 1")
 
 
+class TeraMarkRcnvmeReadPerformanceTC(PalladiumPerformanceTc):
+    tag = RCNVME_READ
+    model = "TeraMarkRcnvmeReadWritePerformance"
+
+    def describe(self):
+        self.set_test_details(id=34,
+                              summary="TeraMark rcnvme read Performance Test on F1",
+                              steps="Steps 1")
+
+    def run(self):
+        try:
+            fun_test.test_assert(self.validate_job(), "validating job")
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, date_time=self.dt)
+
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        set_build_details_for_charts(result=self.result, suite_execution_id=fun_test.get_suite_execution_id(),
+                                     test_case_id=self.id, job_id=self.job_id, jenkins_job_id=self.jenkins_job_id,
+                                     git_commit=self.git_commit, model_name=self.model)
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+class TeraMarkRcnvmeRandomReadPerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_RANDOM_READ
+    model = "TeraMarkRcnvmeReadWritePerformance"
+
+    def describe(self):
+        self.set_test_details(id=35,
+                              summary="TeraMark rcnvme random read Performance Test on F1",
+                              steps="Steps 1")
+
+
+class TeraMarkRcnvmeWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_WRITE
+    model = "TeraMarkRcnvmeReadWritePerformance"
+
+    def describe(self):
+        self.set_test_details(id=36,
+                              summary="TeraMark rcnvme write Performance Test on F1",
+                              steps="Steps 1")
+
+
+class TeraMarkRcnvmeRandomWritePerformanceTC(TeraMarkRcnvmeReadPerformanceTC):
+    tag = RCNVME_RANDOM_WRITE
+    model = "TeraMarkRcnvmeReadWritePerformance"
+
+    def describe(self):
+        self.set_test_details(id=37,
+                              summary="TeraMark rcnvme random write Performance Test on F1",
+                              steps="Steps 1")
+
+
 class PrepareDbTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=100,
@@ -1973,6 +2034,10 @@ if __name__ == "__main__":
     myscript.add_test_case(F1FlowTestPerformanceTC())
     myscript.add_test_case(TeraMarkNfaPerformanceTC())
     myscript.add_test_case(TeraMarkJuniperNetworkingPerformanceTC())
+    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTC())
+    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTC())
+    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTC())
+    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTC())
     myscript.add_test_case(PrepareDbTc())
 
     myscript.run()

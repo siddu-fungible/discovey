@@ -165,7 +165,7 @@ if __name__ == "__main_memset_datasets__":
                 if data_set["name"] == "2048KB" or data_set["name"] == "4096KB":
                     ml.delete_data_set(metric_id=entry.metric_id, data_set=data_set)
 
-if __name__ == "__main__":
+if __name__ == "__main_juniper_networking__":
     flow_types = ["NU_VP_NU_FWD_NFCP", "NU_LE_VP_NU_FW"]
     model_name = "TeraMarkJuniperNetworkingPerformance"
     frame_size_names = {
@@ -218,7 +218,7 @@ if __name__ == "__main__":
             mmt.save()
     print "chart creation for NU_VP_NU_FWD_NFCP throughput and pps is done"
 
-if __name__ == "__main__":
+if __name__ == "__main_juniper_networking__":
     flow_types = ["NU_VP_NU_FWD_NFCP", "NU_LE_VP_NU_FW"]
     model_name = "TeraMarkJuniperNetworkingPerformance"
     frame_size_names = {
@@ -272,3 +272,54 @@ if __name__ == "__main__":
                                milestone_name="Tape-out")
         mmt.save()
     print "chart creation for NU_VP_NU_FWD_NFCP latency is done"
+
+
+if __name__ == "__main__":
+    operations = ["sequential_read", "sequential_write", "random_read", "random_write"]
+    outputs = ["output_bandwidth", "output_iops", "output_latency_avg"]
+    for operation in operations:
+        for output in outputs:
+            data_sets = []
+            positive = True
+            if "bandwidth" in output:
+                y1_axis_title = "Mbps"
+                chart_name = "Throughput"
+            elif "iops" in output:
+                y1_axis_title = "ops"
+                chart_name = "IOPS"
+            else:
+                y1_axis_title = "nsecs"
+                chart_name = "Latency"
+                positive = False
+            internal_name = "rcnvme_" + operation + '_' + output
+            if "sequential" in operation:
+                dev_access = "sequential"
+            else:
+                dev_access = "random"
+            base_line_date = datetime(year=2019, month=4, day=11, minute=0, hour=0, second=0)
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            # one_data_set["inputs"]["input_io_type"] =
+            one_data_set["inputs"]["input_dev_access"] = dev_access
+            one_data_set["name"] = operation
+            one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+            metric_id = LastMetricId.get_next_id()
+            model_name = "TeraMarkRcnvmeReadWritePerformance"
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Raju Vasudevan (raju.vasudevan@fungible.com)",
+                        positive=positive,
+                        y1_axis_title=y1_axis_title,
+                        visualization_unit=y1_axis_title,
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date).save()
+            mmt = MileStoneMarkers(metric_id=metric_id,
+                                   milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+    print "chart creation for RCNVME is done"
