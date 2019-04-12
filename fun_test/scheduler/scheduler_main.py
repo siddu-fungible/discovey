@@ -32,6 +32,48 @@ def clone_job(job_id):
     return suite_execution
 
 
+
+
+class TestBedWorker(Thread):
+    def __init__(self):
+        super(TestBedWorker, self).__init__()
+        self.shutdown_requested = False
+        self.warn_list = []
+
+    def shutdown(self):
+        self.shutdown_requested = True
+
+    def test_bed_unlock_dispatch(self, test_bed_name):
+        try:
+            test_bed = get_test_bed_by_name(test_bed_name)
+
+            if test_bed.manual_lock:
+                if get_current_time() > test_bed.manual_lock_expiry_time:
+                    test_bed.manual_lock = False
+                    test_bed.save()
+                    send_test_bed_remove_lock(test_bed=test_bed, warning=False)
+                    self.warn_list.remove(test_bed.name)
+
+        except Exception as ex:
+            scheduler_logger.exception(str(ex))
+
+    def run(self):
+        while not self.shutdown_requested:
+            test_beds = get_manual_lock_test_beds()
+            for test_bed in test_beds:
+                expiry_time = test_bed.manual_lock_expiry_time
+                if test_bed.name not in self.warn_list:
+                    if get_current_time() > expiry_time:
+                        scheduler_logger.info("Test-bed {} manual lock expired".format(test_bed.name))
+                        t = threading.Timer(60 * 60, self.test_bed_unlock_dispatch, (self, test_bed.name,))
+                        self.warn_list.append(test_bed.name)
+                        send_test_bed_remove_lock(test_bed=test_bed, warning=True)
+
+            time.sleep(20)
+
+        scheduler_logger.info("TestBedWorker shutdown")
+
+
 class QueueWorker(Thread):
     def __init__(self):
         super(QueueWorker, self).__init__()
@@ -719,6 +761,7 @@ def process_container_suites():
 
 def clear_out_queue():
     JobQueue.objects.all().delete()
+
 
 
 if __name__ == "__main__":

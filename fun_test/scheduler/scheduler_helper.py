@@ -10,6 +10,7 @@ import sys
 import web.fun_test.models_helper as models_helper
 from web.fun_test.web_interface import get_suite_detail_url
 from fun_settings import JOBS_DIR, ARCHIVED_JOBS_DIR, LOGS_DIR, WEB_STATIC_DIR, SUITES_DIR
+from fun_settings import TEAM_REGRESSION_EMAIL
 from fun_global import RESULTS, get_current_time
 from lib.utilities.send_mail import send_mail
 from django.utils.timezone import activate
@@ -17,6 +18,7 @@ from fun_settings import TIME_ZONE
 from web.fun_test.models import SchedulerInfo
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulingType, JobStatusType
 from web.fun_test.models import SchedulerJobPriority, JobQueue, KilledJob, TestCaseExecution
+from web.fun_test.models import TestBed, User
 from django.db import transaction
 from pytz import timezone
 from datetime import timedelta
@@ -600,6 +602,33 @@ def increase_decrease_priority(job_id, increase=True):
         swap_priorities(this_job_queue_entry, other_priority_job)
     else:
         pass # You are already the highest
+
+def get_manual_lock_test_beds():
+    return TestBed.objects.filter(manual_lock=True)
+
+def get_test_bed_by_name(test_bed_name):
+    return TestBed.objects.get(test_bed_name=test_bed_name)
+
+
+def send_test_bed_remove_lock(test_bed, warning=False):
+
+    submitter_email = test_bed.manual_lock_submitter
+    expiry_time = test_bed.manual_lock_expiry_time
+    to_addresses = [TEAM_REGRESSION_EMAIL, submitter_email]
+
+    user = User.objects.get(email=submitter_email)
+    content = "Hi {},".format(user.first_name) + "\n"
+    content += "Manual lock for Test-bed {} has expired. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "\n"
+    if warning:
+        content += "We will unlock the test-bed in 1 hour" + "\n"
+        subject = "Manual lock for Test-bed {} has expired".format(test_bed.name)
+    else:
+        content += "Unlocking now" + "\n"
+        subject = "Manual lock for Test-bed {} removed".format(test_bed.name)
+    content += "- Regression" + "\n"
+
+    send_mail(to_addresses=to_addresses, content=content, subject=subject)
+
 
 
 class DatetimeEncoder(json.JSONEncoder):
