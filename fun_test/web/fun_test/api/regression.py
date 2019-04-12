@@ -25,15 +25,23 @@ def test_beds(request, id):
     if request.method == "PUT":
         test_bed = TestBed.objects.get(id=int(id))
         request_json = json.loads(request.body)
-        extension_hour = request_json["manual_lock_extension_hour"]
-        extension_minute = request_json["manual_lock_extension_minute"]
-        submitter_email = request_json["manual_lock_submitter_email"]
 
-        future_time = get_current_time() + timedelta(hours=int(extension_hour),
-                                                     minutes=int(extension_minute))
-        test_bed.manual_lock_expiry_time = future_time
-        test_bed.manual_lock_submitter = submitter_email
-        test_bed.manual_lock = True
+        extension_hour = None
+        extension_minute = None
+        if "manual_lock_extension_hour" in request_json:
+            extension_hour = request_json["manual_lock_extension_hour"]
+        if "manual_lock_extension_minute" in request_json:
+            extension_minute = request_json["manual_lock_extension_minute"]
+        if "manual_lock_submitter_email" in request_json:
+            submitter_email = request_json["manual_lock_submitter_email"]
+            test_bed.manual_lock_submitter = submitter_email
+
+        if extension_hour is not None and extension_minute is not None:
+            future_time = get_current_time() + timedelta(hours=int(extension_hour),
+                                                         minutes=int(extension_minute))
+            test_bed.manual_lock_expiry_time = future_time
+        if "manual_lock" in request_json:
+            test_bed.manual_lock = request_json["manual_lock"]
         test_bed.save()
         pass
     return result
