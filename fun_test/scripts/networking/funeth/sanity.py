@@ -22,12 +22,12 @@ except (KeyError, ValueError):
     #DPC_PROXY_IP = '10.1.21.120'
     #DPC_PROXY_PORT = 40221
     #TB = 'SN2'
-    #DPC_PROXY_IP = '10.1.40.24'
-    #DPC_PROXY_PORT = 40221
-    #TB = 'SB5'
-    DPC_PROXY_IP = '10.1.20.129'
-    DPC_PROXY_PORT = 40220
-    TB = 'FS7'
+    DPC_PROXY_IP = '10.1.40.24'
+    DPC_PROXY_PORT = 40221
+    TB = 'SB5'
+    #DPC_PROXY_IP = '10.1.20.129'
+    #DPC_PROXY_PORT = 40220
+    #TB = 'FS7'
 
 MAX_MTU = 9000  # TODO: check SWLINUX-290 and update
 
@@ -91,10 +91,10 @@ class FunethSanity(FunTestScript):
         funeth_obj = Funeth(tb_config_obj)
 
         # NU host
-        setup_nu_host(funeth_obj)
+        #setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj)
+        #setup_hu_host(funeth_obj)
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
@@ -126,13 +126,13 @@ def verify_nu_hu_datapath(funeth_obj, packet_count=5, packet_size=84, interfaces
     ip_addrs = [tb_config_obj.get_interface_ipv4_addr('hu', intf) for intf in interfaces]
 
     # Collect fpg, psw, vp stats before and after
-    collect_stats()
+    #collect_stats()
 
     for intf, ip_addr in zip(interfaces, ip_addrs):
         result = linux_obj.ping(ip_addr, count=packet_count, max_percentage_loss=0, interval=0.1,
                                 size=packet_size-20-8,  # IP header 20B, ICMP header 8B
                                 sudo=True)
-        collect_stats()
+        #collect_stats()
         fun_test.test_assert(
             result,
             'NU ping HU interfaces {} with {} packets and packet size {}B'.format(intf, packet_count, packet_size))
@@ -461,14 +461,14 @@ if __name__ == "__main__":
     ts = FunethSanity()
     for tc in (
             FunethTestNUPingHU,
-            FunethTestPacketSweep,
-            FunethTestScpNU2HUPF,
-            FunethTestScpNU2HUVF,
-            FunethTestScpHU2NU,
-            FunethTestInterfaceFlapPF,
-            FunethTestInterfaceFlapVF,
-            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
-            FunethTestReboot,
+            #FunethTestPacketSweep,
+            #FunethTestScpNU2HUPF,
+            #FunethTestScpNU2HUVF,
+            #FunethTestScpHU2NU,
+            #FunethTestInterfaceFlapPF,
+            #FunethTestInterfaceFlapVF,
+            ##FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            #FunethTestReboot,
     ):
         ts.add_test_case(tc())
     ts.run()

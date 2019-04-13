@@ -1496,5 +1496,19 @@
         "throughput": 10601.942,
         "timestamp": "2019-04-11 19:27:30.271678-07:00",
         "version": 5912
+    },
+    {
+        "flow_type": "HU_HU_NFCP",
+        "frame_size": 800,
+        "latency_P50": 1228.0,
+        "latency_P90": 1293.0,
+        "latency_P99": 1382.0,
+        "latency_avg": 1207.0,
+        "latency_max": 3185.0,
+        "latency_min": 55.0,
+        "pps": 143025.61,
+        "throughput": 915.364,
+        "timestamp": "2019-04-12 11:49:11.456604-07:00",
+        "version": 5923
     }
 ]
