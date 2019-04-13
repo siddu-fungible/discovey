@@ -748,7 +748,7 @@ def send_summary_mail(job_id, extra_message=""):
                                                         attributes_dict["Failed"])
 
         try:
-            to_addresses = [suite_execution.submitter_email] + json.loads(suite_execution.emails)
+            to_addresses = [suite_execution.submitter_email] + json.loads(suite_execution.emails) + TEAM_REGRESSION_EMAIL
 
             result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
             # print html
