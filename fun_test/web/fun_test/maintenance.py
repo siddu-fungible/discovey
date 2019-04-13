@@ -165,7 +165,7 @@ if __name__ == "__main_memset_datasets__":
                 if data_set["name"] == "2048KB" or data_set["name"] == "4096KB":
                     ml.delete_data_set(metric_id=entry.metric_id, data_set=data_set)
 
-if __name__ == "__main__":
+if __name__ == "__main_juniper_networking__":
     flow_types = ["NU_VP_NU_FWD_NFCP", "NU_LE_VP_NU_FW"]
     model_name = "TeraMarkJuniperNetworkingPerformance"
     frame_size_names = {
@@ -218,7 +218,7 @@ if __name__ == "__main__":
             mmt.save()
     print "chart creation for NU_VP_NU_FWD_NFCP throughput and pps is done"
 
-if __name__ == "__main__":
+if __name__ == "__main_juniper_networking__":
     flow_types = ["NU_VP_NU_FWD_NFCP", "NU_LE_VP_NU_FW"]
     model_name = "TeraMarkJuniperNetworkingPerformance"
     frame_size_names = {
@@ -272,3 +272,58 @@ if __name__ == "__main__":
                                milestone_name="Tape-out")
         mmt.save()
     print "chart creation for NU_VP_NU_FWD_NFCP latency is done"
+
+if __name__ == "__main__":
+    entries = MetricChart.objects.all()
+    ml = MetricLib()
+    for entry in entries:
+        if "memset" in entry.chart_name:
+            print entry.chart_name
+            data_sets = json.loads(entry.data_sets)
+            input = {}
+            input["input_buffer_memory"] = False
+            data_sets = ml.set_inputs_data_sets(data_sets=data_sets, **input)
+            ml.save_data_sets(data_sets=data_sets, chart=entry)
+            print "added buffer memory"
+
+    internal_chart_names = {"memset_buffer_memory_output_bandwidth_below_4k": "DMA soak memset BM (Below 4K)",
+                            "memset_buffer_memory_output_bandwidth_4k_1mb": "DMA soak memset BM (4K-1MB)"}
+    internal_frame_sizes = {"memset_buffer_memory_output_bandwidth_below_4k": ["64B", "128B", "256B", "512B", "1024B", "2048B"],
+                            "memset_buffer_memory_output_bandwidth_4k_1mb": ["4096B", "8192B", "16KB"]}
+    for internal_chart_name in internal_chart_names:
+        chart_name = internal_chart_names[internal_chart_name]
+        model_name = "SoakDmaMemsetPerformance"
+        metric_id = LastMetricId.get_next_id()
+        y1_axis_title = "Gbps"
+        positive = True
+        base_line_date = datetime(year=2019, month=4, day=11, minute=0, hour=0, second=0)
+        data_sets = []
+        frame_sizes = internal_frame_sizes[internal_chart_name]
+        output = "output_bandwidth"
+        for frame_size in frame_sizes:
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_buffer_memory"] = True
+            one_data_set["inputs"]["input_size"] = frame_size
+            one_data_set["inputs"]["input_operation"] = "memset"
+            one_data_set["name"] = frame_size
+            one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+        MetricChart(chart_name=chart_name,
+                    metric_id=metric_id,
+                    internal_chart_name=internal_chart_name,
+                    data_sets=json.dumps(data_sets),
+                    leaf=True,
+                    description="TBD",
+                    owner_info="Bertrand Serlet (bertrand.serlet@fungible.com)",
+                    positive=positive,
+                    y1_axis_title=y1_axis_title,
+                    visualization_unit=y1_axis_title,
+                    source="https://github.com/fungible-inc/FunOS/blob/4ed61d76485feb65fa6f801d994622737ec6dc9a/apps/soak_dma_memset.c",
+                    metric_model_name=model_name,
+                    base_line_date=base_line_date).save()
+        mmt = MileStoneMarkers(metric_id=metric_id,
+                               milestone_date=datetime(year=2018, month=9, day=16),
+                               milestone_name="Tape-out")
+        mmt.save()
+    print "chart creation for BM DMA memset is done"
