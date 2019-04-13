@@ -1134,29 +1134,20 @@
                 "weight": 1
               },
               {
-                "info": "memset_buffer_memory_output_bandwidth_64B_512B",
+                "info": "memset_buffer_memory_output_bandwidth_below_4K",
                 "metric_model_name": "SoakDmaMemsetPerformance",
                 "leaf": true,
-                "name": "memset_buffer_memory_output_bandwidth_64B_512B",
-                "label": "DMA soak memset BM (Below 1KB)",
+                "name": "memset_buffer_memory_output_bandwidth_below_4k",
+                "label": "DMA soak memset BM (Below 4K)",
                 "children": [],
                 "weight": 1
               },
               {
-                "info": "memset_buffer_memory_output_bandwidth_1024B_4KB",
+                "info": "memset_buffer_memory_output_bandwidth_4k_1mb",
                 "metric_model_name": "SoakDmaMemsetPerformance",
                 "leaf": true,
-                "name": "memset_buffer_memory_output_bandwidth_1024B_4KB",
-                "label": "DMA soak memset BM (1KB-4KB)",
-                "children": [],
-                "weight": 1
-              },
-              {
-                "info": "memset_buffer_memory_output_bandwidth_8KB_16KB",
-                "metric_model_name": "SoakDmaMemsetPerformance",
-                "leaf": true,
-                "name": "memset_buffer_memory_output_bandwidth_8KB_16KB",
-                "label": "DMA soak memset BM (Above 4KB)",
+                "name": "memset_buffer_memory_output_bandwidth_4k_1mb",
+                "label": "DMA soak memset BM (4K-1MB)",
                 "children": [],
                 "weight": 1
               },

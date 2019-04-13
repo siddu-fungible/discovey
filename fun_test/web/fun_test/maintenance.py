@@ -286,17 +286,15 @@ if __name__ == "__main__":
             ml.save_data_sets(data_sets=data_sets, chart=entry)
             print "added buffer memory"
 
-    internal_chart_names = {"memset_buffer_memory_output_bandwidth_64B_512B": "DMA soak memset BM (Below 1KB)",
-                            "memset_buffer_memory_output_bandwidth_1024B_4KB": "DMA soak memset BM (1KB-4KB)",
-                            "memset_buffer_memory_output_bandwidth_8KB_16KB": "DMA soak memset BM (Above 4KB)"}
-    internal_frame_sizes = {"memset_buffer_memory_output_bandwidth_64B_512B": ["64B", "128B", "256B", "512B"],
-                            "memset_buffer_memory_output_bandwidth_1024B_4KB": ["1024B", "2048B", "4096B"],
-                            "memset_buffer_memory_output_bandwidth_8KB_16KB": ["8192B", "16KB"]}
+    internal_chart_names = {"memset_buffer_memory_output_bandwidth_below_4k": "DMA soak memset BM (Below 4K)",
+                            "memset_buffer_memory_output_bandwidth_4k_1mb": "DMA soak memset BM (4K-1MB)"}
+    internal_frame_sizes = {"memset_buffer_memory_output_bandwidth_below_4k": ["64B", "128B", "256B", "512B", "1024B", "2048B"],
+                            "memset_buffer_memory_output_bandwidth_4k_1mb": ["4096B", "8192B", "16KB"]}
     for internal_chart_name in internal_chart_names:
         chart_name = internal_chart_names[internal_chart_name]
         model_name = "SoakDmaMemsetPerformance"
         metric_id = LastMetricId.get_next_id()
-        y1_axis_title = "GBps"
+        y1_axis_title = "Gbps"
         positive = True
         base_line_date = datetime(year=2019, month=4, day=11, minute=0, hour=0, second=0)
         data_sets = []
