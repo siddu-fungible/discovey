@@ -1,4 +1,20 @@
+/**
+ * fun_fio.h: fio plugin functions
+ */
+#pragma once
+
 #define FUN_MAX_Q_DEPTH  256
+
+// 1 admin queue
+#define NVMEOF_MAX_QUEUES (65)
+
+// The following definitions are a bit convoluted to avoid
+// multiple evaluations of the arguments
+#define MIN(a, b) ({ \
+			__typeof__(a) _a = (a); \
+			__typeof__(b) _b = (b); \
+			_a < _b ? _a : _b; \
+		  })
 
 struct fio_thread_struct {
         int queued;

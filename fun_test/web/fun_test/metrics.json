@@ -1134,6 +1134,24 @@
                 "weight": 1
               },
               {
+                "info": "memset_buffer_memory_output_bandwidth_below_4K",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_buffer_memory_output_bandwidth_below_4k",
+                "label": "DMA soak memset BM (Below 4K)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_buffer_memory_output_bandwidth_4k_1mb",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_buffer_memory_output_bandwidth_4k_1mb",
+                "label": "DMA soak memset BM (4K-1MB)",
+                "children": [],
+                "weight": 1
+              },
+              {
                 "name": "Bcopy: Plain: Avg Bandwidth",
                 "label": "Bcopy: Plain: Avg Bandwidth",
                 "info": "Bcopy: Plain: Avg Bandwidth",
@@ -1893,7 +1911,7 @@
                 "leaf": false,
                 "name": "durable_volume_ec",
                 "weight": 1,
-                "label": "Durable Volume - EC (work in progress)",
+                "label": "Durable Volume - EC",
                 "children": [
                   {
                     "info": "4kb_one_volume_one_ssd_durable_volume_ec",
@@ -1970,6 +1988,94 @@
                             "label": "IOPS"
                           }
                         ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "info": "Teramarks Customer",
+            "metric_model_name": "MetricContainer",
+            "leaf": false,
+            "name": "teramarks_customer",
+            "weight": 1,
+            "label": "Customer",
+            "children": [
+              {
+                "info": "Juniper",
+                "metric_model_name": "MetricContainer",
+                "leaf": false,
+                "name": "teramarks_customer_juniper",
+                "weight": 1,
+                "label": "Juniper - (work in progress)",
+                "children": [
+                  {
+                    "info": "juniper_NU_VP_NU_FWD_NFCP",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_NU_VP_NU_FWD_NFCP",
+                    "weight": 1,
+                    "label": "NU->VP->NU, FWD Benchmark",
+                    "children": [
+                      {
+                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_VP_NU_FWD_NFCP_output_latency_avg",
+                        "weight": 1,
+                        "label": "Latency"
+                      }
+                    ]
+                  },
+                  {
+                    "info": "juniper_NU_LE_VP_NU_FW",
+                    "metric_model_name": "MetricContainer",
+                    "leaf": false,
+                    "name": "juniper_NU_LE_VP_NU_FW",
+                    "weight": 1,
+                    "label": "NU->LE->VP->NU, Firewall Benchmark",
+                    "children": [
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_throughput",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_throughput",
+                        "weight": 1,
+                        "label": "Throughput"
+                      },
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_pps",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_pps",
+                        "weight": 1,
+                        "label": "Packets per sec"
+                      },
+                      {
+                        "info": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
+                        "metric_model_name": "TeraMarkJuniperNetworkingPerformance",
+                        "leaf": true,
+                        "name": "juniper_NU_LE_VP_NU_FW_output_latency_avg",
+                        "weight": 1,
+                        "label": "Latency"
                       }
                     ]
                   }

@@ -141,7 +141,7 @@ class Bmc(Linux):
 
     def set_boot_phase(self, index, phase):
         self.boot_phase = phase
-        fun_test.add_checkpoint("Started boot phase: {}".format(phase))
+        fun_test.add_checkpoint("F1_{}: Started boot phase: {}".format(index, phase))
         fun_test.log_section("F1_{}:{}".format(index, phase))
 
     def u_boot_command(self, f1_index, command, timeout=15, expected=None):
@@ -295,9 +295,9 @@ class Bmc(Linux):
                 f1_index = int(m.group(1))
                 console_or_sbp = m.group(2)
                 device_path = m.group(3)
-                if f1_index > 0:
-                    fun_test.critical("Disabling F1_1 for now")
-                    continue
+                # if f1_index > 0:
+                #    fun_test.critical("Disabling F1_1 for now")
+                #    continue
                 if f1_index not in f1_info:
                     f1_info[f1_index] = {}
                 if console_or_sbp == "console":
@@ -311,12 +311,12 @@ class Bmc(Linux):
 
 
 class ComE(Linux):
-    EXPECTED_FUNQ_DEVICE_ID = "04:00.1"
-    DEFAULT_DPC_PORT = 40220
+    EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
+    DEFAULT_DPC_PORT = [40220, 40221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
 
     def initialize(self, reset=False):
-        self.funq_bind_device = None
+        self.funq_bind_device = []
         self.dpc_ready = None
         fun_test.simple_assert(self.setup_workspace(), "ComE workspace setup")
         fun_test.simple_assert(self.cleanup_dpc(), "Cleanup dpc")
@@ -325,7 +325,7 @@ class ComE(Linux):
         return True
 
     def get_dpc_port(self, f1_index):
-        return self.DEFAULT_DPC_PORT
+        return self.DEFAULT_DPC_PORT[f1_index]
 
     def setup_workspace(self):
         working_directory = "/tmp"
@@ -346,25 +346,37 @@ class ComE(Linux):
     def cleanup_dpc(self):
         self.command("cd $WORKSPACE/FunControlPlane")
         self.sudo_command("pkill dpc")
+        self.sudo_command("pkill dpcsh")
         self.sudo_command("build/posix/bin/funq-setup unbind")
         return True
 
-    def setup_dpc(self, f1_index=0):
+    def setup_dpc(self):
 
         self.command("cd $WORKSPACE/FunControlPlane")
         output = self.sudo_command("build/posix/bin/funq-setup bind")
-        fun_test.test_assert("Binding {}".format(self.funq_bind_device) in output,
-                             "Bound to {}".format(self.funq_bind_device))
-        command = "LD_LIBRARY_PATH=$PWD/build/posix/lib build/posix/bin/dpc -j -d {} &> {} &".format(
-            self.funq_bind_device, self.get_dpc_log_path(f1_index=f1_index))
-        self.sudo_command(command)
-        fun_test.sleep("dpc socket creation")
-        output = self.command("cat {}".format(self.get_dpc_log_path(f1_index=f1_index)))
-        fun_test.test_assert("socket creation: Success" in output, "DPC Socket creation success")
+        for f1_index in range(2):
+            fun_test.test_assert("Binding {}".format(self.funq_bind_device[f1_index]) in output,
+                                 "Bound to {}".format(self.funq_bind_device[f1_index]))
+        for f1_index in range(2):
+            # command = "LD_LIBRARY_PATH=$PWD/build/posix/lib build/posix/bin/dpc -j -d {} &> {} &".format(
+            #    self.funq_bind_device[f1_index], self.get_dpc_log_path(f1_index=f1_index))
+
+            self.command("cd $WORKSPACE/FunSDK/bin/Linux")
+            self.modprobe("nvme")
+            fun_test.sleep("After modprobe", seconds=5)
+            self.command("ls /dev/nvm*")
+            command = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --tcp_proxy={} &> {} &".format(f1_index, self.get_dpc_port(f1_index=f1_index), self.get_dpc_log_path(f1_index=f1_index))
+            self.sudo_command(command)
+            fun_test.sleep("dpc socket creation")
+            # output = self.command("cat {}".format(self.get_dpc_log_path(f1_index=f1_index)))
+            # fun_test.test_assert("socket creation: Success" in output, "DPC Socket creation success")
         self.dpc_ready = True
         return True
 
     def is_dpc_running(self):
+        pass
+
+    def expected_funq_device_id(self):
         pass
 
     def detect_pfs(self):
@@ -372,19 +384,20 @@ class ComE(Linux):
         fun_test.test_assert(devices, "PCI devices detected")
         for device in devices:
             if "Unassigned class" in device["device_class"]:
-                self.funq_bind_device = device["id"]
-        fun_test.test_assert_expected(actual=self.funq_bind_device,
-                                      expected=self.EXPECTED_FUNQ_DEVICE_ID,
-                                      message="funq bind device found")
+                self.funq_bind_device.append(device["id"])
+
+        for index in range(2):  #TODO hard coded
+            fun_test.test_assert_expected(actual=self.funq_bind_device[index],
+                                          expected=self.EXPECTED_FUNQ_DEVICE_ID[index],
+                                          message="F1_{} funq bind device found".format(index))
         return True
 
     def ensure_dpc_running(self):
         result = None
-        for f1_index in range(1):  #TODO: Disabling F1_1
-            process_id = self.get_process_id_by_pattern("dpc")
-            fun_test.log("Dpc process id: {}".format(process_id))
-            if not process_id:
-                self.setup_dpc(f1_index=f1_index)
+        process_id = self.get_process_id_by_pattern("dpc")
+        fun_test.log("Dpc process id: {}".format(process_id))
+        if not process_id:
+            self.setup_dpc()
         self.dpc_ready = True
         result = True
         return result
@@ -592,6 +605,7 @@ class Fs(object, ToDictMixin):
         return self.come
 
     def come_initialize(self):
+        self.get_come()
         self.come.initialize()
         return True
 
@@ -614,9 +628,9 @@ class Fs(object, ToDictMixin):
                                         serial_device_path=f1_info[f1_index]["f1_device_path"],
                                         serial_sbp_device_path=f1_info[f1_index]["sbp_device_path"])
 
-            if f1_index > 0:
-                fun_test.critical("Disabling F1_1 for now")
-                continue
+            # if f1_index > 0:
+            #    fun_test.critical("Disabling F1_1 for now")
+            #    continue
 
         fun_test.simple_assert(len(self.f1s.keys()), "Both F1 device paths found")
         result = True
