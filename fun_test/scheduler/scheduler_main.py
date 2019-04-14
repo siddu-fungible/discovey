@@ -777,7 +777,7 @@ def clear_out_queue():
 
 if __name__ == "__main__":
     queue_lock = RLock()
-    # ensure_singleton()
+    ensure_singleton()
     scheduler_logger.info("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
     queue_worker.start()
