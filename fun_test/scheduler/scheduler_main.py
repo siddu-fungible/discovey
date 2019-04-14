@@ -412,7 +412,7 @@ class SuiteWorker(Thread):
         return script_string
 
     def debug(self, message, script_path=None):
-        self.local_scheduler_logger.debug("{} {}{}".format(get_job_string_from_spec(job_spec=self.job_spec), self.get_script_string(script_path=script_path), message))
+        self.local_scheduler_logger.info("{} {}{}".format(get_job_string_from_spec(job_spec=self.job_spec), self.get_script_string(script_path=script_path), message))
 
     def error(self, message, script_path=None):
         scheduler_logger.exception("{} {}{}".format(get_job_string_from_spec(job_spec=self.job_spec), self.get_script_string(script_path=script_path), message))
