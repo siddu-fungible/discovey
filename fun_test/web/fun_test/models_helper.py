@@ -29,7 +29,8 @@ from web.fun_test.models import (
     TestCaseExecution,
     JenkinsJobIdMap,
     SuiteContainerExecution,
-    SuiteReRunInfo
+    SuiteReRunInfo,
+    TestBed
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -542,3 +543,12 @@ def set_suite_re_run_info(original_suite_execution_id, re_run_suite_execution_id
 def get_suite_executions_by_filter(**kwargs):
     suite_executions = SuiteExecution.objects.filter(**kwargs)
     return suite_executions
+
+def is_test_bed_with_manual_lock(test_bed_name):
+    result = None
+    try:
+        t = TestBed.objects.get(name=test_bed_name, manual_lock=True)
+        result = {"manual_lock_submitter": t.manual_lock_submitter}
+    except ObjectDoesNotExist:
+        pass
+    return result

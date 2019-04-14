@@ -111,7 +111,8 @@ class AssetManager:
 
     @fun_test.safe
     def get_test_bed_availability(self, test_bed_type):
-        from web.fun_test.models_helper import get_suite_executions_by_filter
+        from web.fun_test.models_helper import get_suite_executions_by_filter, is_test_bed_with_manual_lock
+
         from scheduler.scheduler_global import JobStatusType
         result = {}
         result["test_bed"] = test_bed_type
@@ -127,7 +128,13 @@ class AssetManager:
         else:
             credits = 1
         in_progress_count = in_progress_suites.count()
-        if in_progress_count >= credits:
+
+        manual_lock_info = is_test_bed_with_manual_lock(test_bed_name=test_bed_type)
+
+        if manual_lock_info:
+            result["status"] = False
+            result["message"] = "Test-bed: {} manual locked by: {}".format(test_bed_type, manual_lock_info["manual_lock_submitter"])
+        elif in_progress_count >= credits:
             result["status"] = False
             result["message"] = "Test-bed: {} In-progress count: {}, Credit: {}".format(test_bed_type, in_progress_count, credits)
         else:

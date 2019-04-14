@@ -117,9 +117,9 @@ class QueueWorker(Thread):
         from asset.asset_manager import AssetManager
         asset_manager = AssetManager()
         while True:
-            scheduler_logger.info("QueueWorker: Before lock acquire")
+            # scheduler_logger.info("QueueWorker: Before lock acquire")
             queue_lock.acquire()
-            scheduler_logger.info("QueueWorker: After lock acquire")
+            # scheduler_logger.info("QueueWorker: After lock acquire")
 
             try:
                 de_queued_jobs = []
@@ -158,9 +158,9 @@ class QueueWorker(Thread):
                     d.delete()
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
-            scheduler_logger.info("QueueWorker: Before lock release")
+            # scheduler_logger.info("QueueWorker: Before lock release")
             queue_lock.release()
-            scheduler_logger.info("QueueWorker: After lock release")
+            # scheduler_logger.info("QueueWorker: After lock release")
 
 
     def get_valid_jobs(self):
@@ -194,6 +194,7 @@ class QueueWorker(Thread):
 
 
 queue_worker = QueueWorker()
+test_bed_monitor = TestBedWorker()
 
 def get_job_string_from_spec(job_spec):
     return "{} st={}".format(get_job_string(job_spec.execution_id), job_spec.state)
@@ -781,6 +782,7 @@ if __name__ == "__main__":
     scheduler_logger.info("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
     queue_worker.start()
+    test_bed_monitor.start()
     clear_out_queue()
 
     run = True
