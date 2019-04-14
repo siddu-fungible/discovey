@@ -217,7 +217,8 @@ def submit_job(request):
                                 environment=environment,
                                 test_bed_type=test_bed_type,
                                 original_suite_execution_id=original_suite_execution_id,
-                                build_url=build_url)
+                                build_url=build_url,
+                                submitter_email=submitter_email)
     return job_id
 
 
@@ -924,6 +925,7 @@ def script_execution(request, pk):
 def job_spec(request, job_id):
     result = {}
     suite_execution = SuiteExecution.objects.get(execution_id=job_id)
+    result["submitter_email"] = suite_execution.submitter_email
     result["emails"] = json.loads(suite_execution.emails)
     result["test_bed_type"] = suite_execution.test_bed_type
     result["environment"] = json.loads(suite_execution.environment)

@@ -133,7 +133,8 @@ export class ReRunService {
       version: this.reRunVersion,
       original_suite_execution_id: suiteExecutionId,
       emails: this.archivedJobSpec["emails"],
-    environment: this.archivedJobSpec["environment"]};
+      submitter_email: this.archivedJobSpec["submitter_email"],
+      environment: this.archivedJobSpec["environment"]};
     if (this.archivedJobSpec.hasOwnProperty('test_bed_type')) {
       payload["test_bed_type"] = this.archivedJobSpec["test_bed_type"];
     }

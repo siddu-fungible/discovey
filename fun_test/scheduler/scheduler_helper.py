@@ -246,6 +246,7 @@ def get_suite_level_tags(suite_spec):
 
 
 def queue_dynamic_suite(dynamic_suite_spec,
+                        submitter_email,
                         original_suite_execution_id,
                         emails=None,
                         environment=None,
@@ -258,7 +259,8 @@ def queue_dynamic_suite(dynamic_suite_spec,
                       emails=emails,
                       test_bed_type=test_bed_type,
                       environment=environment,
-                      build_url=build_url)
+                      build_url=build_url,
+                      submitter_email=submitter_email)
 
 def is_auto_scheduled(scheduling_type, repeat_in_minutes):
     return (scheduling_type == SchedulingType.TODAY and repeat_in_minutes > 0) or (scheduling_type == SchedulingType.PERIODIC)
@@ -350,6 +352,7 @@ def queue_job3(suite_path=None,
 
         result = suite_execution.execution_id
     except Exception as ex:
+        scheduler_logger.exception(str(ex))
         if suite_execution:
             suite_execution.delete()
         raise SchedulerException("Unable to schedule job due to: " + str(ex))
