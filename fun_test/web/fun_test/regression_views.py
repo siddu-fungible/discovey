@@ -992,7 +992,7 @@ def _get_job_spec(job_id):
     result["execution_id"] = job_spec.execution_id
     result["suite_type"] = job_spec.suite_type
     result["suite_path"] = job_spec.suite_path
-    result["emails"] = json.loads(job_spec.emails) if job_spec.emails else []
+    result["email"] = job_spec.submitter_email
     return result
 
 

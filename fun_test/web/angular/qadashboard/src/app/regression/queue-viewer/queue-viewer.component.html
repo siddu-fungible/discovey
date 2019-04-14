@@ -8,6 +8,7 @@
         <th></th>
         <th>Job-Id</th>
         <th>Priority</th>
+        <th>Test-bed</th>
         <th>Suite</th>
         <th>Email</th>
         <th>Message</th>
@@ -31,8 +32,9 @@
         </td>
         <td>{{ queueEntry.job_id }}</td>
         <td>{{ queueEntry.priority }}</td>
+        <td>{{ queueEntry.test_bed }}</td>
         <td>{{ queueEntry.job_spec.suite_path }}</td>
-        <td>{{ queueEntry.job_spec.emails }}</td>
+        <td>{{ queueEntry.job_spec.email }}</td>
         <td>{{ queueEntry.message }}</td>
 
       </tr>

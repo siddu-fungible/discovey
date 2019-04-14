@@ -56,7 +56,6 @@ else:
     handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 scheduler_logger.addHandler(hdlr=handler)
-scheduler_logger.setLevel(logging.DEBUG)
 
 
 DAY_OF_WEEK_TO_INDEX = {
