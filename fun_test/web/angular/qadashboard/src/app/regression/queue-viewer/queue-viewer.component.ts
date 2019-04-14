@@ -8,7 +8,7 @@ class JobSpec {
   suite_type: string;
   script_path: string;
   suite_path: string;
-  email: string[];
+  email: string;
 
 }
 
