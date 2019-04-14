@@ -160,6 +160,7 @@ class QueueWorker(Thread):
                 scheduler_logger.exception(str(ex))
             # scheduler_logger.info("QueueWorker: Before lock release")
             queue_lock.release()
+            time.sleep(5)
             # scheduler_logger.info("QueueWorker: After lock release")
 
 
