@@ -8,7 +8,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [4194304, 104857600, 1073741824, 2147483648, 4294967296],
@@ -41,7 +41,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [4194304, 104857600, 1073741824, 2147483648, 4294967296],
@@ -74,7 +74,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [4194304, 104857600, 1073741824, 2147483648, 4294967296],
@@ -107,7 +107,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [4194304, 104857600, 1073741824, 2147483648, 4294967296],
@@ -140,7 +140,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [4194304, 104857600, 1073741824, 2147483648, 4294967296],
@@ -173,7 +173,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [4194304, 104857600, 1073741824, 2147483648, 4294967296],
@@ -206,7 +206,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [16777216, 104857600, 1073741824, 2147483648, 4294967296],
@@ -239,7 +239,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [16777216, 104857600, 1073741824, 2147483648, 4294967296],
@@ -272,7 +272,7 @@
       "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
       "use_lsv": 1,
       "lsv_pct": 0.30,
-      "lsv_chunk_size": 32,
+      "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8
     },
     "volume_capacity_list": [4194304, 104857600, 1073741824, 2147483648, 4294967296],
