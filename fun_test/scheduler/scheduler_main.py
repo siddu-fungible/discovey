@@ -165,6 +165,7 @@ class QueueWorker(Thread):
 
 
     def get_valid_jobs(self):
+        scheduler_logger.info("get_valid_jobs")
         valid_jobs = []
         invalid_jobs = []
         queued_jobs = JobQueue.objects.all().order_by('priority')
