@@ -45,6 +45,7 @@ DYNAMIC_SUITE_QUEUED_JOB_EXTENSION = "dynamic_queued.json"
 
 scheduler_logger = logging.getLogger("main_scheduler_log")
 scheduler_logger.setLevel(logging.DEBUG)
+scheduler_logger.propagate = False
 
 TEN_MB = 1e7
 DEBUG = False
