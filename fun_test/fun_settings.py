@@ -51,6 +51,7 @@ TIME_ZONE = "America/Los_Angeles"
 MAIL_SERVER = "localhost"
 REGRESSION_EMAIL = "regression@fungible.com"
 TEAM_REGRESSION_EMAIL = "team-regression@fungible.com"
+TEAM_REGRESSION_EMAIL = "john.abraham@fungible.com"
 
 SCHEDULER_PID = "/tmp/fun_test_scheduler.pid"
 
