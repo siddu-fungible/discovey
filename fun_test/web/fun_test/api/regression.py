@@ -49,7 +49,7 @@ def test_beds(request, id):
         if test_bed.manual_lock_submitter:
             to_addresses = [test_bed.manual_lock_submitter, TEAM_REGRESSION_EMAIL]
             lock_or_unlock = "lock" if test_bed.manual_lock else "un-lock"
-            subject = "Manual {} for Test-bed: {} req by: {} ".format(lock_or_unlock, test_bed.name, test_bed.manual_lock_submitter)
+            subject = "Manual {} for Test-bed: {} User: {} ".format(lock_or_unlock, test_bed.name, test_bed.manual_lock_submitter)
             content = subject
             send_mail(to_addresses=to_addresses, subject=subject, content=content)
         pass
