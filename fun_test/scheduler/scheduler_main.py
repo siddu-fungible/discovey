@@ -153,6 +153,7 @@ class QueueWorker(Thread):
                 time.sleep(5)
 
                 for de_queued_job in de_queued_jobs:
+                    scheduler_logger.info("Job: {} Dequeuing".format(de_queued_job.job_id))
                     d = JobQueue.objects.get(job_id=de_queued_job.job_id)
                     d.delete()
             except Exception as ex:
