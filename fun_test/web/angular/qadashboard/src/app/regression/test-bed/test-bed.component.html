@@ -59,8 +59,9 @@
                     &nbsp;
                     <span>{{ getPrettyTime(manualStatus[testBed.name].manualLockExpiryTime) }}</span>
                     <ng-container *ngIf="isLockExpired(testBed)">
-
+                      &nbsp;
                       <span class="badge badge-danger" *ngIf="manualStatus[testBed.name].manualLock"> Expired</span>
+                      &nbsp;
                       <span class="pseudo-anchor" (click)="currentTestBed = testBed; onExtendTime(testBed)"> Extend slot</span>
 
                     </ng-container>

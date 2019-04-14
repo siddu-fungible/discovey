@@ -617,15 +617,15 @@ def send_test_bed_remove_lock(test_bed, warning=False):
     to_addresses = [TEAM_REGRESSION_EMAIL, submitter_email]
 
     user = User.objects.get(email=submitter_email)
-    content = "Hi {},".format(user.first_name) + "\n"
-    content += "Manual lock for Test-bed {} has expired. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "\n"
+    content = "Hi {},".format(user.first_name) + "<br>"
+    content += "Manual-testing lock duration for Test-bed {} has exceeded. Expiry time: {}".format(test_bed.name, str(expiry_time)) + "<br>"
     if warning:
-        content += "We will unlock the test-bed in 1 hour" + "\n"
-        subject = "Manual lock for Test-bed {} has expired".format(test_bed.name)
+        content += "We will unlock the test-bed in 1 hour" + "<br>"
+        subject = "Manual-testing lock duration for Test-bed {} has exceeded".format(test_bed.name)
     else:
-        content += "Unlocking now" + "\n"
+        content += "Unlocking now" + "<br>"
         subject = "Manual lock for Test-bed {} removed".format(test_bed.name)
-    content += "- Regression" + "\n"
+    content += "- Regression" + "<br>"
 
     send_mail(to_addresses=to_addresses, content=content, subject=subject)
 
