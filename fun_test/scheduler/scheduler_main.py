@@ -19,6 +19,7 @@ ONE_HOUR = 60 * 60
 queue_lock = None
 
 
+
 class ShutdownReason:
     ABORTED = -2
     KILLED = -1
@@ -116,7 +117,10 @@ class QueueWorker(Thread):
         from asset.asset_manager import AssetManager
         asset_manager = AssetManager()
         while True:
+            scheduler_logger.info("QueueWorker: Before lock acquire")
             queue_lock.acquire()
+            scheduler_logger.info("QueueWorker: After lock acquire")
+
             try:
                 de_queued_jobs = []
                 valid_jobs = self.get_valid_jobs()
@@ -153,7 +157,10 @@ class QueueWorker(Thread):
                     d.delete()
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
+            scheduler_logger.info("QueueWorker: Before lock release")
             queue_lock.release()
+            scheduler_logger.info("QueueWorker: After lock release")
+
 
     def get_valid_jobs(self):
         valid_jobs = []
@@ -197,16 +204,19 @@ def queue_job(job_spec):
     scheduler_logger.info("{} queue_job".format(get_job_string_from_spec(job_spec=job_spec)))
     job_spec = models_helper.get_suite_execution(suite_execution_id=job_spec.execution_id)
     if job_spec.state == JobStatusType.SCHEDULED:
-        scheduler_logger.info("{} queue_job before acquiring lock".format(get_job_string_from_spec(job_spec=job_spec)))
+        scheduler_logger.info("{} queue_job: before acquiring lock".format(get_job_string_from_spec(job_spec=job_spec)))
 
         queue_lock.acquire()
-        scheduler_logger.info("{} queue_job after acquiring lock".format(get_job_string_from_spec(job_spec=job_spec)))
+        scheduler_logger.info("{} queue_job: after acquiring lock".format(get_job_string_from_spec(job_spec=job_spec)))
 
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
         new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id, test_bed_type=job_spec.test_bed_type)
         new_job.save()
         job_spec.set_state(JobStatusType.QUEUED)
+        scheduler_logger.info("{} queue_job: before releasing lock".format(get_job_string_from_spec(job_spec=job_spec)))
         queue_lock.release()
+        scheduler_logger.info("{} queue_job: after releasing lock".format(get_job_string_from_spec(job_spec=job_spec)))
+
     else:
         scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
 

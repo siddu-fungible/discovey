@@ -9,6 +9,7 @@
   "crypto_packet.json",
   "ec_crypto_fault_sanity.json",
   "lsv_crypto_sanity.json",
-  "replica_crypto_sanity.json"
+  "replica_crypto_sanity.json",
+  "replica_crypto_fault_sanity.json"
 
 ]
