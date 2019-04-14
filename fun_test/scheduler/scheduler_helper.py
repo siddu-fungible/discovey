@@ -323,6 +323,7 @@ def queue_job3(suite_path=None,
 
     try:
         suite_execution.suite_path = suite_path
+        suite_execution.script_path = script_path
         suite_execution.dynamic_suite_spec = json.dumps(dynamic_suite_spec)
         suite_execution.suite_type = suite_type
         suite_execution.scheduling_type = scheduling_type

@@ -105,7 +105,8 @@ class SuiteExecution(models.Model):
     """
     Suite selection
     """
-    suite_path = models.CharField(max_length=100)
+    suite_path = models.CharField(max_length=100, null=True)
+    script_path = models.TextField(default=None, null=True)
     suite_type = models.TextField(default=SuiteType.STATIC)
     dynamic_suite_spec = models.TextField(default="{}", null=True)
 

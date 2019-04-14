@@ -242,9 +242,11 @@ class SuiteWorker(Thread):
     def __init__(self, job_spec):
         super(SuiteWorker, self).__init__()
         self.job_spec = job_spec
-        self.job_suite_path = job_spec.suite_path
-        self.job_suite_path = re.sub(r'.json', '', self.job_suite_path)
-        self.job_suite_path += ".json"
+        self.job_suite_path = None
+        if job_spec.suite_path:
+            self.job_suite_path = job_spec.suite_path
+            self.job_suite_path = re.sub(r'.json', '', self.job_suite_path)
+            self.job_suite_path += ".json"
 
         self.job_suite_type = job_spec.suite_type
         self.job_id = job_spec.execution_id
@@ -528,7 +530,8 @@ class SuiteWorker(Thread):
             self.abort_on_failure_requested = False
             script_index = 0
 
-            #TODO: What if there are no scripts
+            if not script_items:
+                self.abort_suite("No scripts detected in suite")
             for script_item in script_items:
                 script_index += 1
                 if "info" in script_item or ("disabled" in script_item and script_item["disabled"]):
