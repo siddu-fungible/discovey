@@ -273,7 +273,7 @@ if __name__ == "__main_juniper_networking__":
         mmt.save()
     print "chart creation for NU_VP_NU_FWD_NFCP latency is done"
 
-if __name__ == "__main__":
+if __name__ == "__main_memset_BM__":
     entries = MetricChart.objects.all()
     ml = MetricLib()
     for entry in entries:
@@ -327,3 +327,7 @@ if __name__ == "__main__":
                                milestone_name="Tape-out")
         mmt.save()
     print "chart creation for BM DMA memset is done"
+
+if __name__ == "__main__":
+    entries = NuTransitPerformance.objects.all().delete()
+    print "Deletion Complete"
