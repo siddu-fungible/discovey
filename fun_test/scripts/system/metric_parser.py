@@ -145,10 +145,9 @@ class MetricParser():
                     input_operation = str(o.group("operation"))
                     metrics["input_operation"] = input_dev_access + "_" + input_operation
                     metrics["input_metric_name"] = "rcnvme_total_" + input_dev_access + "_" + input_operation
+                    self.status = RESULTS["PASSED"]
                     d = self.metrics_to_dict(metrics=metrics, result=self.status, date_time=date_time)
                     result["data"].append(d)
-                    self.status = RESULTS["PASSED"]
-
         result["match_found"] = match_found
         result["status"] = self.status == RESULTS["PASSED"]
         return result

@@ -347,6 +347,7 @@ if __name__ == "__main__":
         for output in outputs:
             data_sets = []
             positive = True
+            name = "SAMSUNG MZQLB1T9HAJR"
             if "bandwidth" in output:
                 y1_axis_title = "Mbps"
                 chart_name = "Throughput"
@@ -357,6 +358,7 @@ if __name__ == "__main__":
                 y1_axis_title = "nsecs"
                 chart_name = "Latency"
                 positive = False
+                name = "avg"
             internal_name = "rcnvme_" + operation + '_' + output
             if "sequential" in operation:
                 dev_access = "sequential"
@@ -371,7 +373,7 @@ if __name__ == "__main__":
             one_data_set["inputs"] = {}
             one_data_set["inputs"]["input_io_type"] = io_type
             one_data_set["inputs"]["input_dev_access"] = dev_access
-            one_data_set["name"] = "SAMSUNG MZQLB1T9HAJR"
+            one_data_set["name"] = name
             one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
             data_sets.append(one_data_set)
             metric_id = LastMetricId.get_next_id()
@@ -383,6 +385,8 @@ if __name__ == "__main__":
                         leaf=True,
                         description="TBD",
                         owner_info="Raju Vasudevan (raju.vasudevan@fungible.com)",
+                        source="https://github.com/fungible-inc/FunOS/blob/ad5f77ba0db25525eed4a3ac4822562b7ccf5d9c/apps/rcnvme_test.c",
+                        work_in_progress=False,
                         positive=positive,
                         y1_axis_title=y1_axis_title,
                         visualization_unit=y1_axis_title,
