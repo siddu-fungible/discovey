@@ -200,12 +200,6 @@ def get_new_suite_execution_id():
         last_suite_execution_id.save()
     return last_suite_execution_id
 
-def add_suite_container_execution(suite_path, tags):
-    last_suite_execution_id = get_new_suite_execution_id()
-    s = SuiteContainerExecution(suite_path=suite_path, execution_id=last_suite_execution_id.last_suite_execution_id, tags=json.dumps(tags))
-    s.save()
-    return s
-
 
 def add_suite_execution(submitted_time,
                         scheduled_time,
@@ -228,6 +222,7 @@ def add_suite_execution(submitted_time,
     for i in xrange(4):
         try:
             last_suite_execution_id = get_new_suite_execution_id()
+            # print ("New suite: {}, submitter: {}".format(last_suite_execution_id.last_suite_execution_id, submitter_email))
             s = SuiteExecution(execution_id=last_suite_execution_id.last_suite_execution_id, suite_path=suite_path,
                                submitted_time=submitted_time,
                                scheduled_time=scheduled_time,

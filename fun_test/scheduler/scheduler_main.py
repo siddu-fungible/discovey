@@ -3,7 +3,7 @@ from fun_settings import *
 from fun_global import determine_version
 import re
 import subprocess
-from threading import Thread, RLock
+from threading import Thread, Lock
 import threading
 
 from scheduler_helper import *
@@ -80,8 +80,14 @@ class QueueWorker(Thread):
         super(QueueWorker, self).__init__()
         self.job_threads = {}
 
-    def submit_container_suite(self, container_suite_execution):
+    def submit_container_suite(self, container_suite_execution_id):
+        # print ("Submit container suite")
+        # return
+        container_suite_execution = models_helper.get_suite_execution(suite_execution_id=container_suite_execution_id)
         container_suite_path = container_suite_execution.suite_path
+        state = JobStatusType.IN_PROGRESS
+        container_suite_execution.state = state
+        container_suite_execution.save()
         try:
             container_spec = parse_suite(suite_name=container_suite_path)
             container_suite_level_tags = json.loads(container_suite_execution.tags)
@@ -89,29 +95,49 @@ class QueueWorker(Thread):
             scheduler_logger.exception("{} Unable to parse spec".format(get_job_string_from_spec(job_spec=container_suite_execution)))
             return
 
-        for item in container_spec:
-            item_suite = parse_suite(suite_name=item)
-            item_suite_level_tags = get_suite_level_tags(suite_spec=item_suite)
-            item_suite_level_tags.extend(container_suite_level_tags)
-
+        try:
             common_build_url = container_suite_execution.build_url
             if not common_build_url:
                 common_build_url = DEFAULT_BUILD_URL
             version = determine_version(build_url=common_build_url)
-            if not version:
-                scheduler_logger.exception("{} Unable to determine version".format(get_job_string_from_spec(job_spec=container_suite_execution)))
+            if version:
+                container_suite_execution.version = version
+                container_suite_execution.save()
+            for item in container_spec:
+                item_suite = parse_suite(suite_name=item)
+                item_suite_level_tags = get_suite_level_tags(suite_spec=item_suite)
+                item_suite_level_tags.extend(container_suite_level_tags)
 
-            queue_job3(suite_path=item,
-                       build_url=common_build_url,
-                       scheduling_type=SchedulingType.ASAP,
-                       tags=item_suite_level_tags,
-                       emails=json.loads(container_suite_execution.emails),
-                       email_on_fail_only=container_suite_execution.email_on_failure_only,
-                       suite_container_execution_id=container_suite_execution.execution_id,
-                       test_bed_type=container_suite_execution.test_bed_type,
-                       requested_priority_category=SchedulerJobPriority.NORMAL)
 
-        container_suite_execution.set_state(JobStatusType.IN_PROGRESS)
+                if not version:
+                    scheduler_logger.exception("{} Unable to determine version".format(get_job_string_from_spec(job_spec=container_suite_execution)))
+                else:
+                    # print ("the item: {}".format(item))
+                    result = queue_job3(suite_path=item,
+                               build_url=common_build_url,
+                               scheduling_type=SchedulingType.ASAP,
+                               tags=item_suite_level_tags,
+                               emails=json.loads(container_suite_execution.emails),
+                               email_on_fail_only=container_suite_execution.email_on_failure_only,
+                               suite_container_execution_id=container_suite_execution.execution_id,
+                               test_bed_type=container_suite_execution.test_bed_type,
+                               requested_priority_category=SchedulerJobPriority.NORMAL,
+                               submitter_email=container_suite_execution.submitter_email)
+                    # container_suite_execution.set_state(state)
+                    if result <= 0:
+                        scheduler_logger.exception("Suite container: {}")
+                        state = JobStatusType.ABORTED
+                        scheduler_logger.exception("{} Unable to process suite container".format(
+                            get_job_string_from_spec(job_spec=container_suite_execution)))
+                        break
+                    # container_suite_execution.set_state(state)
+        except Exception as ex:
+            scheduler_logger.exception(str(ex))
+            state = JobStatusType.ABORTED
+
+        container_suite_execution.state = state
+        container_suite_execution.save()
+
 
     def run(self):
         from asset.asset_manager import AssetManager
@@ -133,7 +159,8 @@ class QueueWorker(Thread):
                     """
                     suite_execution = models_helper.get_suite_execution(suite_execution_id=queued_job.job_id)
                     if suite_execution.suite_type == SuiteType.CONTAINER:
-                        self.submit_container_suite(container_suite_execution=suite_execution)
+                        self.submit_container_suite(container_suite_execution_id=suite_execution.execution_id)
+                        de_queued_jobs.append(queued_job)
                         continue
 
                     if queued_job.test_bed_type not in not_available:
@@ -158,14 +185,14 @@ class QueueWorker(Thread):
                     d.delete()
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
-            # scheduler_logger.info("QueueWorker: Before lock release")
+            scheduler_logger.info("QueueWorker: Before lock release")
             queue_lock.release()
             time.sleep(5)
-            # scheduler_logger.info("QueueWorker: After lock release")
+            scheduler_logger.info("QueueWorker: After lock release")
 
 
     def get_valid_jobs(self):
-        scheduler_logger.info("get_valid_jobs")
+        # scheduler_logger.info("get_valid_jobs")
         valid_jobs = []
         invalid_jobs = []
         queued_jobs = JobQueue.objects.all().order_by('priority')
@@ -204,32 +231,25 @@ def get_job_string_from_spec(job_spec):
 def get_job_string(job_id):
     return "Job: {}".format(job_id)
 
-def queue_job(job_spec):
-    scheduler_logger.info("{} queue_job".format(get_job_string_from_spec(job_spec=job_spec)))
-    job_spec = models_helper.get_suite_execution(suite_execution_id=job_spec.execution_id)
+def queue_job(job_id):
+    queue_lock.acquire()
+    # scheduler_logger.info("Lock: queue_job")
+    job_spec = models_helper.get_suite_execution(suite_execution_id=job_id)
     if job_spec.state == JobStatusType.SCHEDULED:
-        scheduler_logger.info("{} queue_job: before acquiring lock".format(get_job_string_from_spec(job_spec=job_spec)))
-
-        queue_lock.acquire()
-        scheduler_logger.info("{} queue_job: after acquiring lock".format(get_job_string_from_spec(job_spec=job_spec)))
-
         next_priority_value = get_next_priority_value(job_spec.requested_priority_category)
         new_job = JobQueue(priority=next_priority_value, job_id=job_spec.execution_id, test_bed_type=job_spec.test_bed_type)
         new_job.save()
-        job_spec.set_state(JobStatusType.QUEUED)
-        scheduler_logger.info("{} queue_job: before releasing lock".format(get_job_string_from_spec(job_spec=job_spec)))
-        queue_lock.release()
-        scheduler_logger.info("{} queue_job: after releasing lock".format(get_job_string_from_spec(job_spec=job_spec)))
+        models_helper.update_suite_execution(suite_execution_id=job_spec.execution_id, state=JobStatusType.QUEUED)
 
     else:
         scheduler_logger.error("{} trying to be queued".format(get_job_string_from_spec(job_spec)))
+    queue_lock.release()
 
-
-def timer_dispatch(job_spec):
+def timer_dispatch(job_id):
     # Add to queue
-    queue_job(job_spec=job_spec)
-    if job_spec.execution_id in job_id_timers:
-        del job_id_timers[job_spec.execution_id]
+    queue_job(job_id=job_id)
+    if job_id in job_id_timers:
+        del job_id_timers[job_id]
 
 
 def report_error(job_spec, error_message, local_logger=None):
@@ -662,19 +682,22 @@ def process_submissions():
     yesterday = now - timedelta(days=1)
     # job_specs = JobSpec.objects.filter().order_by("-submission_time")
 
+    queue_lock.acquire()
+    # scheduler_logger.info("Lock: process_submissions")
     job_specs = models_helper.get_suite_executions_by_filter(submitted_time__gte=yesterday,
                                                              state=JobStatusType.SUBMITTED).order_by("submitted_time")
+
     for job_spec in job_specs:
         try:
             # Execute
             job_id = job_spec.execution_id
-            scheduler_logger.info("{} Process queue".format(get_job_string(job_id=job_id)))
+            scheduler_logger.info("{} Process queue : submitter: {}".format(get_job_string(job_id=job_id), job_spec.submitter_email))
 
             schedule_it = True
             scheduling_time = get_scheduling_time(spec=job_spec)
             scheduler_logger.info("{} Schedule it: {} Time: {}".format(get_job_string_from_spec(job_spec=job_spec), schedule_it, scheduling_time))
             if job_spec and schedule_it and (scheduling_time >= 0):
-                t = threading.Timer(scheduling_time, timer_dispatch, (job_spec,))
+                t = threading.Timer(scheduling_time, timer_dispatch, (job_spec.execution_id,))
                 job_id_timers[job_id] = t
                 job_spec.set_properties(scheduled_time=get_current_time() + datetime.timedelta(seconds=scheduling_time), state=JobStatusType.SCHEDULED)
                 t.start()
@@ -684,7 +707,7 @@ def process_submissions():
 
         except Exception as ex:
             scheduler_logger.exception(str(ex))
-
+    queue_lock.release()
 
 def remove_scheduled_job(job_id):
     job_spec = JobSpec.objects.get(job_id=job_id)
@@ -748,6 +771,7 @@ def process_auto_scheduled_jobs():
         in_progress_suites = models_helper.get_suite_executions_by_filter(state__gt=JobStatusType.AUTO_SCHEDULED, auto_scheduled_execution_id=auto_schedule_job_id)
         if not in_progress_suites.count():
             # if job_id not in progress, clone and submit
+            print("Cloning")
             cloned_job = clone_job(job_id=auto_schedule_job_id)
             cloned_job.state = JobStatusType.SUBMITTED
             cloned_job.is_auto_scheduled_job = False
@@ -774,16 +798,19 @@ def process_container_suites():
                 break
 
         if all_jobs_completed:
-            container_execution.set_state(JobStatusType.COMPLETED)
+            models_helper.update_suite_execution(suite_execution_id=container_execution.execution_id, state=JobStatusType.COMPLETED)
 
 def clear_out_queue():
     JobQueue.objects.all().delete()
 
 
+def initialize():
+    JobQueue.objects.all().delete()
 
 if __name__ == "__main__":
-    queue_lock = RLock()
+    queue_lock = Lock()
     ensure_singleton()
+    initialize()
     scheduler_logger.info("Started Scheduler")
     set_scheduler_state(SchedulerStates.SCHEDULER_STATE_RUNNING)
     queue_worker.start()

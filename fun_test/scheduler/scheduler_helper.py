@@ -305,6 +305,7 @@ def queue_job3(suite_path=None,
     is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
     job_state = JobStatusType.AUTO_SCHEDULED if is_auto_scheduled_job else JobStatusType.SUBMITTED
 
+    # print ("Before adding suite execution: submitter {}".format(submitter_email))
     suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
                                                         scheduled_time=get_current_time(),
                                                         completed_time=get_current_time(),
@@ -349,6 +350,7 @@ def queue_job3(suite_path=None,
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
         suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
         suite_execution.state = JobStatusType.SUBMITTED
+        # print ("queue_job_3: {}".format(suite_execution.execution_id))
         suite_execution.save()
 
         result = suite_execution.execution_id
@@ -358,7 +360,7 @@ def queue_job3(suite_path=None,
             suite_execution.delete()
         raise SchedulerException("Unable to schedule job due to: " + str(ex))
         # TODO: Remove suite execution entry
-    print("Job Id: {} suite: {} Submitted".format(suite_execution.execution_id, suite_path))
+    # print("Job Id: {} suite: {} Submitted".format(suite_execution.execution_id, suite_path))
     return result
 
 
@@ -468,35 +470,9 @@ def prepare_dynamic_suite(spec):
     return queued_file_name
 
 
-    '''
-        dynamic_suite_contents = {}
-    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                                        scheduled_time=get_current_time(),
-                                                        completed_time=get_current_time(),
-                                                        suite_path=SuiteType.DYNAMIC)
-    dynamic_suite_contents["suite_execution_id"] = suite_execution.execution_id
-    queued_file_name = "{}/{}.{}".format(DYNAMIC_SUITE_JOBS_DIR, suite_execution.execution_id, DYNAMIC_SUITE_QUEUED_JOB_EXTENSION)
-    with open(queued_file_name, "w+") as qf:
-        qf.write(json.dumps(dynamic_suite_contents))
-        qf.close()
-
-    return suite_execution.execution_id
-    '''
 
 
 
-
-
-    '''
-    suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                                        scheduled_time=get_current_time(),
-                                                        completed_time=get_current_time(),
-                                                        suite_path=SuiteType.DYNAMIC)
-    queued_file_name = "{}/{}.{}".format(JOBS_DIR, suite_execution.execution_id, QUEUED_JOB_EXTENSION)
-    with open(queued_file_name, "w+") as qf:
-        qf.write(json.dumps(spec))
-        qf.close()
-    '''
 
 def set_scheduler_state(state):
     o = SchedulerInfo.objects.first()
