@@ -185,10 +185,10 @@ class QueueWorker(Thread):
                     d.delete()
             except Exception as ex:
                 scheduler_logger.exception(str(ex))
-            scheduler_logger.info("QueueWorker: Before lock release")
+            # scheduler_logger.info("QueueWorker: Before lock release")
             queue_lock.release()
             time.sleep(5)
-            scheduler_logger.info("QueueWorker: After lock release")
+            # scheduler_logger.info("QueueWorker: After lock release")
 
 
     def get_valid_jobs(self):
