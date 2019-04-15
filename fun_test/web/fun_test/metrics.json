@@ -2087,7 +2087,7 @@
                 "leaf": false,
                 "name": "teramarks_customer_apple",
                 "weight": 1,
-                "label": "Apple - (work in progress)",
+                "label": "Apple",
                 "children": [
                   {
                     "info": "Random Read",

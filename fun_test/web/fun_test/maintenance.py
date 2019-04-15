@@ -380,43 +380,41 @@ if __name__ == "__main__":
                     data_sets=json.dumps(data_sets),
                     leaf=True,
                     description="TBD",
-                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                    owner_info="Manu KS (manu.ks@fungible.com)",
                     source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/stripe_vol_fs_perf.py",
                     positive=positive,
                     y1_axis_title=y1_axis_title,
                     visualization_unit=y1_axis_title,
                     metric_model_name=model_name,
-                    base_line_date=base_line_date).save()
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
         mmt = MileStoneMarkers(metric_id=metric_id,
                                milestone_date=datetime(year=2018, month=9, day=16),
                                milestone_name="Tape-out")
         mmt.save()
-    print "created throughput charts for random read storage"
+    print "created throughput charts for random read stripe volume"
 
 if __name__ == "__main__":
     internal_chart_names_dict = {"apple_rand_read_4kb6vol6ssd_output_latency": "Latency"}
     model_name = "BltVolumePerformance"
     fio_read_job_names = ["fio_randread_stripe12"]
     y1_axis_title = "usecs"
-    output_read_names = ["output_read_avg_latency", "output_read_90_latency", "output_read_95_latency",
-                         "output_read_99_latency"]
+    output_read_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
 
     for internal_chart_name in internal_chart_names_dict:
         chart_name = internal_chart_names_dict[internal_chart_name]
-        fio_job_name = "fio_randread_4gbps"
+        fio_job_name = "fio_randread_stripe12"
         output_names = output_read_names
         operation = "randread"
 
         data_sets = []
         for output_name in output_names:
-            if "avg_" in output_name:
+            if "_avg_" in output_name:
                 name = "avg"
-            elif "90_" in output_name:
-                name = "90%"
-            elif "95_" in output_name:
-                name = "95%"
-            else:
+            elif "_99_99_" in output_name:
                 name = "99.99%"
+            else:
+                name = "99%"
 
             one_data_set = {}
             one_data_set["inputs"] = {}
@@ -427,21 +425,23 @@ if __name__ == "__main__":
             data_sets.append(one_data_set)
         metric_id = LastMetricId.get_next_id()
         positive = False
-        base_line_date = datetime(year=2019, month=4, day=1, minute=0, hour=0, second=0)
+        base_line_date = datetime(year=2019, month=4, day=14, minute=0, hour=0, second=0)
         MetricChart(chart_name=chart_name,
                     metric_id=metric_id,
                     internal_chart_name=internal_chart_name,
                     data_sets=json.dumps(data_sets),
                     leaf=True,
                     description="TBD",
-                    owner_info="Ravi Hulle (ravi.hulle@fungible.com)",
+                    owner_info="Manu KS (manu.ks@fungible.com)",
+                    source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/stripe_vol_fs_perf.py",
                     positive=positive,
                     y1_axis_title=y1_axis_title,
                     visualization_unit=y1_axis_title,
                     metric_model_name=model_name,
-                    base_line_date=base_line_date).save()
+                    base_line_date=base_line_date,
+                    work_in_progress=False).save()
         mmt = MileStoneMarkers(metric_id=metric_id,
                                milestone_date=datetime(year=2018, month=9, day=16),
                                milestone_name="Tape-out")
         mmt.save()
-    print "created latency charts for random read storage"
+    print "created latency charts for random read stripe volume"
