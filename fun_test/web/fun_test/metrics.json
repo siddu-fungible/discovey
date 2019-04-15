@@ -2009,7 +2009,7 @@
                 "leaf": false,
                 "name": "teramarks_customer_juniper",
                 "weight": 1,
-                "label": "Juniper - (work in progress)",
+                "label": "Juniper",
                 "children": [
                   {
                     "info": "juniper_NU_VP_NU_FWD_NFCP",
