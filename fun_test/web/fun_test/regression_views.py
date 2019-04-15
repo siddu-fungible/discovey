@@ -1031,6 +1031,7 @@ def scheduler_queue(request, job_id):
     elif request.method == 'DELETE':
         try:
             queue_entry = JobQueue.objects.get(job_id=int(job_id))
+            scheduler.scheduler_helper.kill_job(job_id=int(job_id))
             queue_entry.delete()
         except ObjectDoesNotExist:
             pass

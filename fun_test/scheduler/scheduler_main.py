@@ -637,6 +637,11 @@ def process_killed_jobs():
     killed_jobs = KilledJob.objects.order_by('killed_time')
     for killed_job in killed_jobs:
         killed_job_id = killed_job.job_id
+        try:
+            q = JobQueue.objects.get(job_id=killed_job.job_id)
+            q.delete()
+        except:
+            pass
         if killed_job_id in job_id_threads:
             t = job_id_threads[killed_job_id]
             scheduler_logger.info("Job: {} Killing".format(get_job_string(killed_job_id)))

@@ -8,6 +8,7 @@ from fun_settings import TEAM_REGRESSION_EMAIL
 import json
 from lib.utilities.send_mail import send_mail
 from datetime import datetime, timedelta
+from scheduler.scheduler_global import JobStatusType
 
 @csrf_exempt
 @api_safe_json_response
@@ -67,12 +68,33 @@ def suite_executions(request, id):
         state = request.GET.get('state', None)
         if state:
             q = q & Q(state=int(state))
+        if id:
+            q = q & Q(execution_id=id)
+
+        is_completed = request.GET.get('is_job_completed', None) # used by qa_trigger.py
 
         records = []
         suite_executions = SuiteExecution.objects.filter(q).order_by('submitted_time')
         for suite_execution in suite_executions:
             one_record = {"execution_id": suite_execution.execution_id,
-                          "state": suite_execution.state}
+                          "state": suite_execution.state,
+                          "result": suite_execution.result}
             records.append(one_record)
         result = records if len(records) else None
+        if is_completed:
+            if records:
+                first_record = records[0]
+                result = {"result": first_record["result"],
+                          "is_completed": JobStatusType.is_completed(first_record["state"]),
+                          "job_state_code": first_record["state"],
+                          "job_state_string": JobStatusType().code_to_string(first_record["state"]),
+                          "message": "State is {}".format(JobStatusType().code_to_string(first_record["state"]))}
+            else:
+                result = {"result": "FAILED",
+                          "is_completed": True,
+                          "job_state_code": JobStatusType.ERROR,
+                          "job_state_string": JobStatusType().code_to_string(JobStatusType.ERROR),
+                          "message": "Job-id: {} does not exist".format(id)}
+
     return result
+

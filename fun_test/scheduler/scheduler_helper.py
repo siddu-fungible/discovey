@@ -337,7 +337,7 @@ def queue_job3(suite_path=None,
 
         suite_execution.tags = json.dumps(tags)
         suite_execution.emails = json.dumps(emails)
-        suite_execution.email_on_failure_only = email_on_fail_only
+        suite_execution.email_on_failure_only = email_on_fail_only if email_on_fail_only else False
 
         suite_execution.environment = json.dumps(environment)
         suite_execution.inputs = inputs

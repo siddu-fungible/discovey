@@ -40,8 +40,8 @@ class QueueOperations:
 
 
 class JobStatusType:
-    UNKNOWN = -20
-    ERROR = -10
+    UNKNOWN = -40
+    ERROR = -30
     KILLED = -20
     ABORTED = -10
     COMPLETED = 10
@@ -51,6 +51,18 @@ class JobStatusType:
     QUEUED = 50
     IN_PROGRESS = 60
 
+    def code_to_string(self, code):
+        result = "UNKNOWN"
+        non_callable_attributes = [f for f in dir(self) if not callable(getattr(self, f))]
+        for non_callable_attribute in non_callable_attributes:
+            if getattr(self, non_callable_attribute) == code:
+                result = non_callable_attribute
+                break
+        return result
+
     def is_idle_state(self, state):
         return (state == self.AUTO_SCHEDULED) or (state == self.KILLED) or (state == self.ABORTED) or (state == self.COMPLETED) or (state == self.ERROR)
 
+    @staticmethod
+    def is_completed(state):
+        return state <= JobStatusType.COMPLETED
