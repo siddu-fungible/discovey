@@ -129,7 +129,7 @@ class NetperfManager:
             frame_size = arg_dict.get('frame_size', 800)
             sip = arg_dict.get('sip', None)
             ns = arg_dict.get('ns', None)
-            local_send_buffer_size = arg_dicts.get('local_send_buffer_size', None)
+            local_send_buffer_size = arg_dict.get('local_send_buffer_size', None)
 
         if parallel > 1:
             mp_task_obj = MultiProcessingTasks()
