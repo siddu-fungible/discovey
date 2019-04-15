@@ -165,6 +165,7 @@ if __name__ == "__main_memset_datasets__":
                 if data_set["name"] == "2048KB" or data_set["name"] == "4096KB":
                     ml.delete_data_set(metric_id=entry.metric_id, data_set=data_set)
 
+
 if __name__ == "__main_juniper_networking__":
     flow_types = ["NU_VP_NU_FWD_NFCP", "NU_LE_VP_NU_FW"]
     model_name = "TeraMarkJuniperNetworkingPerformance"
@@ -328,6 +329,13 @@ if __name__ == "__main_memset_BM__":
         mmt.save()
     print "chart creation for BM DMA memset is done"
 
-if __name__ == "__main__":
+if __name__ == "__main_delete_network_model__":
     entries = NuTransitPerformance.objects.all().delete()
     print "Deletion Complete"
+
+if __name__ == "__main__":
+    internal_chart_names = ["Networking", "Regex", "teramarks_customer_juniper"]
+    ml = MetricLib()
+    for internal_chart_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+        ml.set_work_in_progress(chart=chart, in_progress=True)
