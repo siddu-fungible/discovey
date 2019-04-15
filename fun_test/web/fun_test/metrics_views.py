@@ -752,6 +752,7 @@ def traverse_dag(metric_id, sort_by_name=True):
     result["last_num_degrades"] = chart.last_num_degrades
     result["last_num_build_failed"] = chart.last_num_build_failed
     result["positive"] = chart.positive
+    result["work_in_progress"] = chart.work_in_progress
     result["jira_ids"] = json.loads(chart.jira_ids)
 
     result["copied_score"] = chart.copied_score

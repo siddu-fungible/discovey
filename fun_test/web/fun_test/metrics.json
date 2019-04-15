@@ -11,7 +11,7 @@
         "metric_model_name": "MetricContainer",
         "leaf": false,
         "name": "Networking",
-        "label": "Networking - (work in progress)",
+        "label": "Networking",
         "children": [
           {
             "info": "Lookup-engine",
@@ -1287,6 +1287,24 @@
                 "weight": 1
               },
               {
+                "info": "memset_buffer_memory_output_bandwidth_below_4K",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_buffer_memory_output_bandwidth_below_4k",
+                "label": "DMA soak memset BM (Below 4K)",
+                "children": [],
+                "weight": 1
+              },
+              {
+                "info": "memset_buffer_memory_output_bandwidth_4k_1mb",
+                "metric_model_name": "SoakDmaMemsetPerformance",
+                "leaf": true,
+                "name": "memset_buffer_memory_output_bandwidth_4k_1mb",
+                "label": "DMA soak memset BM (4K-1MB)",
+                "children": [],
+                "weight": 1
+              },
+              {
                 "name": "Bcopy: Plain: Avg Bandwidth",
                 "label": "Bcopy: Plain: Avg Bandwidth",
                 "info": "Bcopy: Plain: Avg Bandwidth",
@@ -1924,7 +1942,7 @@
             "leaf": false,
             "name": "Regex",
             "weight": 1,
-            "label": "Regex - (work in progress)",
+            "label": "Regex",
             "children": [
               {
                 "info": "dfa_teramark_output_bandwidth",
@@ -2144,7 +2162,7 @@
                 "leaf": false,
                 "name": "teramarks_customer_juniper",
                 "weight": 1,
-                "label": "Juniper - (work in progress)",
+                "label": "Juniper",
                 "children": [
                   {
                     "info": "juniper_NU_VP_NU_FWD_NFCP",

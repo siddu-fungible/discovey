@@ -77,9 +77,10 @@ class Bmc(Linux):
     SERIAL_SPEED_DEFAULT = 1000000
     U_BOOT_F1_PROMPT = "f1 #"
 
-    def __init__(self, **kwargs):
+    def __init__(self, num_f1s=2, **kwargs):
         super(Bmc, self).__init__(**kwargs)
         self.uart_log_threads = {}
+        self.num_f1s = num_f1s
 
     @fun_test.safe
     def ping(self,
@@ -116,7 +117,9 @@ class Bmc(Linux):
         return True
 
     def get_uart_log(self):
-        self.uart_log_threads[0].close()
+        for i in range(self.num_f1s):
+            self.uart_log_threads[i].close()
+
 
     def come_reset(self, come, max_wait_time=180):
         self.command("cd {}".format(self.BMC_SCRIPT_DIRECTORY))
@@ -295,9 +298,9 @@ class Bmc(Linux):
                 f1_index = int(m.group(1))
                 console_or_sbp = m.group(2)
                 device_path = m.group(3)
-                # if f1_index > 0:
-                #    fun_test.critical("Disabling F1_1 for now")
-                #    continue
+                if self.num_f1s < 2 and f1_index > 0:
+                    fun_test.critical("Disabling F1_1 for now")
+                    continue
                 if f1_index not in f1_info:
                     f1_info[f1_index] = {}
                 if console_or_sbp == "console":
@@ -315,12 +318,13 @@ class ComE(Linux):
     DEFAULT_DPC_PORT = [40220, 40221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
 
-    def initialize(self, reset=False):
+    def initialize(self, reset=False, num_f1s=2):
+        self.num_f1s = num_f1s
         self.funq_bind_device = []
         self.dpc_ready = None
         fun_test.simple_assert(self.setup_workspace(), "ComE workspace setup")
         fun_test.simple_assert(self.cleanup_dpc(), "Cleanup dpc")
-        for f1_index in range(2):
+        for f1_index in range(self.num_f1s):
             self.command("rm {}".format(self.get_dpc_log_path(f1_index=f1_index)))
         return True
 
@@ -354,10 +358,10 @@ class ComE(Linux):
 
         self.command("cd $WORKSPACE/FunControlPlane")
         output = self.sudo_command("build/posix/bin/funq-setup bind")
-        for f1_index in range(2):
+        for f1_index in range(self.num_f1s):
             fun_test.test_assert("Binding {}".format(self.funq_bind_device[f1_index]) in output,
                                  "Bound to {}".format(self.funq_bind_device[f1_index]))
-        for f1_index in range(2):
+        for f1_index in range(self.num_f1s):
             # command = "LD_LIBRARY_PATH=$PWD/build/posix/lib build/posix/bin/dpc -j -d {} &> {} &".format(
             #    self.funq_bind_device[f1_index], self.get_dpc_log_path(f1_index=f1_index))
 
@@ -386,7 +390,7 @@ class ComE(Linux):
             if "Unassigned class" in device["device_class"]:
                 self.funq_bind_device.append(device["id"])
 
-        for index in range(2):  #TODO hard coded
+        for index in range(self.num_f1s):  #TODO hard coded
             fun_test.test_assert_expected(actual=self.funq_bind_device[index],
                                           expected=self.EXPECTED_FUNQ_DEVICE_ID[index],
                                           message="F1_{} funq bind device found".format(index))
@@ -409,7 +413,7 @@ class ComE(Linux):
         return self.DPC_LOG_PATH.format(f1_index)
 
     def cleanup(self):
-        for f1_index in range(2):
+        for f1_index in range(self.num_f1s):
             artifact_file_name = fun_test.get_test_case_artifact_file_name("f1_{}_dpc_log.txt".format(f1_index))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description="F1_{} DPC Log".format(f1_index),
@@ -468,7 +472,8 @@ class Fs(object, ToDictMixin):
                  come_mgmt_ssh_password,
                  tftp_image_path="funos-f1.stripped.gz",
                  boot_args=DEFAULT_BOOT_ARGS,
-                 power_cycle_come=False):
+                 power_cycle_come=False,
+                 num_f1s=2):
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
         self.bmc_mgmt_ssh_password = bmc_mgmt_ssh_password
@@ -482,6 +487,7 @@ class Fs(object, ToDictMixin):
         self.fpga = None
         self.come = None
         self.tftp_image_path = tftp_image_path
+        self.num_f1s = num_f1s
         self.f1s = {}
         self.f1_uart_log_process_ids = {}  # stores process id for f1 uart log listener started in background
         self.boot_args = boot_args
@@ -506,7 +512,7 @@ class Fs(object, ToDictMixin):
         return self.f1s[index]
 
     @staticmethod
-    def get(test_bed_spec=None, tftp_image_path=None, boot_args=None):
+    def get(test_bed_spec=None, tftp_image_path=None, boot_args=None, num_f1s=2):
         if not test_bed_spec:
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
             fun_test.log("Testbed-type: {}".format(test_bed_type))
@@ -535,7 +541,8 @@ class Fs(object, ToDictMixin):
                   come_mgmt_ssh_username=come_spec["mgmt_ssh_username"],
                   come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
                   tftp_image_path=tftp_image_path,
-                  boot_args=boot_args)
+                  boot_args=boot_args,
+                  num_f1s=num_f1s)
 
     def bootup(self, reboot_bmc=False, power_cyle_come=None):
         if reboot_bmc:
@@ -570,7 +577,7 @@ class Fs(object, ToDictMixin):
 
 
     def re_initialize(self):
-        self.get_bmc()
+        self.get_bmc(num_f1s=self.num_f1s)
         self.bmc.position_support_scripts()
         self.get_fpga()
         self.get_come()
@@ -582,9 +589,9 @@ class Fs(object, ToDictMixin):
         return True
 
 
-    def get_bmc(self):
+    def get_bmc(self, num_f1s=2):
         if not self.bmc:
-            self.bmc = Bmc(host_ip=self.bmc_mgmt_ip,
+            self.bmc = Bmc(num_f1s=num_f1s, host_ip=self.bmc_mgmt_ip,
                            ssh_username=self.bmc_mgmt_ssh_username,
                            ssh_password=self.bmc_mgmt_ssh_password, set_term_settings=True)
             self.bmc.set_prompt_terminator(r'# $')
@@ -606,11 +613,11 @@ class Fs(object, ToDictMixin):
 
     def come_initialize(self):
         self.get_come()
-        self.come.initialize()
+        self.come.initialize(num_f1s=self.num_f1s)
         return True
 
     def bmc_initialize(self):
-        bmc = self.get_bmc()
+        bmc = self.get_bmc(num_f1s=self.num_f1s)
         fun_test.simple_assert(bmc._connect(), "BMC connected")
         fun_test.simple_assert(bmc.initialize(), "BMC initialize")
 
