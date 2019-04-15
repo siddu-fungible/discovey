@@ -232,8 +232,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
+    let xDate = new Date(x).toISOString();
+    xDate = xDate.replace("T", " ");
     let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-    let match = r.exec(x);
+    let match = r.exec(xDate);
     let key = "";
     if (match) {
       key = match[1];
@@ -261,8 +263,10 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     let hardwareVersion = "Unknown";
     let sdkBranch = "Unknown";
     let gitCommit = "Unknown";
+    let xDate = new Date(x).toISOString();
+    xDate = xDate.replace("T", " ");
     let r = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/g;
-    let match = r.exec(x);
+    let match = r.exec(xDate);
     let key = "";
     if (match) {
       key = match[1];

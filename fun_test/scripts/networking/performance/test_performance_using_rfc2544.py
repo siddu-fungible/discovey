@@ -256,8 +256,10 @@ class TestTransitPerformance(FunTestCase):
                                                             table_name=table_name)
         fun_test.simple_assert(result, checkpoint)
         if self.spray or self.flow_direction == FLOW_TYPE_NU_NU_NFCP:
+            mode = self.template_obj.get_interface_mode_input_speed()
             result = self.template_obj.populate_performance_json_file(result_dict=result_dict['summary_result'],
                                                                       timestamp=TIMESTAMP,
+                                                                      mode=mode,
                                                                       flow_direction=self.flow_direction)
             if not result:
                 fun_test.log("===================== Trying another trial for failed flow with extra debug logs %s "

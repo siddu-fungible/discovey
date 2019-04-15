@@ -119,6 +119,22 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
             fun_test.critical(str(ex))
         return True
 
+    def get_interface_mode_input_speed(self):
+        interface_mode = None
+        try:
+            inputs = fun_test.get_job_inputs()
+            if 'speed' in inputs:
+                speed = inputs['speed']
+            else:
+                speed = SpirentManager.SPEED_25G
+            if speed == SpirentManager.SPEED_100G:
+                interface_mode = self.DUT_MODE_100G
+            elif speed == SpirentManager.SPEED_25G:
+                interface_mode = self.DUT_MODE_25G
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return interface_mode
+
     def get_parameters_for_each_stream(self):
         streams_info = {}
         try:
@@ -348,7 +364,7 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
         return result
 
     def populate_performance_json_file(self, result_dict, timestamp, flow_direction, mode=DUT_MODE_25G,
-                                       file_name=OUTPUT_JSON_FILE_NAME):
+                                       file_name=OUTPUT_JSON_FILE_NAME, protocol="UDP", offloads=False, num_flows=None):
         results = []
         output = True
         failed_result_found = False
@@ -391,6 +407,11 @@ class Rfc2544Template(SpirentTrafficGeneratorTemplate):
                         data_dict['jitter_max'] = -1
                         data_dict['jitter_avg'] = -1
                         failed_result_found = True
+
+                    if num_flows:
+                        data_dict['num_flows'] = num_flows
+                        data_dict['offloads'] = offloads
+                        data_dict['protocol'] = protocol
 
                     results.append(data_dict)
                     fun_test.debug(results)

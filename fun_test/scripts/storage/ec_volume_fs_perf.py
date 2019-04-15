@@ -146,74 +146,81 @@ class ECVolumeLevelScript(FunTestScript):
 
     def cleanup(self):
 
-        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
-        self.command_timeout = 30
-        self.ec_coding = fun_test.shared_variables["ec_coding"]
-        self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
-        if fun_test.shared_variables[self.ec_ratio]["setup_created"]:
-            self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
-            self.volume_types = fun_test.shared_variables[self.ec_ratio]["volume_types"]
-            self.volume_capacity = fun_test.shared_variables[self.ec_ratio]["volume_capacity"]
-            self.volume_block = fun_test.shared_variables[self.ec_ratio]["volume_block"]
-            self.use_lsv = fun_test.shared_variables[self.ec_ratio]["use_lsv"]
-            self.ns_id = fun_test.shared_variables[self.ec_ratio]["ns_id"]
+        try:
+            # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+            self.command_timeout = 30
+            self.ec_coding = fun_test.shared_variables["ec_coding"]
+            self.ec_ratio = str(self.ec_coding["ndata"]) + str(self.ec_coding["nparity"])
+            if fun_test.shared_variables[self.ec_ratio]["setup_created"]:
+                self.uuids = fun_test.shared_variables[self.ec_ratio]["uuids"]
+                self.volume_types = fun_test.shared_variables[self.ec_ratio]["volume_types"]
+                self.volume_capacity = fun_test.shared_variables[self.ec_ratio]["volume_capacity"]
+                self.volume_block = fun_test.shared_variables[self.ec_ratio]["volume_block"]
+                self.use_lsv = fun_test.shared_variables[self.ec_ratio]["use_lsv"]
+                self.ns_id = fun_test.shared_variables[self.ec_ratio]["ns_id"]
 
-            # Detaching the EC or LS volume and deleting the LS voluem based on the use_lsv flag
-            if self.use_lsv:
-                # Detaching
-                detach_uid = self.uuids[self.volume_types["lsv"]]
-                command_result = self.storage_controller.volume_detach_pcie(
-                    ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
-                    ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detaching LS volume on DUT")
+                # Detaching the EC or LS volume and deleting the LS voluem based on the use_lsv flag
+                if self.use_lsv:
+                    # Detaching
+                    detach_uid = self.uuids[self.volume_types["lsv"]]
+                    command_result = self.storage_controller.volume_detach_pcie(
+                        ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
+                        ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detaching LS volume on DUT")
 
-                # Deleting the LS volume
+                    # Deleting the LS volume
+                    command_result = self.storage_controller.delete_volume(
+                        type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
+                        block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
+                        group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
+                        pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Deleting LS volume on DUT")
+
+                    # Deleting the journal volume
+                    command_result = self.storage_controller.delete_volume(
+                        type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
+                        block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
+                        command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Deleting Journal volume on DUT")
+                else:
+                    detach_uid = self.uuids[self.volume_types["ec"]]
+                    command_result = self.storage_controller.volume_detach_pcie(
+                        ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
+                        ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detaching EC volume on DUT instance")
+
+                # Deleting the EC volume
                 command_result = self.storage_controller.delete_volume(
-                    type=self.volume_types["lsv"], capacity=self.volume_capacity["lsv"],
-                    block_size=self.volume_block["lsv"], name="lsv1", uuid=self.uuids[self.volume_types["lsv"]],
-                    group=self.ec_coding["ndata"], jvol_uuid=self.uuids[self.volume_types["jvol"]],
-                    pvol_id=self.uuids[self.volume_types["ec"]], command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleting LS volume on DUT")
-
-                # Deleting the journal volume
-                command_result = self.storage_controller.delete_volume(
-                    type=self.volume_types["jvol"], capacity=self.volume_capacity["jvol"],
-                    block_size=self.volume_block["jvol"], name="jvol1", uuid=self.uuids[self.volume_types["jvol"]],
+                    type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
+                    name="ec1", uuid=self.uuids[self.volume_types["ec"]][0], ndata=self.ec_coding["ndata"],
+                    nparity=self.ec_coding["nparity"], pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"],
                     command_duration=self.command_timeout)
                 fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Deleting Journal volume on DUT")
-            else:
-                detach_uid = self.uuids[self.volume_types["ec"]]
-                command_result = self.storage_controller.volume_detach_pcie(
-                    ns_id=self.ns_id, uuid=detach_uid, huid=tb_config['dut_info'][0]['huid'],
-                    ctlid=tb_config['dut_info'][0]['ctlid'], command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                fun_test.test_assert(command_result["status"], "Detaching EC volume on DUT instance")
+                fun_test.test_assert(command_result["status"], "Deleting EC volume on DUT")
 
-            # Deleting the EC volume
-            command_result = self.storage_controller.delete_volume(
-                type=self.volume_types["ec"], capacity=self.volume_capacity["ec"], block_size=self.volume_block["ec"],
-                name="ec1", uuid=self.uuids[self.volume_types["ec"]][0], ndata=self.ec_coding["ndata"],
-                nparity=self.ec_coding["nparity"], pvol_id=self.uuids["VOL_TYPE_BLK_LOCAL_THIN"],
-                command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "Deleting EC volume on DUT")
+                # Deleting all the BLT volume on which the EC volume is configured
+                for vtype in sorted(self.ec_coding):
+                    for i in range(self.ec_coding[vtype]):
+                        if vtype == "nparity" and self.volume_types[vtype] == self.volume_types["ndata"]:
+                            i += self.ec_coding["ndata"]
+                        command_result = self.storage_controller.delete_volume(
+                            type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
+                            block_size=self.volume_block[vtype], name=vtype+str(i),
+                            uuid=self.uuids[self.volume_types[vtype]][i], command_duration=self.command_timeout)
+                        fun_test.log(command_result)
+                        fun_test.test_assert(command_result["status"], "Deleting {} {} BLT volume on DUT".format(i, vtype))
 
-            # Deleting all the BLT volume on which the EC volume is configured
-            for vtype in sorted(self.ec_coding):
-                for i in range(self.ec_coding[vtype]):
-                    if vtype == "nparity" and self.volume_types[vtype] == self.volume_types["ndata"]:
-                        i += self.ec_coding["ndata"]
-                    command_result = self.storage_controller.delete_volume(
-                        type=self.volume_types[vtype], capacity=self.volume_capacity[vtype],
-                        block_size=self.volume_block[vtype], name=vtype+str(i),
-                        uuid=self.uuids[self.volume_types[vtype]][i], command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Deleting {} {} BLT volume on DUT".format(i, vtype))
+            self.storage_controller.disconnect()
 
-        self.storage_controller.disconnect()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        fs = fun_test.shared_variables["fs"]
+        fs.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):

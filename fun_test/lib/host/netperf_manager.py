@@ -55,7 +55,13 @@ class NetperfManager:
             except Exception as ex:
                 fun_test.critical(str(ex))
             linux_obj = linux_obj.clone()
-            linux_obj.connect_retry_timeout_max = 120
+            try:
+                linux_obj.disconnect()
+            except Exception as ex:
+                pass
+            linux_obj._connect()
+
+            # linux_obj.connect_retry_timeout_max = 120
 
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
@@ -127,7 +133,7 @@ class NetperfManager:
         if parallel > 1:
             mp_task_obj = MultiProcessingTasks()
             rlist = []
-            for i in range(1, parallel):
+            for i in range(1, parallel+1):
                 # parallel-1 tasks to measure throughput
                 measure_latency = False
                 mp_task_obj.add_task(
@@ -139,7 +145,7 @@ class NetperfManager:
             mp_task_obj.add_task(
                 func=do_test,
                 func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, measure_latency, sip, ns),
-                task_key=parallel)
+                task_key=parallel-1)  # TODO: change 'parallel-1' to 'parallel' when COMe is not used
             mp_task_obj.run(max_parallel_processes=parallel)
             for i in range(1, parallel+1):
                 rlist.append(mp_task_obj.get_result(i))
