@@ -145,7 +145,7 @@ class BLTVolumePerformanceScript(FunTestScript):
 
     def cleanup(self):
         # pass
-        TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
+        # TopologyHelper(spec=fun_test.shared_variables["topology"]).cleanup()
         # Detach the volume
         self.blt_details = fun_test.shared_variables["blt_details"]
         self.stripe_details = fun_test.shared_variables["stripe_details"]
