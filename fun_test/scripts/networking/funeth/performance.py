@@ -1177,7 +1177,7 @@ if __name__ == "__main__":
             #FunethPerformance_HU_NU_800B_UDP_NETPERF,
             #FunethPerformance_HU_NU_64B_UDP_NETPERF,
             #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
-            #FunethPerformance_HU_NU_800B_TCP_NETPERF,
+            FunethPerformance_HU_NU_800B_TCP_NETPERF,
             FunethPerformance_HU_NU_128B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
             FunethPerformance_HU_NU_800B_TCP_NETPERF_MultipleFlows,
