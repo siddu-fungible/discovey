@@ -362,12 +362,16 @@ if __name__ == "__main__":
                 dev_access = "sequential"
             else:
                 dev_access = "random"
-            base_line_date = datetime(year=2019, month=4, day=11, minute=0, hour=0, second=0)
+            if "read" in operation:
+                io_type = "RCNVME_TEST_TYPE_RO"
+            else:
+                io_type = "RCNVME_TEST_TYPE_WO"
+            base_line_date = datetime(year=2019, month=4, day=14, minute=0, hour=0, second=0)
             one_data_set = {}
             one_data_set["inputs"] = {}
-            # one_data_set["inputs"]["input_io_type"] =
+            one_data_set["inputs"]["input_io_type"] = io_type
             one_data_set["inputs"]["input_dev_access"] = dev_access
-            one_data_set["name"] = operation
+            one_data_set["name"] = "SAMSUNG MZQLB1T9HAJR"
             one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
             data_sets.append(one_data_set)
             metric_id = LastMetricId.get_next_id()
