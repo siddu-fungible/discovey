@@ -120,7 +120,7 @@ class BLTVolumePerformanceScript(FunTestScript):
         # topology_obj_helper = TopologyHelper(spec=topology_dict)
         # topology = topology_obj_helper.deploy()
 
-        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"])
+        fs = Fs.get(boot_args=tb_config["dut_info"][0]["bootarg"], num_f1s=1)
         fun_test.shared_variables["fs"] = fs
 
         fun_test.test_assert(fs.bootup(reboot_bmc=False), "FS bootup")
@@ -237,9 +237,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                          format(self.fio_pass_threshold, testcase, benchmark_file))
 
         if not hasattr(self, "num_ssd"):
-            self.num_ssd = 1
+            self.num_ssd = 6
         if not hasattr(self, "blt_count"):
-            self.blt_count = 1
+            self.blt_count = 6
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         fun_test.log("Block size and IO depth combo going to be used for this {} testcase: {}".
@@ -475,6 +475,8 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                                  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
+                fun_test.test_assert(fio_output[combo][mode], "Fio {} test for bs {} & iodepth {}".
+                                     format(mode, fio_block_size, fio_iodepth))
 
                 # Check EQM stats after test
                 command_result = self.storage_controller.peek(props_tree="stats/eqm", legacy=False)
@@ -673,7 +675,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                         row_data_list.append(row_data_dict[i])
 
                 table_data_rows.append(row_data_list)
-                # post_results("BLT_FS", test_method, *row_data_list)
+                post_results("Stripe_Vol_FS", test_method, *row_data_list)
 
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="BLT Performance Table", table_name=self.summary, table_data=table_data)

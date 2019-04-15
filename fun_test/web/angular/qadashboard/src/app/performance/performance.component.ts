@@ -43,6 +43,7 @@ class Node {
   failures: any = new Set();
   bugs: any = {};
   positive: boolean = true;
+  workInProgress: boolean = false;
 }
 
 class FlatNode {
@@ -293,6 +294,7 @@ export class PerformanceComponent implements OnInit {
     node.jiraIds = dagEntry.jira_ids;
     node.showAddJira = false;
     node.positive = dagEntry.positive;
+    node.workInProgress = dagEntry.work_in_progress;
 
     Object.keys(dagEntry.children_weights).forEach((key) => {
       let childInfo: ChildInfo = new ChildInfo();
