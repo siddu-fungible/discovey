@@ -140,7 +140,8 @@ class NetperfManager:
                 measure_latency = False
                 mp_task_obj.add_task(
                     func=do_test,
-                    func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, local_send_buffer_size/parallel),
+                    func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns,
+                               local_send_buffer_size/parallel),
                     task_key=i)
             # One task to measure latency
             measure_latency = True
@@ -171,7 +172,8 @@ class NetperfManager:
             }
 
         else:
-            result = do_test(linux_obj, dip=dip, protocol=protocol, duration=duration, frame_size=frame_size, ns=ns)
+            result = do_test(linux_obj, dip=dip, protocol=protocol, duration=duration, frame_size=frame_size, ns=ns,
+                             local_send_buffer_size=local_send_buffer_size)
 
         throughput = result.get('throughput')
         send_size = get_send_size(protocol, frame_size)
