@@ -475,7 +475,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
                                                                  **self.fio_cmd_args)
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fio_output[combo][mode])
-                fun_test.test_assert(fio_output[combo][mode], "Fio {} test for bs {} & iodeepth {}".
+                fun_test.test_assert(fio_output[combo][mode], "Fio {} test for bs {} & iodepth {}".
                                      format(mode, fio_block_size, fio_iodepth))
 
                 # Check EQM stats after test
