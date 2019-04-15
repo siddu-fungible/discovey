@@ -23,7 +23,7 @@ class NetperfManager:
                 linux_obj.sudo_command(
                     'echo performance > /sys/devices/system/cpu/cpu{}/cpufreq/scaling_governor'.format(i))
             linux_obj.sudo_command(cmd)
-
+            
             # Tune TCP buffer
             cmds = (
                 'sysctl -w net.core.rmem_max=2147483647',
@@ -34,7 +34,7 @@ class NetperfManager:
             )
             for cmd in cmds:
                 linux_obj.sudo_command(cmd)
-
+            
             # Clean up iptables
             cmds = (
                 'sudo ufw disable',
@@ -60,9 +60,9 @@ class NetperfManager:
             except Exception as ex:
                 pass
             linux_obj._connect()
-
+            
             # linux_obj.connect_retry_timeout_max = 120
-
+            
             ## Install linuxptp package
             #for pkg in ('linuxptp',):
             #    result &= linux_obj.install_package(pkg)
@@ -82,7 +82,7 @@ class NetperfManager:
             #        linux_obj.get_process_id_by_pattern('phc2sys') is not None)
             #    if not result:
             #        break
-
+            
             # Install Netperf
             for pkg in ('netperf',):
                 if not linux_obj.check_package(pkg):
@@ -129,16 +129,18 @@ class NetperfManager:
             frame_size = arg_dict.get('frame_size', 800)
             sip = arg_dict.get('sip', None)
             ns = arg_dict.get('ns', None)
+            local_send_buffer_size = arg_dicts.get('local_send_buffer_size', None)
 
         if parallel > 1:
             mp_task_obj = MultiProcessingTasks()
             rlist = []
-            for i in range(1, parallel+1):
+            for i in range(0, parallel):
                 # parallel-1 tasks to measure throughput
+                cpu = i + 8  # TODO: this is for SB-5 only
                 measure_latency = False
                 mp_task_obj.add_task(
                     func=do_test,
-                    func_args=(linux_obj, dip, protocol, duration, frame_size, i, measure_latency, sip, ns),
+                    func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns, local_send_buffer_size/parallel),
                     task_key=i)
             # One task to measure latency
             measure_latency = True
@@ -147,7 +149,7 @@ class NetperfManager:
                 func_args=(linux_obj, dip, protocol, duration, frame_size, parallel, measure_latency, sip, ns),
                 task_key=parallel-1)  # TODO: change 'parallel-1' to 'parallel' when COMe is not used
             mp_task_obj.run(max_parallel_processes=parallel)
-            for i in range(1, parallel+1):
+            for i in range(0, parallel):
                 rlist.append(mp_task_obj.get_result(i))
 
             throughput = sum(r.get('throughput') for r in rlist)
@@ -194,7 +196,7 @@ def get_send_size(protocol, frame_size):
 
 
 def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=None, measure_latency=False, sip=None,
-            ns=None):
+            ns=None, local_send_buffer_size=None):
     """Use Netperf measure TCP throughput (Mbps) and latency (us).
 
 
@@ -246,6 +248,8 @@ def do_test(linux_obj, dip, protocol='tcp', duration=30, frame_size=800, cpu=Non
         cmd = 'sudo ip netns exec {} {}'.format(ns, cmd)
     if cpu:
         cmd = 'taskset -c {} {}'.format(cpu, cmd)
+    if local_send_buffer_size:  # in kB
+        cmd = '{} -s {}k'.format(cmd, local_send_buffer_size)
     # TODO: use numactl if necessary
     output = linux_obj.command(cmd, timeout=duration+30)
     match = re.search(pat, output, re.DOTALL)

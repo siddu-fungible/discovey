@@ -94,7 +94,7 @@ class FunethSanity(FunTestScript):
         setup_nu_host(funeth_obj)
 
         # HU host
-        setup_hu_host(funeth_obj)
+        setup_hu_host(funeth_obj, update_driver=True)
 
         fun_test.shared_variables['funeth_obj'] = funeth_obj
         network_controller_obj = NetworkController(dpc_server_ip=DPC_PROXY_IP, dpc_server_port=DPC_PROXY_PORT,
@@ -461,14 +461,14 @@ if __name__ == "__main__":
     ts = FunethSanity()
     for tc in (
             FunethTestNUPingHU,
-            FunethTestPacketSweep,
-            FunethTestScpNU2HUPF,
-            FunethTestScpNU2HUVF,
-            FunethTestScpHU2NU,
-            FunethTestInterfaceFlapPF,
-            FunethTestInterfaceFlapVF,
-            #FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
-            FunethTestReboot,
+            #FunethTestPacketSweep,
+            #FunethTestScpNU2HUPF,
+            #FunethTestScpNU2HUVF,
+            #FunethTestScpHU2NU,
+            #FunethTestInterfaceFlapPF,
+            #FunethTestInterfaceFlapVF,
+            ##FunethTestUnloadDriver,  # TODO: uncomment after EM-914 is fixed
+            #FunethTestReboot,
     ):
         ts.add_test_case(tc())
     ts.run()

@@ -21,6 +21,7 @@ RESULT_FILE = FUN_TEST_DIR + '/web/static/logs/hu_funeth_performance_data.json'
 TIMESTAMP = get_current_time()
 PARALLEL = 8  # TODO: change back to 6 after SWOS-4552 is resolved
 FPG_MTU_DEFAULT = 1518
+LOCAL_SEND_BUFFER_SIZE = 256  # in kB
 
 
 class FunethPerformance(sanity.FunethSanity):
@@ -106,6 +107,7 @@ class FunethPerformanceBase(FunTestCase):
         linux_objs = []
         linux_objs_dst = []
         ns_dst_list = []
+        local_send_buffer_size = None
         if flow_type.startswith('NU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['nu']
             linux_obj_dst = funeth_obj.linux_obj_dict['hu']
@@ -117,6 +119,7 @@ class FunethPerformanceBase(FunTestCase):
             else:  # Default use PF interface
                 dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu', funeth_obj.pf_intf)
                 sip = None
+            local_send_buffer_size = LOCAL_SEND_BUFFER_SIZE
         elif flow_type.startswith('HU_NU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             linux_obj_dst = funeth_obj.linux_obj_dict['nu']
@@ -124,6 +127,7 @@ class FunethPerformanceBase(FunTestCase):
             ns_dst = None
             dip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('nu', funeth_obj.tb_config_obj.get_a_nu_interface())
             sip = None
+            local_send_buffer_size = LOCAL_SEND_BUFFER_SIZE / 2
         elif flow_type.startswith('HU_HU'):
             linux_obj = funeth_obj.linux_obj_dict['hu']
             linux_obj_dst = funeth_obj.linux_obj_dict['hu']
@@ -137,6 +141,8 @@ class FunethPerformanceBase(FunTestCase):
                                                                     funeth_obj.tb_config_obj.get_hu_vf_interface_fcp())
                 sip = funeth_obj.tb_config_obj.get_interface_ipv4_addr('hu',
                                                                     funeth_obj.tb_config_obj.get_hu_pf_interface_fcp())
+            local_send_buffer_size = LOCAL_SEND_BUFFER_SIZE / 2
+
         linux_objs.append(linux_obj)
         linux_objs_dst.append(linux_obj_dst)
         ns_dst_list.append(ns_dst)
@@ -167,7 +173,8 @@ class FunethPerformanceBase(FunTestCase):
              'duration': duration,
              'frame_size': frame_size,
              'bw': bw,
-             'ns': ns
+             'ns': ns,
+             'local_send_buffer_size': local_send_buffer_size,
              }
         ]
         if tool == 'netperf':
@@ -176,10 +183,10 @@ class FunethPerformanceBase(FunTestCase):
 
         # Collect stats before and after test run
         fun_test.log('Collect stats before test')
-        collect_stats()
+        #collect_stats()
         result = perf_manager_obj.run(*arg_dicts)
         fun_test.log('Collect stats after test')
-        collect_stats()
+        #collect_stats()
 
         # Delete iptable rule
         for linux_obj_dst, ns_dst in zip(linux_objs_dst, ns_dst_list):
@@ -1170,7 +1177,7 @@ if __name__ == "__main__":
             #FunethPerformance_HU_NU_800B_UDP_NETPERF,
             #FunethPerformance_HU_NU_64B_UDP_NETPERF,
             #FunethPerformance_HU_NU_1500B_UDP_NETPERF,
-            FunethPerformance_HU_NU_800B_TCP_NETPERF,
+            #FunethPerformance_HU_NU_800B_TCP_NETPERF,
             FunethPerformance_HU_NU_128B_TCP_NETPERF,
             FunethPerformance_HU_NU_1500B_TCP_NETPERF,
             FunethPerformance_HU_NU_800B_TCP_NETPERF_MultipleFlows,
@@ -1178,9 +1185,9 @@ if __name__ == "__main__":
             FunethPerformance_HU_NU_1500B_TCP_NETPERF_MultipleFlows,
 
             # NU -> HU Non-FCP
-            # FunethPerformance_NU_HU_800B_UDP_NETPERF,
-            # FunethPerformance_NU_HU_64B_UDP_NETPERF,
-            # FunethPerformance_NU_HU_1500B_UDP_NETPERF,
+            ## FunethPerformance_NU_HU_800B_UDP_NETPERF,
+            ## FunethPerformance_NU_HU_64B_UDP_NETPERF,
+            ## FunethPerformance_NU_HU_1500B_UDP_NETPERF,
             FunethPerformance_NU_HU_800B_TCP_NETPERF,
             FunethPerformance_NU_HU_128B_TCP_NETPERF,
             FunethPerformance_NU_HU_1500B_TCP_NETPERF,
@@ -1192,34 +1199,34 @@ if __name__ == "__main__":
             #FunethPerformance_HU_HU_800B_UDP_NETPERF,
             #FunethPerformance_HU_HU_64B_UDP_NETPERF,
             #FunethPerformance_HU_HU_1500B_UDP_NETPERF,
-            FunethPerformance_HU_HU_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_128B_TCP_NETPERF,
-            FunethPerformance_HU_HU_1500B_TCP_NETPERF,
-            FunethPerformance_HU_HU_800B_TCP_NETPERF_MulitipleFlows,
-            FunethPerformance_HU_HU_128B_TCP_NETPERF_MulitipleFlows,
-            FunethPerformance_HU_HU_1500B_TCP_NETPERF_MulitipleFlows,
-
-            # HU -> HU FCP non-secure
-            #FunethPerformance_HU_HU_FCP_800B_UDP_NETPERF,
-            #FunethPerformance_HU_HU_FCP_64B_UDP_NETPERF,
-            #FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF,
-            FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_1500B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF_MultipleFlows,
-            FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF_MultipleFlows,
-            FunethPerformance_HU_HU_FCP_1500B_TCP_NETPERF_MultipleFlows,
-
-            # HU -> HU FCP secure
-            # FunethPerformance_HU_HU_FCP_SEC_800B_UDP_NETPERF,
-            # FunethPerformance_HU_HU_FCP_SEC_64B_UDP_NETPERF,
-            # FunethPerformance_HU_HU_FCP_SEC_1500B_UDP_NETPERF,
-            FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_SEC_1500B_TCP_NETPERF,
-            FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF_MultipleFlows,
-            FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF_MultipleFlows,
-            FunethPerformance_HU_HU_FCP_SEC_1500B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_HU_HU_800B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_128B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_1500B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_800B_TCP_NETPERF_MulitipleFlows,
+            #FunethPerformance_HU_HU_128B_TCP_NETPERF_MulitipleFlows,
+            #FunethPerformance_HU_HU_1500B_TCP_NETPERF_MulitipleFlows,
+            #
+            ## HU -> HU FCP non-secure
+            ##FunethPerformance_HU_HU_FCP_800B_UDP_NETPERF,
+            ##FunethPerformance_HU_HU_FCP_64B_UDP_NETPERF,
+            ##FunethPerformance_HU_HU_FCP_1500B_UDP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_1500B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_800B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_HU_HU_FCP_128B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_HU_HU_FCP_1500B_TCP_NETPERF_MultipleFlows,
+            #
+            ## HU -> HU FCP secure
+            ## FunethPerformance_HU_HU_FCP_SEC_800B_UDP_NETPERF,
+            ## FunethPerformance_HU_HU_FCP_SEC_64B_UDP_NETPERF,
+            ## FunethPerformance_HU_HU_FCP_SEC_1500B_UDP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_SEC_1500B_TCP_NETPERF,
+            #FunethPerformance_HU_HU_FCP_SEC_800B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_HU_HU_FCP_SEC_128B_TCP_NETPERF_MultipleFlows,
+            #FunethPerformance_HU_HU_FCP_SEC_1500B_TCP_NETPERF_MultipleFlows,
     ):
         ts.add_test_case(tc())
     ts.run()
