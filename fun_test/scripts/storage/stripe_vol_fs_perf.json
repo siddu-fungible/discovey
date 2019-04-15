@@ -1,0 +1,68 @@
+{
+  "BLTFioRandRead12": {
+    "num_ssd": 1,
+    "blt_count": 6,
+    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 35791396864, "block_size": 4096},
+    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "block_size": 4096, "stripe_unit": 2},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "1g", "iodepth": 1, "fill_device": "1", "rw": "write", "direct": 1, "prio": 0,"timeout": 800},
+    "fio_cmd_args": {"ioengine": "mmap", "numjobs": 12, "size": "32G", "direct": 1, "prio":  0, "cpumask": 254,"runtime": 30, "group_reporting": 1, "timeout": 400},
+    "fio_modes": ["randread"],
+    "fio_bs_iodepth": ["(4, 1)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "stripe12", "randread": "stripe12"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "expected_volume_stats": {
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    // The first element is the expected value and the second element is the maximum threshold in absolute value
+    "expected_stats": {
+      "read": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472384)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  },
+  "BLTFioRandRead16": {
+    "num_ssd": 1,
+    "blt_count": 6,
+    "blt_details": {"type": "VOL_TYPE_BLK_LOCAL_THIN", "capacity": 35791396864, "block_size": 4096},
+    "stripe_details": {"ns_id": 1, "type": "VOL_TYPE_BLK_STRIPE", "block_size": 4096, "stripe_unit": 2},
+    "controllers": 1,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {"bs": "1g", "iodepth": 1, "size": "32G", "rw": "write", "direct": 1, "prio": 0,"timeout": 800},
+    "fio_cmd_args": {"ioengine": "mmap", "numjobs": 16, "size": "32G", "direct": 1, "prio":  0, "cpumask": 254,"runtime": 300,"group_reporting": 1, "timeout": 400},
+    "fio_modes": ["randread"],
+    "fio_bs_iodepth": ["(4, 1)"],
+    "fio_pass_threshold": 0.05,
+    "fio_job_name": {"read": "stripe16", "randread": "stripe16"},
+    "volume_pass_threshold": 0,
+    "nvme_device": "/dev/nvme0",
+    "expected_fio_result": {
+      "(4, 1)": {"randread": {"read": {"bw": 505, "iops": 123, "clatency": 112, "latency90": 187, "latency95": 207, "latency99": 209, "latency9999": 370}}}
+    },
+    "expected_volume_stats": {
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "stats_list": {"malloc_agent": ["total_bytes_in_use_minus_cached"], "mbuf": [], "wustacks": []},
+    // The first element is the expected value and the second element is the maximum threshold in absolute value
+    "expected_stats": {
+      "read": {
+        "malloc_agent": {"total_bytes_in_use_minus_cached": "(0, 472384)"},
+        "mbuf": {"bm_in_use": "(0, 1)", "bm_num_bytes": "(0, 1)", "in_use": "(0, 1)", "num_bytes": "(0, 1)"},
+        "wustacks": {"in_use": "(0, 1)"}
+      }
+    }
+  }
+}
