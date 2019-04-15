@@ -15,6 +15,9 @@
       </tr>
       <tr *ngFor="let queueEntry of queueOccupancy[category]; let i = index">
         <td>
+          <ng-container>
+            <i (click)="onDelete(queueEntry)" class="fa fa-trash-o" style="font-size:20px; color: red"></i> &nbsp;
+          </ng-container>
           <ng-container *ngIf="i > 0 && queueOccupancy[category].length > 1">
             <i class="btn btn-link" (click)="moveUpDown(queueEntry.job_id, true)" class="fa fa-arrow-up"></i>
             &nbsp;

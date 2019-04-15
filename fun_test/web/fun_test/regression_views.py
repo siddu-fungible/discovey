@@ -1000,7 +1000,7 @@ def _get_job_spec(job_id):
 
 @csrf_exempt
 @api_safe_json_response
-def scheduler_queue(request):
+def scheduler_queue(request, job_id):
     result = None
     if request.method == 'GET':
         result = []
@@ -1028,6 +1028,13 @@ def scheduler_queue(request):
         if operation == QueueOperations.DELETE:
             delete_queued_job(job_id=job_id)
         result = True
+    elif request.method == 'DELETE':
+        try:
+            queue_entry = JobQueue.objects.get(job_id=int(job_id))
+            queue_entry.delete()
+        except ObjectDoesNotExist:
+            pass
+
     return result
 
 

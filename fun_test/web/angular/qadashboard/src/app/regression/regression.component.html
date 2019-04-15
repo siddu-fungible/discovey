@@ -117,14 +117,14 @@
                       class="anchor-button pseudo-anchor">
               / Re-run failed</span> &nbsp;
                 <span style="display: inline-flex"
-                      [hidden]="(suiteExecution.suite_result === 'ABORTED') || (suiteExecution.suite_result === 'KILLED') || ((suiteExecution.suite_result === 'PASSED') || (suiteExecution.suite_result === 'FAILED'))"
+                      [hidden]="suiteExecution.fields.state < 30"
                       data-placement="top" data-toggle="tooltip" title="Stop/Kill"
                       (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor">&nbsp;Kill</span>
               </ng-container>
 
               <ng-container *ngIf="suiteExecution.fields.suite_type ==='dynamic'">
                 <span style="display: inline-flex"
-                      [hidden]="(suiteExecution.suite_result === 'ABORTED') || (suiteExecution.suite_result === 'KILLED') || ((suiteExecution.suite_result === 'PASSED') || (suiteExecution.suite_result === 'FAILED'))"
+                      [hidden]="suiteExecution.fields.state < 30"
                       data-placement="top" data-toggle="tooltip" title="Stop/Kill"
                       (click)="killClick(suiteExecution.fields.execution_id)" class="anchor-button pseudo-anchor">&nbsp;Kill</span>
               </ng-container>

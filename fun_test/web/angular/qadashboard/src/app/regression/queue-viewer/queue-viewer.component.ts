@@ -157,4 +157,16 @@ export class QueueViewerComponent implements OnInit {
     })
   }
 
+  onDelete(queueEntry) {
+    let jobId = queueEntry.job_id;
+    let url = "/regression/scheduler/queue/" + jobId;
+    if (confirm("Are you sure, you want to delete Job-id: " + jobId)) {
+      this.apiService.delete(url).subscribe(response => {
+        this.loggerService.success("Delete queue entry request submitted");
+        this.getCurrentQueueOccupancy().subscribe();
+      }, error => {
+        this.loggerService.error("Unable to delete queue entry");
+      })
+    }
+  }
 }
