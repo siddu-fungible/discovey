@@ -141,7 +141,7 @@ class NetperfManager:
                 mp_task_obj.add_task(
                     func=do_test,
                     func_args=(linux_obj, dip, protocol, duration, frame_size, cpu, measure_latency, sip, ns,
-                               local_send_buffer_size/parallel),
+                               local_send_buffer_size),
                     task_key=i)
             # One task to measure latency
             measure_latency = True
