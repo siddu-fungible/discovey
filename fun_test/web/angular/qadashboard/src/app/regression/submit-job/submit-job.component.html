@@ -1,18 +1,11 @@
-<div style="padding-top: 70px;">
+<div class="component">
   <div class="row">
     <div class="col">
       <div class="card" style="margin: 4px;">
         <div class="card-header">Submit Job</div>
         <div class="card-body">
           <table class="table table-nonfluid table-borderless">
-            <tr>
-              <td class="no-wrap">
-                <label for="build-url">Build URL</label>
-              </td>
-              <td>
-                <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
-              </td>
-            </tr>
+
             <tr>
               <td class="no-wrap">
                 <label for="testbed-type">Testbed type</label>
@@ -23,6 +16,8 @@
                   </select>
               </td>
             </tr>
+
+
             <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('fs') > -1">
               <td class="no-wrap">
                 <label for="tftp-path">TFTP path (F1 stripped image)</label>
@@ -36,6 +31,29 @@
               <td><label for="boot-args">Boot-args</label></td>
               <td><input style='width:100%' id="boot-args" name="boot-args" [(ngModel)]="bootArgs" type="text" required/></td>
             </tr>
+
+            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
+              <td class="no-wrap">
+                <label for="build-url">Build artifacts URL</label>
+              </td>
+              <td>
+                <input class="field-width" id="build-url" name="build-url" [(ngModel)]="buildUrl" type="text" required/>
+              </td>
+
+
+            </tr>
+
+            <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
+              <td class="no-wrap">
+                <label for="build-url">Custom path to funos-posix</label>
+              </td>
+              <td>
+                <input class="field-width" id="private-funos-tgz-url" name="private_funos_tgz_url" [(ngModel)]="privateFunosTgzUrl" type="text" required/>
+              </td>
+
+            </tr>
+
+
             <tr *ngIf="withJenkinsBuild">
               <td colspan="2">
                 <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>

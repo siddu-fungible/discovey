@@ -48,6 +48,7 @@ export class SubmitJobComponent implements OnInit {
 
   selectedScriptPk: number = null;
   resetScriptSelector: boolean = false;
+  privateFunosTgzUrl: string = null;
 
   suiteSelectionMode: string = "BY_SUITE";
 
@@ -238,6 +239,10 @@ export class SubmitJobComponent implements OnInit {
       }
       payload["environment"]["build_parameters"]["DISABLE_ASSERTIONS"] = this.disableAssertions;
       payload["environment"]["build_parameters"]["FUNOS_MAKEFLAGS"] = this.funOsMakeFlags;
+    }
+
+    if (this.privateFunosTgzUrl && this.privateFunosTgzUrl !== "") {
+      payload["environment"]["private_funos_tgz_url"] = this.privateFunosTgzUrl;
     }
 
     this.submitting = "Submitting job";
