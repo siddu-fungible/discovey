@@ -1,4 +1,3 @@
-#!/bin/bash
 set -e
 
 curl_fetch()
@@ -23,6 +22,7 @@ functrlp_tgz_url=http://$dochub_fungible_local/doc/jenkins/funcontrolplane/lates
 sdk_url=
 kernel_url=
 host_os_tgz=host_os.tgz    
+regex_tgz_url=
 
 QEMU_TGZ_NAME=qemu.tgz
 DPCSH_TGZ_NAME=dpcsh.tgz
@@ -31,8 +31,9 @@ DPCSH_NAME=dpcsh
 FUNOS_POSIX_NAME=funos-posix
 QEMU_DIRECTORY=qemu
 KERNEL_NAME=bzImage
+REGEX_TGZ_NAME=Regex.re.tgz
 
-while getopts d:f:q:m:c:s:h:k: name
+while getopts d:f:q:m:c:s:h:k:r: name
 do
     case $name in
     d)    dpcsh_tgz_url="$OPTARG";;
@@ -42,7 +43,8 @@ do
     c)    functrlp_tgz_url="$OPTARG";;
     h)    dochub_fungible_local="$OPTARG";;
     s)    sdk_url="$OPTARG";;
-    ?)    printf "Usage: %s: [-d dpcsh tgz url] [-f funos tgz url] [-q qemu tgz url] [-m modules tgz url] [-c functrlp tgz url] [-h dochub ip] [-s sdk url]\n" $0
+    r)    regex_tgz_url="$OPTARG";;
+    ?)    printf "Usage: %s: [-d dpcsh tgz url] [-f funos tgz url] [-q qemu tgz url] [-m modules tgz url] [-c functrlp tgz url] [-h dochub ip] [-s sdk url] [-r regex tgz url]\n" $0
           exit 2;;
     esac
 done
@@ -64,7 +66,9 @@ if [ -z "$dcpsh_tgz_url" ]; then
     dpcsh_tgz_url=$sdk_url/$DPCSH_TGZ_NAME
 fi
 
-
+if [ -z "$regex_tgz_url" ]; then
+    regex_tgz_url=$sdk_url/$REGEX_TGZ_NAME
+fi
 
 if [ ! -z "$dpcsh_tgz_url" ]; then
     printf "DPCSH tgz url: $dpcsh_tgz_url\n"
@@ -84,10 +88,12 @@ if [ ! -z "$funos_tgz_url" ]; then
     echo "Setting up funos files"
     echo "----------------------"
     curl_fetch $funos_tgz_url
-    tar -xf $FUNOS_TGZ_NAME -C /tmp
-    mv /tmp/bin/$FUNOS_POSIX_NAME $FUNOS_POSIX_NAME
-    rm -rf /tmp/bin
-
+    if [[ $fun_os_tgz_url =~ tgz ]]; then
+        tar -xf $FUNOS_TGZ_NAME -C /tmp
+        mv /tmp/bin/$FUNOS_POSIX_NAME $FUNOS_POSIX_NAME
+        rm -rf /tmp/bin
+    fi
+    chmod 777 $FUNOS_POSIX_NAME
 fi
 
 if [ ! -z "$qemu_tgz_url" ]; then
@@ -102,6 +108,17 @@ if [ ! -z "$qemu_tgz_url" ]; then
     QEMU_NAME=qemu-system-x86_64
     chmod 777 $qemu_bin_directory/$QEMU_NAME
     export PATH=$PATH:$qemu_bin_directory
+fi
+
+if [ ! -z "$regex_tgz_url" ]; then
+    printf "Regex tgz url: $regex_tgz_url\n"
+    curl_fetch $regex_tgz_url
+    TMP_REGEX=/tmp/regex
+    mkdir -p /tmp/regex
+    tar -xvzf $REGEX_TGZ_NAME -C $TMP_REGEX
+    cp $TMP_REGEX/bin/Linux/ffac `pwd`
+    rm -rf $TMP_REGEX
+    echo PATH=$PATH:`pwd` >> ~/.bashrc
 fi
 
 if [ ! -z "$host_os_tgz" ]; then
@@ -126,6 +143,7 @@ if [ ! -z "$functrlp_tgz_url" ]; then
 fi
 
 
+
 echo "-------------------"
 echo "Starting SSH server"
 echo "-------------------"
@@ -141,4 +159,5 @@ while [ 1 ]
     do
         sleep 1
     done
+
 

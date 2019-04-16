@@ -1646,5 +1646,49 @@
         "throughput": 23267.684,
         "timestamp": "2019-04-13 12:29:42.364522-07:00",
         "version": 5942
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 1500,
+        "num_flows": 1,
+        "offloads": false,
+        "pps_h2n": 866.85,
+        "protocol": "TCP",
+        "throughput_h2n": 10.402,
+        "timestamp": "2019-04-15 20:59:16.390465-07:00",
+        "version": 5975
+    },
+    {
+        "flow_type": "HU_NU_NFCP",
+        "frame_size": 1500,
+        "num_flows": 8,
+        "offloads": false,
+        "pps_h2n": 0.0,
+        "protocol": "TCP",
+        "throughput_h2n": 0.0,
+        "timestamp": "2019-04-15 20:59:16.390465-07:00",
+        "version": 5975
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "num_flows": 1,
+        "offloads": false,
+        "pps_n2h": 0.0,
+        "protocol": "TCP",
+        "throughput_n2h": 0.0,
+        "timestamp": "2019-04-15 20:59:16.390465-07:00",
+        "version": 5975
+    },
+    {
+        "flow_type": "NU_HU_NFCP",
+        "frame_size": 1500,
+        "num_flows": 8,
+        "offloads": false,
+        "pps_n2h": 0.0,
+        "protocol": "TCP",
+        "throughput_n2h": 0.0,
+        "timestamp": "2019-04-15 20:59:16.390465-07:00",
+        "version": 5975
     }
 ]
