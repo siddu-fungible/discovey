@@ -533,7 +533,7 @@ class SuiteWorker(Thread):
         elif self.job_script_path:
             script_items.append({"path": self.job_script_path})
         elif self.job_suite_type == SuiteType.DYNAMIC:
-            script_items, all_tags = self.get_scripts(suite_execution_id=suite_execution_id,
+            script_items, all_tags = self.get_scripts(suite_execution_id=self.job_id,
                                                       dynamic_suite_spec=self.job_dynamic_suite_spec)
             # TODO: Delete dynamic spec
 
@@ -602,7 +602,7 @@ class SuiteWorker(Thread):
                           "--" + "suite_execution_id={}".format(self.job_id),
                           "--" + "relative_path={}".format(relative_path),
                           "--" + "build_url={}".format(self.job_build_url),
-                          "--" + "log_prefix={}".format(script_item_index)]
+                          "--" + "log_prefix={}".format(script_item_index + 1)]
 
                 if self.job_test_case_ids:
                     popens.append("--test_case_ids=" + ','.join(str(v) for v in self.job_test_case_ids))
@@ -736,6 +736,7 @@ def process_killed_jobs():
         except:
             pass
         if killed_job_id in job_id_threads:
+            models_helper.update_suite_execution(suite_execution_id=killed_job_id, result=RESULTS["KILLED"])
             t = job_id_threads[killed_job_id]
             scheduler_logger.info("Job: {} Killing".format(get_job_string(killed_job_id)))
             try:
