@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 
 curl_fetch()
@@ -88,7 +89,7 @@ if [ ! -z "$funos_tgz_url" ]; then
     echo "Setting up funos files"
     echo "----------------------"
     curl_fetch $funos_tgz_url
-    if [[ $fun_os_tgz_url =~ tgz ]]; then
+    if [[ $funos_tgz_url =~ tgz ]]; then
         tar -xf $FUNOS_TGZ_NAME -C /tmp
         mv /tmp/bin/$FUNOS_POSIX_NAME $FUNOS_POSIX_NAME
         rm -rf /tmp/bin
