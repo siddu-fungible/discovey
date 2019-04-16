@@ -83,8 +83,8 @@ class ScriptSetup(FunTestScript):
             result = network_controller_obj.set_nu_benchmark_1(mode=1, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
 
-        result = network_controller_obj.set_etp(pkt_adj_size=8)
-        fun_test.simple_assert(result['status'], "Set pkt_adj_size")
+        #result = network_controller_obj.set_etp(pkt_adj_size=8)
+        #fun_test.simple_assert(result['status'], "Set pkt_adj_size")
 
         TIMESTAMP = get_current_time()
 
