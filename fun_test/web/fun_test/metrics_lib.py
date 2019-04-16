@@ -159,7 +159,8 @@ class MetricLib():
                     y1_axis_title=kwargs["y1_axis_title"],
                     visualization_unit=kwargs["visualization_unit"],
                     metric_model_name=kwargs["metric_model_name"],
-                    base_line_date=kwargs["base_line_date"]).save()
+                    base_line_date=kwargs["base_line_date"],
+                    work_in_progress=False).save()
         MileStoneMarkers(metric_id=metric_id,
                          milestone_date=datetime(year=2018, month=9, day=16),
                          milestone_name="Tape-out").save()
