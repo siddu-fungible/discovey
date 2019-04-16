@@ -35,6 +35,7 @@ export class RegressionComponent implements OnInit {
   logDir: any;
   status: string = "Fetching Data";
   stateFilter: string = Filter.ALL;
+  stateFilterString: string = Filter.ALL;
   filter = Filter;
   stateStringMap: any = null;
 
@@ -130,7 +131,7 @@ export class RegressionComponent implements OnInit {
 
 
   onStateFilterClick(state) {
-    this.stateFilter = state;
+    this.stateFilterString = state;
     this.navigateByQuery(this.stateFilterStringToNumber(state));
   }
 

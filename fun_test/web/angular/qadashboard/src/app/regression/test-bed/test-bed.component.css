@@ -1,8 +1,9 @@
 table > tbody > tr > th, table > tbody > tr > td {
-  text-align: left;
+  /*text-align: left;*/
   padding: 2px;
   margin: 2px;
   vertical-align: middle;
+  text-align: center;
 }
 
 
