@@ -108,7 +108,7 @@ export class RegressionService implements OnInit{
     if (testBedType) {
       paramString += `test_bed_type=${testBedType}&state=${stateStringNumber}`;
     }
-    return this.apiService.get("/api/v1/suite_executions" + paramString).pipe(switchMap (response => {
+    return this.apiService.get("/api/v1/regression/suite_executions" + paramString).pipe(switchMap (response => {
       return of(response.data);
     }))
 

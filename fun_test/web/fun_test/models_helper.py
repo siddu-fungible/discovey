@@ -162,7 +162,7 @@ def update_suite_execution(suite_execution_id,
                            state=None,
                            suite_path=None,
                            completed_time=None):
-    # print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
+    print "Suite-Execution-ID: {}, result: {}, version: {}".format(suite_execution_id, result, version)
     te = SuiteExecution.objects.get(execution_id=suite_execution_id)
     if result:
         te.result = result
@@ -180,9 +180,12 @@ def update_suite_execution(suite_execution_id,
         te.state = state
     if completed_time:
         te.completed_time = completed_time
-    with transaction.atomic():
-        te.save()
+    te.save()
+    te.save()
+    transaction.commit()
     # print te.version
+    print "End Suite-Execution-ID: {}, result: {}, version: {} state: {}".format(suite_execution_id, result, version, te.state)
+
     return te
 
 def finalize_suite_execution(suite_execution_id):
@@ -197,6 +200,7 @@ def get_new_suite_execution_id():
         time.sleep(random.uniform(0.1, 1.5))
         last_suite_execution_id = LastSuiteExecution.objects.last()
         last_suite_execution_id.last_suite_execution_id += 1
+        last_suite_execution_id.save()
         last_suite_execution_id.save()
     return last_suite_execution_id
 
@@ -234,6 +238,7 @@ def add_suite_execution(submitted_time,
                                suite_type=suite_type,
                                submitter_email=submitter_email)
             s.save()
+            s.save()
 
             break
         except Exception as ex:
@@ -267,6 +272,7 @@ def get_next_test_case_execution_id():
         last_test_case_execution_id = LastTestCaseExecution.objects.last()
         last_test_case_execution_id.last_test_case_execution_id += 1
         last_test_case_execution_id.save()
+        last_test_case_execution_id.save()
     return last_test_case_execution_id.last_test_case_execution_id
 
 def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
@@ -278,7 +284,7 @@ def add_test_case_execution_id(suite_execution_id, test_case_execution_id):
             current_list.append(test_case_execution_id)
             s.test_case_execution_ids = json.dumps(current_list)
             s.save()
-
+            s.save()
             result = True
         else:
             raise ("Unable to locate Suite Execution id: {}".format(suite_execution_id))
@@ -306,6 +312,7 @@ def add_test_case_execution(test_case_id,
                                    tags=json.dumps(tags),
                                    inputs=json.dumps(inputs))
             te.save()
+            te.save()
             add_test_case_execution_id(suite_execution_id=suite_execution_id,
                                        test_case_execution_id=te.execution_id)
             break
@@ -320,6 +327,7 @@ def update_test_case_execution(test_case_execution_id, suite_execution_id, resul
     te = TestCaseExecution.objects.get(execution_id=test_case_execution_id,
                                        suite_execution_id=suite_execution_id)
     te.result = result
+    te.save()
     te.save()
     return te
 
@@ -343,10 +351,14 @@ def report_re_run_result(execution_id, re_run_info=None):
             original_test_case_execution.add_re_run_entry(re_run_entry)
             original_test_case_execution.re_run_state = TestCaseReRunState.RE_RUN_COMPLETE
             original_test_case_execution.save()
+            original_test_case_execution.save()
             original_suite_execution = get_suite_execution(suite_execution_id=original_test_case_execution.suite_execution_id)
             original_suite_execution.finalized = False
             original_suite_execution.save()
+            original_suite_execution.save()
+
             finalize_suite_execution(suite_execution_id=original_suite_execution.execution_id)
+
 
 
 def get_test_case_executions_by_suite_execution(suite_execution_id):
@@ -497,7 +509,6 @@ def _get_suite_executions(execution_id=None,
         if save_suite_info:
             for se in ses:
                 se.save()
-
     return all_objects_dict
 
 def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_date, hardware_version, completion_date, build_properties):
@@ -512,6 +523,7 @@ def add_jenkins_job_id_map(jenkins_job_id, fun_sdk_branch, git_commit, software_
                                 software_date=software_date,
                                 hardware_version=hardware_version,
                                 build_properties=build_properties)
+        entry.save()
         entry.save()
 
 def _get_suite_execution_attributes(suite_execution):
@@ -533,6 +545,7 @@ def _get_suite_execution_attributes(suite_execution):
 
 def set_suite_re_run_info(original_suite_execution_id, re_run_suite_execution_id):
     re_run = SuiteReRunInfo(original_suite_execution_id=original_suite_execution_id, re_run_suite_execution_id=re_run_suite_execution_id)
+    re_run.save()
     re_run.save()
 
 def get_suite_executions_by_filter(**kwargs):

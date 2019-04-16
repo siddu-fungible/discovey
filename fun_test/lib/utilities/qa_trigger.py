@@ -26,6 +26,7 @@ PASSED_EXIT_CODE = 0
 FAILED_EXIT_CODE = -1
 GENERIC_ERROR_EXIT_CODE = -111
 
+
 class FunTestClient:
     STATUS_UNKNOWN = "UNKNOWN"
     STATUS_COMPLETED = "COMPLETED"
@@ -112,7 +113,14 @@ class FunTestClient:
         if d and self.DEBUG:
             logging.info(json.dumps(d, indent=4))
 
-    def submit_job(self, suite_path, build_url, submitter_email=None, tags=None, email_list=None, environment=None):
+    def submit_job(self,
+                   suite_path,
+                   build_url,
+                   submitter_email=None,
+                   tags=None,
+                   email_list=None,
+                   environment=None,
+                   test_bed_type="emulation"):
         if not tags:
             tags = []
         elif isinstance(tags, str):
@@ -129,7 +137,9 @@ class FunTestClient:
             "build_url": build_url,
             "tags": tags,
             "email_list": email_list,
+            "submitter_email": submitter_email,
             "environment": environment,
+            "test_bed_type": test_bed_type
         }
         response = self._do_post(url="/regression/submit_job", data=json.dumps(job_spec))
         if response["status"]:
@@ -139,16 +149,6 @@ class FunTestClient:
             self.report_error(error_message, suite_path)
         return suite_execution_id
 
-    def get_suite_status(self, suite_execution_id):
-        response = self._do_get(url="/regression/suite_execution/" + str(suite_execution_id))
-        if response["status"]:
-            suite_status = response["data"]
-        else:
-            suite_status = {"suite_result": "UNKNOWN"}
-            error_message = "Unable to fetch suite status of {}".format(suite_execution_id)
-            self.report_error(error_message, "")
-        return suite_status
-
     def _write_html(self, contents):
         with open(LOG_FILE, "a+") as f:
             f.write(contents)
@@ -157,35 +157,19 @@ class FunTestClient:
         response = self._do_get(url="/api/v1/regression/suite_executions/{}?is_job_completed=true".format(job_id))
         return response
 
-    def ensure_job_is_complete(self, job_id):
-        """
-        Retrieves a dictionary mapping the regression Job state strings to codes (number)
-        :return:
-        """
-        result = False
-        try:
-            response = self._do_get(url="/api/v1/regression/suite_executions/{}".format(job_id))
-            message = "Unexpected error"
-            if response["status"]:
-                result = True
-                if "message" in response:
-                    message = response["message"]
-                logging.exception(message)
-        except Exception as ex:
-            result = True
-        return result
 
 
 def main():
     exit_code = 0
     parser = argparse.ArgumentParser(description='Trigger and monitor job on Integration team server')
-    parser.add_argument('-s', '--suite_name', help='Suite name', required=True)
-    parser.add_argument('-e', '--emails', help='Email addresses', required=True)
-    parser.add_argument('-t', '--tags', help='Tags')
-    parser.add_argument('-u', '--base_url', help="Base URL")
-    parser.add_argument('-b', '--submitter_email', help="Submitter's email address", default=DEFAULT_SUBMITTER_EMAIL)
-    parser.add_argument('-n', '--environment', help="Custom environment")
-    parser.add_argument('-r', '--max_run_time', help="Max run-time", default=60 * 60 * 3)
+    parser.add_argument('--suite_name', help='Suite name', required=True)
+    parser.add_argument('--emails', help='Email addresses', required=True)
+    parser.add_argument('--tags', help='Tags')
+    parser.add_argument('--base_url', help="Base URL")
+    parser.add_argument('--submitter_email', help="Submitter's email address", default=DEFAULT_SUBMITTER_EMAIL)
+    parser.add_argument('--environment', help="Custom environment")
+    parser.add_argument('--max_run_time', help="Max run-time", default=60 * 60 * 3)
+    parser.add_argument('--test_bed_type', default="emulation", help="emulation or simulation or fs")
     args = parser.parse_args()
 
     suite_name = args.suite_name
@@ -195,14 +179,16 @@ def main():
     base_url = args.base_url
     environment = args.environment
     max_run_time = args.max_run_time
+    test_bed_type = args.test_bed_type
 
     logging.info("Input options provided:")
-    logging.info("Suite      : {}".format(suite_name))
-    logging.info("Submitter  : {}".format(submitter_email))
-    logging.info("Emails     : {}".format(emails))
-    logging.info("Tags       : {}".format(tags))
-    logging.info("Base URL   : {}".format(base_url))
-    logging.info("Environment: {}".format(environment))
+    logging.info("Suite        : {}".format(suite_name))
+    logging.info("Submitter    : {}".format(submitter_email))
+    logging.info("Emails       : {}".format(emails))
+    logging.info("Tags         : {}".format(tags))
+    logging.info("Base URL     : {}".format(base_url))
+    logging.info("Environment  : {}".format(environment))
+    logging.info("Test-bed type: {}".format(test_bed_type))
     logging.info("")
 
     if not base_url:
@@ -225,11 +211,11 @@ def main():
         fun_test_client = FunTestClient(base_url=base_url)
         start_time = time.time()
         job_id = fun_test_client.submit_job(suite_path=suite_name,
-                                                        build_url=DEFAULT_BUILD_URL,
-                                                        tags=tags,
-                                                        email_list=emails,
-                                                        environment=environment,
-                                                        submitter_email=submitter_email)
+                                            build_url=DEFAULT_BUILD_URL,
+                                            tags=tags,
+                                            email_list=emails,
+                                            environment=environment,
+                                            submitter_email=submitter_email)
 
         job_status = None
         if job_id > 0:
