@@ -80,8 +80,11 @@ class ScriptSetup(FunTestScript):
 
         fwd_benchmark_ports = [8, 12]
         for fpg in fwd_benchmark_ports:
-            result = network_controller_obj.set_nu_benchmark(main=1, erp=1, nh_id=4097, clbp_idx=20, fpg=fpg)
+            result = network_controller_obj.set_nu_benchmark_1(mode=1, fpg=fpg)
             fun_test.simple_assert(result['status'], 'Enable FWD benchmark')
+
+        result = network_controller_obj.set_etp(pkt_adj_size=8)
+        fun_test.simple_assert(result['status'], "Set pkt_adj_size")
 
         TIMESTAMP = get_current_time()
 
