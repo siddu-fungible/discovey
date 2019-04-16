@@ -340,6 +340,64 @@ if __name__ == "__main_work_in_progress__":
         chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
         ml.set_work_in_progress(chart=chart, in_progress=True)
 
+if __name__ == "__main_RCNVME__":
+    operations = ["sequential_read", "sequential_write", "random_read", "random_write"]
+    outputs = ["output_bandwidth", "output_iops", "output_latency_avg"]
+    for operation in operations:
+        for output in outputs:
+            data_sets = []
+            positive = True
+            name = "SAMSUNG MZQLB1T9HAJR"
+            if "bandwidth" in output:
+                y1_axis_title = "Mbps"
+                chart_name = "Throughput"
+            elif "iops" in output:
+                y1_axis_title = "ops"
+                chart_name = "IOPS"
+            else:
+                y1_axis_title = "nsecs"
+                chart_name = "Latency"
+                positive = False
+                name = "avg"
+            internal_name = "rcnvme_" + operation + '_' + output
+            if "sequential" in operation:
+                dev_access = "sequential"
+            else:
+                dev_access = "random"
+            if "read" in operation:
+                io_type = "RCNVME_TEST_TYPE_RO"
+            else:
+                io_type = "RCNVME_TEST_TYPE_WO"
+            base_line_date = datetime(year=2019, month=4, day=14, minute=0, hour=0, second=0)
+            one_data_set = {}
+            one_data_set["inputs"] = {}
+            one_data_set["inputs"]["input_io_type"] = io_type
+            one_data_set["inputs"]["input_dev_access"] = dev_access
+            one_data_set["name"] = name
+            one_data_set["output"] = {"name": output, 'min': 0, "max": -1, "expected": -1, "reference": -1}
+            data_sets.append(one_data_set)
+            metric_id = LastMetricId.get_next_id()
+            model_name = "TeraMarkRcnvmeReadWritePerformance"
+            MetricChart(chart_name=chart_name,
+                        metric_id=metric_id,
+                        internal_chart_name=internal_name,
+                        data_sets=json.dumps(data_sets),
+                        leaf=True,
+                        description="TBD",
+                        owner_info="Raju Vasudevan (raju.vasudevan@fungible.com)",
+                        source="https://github.com/fungible-inc/FunOS/blob/ad5f77ba0db25525eed4a3ac4822562b7ccf5d9c/apps/rcnvme_test.c",
+                        work_in_progress=False,
+                        positive=positive,
+                        y1_axis_title=y1_axis_title,
+                        visualization_unit=y1_axis_title,
+                        metric_model_name=model_name,
+                        base_line_date=base_line_date).save()
+            mmt = MileStoneMarkers(metric_id=metric_id,
+                                   milestone_date=datetime(year=2018, month=9, day=16),
+                                   milestone_name="Tape-out")
+            mmt.save()
+    print "chart creation for RCNVME is done"
+
 if __name__ == "__main__":
     internal_chart_names = ["apple_rand_read_4kb6vol6ssd_output_bandwidth",
                             "apple_rand_read_4kb6vol6ssd_output_iops"]
